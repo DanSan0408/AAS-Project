@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users</title>
+    <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+
+</head>
+<body>
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+        
+    <div class="main-content">
+        <div class="card">
+            <h1>Manage Users</h1>
+            <p>Please select a user type to configure.</p>
+            <div class="user-selection">
+                <a href="/admin/manage-students">Students</a>
+                <a href="/admin/manage-lecturers">Lecturers</a>
+                <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

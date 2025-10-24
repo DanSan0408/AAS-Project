@@ -1,0 +1,79 @@
+package com.capstone.adproject.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+
+import com.capstone.adproject.service.CustomUserDetailsService;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+
+    //constructor - utk bagi kita guna CustomAuthenticationSuccessHandler utk determine role nnt
+    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
+    // utk encrypt/decrypt password user (hashing and verification)
+    // even if ada 2 user password sama dia akan letak random salt so hashes will look different
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
+    @Autowired
+    private AuthenticationSuccessHandler authenticationSuccessHandler;
+
+    //give permission to the website to access this files.
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authenticationProvider(daoAuthenticationProvider())
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/rubrics/**").hasRole("ADMIN")
+                .requestMatchers("/student/**").hasRole("STUDENT")
+                .requestMatchers("/lecturer/**").hasRole("LECTURER")
+                .requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .successHandler(authenticationSuccessHandler)
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
+
+            .rememberMe(Customizer.withDefaults())
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/startup")
+                .permitAll()
+            );
+
+        return http.build();
+    }
+
+    //DAO = Data Access Object (built in authentication provider that uses database to authenticate user)
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        //check raw password user enter sama tak dengan hash password dalam database
+        provider.setPasswordEncoder(passwordEncoder());
+        //bagi spring security guna custom UserDetailsService utk loads user details. 
+        provider.setUserDetailsService(userDetailsService);
+        return provider;
+    }
+}

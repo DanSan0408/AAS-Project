@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Lecturers</title>
+    <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+
+</head>
+<body>
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+        
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <h1>USER EDITING</h1>
+            </div>
+            <div class="user-editing-container">
+                <div class="user-editing-sidebar">
+                    <a href="/admin/manage-students">Students</a>
+                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                </div>
+                <div class="user-editing-main">
+                    <h2>Lecturers List</h2>
+
+                    <div class="add-form-container">
+                        <h3 th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add New Lecturer'}">Add New Lecturer</h3>
+                        <form th:action="@{/admin/manage-lecturers}" th:object="${lecturer}" method="post">
+                            <input type="hidden" th:field="*{id}" />
+
+                            <label for="username">Username</label>
+                            <input type="text" id="username" th:field="*{username}" required>
+                            
+                            <label for="password">Password</label>
+                            <input type="password" id="password" th:field="*{password}">
+                            
+                            <button type="submit" th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}">Add Lecturer</button>
+                        </form>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="lecturer : ${lecturers}">
+                                <td th:text="${lecturer.id}"></td>
+                                <td th:text="${lecturer.username}"></td>
+                                <td>
+                                    <a th:href="@{/admin/edit-lecturer/{id}(id=${lecturer.id})}" class="action-button">Update</a>
+                                    <a th:href="@{/admin/delete-lecturer/{id}(id=${lecturer.id})}" class="action-button delete">Delete</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
