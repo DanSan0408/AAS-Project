@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${assessment.title} + ' Rubrics'">View Rubrics</title>
+    <link rel="stylesheet" th:href="@{/css/rubric.css}">
+    <style>
+        .main-content { font-size: 1.1em; }
+        .page-header h1 { font-size: 2.2em; }
+        .rubric-container h2, .criteria-header h2 { font-size: 1.8em; }
+        h2 { font-size: 1.5em !important; }
+        /* Adjusted table and element font sizes for consistency */
+        table th, table td, .rubric-header strong, .rubric-header p, .sub-rubric h4, .sub-rubric p, .likert-level-grid strong, .likert-level-grid span { font-size: 1.1em; }
+        .btn { padding: 15px 25px !important; font-size: 17px !important; }
+        .rubric-container { padding: 30px; margin-bottom: 35px; background-color: #34495e; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
+        .criteria-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #4a6681; padding-bottom: 10px; }
+        .criteria-header h2 { margin-top: 0; color: #ecf0f1; }
+        .criteria-rating-card { 
+            background-color: #2c3e50; 
+            border-radius: 6px; 
+            padding: 10px; /* Reduced padding */
+            margin-top: 5px; /* Reduced margin */
+            border: 1px solid #4a6681;
+        }
+        
+        /* Removed .rating-grid styles as they are no longer needed for the new compact display */
+
+        .assessment-summary { margin-top: 20px; margin-bottom: 40px; padding: 30px; background-color: #2c3e50; border-radius: 12px; max-width: 1200px; color: #ecf0f1; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); border: 2px solid #3498db; text-align: left; }
+        
+        /* NEW STYLES for Likert Ratings Display */
+        .likert-ratings-section { margin-top: 15px; border: 1px solid #4a6681; border-radius: 6px; padding: 15px; background-color: #2c3e50; }
+        .likert-ratings-section h5 { color: #3498db; font-size: 1.2em; margin-top: 0; margin-bottom: 10px; border-bottom: 1px dotted #3498db; padding-bottom: 5px; }
+        /* CORRECTED BLOCK: Added colons and semicolons for proper CSS syntax */
+        .likert-level-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 4fr; /* Level Label/Value | Description */
+            gap: 15px; 
+            align-items: flex-start; 
+            padding: 8px 0; 
+            border-bottom: 1px dashed #4a6681; 
+        }
+        .likert-level-grid:last-child { border-bottom: none; }
+        .likert-level-grid strong { color: #f39c12; }
+        
+        /* Style for the new compact criteria rating display */
+        .compact-criteria-rating {
+            padding: 3px 0;
+            font-size: 1.05em;
+            color: #ecf0f1;
+        }
+        .compact-criteria-rating strong {
+            color: #f39c12;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 th:text="${assessment.title}">Assessment Title</h1>
+            <p>Below are all the rubrics associated with this assessment.</p>
+        </div>
+
+        <div class="assessment-summary">
+            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">Assessment Summary</h3>
+            
+            <p style="margin-bottom: 15px;">
+                <strong>Total Assessment Marks (Likert + Criteria): </strong>
+                <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}" style="color: #f39c12; font-weight: bold;">0.00</span>
+            </p>
+            
+            <h4 style="color: #ecf0f1; margin-top: 20px; border-bottom: 1px dotted #4a6681; padding-bottom: 5px; font-size: 1.3em;">CLO Marks Distribution:</h4>
+            
+            <div th:each="clo : ${assessment.cloMarks}" style="margin-left: 20px;">
+                <p style="margin: 8px 0;">
+                    <strong th:text="${'CLO ' + clo.key + ' Total Marks:'}">Total CLO X Marks:</strong>
+                    <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span>
+                </p>
+            </div>
+            <div th:if="${#maps.isEmpty(assessment.cloMarks)}">
+                <p style="margin-left: 20px; color: #7f8c8d;">No CLO marks are currently assigned.</p>
+            </div>
+        </div>
+        
+        <div style="width:100%; max-width:1200px; text-align:center; margin-bottom:40px; display:flex; justify-content:center; gap: 30px;">
+            <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-add" style="background-color: #f39c12;">
+                ➕ Add Likert Rubric
+            </a>
+            <a th:href="@{/criteria/add/{id}(id=${assessment.id})}" class="btn btn-add">
+                ➕ Add Criteria Rubric
+            </a>
+        </div>
+        
+        <div th:each="evaluationEntry : ${groupedRubrics}" style="margin-top: 40px; width: 100%; max-width: 1200px;">
+            <h2 style="color: #ecf0f1; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 20px;">
+                <span th:text="${evaluationEntry.key} + ' Evaluation'">Evaluation Type</span>
+            </h2>
+            
+            <div th:each="assessmentEntry : ${evaluationEntry.value}" style="margin-top: 30px; margin-left: 20px; border-left: 5px solid #2ecc71; padding-left: 15px;">
+                <h3 style="color: #3498db; border-bottom: 1px solid #3498db; padding-bottom: 5px; font-size: 1.6em;">
+                    <span th:text="${assessmentEntry.key}">Assessment Type</span>
+                </h3>
+                
+                <div th:each="item : ${assessmentEntry.value}" style="margin-top: 20px;">
+                
+                    <div class="rubric-container" th:if="${item.isRubric()}"> 
+                        <div th:with="rubric=${item.item}">
+                            <div class="rubric-header">
+                                <div>
+                                    <h2 th:text="${rubric.name}">Likert Rubric Name</h2>
+                                    <p th:text="${rubric.description}" style="margin:8px 0;">Rubric Description</p>
+                                    
+                                    <strong>Type: <span style="color: #f39c12;">Likert Scale (5-Point)</span></strong>
+                                    <br>
+                                    
+                                    <strong>Evaluation Type: <span th:text="${rubric.evaluationType}">Individual</span></strong>
+                                    <br>
+                                    <strong>Assessment Type: <span th:text="${rubric.assessmentTypes}">Individual Assessment</span></strong>
+                                    <br>
+
+                                    <strong>Total Marks: <span th:text="${rubric.marks}">100</span></strong>
+                                    <br>
+                                    <strong>CLO: <span th:text="${rubric.clo}">1</span></strong><br>
+                                    <strong>CLO Marks: <span th:text="${rubric.cloMarks}">50</span></strong>
+                                </div>
+                                <div class="action-buttons">
+                                    <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn btn-edit">Edit</a>
+                                    <form class="inline" th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this rubric?');">
+                                        <button type="submit" class="btn btn-delete">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="sub-rubric" th:each="subRubric : ${rubric.subRubrics}">
+                                <h4 th:text="${subRubric.name}" style="font-size: 1.25em; margin-top: 20px;">Sub-Rubric Name</h4>
+                                <p th:text="${subRubric.description}" style="margin:5px 0;">Sub-Rubric Description</p>
+                                <strong>Marks: <span th:text="${subRubric.marks}">20</span></strong>
+                                <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
+                                    *Student mark is calculated based on the average of selected rating levels (0-4).
+                                </p>
+                                
+                                <div class="likert-ratings-section" th:if="${subRubric.ratings != null and not #lists.isEmpty(subRubric.ratings)}">
+                                    <h5>Rating Levels (Level 0 to Level 4)</h5>
+                                    <div th:each="rating : ${subRubric.ratings}" class="likert-level-grid">
+                                        <div>
+                                            <strong th:text="${rating.levelLabel}">Level Label</strong>
+                                            <br>
+                                            <span style="font-weight: normal; color: #ecf0f1;" th:text="${'Level ' + rating.level}">Level Value</span>
+                                        </div>
+                                        <div style="grid-column: 2 / 3;">
+                                            <span th:text="${rating.description ?: 'No specific description provided.'}">Rating Description</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div th:if="${subRubric.ratings == null or #lists.isEmpty(subRubric.ratings)}">
+                                    <p style="color: #f39c12; margin-top: 10px;">No rating levels found for this sub-rubric.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="rubric-container" th:if="${item.isCriteria()}">
+                            <div th:with="criteria=${item.item}">
+                            
+                            <div class="criteria-header">
+                                <div>
+                                    <h2 th:text="${criteria.name}">Criteria Rubric Name</h2>
+                                    
+                                    <strong>Type: <span style="color: #2ecc71;">Criteria Based (Rating Levels 0-4)</span></strong>
+                                    <br>
+
+                                    <strong>Evaluation Type: <span th:text="${criteria.evaluationType}">Individual</span></strong>
+                                    <br>
+                                    <strong>Assessment Type: <span th:text="${criteria.assessmentTypes}">Individual Assessment</span></strong>
+                                    <br>
+                                    
+                                    <strong>Total Marks: <span th:text="${criteria.marks}">100</span></strong>
+                                    <br>
+                                    <strong>CLO: <span th:text="${criteria.clo}">1</span></strong><br>
+                                    <strong>CLO Marks: <span th:text="${criteria.cloMarks}">50</span></strong>
+                                </div>
+                                <div class="action-buttons">
+                                    <a th:href="@{/criteria/edit/{id}(id=${criteria.id})}" class="btn btn-edit">Edit</a> 
+                                    <form class="inline" th:action="@{/criteria/delete/{id}(id=${criteria.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this Criteria rubric?');">
+                                        <button type="submit" class="btn btn-delete">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 15px;">
+                                <h4 style="color: #3498db; border-bottom: 1px dotted #3498db; padding-bottom: 5px; font-size: 1.25em;">Rating Levels (0 to 4)</h4>
+                                <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
+                                    *Student mark is calculated based on the average of selected rating levels (0-4).
+                                </p>
+                                
+                                <div th:if="${criteria.criteriaRatings != null and not #lists.isEmpty(criteria.criteriaRatings)}">
+                                    <div class="criteria-rating-card compact-criteria-rating" th:each="rating : ${criteria.criteriaRatings}">
+                                        <span th:text="${rating.level} + ':'">0:</span>
+                                        <strong th:text="${rating.name}">Never</strong>
+                                        <span th:text="${'' + rating.description + ''}">(0% of the time)</span> 
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${criteria.criteriaRatings == null or #lists.isEmpty(criteria.criteriaRatings)}">
+                                    <p style="color: #f39c12; margin-top: 10px; padding: 10px; border: 1px dashed #f39c12; border-radius: 4px;">No rating levels found for this Criteria. Check your data or CriteriaRating entity property names.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <div th:if="${#maps.isEmpty(groupedRubrics)}" style="padding: 25px; background-color: #4a6681; border-radius: 8px; text-align: center; max-width: 1200px; margin-top: 40px;">
+            <p style="font-size: 1.1em;">No Rubrics or Criteria have been added to this assessment yet.</p>
+        </div>
+    </div>
+</body>
+</html>

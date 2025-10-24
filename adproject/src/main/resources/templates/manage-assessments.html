@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Assessments & Rubrics</title>
+    <link rel="stylesheet" th:href="@{/css/rubric.css}">
+</head>
+<body>
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+        
+    <div class="main-content">
+        <div class="card">
+            <h1>Create New Assessment</h1>
+            <form id="assessment-form" th:action="@{/rubrics/assessment/save}" th:object="${newAssessment}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                <input type="text" th:field="*{title}" placeholder="Enter assessment title" required>
+                <button type="submit" class="btn btn-add">Save Assessment</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h1>Existing Assessments</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th style="width: 300px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="assessment : ${assessments}">
+                        <td th:text="${assessment.id}">1</td>
+                        <td th:text="${assessment.title}">Final Year Project</td>
+                        <td>
+                            <!-- New flex container for all action buttons -->
+                            <div class="action-buttons">
+                                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-view">View Rubrics</a>
+                                <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-add">Add Rubric</a>
+                                <a th:href="@{/rubrics/assessment/edit/{id}(id=${assessment.id})}" class="btn btn-edit">Edit</a>
+                                <form th:action="@{/rubrics/assessment/delete/{id}(id=${assessment.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this assessment and all its rubrics?');">
+                                    <button type="submit" class="btn btn-delete">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        // Simple script to populate the edit form
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const assessmentId = urlParams.get('assessmentId');
+            const title = urlParams.get('title');
+            if (assessmentId && title) {
+                const form = document.getElementById('assessment-form');
+                form.querySelector('input[name="id"]').value = assessmentId;
+                form.querySelector('input[name="title"]').value = title;
+                form.querySelector('button').textContent = 'Update Assessment';
+            }
+        });
+    </script>
+</body>
+</html>
