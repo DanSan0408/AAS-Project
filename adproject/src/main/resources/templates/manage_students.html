@@ -6,49 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Students</title>
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
-
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
-    <div class="main-content">
         <div class="card">
             <div class="card-header">
                 <h1>USER EDITING</h1>
             </div>
+            
             <div class="user-editing-container">
                 <div class="user-editing-sidebar">
-                    <a href="/admin/manage-students">Students</a>
+                    <a href="/admin/manage-students" class="active">Students</a>
                     <a href="/admin/manage-lecturers">Lecturers</a>
                     <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <a href="/admin/group-assignment">Group Assignment</a>
                 </div>
+                
                 <div class="user-editing-main">
                     <h2>Students List</h2>
 
                     <div class="add-form-container">
-                        <!-- Conditional form title -->
                         <h3 th:text="${student.id != null ? 'Update Student' : 'Add New Student'}">Add New Student</h3>
-                        <!-- The form's action and method will remain the same, as the controller handles both create and update -->
                         <form th:action="@{/admin/manage-students}" th:object="${student}" method="post">
-                            <!-- A hidden input field to hold the user ID for updates -->
                             <input type="hidden" th:field="*{id}" />
 
                             <label for="username">Username</label>
                             <input type="text" id="username" th:field="*{username}" required>
                             
                             <label for="password">Password</label>
-                            <!-- The password field is not required for updates, so we remove the `required` attribute -->
                             <input type="password" id="password" th:field="*{password}">
                             
-                            <!-- The button text changes based on the form state -->
                             <button type="submit" th:text="${student.id != null ? 'Update Student' : 'Add Student'}">Add Student</button>
                         </form>
                     </div>
@@ -66,10 +60,10 @@
                                 <td th:text="${student.id}"></td>
                                 <td th:text="${student.username}"></td>
                                 <td>
-                                    <!-- The update button now links to the new edit URL -->
-                                    <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
-                                    <!-- The delete button also uses the correct URL with the user's ID -->
-                                    <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" class="action-button delete">Delete</a>
+                                    <div class="table-actions">
+                                        <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
+                                        <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" class="action-button delete">Delete</a>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
