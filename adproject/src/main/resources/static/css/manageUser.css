@@ -7,6 +7,7 @@ body {
     color: #ecf0f1;
 }
 
+/* Sidebar styles (mostly unchanged, ensuring z-index for fixed position) */
 .sidebar {
     width: 280px;
     background-color: #34495e;
@@ -14,6 +15,7 @@ body {
     height: 100vh;
     position: fixed;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    z-index: 1000; /* Added for consistency with rubric.css */
 }
 
 .logo {
@@ -44,7 +46,7 @@ body {
 }
 
 .user-profile span {
-    font-weight: bold;
+    font-weight: 700; /* Used 700 for explicit bold consistency */
 }
 
 .menu-list {
@@ -67,6 +69,26 @@ body {
     background-color: #4a6681;
 }
 
+/* Menu list button styling for consistency */
+.menu-list form button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 15px 20px;
+    color: #ecf0f1;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+    font-size: 17px;
+}
+
+.menu-list form button:hover {
+    background-color: #4a6681;
+}
+
 .logout-link {
     position: absolute;
     bottom: 20px;
@@ -74,27 +96,28 @@ body {
     transform: translateX(-50%);
     color: #e74c3c;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700; /* Used 700 for explicit bold consistency */
 }
 
+/* Main Content & Card */
 .main-content {
     flex-grow: 1;
-    margin-left: 150px;
+    margin-left: 280px; /* Adjusted to sidebar width (280px) for proper alignment */
     padding: 40px;
     background-color: #2c3e50;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+    flex-direction: column; /* Changed to column to allow elements to stack */
+    align-items: center; /* Center content horizontally */
 }
 
 .card {
     background-color: #34495e;
-    padding: 100px;
+    padding: 40px; /* Reduced padding from 100px to 40px for a better fit */
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%;
-    max-width: 900px; /* Adjusted to support all pages */
+    max-width: 1200px; /* Increased max-width for consistency with rubric.css */
+    margin-bottom: 20px; /* Added margin for stacking */
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -107,23 +130,28 @@ body {
     margin-bottom: 20px;
 }
 
-.user-selection a {
-    display: inline-block;
-    background-color: #3f51b5;
-    color: white;
-    padding: 15px 30px;
-    margin: 10px;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: background-color 0.3s ease;
-    font-weight: bold;
+/* Header Container Alignment Fix */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px; /* Use 20px margin-bottom for better spacing */
+    margin-left: 0; /* Removed margin-left: 150px as main-content handles offset */
 }
 
-.user-selection a:hover {
-    background-color: #303f9f;
+.header-container img {
+    max-width: 200px;
+    height: auto;
 }
 
-/* Styles for manage_students, manage_lecturers, manage_supervisors */
+.header-container h1 {
+    margin: 0;
+    color: #ecf0f1;
+}
+
+/* --- User Management Specific Styles --- */
+
 .card-header {
     text-align: center;
 }
@@ -137,6 +165,7 @@ body {
 .user-editing-container {
     display: flex;
     gap: 20px;
+    text-align: left; /* Ensure inner content aligns left */
 }
 
 .user-editing-sidebar {
@@ -158,7 +187,8 @@ body {
     transition: background-color 0.3s ease;
 }
 
-.user-editing-sidebar a:hover {
+.user-editing-sidebar a:hover,
+.user-editing-sidebar a.active { /* Added active state styling */
     background-color: #303f9f;
 }
 
@@ -166,115 +196,146 @@ body {
     flex-grow: 1;
 }
 
+/* Table Styles (Harmonized with rubric.css) */
 table {
     width: 100%;
     border-collapse: collapse;
-    background-color: #4a6681;
+    background-color: transparent; /* Use transparent background or remove for card background to show */
     border-radius: 8px;
     overflow: hidden;
-    margin-top: 15px;
+    margin-top: 20px; /* Increased margin for better spacing */
 }
 
 th, td {
     padding: 12px;
-    border-bottom: 1px solid #34495e;
+    border-bottom: 1px solid #4a6681; /* Consistent border color */
     text-align: left;
 }
 
 th {
-    background-color: #3f51b5;
+    background-color: #4a6681; /* Consistent header background color */
+}
+
+tr:hover { /* Added hover effect for rows */
+    background-color: #4a6681;
 }
 
 tr:last-child td {
     border-bottom: none;
 }
 
+/* Add/Edit Form Container */
 .add-form-container {
     margin-bottom: 20px;
-    background-color: #3f51b5;
+    background-color: #2c3e50; /* Changed background for better contrast inside the card */
     padding: 20px;
     border-radius: 8px;
+    border: 1px solid #4a6681; /* Added subtle border */
 }
 
-.add-form-container label, .add-form-container input {
+.add-form-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #4a6681;
+    padding-bottom: 10px;
+}
+
+.add-form-container label {
     display: block;
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduced margin-bottom for tighter form fields */
+    font-weight: 700;
 }
 
-.add-form-container input {
-    padding: 8px;
-    border-radius: 4px;
-    border: none;
-    color: #2c3e50;
+/* Form Input Styles (Harmonized with rubric.css inputs) */
+.add-form-container input, 
+.add-form-container select { /* 👈 ADDED 'select' HERE */
+    width: 100%;
+    padding: 10px; 
+    border-radius: 5px;
+    border: 1px solid #4a6681;
+    background-color: #2c3e50; /* Consistent dark background */
+    color: #ecf0f1; /* Consistent light text color */
+    box-sizing: border-box;
+    font-size: 16px; 
+    margin-bottom: 15px; 
 }
 
-.add-form-container button {
-    background-color: #28a745;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
+/* Button Styles (Harmonized with rubric.css btn variants) */
+
+/* Base Button Style */
+.btn, .action-button, .add-form-container button {
+    padding: 10px 15px; /* Consistent padding */
+    border-radius: 5px;
+    text-decoration: none;
+    color: #fff;
     cursor: pointer;
-    margin-top: 10px;
+    border: none;
+    font-weight: 700;
+    transition: background-color 0.3s;
+    display: inline-block;
+    margin-left: 5px; /* Retained margin-left for action-buttons spacing */
+    font-size: 16px;
+}
+
+/* Re-mapped button colors to rubric.css palette */
+.add-form-container button { /* Add/Update button in the form */
+    background-color: #16a085; /* btn-add style */
+}
+
+.add-form-container button:hover {
+    background-color: #1abc9c;
+}
+
+.action-button { /* Update button in the table */
+    background: #f39c12; /* btn-edit style */
+}
+
+.action-button:hover {
+    background: #f1c40f;
+}
+
+.action-button.delete { /* Delete button in the table */
+    background: #e74c3c; /* btn-danger style */
+}
+
+.action-button.delete:hover {
+    background: #c0392b;
 }
 
 .table-actions {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 10px;
+    gap: 5px; /* Used gap for button spacing */
 }
 
-.action-button {
-    background: #28a745;
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 5px;
+.user-selection a {
+    /* Inherit base button styling for a consistent look */
+    display: inline-block;
+    padding: 12px 20px; /* Adjusted padding to match .btn standard */
+    margin: 10px;
+    text-decoration: none;
+    border-radius: 8px; /* Slightly larger radius looks better for these main buttons */
+    transition: background-color 0.3s ease;
+    font-weight: 700;
+    color: white; /* Ensure text color is white */
 }
 
-.action-button.delete {
-    background: #dc3545;
+/* Default color for all user-selection buttons (mapped to btn-secondary/green) */
+.user-selection a {
+    background-color: #27ae60; 
 }
 
-.header-container {
-    display: flex; /* Makes the children (img and h1) flex items */
-    align-items: center; /* Vertically aligns items in the middle */
-    justify-content: center; /* Horizontally centers the items as a group */
-    gap: 15px; /* Adds space between the logo and the title */
-    margin-bottom: 10px; /* Add some space below the header */
-    margin-left: 150px;
+.user-selection a:hover {
+    background-color: #2ecc71;
 }
 
-.header-container img {
-    max-width: 200px; /* Reduced size for better side-by-side display */
-    height: auto;
-    /* Removed 'display: block' and 'margin: 0 auto 20px;' as flexbox handles alignment */
+/* Specific color for the 'Manage Groups & Assignments' button (mapped to btn-primary/blue) */
+.user-selection a.btn-primary {
+    background-color: #3498db;
 }
 
-.header-container h1 {
-    margin: 0; /* Remove default margin to prevent extra space */
-    color: #ecf0f1; /* Ensure consistent color */
+.user-selection a.btn-primary:hover {
+    background-color: #2980b9;
 }
-
-.menu-list form button {
-        display: block;
-        width: 100%; /* Make the button take up the full width of the li */
-        text-align: left; /* Align text to the left */
-        padding: 15px 20px;
-        color: #ecf0f1;
-        background-color: transparent; /* Remove the default button background */
-        border: none; /* Remove the default button border */
-        cursor: pointer;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        transition: background-color 0.3s ease;
-        font-size: 17px;
-        }
-
-        .menu-list form button:hover {
-            background-color: #4a6681;
-        }
-

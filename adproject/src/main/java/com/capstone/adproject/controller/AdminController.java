@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
-import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.Student; // NEW IMPORT
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
@@ -60,6 +61,38 @@ public class AdminController {
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "manage_users";
     }
+
+    // =========================================================
+    // NEW GROUP ASSIGNMENT MAPPINGS
+    // =========================================================
+    
+    @GetMapping("/group-assignment")
+    public String groupAssignmentPage(Model model) {
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        
+        // Data needed for the form
+        model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
+        model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup());
+        model.addAttribute("availableLecturers", adminService.getAllLecturers());
+        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
+        
+        // Data to display existing groups
+        model.addAttribute("allGroups", adminService.getAllGroups()); 
+        
+        return "group_assignment";
+    }
+
+    @PostMapping("/group-assignment")
+    public String createAndAssignGroup(@ModelAttribute GroupAssignmentDto groupAssignmentDto) {
+        // Use the service method to handle the logic
+        adminService.assignStudentsToNewGroup(groupAssignmentDto);
+        
+        return "redirect:/admin/group-assignment";
+    }
+
+    // =========================================================
+    // EXISTING USER MANAGEMENT MAPPINGS
+    // =========================================================
 
     //hantar admin ke manage-students page and tambah user
     @GetMapping("/manage-students")
