@@ -1,7 +1,5 @@
-// src/main/java/com/capstone/adproject/model/SubRubric.java
 package com.capstone.adproject.model;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +24,7 @@ public class SubRubric {
 
     private String name;
     private String description;
-    private BigDecimal marks;
+    // REMOVED: private BigDecimal marks;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rubric_id")
@@ -42,12 +40,13 @@ public class SubRubric {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public BigDecimal getMarks() { return marks; }
-    public void setMarks(BigDecimal marks) { this.marks = marks; }
+    // REMOVED: public BigDecimal getMarks() { return marks; }
+    // REMOVED: public void setMarks(BigDecimal marks) { this.marks = marks; }
     public Rubric getRubric() { return rubric; }
     public void setRubric(Rubric rubric) { this.rubric = rubric; }
 
-    public List<Rating> getRatings() { if (ratings == null) {
+    public List<Rating> getRatings() { 
+        if (ratings == null) {
             ratings = new ArrayList<>();
         }
         return ratings;
@@ -56,14 +55,14 @@ public class SubRubric {
     public void setRatings(List<Rating> ratings) { this.ratings = ratings; }
 
     public void addRating(Rating rating) {
-    if (rating != null) {
-        if (this.ratings == null) {
-            this.ratings = new ArrayList<>();
+        if (rating != null) {
+            if (this.ratings == null) {
+                this.ratings = new ArrayList<>();
+            }
+            // The FINAL and CRITICAL step: set the foreign key reference
+            rating.setSubRubric(this);
+            this.ratings.add(rating);
         }
-        // The FINAL and CRITICAL step: set the foreign key reference
-        rating.setSubRubric(this);
-        this.ratings.add(rating);
-    }
     }
 
 }
