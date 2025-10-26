@@ -1,5 +1,12 @@
 package com.capstone.adproject.controller;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function; 
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -12,9 +19,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
-import com.capstone.adproject.model.Student; // NEW IMPORT
+import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.model.Student;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
@@ -35,36 +45,113 @@ public class AdminController {
     }
 
 
+    // Existing helper method for login username
     private String getLoggedInUsername() {
-        //SecurityContextHolder (spring class) stores details about the current logged in user
-        //.getContext().getAuthentication dapatkan object for current user session
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        //check admin ke tak
         if (authentication != null && authentication.getPrincipal() instanceof Admin) {
             return ((Admin) authentication.getPrincipal()).getUsername();
         }
         return "Admin";
     }
 
+    // Existing helper method (still useful for single types, but we will rely more on the new grouping)
+    private String getAssessmentKey(Assessment assessment, String type) {
+        final String DEFAULT_EVAL_TYPE = "Ungrouped Assessments";
+        final String DEFAULT_ASSESS_TYPE = "Miscellaneous";
+        
+        String key = "N/A_TEMP"; 
+        
+        // Use the first available rubric/criteria to determine the main assessment type header
+        if (assessment.getRubrics() != null && !assessment.getRubrics().isEmpty()) {
+            if ("evaluationType".equals(type)) {
+                key = assessment.getRubrics().get(0).getEvaluationType();
+            } else if ("assessmentType".equals(type)) {
+                key = assessment.getRubrics().get(0).getAssessmentTypes();
+            }
+        }
+        
+        if (key.equals("N/A_TEMP") && assessment.getCriteria() != null && !assessment.getCriteria().isEmpty()) {
+            if ("evaluationType".equals(type)) {
+                key = assessment.getCriteria().get(0).getEvaluationType();
+            } else if ("assessmentType".equals(type)) {
+                key = assessment.getCriteria().get(0).getAssessmentTypes(); 
+            }
+        }
+        
+        if (key.equals("N/A_TEMP")) {
+            return "evaluationType".equals(type) ? DEFAULT_EVAL_TYPE : DEFAULT_ASSESS_TYPE;
+        }
+        
+        return key;
+    }
+    
+    // HELPER METHOD FOR NESTED GROUPING OF RUBRICS/CRITERIA
+    public Map<String, Map<String, List<Object>>> groupAssessmentComponents(Assessment assessment) {
+        
+        Map<String, Map<String, List<Object>>> grouped = new LinkedHashMap<>();
+        
+        // 1. Group Likert Rubrics
+        if (assessment.getRubrics() != null) {
+            for (Rubric rubric : assessment.getRubrics()) {
+                String evalType = rubric.getEvaluationType();
+                String assessType = rubric.getAssessmentTypes();
+                
+                grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
+                       .computeIfAbsent(assessType, k -> new ArrayList<>())
+                       .add(rubric);
+            }
+        }
+
+        // 2. Group Criteria
+        if (assessment.getCriteria() != null) {
+            for (Criteria criteria : assessment.getCriteria()) {
+                String evalType = criteria.getEvaluationType();
+                String assessType = criteria.getAssessmentTypes();
+                
+                grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
+                       .computeIfAbsent(assessType, k -> new ArrayList<>())
+                       .add(criteria);
+            }
+        }
+        
+        return grouped;
+    }
+
+
     //hantar admin ke home admin and fetch data for assessments and deadlines
     @GetMapping("/home")
     public String adminHome(Model model) {
+    
+        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics(); 
+
+        // Pass the two required helper methods
+        BiFunction<Assessment, String, String> keyExtractor = this::getAssessmentKey;
+        model.addAttribute("getAssessmentKey", keyExtractor); 
+        
+        Function<Assessment, Map<String, Map<String, List<Object>>>> componentGrouper = this::groupAssessmentComponents;
+        model.addAttribute("groupAssessmentComponents", componentGrouper); 
+        
+        model.addAttribute("allAssessments", allAssessments); 
+        
         model.addAttribute("adminUsername", getLoggedInUsername());
-        model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics()); 
         model.addAttribute("deadlines", deadlineService.getAllDeadlines()); 
         return "admin_home";
     }
 
-    //hantar admin ke manage_users page
+    // =========================================================
+    // USER MANAGEMENT START
+    // =========================================================
+
+    // NEW METHOD: This was missing and caused the 404 error if you tried to navigate here directly.
     @GetMapping("/manage-users")
     public String manageUsers(Model model) {
         model.addAttribute("adminUsername", getLoggedInUsername());
-        return "manage_users";
+        // NOTE: If your template is in src/main/resources/templates/admin/manage_users.html,
+        // you MUST change the return value to "admin/manage_users".
+        return "manage_users"; 
     }
 
-    // =========================================================
-    // NEW GROUP ASSIGNMENT MAPPINGS
-    // =========================================================
+    // The rest of the methods remain unchanged but are included for completeness.
     
     @GetMapping("/group-assignment")
     public String groupAssignmentPage(Model model) {
@@ -90,10 +177,7 @@ public class AdminController {
         return "redirect:/admin/group-assignment";
     }
 
-    // =========================================================
-    // EXISTING USER MANAGEMENT MAPPINGS
-    // =========================================================
-
+    
     //hantar admin ke manage-students page and tambah user
     @GetMapping("/manage-students")
     public String manageStudents(Model model) {
@@ -151,7 +235,7 @@ public class AdminController {
     public String deleteLecturer(@PathVariable Long id) {
         adminService.deleteLecturerById(id);
         return "redirect:/admin/manage-lecturers";
-    }
+        }
 
     @GetMapping("/delete-supervisor/{id}")
     public String deleteIndustrialSupervisor(@PathVariable Long id) {

@@ -16,8 +16,7 @@
         
         <div class="card">
             <h1>Group Assignment Management</h1>
-            <p>Logged in as: <span th:text="${adminUsername}">Admin</span></p>
-
+            
             <div class="add-form-container">
                 <h3>Create New Group and Assign Students/Supervisors</h3>
                 <form th:action="@{/admin/group-assignment}" th:object="${groupAssignmentDto}" method="post" style="text-align: left;">

@@ -136,7 +136,6 @@
                             <div class="sub-rubric" th:each="subRubric : ${rubric.subRubrics}">
                                 <h4 th:text="${subRubric.name}" style="font-size: 1.25em; margin-top: 20px;">Sub-Rubric Name</h4>
                                 <p th:text="${subRubric.description}" style="margin:5px 0;">Sub-Rubric Description</p>
-                                <strong>Marks: <span th:text="${subRubric.marks}">20</span></strong>
                                 <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
                                     *Student mark is calculated based on the average of selected rating levels (0-4).
                                 </p>
