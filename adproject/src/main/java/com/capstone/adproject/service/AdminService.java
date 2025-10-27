@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.IndustrialSupervisor;
-import com.capstone.adproject.model.Lecturer; // Import Group
-import com.capstone.adproject.model.Student; // Import DTO
-import com.capstone.adproject.repositories.GroupRepository; // Import GroupRepository
+import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
@@ -23,7 +23,7 @@ public class AdminService {
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final IndustrialSupervisorRepository industrialSupervisorRepository;
-    private final GroupRepository groupRepository; // New Repository
+    private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Updated constructor to include GroupRepository
@@ -32,7 +32,7 @@ public class AdminService {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.industrialSupervisorRepository = industrialSupervisorRepository;
-        this.groupRepository = groupRepository; // Initialize GroupRepository
+        this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
     }
     
@@ -85,10 +85,16 @@ public class AdminService {
     // =========================================================
     // Existing Admin/User Management Methods
     // =========================================================
-    // (Existing methods are kept below for context)
 
+    /**
+     * FIX APPLIED HERE: Uses the custom repository method to eagerly load the 'group' 
+     * association for each student, preventing LazyInitializationException 
+     * when the template accesses student.group.id.
+     */
     public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+        // Must use the custom repository method: studentRepository.findAllWithGroupEagerly()
+        // assuming you have added it to StudentRepository as instructed previously.
+        return studentRepository.findAllWithGroupEagerly();
     }
 
     public List<Lecturer> getAllLecturers() {

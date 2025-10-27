@@ -97,8 +97,8 @@ public class AdminController {
                 String assessType = rubric.getAssessmentTypes();
                 
                 grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
-                       .computeIfAbsent(assessType, k -> new ArrayList<>())
-                       .add(rubric);
+                        .computeIfAbsent(assessType, k -> new ArrayList<>())
+                        .add(rubric);
             }
         }
 
@@ -109,8 +109,8 @@ public class AdminController {
                 String assessType = criteria.getAssessmentTypes();
                 
                 grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
-                       .computeIfAbsent(assessType, k -> new ArrayList<>())
-                       .add(criteria);
+                        .computeIfAbsent(assessType, k -> new ArrayList<>())
+                        .add(criteria);
             }
         }
         
@@ -151,8 +151,7 @@ public class AdminController {
         return "manage_users"; 
     }
 
-    // The rest of the methods remain unchanged but are included for completeness.
-    
+    // THE ONLY MODIFIED METHOD: Added 'allStudents' to the model.
     @GetMapping("/group-assignment")
     public String groupAssignmentPage(Model model) {
         model.addAttribute("adminUsername", getLoggedInUsername());
@@ -165,6 +164,9 @@ public class AdminController {
         
         // Data to display existing groups
         model.addAttribute("allGroups", adminService.getAllGroups()); 
+        
+        // ADDED: Fetch all students so the template can display the members of each group.
+        model.addAttribute("allStudents", adminService.getAllStudents());
         
         return "group_assignment";
     }

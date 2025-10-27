@@ -241,6 +241,7 @@
             const card = document.createElement('div');
             card.className = 'sub-rubric-card';
             
+            // START OF FIX: Removed the 'Marks' field from the dynamically generated HTML
             let content = `
                 <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
                 <div class="form-group">
@@ -251,15 +252,12 @@
                     <label>Description</label>
                     <textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Marks</label>
-                    <input type="number" step="0.01" class="sub-rubric-marks" name="subRubrics[${subRubricIndex}].marks" required>
-                </div>
                 <h4 style="margin-top: 20px; color: #3498db;">Rating Levels (0-4)</h4>
                 <p class="info-text">
                     Note: Ratings don't have individual marks. Student marks = (average of selected rating levels / 4) × sub-rubric marks.
                 </p>
                 <div class="rating-grid">`;
+            // END OF FIX
             
             // Generate exactly 5 ratings with fixed levels
             likertScale.forEach((scale, i) => {
@@ -293,9 +291,6 @@
             }
         });
 
-        // Don't auto-add sub-rubric - it's already initialized from the controller
-        // The controller now provides an initial sub-rubric with 5 ratings
-
         // Form validation on submit
         document.getElementById('rubricForm').addEventListener('submit', function (event) {
             updateAssessmentTypes();
@@ -316,14 +311,22 @@
                 return;
             }
             
+            // The validation below still requires the total sub-rubric marks to be calculated, 
+            // even if the field is not visible. 
+            // This suggests your backend/data model (SubRubric.marks) is still essential.
+            
+            // Since you removed the marks field, this validation can no longer work correctly 
+            // by reading the DOM, UNLESS you are calculating marks differently now.
+            
+            /*
             let totalSubRubricMarks = 0;
             let validationFailed = false;
             
             subRubricCards.forEach((card, index) => {
-                const subRubricMarks = parseFloat(card.querySelector('.sub-rubric-marks').value) || 0;
+                // THIS LINE WILL NOW FAIL: The selector '.sub-rubric-marks' is no longer in the DOM
+                const subRubricMarks = parseFloat(card.querySelector('.sub-rubric-marks').value) || 0; 
                 totalSubRubricMarks += subRubricMarks;
                 
-                // Validate that exactly 5 ratings exist (no marks validation needed)
                 const ratingItems = card.querySelectorAll('.rating-item');
                 if (ratingItems.length !== 5) {
                     showMessage(`Error: Each sub-rubric must have exactly 5 rating levels.`);
@@ -337,11 +340,18 @@
                 return; 
             }
             
-            // Validate total marks match
+            // Validate total marks match (This check will need adjustment if marks are now set server-side)
             if (Math.abs(rubricMarks - totalSubRubricMarks) > 0.001) {
                 showMessage(`The sum of sub-rubric marks (${totalSubRubricMarks.toFixed(2)}) must equal the total rubric mark (${rubricMarks.toFixed(2)}).`);
                 event.preventDefault();
             }
+            */
+            
+            // **ACTION REQUIRED:** If the sub-rubric marks are no longer necessary for validation/submission, 
+            // you should remove the entire marks validation block from the submit event listener. 
+            // I've commented it out above. If they are still required, you need to re-introduce the field, 
+            // perhaps as a hidden input if you don't want the user to see it.
+            
         });
     });
 </script>
