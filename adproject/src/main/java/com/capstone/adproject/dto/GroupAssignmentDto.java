@@ -44,4 +44,5 @@ public class GroupAssignmentDto {
     public void setSelectedStudentIds(List<Long> selectedStudentIds) {
         this.selectedStudentIds = selectedStudentIds;
     }
+    
 }
