@@ -2,10 +2,12 @@ package com.capstone.adproject.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder; // Added for stream use
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Group;
@@ -26,7 +28,6 @@ public class AdminService {
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Updated constructor to include GroupRepository
     @Autowired
     public AdminService(StudentRepository studentRepository, LecturerRepository lecturerRepository, IndustrialSupervisorRepository industrialSupervisorRepository, GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
@@ -35,43 +36,47 @@ public class AdminService {
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
     }
-    
-    // =========================================================
-    // Group Assignment Methods
-    // =========================================================
 
     public List<Student> getStudentsWithoutGroup() {
-        return studentRepository.findByGroupIsNull(); 
+        return studentRepository.findByGroupIsNull();
+    }
+    
+    public List<Student> getStudentsByGroup(Group group) {
+        return studentRepository.findByGroup(group); 
     }
     
     public List<Group> getAllGroups() {
         return groupRepository.findAll();
     }
+    
+    public Optional<Group> findGroupById(Long id) {
+        return groupRepository.findById(id);
+    }
 
+    @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
         // 1. Create the new Group entity
         Group newGroup = new Group();
         newGroup.setGroupName(dto.getGroupName());
-        
+
         // 2. Assign Supervisors/Lecturer
-        // Find by ID and set on the Group
         lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
         industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
-        
+
         // Save the group first to generate its ID
         Group savedGroup = groupRepository.save(newGroup);
 
         // 3. Assign the Group to the selected Students
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
-            
+
             for (Student student : studentsToAssign) {
                 // Set the group FK on the student
                 student.setGroup(savedGroup);
             }
             // Save all modified students
             studentRepository.saveAll(studentsToAssign);
-            
+
             // 4. Update the actual group size
             savedGroup.setGroupSize(studentsToAssign.size());
             groupRepository.save(savedGroup); // Save again to update the size
@@ -82,18 +87,61 @@ public class AdminService {
         }
     }
     
-    // =========================================================
-    // Existing Admin/User Management Methods
-    // =========================================================
+    @Transactional
+    public void updateGroup(Long groupId, GroupAssignmentDto dto) {
+        Group existingGroup = groupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
-    /**
-     * FIX APPLIED HERE: Uses the custom repository method to eagerly load the 'group' 
-     * association for each student, preventing LazyInitializationException 
-     * when the template accesses student.group.id.
-     */
+        // 1. Update Group Name and Supervisors
+        existingGroup.setGroupName(dto.getGroupName());
+        lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
+        industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+        
+        // Save the group changes
+        groupRepository.save(existingGroup);
+
+        // 2. Add NEW Students to the existing group
+        if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
+            List<Student> newStudentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
+            
+            // Only students without a group will be added (prevent duplicates)
+            List<Student> studentsToSave = newStudentsToAssign.stream()
+                .filter(student -> student.getGroup() == null)
+                .peek(student -> student.setGroup(existingGroup))
+                .toList();
+            
+            studentRepository.saveAll(studentsToSave);
+        }
+        
+        // 3. Recalculate and update the group size
+        // This is necessary because students may have been added or removed in this or prior actions.
+        // NOTE: This logic seems to be for *adding* students to an existing group, not for full edit/replacement. 
+        // For randomization, we generally replace.
+        // Keeping it for consistency with your existing updateGroup.
+        long currentGroupSize = studentRepository.countByGroup(existingGroup); // Assuming you add countByGroup to StudentRepository
+        existingGroup.setGroupSize((int) currentGroupSize);
+        groupRepository.save(existingGroup);
+    }
+    
+    @Transactional
+    public void removeStudentFromGroup(Long studentId) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+        
+        Group group = student.getGroup();
+        
+        if (group != null) {
+            student.setGroup(null); // Remove the student from the group
+            studentRepository.save(student);
+            
+            // Recalculate and update group size
+            long currentGroupSize = studentRepository.countByGroup(group);
+            group.setGroupSize((int) currentGroupSize);
+            groupRepository.save(group);
+        }
+    }
+    
     public List<Student> getAllStudents() {
-        // Must use the custom repository method: studentRepository.findAllWithGroupEagerly()
-        // assuming you have added it to StudentRepository as instructed previously.
         return studentRepository.findAllWithGroupEagerly();
     }
 
@@ -121,7 +169,6 @@ public class AdminService {
         if (student.getPassword() != null && !student.getPassword().isEmpty()) {
             student.setPassword(passwordEncoder.encode(student.getPassword()));
         } else {
-            // Keep the old password if a new one is not provided during update
             studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setPassword(existingStudent.getPassword()));
         }
         studentRepository.save(student);
@@ -156,4 +203,56 @@ public class AdminService {
     public void deleteIndustrialSupervisorById(Long id) {
         industrialSupervisorRepository.deleteById(id);
     }
+
+    public List<Student> searchStudentsWithoutGroup(String searchTerm) {
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            return studentRepository.findByGroupIsNullAndUsernameContainingIgnoreCase(searchTerm);
+        }
+        return studentRepository.findByGroupIsNull(); 
+    }
+
+    // REMOVED: public List<GroupAssignmentDto> generateRandomGroups(int numberOfGroups) {...}
+    
+    /**
+     * NEW: Gathers all unassigned students into a single DTO for preview and editing.
+     * The students are NOT shuffled, as shuffling is unnecessary if all are in one group.
+     * @return A single GroupAssignmentDto with all unassigned student IDs.
+     */
+    public GroupAssignmentDto generateSingleRandomGroup() {
+        List<Student> availableStudents = studentRepository.findByGroupIsNull();
+        
+        GroupAssignmentDto dto = new GroupAssignmentDto();
+        dto.setGroupName("Random Group (Ready to Edit)"); // Default name
+        
+        List<Long> studentIds = availableStudents.stream()
+                                    .map(Student::getId)
+                                    .collect(Collectors.toList());
+
+        dto.setSelectedStudentIds(studentIds);
+        return dto;
+    }
+
+    // REMOVED: public void createGroupsFromDtoList(List<GroupAssignmentDto> groups) {...}
+
+    /**
+     * NEW: Persists a single GroupAssignmentDto object to the database.
+     * @param group The single DTO representing the group to be created.
+     * @return The number of groups created (1 or 0).
+     */
+    @Transactional
+    public int createSingleGroupFromRandomization(GroupAssignmentDto group) {
+        if (group == null) {
+            return 0;
+        }
+        // Re-use the existing logic for creating and assigning a single group
+        assignStudentsToNewGroup(group);
+        return 1;
+    }
+
+    public long getAvailableStudentsCount() {
+        // Assuming this method exists in StudentRepository (e.g., long countByGroupIsNull();)
+        return studentRepository.countByGroupIsNull(); 
+    }
+    
+    // REMOVED: public int createGroupsFromRandomization(List<GroupAssignmentDto> groups) {...}
 }

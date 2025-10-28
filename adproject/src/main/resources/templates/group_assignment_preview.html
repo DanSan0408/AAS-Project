@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Randomized Group</title>
+    <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+</head>
+<body>
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div> 
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
+        </div>
+
+        <div class="card">
+            <h1 style="color: #2ecc71;">Single Random Group Preview - Edit and Approve</h1>
+            
+            <p>
+                There are <span th:text="${availableStudentsCount}"></span> students available. A single random group of <span th:text="${actualGroupSize}"></span> members was created, respecting the maximum size of <span th:text="${maxStudentsPerGroup}"></span> students.
+                <strong th:if="${remainingStudents > 0}" style="color: #e74c3c;">
+                    <br/><span th:text="${remainingStudents}"></span> students remain unassigned.
+                </strong> Edit the group details and members below before saving.
+            </p>
+            
+            <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" th:object="${randomGroupPreview}" method="post"> 
+                
+                <input type="hidden" id="selectedStudentIdsInput" th:field="*{selectedStudentIds}" />
+
+                <table class="group-table">
+                    <thead>
+                        <tr>
+                            <th>Group Name (Editable)</th>
+                            <th>Academic Supervisor</th>
+                            <th>Industrial Supervisor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="text" th:field="*{groupName}" 
+                                       placeholder="Enter Group Name" required/>
+                            </td>
+                            
+                            <td>
+                                <select th:field="*{academicSupervisorId}" required>
+                                    <option value="">-- Select Lecturer --</option>
+                                    <option th:each="lecturer : ${availableLecturers}"
+                                            th:value="${lecturer.id}"
+                                            th:text="${lecturer.username}"></option>
+                                </select>
+                            </td>
+                            
+                            <td>
+                                <select th:field="*{industrialSupervisorId}" required>
+                                    <option value="">-- Select Supervisor --</option>
+                                    <option th:each="supervisor : ${availableSupervisors}"
+                                            th:value="${supervisor.id}"
+                                            th:text="${supervisor.username}"></option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Group Members (<span id="currentGroupSize">0</span> / <span th:text="${maxStudentsPerGroup}"></span>)</h2>
+                
+                <ul id="student-display-list">
+                    </ul>
+                
+                <div class="add-student-container">
+                    <label for="addStudentSelect">Add Student (Unassigned):</label>
+                    <select id="addStudentSelect">
+                        <option value="">-- Select Student to Add --</option>
+                        <option th:each="student : ${availableStudentsForAdd}"
+                                th:value="${student.id}"
+                                th:text="${student.username}"
+                                th:data-name="${student.username}">
+                        </option>
+                    </select>
+                    <button type="button" id="addStudentButton" class="btn btn-secondary">Add</button>
+                    <span id="sizeWarning" style="color: #e74c3c; display: none;">Group is full!</span>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary" id="createGroupButton">Approve & Create Group</button>
+                    <a th:href="@{/admin/group-assignment}" class="btn btn-secondary">Cancel & Go Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        
+        // Data passed from the controller
+        // FIX: Use the safer /*[[...]]*/ syntax for complex/integer objects and maps
+        var studentLookupMap = /*[[${studentLookupMap}]]*/ {}; 
+        var initialStudentIds = /*[[${randomGroupPreview.selectedStudentIds}]]*/ []; 
+        var maxGroupSize = /*[[${maxStudentsPerGroup}]]*/ 0;
+        
+        // DOM elements
+        var studentList = document.getElementById('student-display-list');
+        var hiddenInput = document.getElementById('selectedStudentIdsInput');
+        var addStudentSelect = document.getElementById('addStudentSelect');
+        var addStudentButton = document.getElementById('addStudentButton');
+        var sizeWarning = document.getElementById('sizeWarning');
+        var currentGroupSizeElement = document.getElementById('currentGroupSize');
+
+        // Store the current student IDs in an array
+        // Ensure all IDs are integers for proper comparison
+        var currentStudentIds = Array.from(initialStudentIds || []).map(id => parseInt(id));
+
+        function updateHiddenInput() {
+            // The hidden input expects a comma-separated string
+            hiddenInput.value = currentStudentIds.join(',');
+        }
+
+        function updateGroupSizeDisplay() {
+            currentGroupSizeElement.textContent = currentStudentIds.length;
+            
+            if (currentStudentIds.length >= maxGroupSize) {
+                addStudentSelect.disabled = true;
+                addStudentButton.disabled = true;
+                sizeWarning.style.display = 'inline';
+            } else {
+                addStudentSelect.disabled = false;
+                addStudentButton.disabled = false;
+                sizeWarning.style.display = 'none';
+            }
+        }
+
+        function renderStudents() {
+            studentList.innerHTML = ''; // Clear existing list
+
+            currentStudentIds.forEach(function(studentId) {
+                var student = studentLookupMap[studentId];
+                var name = student ? student.username : 'Student ID: ' + studentId + ' (Not Found)';
+                
+                var listItem = document.createElement('li');
+                listItem.className = 'student-item';
+                
+                var nameSpan = document.createElement('span');
+                nameSpan.textContent = name;
+
+                var removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'remove-student-btn';
+                removeButton.textContent = 'Remove';
+                removeButton.setAttribute('data-student-id', studentId);
+                removeButton.onclick = removeStudent;
+
+                listItem.appendChild(nameSpan);
+                listItem.appendChild(removeButton);
+                studentList.appendChild(listItem);
+                
+                // Hide the student from the 'Add Student' dropdown if they are currently in the group
+                var optionToHide = addStudentSelect.querySelector('option[value="' + studentId + '"]');
+                if (optionToHide) {
+                    optionToHide.style.display = 'none';
+                }
+            });
+            
+            // Re-show students in the dropdown who were removed from the list
+            // Iterate over all options and check if the student is NOT in the current group
+            Array.from(addStudentSelect.options).forEach(function(option) {
+                 if (option.value) { // Skip the default "-- Select Student to Add --" option
+                     var id = parseInt(option.value);
+                     if (!currentStudentIds.includes(id)) {
+                         option.style.display = '';
+                     }
+                 }
+            });
+
+            updateHiddenInput();
+            updateGroupSizeDisplay();
+        }
+        
+        function removeStudent(event) {
+            var studentId = parseInt(event.target.getAttribute('data-student-id'));
+            currentStudentIds = currentStudentIds.filter(id => id !== studentId);
+            renderStudents();
+        }
+
+        addStudentButton.onclick = function() {
+            if (currentStudentIds.length >= maxGroupSize) {
+                return; 
+            }
+            
+            var selectedId = addStudentSelect.value;
+            if (selectedId) {
+                var studentId = parseInt(selectedId);
+                
+                // Only add if not already in the list
+                if (!currentStudentIds.includes(studentId)) {
+                    currentStudentIds.push(studentId);
+                    // Reset the dropdown after adding
+                    addStudentSelect.value = ""; 
+                    renderStudents();
+                }
+            }
+        };
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', renderStudents);
+
+        /*]]>*/
+    </script>
+</body>
+</html>
