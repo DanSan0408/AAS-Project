@@ -9,4 +9,9 @@ import java.util.Optional;
 @Repository
 public interface IndustrialSupervisorRepository extends JpaRepository<IndustrialSupervisor, Long> {
     Optional<IndustrialSupervisor> findByUsername(String username);
+
+    Optional<IndustrialSupervisor> findByEmail(String email);
+
+    // **New Method for Forgot Password - Find by Token**
+    Optional<IndustrialSupervisor> findByResetPasswordToken(String resetPasswordToken);
 }

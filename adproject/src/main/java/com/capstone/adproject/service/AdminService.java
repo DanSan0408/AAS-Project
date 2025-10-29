@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder; // Added for stream use
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -141,6 +141,26 @@ public class AdminService {
         }
     }
     
+    @Transactional
+    public void deleteGroupById(Long groupId) {
+        // 1. Find the group or throw an exception if not found
+        Group groupToDelete = groupRepository.findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+        
+        // 2. Find all students currently assigned to this group (using the helper method or a direct repository call)
+        List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
+        
+        // 3. Unlink students from the group (set group FK to null)
+        for (Student student : studentsToUnlink) {
+            student.setGroup(null);
+        }
+        // Save all modified students
+        studentRepository.saveAll(studentsToUnlink);
+        
+        // 4. Delete the group itself.
+        groupRepository.delete(groupToDelete);
+    }
+    
     public List<Student> getAllStudents() {
         return studentRepository.findAllWithGroupEagerly();
     }
@@ -166,31 +186,51 @@ public class AdminService {
     }
 
     public void saveStudent(Student student) {
-        if (student.getPassword() != null && !student.getPassword().isEmpty()) {
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
-        } else {
-            studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setPassword(existingStudent.getPassword()));
-        }
-        studentRepository.save(student);
+    if (student.getPassword() != null && !student.getPassword().isEmpty()) {
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
+    } else {
+        studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setPassword(existingStudent.getPassword()));
     }
+    
+    // START: Added logic to retain existing email if the submitted one is blank/null
+    if (student.getId() != null && (student.getEmail() == null || student.getEmail().isEmpty())) {
+        studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setEmail(existingStudent.getEmail()));
+    }
+    // END: Added logic
+    
+    studentRepository.save(student);
+}
 
     public void saveLecturer(Lecturer lecturer) {
-        if (lecturer.getPassword() != null && !lecturer.getPassword().isEmpty()) {
-            lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
-        } else {
-            lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setPassword(existingLecturer.getPassword()));
-        }
-        lecturerRepository.save(lecturer);
+    if (lecturer.getPassword() != null && !lecturer.getPassword().isEmpty()) {
+        lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
+    } else {
+        lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setPassword(existingLecturer.getPassword()));
+    }
+    
+    // START: Added logic to retain existing email if the submitted one is blank/null
+    if (lecturer.getId() != null && (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
+        lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setEmail(existingLecturer.getEmail()));
+    }
+    // END: Added logic
+    
+    lecturerRepository.save(lecturer);
+}
+    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
+    if (industrialSupervisor.getPassword() != null && !industrialSupervisor.getPassword().isEmpty()) {
+        industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
+    } else {
+        industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setPassword(existingSupervisor.getPassword()));
     }
 
-    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
-        if (industrialSupervisor.getPassword() != null && !industrialSupervisor.getPassword().isEmpty()) {
-            industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
-        } else {
-            industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setPassword(existingSupervisor.getPassword()));
-        }
-        industrialSupervisorRepository.save(industrialSupervisor);
+    // START: Added logic to retain existing email if the submitted one is blank/null
+    if (industrialSupervisor.getId() != null && (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) {
+        industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setEmail(existingSupervisor.getEmail()));
     }
+    // END: Added logic
+    
+    industrialSupervisorRepository.save(industrialSupervisor);
+}
 
     public void deleteStudentById(Long id) {
         studentRepository.deleteById(id);
@@ -225,8 +265,8 @@ public class AdminService {
         dto.setGroupName("Random Group (Ready to Edit)"); // Default name
         
         List<Long> studentIds = availableStudents.stream()
-                                    .map(Student::getId)
-                                    .collect(Collectors.toList());
+                                         .map(Student::getId)
+                                         .collect(Collectors.toList());
 
         dto.setSelectedStudentIds(studentIds);
         return dto;
@@ -255,4 +295,6 @@ public class AdminService {
     }
     
     // REMOVED: public int createGroupsFromRandomization(List<GroupAssignmentDto> groups) {...}
+
+    
 }
