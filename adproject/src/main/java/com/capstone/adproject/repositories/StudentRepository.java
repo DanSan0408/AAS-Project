@@ -28,4 +28,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByGroupIsNullAndUsernameContainingIgnoreCase(String username);
 
     long countByGroupIsNull();
+
+    Optional<Student> findByEmail(String email);
+
+    // **New Method for Forgot Password - Find by Token**
+    Optional<Student> findByResetPasswordToken(String resetPasswordToken);
 }

@@ -42,6 +42,9 @@
                             
                             <label for="password">Password</label>
                             <input type="password" id="password" th:field="*{password}">
+
+                            <label for="email">Email</label>
+                            <input type="email" id="email" th:field="*{email}" required>
                             
                             <button type="submit" th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}">Add Lecturer</button>
                         </form>
@@ -52,6 +55,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Username</th>
+                                <th>Email</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -59,6 +63,7 @@
                             <tr th:each="lecturer : ${lecturers}">
                                 <td th:text="${lecturer.id}"></td>
                                 <td th:text="${lecturer.username}"></td>
+                                <td th:text="${lecturer.email}"></td>
                                 <td>
                                     <div class="table-actions">
                                         <a th:href="@{/admin/edit-lecturer/{id}(id=${lecturer.id})}" class="action-button">Update</a>

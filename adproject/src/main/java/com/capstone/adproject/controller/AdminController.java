@@ -214,9 +214,9 @@ public class AdminController {
     public String removeStudentFromGroup(@PathVariable Long studentId, RedirectAttributes redirectAttributes) {
         
         Long groupId = adminService.findStudentById(studentId)
-                                       .map(Student::getGroup)
-                                       .map(Group::getId)
-                                       .orElse(null);
+                                     .map(Student::getGroup)
+                                     .map(Group::getId)
+                                     .orElse(null);
         
         if (groupId == null) {
             redirectAttributes.addFlashAttribute("warning", "Student was not in a group or not found.");
@@ -228,7 +228,26 @@ public class AdminController {
         
         return "redirect:/admin/group/edit/" + groupId;
     }
-
+    
+    // --- NEW FEATURE: DELETE ENTIRE GROUP ---
+    /**
+     * Handles the deletion of a group and redirects students back to unassigned status.
+     * @param groupId The ID of the group to be deleted.
+     * @param redirectAttributes Used to pass messages back to the group assignment page.
+     * @return Redirects to the group assignment management page.
+     */
+    @PostMapping("/group/delete/{groupId}")
+    public String deleteGroup(@PathVariable Long groupId, RedirectAttributes redirectAttributes) {
+        try {
+            // CRITICAL: Must be implemented in AdminService to remove Group, unlink students, 
+            // and handle any cascading data (e.g., marks, assessments).
+            adminService.deleteGroupById(groupId); 
+            redirectAttributes.addFlashAttribute("success", "Group ID " + groupId + " and all associated student assignments cleared successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error deleting group: " + e.getMessage());
+        }
+        return "redirect:/admin/group-assignment";
+    }
 
     // =========================================================
     // USER MANAGEMENT START
@@ -341,8 +360,8 @@ public class AdminController {
 
     @PostMapping("/group-assignment/randomize/preview")
     public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
-                                      Model model,
-                                      RedirectAttributes redirectAttributes) {
+                                     Model model,
+                                     RedirectAttributes redirectAttributes) {
 
         int maxStudents = randomizationInput.getMaxStudentsPerGroup();
         long availableStudentsCount = adminService.getAvailableStudentsCount(); 

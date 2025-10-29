@@ -4,31 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <!-- Assuming login.css is placed in src/main/resources/static/css/ -->
     <link rel="stylesheet" href="/css/login.css">
+    <style>
+        .success-message {
+            color: #2ecc71; /* Green color from btn-success-custom */
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .forgot-password-link {
+            display: block;
+            text-align: right;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #3498db;
+            transition: color 0.3s ease;
+        }
+        .forgot-password-link:hover {
+            color: #2980b9;
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin: 0 auto 20px; /* Center and add spacing */
+        }
+    </style>
 </head>
 <body>
     <div class="auth-container">
+        <!-- Logo Image -->
+        <img th:src="@{/images/utmlogo.png}" alt="UTM Logo" class="logo" />
+        
         <h3 class="card-title text-center mb-4">Login</h3>
+
+        <div th:if="${message}" class="success-message" role="alert">
+            <p th:text="${message}"></p>
+        </div>
+
         <div th:if="${param.error}" class="alert" role="alert">
             Invalid username or password.
         </div>
+        
         <form th:action="@{/login}" method="post">
             <input type="hidden" name="userRole" th:value="${param.userRole}"/>
+            
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" class="form-control" id="username" name="username" required>
             </div>
+            
             <div class="form-group">
                 <label for="password">Password</label>
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
-            <button type="submit" class="auth-btn btn-primary-custom">Login</button>
-        </form>
-        <div class="form-group">
-                <label for="remember-me">
-                    <input type="checkbox" id="remember-me" name="remember-me"> Remember Me
+            
+            <div class="form-group">
+                <label for="remember-me" class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="remember-me" name="remember-me" class="mr-2"> Remember Me
                 </label>
             </div>
+            
+            <a th:href="@{/forgot_password}" class="forgot-password-link">Forgot Password?</a><br>
+            
+            <button type="submit" class="auth-btn btn-primary-custom">Login</button>
+            
+        </form>
     </div>
 </body>
 </html>

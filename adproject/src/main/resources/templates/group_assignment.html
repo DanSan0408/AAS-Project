@@ -159,6 +159,20 @@
                                     </td>
                                     <td>
                                         <a th:href="@{/admin/group/edit/{id}(id=${group.id})}" class="btn-edit">Edit</a>
+
+                                        <form th:id="'deleteForm_' + ${group.id}" 
+                                            th:action="@{/admin/group/delete/{id}(id=${group.id})}" 
+                                            method="post" 
+                                            style="display: inline-block;">
+                                            
+                                            <button 
+                                                type="button" 
+                                                class="btn-delete" 
+                                                th:attr="data-group-name=${group.groupName}, data-group-id=${group.id}" 
+                                                onclick="confirmDeleteGroupAndSubmit(this)">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             </tbody>
@@ -365,6 +379,29 @@
         currentPage = 0;
         updateDisplay();
     }
+
+    /**
+ * Prompts for confirmation and submits the corresponding form if confirmed.
+ * @param {HTMLButtonElement} button - The clicked button element.
+ */
+function confirmDeleteGroupAndSubmit(button) {
+    // 1. Get data from the button's data attributes
+    const groupName = button.getAttribute('data-group-name');
+    const groupId = button.getAttribute('data-group-id');
+    
+    // 2. Display confirmation dialog
+    const isConfirmed = confirm("Are you sure you want to permanently delete the group: " + groupName + "? This will unassign all students.");
+
+    // 3. If confirmed, find the parent form and submit it
+    if (isConfirmed) {
+        // Find the form using the unique ID we set in the HTML
+        const form = document.getElementById('deleteForm_' + groupId);
+        if (form) {
+            form.submit();
+        }
+    }
+}
+
 </script>
 </body>
 </html>
