@@ -16,176 +16,188 @@
         </div>
 
         <div class="card">
-            <h1>Group Assignment Management</h1>
-            
-            <div th:if="${success != null}" class="alert alert-success" th:text="${success}">Success message!</div>
-            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}">Error message!</div>
-            <div th:if="${warning != null}" class="alert alert-warning" th:text="${warning}">Warning message!</div>
-
-            <div th:if="${randomGroupsPreview == null}" class="randomize-section">
-                <h3>Group Randomization</h3>
-                <p th:if="${availableStudentsCount > 0}">
-                    There are currently <span th:text="${availableStudentsCount}">0</span> unassigned students available for randomization.
-                </p>
-                <p th:unless="${availableStudentsCount > 0}" style="color: #e74c3c; font-weight: bold;">
-                    No unassigned students available to randomize.
-                </p>
-                
-                <form th:action="@{/admin/group-assignment/randomize/preview}" th:object="${randomizationInput}" method="post" class="randomize-form-inline">
-                    <div class="form-group-inline">
-                        <label for="maxStudentsPerGroup">Max Students Per Group:</label>
-                        <input type="number" id="maxStudentsPerGroup" th:field="*{maxStudentsPerGroup}" min="1" required />
-                    </div>
-                    <br>
-                    <button type="submit" class="btn btn-warning" th:disabled="${availableStudentsCount == 0}">Generate Preview</button>
-                </form>
+            <div class="card-header">
+                <h1>USER EDITING</h1>
             </div>
+            
+            <div class="user-editing-container">
+                <div class="user-editing-sidebar">
+                    <a href="/admin/manage-students">Students</a>
+                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <a href="/admin/group-assignment" class="active">Group Assignment</a>
+                </div>
+                
+                <div class="user-editing-main">
+                    <h2>Group Assignment Management</h2>
+            
+                    <div th:if="${success != null}" class="alert alert-success" th:text="${success}">Success message!</div>
+                    <div th:if="${error != null}" class="alert alert-danger" th:text="${error}">Error message!</div>
+                    <div th:if="${warning != null}" class="alert alert-warning" th:text="${warning}">Warning message!</div>
 
-            <div th:if="${randomGroupsPreview == null}" class="content-layout">
-
-                <div class="form-panel">
-                    <div class="add-form-container">
-                        <h3>Manual Group Creation</h3>
-                        <form th:action="@{/admin/group-assignment}" th:object="${groupAssignmentDto}" method="post" style="text-align: left;">
-
-                            <div class="form-group">
-                                <label for="groupName">Group Name:</label>
-                                <input type="text" id="groupName" th:field="*{groupName}" required>
+                    <div th:if="${randomGroupsPreview == null}" class="randomize-section">
+                        <h3>Group Randomization</h3>
+                        <p th:if="${availableStudentsCount > 0}">
+                            There are currently <span th:text="${availableStudentsCount}">0</span> unassigned students available for randomization.
+                        </p>
+                        <p th:unless="${availableStudentsCount > 0}" style="color: #e74c3c; font-weight: bold;">
+                            No unassigned students available to randomize.
+                        </p>
+                        
+                        <form th:action="@{/admin/group-assignment/randomize/preview}" th:object="${randomizationInput}" method="post" class="randomize-form-inline">
+                            <div class="form-group-inline">
+                                <label for="maxStudentsPerGroup">Max Students Per Group:</label>
+                                <input type="number" id="maxStudentsPerGroup" th:field="*{maxStudentsPerGroup}" min="1" required />
                             </div>
-
-                            <h3>1. Select Students for this Group</h3>
-                            <div th:if="${availableStudents.isEmpty()}">
-                                <p>All students are currently assigned to a group or no students exist.</p>
-                            </div>
-                            
-                            <div th:unless="${availableStudents.isEmpty()}" class="form-group">
-                                <label for="studentSearch">Search Student Name:</label>
-                                <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by username..." style="width: 100%;">
-                            </div>
-                            
-                            <div th:unless="${availableStudents.isEmpty()}" id="studentCarouselContainer">
-                                
-                                <div class="carousel-controls">
-                                    <button type="button" id="prevBtn" class="carousel-btn" onclick="moveCarousel(-1)">&#9664; Prev</button>
-                                    <span id="pageInfo">Page 1 of 1</span>
-                                    <button type="button" id="nextBtn" class="carousel-btn" onclick="moveCarousel(1)">Next &#9654;</button>
-                                </div>
-
-                                <div class="carousel-viewport">
-                                    <div id="studentCarousel" class="carousel-track">
-                                        <table id="studentTable"> 
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 10%;">Select</th>
-                                                    <th>Student Username</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr th:each="student : ${availableStudents}" class="student-row"> 
-                                                    <td>
-                                                        <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
-                                                    </td>
-                                                    <td th:text="${student.username}" class="student-username">Student Name</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr/>
-
-                            <h3>2. Assign Academic Supervisor (Lecturer)</h3>
-                            <div class="form-group">
-                                <label for="academicSupervisorId">Lecturer:</label>
-                                <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
-                                    <option value="">-- Select Lecturer --</option>
-                                    <option th:each="lecturer : ${availableLecturers}"
-                                            th:value="${lecturer.id}"
-                                            th:text="${lecturer.username}">Lecturer Name</option>
-                                </select>
-                            </div>
-
-                            <hr/>
-
-                            <h3>3. Assign Industrial Supervisor</h3>
-                            <div class="form-group">
-                                <label for="industrialSupervisorId">Industrial Supervisor:</label>
-                                <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                    <option value="">-- Select Supervisor --</option>
-                                    <option th:each="supervisor : ${availableSupervisors}"
-                                            th:value="${supervisor.id}"
-                                            th:text="${supervisor.username}">Supervisor Name</option>
-                                </select>
-                            </div>
-
-                            <hr/>
-
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Group & Assign</button>
+                            <br>
+                            <button type="submit" class="btn btn-warning" th:disabled="${availableStudentsCount == 0}">Generate Preview</button>
                         </form>
                     </div>
-                </div>
 
-                <div class="group-display-panel">
-                    <h2>Existing Groups</h2>
-                    <div th:if="${allGroups.isEmpty()}">
-                        <p>No groups have been created yet.</p>
+                    <div th:if="${randomGroupsPreview == null}" class="content-layout">
+
+                        <div class="form-panel">
+                            <div class="add-form-container">
+                                <h3>Manual Group Creation</h3>
+                                <form th:action="@{/admin/group-assignment}" th:object="${groupAssignmentDto}" method="post" style="text-align: left;">
+
+                                    <div class="form-group">
+                                        <label for="groupName">Group Name:</label>
+                                        <input type="text" id="groupName" th:field="*{groupName}" required>
+                                    </div>
+
+                                    <h3>1. Select Students for this Group</h3>
+                                    <div th:if="${availableStudents.isEmpty()}">
+                                        <p>All students are currently assigned to a group or no students exist.</p>
+                                    </div>
+                                    
+                                    <div th:unless="${availableStudents.isEmpty()}" class="form-group">
+                                        <label for="studentSearch">Search Student Name:</label>
+                                        <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by username..." style="width: 100%;">
+                                    </div>
+                                    
+                                    <div th:unless="${availableStudents.isEmpty()}" id="studentCarouselContainer">
+                                        
+                                        <div class="carousel-controls">
+                                            <button type="button" id="prevBtn" class="carousel-btn" onclick="moveCarousel(-1)">&#9664; Prev</button>
+                                            <span id="pageInfo">Page 1 of 1</span>
+                                            <button type="button" id="nextBtn" class="carousel-btn" onclick="moveCarousel(1)">Next &#9654;</button>
+                                        </div>
+
+                                        <div class="carousel-viewport">
+                                            <div id="studentCarousel" class="carousel-track">
+                                                <table id="studentTable"> 
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 10%;">Select</th>
+                                                            <th>Student Username</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="student : ${availableStudents}" class="student-row"> 
+                                                            <td>
+                                                                <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
+                                                            </td>
+                                                            <td th:text="${student.username}" class="student-username">Student Name</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr/>
+
+                                    <h3>2. Assign Academic Supervisor (Lecturer)</h3>
+                                    <div class="form-group">
+                                        <label for="academicSupervisorId">Lecturer:</label>
+                                        <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
+                                            <option value="">-- Select Lecturer --</option>
+                                            <option th:each="lecturer : ${availableLecturers}"
+                                                    th:value="${lecturer.id}"
+                                                    th:text="${lecturer.username}">Lecturer Name</option>
+                                        </select>
+                                    </div>
+
+                                    <hr/>
+
+                                    <h3>3. Assign Industrial Supervisor</h3>
+                                    <div class="form-group">
+                                        <label for="industrialSupervisorId">Industrial Supervisor:</label>
+                                        <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
+                                            <option value="">-- Select Supervisor --</option>
+                                            <option th:each="supervisor : ${availableSupervisors}"
+                                                    th:value="${supervisor.id}"
+                                                    th:text="${supervisor.username}">Supervisor Name</option>
+                                        </select>
+                                    </div>
+
+                                    <hr/>
+
+                                    <button type="submit" class="btn btn-primary" style="width: 100%;">Create Group & Assign</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="group-display-panel">
+                            <h2>Existing Groups</h2>
+                            <div th:if="${allGroups.isEmpty()}">
+                                <p>No groups have been created yet.</p>
+                            </div>
+
+                            <div th:unless="${allGroups.isEmpty()}" class="groups-container">
+                                <table class="group-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Group Name</th>
+                                            <th>Size</th>
+                                            <th>Academic Supervisor</th>
+                                            <th>Industrial Supervisor</th>
+                                            <th>Students</th>
+                                            <th>Action</th> 
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="group : ${allGroups}">
+                                            <td th:text="${group.groupName}">Group Alpha</td>
+                                            <td th:text="${group.groupSize}">0</td>
+                                            <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.username : 'N/A'}">Lecturer A</td>
+                                            <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.username : 'N/A'}">Supervisor B</td>
+                                            <td>
+                                                <ul th:if="${group.groupSize > 0}" class="student-list">
+                                                    <th:block th:each="student : ${allStudents}">
+                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${student.username}">Student Username</li>
+                                                    </th:block>
+                                                </ul>
+                                                <span th:unless="${group.groupSize > 0}" style="font-style: italic; color: #95a5a6;">None</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/admin/group/edit/{id}(id=${group.id})}" class="btn-edit">Edit</a>
+
+                                                <form th:id="'deleteForm_' + ${group.id}" 
+                                                    th:action="@{/admin/group/delete/{id}(id=${group.id})}" 
+                                                    method="post" 
+                                                    style="display: inline-block;">
+                                                    
+                                                    <button 
+                                                        type="button" 
+                                                        class="btn-delete" 
+                                                        th:attr="data-group-name=${group.groupName}, data-group-id=${group.id}" 
+                                                        onclick="confirmDeleteGroupAndSubmit(this)">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <div th:unless="${allGroups.isEmpty()}" class="groups-container">
-                        <table class="group-table">
-                            <thead>
-                                <tr>
-                                    <th>Group Name</th>
-                                    <th>Size</th>
-                                    <th>Academic Supervisor</th>
-                                    <th>Industrial Supervisor</th>
-                                    <th>Students</th>
-                                    <th>Action</th> 
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="group : ${allGroups}">
-                                    <td th:text="${group.groupName}">Group Alpha</td>
-                                    <td th:text="${group.groupSize}">0</td>
-                                    <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.username : 'N/A'}">Lecturer A</td>
-                                    <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.username : 'N/A'}">Supervisor B</td>
-                                    <td>
-                                        <ul th:if="${group.groupSize > 0}" class="student-list">
-                                            <th:block th:each="student : ${allStudents}">
-                                                <li th:if="${student.group != null and student.group.id == group.id}" th:text="${student.username}">Student Username</li>
-                                            </th:block>
-                                        </ul>
-                                        <span th:unless="${group.groupSize > 0}" style="font-style: italic; color: #95a5a6;">None</span>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/admin/group/edit/{id}(id=${group.id})}" class="btn-edit">Edit</a>
-
-                                        <form th:id="'deleteForm_' + ${group.id}" 
-                                            th:action="@{/admin/group/delete/{id}(id=${group.id})}" 
-                                            method="post" 
-                                            style="display: inline-block;">
-                                            
-                                            <button 
-                                                type="button" 
-                                                class="btn-delete" 
-                                                th:attr="data-group-name=${group.groupName}, data-group-id=${group.id}" 
-                                                onclick="confirmDeleteGroupAndSubmit(this)">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <br>
+                    <br>
                 </div>
-            </div>
-
-            <br>
-            <br>
-            <a th:href="@{/admin/manage-users}" class="btn btn-secondary">Back to Manage Users Page</a>
                 </div>
-            </div>
         </div>
     </div>
     
@@ -349,7 +361,7 @@
         if (pageInfo) {
              pageInfo.textContent = `Page ${totalPages > 0 ? currentPage + 1 : 0} of ${totalPages}`;
         }
-       
+        
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
 
@@ -381,9 +393,9 @@
     }
 
     /**
- * Prompts for confirmation and submits the corresponding form if confirmed.
- * @param {HTMLButtonElement} button - The clicked button element.
- */
+* Prompts for confirmation and submits the corresponding form if confirmed.
+* @param {HTMLButtonElement} button - The clicked button element.
+*/
 function confirmDeleteGroupAndSubmit(button) {
     // 1. Get data from the button's data attributes
     const groupName = button.getAttribute('data-group-name');

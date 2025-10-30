@@ -16,79 +16,94 @@
         </div>
 
         <div class="card">
-            <h1 style="color: #2ecc71;">Single Random Group Preview - Edit and Approve</h1>
+            <div class="card-header">
+                <h1>USER EDITING</h1>
+            </div>
             
-            <p>
-                There are <span th:text="${availableStudentsCount}"></span> students available. A single random group of <span th:text="${actualGroupSize}"></span> members was created, respecting the maximum size of <span th:text="${maxStudentsPerGroup}"></span> students.
-                <strong th:if="${remainingStudents > 0}" style="color: #e74c3c;">
-                    <br/><span th:text="${remainingStudents}"></span> students remain unassigned.
-                </strong> Edit the group details and members below before saving.
-            </p>
-            
-            <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" th:object="${randomGroupPreview}" method="post"> 
-                
-                <input type="hidden" id="selectedStudentIdsInput" th:field="*{selectedStudentIds}" />
-
-                <table class="group-table">
-                    <thead>
-                        <tr>
-                            <th>Group Name (Editable)</th>
-                            <th>Academic Supervisor</th>
-                            <th>Industrial Supervisor</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <input type="text" th:field="*{groupName}" 
-                                       placeholder="Enter Group Name" required/>
-                            </td>
-                            
-                            <td>
-                                <select th:field="*{academicSupervisorId}" required>
-                                    <option value="">-- Select Lecturer --</option>
-                                    <option th:each="lecturer : ${availableLecturers}"
-                                            th:value="${lecturer.id}"
-                                            th:text="${lecturer.username}"></option>
-                                </select>
-                            </td>
-                            
-                            <td>
-                                <select th:field="*{industrialSupervisorId}" required>
-                                    <option value="">-- Select Supervisor --</option>
-                                    <option th:each="supervisor : ${availableSupervisors}"
-                                            th:value="${supervisor.id}"
-                                            th:text="${supervisor.username}"></option>
-                                </select>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h2>Group Members (<span id="currentGroupSize">0</span> / <span th:text="${maxStudentsPerGroup}"></span>)</h2>
-                
-                <ul id="student-display-list">
-                    </ul>
-                
-                <div class="add-student-container">
-                    <label for="addStudentSelect">Add Student (Unassigned):</label>
-                    <select id="addStudentSelect">
-                        <option value="">-- Select Student to Add --</option>
-                        <option th:each="student : ${availableStudentsForAdd}"
-                                th:value="${student.id}"
-                                th:text="${student.username}"
-                                th:data-name="${student.username}">
-                        </option>
-                    </select>
-                    <button type="button" id="addStudentButton" class="btn btn-secondary">Add</button>
-                    <span id="sizeWarning" style="color: #e74c3c; display: none;">Group is full!</span>
+            <div class="user-editing-container">
+                <div class="user-editing-sidebar">
+                    <a href="/admin/manage-students">Students</a>
+                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
                 
-                <div class="action-buttons">
-                    <button type="submit" class="btn btn-primary" id="createGroupButton">Approve & Create Group</button>
-                    <a th:href="@{/admin/group-assignment}" class="btn btn-secondary">Cancel & Go Back</a>
+                <div class="user-editing-main">
+                    <h1 style="color: #2ecc71;">Single Random Group Preview - Edit and Approve</h1>
+                    
+                    <p>
+                        There are <span th:text="${availableStudentsCount}"></span> students available. A single random group of <span th:text="${actualGroupSize}"></span> members was created, respecting the maximum size of <span th:text="${maxStudentsPerGroup}"></span> students.
+                        <strong th:if="${remainingStudents > 0}" style="color: #e74c3c;">
+                            <br/><span th:text="${remainingStudents}"></span> students remain unassigned.
+                        </strong> Edit the group details and members below before saving.
+                    </p>
+                    
+                    <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" th:object="${randomGroupPreview}" method="post"> 
+                        
+                        <input type="hidden" id="selectedStudentIdsInput" th:field="*{selectedStudentIds}" />
+
+                        <table class="group-table">
+                            <thead>
+                                <tr>
+                                    <th>Group Name (Editable)</th>
+                                    <th>Academic Supervisor</th>
+                                    <th>Industrial Supervisor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <input type="text" th:field="*{groupName}" 
+                                                placeholder="Enter Group Name" required/>
+                                    </td>
+                                    
+                                    <td>
+                                        <select th:field="*{academicSupervisorId}" required>
+                                            <option value="">-- Select Lecturer --</option>
+                                            <option th:each="lecturer : ${availableLecturers}"
+                                                    th:value="${lecturer.id}"
+                                                    th:text="${lecturer.username}"></option>
+                                        </select>
+                                    </td>
+                                    
+                                    <td>
+                                        <select th:field="*{industrialSupervisorId}" required>
+                                            <option value="">-- Select Supervisor --</option>
+                                            <option th:each="supervisor : ${availableSupervisors}"
+                                                    th:value="${supervisor.id}"
+                                                    th:text="${supervisor.username}"></option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h2>Group Members (<span id="currentGroupSize">0</span> / <span th:text="${maxStudentsPerGroup}"></span>)</h2>
+                        
+                        <ul id="student-display-list">
+                            </ul>
+                        
+                        <div class="add-student-container">
+                            <label for="addStudentSelect">Add Student (Unassigned):</label>
+                            <select id="addStudentSelect">
+                                <option value="">-- Select Student to Add --</option>
+                                <option th:each="student : ${availableStudentsForAdd}"
+                                        th:value="${student.id}"
+                                        th:text="${student.username}"
+                                        th:data-name="${student.username}">
+                                </option>
+                            </select>
+                            <button type="button" id="addStudentButton" class="btn btn-secondary">Add</button>
+                            <span id="sizeWarning" style="color: #e74c3c; display: none;">Group is full!</span>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="submit" class="btn btn-primary" id="createGroupButton">Approve & Create Group</button>
+                            <a th:href="@{/admin/group-assignment}" class="btn btn-secondary">Cancel & Go Back</a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+                </div>
         </div>
     </div>
 

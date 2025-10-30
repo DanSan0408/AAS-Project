@@ -140,6 +140,11 @@ public class AdminController {
 
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("deadlines", deadlineService.getAllDeadlines());
+
+        if (!model.containsAttribute("deadlineToSave")) {
+             // Create a new Deadline object if none came from flash attributes (e.g., initial page load)
+             model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
+        }
         return "admin_home";
     }
 
