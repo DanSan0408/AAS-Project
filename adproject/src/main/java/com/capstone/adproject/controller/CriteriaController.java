@@ -156,29 +156,60 @@ public class CriteriaController {
     @PostMapping("/save")
     @Transactional 
     public String saveOrUpdateCriteria(@ModelAttribute Criteria criteria,
-                                     @RequestParam(value = "assessmentTypes", required = false) String[] assessmentTypes) {
+                                       @RequestParam(value = "assessmentTypes", required = false) String[] assessmentTypes,
+                                       // --- NEW PARAMETER for confirmation flag ---
+                                       @RequestParam(value = "confirmedDuplicate", defaultValue = "false") boolean confirmedDuplicate, 
+                                       // --- NEW PARAMETER for RedirectAttributes ---
+                                       RedirectAttributes redirectAttributes) {
         
+        Long assessmentId = criteria.getAssessment().getId();
+
+        // 1. DUPLICATE CHECK (only if not confirmed)
+        if (!confirmedDuplicate) {
+            boolean isDuplicate = criteriaService.isCriteriaNameDuplicate(
+                criteria.getName(), 
+                assessmentId, 
+                criteria.getId() // pass ID for edit case (null for add case)
+            );
+
+            if (isDuplicate) {
+                // Flash the name and ID back so we can correctly redirect to the right form (add/edit)
+                // We use redirectAttributes to add the 'alert' flag to the URL
+                redirectAttributes.addFlashAttribute("criteria", criteria); 
+                redirectAttributes.addFlashAttribute("errorMessage", "A Criteria with the name '" + criteria.getName() + "' already exists for this Assessment.");
+                redirectAttributes.addAttribute("duplicate", "true");
+                
+                // Redirect back to the edit/add form
+                String redirectUrl = criteria.getId() != null ? 
+                                     "redirect:/criteria/edit/" + criteria.getId() : 
+                                     "redirect:/criteria/add/" + assessmentId;
+                                     
+                return redirectUrl;
+            }
+        }
+        
+        // 2. NORMAL SAVE LOGIC (Executed if not a duplicate, or if confirmedDuplicate is true)
+
         if (criteria.getMarks() != null) {
             criteria.setCloMarks(criteria.getMarks().doubleValue());
         } else {
             criteria.setCloMarks(null);
         }
         
+        // ... (existing assessmentTypes logic)
         if (assessmentTypes != null) {
             String cleanAssessmentTypes = Arrays.stream(assessmentTypes)
-                                                 .distinct()
-                                                 .collect(Collectors.joining(", "));
+                                                    .distinct()
+                                                    .collect(Collectors.joining(", "));
             criteria.setAssessmentTypes(cleanAssessmentTypes);
         } else {
             criteria.setAssessmentTypes(null);
         }
         
-        // Ensure all CriteriaRatings have proper relationships and marks are set from level
+        // ... (existing CriteriaRatings logic)
         if (criteria.getCriteriaRatings() != null) {
             for (CriteriaRating rating : criteria.getCriteriaRatings()) {
                 rating.setCriteria(criteria);
-                
-                // IMPORTANT: Ensure ratingMark reflects the level for calculation consistency
                 if (rating.getLevel() != null) {
                     rating.setRatingMark((double) rating.getLevel());
                 }
@@ -186,7 +217,7 @@ public class CriteriaController {
         }
         
         criteriaService.saveCriteria(criteria);
-        return "redirect:/rubrics/view/" + criteria.getAssessment().getId();
+        return "redirect:/rubrics/view/" + assessmentId;
     }
     
     @PostMapping("/delete/{criteriaId}")

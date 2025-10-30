@@ -32,6 +32,13 @@
                 <div class="user-editing-main">
                     <h2>Students List</h2>
 
+                    <div th:if="${errorMessage}" class="alert alert-danger">
+                        <p th:text="${errorMessage}">Error Message Placeholder</p>
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <p th:text="${successMessage}">Success Message Placeholder</p>
+                    </div>
+
                     <div class="add-form-container">
                         <h3 th:text="${student.id != null ? 'Update Student' : 'Add New Student'}">Add New Student</h3>
                         <form th:action="@{/admin/manage-students}" th:object="${student}" method="post">
@@ -76,5 +83,7 @@
             </div>
         </div>
     </div>
+
+    
 </body>
 </html>
