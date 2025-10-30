@@ -39,7 +39,7 @@ public class DeadlineController {
         binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
 
-    // ⭐ MODIFIED saveDeadline method
+    
     @PostMapping("/save")
     public String saveDeadline(
         @ModelAttribute Deadline deadline, 
