@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -115,6 +116,10 @@ public class AdminController {
         return grouped;
     }
 
+    // NEW HELPER METHOD: Determine if component is a Rubric (Likert Scale)
+    public boolean isRubricType(Object component) {
+        return component instanceof Rubric;
+    }
 
     @GetMapping("/home")
     public String adminHome(Model model) {
@@ -126,6 +131,10 @@ public class AdminController {
 
         Function<Assessment, Map<String, Map<String, List<Object>>>> componentGrouper = this::groupAssessmentComponents;
         model.addAttribute("groupAssessmentComponents", componentGrouper);
+
+        // NEW: Add helper function to check component type
+        Function<Object, Boolean> rubricChecker = this::isRubricType;
+        model.addAttribute("isRubricType", rubricChecker);
 
         model.addAttribute("allAssessments", allAssessments);
 
@@ -150,7 +159,7 @@ public class AdminController {
         model.addAttribute("allStudents", adminService.getAllStudents());
         
         if (!model.containsAttribute("randomizationInput")) {
-             model.addAttribute("randomizationInput", new RandomizationInputDto());
+               model.addAttribute("randomizationInput", new RandomizationInputDto());
         }
         
         model.addAttribute("availableStudentsCount", unassignedStudents.size()); 
@@ -214,9 +223,9 @@ public class AdminController {
     public String removeStudentFromGroup(@PathVariable Long studentId, RedirectAttributes redirectAttributes) {
         
         Long groupId = adminService.findStudentById(studentId)
-                                     .map(Student::getGroup)
-                                     .map(Group::getId)
-                                     .orElse(null);
+                                   .map(Student::getGroup)
+                                   .map(Group::getId)
+                                   .orElse(null);
         
         if (groupId == null) {
             redirectAttributes.addFlashAttribute("warning", "Student was not in a group or not found.");
@@ -229,18 +238,9 @@ public class AdminController {
         return "redirect:/admin/group/edit/" + groupId;
     }
     
-    // --- NEW FEATURE: DELETE ENTIRE GROUP ---
-    /**
-     * Handles the deletion of a group and redirects students back to unassigned status.
-     * @param groupId The ID of the group to be deleted.
-     * @param redirectAttributes Used to pass messages back to the group assignment page.
-     * @return Redirects to the group assignment management page.
-     */
     @PostMapping("/group/delete/{groupId}")
     public String deleteGroup(@PathVariable Long groupId, RedirectAttributes redirectAttributes) {
         try {
-            // CRITICAL: Must be implemented in AdminService to remove Group, unlink students, 
-            // and handle any cascading data (e.g., marks, assessments).
             adminService.deleteGroupById(groupId); 
             redirectAttributes.addFlashAttribute("success", "Group ID " + groupId + " and all associated student assignments cleared successfully!");
         } catch (Exception e) {
@@ -248,10 +248,6 @@ public class AdminController {
         }
         return "redirect:/admin/group-assignment";
     }
-
-    // =========================================================
-    // USER MANAGEMENT START
-    // =========================================================
 
     @GetMapping("/manage-users")
     public String manageUsers(Model model) {
@@ -264,12 +260,20 @@ public class AdminController {
         model.addAttribute("students", adminService.getAllStudents());
         model.addAttribute("student", new Student());
         model.addAttribute("adminUsername", getLoggedInUsername());
+        if (model.containsAttribute("errorMessage")) {
+            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
+        }
         return "manage_students";
     }
 
     @PostMapping("/manage-students")
-    public String saveStudent(@ModelAttribute Student student) {
-        adminService.saveStudent(student);
+    public String saveStudent(@ModelAttribute Student student, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.saveStudent(student);
+            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
+        }
         return "redirect:/admin/manage-students";
     }
 
@@ -278,12 +282,20 @@ public class AdminController {
         model.addAttribute("lecturers", adminService.getAllLecturers());
         model.addAttribute("lecturer", new Lecturer());
         model.addAttribute("adminUsername", getLoggedInUsername());
+        if (model.containsAttribute("errorMessage")) {
+            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
+        }
         return "manage_lecturers";
     }
 
     @PostMapping("/manage-lecturers")
-    public String saveLecturer(@ModelAttribute Lecturer lecturer) {
-        adminService.saveLecturer(lecturer);
+    public String saveLecturer(@ModelAttribute Lecturer lecturer, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.saveLecturer(lecturer);
+            redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
+        }
         return "redirect:/admin/manage-lecturers";
     }
 
@@ -292,12 +304,20 @@ public class AdminController {
         model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
         model.addAttribute("industrialSupervisor", new IndustrialSupervisor());
         model.addAttribute("adminUsername", getLoggedInUsername());
+        if (model.containsAttribute("errorMessage")) {
+            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
+        }
         return "manage_supervisors";
     }
 
     @PostMapping("/manage-supervisors")
-    public String saveIndustrialSupervisor(@ModelAttribute IndustrialSupervisor industrialSupervisor) {
-        adminService.saveIndustrialSupervisor(industrialSupervisor);
+    public String saveIndustrialSupervisor(@ModelAttribute IndustrialSupervisor industrialSupervisor, RedirectAttributes redirectAttributes) {
+        try {
+            adminService.saveIndustrialSupervisor(industrialSupervisor);
+            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
+        }
         return "redirect:/admin/manage-supervisors";
     }
 
@@ -371,8 +391,6 @@ public class AdminController {
             return "redirect:/admin/group-assignment"; 
         }
         
-        // 1. Get ALL unassigned student IDs. We don't use the service's current generateSingleRandomGroup() 
-        //    because we need the raw list to select a random sublist.
         List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
         
         if (unassignedStudents.isEmpty()) {
@@ -380,13 +398,10 @@ public class AdminController {
             return "redirect:/admin/group-assignment"; 
         }
         
-        // 2. Shuffle the students for randomness
         Collections.shuffle(unassignedStudents);
         
-        // 3. Determine the actual size of the group (min of maxStudents or total available)
         int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
         
-        // 4. Create the DTO with a sublist of the shuffled students
         GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
         singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
         
@@ -396,20 +411,16 @@ public class AdminController {
             
         singleRandomGroup.setSelectedStudentIds(studentIds);
 
-
-        // 5. Prepare lookup data (Crucial for displaying student names)
         Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
             .collect(Collectors.toMap(Student::getId, Function.identity()));
         
-        // 6. Add necessary attributes to the model
         model.addAttribute("randomGroupPreview", singleRandomGroup); 
         model.addAttribute("availableStudentsCount", availableStudentsCount);
         model.addAttribute("maxStudentsPerGroup", maxStudents);
-        model.addAttribute("actualGroupSize", actualGroupSize); // New variable for display
-        model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize); // New variable for display
+        model.addAttribute("actualGroupSize", actualGroupSize);
+        model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
         model.addAttribute("studentLookupMap", studentLookupMap); 
 
-        // Pass ALL students who are currently unassigned for the 'Add Student' dropdown.
         model.addAttribute("availableStudentsForAdd", unassignedStudents); 
         
         model.addAttribute("availableLecturers", adminService.getAllLecturers());

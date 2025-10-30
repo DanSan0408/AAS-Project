@@ -1,6 +1,7 @@
 package com.capstone.adproject.repositories;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ import com.capstone.adproject.model.Assessment;
 
 @Repository
 public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
+
+    List<Assessment> findByTitle(String title);
 
     @Query("SELECT DISTINCT a FROM Assessment a " +
            "LEFT JOIN FETCH a.rubrics r " +

@@ -50,6 +50,8 @@
             border: 1px dashed #4a6681;
             border-radius: 6px;
         }
+
+        
     </style>
 </head>
 <body>
@@ -188,14 +190,14 @@
             messageBox.style.display = 'block';
             messageBox.style.opacity = 1;
             
-            // Set colors based on type (though we only use 'error' here)
+            // Set colors based on type
             if (type === 'success') {
                 messageBox.style.backgroundColor = '#d4edda'; // Light green
-                messageBox.style.color = '#155724';         // Dark green
+                messageBox.style.color = '#155724';          // Dark green
                 messageBox.style.borderColor = '#c3e6cb';
             } else {
                 messageBox.style.backgroundColor = '#f8d7da'; // Light red (error default)
-                messageBox.style.color = '#721c24';         // Dark red
+                messageBox.style.color = '#721c24';          // Dark red
                 messageBox.style.borderColor = '#f5c6cb';
             }
             
@@ -217,8 +219,55 @@
             cloMarksInput.value = criteriaMarksInput.value;
         }
 
+        // --- NEW DUPLICATE CHECK AND CONFIRMATION LOGIC ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const isDuplicateFlag = urlParams.get('duplicate') === 'true';
+
+        if (isDuplicateFlag) {
+            
+            // 🚨 FIXED LINE: Use th:inline="javascript" with the text type 
+            // to safely inject the String value.
+            const serverMessage = /*[[${errorMessage}]]*/ ''; 
+            
+            const duplicateMessage = serverMessage.trim() !== '' 
+                ? serverMessage 
+                : "A criteria with this name already exists. Do you wish to save it anyway?";
+            
+            // Display the server-side error message
+            showMessage(duplicateMessage, 'error');
+
+            // Prompt the admin for confirmation
+            if (confirm(duplicateMessage + "\n\nClick OK to **confirm** and save the duplicate criteria, or CANCEL to stop.")) {
+                // Admin confirmed the duplication. 
+                // Add a hidden field to the form to tell the server to proceed with the save.
+                const confirmedField = document.createElement('input');
+                confirmedField.type = 'hidden';
+                confirmedField.name = 'confirmedDuplicate';
+                confirmedField.value = 'true';
+                form.appendChild(confirmedField);
+                
+                // Important: Submit the form immediately with the confirmation flag
+                // This prevents the user from accidentally clicking cancel on the next submit attempt.
+                // We must use form.submit() instead of letting the event listener handle it.
+                // The form submission logic will prevent a double alert.
+                // We'll let the user click 'Save' again for clarity, but clear the URL.
+            } 
+            
+            // Remove the 'duplicate' flag from the URL to avoid the prompt reappearing on refresh/manual action.
+            const newUrl = window.location.href.split('?')[0];
+            window.history.replaceState({}, document.title, newUrl);
+        }
+        // ----------------------------------------------------
+
+
         // Form submission validation
         form.addEventListener('submit', function (event) {
+            
+            // If the confirmedDuplicate field is present, the admin has already confirmed, 
+            // so we skip client-side required field checks and let the form submit to the server.
+            if (form.querySelector('input[name="confirmedDuplicate"]')) {
+                return; 
+            }
             
             // --- VALIDATE ASSESSMENT TYPE SELECTION ---
             updateAssessmentTypes();
@@ -228,9 +277,8 @@
             }
             // ---------------------------------------------
             
-            // NOTE: Validation for Rating Level Names is removed 
-            // because they are now read-only and must be handled server-side 
-            // or pre-filled in the model.
+            // Other standard required field validation (handled by native HTML5 'required' attributes)
+            
         });
     });
 </script>

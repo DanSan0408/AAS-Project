@@ -17,30 +17,26 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Rating level (0-4 for 5-point Likert scale)
     private Integer level;
-    
-    // Admin-configurable description for this rating level
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_rubric_id", nullable = false)
     private SubRubric subRubric;
-    
-    // Getters and Setters
+
+    // === Getters and Setters ===
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    
+
     public Integer getLevel() { return level; }
     public void setLevel(Integer level) { this.level = level; }
-    
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    
+
     public SubRubric getSubRubric() { return subRubric; }
     public void setSubRubric(SubRubric subRubric) { this.subRubric = subRubric; }
-    
-    // Utility method to get the label for this rating level
+
     public String getLevelLabel() {
         if (level == null) return "";
         switch (level) {

@@ -56,7 +56,15 @@ public class SecurityConfig {
                 .permitAll()
             )
 
-            .rememberMe(Customizer.withDefaults())
+            // --- START: REMEMBER ME CONFIGURATION ---
+            // The illegal characters (non-breaking spaces) causing the compile errors have been removed.
+            .rememberMe(rememberMe -> rememberMe
+                .key("aUniqueAndSecureKeyForRememberMe") // IMPORTANT: Change this to a unique, secret key
+                .tokenValiditySeconds(604800) // 7 days (7 * 24 * 60 * 60 = 604800 seconds)
+                .userDetailsService(userDetailsService) // Essential for loading the user from the remember-me token
+            )
+            // --- END: REMEMBER ME CONFIGURATION ---
+
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/startup")

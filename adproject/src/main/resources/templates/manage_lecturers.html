@@ -32,6 +32,13 @@
                 <div class="user-editing-main">
                     <h2>Lecturers List</h2>
 
+                    <div th:if="${errorMessage}" class="alert alert-danger">
+                        <p th:text="${errorMessage}">Error Message Placeholder</p>
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <p th:text="${successMessage}">Success Message Placeholder</p>
+                    </div>
+
                     <div class="add-form-container">
                         <h3 th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add New Lecturer'}">Add New Lecturer</h3>
                         <form th:action="@{/admin/manage-lecturers}" th:object="${lecturer}" method="post">

@@ -1,12 +1,15 @@
 package com.capstone.adproject.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // <-- NEW IMPORT
+import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Criteria; 
@@ -75,35 +78,29 @@ public class RubricService {
     public List<Assessment> findAllAssessments() {
         List<Assessment> assessments = assessmentRepository.findAll();
         for (Assessment assessment : assessments) {
-            // Note: This method relies on LAZY loading and is fine for the home page list
             calculateAssessmentMarks(assessment);
         }
         return assessments;
     }
 
-    // THE FIX IS HERE: Use @Transactional and Hibernate.initialize()
     @Transactional
     public Assessment findAssessmentById(Long id) {
-        // Use standard findById, no complex JOIN FETCH needed
         Assessment assessment = assessmentRepository.findById(id) 
             .orElseThrow(() -> new EntityNotFoundException("Assessment not found with id: " + id));
             
-        // 1. Initialize top-level collections (Rubrics and Criteria)
         Hibernate.initialize(assessment.getRubrics());
         Hibernate.initialize(assessment.getCriteria());
         
-        // 2. Initialize nested collections for Criteria (CriteriaRatings)
         for (Criteria criteria : assessment.getCriteria()) {
-            Hibernate.initialize(criteria.getCriteriaRatings()); // Assuming Criteria.criteriaRatings is List/Set
+            Hibernate.initialize(criteria.getCriteriaRatings());
         }
         
-        // 3. Initialize nested collections for Rubrics (SubRubrics and Ratings)
         for (Rubric rubric : assessment.getRubrics()) {
-            Hibernate.initialize(rubric.getSubRubrics()); // Assuming Rubric.subRubrics is List/Set
+            Hibernate.initialize(rubric.getSubRubrics());
             
             if (rubric.getSubRubrics() != null) {
                 for (SubRubric subRubric : rubric.getSubRubrics()) {
-                    Hibernate.initialize(subRubric.getRatings()); // Assuming SubRubric.ratings is List/Set
+                    Hibernate.initialize(subRubric.getRatings());
                 }
             }
         }
@@ -130,38 +127,152 @@ public class RubricService {
                 .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + id));
     }
 
-    @Transactional
-public Rubric saveRubric(Rubric rubric) {
-    // 1. Ensure bidirectional relationship is set for SubRubrics and Ratings
-    if (rubric.getSubRubrics() != null) {
-        for (SubRubric subRubric : rubric.getSubRubrics()) {
-            subRubric.setRubric(rubric);
 
-            if (subRubric.getRatings() != null) {
-                for (Rating rating : subRubric.getRatings()) {
-                    rating.setSubRubric(subRubric);
+    @Transactional
+    public Rubric saveRubric(Rubric formRubric) { 
+        
+        // Logic for UPDATING an existing Rubric (formRubric.getId() != null)
+        if (formRubric.getId() != null) {
+            
+            // 1. Fetch the existing, managed Rubric entity
+            Rubric existingRubric = rubricRepository.findById(formRubric.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + formRubric.getId()));
+                
+            // 2. Update scalar fields
+            existingRubric.setName(formRubric.getName());
+            existingRubric.setMarks(formRubric.getMarks());
+            existingRubric.setEvaluationType(formRubric.getEvaluationType());
+            existingRubric.setAssessmentTypes(formRubric.getAssessmentTypes());
+            existingRubric.setClo(formRubric.getClo());
+            existingRubric.setCloMarks(formRubric.getCloMarks());
+
+            
+            // 3. --- SubRubrics Collection Management (Outer Collection) ---
+            List<SubRubric> managedSubRubrics = existingRubric.getSubRubrics(); 
+
+            Set<Long> formSubRubricIds = formRubric.getSubRubrics().stream()
+                                                 .map(SubRubric::getId)
+                                                 .filter(java.util.Objects::nonNull)
+                                                 .collect(Collectors.toSet());
+
+            managedSubRubrics.removeIf(sr -> sr.getId() != null && !formSubRubricIds.contains(sr.getId()));
+            
+            Map<Long, SubRubric> existingSubRubricMap = managedSubRubrics.stream()
+                .filter(sr -> sr.getId() != null)
+                .collect(Collectors.toMap(SubRubric::getId, sr -> sr));
+
+
+            // 4. Iterate and update/add SubRubrics
+            List<SubRubric> updatedSubRubricsList = new ArrayList<>();
+            if (formRubric.getSubRubrics() != null) {
+                for (SubRubric formSubRubric : formRubric.getSubRubrics()) {
+                    
+                    SubRubric targetSubRubric;
+
+                    if (formSubRubric.getId() != null && existingSubRubricMap.containsKey(formSubRubric.getId())) {
+                        // **UPDATE EXISTING SubRubric**
+                        targetSubRubric = existingSubRubricMap.get(formSubRubric.getId());
+                        targetSubRubric.setDescription(formSubRubric.getDescription());
+                        targetSubRubric.setName(formSubRubric.getName()); 
+                        
+                        // --- 5. Ratings Collection Management (Nested Collection - ULTIMATE CORE FIX) ---
+                        List<Rating> managedRatings = targetSubRubric.getRatings();
+                        List<Rating> formRatings = formSubRubric.getRatings() != null ? formSubRubric.getRatings() : new ArrayList<>();
+                        
+                        // Get IDs from the incoming form data
+                        Set<Long> formRatingIdsNested = formRatings.stream()
+                                                         .map(Rating::getId)
+                                                         .filter(java.util.Objects::nonNull)
+                                                         .collect(Collectors.toSet());
+                        
+                        // CRITICAL STEP B: Remove old orphans from the managed collection
+                        managedRatings.removeIf(r -> r.getId() != null && !formRatingIdsNested.contains(r.getId()));
+                        
+                        // Prepare a map of existing Ratings by ID *after* orphan removal
+                        Map<Long, Rating> existingRatingMap = managedRatings.stream()
+                                                         .filter(r -> r.getId() != null)
+                                                         .collect(Collectors.toMap(Rating::getId, r -> r));
+
+                        
+                        // List to build the final, ordered collection for assignment
+                        List<Rating> finalOrderedRatings = new ArrayList<>();
+
+                        // Iterate over FORM list to update, RE-ASSOCIATE, and collect
+                        for (Rating formRating : formRatings) {
+                            
+                            Rating entityToSave;
+                            
+                            if (formRating.getId() != null && existingRatingMap.containsKey(formRating.getId())) {
+                                // Update existing managed Rating
+                                entityToSave = existingRatingMap.get(formRating.getId());
+                                entityToSave.setDescription(formRating.getDescription());
+                                entityToSave.setLevel(formRating.getLevel());
+                                
+                                // ⭐ ULTIMATE FIX: Explicitly call the setter on the managed entity.
+                                entityToSave.setSubRubric(targetSubRubric); 
+                                
+                            } else {
+                                // This is a NEW Rating
+                                entityToSave = formRating;
+                                
+                                // Ensure bidirectional link is set for the new entity
+                                entityToSave.setSubRubric(targetSubRubric); 
+                            }
+                            
+                            finalOrderedRatings.add(entityToSave);
+                        }
+
+                        // Replace the managed list content with the final, ordered list.
+                        managedRatings.clear(); 
+                        managedRatings.addAll(finalOrderedRatings);
+                        // --- END ULTIMATE CORE FIX ---
+                        
+                    } else {
+                        // **ADD NEW SubRubric**
+                        targetSubRubric = formSubRubric;
+                        // Ensure all new children (Ratings) point to the new SubRubric
+                        if (targetSubRubric.getRatings() != null) {
+                            targetSubRubric.getRatings().forEach(r -> r.setSubRubric(targetSubRubric));
+                        }
+                    }
+                    
+                    // Ensure parent link for SubRubric
+                    targetSubRubric.setRubric(existingRubric); 
+                    updatedSubRubricsList.add(targetSubRubric);
                 }
             }
+            
+            // Final step for the outer collection: replace the managed list with the list from the form
+            managedSubRubrics.clear(); 
+            managedSubRubrics.addAll(updatedSubRubricsList);
+            
+            return rubricRepository.save(existingRubric);
+            
+        } else {
+            // ... (Logic for SAVING a BRAND NEW Rubric - remains the same) ...
+            
+            if (formRubric.getSubRubrics() != null) {
+                for (SubRubric subRubric : formRubric.getSubRubrics()) {
+                    subRubric.setRubric(formRubric);
+                    
+                    if (subRubric.getRatings() != null) {
+                        for (Rating rating : subRubric.getRatings()) {
+                            rating.setSubRubric(subRubric);
+                        }
+                    }
+                }
+            }
+            
+            // Load parent Assessment and save
+            if (formRubric.getAssessment() != null && formRubric.getAssessment().getId() != null) {
+                Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
+                formRubric.setAssessment(assessment); 
+            }
+
+            return rubricRepository.save(formRubric);
         }
     }
-    
-    // 2. Load the parent Assessment to manage the bidirectional link
-    if (rubric.getAssessment() != null && rubric.getAssessment().getId() != null) {
-        Assessment assessment = assessmentRepository.findById(rubric.getAssessment().getId())
-            .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
-            
-        // Assuming you have an addRubric helper method on the Assessment entity.
-        // If not, you should add one, or use assessment.getRubrics().add(rubric);
-        assessment.addRubric(rubric); 
-        // Note: assessmentRepository.save(assessment) is usually not strictly required 
-        // here due to the transactional context and the cascading set on Assessment.rubrics,
-        // but it ensures the parent object is marked dirty if necessary.
-    }
-
-    // 3. Save the Rubric (This will cascade up and save the Assessment if necessary)
-    // The Rubric is returned, which the controller will use for the redirect ID.
-    return rubricRepository.save(rubric);
-}
 
     @Transactional
     public void deleteRubric(Long rubricId) {
@@ -169,5 +280,16 @@ public Rubric saveRubric(Rubric rubric) {
             throw new EntityNotFoundException("Cannot delete. Rubric not found with id: " + rubricId);
         }
         rubricRepository.deleteById(rubricId);
+    }
+
+    public boolean isRubricNameDuplicate(String name, Long assessmentId, Long rubricIdToExclude) {
+        List<Rubric> existingRubrics = rubricRepository.findByNameAndAssessmentId(name, assessmentId);
+        
+        // Filter out the rubric being edited (if any)
+        if (rubricIdToExclude != null) {
+            existingRubrics.removeIf(rubric -> rubric.getId().equals(rubricIdToExclude));
+        }
+        
+        return !existingRubrics.isEmpty();
     }
 }
