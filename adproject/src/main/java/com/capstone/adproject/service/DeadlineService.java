@@ -38,4 +38,11 @@ public class DeadlineService {
     public void save(Deadline deadline) {
         deadlineRepository.save(deadline);
     }
+
+    // ⭐ NEW METHOD: Check if a deadline with the given title exists
+    public Optional<Deadline> findByTitle(String title) {
+        // ASSUMPTION: You have defined a method in your DeadlineRepository like: 
+        // Optional<Deadline> findByTitle(String title);
+        return deadlineRepository.findByTitle(title);
+    }
 }

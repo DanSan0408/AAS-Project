@@ -49,34 +49,35 @@
                                     
                                     <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
                                         
-                                        <!-- Use the helper function from AdminController -->
-                                        <th:block th:with="isRubric=${isRubricType.apply(component)},
-                                                           componentType=${isRubricType.apply(component) ? 'Likert Scale' : 'Criteria Based'}">
+                                     <th:block th:with="isRubric=${isRubricType.apply(component)}">
+    <th:block th:with="componentType=${isRubric ? 'Likert Scale' : 'Criteria Based'}">
+
+
                                         
-                                            <h6 th:text="${component.name}">Market Survey / Criteria 1</h6> 
-                                            <div class="rubric-details">
-                                                <p><strong>Type:</strong> <span th:text="${componentType}">Criteria Based</span></p>
-                                                <p><strong>Evaluation Type:</strong> <span th:text="${component.evaluationType}">Group</span></p>
-                                                <p><strong>Assessment Type:</strong> <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
-                                                <p><strong>CLO:</strong> <span th:text="${component.clo}">2</span></p>
-                                                <p><strong>CLO Marks:</strong> <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
-                                            </div>
-                                            
-                                            <div style="margin-top: 15px;">
-                                                <th:block th:if="${isRubric}">
-                                                    <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
-                                                    <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this rubric?');">
-                                                        <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
-                                                    </form>
-                                                </th:block>
-                                                <th:block th:unless="${isRubric}">
-                                                    <a th:href="@{/criteria/edit/{id}(id=${component.id})}" class="rubric-action-btn edit-btn" style="margin-right: 5px; background-color: #f39c12;">Edit</a>
-                                                    <form th:action="@{/criteria/delete/{id}(id=${component.id})}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this criteria rubric?');">
-                                                        <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
-                                                    </form>
-                                                </th:block>
-                                            </div>
-                                        </th:block>
+                                             <h6 th:text="${component.name}">Market Survey / Criteria 1</h6> 
+                                             <div class="rubric-details">
+                                                 <p><strong>Type:</strong> <span th:text="${componentType}">Criteria Based</span></p>
+                                                 <p><strong>Evaluation Type:</strong> <span th:text="${component.evaluationType}">Group</span></p>
+                                                 <p><strong>Assessment Type:</strong> <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
+                                                 <p><strong>CLO:</strong> <span th:text="${component.clo}">2</span></p>
+                                                 <p><strong>CLO Marks:</strong> <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
+                                             </div>
+                                             
+                                             <div style="margin-top: 15px;">
+                                                 <th:block th:if="${isRubric}">
+                                                     <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
+                                                     <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this rubric?');">
+                                                         <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
+                                                     </form>
+                                                 </th:block>
+                                                 <th:block th:unless="${isRubric}">
+                                                     <a th:href="@{/criteria/edit/{id}(id=${component.id})}" class="rubric-action-btn edit-btn" style="margin-right: 5px; background-color: #538b99;">Edit</a>
+                                                     <form th:action="@{/criteria/delete/{id}(id=${component.id})}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this criteria rubric?');">
+                                                         <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
+                                                     </form>
+                                                 </th:block>
+                                             </div>
+                                         </th:block>
                                     </div>
                                 </div>
                             </div>
@@ -86,7 +87,7 @@
                             <span th:if="${#lists.isEmpty(assessment.rubrics) and #lists.isEmpty(assessment.criteria)}" style="display: block; margin-bottom: 10px;">No rubrics/criteria defined. Add new rubrics:</span>
                             
                             <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="add-rubric-button" style="display: inline-block;">Add Likert Rubric</a>
-                            <a th:href="@{/criteria/add/{id}(id=${assessment.id})}" class="add-rubric-button" style="background-color: #f39c12; margin-left: 10px; display: inline-block;">Add Criteria Rubric</a>
+                            <a th:href="@{/criteria/add/{id}(id=${assessment.id})}" class="add-rubric-button" style="background-color: #018cb6; margin-left: 10px; display: inline-block;">Add Criteria Rubric</a>
                         </div>
                     </div>
                     
@@ -108,17 +109,62 @@
                 </div>
                 
                 <div class="add-new-deadline">
-                    <h3 style="margin-top: 20px;">Add New Deadline</h3>
-                    <form th:action="@{/deadlines/save}" method="post">
-                        <label for="new-title">Title:</label>
-                        <input type="text" id="new-title" name="title" required/>
-                        <label for="new-date">Date:</label>
-                        <input type="date" id="new-date" name="date" required/>
-                        <button type="submit" class="save-deadlines-button">Add Deadline</button>
-                    </form>
-                </div>
+    <h3 style="margin-top: 20px;">Add New Deadline</h3>
+    
+    <form id="newDeadlineForm"
+          th:action="@{/deadlines/save}"
+          method="post"
+          
+          th:object="${deadlineToSave}">
+          
+        <input type="hidden" th:field="*{id}" />
+        
+        <label for="new-title">Title:</label>
+        <input type="text" id="new-title" th:field="*{title}" required/> 
+        
+        <label for="new-date">Date:</label>
+        <input type="date" id="new-date" th:field="*{date}" required/>
+        
+        <button type="submit" class="save-deadlines-button">Add Deadline</button>
+    </form>
+</div>
+
             </div>
         </div>
     </div>
+    
+        <script th:inline="javascript">
+    /* This script runs if the controller redirected with 'isDuplicate' flash attribute */
+    
+    // Corrected Line 135: Use text inlining for the boolean to ensure it's evaluated correctly.
+    const isDuplicate = /*[[${isDuplicate}]]*/ false;
+    
+    if (isDuplicate === true) {
+        // Corrected Line 139: Use JSON inlining for the object.
+        const deadlineData = /*[[${deadlineToSave}]]*/ null;
+        const title = deadlineData ? deadlineData.title : 'the entered title';
+
+        let confirmed = confirm(`A deadline with the title "${title}" already exists. Do you really want to save this duplicate?`);
+        
+        if (confirmed) {
+            const form = document.getElementById('newDeadlineForm');
+            
+            // Create a hidden input to send the confirmation flag back to the controller
+            const confirmInput = document.createElement('input');
+            confirmInput.type = 'hidden';
+            confirmInput.name = 'confirmDuplicate';
+            confirmInput.value = 'true';
+            
+            form.appendChild(confirmInput);
+
+            // Resubmit the form, which now includes the original data (due to th:object) 
+            // PLUS the 'confirmDuplicate=true' flag.
+            form.submit();
+        } else {
+            // Optional: Inform the user
+            console.log("Duplicate entry creation cancelled by admin.");
+        }
+    }
+</script>
 </body>
 </html>
