@@ -7,7 +7,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <div th:replace="fragments/common_sidebar :: sidebar"></div>
+    <div th:replace="fragments/common_sidebar :: sidebar"></div> 
 
     <div class="main-content">
         <div class="header">
@@ -16,10 +16,77 @@
                 <h1>UTM CAS</h1>
             </div>
         </div>
-        <div class="head">
-            <h1 class="display-4" style="text-align: center">Welcome, Student!</h1>
-            <p class="lead" style="text-align: center">You have successfully logged in.</p>
+        
+        <div class="content-flex-container">
+            
+            <div class="rubric-section">
+                <h2>RUBRIC</h2>
+                <div class="rubric-list">
+
+                    <div th:each="assessment : ${allAssessments}" class="assessment-box">
+                        
+                        <div class="assessment-header">
+                            <h3 th:text="${'Assessment: ' + assessment.title}">Assessment: Presentation 1 Assessment</h3>
+                        </div>
+                        
+                        <div class="total-marks">
+                            <p>
+                                Total Assessment Marks:
+                                <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">4.00</span>
+                            </p>
+                            <div th:each="clo : ${assessment.cloMarks}">
+                                <p th:text="${'Total CLO ' + clo.key + ' Marks: ' + #numbers.formatDecimal(clo.value, 1, 2)}">Total CLO 2 Marks: 1.00</p>
+                            </div>
+                        </div>
+
+                        <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">
+                        
+                            <div th:each="evalTypeEntry : ${groupedComponents}" class="eval-type-group">
+                                <h4 th:text="${'Evaluation Type: ' + evalTypeEntry.key}">Evaluation Type: Group Evaluation</h4>
+                                
+                                <div th:each="assessTypeEntry : ${evalTypeEntry.value}" class="assess-type-group">
+                                    <h5 th:text="${'Assessment Type: ' + assessTypeEntry.key}">Assessment Type: Individual Assessment</h5>
+                                    
+                                    <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
+                                        
+                                        <th:block th:with="isRubric=${isRubricType.apply(component)}">
+                                        <th:block th:with="componentType=${isRubric ? 'Likert Scale' : 'Criteria Based'}">
+
+
+                                            
+                                            <h6 th:text="${component.name}">Market Survey / Criteria 1</h6> 
+                                            <div class="rubric-details">
+                                                <p>Type: <span th:text="${componentType}">Criteria Based</span></p>
+                                                <p>Evaluation Type: <span th:text="${component.evaluationType}">Group</span></p>
+                                                <p>Assessment Type: <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
+                                                <p>CLO: <span th:text="${component.clo}">2</span></p>
+                                                <p>CLO Marks: <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
+                                            </div>
+                                            </th:block>
+                                        </th:block>
+                                    </div>
+                                </div>
+                            </div>
+                        </th:block>
+                        
+                        </div>
+                    
+                </div>
+            </div>
+            <div class="deadline-section">
+                <h2>DEADLINES</h2>
+                <div class="deadline-list">
+                    <div th:each="deadline : ${deadlines}" class="deadline-item">
+                        <div class="deadline-display">
+                            <p>Title: <span th:text="${deadline.title}"></span></p>
+                            <p>Date: <span th:text="${#dates.format(deadline.date, 'yyyy-MM-dd')}"></span></p>
+                            </div>
+                    </div>
+                </div>
+                
+                </div>
         </div>
-    </div>
-</body>
+        </div>
+    
+    </body>
 </html>
