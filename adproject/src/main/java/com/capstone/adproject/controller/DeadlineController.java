@@ -100,10 +100,10 @@ public class DeadlineController {
         return "redirect:/admin/home";
     }
 
-    @GetMapping("/delete/{id}")
-    public String deleteDeadline(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        deadlineService.deleteDeadline(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Deadline deleted successfully!");
-        return "redirect:/admin/home";
-    }
+    @PostMapping("/delete/{id}") 
+public String deleteDeadline(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+    deadlineService.deleteDeadline(id);
+    redirectAttributes.addFlashAttribute("successMessage", "Deadline deleted successfully!");
+    return "redirect:/admin/home";
+}
 }
