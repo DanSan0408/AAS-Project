@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="student_sidebar" class="sidebar">
+    <a th:href="@{/student/assessments}" class="sidebar-link">
+        <i class="fas fa-chalkboard-teacher"></i> Peer & Self Assessment
+    </a>
+    
+    <a th:href="@{/logout}" class="sidebar-link logout-link">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+</div>
+</html>
