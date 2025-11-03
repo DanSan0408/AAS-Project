@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/startup", "/login", "/css/**", "/js/**", "/images/**", "/forgot_password", "/reset_password/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/rubrics/**").hasRole("ADMIN")
-                .requestMatchers("/student/**").hasRole("STUDENT")
+                .requestMatchers("/student/**", "/student/assessment/**").hasRole("STUDENT")
                 .requestMatchers("/lecturer/**").hasRole("LECTURER")
                 .requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
                 .anyRequest().authenticated()

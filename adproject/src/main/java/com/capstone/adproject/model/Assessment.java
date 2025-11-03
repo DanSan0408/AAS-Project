@@ -37,6 +37,7 @@ public class Assessment {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     
+    
     // FIX 3: Update getters/setters to use List
     public List<Rubric> getRubrics() { 
         if (rubrics == null) { rubrics = new ArrayList<>(); }
