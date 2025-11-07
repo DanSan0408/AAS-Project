@@ -1,0 +1,392 @@
+/* ==========================================================
+   STUDENT COMMENTS PAGE STYLES
+   ========================================================== */
+
+/* Color Variables pulled from student.css */
+:root {
+    /* Primary / Accent Colors */
+    --color-primary: #3498db;      /* Blue (Main Accent) */
+    --color-primary-dark: #2980b9; /* Darker Blue (Hover/Shadow) */
+    --color-success: #2ecc71;      /* Green */
+    --color-warning: #e67e22;      /* Orange */
+    --color-danger: #e74c3c;       /* Red */
+    --color-purple: #9b59b6;       /* Purple (Lecturer/Supervisor) */
+    --color-yellow: #f39c12;       /* Yellow (Self Comment/Warning) */
+    --color-teal: #1abc9c;         /* Teal (Supervisor Comment) */
+
+    /* Backgrounds / Grays */
+    --bg-darkest: #152238;     /* Darkest Blue/Gray (Inputs, Header/Footer) */
+    --bg-darker: #192841;      /* Darker Background (Main content sections, Box-shadow color) */
+    --bg-mid-tone: #203354;    /* Mid-tone Background (Card content areas, Member rows) */
+    --bg-light-gray: #34495e;  /* Light Gray (Borders, Dividers) */
+    --bg-white: #ecf0f1;       /* Near White */
+
+    /* Text */
+    --text-primary: #ecf0f1;   /* Light Text (Headings, Main Text) */
+    --text-secondary: #bdc3c7; /* Secondary Text (Descriptions, Smaller text) */
+    --text-mute: #7f8c8d;      /* Muted Text (Icons, Placeholders) */
+    
+    /* Font Sizing (Larger) */
+    --font-size-h2: 2.2em; 
+    --font-size-h3: 1.8em;
+    --font-size-p: 1.1em; 
+}
+
+
+/* ==========================================================
+   LAYOUT & CONTAINERS
+   ========================================================== */
+
+/* The outer content wrapper (inherited from student.css layout) */
+.content-container {
+    padding: 40px; 
+    max-width: 1400px; 
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Section Title below the header flex */
+.section-divider-title {
+    font-size: 2.2em;
+    color: var(--text-primary);
+    border-bottom: 3px solid var(--bg-light-gray);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+    margin-top: 10px;
+}
+
+/* Overall card block for an individual assessment (Comments) */
+.assessment-comments-block {
+
+    max-width: 1400px;
+    margin: 0 auto 40px auto;
+
+    background-color: var(--bg-darker);
+    border-radius: 12px;
+    /* Use the same padding as the 'stats-summary' block (25px) */
+    padding: 25px; 
+    margin-bottom: 40px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--bg-light-gray);
+}
+
+.assessment-title-header {
+    color: var(--color-primary);
+    border-bottom: 3px solid var(--color-primary);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+    font-size: var(--font-size-h2);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+
+/* ==========================================================
+   STATISTICS SUMMARY
+   ========================================================== */
+
+.stats-summary {
+    display: flex;
+    /* REDUCE GAP slightly to create more horizontal space for 4 items */
+    gap: 20px; 
+    flex-wrap: wrap; 
+    margin-bottom: 40px; /* Add margin here to separate from content below */
+    padding: 30px; /* Optional: Adds a dark background border around the whole summary block */
+    background-color: var(--bg-darker);
+    border-radius: 12px;
+    border: 1px solid var(--bg-light-gray);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stat-card {
+    /* 🎯 This forces all 4 cards to share the space equally on one line */
+    flex: 1 1 0; 
+    min-width: 150px; /* Allows cards to shrink down to 150px before wrapping */
+    background-color: var(--bg-mid-tone);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid var(--bg-light-gray);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stat-number {
+    font-size: 3.0em; 
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 1.0em; 
+    margin-top: 8px;
+}
+
+
+/* ==========================================================
+   COMMENT BLOCKS
+   ========================================================== */
+
+.comment-category {
+    margin-bottom: 35px;
+    padding-left: 10px; 
+}
+
+.category-title {
+    color: var(--text-primary); 
+    font-size: var(--font-size-h3);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px dashed var(--bg-light-gray);
+    padding-bottom: 10px;
+}
+
+.category-title .fas {
+    color: var(--color-primary);
+}
+
+/* Individual Comment Card */
+.comment-card {
+    background-color: var(--bg-mid-tone);
+    border-left: 6px solid var(--color-primary); 
+    border-radius: 8px;
+    padding: 25px; 
+    margin-bottom: 20px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    border-right: 1px solid var(--bg-light-gray);
+    border-top: 1px solid var(--bg-light-gray);
+    border-bottom: 1px solid var(--bg-light-gray);
+}
+
+.comment-card:hover {
+    transform: translateX(8px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* Comment Type Color Overrides */
+.comment-card.self-comment {
+    border-left-color: var(--color-yellow);
+    background-color: #263857; 
+}
+
+.comment-card.lecturer-comment {
+    border-left-color: var(--color-purple);
+}
+
+.comment-card.supervisor-comment {
+    border-left-color: var(--color-teal);
+}
+
+/* Comment Header */
+.comment-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--bg-darkest);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.evaluator-badge {
+    padding: 8px 15px; 
+    border-radius: 20px;
+    font-size: 1.0em; 
+    font-weight: bold;
+    color: var(--bg-darkest); 
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.evaluator-badge .fas {
+    color: var(--bg-darkest); 
+}
+
+/* Badge Color Definitions */
+.badge-peer {
+    background-color: var(--color-primary);
+}
+
+.badge-self {
+    background-color: var(--color-yellow);
+}
+
+.badge-lecturer {
+    background-color: var(--color-purple);
+}
+
+.badge-supervisor {
+    background-color: var(--color-teal);
+}
+
+.comment-date {
+    color: var(--text-mute);
+    font-size: 0.9em;
+}
+
+.comment-text {
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 20px; 
+    background-color: var(--bg-darker); 
+    border-radius: 6px;
+    margin-top: 15px;
+    font-size: var(--font-size-p); 
+    border: 1px solid var(--bg-darkest);
+}
+
+/* ==========================================================
+   NO COMMENTS MESSAGE
+   ========================================================== */
+
+.no-comments {
+    text-align: center;
+    padding: 60px; 
+    color: var(--text-mute);
+    background-color: var(--bg-mid-tone);
+    border-radius: 12px;
+    margin-top: 30px;
+    border: 1px solid var(--bg-light-gray);
+}
+
+.no-comments i {
+    font-size: 5em; 
+    margin-bottom: 25px;
+    opacity: 0.4;
+    color: var(--color-primary);
+}
+
+.no-comments h2 {
+    color: var(--text-primary);
+    font-size: var(--font-size-h2);
+    margin-bottom: 10px;
+}
+
+.no-comments p {
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+/* ==========================================================
+   RESPONSIVE ADJUSTMENTS (STACKING LAYOUT)
+   ========================================================== */
+@media (max-width: 1000px) {
+    .content-container {
+        padding: 20px;
+    }
+
+    /* Allow the stat cards to stack into two rows on smaller screens */
+    .stats-summary {
+        gap: 15px;
+    }
+    
+    .stat-card {
+        flex: 1 1 45%; /* Stack in pairs */
+        min-width: unset;
+        padding: 20px;
+    }
+    
+    .assessment-comments-block {
+        padding: 20px;
+    }
+
+    .comment-card {
+        padding: 15px;
+    }
+
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .comment-date {
+        margin-left: 5px;
+    }
+    
+    .comment-text {
+        padding: 15px;
+        font-size: 1.0em;
+    }
+}
+
+@media (max-width: 600px) {
+    .stat-card {
+        flex: 1 1 100%; /* Full width on smallest screens */
+    }
+}
+
+/* ==========================================================
+   LAYOUT FIX — Keep Stats Side-by-Side and Above Comments
+   ========================================================== */
+
+/* Ensure vertical stacking between sections */
+.comments-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px; /* space between stats section and comments section */
+    width: 100%;
+}
+
+/* Keep the 4 stat cards on the same row (side by side) */
+.stats-summary {
+    display: flex;
+    flex-wrap: nowrap; /* prevent them from stacking unless screen is very small */
+    justify-content: space-between;
+    align-items: stretch;
+    width: 100%;
+    gap: 20px;
+    background-color: var(--bg-darker);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Each stat card equally sized */
+.stat-card {
+    flex: 1;
+    background-color: var(--bg-mid-tone);
+    border-radius: 10px;
+    border: 1px solid var(--bg-light-gray);
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Ensure comments section comes after stats */
+.assessment-comments-block {
+    max-width: 1200px;
+    margin: 0 auto 40px auto;
+}
+
+/* ==========================================================
+   RESPONSIVE BEHAVIOR — Stack stats only on small screens
+   ========================================================== */
+@media (max-width: 900px) {
+    .stats-summary {
+        flex-wrap: wrap; /* allow wrapping for smaller screens */
+        justify-content: center;
+    }
+
+    .stat-card {
+        flex: 1 1 45%;
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 600px) {
+    .stat-card {
+        flex: 1 1 100%;
+    }
+}

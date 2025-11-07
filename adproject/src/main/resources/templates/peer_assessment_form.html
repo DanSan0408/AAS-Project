@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer Assessment Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/peer_assess.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="fragments/student_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1 th:text="${isSelfAssessment ? 'Self Assessment' : 'Peer Assessment'}">Assessment</h1>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            
+            <div class="assessment-info">
+                <h2 th:text="${assessment.title}">Assessment Title</h2>
+                <div class="evaluation-info">
+                    <div class="evaluator-info">
+                        <span class="label">Evaluator:</span>
+                        <strong th:text="${evaluator.username}">Your Name</strong>
+                    </div>
+                    <div class="evaluated-info">
+                        <span class="label">Evaluating:</span>
+                        <strong th:text="${evaluatedStudent.username}">Student Name</strong>
+                        <span th:if="${isSelfAssessment}" class="self-badge">(Yourself)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⭐ NOTICES CONTAINER - Side by Side Layout -->
+            <div class="notices-container">
+                <!-- Re-evaluation Notice -->
+                <div th:if="${hasExistingEvaluation}" class="re-evaluation-notice">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <h4>⚠️ Re-evaluation Notice</h4>
+                        <p>
+                            You have already submitted an evaluation for 
+                            <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.username}">this student</strong>.
+                            Your previous responses have been loaded below. If you submit again, 
+                            <strong>your new evaluation will replace the existing one.</strong>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Deadline Warning -->
+                <div th:if="${deadline != null}" class="deadline-warning">
+                    <i class="fas fa-clock"></i>
+                    <div class="deadline-warning-content">
+                        <h4>⏰ Deadline Reminder</h4>
+                        <p>
+                            <strong>Must be submitted by:</strong><br>
+                            <span th:text="${#dates.format(deadline.date, 'dd MMMM yyyy, HH:mm')}">30 November 2025, 00:00</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⭐ FORM STARTS HERE - Below the notices -->
+            <form id="assessmentForm" 
+                  th:action="@{/student/assessment/{assessmentId}/evaluate/{studentId}/submit(assessmentId=${assessment.id}, studentId=${evaluatedStudent.id})}" 
+                  method="post" 
+                  class="assessment-form">
+                
+                <div class="rubrics-container">
+                    
+                    <!-- CRITERIA-BASED ASSESSMENT -->
+                    <div th:if="${criteria != null and !#lists.isEmpty(criteria)}">
+                        <h2 style="color: #3498db; margin-bottom: 20px;">
+                            <i class="fas fa-clipboard-check"></i> Criteria-Based Assessment
+                        </h2>
+                        
+                        <div th:each="criterion, iterStat : ${criteria}" class="criteria-section">
+                            <div class="criteria-header">
+                                <h3>
+                                    <span th:text="${iterStat.count}">1</span>. 
+                                    <span th:text="${criterion.name}">Criterion Name</span>
+                                    <span class="clo-badge" style="margin-left: 10px;">
+                                        CLO <span th:text="${criterion.clo}">7</span>
+                                    </span>
+                                    <span class="marks-badge" style="margin-left: 10px;">
+                                        <span th:text="${#numbers.formatDecimal(criterion.cloMarks, 1, 2)}">0.60</span> marks
+                                    </span>
+                                </h3>
+                            </div>
+                            
+                            <div class="criteria-rating-scale">
+                                <div class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:id="'criteria_' + ${criterion.id} + '_0'" 
+                                           th:name="'criteria_' + ${criterion.id}" 
+                                           value="0"
+                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 0}"
+                                           required>
+                                    <label th:for="'criteria_' + ${criterion.id} + '_0'">
+                                        <span class="rating-level-badge">0</span>
+                                        <span class="rating-description">Unsatisfactory</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:id="'criteria_' + ${criterion.id} + '_1'" 
+                                           th:name="'criteria_' + ${criterion.id}" 
+                                           value="1"
+                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 1}"
+                                           required>
+                                    <label th:for="'criteria_' + ${criterion.id} + '_1'">
+                                        <span class="rating-level-badge">1</span>
+                                        <span class="rating-description">Needs Improvement</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:id="'criteria_' + ${criterion.id} + '_2'" 
+                                           th:name="'criteria_' + ${criterion.id}" 
+                                           value="2"
+                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 2}"
+                                           required>
+                                    <label th:for="'criteria_' + ${criterion.id} + '_2'">
+                                        <span class="rating-level-badge">2</span>
+                                        <span class="rating-description">Satisfactory</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:id="'criteria_' + ${criterion.id} + '_3'" 
+                                           th:name="'criteria_' + ${criterion.id}" 
+                                           value="3"
+                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 3}"
+                                           required>
+                                    <label th:for="'criteria_' + ${criterion.id} + '_3'">
+                                        <span class="rating-level-badge">3</span>
+                                        <span class="rating-description">Good</span>
+                                    </label>
+                                </div>
+                                
+                                <div class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:id="'criteria_' + ${criterion.id} + '_4'" 
+                                           th:name="'criteria_' + ${criterion.id}" 
+                                           value="4"
+                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 4}"
+                                           required>
+                                    <label th:for="'criteria_' + ${criterion.id} + '_4'">
+                                        <span class="rating-level-badge">4</span>
+                                        <span class="rating-description">Excellent</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RUBRICS (Likert Scale) - if any -->
+                    <div th:if="${rubrics != null and !#lists.isEmpty(rubrics)}">
+                        <h2 style="color: #3498db; margin-bottom: 20px;">
+                            <i class="fas fa-tasks"></i> Likert Scale Rubrics
+                        </h2>
+                        <!-- Rubric display logic here if needed -->
+                    </div>
+                </div>
+
+                <!-- MANDATORY OVERALL COMMENT SECTION -->
+                <div class="overall-comment-section">
+                    <h3>
+                        <i class="fas fa-comments"></i> 
+                        Overall Comment 
+                        <span class="required-indicator">*</span>
+                    </h3>
+                    <p style="color: #ecf0f1; margin-bottom: 15px;">
+                        <span th:if="${isSelfAssessment}">
+                            Reflect on your own performance and contribution to the team. What are your strengths and areas for improvement?
+                        </span>
+                        <span th:unless="${isSelfAssessment}">
+                            Provide constructive feedback about <strong th:text="${evaluatedStudent.username}">this teammate</strong>'s contribution and collaboration.
+                        </span>
+                    </p>
+                    
+                    <textarea name="overallComment" 
+                              id="overallComment"
+                              placeholder="Write your overall comment here... (This comment is mandatory and will be shared with the student)"
+                              required
+                              minlength="20"
+                              th:text="${existingComment != null ? existingComment.commentText : ''}"></textarea>
+                    
+                    <div class="comment-hint" id="commentHint">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> 
+                        <span th:if="${isSelfAssessment}">
+                            Your self-reflection comment will be visible to you and may be reviewed by instructors.
+                        </span>
+                        <span th:unless="${isSelfAssessment}">
+                            Your comment will appear anonymously as "Teammate X" to maintain confidentiality.
+                        </span>
+                        Minimum 20 characters required.
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a th:href="@{/student/assessments}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                    <button type="button" id="submitBtn" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Submit Assessment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ⭐ Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-exclamation-triangle modal-icon"></i>
+                <h3 class="modal-title">Confirm Re-evaluation</h3>
+            </div>
+            <div class="modal-body">
+                <p>
+                    You have already submitted an evaluation for 
+                    <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.username}">this student</strong>.
+                </p>
+                <p>
+                    <strong>Are you sure you want to re-evaluate?</strong>
+                </p>
+                <p style="color: #e74c3c; font-weight: bold;">
+                    ⚠️ This will replace your previous evaluation and cannot be undone.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="modalCancel" class="modal-btn modal-btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" id="modalConfirm" class="modal-btn modal-btn-confirm">
+                    <i class="fas fa-check"></i> Yes, Replace Evaluation
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        // Character counter for comment
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('overallComment');
+            const hint = document.getElementById('commentHint');
+            const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
+            const form = document.getElementById('assessmentForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const modal = document.getElementById('confirmModal');
+            const modalCancel = document.getElementById('modalCancel');
+            const modalConfirm = document.getElementById('modalConfirm');
+            
+            // Character counter
+            textarea.addEventListener('input', function() {
+                const length = this.value.length;
+                const minLength = 20;
+                
+                if (length < minLength) {
+                    hint.style.color = '#e74c3c';
+                    hint.innerHTML = '<i class="fas fa-exclamation-circle"></i> <strong>Minimum ' + minLength + ' characters required.</strong> Current: ' + length + ' characters.';
+                } else {
+                    hint.style.color = '#27ae60';
+                    hint.innerHTML = '<i class="fas fa-check-circle"></i> <strong>Good!</strong> Character count: ' + length;
+                }
+            });
+            
+            // ⭐ Confirmation logic for re-evaluation
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate form first
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // If this is a re-evaluation, show confirmation
+                if (hasExisting) {
+                    modal.classList.add('active');
+                } else {
+                    // First time evaluation, submit directly
+                    form.submit();
+                }
+            });
+            
+            // Modal cancel button
+            modalCancel.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+            
+            // Modal confirm button
+            modalConfirm.addEventListener('click', function() {
+                modal.classList.remove('active');
+                form.submit();
+            });
+            
+            // Close modal on overlay click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+            
+            // Close modal on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

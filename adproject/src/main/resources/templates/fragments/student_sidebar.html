@@ -1,12 +1,44 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<div th:fragment="student_sidebar" class="sidebar">
-    <a th:href="@{/student/assessments}" class="sidebar-link">
-        <i class="fas fa-chalkboard-teacher"></i> Peer & Self Assessment
-    </a>
-    
-    <a th:href="@{/logout}" class="sidebar-link logout-link">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<div class="sidebar" th:fragment="sidebar">
+    <div class="logo">
+        <h2>UTM CAS</h2>
+    </div>
+
+    <div class="user-profile">
+        <p><span sec:authentication="name"></span></p>
+    </div>
+
+    <ul class="menu-list">
+        <li>
+            <a th:href="@{/student/home}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/assessments}">
+                <i class="fas fa-tasks"></i> Peer & Self Assessments
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/comments}">
+                <i class="fas fa-comments"></i> My Comments
+            </a>
+        </li>
+        
+        <li class="logout-item">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            </form>
+        </li>
+    </ul>
 </div>
+</body>
 </html>

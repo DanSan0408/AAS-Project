@@ -1,7 +1,7 @@
 package com.capstone.adproject.repositories;
 
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +23,5 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
            "LEFT JOIN FETCH c.criteriaRatings crat " +
            "WHERE a.id = :id")
     Optional<Assessment> findByIdWithFullRubricDetails(@Param("id") Long id);
+    
 }

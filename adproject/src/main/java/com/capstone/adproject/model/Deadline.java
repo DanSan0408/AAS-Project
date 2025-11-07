@@ -16,6 +16,9 @@ public class Deadline {
     private Long id;
     private String title;
     private Date date;
+    private Long assessmentId; 
+private String assessorType; // To store "STUDENT", "LECTURER", or "SUPERVISOR"
+private Date openDate;
 
     // Getters and Setters
     public Long getId() {
@@ -41,4 +44,28 @@ public class Deadline {
     public void setDate(Date date) {
         this.date = date;
     }
+
+    public Long getAssessmentId() {
+    return assessmentId;
+}
+
+public void setAssessmentId(Long assessmentId) {
+    this.assessmentId = assessmentId;
+}
+
+public String getAssessorType() {
+    return assessorType;
+}
+
+public void setAssessorType(String assessorType) {
+    this.assessorType = assessorType;
+}
+
+public Date getOpenDate() {
+    return openDate;
+}
+
+public void setOpenDate(Date openDate) {
+    this.openDate = openDate;
+}
 }

@@ -1,7 +1,9 @@
 package com.capstone.adproject.controller;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,23 +12,28 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.capstone.adproject.dto.AssessmentAssignmentDto;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.dto.RandomizationInputDto;
 import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Criteria;
+import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
@@ -48,6 +55,15 @@ public class AdminController {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
+    }
+
+    // ⭐ ADDED: InitBinder to handle date conversion from form input
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false);
+        // true parameter allows empty values (important for optional openDate)
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
 
     private String getLoggedInUsername() {
@@ -116,7 +132,6 @@ public class AdminController {
         return grouped;
     }
 
-    // NEW HELPER METHOD: Determine if component is a Rubric (Likert Scale)
     public boolean isRubricType(Object component) {
         return component instanceof Rubric;
     }
@@ -132,7 +147,6 @@ public class AdminController {
         Function<Assessment, Map<String, Map<String, List<Object>>>> componentGrouper = this::groupAssessmentComponents;
         model.addAttribute("groupAssessmentComponents", componentGrouper);
 
-        // NEW: Add helper function to check component type
         Function<Object, Boolean> rubricChecker = this::isRubricType;
         model.addAttribute("isRubricType", rubricChecker);
 
@@ -142,7 +156,6 @@ public class AdminController {
         model.addAttribute("deadlines", deadlineService.getAllDeadlines());
 
         if (!model.containsAttribute("deadlineToSave")) {
-             // Create a new Deadline object if none came from flash attributes (e.g., initial page load)
              model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
         }
         return "admin_home";
@@ -449,5 +462,72 @@ public class AdminController {
         }
 
         return "redirect:/admin/group-assignment"; 
+    }
+
+
+    @GetMapping("/assessment/assign/{assessmentId}")
+    public String showAssessmentAssignationForm(@PathVariable Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
+        
+        Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(assessmentId);
+        
+        if (assessmentOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found.");
+            return "redirect:/admin/home";
+        }
+
+        AssessmentAssignmentDto dto = new AssessmentAssignmentDto();
+        dto.setAssessmentId(assessmentId);
+        dto.setTitle(assessmentOpt.get().getTitle() + " - Assignment"); 
+        dto.setOpenType("INSTANT"); // Default to instant open
+
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        model.addAttribute("assessment", assessmentOpt.get());
+        model.addAttribute("assignmentDto", dto);
+        model.addAttribute("assessorTypes", List.of("STUDENT", "LECTURER", "SUPERVISOR")); 
+        
+        return "assign_assessment";
+    }
+
+    @PostMapping("/assessment/assign")
+    public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
+        
+        // Basic validation
+        if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
+             redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
+             return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+        }
+
+        Deadline deadline = new Deadline();
+        if (dto.getDeadlineId() != null) {
+            deadline = deadlineService.getDeadlineById(dto.getDeadlineId()).orElse(deadline);
+        }
+        
+        deadline.setAssessmentId(dto.getAssessmentId());
+        deadline.setAssessorType(dto.getAssessorType());
+        deadline.setTitle(dto.getTitle());
+        deadline.setDate(dto.getEndDate());
+
+        // Handle Opening Date Logic
+        if ("INSTANT".equalsIgnoreCase(dto.getOpenType())) {
+            deadline.setOpenDate(new Date()); 
+        } else if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null) {
+            deadline.setOpenDate(dto.getOpenDate());
+        } else {
+            deadline.setOpenDate(new Date()); 
+        }
+
+        try {
+            deadlineService.save(deadline); 
+            
+            String openDateStr = new SimpleDateFormat("yyyy-MM-dd").format(deadline.getOpenDate());
+
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Assessment **" + dto.getTitle() + "** assigned successfully for **" + dto.getAssessorType() + "s**. Open Date: " + openDateStr);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error assigning assessment: " + e.getMessage());
+            return "redirect:/admin/assessment/assign/" + dto.getAssessmentId(); 
+        }
+        
+        return "redirect:/admin/home"; 
     }
 }

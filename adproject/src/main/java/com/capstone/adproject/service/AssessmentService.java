@@ -1,13 +1,14 @@
 package com.capstone.adproject.service;
 
-import com.capstone.adproject.model.Assessment;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.capstone.adproject.model.Assessment; // Import Transactional
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.repositories.AssessmentRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AssessmentService {
@@ -56,4 +57,9 @@ public class AssessmentService {
         }
         return assessments;
     }
+
+    public Optional<Assessment> getAssessmentById(Long id) {
+    // Assuming you have an AssessmentRepository
+    return assessmentRepository.findById(id); 
+}
 }

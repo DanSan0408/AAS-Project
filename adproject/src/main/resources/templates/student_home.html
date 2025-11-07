@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Home</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/student.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .deadline-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-student {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .badge-lecturer {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .badge-supervisor {
+            background-color: #1abc9c;
+            color: white;
+        }
+        
+        .badge-general {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .deadline-item {
+            border-left: 4px solid #95a5a6;
+        }
+        
+        .deadline-item.student-deadline {
+            border-left-color: #3498db;
+        }
+        
+        .deadline-item.lecturer-deadline {
+            border-left-color: #9b59b6;
+        }
+        
+        .deadline-item.supervisor-deadline {
+            border-left-color: #1abc9c;
+        }
+        
+        .deadline-item.general-deadline {
+            border-left-color: #95a5a6;
+        }
+    </style>
 </head>
 <body>
     <div th:replace="fragments/student_sidebar :: sidebar"></div> 
@@ -73,20 +125,60 @@
                     
                 </div>
             </div>
+            
+            <!-- ⭐ UPDATED: Show ALL deadlines with assessor type badges -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
-                    <div th:each="deadline : ${deadlines}" class="deadline-item">
+                    <div th:if="${allDeadlines == null or #lists.isEmpty(allDeadlines)}" 
+                         style="text-align: center; padding: 20px; color: #95a5a6;">
+                        <i class="fas fa-calendar-times" style="font-size: 2em; margin-bottom: 10px;"></i>
+                        <p>No deadlines available</p>
+                    </div>
+                    
+                    <div th:each="deadline : ${allDeadlines}" 
+                         class="deadline-item"
+                         th:classappend="${deadline.assessorType == 'STUDENT' ? 'student-deadline' : 
+                                         (deadline.assessorType == 'LECTURER' ? 'lecturer-deadline' : 
+                                         (deadline.assessorType == 'SUPERVISOR' ? 'supervisor-deadline' : 'general-deadline'))}">
                         <div class="deadline-display">
-                            <p>Title: <span th:text="${deadline.title}"></span></p>
-                            <p>Date: <span th:text="${#dates.format(deadline.date, 'yyyy-MM-dd')}"></span></p>
-                            </div>
+                            <p>
+                                <strong>Title:</strong> 
+                                <span th:text="${deadline.title}">Assessment Title</span>
+                                
+                                <!-- Assessor Type Badge - Shows WHO needs to assess -->
+                                 <br><br>
+                                <span class="deadline-badge"
+                                      th:classappend="${deadline.assessorType == 'STUDENT' ? 'badge-student' : 
+                                                       (deadline.assessorType == 'LECTURER' ? 'badge-lecturer' : 
+                                                       (deadline.assessorType == 'SUPERVISOR' ? 'badge-supervisor' : 'badge-general'))}"
+                                      th:text="${deadline.assessorType == 'STUDENT' ? 'Students' : 
+                                               (deadline.assessorType == 'LECTURER' ? 'Lecturers' : 
+                                               (deadline.assessorType == 'SUPERVISOR' ? 'Industrial Supervisors' : 'General'))}">
+                                    Students
+                                </span>
+                            </p>
+                            
+                            <p>
+                                <strong>
+                                    <i class="fas fa-calendar-alt"></i> Deadline:
+                                </strong> 
+                                <span th:text="${#dates.format(deadline.date, 'dd MMMM yyyy, HH:mm')}">30 November 2025, 00:00</span>
+                            </p>
+                            
+                            <!-- Open Date (if available) -->
+                            <p th:if="${deadline.openDate != null}">
+                                <strong>
+                                    <i class="fas fa-door-open"></i> Opens:
+                                </strong> 
+                                <span th:text="${#dates.format(deadline.openDate, 'dd MMMM yyyy, HH:mm')}">20 November 2025, 00:00</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
-                
-                </div>
+            </div>
         </div>
-        </div>
+    </div>
     
-    </body>
+</body>
 </html>
