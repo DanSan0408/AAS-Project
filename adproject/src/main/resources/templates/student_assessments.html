@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peer & Self Assessments</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/student.css}">
+    <link rel="stylesheet" th:href="@{/css/student_assessments.css}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="fragments/student_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>Peer & Self Assessment Portal</h1>
+            </div>
+        </div>
+        
+        <div class="content-container"> 
+            
+            <div th:if="${error}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${error}">Error message</span>
+            </div>
+
+            <div th:if="${success}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${success}">Success message</span>
+            </div>
+
+            <div th:if="${group}" class="group-section card">
+                <h2>Your Group: <span th:text="${group.groupName}">Group Name</span></h2>
+                <div class="team-members">
+                    <h3>Team Members:</h3>
+                    <div class="members-grid">
+                        <div th:each="member : ${teamMembers}" class="member-card">
+                            <div class="member-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="member-info">
+                                <span class="member-name" th:text="${member.username}">Member Name</span>
+                                <span th:if="${member.id == currentStudent.id}" class="you-badge">(You)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${group}" class="assessments-section card">
+                <h2>📋 Available Assessments</h2>
+                
+                <div th:if="${#lists.isEmpty(assessments)}" class="no-assessments">
+                    <i class="fas fa-inbox"></i>
+                    <p>No peer or self assessments are currently open.</p>
+                    <p style="font-size: 0.9em; color: #95a5a6;">
+                        Assessments will appear here once your administrator opens them. Check back later or contact your administrator for more information.
+                    </p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(assessments)}" class="assessments-container">
+                    <div th:each="assessment : ${assessments}" class="assessment-block">
+                        <div class="assessment-title">
+                            <h3>
+                                <i class="fas fa-clipboard-list"></i>
+                                <span th:text="${assessment.title}">Assessment Title</span>
+                            </h3>
+                            <span class="marks-badge">
+                                Total: <strong th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</strong> marks
+                            </span>
+                        </div>
+
+                        <div th:if="${assessmentDeadlineMap.containsKey(assessment.id)}" 
+                             th:with="deadline=${assessmentDeadlineMap.get(assessment.id)}"
+                             class="deadline-info">
+                            <i class="fas fa-clock"></i>
+                            <div class="deadline-details">
+                                <p>
+                                    <strong>Opened:</strong> 
+                                    <span th:if="${deadline.openDate != null}" 
+                                          th:text="${#dates.format(deadline.openDate, 'dd MMM yyyy, HH:mm')}">
+                                        04 Nov 2025, 14:00
+                                    </span>
+                                    <span th:unless="${deadline.openDate != null}">
+                                        Immediately
+                                    </span>
+                                </p>
+                                <p>
+                                    <strong>Deadline:</strong> 
+                                    <span class="time-remaining" 
+                                          th:text="${#dates.format(deadline.date, 'dd MMM yyyy, HH:mm')}">
+                                        19 Nov 2025, 23:59
+                                    </span>
+                                </p>
+                            </div>
+                            <span class="deadline-status status-open">
+                                <i class="fas fa-check-circle"></i> OPEN
+                            </span>
+                        </div>
+
+                        <div class="evaluation-grid">
+                            <h4>Evaluate Your Team Members:</h4>
+                            
+                            <!-- Self Assessment -->
+                            <div class="evaluation-card self-assessment">
+                                <div class="evaluation-header">
+                                    <h5>Self Assessment</h5>
+                                    <span class="assessment-type-badge self">SELF</span>
+                                </div>
+                                <div class="evaluation-body">
+                                    <div class="member-eval">
+                                        <span class="member-name">
+                                            <i class="fas fa-user"></i> 
+                                            <span th:text="${currentStudent.username}">Your Name</span>
+                                        </span>
+                                        <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${currentStudent.id})}" 
+                                           class="btn btn-evaluate btn-self">
+                                            <i class="fas fa-edit"></i> Evaluate Yourself
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Peer Assessments -->
+                            <div class="evaluation-card peer-assessment">
+                                <div class="evaluation-header">
+                                    <h5>Peer Assessments</h5>
+                                    <span class="assessment-type-badge peer">PEER</span>
+                                </div>
+                                <div class="evaluation-body">
+                                    <div th:each="member : ${teamMembers}" 
+                                         th:if="${member.id != currentStudent.id}"
+                                         class="member-eval">
+                                        <span class="member-name">
+                                            <i class="fas fa-user"></i> 
+                                            <span th:text="${member.username}">Member Name</span>
+                                        </span>
+                                        <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${member.id})}" 
+                                           class="btn btn-evaluate btn-peer">
+                                            <i class="fas fa-user-edit"></i> Evaluate
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -751,3 +751,31 @@ tbody tr:hover {
     cursor: pointer;
     font-size: 0.8em;
 }
+
+/* Apply dark-theme input styling to select elements */
+.add-form-container select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #34495e; 
+    border-radius: 5px;
+    /* INPUT BG: #34495e -> #192841 (Darker) */
+    background-color: #192841; 
+    color: #ecf0f1;
+    box-sizing: border-box;
+}
+
+/* Style for the radio button group */
+.radio-group label {
+    font-weight: normal; /* Don't bold the radio label */
+    margin-left: 5px;
+    color: #ecf0f1;
+    display: inline;
+}
+
+.radio-group input[type="radio"] {
+    /* Use accent color if desired, otherwise default will do */
+    accent-color: #3498db; 
+    width: auto; /* Radio buttons shouldn't be full width */
+    height: auto;
+    margin-right: 5px;
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assessment Comments</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/student_comments.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div th:replace="fragments/student_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>📝 My Assessment Comments</h1>
+            </div>
+        </div>
+        
+        <div class="content-container comments-container">
+            
+            <!-- Statistics Summary -->
+            <div class="stats-summary">
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${totalComments}">0</div>
+                    <div class="stat-label">Total Comments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${peerCommentCount}">0</div>
+                    <div class="stat-label">Peer Comments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${lecturerCommentCount}">0</div>
+                    <div class="stat-label">Lecturer Comments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" th:text="${supervisorCommentCount}">0</div>
+                    <div class="stat-label">Supervisor Comments</div>
+                </div>
+            </div>
+            
+            <!-- Comments by Assessment -->
+            <div th:if="${commentsByAssessment != null and !commentsByAssessment.isEmpty()}">
+                
+                <div th:each="assessmentEntry : ${commentsByAssessment}" class="assessment-comments-block">
+                    <h2 class="assessment-title-header">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span th:text="${assessmentEntry.key}">Assessment Name</span>
+                    </h2>
+                    
+                    <!-- Self Comment -->
+                    <div th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}" 
+                         class="comment-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-user"></i> Your Self-Reflection
+                        </h3>
+                        <div th:each="comment : ${assessmentEntry.value['self']}" class="comment-card self-comment">
+                            <div class="comment-header">
+                                <span class="evaluator-badge badge-self">
+                                    <i class="fas fa-user-circle"></i>
+                                    You (Self)
+                                </span>
+                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                            </div>
+                            <div class="comment-text" th:text="${comment.commentText}">
+                                Self reflection comment text here...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Peer Comments (Anonymous) -->
+                    <div th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}" 
+                         class="comment-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-users"></i> Peer Feedback (Anonymous)
+                        </h3>
+                        <div th:each="comment : ${assessmentEntry.value['peer']}" class="comment-card">
+                            <div class="comment-header">
+                                <span class="evaluator-badge badge-peer">
+                                    <i class="fas fa-user-friends"></i>
+                                    <span th:text="${comment.anonymousIdentifier}">Teammate 1</span>
+                                </span>
+                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                            </div>
+                            <div class="comment-text" th:text="${comment.commentText}">
+                                Peer comment text here...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lecturer Comments -->
+                    <div th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}" 
+                         class="comment-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-chalkboard-teacher"></i> Lecturer Feedback
+                        </h3>
+                        <div th:each="comment : ${assessmentEntry.value['lecturer']}" class="comment-card lecturer-comment">
+                            <div class="comment-header">
+                                <span class="evaluator-badge badge-lecturer">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span th:text="${comment.evaluatorName}">Dr. Hakim</span>
+                                </span>
+                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                            </div>
+                            <div class="comment-text" th:text="${comment.commentText}">
+                                Lecturer comment text here...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Supervisor Comments -->
+                    <div th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}" 
+                         class="comment-category">
+                        <h3 class="category-title">
+                            <i class="fas fa-user-tie"></i> Industrial Supervisor Feedback
+                        </h3>
+                        <div th:each="comment : ${assessmentEntry.value['supervisor']}" class="comment-card supervisor-comment">
+                            <div class="comment-header">
+                                <span class="evaluator-badge badge-supervisor">
+                                    <i class="fas fa-briefcase"></i>
+                                    <span th:text="${comment.evaluatorName}">Mr. Ahmad</span>
+                                </span>
+                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                            </div>
+                            <div class="comment-text" th:text="${comment.commentText}">
+                                Supervisor comment text here...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- No Comments Message -->
+            <div th:if="${commentsByAssessment == null or commentsByAssessment.isEmpty()}" class="no-comments">
+                <i class="fas fa-comments"></i>
+                <h2>No Comments Yet</h2>
+                <p>You haven't received any assessment comments yet.</p>
+                <p style="color: #7f8c8d;">Comments from peers, lecturers, and supervisors will appear here once evaluations are submitted.</p>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>

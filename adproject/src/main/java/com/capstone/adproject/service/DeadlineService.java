@@ -39,10 +39,29 @@ public class DeadlineService {
         deadlineRepository.save(deadline);
     }
 
-    // ⭐ NEW METHOD: Check if a deadline with the given title exists
     public Optional<Deadline> findByTitle(String title) {
-        // ASSUMPTION: You have defined a method in your DeadlineRepository like: 
-        // Optional<Deadline> findByTitle(String title);
         return deadlineRepository.findByTitle(title);
+    }
+    
+    /**
+     * ⭐ NEW: Get deadlines by assessment ID
+     */
+    public List<Deadline> getDeadlinesByAssessmentId(Long assessmentId) {
+        return deadlineRepository.findByAssessmentId(assessmentId);
+    }
+    
+    /**
+     * ⭐ NEW: Get deadlines by assessor type (STUDENT, LECTURER, SUPERVISOR)
+     */
+    public List<Deadline> getDeadlinesByAssessorType(String assessorType) {
+        return deadlineRepository.findByAssessorType(assessorType);
+    }
+    
+    /**
+     * ⭐ NEW: Get deadlines by assessment ID and assessor type
+     * This is the key method for checking if an assessment is open for a specific user role
+     */
+    public List<Deadline> getDeadlinesByAssessmentIdAndAssessorType(Long assessmentId, String assessorType) {
+        return deadlineRepository.findByAssessmentIdAndAssessorType(assessmentId, assessorType);
     }
 }
