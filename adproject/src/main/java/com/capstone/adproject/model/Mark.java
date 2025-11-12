@@ -29,7 +29,7 @@ public class Mark {
     @JoinColumn(name = "evaluated_student_id", nullable = false)
     private Student evaluatedStudent;
 
-    // Student doing the evaluation
+    // Student doing the evaluation (for lecturer marks, same as evaluated)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluator_student_id", nullable = false)
     private Student evaluatorStudent;
@@ -39,7 +39,7 @@ public class Mark {
     @JoinColumn(name = "assessment_id", nullable = false)
     private Assessment assessment;
 
-    // ⭐ UPDATED: Rubric is now OPTIONAL (null for criteria-based marks)
+    // Rubric (optional - null for criteria-based marks)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rubric_id")
     private Rubric rubric;
@@ -49,21 +49,21 @@ public class Mark {
     @JoinColumn(name = "sub_rubric_id")
     private SubRubric subRubric;
 
-    // ⭐ NEW: Criteria (null for rubric-based marks)
+    // Criteria (null for rubric-based marks)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "criteria_id")
     private Criteria criteria;
 
-    // ⭐ UPDATED: Rating is OPTIONAL (null for criteria which use ratingLevel directly)
+    // Rating (optional - null for criteria which use ratingLevel directly)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rating_id")
     private Rating rating;
 
-    // ⭐ NEW: Rating level (0-4) for criteria-based marks
+    // Rating level (0-4) for criteria-based marks
     @Column(name = "rating_level")
     private Integer ratingLevel;
 
-    // The actual mark value (calculated from rating level * marks / 4)
+    // The actual mark value
     @Column(nullable = false)
     private Double markValue;
 
@@ -74,13 +74,12 @@ public class Mark {
     @Column(nullable = false)
     private Double cloMarks;
 
-    // Type of assessment (PEER or SELF)
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AssessmentType assessmentType;
+    // Assessment type from rubric (Group Assessment or Individual Assessment)
+    @Column(name = "assessment_type", nullable = false)
+    private String assessmentType;
 
-    // Evaluation type from rubric/criteria (Individual/Group)
-    @Column(nullable = false)
+    // Evaluation type from rubric (Group Evaluation or Individual Evaluation)
+    @Column(name = "evaluation_type", nullable = false)
     private String evaluationType;
 
     // Timestamp
@@ -96,12 +95,7 @@ public class Mark {
     @Column(nullable = false)
     private SubmissionStatus status = SubmissionStatus.DRAFT;
 
-    // Enums
-    public enum AssessmentType {
-        PEER,
-        SELF
-    }
-
+    // Enum
     public enum SubmissionStatus {
         DRAFT,
         SUBMITTED,
@@ -211,11 +205,11 @@ public class Mark {
         this.cloMarks = cloMarks;
     }
 
-    public AssessmentType getAssessmentType() {
+    public String getAssessmentType() {
         return assessmentType;
     }
 
-    public void setAssessmentType(AssessmentType assessmentType) {
+    public void setAssessmentType(String assessmentType) {
         this.assessmentType = assessmentType;
     }
 
@@ -251,7 +245,7 @@ public class Mark {
         this.status = status;
     }
 
-    // ⭐ UPDATED: Helper methods to check mark type
+    // Helper methods
     public boolean isRubricBased() {
         return rubric != null;
     }
@@ -260,49 +254,96 @@ public class Mark {
         return criteria != null;
     }
 
-    // ⭐ UPDATED: Calculate mark value for both rubric and criteria
+    // Calculate mark value for both rubric and criteria
     public void calculateMarkValue() {
         if (isRubricBased() && rating != null && rubric.getMarks() != null) {
-            // Rubric-based: use rating level from Rating entity
             this.markValue = (rating.getLevel() / 4.0) * rubric.getMarks().doubleValue();
         } else if (isCriteriaBased() && ratingLevel != null && criteria.getMarks() != null) {
-            // Criteria-based: use ratingLevel field directly
             this.markValue = (ratingLevel / 4.0) * criteria.getMarks().doubleValue();
         }
     }
 
-    // ⭐ UPDATED: Calculate CLO marks for both rubric and criteria
+    // Calculate CLO marks for both rubric and criteria
     public void calculateCloMarks() {
         if (isRubricBased() && rubric.getCloMarks() != null && rating != null) {
-            // Rubric-based CLO calculation
             this.cloMarks = (rating.getLevel() / 4.0) * rubric.getCloMarks();
         } else if (isCriteriaBased() && criteria.getCloMarks() != null && ratingLevel != null) {
-            // Criteria-based CLO calculation
             this.cloMarks = (ratingLevel / 4.0) * criteria.getCloMarks();
         }
     }
 
-    @PrePersist
-    @PreUpdate
-    public void prePersistOrUpdate() {
-        if (submittedAt == null) {
-            submittedAt = LocalDateTime.now();
-        }
-        calculateMarkValue();
-        calculateCloMarks();
+    // --- In Mark.java ---
+// (Only changing the prePersistOrUpdate method)
+
+@PrePersist
+@PreUpdate
+public void prePersistOrUpdate() {
+    if (submittedAt == null) {
+        submittedAt = LocalDateTime.now();
+    }
+    
+    // Ensure MarkValue/CloMarks are calculated first.
+    calculateMarkValue(); 
+    calculateCloMarks();
+    
+    // --- Determine derived values safely ---
+    
+    String tempEvaluationType = null;
+    Integer tempClo = null;
+    String tempAssessmentType = this.assessmentType; // Keep assessmentType set by controller
+
+    if (isRubricBased() && this.rubric != null) {
+        // Attempt to get required fields from the eagerly loaded Rubric or Criteria.
+        // If the Rubric/Criteria object is available (it should be, since the controller fetched it), 
+        // accessing its fields is usually safe, but null checks are vital.
+        tempClo = rubric.getClo();
+        tempEvaluationType = rubric.getEvaluationType();
         
-        // Set CLO from rubric or criteria
-        if (isRubricBased() && rubric.getClo() != null) {
-            this.clo = rubric.getClo();
-        } else if (isCriteriaBased() && criteria.getClo() != null) {
-            this.clo = criteria.getClo();
+        // Use Rubric's assessment type if the controller didn't set the basic one
+        if (tempAssessmentType == null) {
+             tempAssessmentType = rubric.getAssessmentTypes();
         }
+    } else if (isCriteriaBased() && this.criteria != null) {
+        tempClo = criteria.getClo();
+        tempEvaluationType = criteria.getEvaluationType();
         
-        // Set evaluation type from rubric or criteria
-        if (isRubricBased() && rubric.getEvaluationType() != null) {
-            this.evaluationType = rubric.getEvaluationType();
-        } else if (isCriteriaBased() && criteria.getEvaluationType() != null) {
-            this.evaluationType = criteria.getEvaluationType();
+        // Use Criteria's assessment type if the controller didn't set the basic one
+        if (tempAssessmentType == null) {
+             tempAssessmentType = criteria.getAssessmentTypes();
         }
     }
+
+    // --- CRITICAL DEFAULTS: If any derived field is null, set a default to prevent DB error ---
+
+    // 1. Set CLO
+    if (tempClo != null) {
+        this.clo = tempClo;
+    } else if (this.clo == null) {
+        // Fallback for database requirement. Should be fixed at the Rubric/Criteria data level.
+        this.clo = 0; 
+    }
+    
+    // 2. Set Evaluation Type (The field causing the direct error)
+    if (tempEvaluationType != null) {
+        this.evaluationType = tempEvaluationType;
+    } else if (this.evaluationType == null) {
+        // Fallback: Since this controller ONLY handles Individual (Peer/Self), this is a safe default.
+        this.evaluationType = "Individual"; 
+    }
+    
+    // 3. Set Assessment Type (If not set by controller or component)
+    if (tempAssessmentType != null) {
+        this.assessmentType = tempAssessmentType;
+    } else if (this.assessmentType == null) {
+        this.assessmentType = "Peer Assessment"; // Safe default for this context
+    }
+    
+    // 4. Ensure mandatory calculated fields are not null (MarkValue and CloMarks)
+    if (this.markValue == null) {
+        this.markValue = 0.0;
+    }
+    if (this.cloMarks == null) {
+        this.cloMarks = 0.0;
+    }
+}
 }

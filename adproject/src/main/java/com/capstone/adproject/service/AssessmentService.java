@@ -28,20 +28,31 @@ public class AssessmentService {
      */
     @Transactional(readOnly = true)
     public boolean isAssessmentTitleDuplicate(String title, Long assessmentIdToExclude) {
-        // 1. Find all assessments with the given title
-        List<Assessment> existingAssessments = assessmentRepository.findByTitle(title);
-        
-        // 2. Filter out the assessment being edited (if it's an update)
-        if (assessmentIdToExclude != null) {
-            existingAssessments.removeIf(assessment -> 
-                assessment.getId() != null && assessment.getId().equals(assessmentIdToExclude)
-            );
+    if (title == null || title.trim().isEmpty()) {
+        return false;
+    }
+    
+    // Normalize the input title by removing all whitespace and converting to lowercase
+    String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
+    
+    List<Assessment> allAssessments = assessmentRepository.findAll();
+    
+    for (Assessment assessment : allAssessments) {
+        // Skip the assessment being edited
+        if (assessmentIdToExclude != null && assessment.getId().equals(assessmentIdToExclude)) {
+            continue;
         }
         
-        // 3. If any remain, it's a duplicate
-        return !existingAssessments.isEmpty();
+        if (assessment.getTitle() != null) {
+            String normalizedExisting = assessment.getTitle().replaceAll("\\s+", "").toLowerCase();
+            if (normalizedExisting.equals(normalizedTitle)) {
+                return true;
+            }
+        }
     }
-    // ------------------------------------
+    
+    return false;
+}
 
     public List<Assessment> findAllAssessmentsWithRubrics() {
         List<Assessment> assessments = assessmentRepository.findAll();

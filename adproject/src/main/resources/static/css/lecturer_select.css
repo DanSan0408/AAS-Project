@@ -1,0 +1,236 @@
+/* =======================================================
+    LECTURER SELECT TARGET PAGE - DEDICATED CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette - Dark Blue Theme */
+    --primary-dark: #23395d;      /* Main Headings, Focus */
+    --primary-darker: #203354;    /* Button/Hover BG */
+    --primary-darkest-bg: #1c2e4a; /* Deep BG/Strong Borders */
+    --primary-night: #192841;     /* Target Card Hover/Border */
+    --primary-midnight: #152238;  /* Deepest Accent */
+    
+    /* Secondary/Accents */
+    --accent-green: #2ecc71;      /* Success/Evaluated Indicator */
+    --accent-red: #e74c3c;        /* Error/Warning */
+    --accent-blue: #3498db;       /* Back Button/Links */
+    
+    /* General UI Colors */
+    --bg-light: #f7f9fc;          /* Light page background */
+    --bg-card: #ffffff;           /* Card background */
+    --border-color: #dddddd;
+    --text-color: #333333;
+}
+
+/* ==================== LAYOUT & CONTAINERS ==================== */
+.content-flex-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.selection-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 30px;
+    background: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.selection-container h2 {
+    color: var(--primary-dark);
+    margin-top: 15px;
+    margin-bottom: 25px;
+    font-size: 30px;
+    font-weight: 700;
+    border-bottom: 3px solid var(--primary-darker);
+    padding-bottom: 10px;
+}
+
+.target-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.target-section h3 {
+    color: var(--primary-darker);
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.target-section p {
+    color: var(--text-color);
+    margin-bottom: 20px;
+    font-style: italic;
+    font-size: 15px;
+}
+
+/* ==================== BUTTONS & LINKS ==================== */
+.btn-back {
+    display: inline-block;
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    transition: color 0.2s ease;
+}
+
+.btn-back:hover {
+    color: var(--primary-dark);
+}
+
+.btn-select {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--primary-dark);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+    margin-top: auto; /* Push button to the bottom */
+}
+
+.btn-select:hover {
+    background-color: var(--primary-darker);
+}
+
+/* ==================== INSTRUCTION BOX ==================== */
+.instruction-box {
+    background-color: #e8f4ff; /* Light accent background */
+    border: 1px solid var(--accent-blue);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.instruction-box h4 {
+    color: var(--primary-dark);
+    margin-top: 0;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.instruction-box ul {
+    list-style: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    color: var(--text-color);
+}
+
+.instruction-box li {
+    margin-bottom: 5px;
+    font-size: 15px;
+}
+
+.instruction-box li strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== TARGET CARDS & GRID ==================== */
+.target-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.target-grid form {
+    /* Ensures the form doesn't interfere with the grid layout */
+    display: contents; 
+}
+
+.target-card {
+    background: var(--bg-card);
+    border: 3px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 180px; /* Ensure visual consistency */
+}
+
+.target-card:hover {
+    border-color: var(--primary-dark);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Evaluated State */
+.target-card.evaluated {
+    border-color: var(--accent-green);
+    background-color: #f6fff6; /* Very light green background */
+    opacity: 0.9;
+}
+
+.target-card.evaluated::after {
+    content: '✓ Evaluated';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--accent-green);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.target-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.target-info, .group-members {
+    font-size: 14px;
+    color: var(--text-color);
+    margin-bottom: 15px;
+}
+
+.group-members ul {
+    list-style: none;
+    padding-left: 10px;
+    margin-top: 5px;
+}
+
+.group-members ul li {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.group-members strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== MEDIA QUERIES ==================== */
+@media (max-width: 768px) {
+    .selection-container {
+        padding: 15px;
+        margin: 0 10px;
+    }
+
+    .selection-container h2 {
+        font-size: 24px;
+    }
+
+    .target-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .target-card {
+        min-height: auto;
+    }
+}

@@ -1,0 +1,383 @@
+/* =======================================================
+    LECTURER EVALUATION PAGE - DEDICATED CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette - Dark Blue Theme */
+    --primary-dark: #23395d;        /* Main Headings, Focus */
+    --primary-darker: #203354;      /* Button/Header BG */
+    --primary-darkest-bg: #1c2e4a;  /* Deep BG/Sidebar */
+    --primary-night: #192841;       /* Component Borders */
+    --primary-midnight: #152238;    /* Deepest Accent */
+    
+    /* Secondary/Accents */
+    --accent-blue: #3498db;         /* Back Button/Links */
+    --accent-orange: #e67e22;       /* Warning/Notes */
+    --accent-green: #2ecc71;        /* Success/Confirmation */
+    
+    /* General UI Colors */
+    --bg-light: #f7f9fc;            /* Light page background */
+    --bg-card: #ffffff;             /* Evaluation container background */
+    --border-color: #e0e0e0;        /* Light border */
+    --text-color: #333333;
+    --text-light: #666666;
+}
+
+/* ==================== LAYOUT & CONTAINERS ==================== */
+.main-content {
+    /* Assuming this is used for the main body content area */
+    padding: 20px;
+}
+
+.content-flex-container {
+    padding: 20px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.evaluation-container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 30px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== HEADER & INFO ==================== */
+.evaluation-container h2 {
+    color: var(--primary-dark);
+    margin-top: 15px;
+    margin-bottom: 25px;
+    font-size: 30px;
+    font-weight: 700;
+    border-bottom: 3px solid var(--primary-darker);
+    padding-bottom: 10px;
+}
+
+.page-indicator {
+    background-color: var(--primary-darker);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+}
+
+.section-info {
+    background-color: #f0f4f8; /* Very light blue background */
+    border-left: 5px solid var(--primary-dark);
+    padding: 15px;
+    margin-bottom: 30px;
+    border-radius: 6px;
+}
+
+.section-info p {
+    margin: 5px 0;
+    font-size: 15px;
+    color: var(--text-light);
+}
+
+.section-info strong {
+    color: var(--primary-dark);
+}
+
+.section-info h4 {
+    color: var(--primary-darker);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.section-info textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 14px;
+    resize: vertical;
+}
+
+/* ==================== RUBRIC COMPONENTS ==================== */
+.rubric-component {
+    border: 1px solid var(--primary-night);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 35px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+}
+
+.rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.badge {
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+}
+
+.badge-group {
+    background-color: var(--primary-dark);
+}
+
+.badge-individual {
+    background-color: var(--primary-darker);
+}
+
+.component-info p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 5px 0 20px 0;
+}
+
+.component-info strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== SUB-RUBRICS / CRITERIA ITEMS ==================== */
+.sub-rubric-item {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--primary-darkest-bg);
+    background-color: #fcfcfc;
+    border-radius: 5px;
+}
+
+.sub-rubric-item h5 {
+    color: var(--primary-darker);
+    font-size: 18px;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.sub-rubric-item p {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+
+/* ==================== RATING OPTIONS (Likert Scale) ==================== */
+.rating-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rating-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f9f9f9;
+}
+
+.rating-option:hover {
+    background-color: #f0f4f8;
+}
+
+.rating-option.selected {
+    background-color: #e6f0ff; /* Light blue selection background */
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 5px rgba(35, 57, 93, 0.3);
+}
+
+.rating-option input[type="radio"] {
+    margin-right: 15px;
+    margin-top: 2px;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--primary-dark);
+    border-radius: 50%;
+    position: relative;
+    outline: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.rating-option input[type="radio"]:checked {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+.rating-option input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+}
+
+.rating-option strong {
+    color: var(--primary-darker);
+    font-size: 15px;
+}
+
+.rating-option span {
+    color: var(--text-color);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* ==================== CRITERIA RATING OPTIONS (Grid) ==================== */
+.criteria-ratings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.criteria-rating-option {
+    display: block;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #f9f9f9;
+    position: relative;
+    text-align: center;
+}
+
+.criteria-rating-option:hover {
+    background-color: #f0f4f8;
+}
+
+.criteria-rating-option.selected {
+    background-color: #e6f0ff;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 5px rgba(35, 57, 93, 0.3);
+}
+
+.criteria-rating-option input[type="radio"] {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    opacity: 0; /* Hide default radio button */
+}
+
+/* Custom Checkmark for Criteria Rating */
+.criteria-rating-option.selected::before {
+    content: '✓';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--primary-dark);
+    background: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--primary-dark);
+}
+
+.criteria-rating-option strong {
+    font-size: 16px;
+    color: var(--primary-dark);
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* ==================== BUTTONS ==================== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 30px;
+}
+
+.btn-back {
+    display: inline-block;
+    color: var(--text-light);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    align-self: center;
+    transition: color 0.2s ease;
+}
+
+.btn-back:hover {
+    color: var(--primary-dark);
+}
+
+.btn-next {
+    padding: 12px 25px;
+    background-color: var(--primary-dark);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-next:hover {
+    background-color: var(--primary-darker);
+    transform: translateY(-1px);
+}
+
+/* ==================== MEDIA QUERIES ==================== */
+@media (max-width: 768px) {
+    .evaluation-container {
+        padding: 15px;
+        margin: 0 10px;
+    }
+    
+    .rubric-header {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 20px;
+    }
+
+    .badge {
+        margin-top: 8px;
+    }
+    
+    .criteria-ratings {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+    
+    .btn-next, .btn-back {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+}

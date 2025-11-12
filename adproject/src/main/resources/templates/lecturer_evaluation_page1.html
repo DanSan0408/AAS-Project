@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluation - Page 1</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+</head>
+<body>
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="evaluation-container">
+                <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" class="btn-back">
+                    ← Back to Target Selection
+                </a>
+
+                <h2 th:text="'Evaluate: ' + ${assessment.title}">Assessment</h2>
+
+                <div class="page-indicator">
+                    📝 PAGE 1 of 2: EVALUATION & ASSESSMENT
+                </div>
+
+                <!-- Messages -->
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+                <div class="section-info">
+                    <p th:if="${selectedGroup != null}">
+                        <strong>Evaluating Group:</strong> <span th:text="${selectedGroup.groupName}"></span>
+                    </p>
+                    <p th:if="${selectedStudent != null}">
+                        <strong>Evaluating Student:</strong> <span th:text="${selectedStudent.username}"></span>
+                    </p>
+                    <p th:if="${evaluationType == 'GROUP'}">
+                        <strong>Page 1:</strong> Group Evaluation + Group Assessment
+                    </p>
+                    <p th:if="${evaluationType == 'INDIVIDUAL'}">
+                        <strong>Page 1:</strong> Individual Evaluation + Individual Assessment
+                    </p>
+                    <p style="color: #e67e22; margin-top: 10px;">
+                        <em>⚠️ After this page, you'll proceed to the opposite assessment type (Page 2)</em>
+                    </p>
+                </div>
+
+                <form th:action="@{/lecturer/assessments/{id}/evaluate/submit(id=${assessment.id})}" 
+                      method="post" 
+                      id="evaluationForm">
+
+                    <input type="hidden" name="groupId" th:if="${selectedGroup != null}" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" name="studentId" th:if="${selectedStudent != null}" th:value="${selectedStudent.id}"/>
+
+                    <!-- EVALUATION RUBRICS -->
+                    <div th:if="${evaluationRubrics != null and !evaluationRubrics.isEmpty()}">
+                        <div th:each="rubric : ${evaluationRubrics}">
+                            <div th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}" 
+                                 class="rubric-component">
+                                <div class="rubric-header">
+                                    <span th:text="${rubric.name}">Rubric Name</span>
+                                    <span class="badge" 
+                                          th:classappend="${evaluationType == 'GROUP' ? 'badge-group' : 'badge-individual'}">
+                                        <span th:text="${evaluationType == 'GROUP' ? 'GROUP' : 'INDIVIDUAL'}"></span>
+                                    </span>
+                                </div>
+                                
+                                <div class="component-info">
+                                    <p>
+                                        <strong>Type:</strong> Likert Scale | 
+                                        <strong>Marks:</strong> <span th:text="${rubric.marks}">0</span> | 
+                                        <strong>CLO:</strong> <span th:text="${rubric.clo}">0</span>
+                                    </p>
+                                </div>
+
+                                <!-- SUB RUBRICS -->
+                                <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-item">
+                                    <h5 th:text="${subRubric.name}">Sub Rubric</h5>
+                                    <p th:if="${subRubric.description != null}" 
+                                       th:text="${subRubric.description}">Description</p>
+
+                                    <!-- RATINGS -->
+                                    <div class="rating-options">
+                                        <label th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                            <input type="radio" 
+                                                   th:name="'eval_subRubric_' + ${subRubric.id} + '_rating'"
+                                                   th:value="${rating.id}"
+                                                   required />
+                                            <span>
+                                                <strong th:text="${rating.levelLabel}">Level</strong> - 
+                                                <span th:text="${rating.description}">Description</span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EVALUATION CRITERIA -->
+                    <div th:if="${evaluationCriteria != null and !evaluationCriteria.isEmpty()}">
+                        <div th:each="criteria : ${evaluationCriteria}" 
+                             class="rubric-component">
+                            <div class="rubric-header">
+                                <span th:text="${criteria.name}">Criteria Name</span>
+                                <span class="badge" 
+                                      th:classappend="${evaluationType == 'GROUP' ? 'badge-group' : 'badge-individual'}">
+                                    <span th:text="${evaluationType == 'GROUP' ? 'GROUP' : 'INDIVIDUAL'}"></span>
+                                </span>
+                            </div>
+                            
+                            <div class="component-info">
+                                <p>
+                                    <strong>Type:</strong> Criteria Based | 
+                                    <strong>Marks:</strong> <span th:text="${criteria.marks}">0</span> | 
+                                    <strong>CLO:</strong> <span th:text="${criteria.clo}">0</span>
+                                </p>
+                            </div>
+
+                            <!-- CRITERIA RATINGS -->
+                            <div class="criteria-ratings">
+                                <label th:each="criteriaRating : ${criteria.criteriaRatings}" 
+                                       class="criteria-rating-option">
+                                    <input type="radio" 
+                                           th:name="'eval_criteria_' + ${criteria.id} + '_rating'"
+                                           th:value="${criteriaRating.level}"
+                                           required />
+                                    <div>
+                                        <strong th:text="${criteriaRating.name}">Rating</strong>
+                                        <p style="margin: 5px 0; font-size: 13px;" 
+                                           th:text="${criteriaRating.description}">Description</p>
+                                        <p style="margin: 0; color: #23395d; font-weight: bold;">
+                                            <span th:text="${criteriaRating.ratingMark}">0</span> marks
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments -->
+                    <div class="section-info">
+                        <h4>💬 Comments (Optional)</h4>
+                        <textarea name="comments" 
+                                  placeholder="Enter any comments..."></textarea>
+                    </div>
+
+                    <!-- Next Button -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-next">Next: Assessment →</button>
+                        <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" 
+                           class="btn-back">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Visual feedback for radio button selection
+        document.querySelectorAll('.rating-option input[type="radio"], .criteria-rating-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const name = this.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                    r.closest('.rating-option, .criteria-rating-option').classList.remove('selected');
+                });
+                this.closest('.rating-option, .criteria-rating-option').classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

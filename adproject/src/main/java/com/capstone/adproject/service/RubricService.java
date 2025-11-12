@@ -283,13 +283,35 @@ public class RubricService {
     }
 
     public boolean isRubricNameDuplicate(String name, Long assessmentId, Long rubricIdToExclude) {
-        List<Rubric> existingRubrics = rubricRepository.findByNameAndAssessmentId(name, assessmentId);
-        
-        // Filter out the rubric being edited (if any)
-        if (rubricIdToExclude != null) {
-            existingRubrics.removeIf(rubric -> rubric.getId().equals(rubricIdToExclude));
-        }
-        
-        return !existingRubrics.isEmpty();
+    if (name == null || name.trim().isEmpty()) {
+        return false;
     }
+    
+    // Normalize the input name by removing all whitespace and converting to lowercase
+    String normalizedName = name.replaceAll("\\s+", "").toLowerCase();
+    
+    List<Rubric> existingRubrics = rubricRepository.findByNameAndAssessmentId(name, assessmentId);
+    
+    // Also check all rubrics in the assessment with normalized names
+    Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+    if (assessment != null && assessment.getRubrics() != null) {
+        for (Rubric rubric : assessment.getRubrics()) {
+            // Skip the rubric being edited
+            if (rubricIdToExclude != null && rubric.getId().equals(rubricIdToExclude)) {
+                continue;
+            }
+            
+            if (rubric.getName() != null) {
+                String normalizedExisting = rubric.getName().replaceAll("\\s+", "").toLowerCase();
+                if (normalizedExisting.equals(normalizedName)) {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
+    
 }

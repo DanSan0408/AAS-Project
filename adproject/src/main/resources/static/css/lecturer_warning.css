@@ -1,0 +1,199 @@
+/* =======================================================
+    LECTURER RE-EVALUATION WARNING PAGE - DEDICATED CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    
+    NOTE: Using bright red/orange for high visibility warning.
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette - Dark Blue Theme */
+    --primary-dark: #23395d;      /* Main Headings */
+    --primary-darker: #203354;    /* Detail Headers */
+    --primary-darkest-bg: #1c2e4a; /* Deep Borders/Accents */
+    --primary-night: #192841;     
+    --primary-midnight: #152238;  
+    
+    /* Warning and Action Colors */
+    --warning-red: #e74c3c;       /* Strong warning color */
+    --warning-orange: #f39c12;    /* Icon and main alert border */
+    --warning-light-bg: #fffbf5;  /* Very light warning background */
+    
+    /* General UI Colors */
+    --bg-page: #f0f4f8;           /* Light page background */
+    --bg-card: #ffffff;           /* Container background */
+    --text-color: #333333;
+}
+
+/* ==================== PAGE & CONTAINER ==================== */
+body {
+    background-color: var(--bg-page);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.warning-container {
+    max-width: 650px;
+    width: 90%;
+    padding: 40px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    border-top: 5px solid var(--warning-orange);
+}
+
+.warning-icon {
+    font-size: 50px;
+    margin-bottom: 20px;
+    color: var(--warning-orange);
+}
+
+.warning-title {
+    color: var(--warning-red);
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    border-bottom: 2px dashed var(--warning-orange);
+    padding-bottom: 10px;
+}
+
+.warning-message {
+    font-size: 17px;
+    color: var(--text-color);
+    line-height: 1.6;
+    margin-bottom: 30px;
+    padding: 15px;
+    background-color: var(--warning-light-bg);
+    border: 1px solid var(--warning-orange);
+    border-radius: 8px;
+}
+
+.warning-message strong {
+    color: var(--warning-red);
+    font-weight: 900;
+}
+
+/* ==================== DETAILS SECTION ==================== */
+.warning-details {
+    text-align: left;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f7f9fc;
+    border-left: 5px solid var(--primary-darker);
+    border-radius: 6px;
+}
+
+.warning-details h4 {
+    color: var(--primary-dark);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.warning-details p {
+    margin: 5px 0;
+    font-size: 15px;
+    color: var(--text-color);
+}
+
+.warning-details strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== LIST OF WARNINGS ==================== */
+.warning-list {
+    text-align: left;
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid var(--warning-red);
+    background-color: #fcebeb;
+    border-radius: 8px;
+}
+
+.warning-list h4 {
+    color: var(--warning-red);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.warning-list ul {
+    list-style: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    color: var(--warning-red);
+    font-size: 14px;
+}
+
+.warning-list li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+/* ==================== BUTTONS ==================== */
+.warning-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.warning-buttons form, .warning-buttons a {
+    flex: 1 1 200px;
+}
+
+.btn-warning-confirm {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--warning-red);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-warning-confirm:hover {
+    background-color: #c0392b; /* Darker red */
+}
+
+.btn-warning-cancel {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-dark);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.btn-warning-cancel:hover {
+    background-color: var(--primary-darker);
+}
+
+/* ==================== MEDIA QUERIES ==================== */
+@media (max-width: 600px) {
+    .warning-container {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .warning-title {
+        font-size: 24px;
+    }
+    
+    .warning-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+}

@@ -5,99 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Home</title>
     <link rel="stylesheet" th:href="@{/css/style.css}"> 
-    <style>
-        /* Additional inline styles for deadline display improvements */
-        .deadline-item {
-            background-color: #2c3e50;
-            border: 1px solid #34495e;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .deadline-item p {
-            margin: 8px 0;
-            color: #ecf0f1;
-        }
-        
-        .deadline-item strong {
-            color: #3498db;
-            display: inline-block;
-            width: 120px;
-        }
-        
-        .deadline-type-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-left: 5px;
-        }
-        
-        .badge-student {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .badge-lecturer {
-            background-color: #2980b9;
-            color: white;
-        }
-        
-        .badge-supervisor {
-            background-color: #8e44ad;
-            color: white;
-        }
-        
-        .badge-general {
-            background-color: #95a5a6;
-            color: white;
-        }
-        
-        .deadline-actions {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #34495e;
-        }
-        
-        .no-deadlines-message {
-            text-align: center;
-            padding: 30px;
-            color: #95a5a6;
-            font-style: italic;
-        }
-        
-        .add-new-deadline {
-            background-color: #34495e;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        
-        .add-new-deadline h3 {
-            color: #3498db;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-        
-        .date-info {
-            display: inline-block;
-            padding: 2px 8px;
-            background-color: #34495e;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .instant-badge {
-            background-color: #e74c3c;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-    </style>
+    
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -316,33 +224,33 @@
     </div>
     
     <script th:inline="javascript">
-    /* This script runs if the controller redirected with 'isDuplicate' flash attribute */
-    
     const isDuplicate = /*[[${isDuplicate}]]*/ false;
     
     if (isDuplicate === true) {
         const deadlineData = /*[[${deadlineToSave}]]*/ null;
-        const title = deadlineData ? deadlineData.title : 'the entered title';
+        const existingTitle = /*[[${existingTitle}]]*/ '';
+        const newTitle = deadlineData ? deadlineData.title : 'the entered title';
 
-        let confirmed = confirm(`A deadline with the title "${title}" already exists. Do you really want to save this duplicate?`);
+        let message = `A deadline similar to "${newTitle}" already exists`;
+        if (existingTitle) {
+            message += ` (existing: "${existingTitle}")`;
+        }
+        message += `. The titles are the same when ignoring spaces. Do you really want to save this duplicate?`;
+
+        let confirmed = confirm(message);
         
         if (confirmed) {
             const form = document.getElementById('newDeadlineForm');
-            
-            // Create a hidden input to send the confirmation flag back to the controller
             const confirmInput = document.createElement('input');
             confirmInput.type = 'hidden';
             confirmInput.name = 'confirmDuplicate';
             confirmInput.value = 'true';
-            
             form.appendChild(confirmInput);
-
-            // Resubmit the form
             form.submit();
         } else {
             console.log("Duplicate entry creation cancelled by admin.");
         }
     }
-    </script>
+</script>
 </body>
 </html>

@@ -1,0 +1,357 @@
+/* =======================================================
+    LECTURER ASSESSMENT PAGE 2 - DEDICATED CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette - Dark Blue Theme */
+    --primary-dark: #23395d;      /* Darkest Blue - Headings/Main Accents */
+    --primary-darker: #203354;    /* Slightly Lighter Dark Blue - Button/Hover BG */
+    --primary-darkest-bg: #1c2e4a; /* Very Dark Blue - Deep BG/Borders */
+    --primary-night: #192841;     /* Text/Icon Accents */
+    --primary-midnight: #152238;  /* Deepest Accent */
+    
+    /* Secondary/Accents */
+    --accent-green: #2ecc71;      /* Submit Button */
+    --accent-orange: #e67e22;     /* Emphasis/Warning text */
+    --text-color: #333333;
+    --light-bg: #f7f9fc;          /* Light background for sections */
+    --border-color: #dddddd;
+    --selected-border: #3498db;   /* Standard light blue for selection */
+}
+
+/* ==================== CORE LAYOUT & CONTAINERS ==================== */
+.content-flex-container {
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.evaluation-container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    background: var(--light-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.evaluation-container h2 {
+    color: var(--primary-dark);
+    margin-bottom: 25px;
+    font-size: 32px;
+    font-weight: 700;
+    border-bottom: 4px solid var(--primary-darker);
+    padding-bottom: 10px;
+}
+
+.evaluation-container h3 {
+    color: var(--primary-darker);
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 24px;
+    border-left: 5px solid var(--accent-green);
+    padding-left: 10px;
+}
+
+h4 {
+    color: var(--primary-dark);
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* ==================== PAGE INDICATOR & INFO ==================== */
+.page-indicator {
+    padding: 10px 15px;
+    background-color: var(--primary-dark);
+    color: white;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.section-info {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    color: var(--text-color);
+}
+
+.section-info p {
+    margin: 5px 0;
+    font-size: 15px;
+}
+
+.section-info strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== RUBRIC COMPONENTS ==================== */
+.student-assessment-section {
+    margin-bottom: 40px;
+    border: 1px solid var(--primary-darkest-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(35, 57, 93, 0.1); /* Subtle shadow using primary color */
+}
+
+.student-assessment-header {
+    background: var(--primary-dark);
+    color: white;
+    padding: 15px 20px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    border-bottom: 3px solid var(--accent-green);
+}
+
+.rubric-component {
+    margin: 0 20px 30px 20px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--primary-darker);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.badge-individual {
+    background-color: var(--primary-night);
+}
+
+.badge-group {
+    background-color: var(--primary-darker);
+}
+
+.component-info {
+    font-size: 14px;
+    color: var(--text-color);
+    margin-bottom: 15px;
+    padding-left: 5px;
+}
+
+.sub-rubric-item {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #eeeeee;
+    border-radius: 6px;
+}
+
+.sub-rubric-item h5 {
+    font-size: 16px;
+    color: var(--primary-dark);
+    margin-bottom: 5px;
+}
+
+.sub-rubric-item p {
+    font-size: 14px;
+    color: var(--text-color);
+    margin-bottom: 15px;
+}
+
+/* ==================== RATING OPTIONS (Likert Scale) ==================== */
+.rating-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rating-option {
+    flex: 1 1 200px; /* Allow options to flex, min width 200px */
+    display: block;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    padding: 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    background-color: #fcfcfc;
+}
+
+.rating-option input[type="radio"] {
+    margin-right: 8px;
+    accent-color: var(--primary-dark);
+    transform: scale(1.2);
+}
+
+.rating-option:hover {
+    border-color: var(--primary-darker);
+    background-color: #f0f3f7;
+}
+
+.rating-option.selected {
+    background-color: #e8f4ff; /* Light blue background for selected */
+    border-color: var(--selected-border);
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.rating-option strong {
+    color: var(--primary-darker);
+}
+
+.rating-option span {
+    color: var(--primary-darker);
+}
+
+
+/* ==================== CRITERIA RATINGS (Criteria Based) ==================== */
+.criteria-ratings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.criteria-rating-option {
+    display: block;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    padding: 15px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+}
+
+.criteria-rating-option:hover {
+    border-color: var(--primary-darker);
+    background-color: #f0f3f7;
+}
+
+.criteria-rating-option.selected {
+    background-color: #e8f4ff; 
+    border-color: var(--selected-border);
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.criteria-rating-option input[type="radio"] {
+    float: right;
+    margin-left: 10px;
+    accent-color: var(--primary-dark);
+    transform: scale(1.3);
+}
+
+.criteria-rating-option p {
+    color: var(--primary-darker) !important; 
+}
+
+.criteria-rating-option p strong {
+    color: var(--primary-darker);
+}
+
+/* ==================== COMMENTS & ACTIONS ==================== */
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 15px;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-top: 10px;
+    transition: border-color 0.3s;
+}
+
+textarea:focus {
+    border-color: var(--primary-darker);
+    outline: none;
+    box-shadow: 0 0 5px rgba(35, 57, 93, 0.2);
+}
+
+.form-actions {
+    margin-top: 30px;
+    text-align: right;
+}
+
+.btn-submit {
+    background-color: var(--accent-green);
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    transition: background 0.3s ease, transform 0.1s ease;
+}
+
+.btn-submit:hover {
+    background-color: #27ae60; /* Darker green */
+}
+
+.btn-submit:active {
+    transform: scale(0.99);
+}
+
+/* ==================== ALERTS ==================== */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* ==================== MEDIA QUERIES ==================== */
+@media (max-width: 768px) {
+    .evaluation-container {
+        padding: 15px;
+        margin: 0 10px;
+    }
+
+    .evaluation-container h2 {
+        font-size: 26px;
+    }
+
+    .rating-options {
+        flex-direction: column;
+    }
+
+    .rating-option {
+        flex: 1 1 100%;
+    }
+
+    .criteria-ratings {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-submit {
+        width: 100%;
+    }
+}

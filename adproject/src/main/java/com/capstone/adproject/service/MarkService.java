@@ -80,7 +80,7 @@ public class MarkService {
             mark.setEvaluatedStudent(evaluated);
             mark.setAssessment(assessment);
             mark.setAssessmentType(evaluator.getId().equals(evaluated.getId()) ? 
-                    Mark.AssessmentType.SELF : Mark.AssessmentType.PEER);
+        "Self Assessment" : "Peer Assessment");
             mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
             mark.setSubmittedAt(LocalDateTime.now());
             

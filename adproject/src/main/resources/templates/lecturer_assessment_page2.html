@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assessment - Page 2</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_assessments2.css}">
+</head>
+<body>
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="evaluation-container">
+                <h2 th:text="'Assess: ' + ${assessment.title}">Assessment</h2>
+
+                <div class="page-indicator page-2">
+                    ✅ PAGE 2 of 2: ASSESSMENT TYPE
+                </div>
+
+                <!-- Messages -->
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+                <div class="section-info">
+                    <p th:if="${selectedGroup != null}">
+                        <strong>Selected Group:</strong> <span th:text="${selectedGroup.groupName}"></span>
+                    </p>
+                    <p th:if="${selectedStudent != null}">
+                        <strong>Selected Student:</strong> <span th:text="${selectedStudent.username}"></span>
+                    </p>
+                    <p>
+                        <strong>Assessment Type:</strong> 
+                        <span th:text="${assessmentType == 'INDIVIDUAL' ? 'Individual Assessment' : 'Group Assessment'}"></span>
+                    </p>
+                </div>
+
+                <form th:action="@{/lecturer/assessments/{id}/assess/submit(id=${assessment.id})}" 
+                      method="post" 
+                      id="assessmentForm">
+
+                    <input type="hidden" name="groupId" th:if="${selectedGroup != null}" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" name="studentId" th:if="${selectedStudent != null}" th:value="${selectedStudent.id}"/>
+
+                    <!-- INDIVIDUAL ASSESSMENT (for each student in group) -->
+                    <div th:if="${assessmentType == 'INDIVIDUAL' and studentsToAssess != null and !studentsToAssess.isEmpty()}">
+                        <h3>👥 Individual Assessment for Each Student</h3>
+                        <p style="color: #e67e22; margin-bottom: 20px;">
+                            <em>Evaluate each student individually</em>
+                        </p>
+
+                        <!-- Loop through each student -->
+                        <div th:each="student, iterStat : ${studentsToAssess}" class="student-assessment-section">
+                            <div class="student-assessment-header">
+                                👤 Student [[${iterStat.count}]]: <span th:text="${student.username}"></span>
+                            </div>
+
+                            <!-- ASSESSMENT RUBRICS FOR THIS STUDENT -->
+                            <div th:if="${assessmentRubrics != null and !assessmentRubrics.isEmpty()}">
+                                <div th:each="rubric : ${assessmentRubrics}">
+                                    <div th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}" 
+                                         class="rubric-component">
+                                        <div class="rubric-header">
+                                            <span th:text="${rubric.name}">Rubric Name</span>
+                                            <span class="badge badge-individual">INDIVIDUAL</span>
+                                        </div>
+                                        
+                                        <div class="component-info">
+                                            <p>
+                                                <strong>Type:</strong> Likert Scale | 
+                                                <strong>Marks:</strong> <span th:text="${rubric.marks}">0</span> | 
+                                                <strong>CLO:</strong> <span th:text="${rubric.clo}">0</span>
+                                            </p>
+                                        </div>
+
+                                        <!-- SUB RUBRICS -->
+                                        <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-item">
+                                            <h5 th:text="${subRubric.name}">Sub Rubric</h5>
+                                            <p th:if="${subRubric.description != null}" 
+                                               th:text="${subRubric.description}">Description</p>
+
+                                            <!-- RATINGS -->
+                                            <div class="rating-options">
+                                                <label th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                                    <input type="radio" 
+                                                           th:name="'assess_student_' + ${student.id} + '_subRubric_' + ${subRubric.id} + '_rating'"
+                                                           th:value="${rating.id}"
+                                                           required />
+                                                    <span>
+                                                        <strong th:text="${rating.levelLabel}">Level</strong> - 
+                                                        <span th:text="${rating.description}">Description</span>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ASSESSMENT CRITERIA FOR THIS STUDENT -->
+                            <div th:if="${assessmentCriteria != null and !assessmentCriteria.isEmpty()}">
+                                <div th:each="criteria : ${assessmentCriteria}" 
+                                     class="rubric-component">
+                                    <div class="rubric-header">
+                                        <span th:text="${criteria.name}">Criteria Name</span>
+                                        <span class="badge badge-individual">INDIVIDUAL</span>
+                                    </div>
+                                    
+                                    <div class="component-info">
+                                        <p>
+                                            <strong>Type:</strong> Criteria Based | 
+                                            <strong>Marks:</strong> <span th:text="${criteria.marks}">0</span> | 
+                                            <strong>CLO:</strong> <span th:text="${criteria.clo}">0</span>
+                                        </p>
+                                    </div>
+
+                                    <!-- CRITERIA RATINGS -->
+                                    <div class="criteria-ratings">
+                                        <label th:each="criteriaRating : ${criteria.criteriaRatings}" 
+                                               class="criteria-rating-option">
+                                            <input type="radio" 
+                                                   th:name="'assess_student_' + ${student.id} + '_criteria_' + ${criteria.id} + '_rating'"
+                                                   th:value="${criteriaRating.level}"
+                                                   required />
+                                            <div>
+                                                <strong th:text="${criteriaRating.name}">Rating</strong>
+                                                <p style="margin: 5px 0; font-size: 13px;" 
+                                                   th:text="${criteriaRating.description}">Description</p>
+                                                <p style="margin: 0; color: #23395d; font-weight: bold;">
+                                                    <span th:text="${criteriaRating.ratingMark}">0</span> marks
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GROUP ASSESSMENT (for student's group) -->
+                    <div th:if="${assessmentType == 'GROUP' and groupsToAssess != null and !groupsToAssess.isEmpty()}">
+                        <h3>📊 Group Assessment</h3>
+                        <p style="color: #e67e22; margin-bottom: 20px;">
+                            <em>Evaluate the group: <span th:text="${groupsToAssess[0].groupName}"></span></em>
+                        </p>
+
+                        <!-- ASSESSMENT RUBRICS -->
+                        <div th:if="${assessmentRubrics != null and !assessmentRubrics.isEmpty()}">
+                            <div th:each="rubric : ${assessmentRubrics}">
+                                <div th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}" 
+                                     class="rubric-component">
+                                    <div class="rubric-header">
+                                        <span th:text="${rubric.name}">Rubric Name</span>
+                                        <span class="badge badge-group">GROUP</span>
+                                    </div>
+                                    
+                                    <div class="component-info">
+                                        <p>
+                                            <strong>Type:</strong> Likert Scale | 
+                                            <strong>Marks:</strong> <span th:text="${rubric.marks}">0</span> | 
+                                            <strong>CLO:</strong> <span th:text="${rubric.clo}">0</span>
+                                        </p>
+                                    </div>
+
+                                    <!-- SUB RUBRICS -->
+                                    <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-item">
+                                        <h5 th:text="${subRubric.name}">Sub Rubric</h5>
+                                        <p th:if="${subRubric.description != null}" 
+                                           th:text="${subRubric.description}">Description</p>
+
+                                        <!-- RATINGS -->
+                                        <div class="rating-options">
+                                            <label th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                                <input type="radio" 
+                                                       th:name="'assess_group_subRubric_' + ${subRubric.id} + '_rating'"
+                                                       th:value="${rating.id}"
+                                                       required />
+                                                <span>
+                                                    <strong th:text="${rating.levelLabel}">Level</strong> - 
+                                                    <span th:text="${rating.description}">Description</span>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ASSESSMENT CRITERIA -->
+                        <div th:if="${assessmentCriteria != null and !assessmentCriteria.isEmpty()}">
+                            <div th:each="criteria : ${assessmentCriteria}" 
+                                 class="rubric-component">
+                                <div class="rubric-header">
+                                    <span th:text="${criteria.name}">Criteria Name</span>
+                                    <span class="badge badge-group">GROUP</span>
+                                </div>
+                                
+                                <div class="component-info">
+                                    <p>
+                                        <strong>Type:</strong> Criteria Based | 
+                                        <strong>Marks:</strong> <span th:text="${criteria.marks}">0</span> | 
+                                        <strong>CLO:</strong> <span th:text="${criteria.clo}">0</span>
+                                    </p>
+                                </div>
+
+                                <!-- CRITERIA RATINGS -->
+                                <div class="criteria-ratings">
+                                    <label th:each="criteriaRating : ${criteria.criteriaRatings}" 
+                                           class="criteria-rating-option">
+                                        <input type="radio" 
+                                               th:name="'assess_group_criteria_' + ${criteria.id} + '_rating'"
+                                               th:value="${criteriaRating.level}"
+                                               required />
+                                        <div>
+                                            <strong th:text="${criteriaRating.name}">Rating</strong>
+                                            <p style="margin: 5px 0; font-size: 13px;" 
+                                               th:text="${criteriaRating.description}">Description</p>
+                                            <p style="margin: 0; color: #23395d; font-weight: bold;">
+                                                <span th:text="${criteriaRating.ratingMark}">0</span> marks
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments -->
+                    <div class="section-info">
+                        <h4>💬 Additional Comments (Optional)</h4>
+                        <textarea name="comments" 
+                                  placeholder="Enter any additional feedback..."></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">✓ Complete & Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Visual feedback for radio button selection
+        document.querySelectorAll('.rating-option input[type="radio"], .criteria-rating-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const name = this.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                    r.closest('.rating-option, .criteria-rating-option').classList.remove('selected');
+                });
+                this.closest('.rating-option, .criteria-rating-option').classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

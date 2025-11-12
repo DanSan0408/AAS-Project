@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Target - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_select.css}">
+</head>
+<body>
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="selection-container">
+                <a th:href="@{/lecturer/assessments}" class="btn-back">← Back to Assessments</a>
+
+                <h2 th:text="'Select Target for: ' + ${assessment.title}">Select Target</h2>
+
+                <!-- Messages -->
+                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+                <!-- Instructions -->
+                <div class="instruction-box">
+                    <h4>📋 Instructions</h4>
+                    <ul>
+                        <li><strong>Step 1:</strong> Select a group or student to evaluate based on the evaluation type</li>
+                        <li><strong>Step 2:</strong> If already evaluated, you'll see a warning before proceeding</li>
+                        <li><strong>Step 3:</strong> Complete the evaluation form</li>
+                        <li>✓ Green checkmark indicates already evaluated targets</li>
+                    </ul>
+                </div>
+
+                <!-- GROUP EVALUATION TARGETS -->
+                <div th:if="${hasGroupEvaluation}" class="target-section">
+                    <h3>📊 Group Evaluation - Select a Group</h3>
+                    <p>Choose a group to evaluate for Group Evaluation rubrics/criteria.</p>
+
+                    <div class="target-grid">
+                        <form th:each="group : ${allGroups}" 
+                              th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
+                              method="post">
+                            <input type="hidden" name="groupId" th:value="${group.id}"/>
+                            
+                            <div class="target-card" 
+                                 th:classappend="${groupEvaluationStatus.get(group.id)} ? 'evaluated' : ''">
+                                <div class="target-name" th:text="${group.groupName}">Group Name</div>
+                                
+                                <div class="group-members" th:if="${group.students != null and !group.students.isEmpty()}">
+                                    <p><strong>Members:</strong></p>
+                                    <ul>
+                                        <li th:each="student : ${group.students}" 
+                                            th:text="${student.username}">Student Name</li>
+                                    </ul>
+                                </div>
+                                
+                                <button type="submit" class="btn-select">
+                                    Select Group
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- INDIVIDUAL EVALUATION TARGETS -->
+                <div th:if="${hasIndividualEvaluation}" class="target-section">
+                    <h3>👤 Individual Evaluation - Select a Student</h3>
+                    <p>Choose a student to evaluate for Individual Evaluation rubrics/criteria.</p>
+
+                    <div class="target-grid">
+                        <form th:each="student : ${allStudents}" 
+                              th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
+                              method="post">
+                            <input type="hidden" name="studentId" th:value="${student.id}"/>
+                            
+                            <div class="target-card" 
+                                 th:classappend="${studentEvaluationStatus.get(student.id)} ? 'evaluated' : ''">
+                                <div class="target-name" th:text="${student.username}">Student Name</div>
+                                
+                                <div class="target-info" th:if="${student.group != null}">
+                                    Group: <span th:text="${student.group.groupName}">Group Name</span>
+                                </div>
+                                
+                                <button type="submit" class="btn-select">
+                                    Select Student
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
