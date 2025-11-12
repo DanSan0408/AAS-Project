@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Re-evaluation Warning</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_warning.css}">
+</head>
+<body>
+    <div class="warning-container">
+        <div class="warning-icon">⚠️</div>
+        
+        <h2 class="warning-title">Re-evaluation Warning</h2>
+        
+        <p class="warning-message">
+            You have already evaluated this target for this assessment.
+            If you proceed, <strong>ALL EXISTING MARKS WILL BE REPLACED</strong> with the new evaluation.
+        </p>
+
+        <div class="warning-details">
+            <h4>📋 Evaluation Details:</h4>
+            <p><strong>Assessment:</strong> <span th:text="${assessment.title}"></span></p>
+            <p th:if="${targetType == 'GROUP'}">
+                <strong>Target Type:</strong> Group Evaluation<br/>
+                <strong>Group:</strong> <span th:text="${selectedGroup.groupName}"></span>
+            </p>
+            <p th:if="${targetType == 'STUDENT'}">
+                <strong>Target Type:</strong> Individual Evaluation<br/>
+                <strong>Student:</strong> <span th:text="${selectedStudent.username}"></span>
+            </p>
+        </div>
+
+        <div class="warning-list">
+            <h4>⚠️ Important:</h4>
+            <ul>
+                <li>All previous marks for this evaluation will be permanently deleted</li>
+                <li>You cannot undo this action once confirmed</li>
+                <li>Make sure you want to completely replace the evaluation</li>
+                <li>Consider whether you need to re-evaluate or if the existing evaluation is sufficient</li>
+            </ul>
+        </div>
+
+        <div class="warning-buttons">
+            <form th:if="${selectedGroup != null}"
+                  th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
+                  method="post"
+                  onsubmit="return confirm('Are you absolutely sure you want to replace the existing evaluation?');">
+                <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
+                <input type="hidden" name="confirmReevaluation" value="true"/>
+                <button type="submit" class="btn-warning-confirm">
+                    ✓ Confirm Re-evaluation
+                </button>
+            </form>
+
+            <form th:if="${selectedStudent != null}"
+                  th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
+                  method="post"
+                  onsubmit="return confirm('Are you absolutely sure you want to replace the existing evaluation?');">
+                <input type="hidden" name="studentId" th:value="${selectedStudent.id}"/>
+                <input type="hidden" name="confirmReevaluation" value="true"/>
+                <button type="submit" class="btn-warning-confirm">
+                    ✓ Confirm Re-evaluation
+                </button>
+            </form>
+            
+            <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" 
+               class="btn-warning-cancel">
+                ✕ Choose Another Target
+            </a>
+        </div>
+    </div>
+</body>
+</html>

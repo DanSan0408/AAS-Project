@@ -44,23 +44,49 @@ public class DeadlineService {
     }
     
     /**
-     * ⭐ NEW: Get deadlines by assessment ID
+     * ⭐ NEW: Check if a deadline title is a duplicate (ignoring whitespace)
+     * @param title The title to check
+     * @param deadlineIdToExclude The ID of the deadline being edited (null for new deadlines)
+     * @return true if a duplicate exists, false otherwise
      */
+    public boolean isTitleDuplicateIgnoringWhitespace(String title, Long deadlineIdToExclude) {
+        if (title == null || title.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Normalize the input title by removing all whitespace and converting to lowercase
+        String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
+        
+        // Get all deadlines and check for normalized matches
+        List<Deadline> allDeadlines = deadlineRepository.findAll();
+        
+        for (Deadline deadline : allDeadlines) {
+            // Skip the deadline being edited
+            if (deadlineIdToExclude != null && deadline.getId().equals(deadlineIdToExclude)) {
+                continue;
+            }
+            
+            // Normalize the existing deadline title
+            if (deadline.getTitle() != null) {
+                String normalizedExisting = deadline.getTitle().replaceAll("\\s+", "").toLowerCase();
+                
+                if (normalizedExisting.equals(normalizedTitle)) {
+                    return true; // Duplicate found
+                }
+            }
+        }
+        
+        return false; // No duplicate found
+    }
+    
     public List<Deadline> getDeadlinesByAssessmentId(Long assessmentId) {
         return deadlineRepository.findByAssessmentId(assessmentId);
     }
     
-    /**
-     * ⭐ NEW: Get deadlines by assessor type (STUDENT, LECTURER, SUPERVISOR)
-     */
     public List<Deadline> getDeadlinesByAssessorType(String assessorType) {
         return deadlineRepository.findByAssessorType(assessorType);
     }
     
-    /**
-     * ⭐ NEW: Get deadlines by assessment ID and assessor type
-     * This is the key method for checking if an assessment is open for a specific user role
-     */
     public List<Deadline> getDeadlinesByAssessmentIdAndAssessorType(Long assessmentId, String assessorType) {
         return deadlineRepository.findByAssessmentIdAndAssessorType(assessmentId, assessorType);
     }

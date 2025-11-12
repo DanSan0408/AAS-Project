@@ -2,6 +2,7 @@ package com.capstone.adproject.controller;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,44 +42,58 @@ public class DeadlineController {
 
     
     @PostMapping("/save")
-    public String saveDeadline(
-        @ModelAttribute Deadline deadline, 
-        @RequestParam(value = "confirmDuplicate", required = false, defaultValue = "false") boolean confirmDuplicate, 
-        RedirectAttributes redirectAttributes) {
-        
-        String title = deadline.getTitle() != null ? deadline.getTitle().trim() : "";
-        
-        if (title.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Title cannot be empty!");
-            return "redirect:/admin/home";
-        }
-
-        // 1. Check for Duplicate Title (only if it's a NEW deadline or an update changing the title)
-        Optional<Deadline> existingDeadline = deadlineService.findByTitle(title);
-
-        if (existingDeadline.isPresent()) {
-            // Check if the duplicate belongs to a different entity (i.e., it's a true duplicate or a new entry)
-            boolean isUpdateOfSameEntity = deadline.getId() != null && 
-                                           existingDeadline.get().getId().equals(deadline.getId());
-
-            if (!isUpdateOfSameEntity) {
-                if (!confirmDuplicate) {
-                    // Title exists and admin has NOT confirmed: trigger the warning
-                    redirectAttributes.addFlashAttribute("deadlineToSave", deadline); // Pass the entire object
-                    redirectAttributes.addFlashAttribute("isDuplicate", true);
-                    return "redirect:/admin/home"; 
-                }
-                // If confirmDuplicate is true, we proceed to save (Step 2).
-            }
-        }
-
-        // 2. Save the Deadline (If not duplicate, or if duplicate confirmed)
-        deadlineService.save(deadline);
-        redirectAttributes.addFlashAttribute("successMessage", "Deadline saved successfully!");
-        
+public String saveDeadline(
+    @ModelAttribute Deadline deadline, 
+    @RequestParam(value = "confirmDuplicate", required = false, defaultValue = "false") boolean confirmDuplicate, 
+    RedirectAttributes redirectAttributes) {
+    
+    String title = deadline.getTitle() != null ? deadline.getTitle().trim() : "";
+    
+    if (title.isEmpty()) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Title cannot be empty!");
         return "redirect:/admin/home";
     }
 
+    // 1. Check for Duplicate Title (IGNORING WHITESPACE)
+    if (!confirmDuplicate) {
+        boolean isDuplicate = deadlineService.isTitleDuplicateIgnoringWhitespace(title, deadline.getId());
+        
+        if (isDuplicate) {
+            // Find the existing deadline with similar title for display
+            String existingTitle = findExistingTitleIgnoringWhitespace(title, deadline.getId());
+            
+            redirectAttributes.addFlashAttribute("deadlineToSave", deadline);
+            redirectAttributes.addFlashAttribute("isDuplicate", true);
+            redirectAttributes.addFlashAttribute("existingTitle", existingTitle); // Pass existing title for display
+            return "redirect:/admin/home"; 
+        }
+    }
+
+    // 2. Save the Deadline
+    deadlineService.save(deadline);
+    redirectAttributes.addFlashAttribute("successMessage", "Deadline saved successfully!");
+    
+    return "redirect:/admin/home";
+}
+
+// Helper method to find the existing title for display in the warning
+private String findExistingTitleIgnoringWhitespace(String title, Long excludeId) {
+    String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
+    List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+    
+    for (Deadline deadline : allDeadlines) {
+        if (excludeId != null && deadline.getId().equals(excludeId)) {
+            continue;
+        }
+        if (deadline.getTitle() != null) {
+            String normalizedExisting = deadline.getTitle().replaceAll("\\s+", "").toLowerCase();
+            if (normalizedExisting.equals(normalizedTitle)) {
+                return deadline.getTitle();
+            }
+        }
+    }
+    return title;
+}
     @GetMapping("/edit/{id}")
     public String editDeadline(@PathVariable("id") Long id, Model model) {
         Optional<Deadline> deadlineOptional = deadlineService.getDeadlineById(id);

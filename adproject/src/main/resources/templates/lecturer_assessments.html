@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assess Students</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_assessments.css}">
+</head>
+<body>
+    <div th:replace="fragments/lecturer_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="rubric-section">
+                <h2>ASSESS STUDENTS</h2>
+
+                <div th:if="${successMessage}" class="alert alert-success">
+                    <span th:text="${successMessage}"></span>
+                </div>
+
+                <div th:if="${errorMessage}" class="alert alert-error">
+                    <span th:text="${errorMessage}"></span>
+                </div>
+
+                <div th:if="${assessments.isEmpty()}" class="no-assessments">
+                    <p>No assessments available for evaluation at this time.</p>
+                </div>
+
+                <div th:each="assessment : ${assessments}" class="assessment-card">
+                    <h3 th:text="${assessment.title}">Assessment Title</h3>
+                    
+                    <div class="assessment-details">
+                        <p><strong>Total Marks:</strong> 
+                            <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
+                        </p>
+                        
+                        <div th:if="${!assessment.cloMarks.isEmpty()}">
+                            <p><strong>CLO Distribution:</strong></p>
+                            <ul>
+                                <li th:each="clo : ${assessment.cloMarks}">
+                                    CLO <span th:text="${clo.key}">1</span>: 
+                                    <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span> marks
+                                </li>
+                            </ul>
+                        </div>
+
+                        <p><strong>Components:</strong></p>
+                        <ul>
+                            <li th:if="${!assessment.rubrics.isEmpty()}">
+                                <span th:text="${assessment.rubrics.size()}">0</span> Likert Scale Rubric(s)
+                            </li>
+                            <li th:if="${!assessment.criteria.isEmpty()}">
+                                <span th:text="${assessment.criteria.size()}">0</span> Criteria-Based Rubric(s)
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" 
+                        class="btn-evaluate">
+                        Start Assessment
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

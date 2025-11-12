@@ -32,9 +32,8 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
     List<Mark> findByGroupMembersAndAssessment(@Param("groupMembers") List<Student> groupMembers, 
                                                @Param("assessment") Assessment assessment);
     
-    // Find all peer assessments for a student in an assessment
     List<Mark> findByEvaluatedStudentAndAssessmentAndAssessmentType(
-            Student evaluatedStudent, Assessment assessment, Mark.AssessmentType assessmentType);
+        Student evaluatedStudent, Assessment assessment, String assessmentType);
     
     // Count submitted assessments for a student
     long countByEvaluatorStudentAndAssessmentAndStatus(

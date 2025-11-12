@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.dto.AssessmentAssignmentDto;
@@ -284,16 +285,35 @@ public class AdminController {
         return "manage_students";
     }
 
-    @PostMapping("/manage-students")
-    public String saveStudent(@ModelAttribute Student student, RedirectAttributes redirectAttributes) {
-        try {
-            adminService.saveStudent(student);
-            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
+   @PostMapping("/manage-students")
+public String saveStudent(
+        @ModelAttribute Student student, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Check for whitespace-insensitive duplicates
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkStudentDuplicate(
+                student.getUsername(), 
+                student.getEmail(), 
+                student.getId()
+            );
+            
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("student", student);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-students";
+            }
         }
-        return "redirect:/admin/manage-students";
+        
+        adminService.saveStudent(student);
+        redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-students";
+}
 
     @GetMapping("/manage-lecturers")
     public String manageLecturers(Model model) {
@@ -307,15 +327,34 @@ public class AdminController {
     }
 
     @PostMapping("/manage-lecturers")
-    public String saveLecturer(@ModelAttribute Lecturer lecturer, RedirectAttributes redirectAttributes) {
-        try {
-            adminService.saveLecturer(lecturer);
-            redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
+public String saveLecturer(
+        @ModelAttribute Lecturer lecturer, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Check for whitespace-insensitive duplicates
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkLecturerDuplicate(
+                lecturer.getUsername(), 
+                lecturer.getEmail(), 
+                lecturer.getId()
+            );
+            
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("lecturer", lecturer);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-lecturers";
+            }
         }
-        return "redirect:/admin/manage-lecturers";
+        
+        adminService.saveLecturer(lecturer);
+        redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-lecturers";
+}
 
     @GetMapping("/manage-supervisors")
     public String manageSupervisors(Model model) {
@@ -329,15 +368,34 @@ public class AdminController {
     }
 
     @PostMapping("/manage-supervisors")
-    public String saveIndustrialSupervisor(@ModelAttribute IndustrialSupervisor industrialSupervisor, RedirectAttributes redirectAttributes) {
-        try {
-            adminService.saveIndustrialSupervisor(industrialSupervisor);
-            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
+public String saveIndustrialSupervisor(
+        @ModelAttribute IndustrialSupervisor industrialSupervisor, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Check for whitespace-insensitive duplicates
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkSupervisorDuplicate(
+                industrialSupervisor.getUsername(), 
+                industrialSupervisor.getEmail(), 
+                industrialSupervisor.getId()
+            );
+            
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-supervisors";
+            }
         }
-        return "redirect:/admin/manage-supervisors";
+        
+        adminService.saveIndustrialSupervisor(industrialSupervisor);
+        redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-supervisors";
+}
 
     @GetMapping("/delete-student/{id}")
     public String deleteStudent(@PathVariable Long id) {

@@ -2,7 +2,6 @@ package com.capstone.adproject.controller;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -286,12 +285,12 @@ public class StudentController {
         
         List<Rubric> assessmentRubrics = assessment.getRubrics().stream()
                 .filter(r -> r.getEvaluationType() != null && 
-                        r.getEvaluationType().equalsIgnoreCase("Individual"))
+                            r.getEvaluationType().equalsIgnoreCase("Individual"))
                 .collect(Collectors.toList());
         
         List<Criteria> assessmentCriteria = assessment.getCriteria().stream()
                 .filter(c -> c.getEvaluationType() != null && 
-                        c.getEvaluationType().equalsIgnoreCase("Individual"))
+                            c.getEvaluationType().equalsIgnoreCase("Individual"))
                 .collect(Collectors.toList());
         
         // ⭐ Check if previous evaluation exists
@@ -333,14 +332,14 @@ public class StudentController {
     }
     
     /**
-     * ⭐ UPDATED: Submit with replacement logic
+     * ⭐ CORRECTED: Submit with all required Mark fields set.
      */
     @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
     public String submitPeerAssessment(@PathVariable Long assessmentId,
-                                       @PathVariable Long studentId,
-                                       @RequestParam Map<String, String> formData,
-                                       Principal principal,
-                                       RedirectAttributes redirectAttributes) {
+                                         @PathVariable Long studentId,
+                                         @RequestParam Map<String, String> formData,
+                                         Principal principal,
+                                         RedirectAttributes redirectAttributes) {
         
         Student evaluator = studentRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -393,10 +392,13 @@ public class StudentController {
                 mark.setEvaluatorStudent(evaluator);
                 mark.setEvaluatedStudent(evaluatedStudent);
                 mark.setAssessment(assessment);
-                mark.setRubric(rubric);
-                mark.setRating(rating);
+                mark.setRubric(rubric); // <-- Critical for @PrePersist (to set CLO, EvalType, etc.)
+                mark.setRating(rating); // <-- Critical for @PrePersist (to calculate MarkValue/CloMarks)
+                
+                // Set the basic assessment type which is used in the PrePersist
                 mark.setAssessmentType(evaluator.getId().equals(evaluatedStudent.getId()) ? 
-                        Mark.AssessmentType.SELF : Mark.AssessmentType.PEER);
+        "Self Assessment" : "Peer Assessment");
+                
                 mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
                 
                 marks.add(mark);
@@ -416,10 +418,13 @@ public class StudentController {
                 mark.setEvaluatorStudent(evaluator);
                 mark.setEvaluatedStudent(evaluatedStudent);
                 mark.setAssessment(assessment);
-                mark.setCriteria(criteria);
-                mark.setRatingLevel(ratingLevel);
+                mark.setCriteria(criteria); // <-- Critical for @PrePersist (to set CLO, EvalType, etc.)
+                mark.setRatingLevel(ratingLevel); // <-- Critical for @PrePersist (to calculate MarkValue/CloMarks)
+                
+                // Set the basic assessment type which is used in the PrePersist
                 mark.setAssessmentType(evaluator.getId().equals(evaluatedStudent.getId()) ? 
-                        Mark.AssessmentType.SELF : Mark.AssessmentType.PEER);
+        "Self Assessment" : "Peer Assessment");
+                
                 mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
                 
                 marks.add(mark);
@@ -428,7 +433,8 @@ public class StudentController {
         
         // Save new marks
         if (!marks.isEmpty()) {
-            markService.saveAllMarks(marks);
+            // This is where Hibernate triggers the @PrePersist method in the Mark entity
+            markService.saveAllMarks(marks); 
         }
         
         // Save comment (will update if exists)
@@ -481,8 +487,8 @@ public class StudentController {
     
     @GetMapping("/assessment/{assessmentId}/results")
     public String viewAssessmentResults(@PathVariable Long assessmentId,
-                                       Model model,
-                                       Principal principal) {
+                                         Model model,
+                                         Principal principal) {
         
         Student currentStudent = studentRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));

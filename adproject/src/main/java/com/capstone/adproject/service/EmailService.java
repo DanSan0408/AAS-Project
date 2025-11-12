@@ -1,10 +1,11 @@
 package com.capstone.adproject.service;
 
-import jakarta.mail.internet.MimeMessage;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {

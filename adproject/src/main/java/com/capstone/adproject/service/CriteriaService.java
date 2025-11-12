@@ -3,12 +3,12 @@ package com.capstone.adproject.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.repositories.CriteriaRepository;
 
 import jakarta.persistence.EntityNotFoundException;
-import java.util.Optional;
 
 @Service
 public class CriteriaService {
@@ -21,19 +21,34 @@ public class CriteriaService {
         this.assessmentRepository = assessmentRepository;
     }
 
-    public boolean isCriteriaNameDuplicate(String name, Long assessmentId, Long currentCriteriaId) {
-        if (currentCriteriaId == null) {
-            // New criteria check: look for any criteria with the name and assessmentId
-            return criteriaRepository.existsByNameAndAssessmentId(name, assessmentId);
-        } else {
-            // Edit criteria check: look for criteria with the same name and assessmentId, but a DIFFERENT id
-            Optional<Criteria> existingCriteria = criteriaRepository.findByNameAndAssessmentId(name, assessmentId);
-            // It's a duplicate if: 
-            // 1. A criteria exists, AND
-            // 2. The existing criteria's ID is not the one we are currently editing
-            return existingCriteria.isPresent() && !existingCriteria.get().getId().equals(currentCriteriaId);
+    public boolean isCriteriaNameDuplicate(String name, Long assessmentId, Long criteriaIdToExclude) {
+    if (name == null || name.trim().isEmpty()) {
+        return false;
+    }
+    
+    // Normalize the input name by removing all whitespace and converting to lowercase
+    String normalizedName = name.replaceAll("\\s+", "").toLowerCase();
+    
+    // Get all criteria for the assessment
+    Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+    if (assessment != null && assessment.getCriteria() != null) {
+        for (Criteria criteria : assessment.getCriteria()) {
+            // Skip the criteria being edited
+            if (criteriaIdToExclude != null && criteria.getId().equals(criteriaIdToExclude)) {
+                continue;
+            }
+            
+            if (criteria.getName() != null) {
+                String normalizedExisting = criteria.getName().replaceAll("\\s+", "").toLowerCase();
+                if (normalizedExisting.equals(normalizedName)) {
+                    return true;
+                }
+            }
         }
     }
+    
+    return false;
+}
 
     public Criteria findCriteriaById(Long id) {
         return criteriaRepository.findById(id)

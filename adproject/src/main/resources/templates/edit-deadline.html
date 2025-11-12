@@ -5,114 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Deadline</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .deadline-form-container {
-            max-width: 700px;
-            margin: 0 auto;
-            background-color: #2c3e50;
-            border-radius: 8px;
-            padding: 30px;
-        }
-        
-        .form-section {
-            margin-bottom: 25px;
-        }
-        
-        .form-section label {
-            display: block;
-            color: #3498db;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .form-section input,
-        .form-section select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #34495e;
-            border-radius: 4px;
-            background-color: #34495e;
-            color: #ecf0f1;
-            font-size: 14px;
-        }
-        
-        .form-section input:focus,
-        .form-section select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .form-section small {
-            display: block;
-            color: #95a5a6;
-            margin-top: 5px;
-            font-size: 0.85em;
-        }
-        
-        .readonly-field {
-            background-color: #1a252f;
-            cursor: not-allowed;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
-        
-        .btn-primary {
-            flex: 1;
-            background-color: #3498db;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-secondary {
-            flex: 1;
-            background-color: #95a5a6;
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #7f8c8d;
-        }
-        
-        .info-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        
-        .badge-assessment {
-            background-color: #f7941d;
-            color: white;
-        }
-        
-        .badge-general {
-            background-color: #95a5a6;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/editdeadline.css}">
+    
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -127,7 +21,7 @@
 
         <div class="deadline-form-container">
             <h2>
-                📝 Edit Deadline
+                Edit Deadline
                 <span th:if="${deadline.assessmentId != null}" class="info-badge badge-assessment">
                     Assessment
                 </span>

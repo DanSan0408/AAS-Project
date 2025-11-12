@@ -1,0 +1,155 @@
+/* ==========================================================
+ * EDIT DEADLINE PAGE STYLES - ACCESSIBILITY ENHANCED (LARGE PRINT)
+ * Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+ * ========================================================== */
+
+/* Define variables for the dark palette */
+:root {
+    --primary-blue: #3498db;
+    --accent-red: #e74c3c;
+    --text-light: #ecf0f1;
+    --text-mid: #bdc3c7;
+    
+    /* Dark Theme Colors */
+    --darkest-bg: #152238; 
+    --darker-bg: #192841; 
+    --mid-tone-bg: #1c2e4a; 
+    --deep-mid-tone: #203354; 
+    --accent-dark: #23395d; 
+}
+
+.deadline-form-container {
+    /* Background: #2c3e50 -> #203354 (Deep Mid-tone) */
+    max-width: 900px; 
+    margin: 0 auto;
+    background-color: var(--deep-mid-tone); 
+    border-radius: 10px; /* Slightly larger border-radius for softer look */
+    padding: 50px; /* Increased padding */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); /* Stronger shadow */
+}
+
+/* --- Increased Headings Size --- */
+.deadline-form-container h2 {
+    /* Increased font size for title */
+    font-size: 1.8em; 
+    color: var(--text-light);
+    border-bottom: 3px solid var(--accent-dark); /* Thicker border */
+    padding-bottom: 15px; /* More padding */
+    margin-bottom: 30px; 
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.form-section {
+    margin-bottom: 35px; /* Increased margin between sections */
+}
+
+/* --- Larger and Clearer Labels --- */
+.form-section label {
+    display: block;
+    color: var(--primary-blue);
+    font-size: 1.2em; /* Larger font size for labels */
+    font-weight: bold;
+    margin-bottom: 12px; /* Increased spacing below label */
+}
+
+/* --- Larger Inputs and Selects --- */
+.form-section input,
+.form-section select {
+    width: 100%;
+    padding: 15px 12px; /* Increased vertical padding for taller inputs */
+    /* Border: #34495e -> #1c2e4a (Mid-tone) */
+    border: 2px solid var(--mid-tone-bg); /* Thicker border for clarity */
+    /* Background: #34495e -> #192841 (Darker) */
+    border-radius: 6px;
+    background-color: var(--darker-bg);
+    color: var(--text-light);
+    font-size: 1.1em; /* Larger input text */
+    box-sizing: border-box; 
+}
+
+.form-section input:focus,
+.form-section select:focus {
+    outline: none;
+    border-color: var(--primary-blue); 
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.7); /* Clearer focus highlight */
+}
+
+/* --- Larger, Clearer Helper Text --- */
+.form-section small {
+    display: block;
+    color: var(--text-mid); 
+    margin-top: 8px; /* More spacing above small text */
+    font-size: 0.95em; /* Slightly larger small text */
+}
+
+.readonly-field {
+    background-color: var(--darkest-bg);
+    cursor: not-allowed;
+    border: 2px dashed var(--mid-tone-bg); /* Dashed border to indicate read-only */
+    color: var(--text-mid);
+}
+
+.button-group {
+    display: flex;
+    gap: 15px; /* Increased gap between buttons */
+    margin-top: 40px; /* Increased margin above buttons */
+}
+
+/* --- Larger, High-Contrast Buttons --- */
+.btn-primary {
+    flex: 1;
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 16px; /* Increased button height */
+    border: none;
+    border-radius: 8px; /* Larger border radius */
+    cursor: pointer;
+    font-size: 1.2em; /* Larger button text */
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9; 
+}
+
+.btn-secondary {
+    flex: 1;
+    background-color: #7f8c8d; 
+    color: white;
+    padding: 16px; /* Increased button height */
+    border: none;
+    border-radius: 8px; 
+    cursor: pointer;
+    font-size: 1.2em; /* Larger button text */
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #6c7a7e; 
+}
+
+/* --- Larger Info Badges --- */
+.info-badge {
+    display: inline-block;
+    padding: 6px 15px; /* Increased badge size */
+    border-radius: 6px;
+    font-size: 0.95em; /* Larger badge text */
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.badge-assessment {
+    background-color: #f7941d;
+    color: white;
+}
+
+.badge-general {
+    background-color: #95a5a6;
+    color: white;
+}

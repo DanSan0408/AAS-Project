@@ -6,6 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Supervisors</title>
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+    <style>
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .btn-confirm {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+            border-color: #ffc107 !important;
+            font-weight: bold;
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(255, 193, 7, 1); }
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -38,11 +65,15 @@
                     <div th:if="${successMessage}" class="alert alert-success">
                         <p th:text="${successMessage}">Success Message Placeholder</p>
                     </div>
+                    <div th:if="${duplicateWarning}" class="alert alert-warning">
+                        <p th:text="${duplicateWarning}">Duplicate Warning</p>
+                    </div>
 
                     <div class="add-form-container">
                         <h3 th:text="${industrialSupervisor.id != null ? 'Update Industrial Supervisor' : 'Add New Industrial Supervisor'}">Add New Industrial Supervisor</h3>
-                        <form th:action="@{/admin/manage-supervisors}" th:object="${industrialSupervisor}" method="post">
+                        <form id="supervisorForm" th:action="@{/admin/manage-supervisors}" th:object="${industrialSupervisor}" method="post">
                             <input type="hidden" th:field="*{id}" />
+                            <input type="hidden" name="confirmDuplicate" id="confirmDuplicate" value="false" />
 
                             <label for="username">Username</label>
                             <input type="text" id="username" th:field="*{username}" required>
@@ -53,7 +84,7 @@
                             <label for="email">Email</label>
                             <input type="email" id="email" th:field="*{email}" required>
                             
-                            <button type="submit" th:text="${industrialSupervisor.id != null ? 'Update Industrial Supervisor' : 'Add Industrial Supervisor'}">Add Industrial Supervisor</button>
+                            <button type="submit" id="submitButton" th:text="${industrialSupervisor.id != null ? 'Update Industrial Supervisor' : 'Add Industrial Supervisor'}">Add Industrial Supervisor</button>
                         </form>
                     </div>
 
@@ -77,8 +108,7 @@
                                         <a th:href="@{/admin/delete-supervisor/{id}(id=${supervisor.id})}" class="action-button delete">Delete</a>
                                     </div>
                                 </td>
-                            </td>
-                        </tr>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -86,6 +116,33 @@
         </div>
     </div>
 
-    
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDuplicate = /*[[${isDuplicate}]]*/ false;
+            
+            if (isDuplicate) {
+                const form = document.getElementById('supervisorForm');
+                const submitButton = document.getElementById('submitButton');
+                const confirmInput = document.getElementById('confirmDuplicate');
+                const duplicateWarning = /*[[${duplicateWarning}]]*/ '';
+                
+                // Change button appearance
+                submitButton.textContent = 'Confirm and Save Anyway';
+                submitButton.classList.add('btn-confirm', 'glow-effect');
+                
+                // Handle form submission
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const confirmed = confirm(duplicateWarning + "\n\nDo you want to save this user anyway?");
+                    
+                    if (confirmed) {
+                        confirmInput.value = 'true';
+                        form.submit();
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
