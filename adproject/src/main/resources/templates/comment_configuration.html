@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure Comments - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .config-container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #2c3e50;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .config-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .config-header h1 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .config-header p {
+            color: #95a5a6;
+            font-size: 0.95em;
+        }
+        
+        /* Comment Items Container */
+        .comments-list {
+            margin-bottom: 30px;
+        }
+        
+        .comment-item {
+            background: #34495e;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            position: relative;
+        }
+        
+        .comment-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .comment-item-header h3 {
+            color: #3498db;
+            margin: 0;
+            font-size: 1.2em;
+        }
+        
+        .remove-comment-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.3s;
+        }
+        
+        .remove-comment-btn:hover {
+            background: #c0392b;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #ecf0f1;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            background: #2c3e50;
+            border: 2px solid #4a6681;
+            border-radius: 6px;
+            color: #ecf0f1;
+            font-size: 1em;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .inline-group {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        
+        .inline-group .form-group {
+            flex: 1;
+        }
+        
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #2c3e50;
+            border-radius: 6px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #7f8c8d;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #3498db;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .toggle-label {
+            flex: 1;
+            color: #ecf0f1;
+            font-size: 1em;
+        }
+        
+        .help-text {
+            color: #95a5a6;
+            font-size: 0.9em;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .add-comment-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn-add-comment {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-add-comment:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #7f8c8d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #6c7a7b;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: #34495e;
+            border-radius: 8px;
+            border: 2px dashed #4a6681;
+        }
+        
+        .empty-state i {
+            font-size: 3em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            color: #95a5a6;
+            font-size: 1.1em;
+        }
+        
+        .info-box {
+            background: #1a252f;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .info-box strong {
+            color: #f39c12;
+        }
+        
+        .info-box p {
+            color: #ecf0f1;
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>Comment Configuration</h1>
+            </div>
+        </div>
+        
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle"></i>
+            <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            <span th:text="${errorMessage}"></span>
+        </div>
+        
+        <div class="config-container">
+            <div class="config-header">
+                <h1>
+                    <i class="fas fa-comments"></i>
+                    Configure Comment Requirements
+                </h1>
+                <p>
+                    <strong>Assessment:</strong> <span th:text="${assessment.title}">Assessment Title</span>
+                </p>
+                <p style="font-size: 0.9em; margin-top: 10px;">
+                    Define the comment questions students must answer during peer/self assessments
+                </p>
+            </div>
+            
+            <form th:action="@{/admin/comment-config/{id}/save(id=${assessment.id})}" method="post" id="commentConfigForm">
+                
+                <!-- Comments List Container -->
+                <div id="commentsContainer" class="comments-list">
+                    <!-- Empty State (shown when no comments) -->
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-comments-slash"></i>
+                        <p>No comment questions defined yet.</p>
+                        <p style="font-size: 0.9em; color: #7f8c8d;">Click "Add Comment Question" below to create your first comment requirement.</p>
+                    </div>
+                    
+                    <!-- Comment items will be added here dynamically -->
+                </div>
+                
+                <!-- Add Comment Button -->
+                <div class="add-comment-section">
+                    <button type="button" id="addCommentBtn" class="btn-add-comment">
+                        <i class="fas fa-plus-circle"></i> Add Comment Question
+                    </button>
+                </div>
+                
+                <!-- Info Box -->
+                <div class="info-box">
+                    <strong><i class="fas fa-info-circle"></i> How it works:</strong>
+                    <p>• Each comment question will appear as a separate text field during student evaluations</p>
+                    <p>• Students must answer all questions to submit their evaluation</p>
+                    <p>• You can set different minimum character requirements for each question</p>
+                    <p>• Visibility setting controls whether students see the commenter's name or "Teammate X"</p>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="button-group">
+                    <a th:href="@{/admin/home}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        // Load existing configuration from server
+        const existingLabels = /*[[${assessment.commentLabels}]]*/ [];
+        const existingMinLength = /*[[${assessment.commentMinLength}]]*/ 20;
+        const existingAnonymous = /*[[${assessment.commentsAnonymous}]]*/ true;
+        
+        let commentCounter = 0;
+        
+        // Comment template
+        function createCommentItem(label = '', minLength = 20, anonymous = true) {
+            commentCounter++;
+            const id = 'comment_' + commentCounter;
+            
+            const div = document.createElement('div');
+            div.className = 'comment-item';
+            div.setAttribute('data-comment-id', id);
+            
+            div.innerHTML = `
+                <div class="comment-item-header">
+                    <h3>Comment Question #<span class="comment-number">${commentCounter}</span></h3>
+                    <button type="button" class="remove-comment-btn" onclick="removeComment('${id}')">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Question/Prompt <span class="required">*</span>
+                    </label>
+                    <textarea name="commentLabels" 
+                              placeholder="e.g., What are this person's key strengths?"
+                              required>${label}</textarea>
+                    <p class="help-text">This is the question students will see when providing feedback</p>
+                </div>
+                
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label>
+                            Minimum Characters <span class="required">*</span>
+                        </label>
+                        <input type="number" 
+                               name="commentMinLengths" 
+                               value="${minLength}"
+                               min="10" 
+                               max="500"
+                               required>
+                        <p class="help-text">Minimum characters required for this comment</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Visibility</label>
+                        <div class="toggle-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       name="commentAnonymous" 
+                                       value="true"
+                                       ${anonymous ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <div class="toggle-label">
+                                <strong>Anonymous</strong>
+                                <p class="help-text" style="margin-top: 5px; margin-bottom: 0;">
+                                    When enabled, comments appear as "Teammate X"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Add comment function
+        function addComment(label = '', minLength = 20, anonymous = true) {
+            const container = document.getElementById('commentsContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            // Hide empty state
+            emptyState.style.display = 'none';
+            
+            // Create and add new comment item
+            const commentItem = createCommentItem(label, minLength, anonymous);
+            container.appendChild(commentItem);
+            
+            // Renumber all comments
+            renumberComments();
+            
+            // Scroll to new item
+            commentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Remove comment function
+        function removeComment(id) {
+            const item = document.querySelector(`[data-comment-id="${id}"]`);
+            if (item) {
+                if (confirm('Are you sure you want to remove this comment question?')) {
+                    item.remove();
+                    renumberComments();
+                    
+                    // Show empty state if no comments left
+                    const container = document.getElementById('commentsContainer');
+                    const commentItems = container.querySelectorAll('.comment-item');
+                    if (commentItems.length === 0) {
+                        document.getElementById('emptyState').style.display = 'block';
+                    }
+                }
+            }
+        }
+        
+        // Renumber comments
+        function renumberComments() {
+            const container = document.getElementById('commentsContainer');
+            const commentItems = container.querySelectorAll('.comment-item');
+            commentItems.forEach((item, index) => {
+                const numberSpan = item.querySelector('.comment-number');
+                if (numberSpan) {
+                    numberSpan.textContent = index + 1;
+                }
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add existing comments
+            if (existingLabels && existingLabels.length > 0) {
+                existingLabels.forEach(label => {
+                    addComment(label, existingMinLength, existingAnonymous);
+                });
+            } else {
+                // Show empty state
+                document.getElementById('emptyState').style.display = 'block';
+            }
+            
+            // Add comment button handler
+            document.getElementById('addCommentBtn').addEventListener('click', function() {
+                addComment('', 20, true);
+            });
+            
+            // Form validation
+            document.getElementById('commentConfigForm').addEventListener('submit', function(e) {
+                const container = document.getElementById('commentsContainer');
+                const commentItems = container.querySelectorAll('.comment-item');
+                
+                if (commentItems.length === 0) {
+                    e.preventDefault();
+                    alert('Please add at least one comment question before saving.');
+                    return false;
+                }
+                
+                // Validate all questions are filled
+                let allValid = true;
+                commentItems.forEach(item => {
+                    const textarea = item.querySelector('textarea[name="commentLabels"]');
+                    if (!textarea.value.trim()) {
+                        allValid = false;
+                        textarea.focus();
+                    }
+                });
+                
+                if (!allValid) {
+                    e.preventDefault();
+                    alert('Please fill in all comment questions.');
+                    return false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

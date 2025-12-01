@@ -12,6 +12,7 @@ import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.SubRubric;
 
 @Repository
 public interface MarkRepository extends JpaRepository<Mark, Long> {
@@ -70,4 +71,15 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
 
     List<Mark> findByEvaluatorStudentAndAssessmentAndStatus(
         Student evaluator, Assessment assessment, Mark.SubmissionStatus status);
+
+    List<Mark> findByEvaluatedStudentAndAssessment(
+        Student evaluatedStudent, 
+        Assessment assessment
+    );
+    
+    // ✅ NEW: Find all marks for a specific rubric (for cascade deletion)
+    List<Mark> findByRubric(Rubric rubric);
+    
+    // ✅ NEW: Find all marks for a specific sub-rubric (for cascade deletion)
+    List<Mark> findBySubRubric(SubRubric subRubric);
 }

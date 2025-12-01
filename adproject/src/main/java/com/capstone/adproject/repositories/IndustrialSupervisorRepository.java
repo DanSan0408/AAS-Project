@@ -1,10 +1,11 @@
 package com.capstone.adproject.repositories;
 
-import com.capstone.adproject.model.IndustrialSupervisor;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.capstone.adproject.model.IndustrialSupervisor;
 
 @Repository
 public interface IndustrialSupervisorRepository extends JpaRepository<IndustrialSupervisor, Long> {
@@ -14,4 +15,8 @@ public interface IndustrialSupervisorRepository extends JpaRepository<Industrial
 
     // **New Method for Forgot Password - Find by Token**
     Optional<IndustrialSupervisor> findByResetPasswordToken(String resetPasswordToken);
+    
+    boolean existsByUsername(String username);
+    
+    boolean existsByEmail(String email);
 }

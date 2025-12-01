@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,6 @@ import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.dto.RandomizationInputDto;
 import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Assessment;
-import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.IndustrialSupervisor;
@@ -58,12 +56,10 @@ public class AdminController {
         this.deadlineService = deadlineService;
     }
 
-    // ⭐ ADDED: InitBinder to handle date conversion from form input
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setLenient(false);
-        // true parameter allows empty values (important for optional openDate)
         binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
 
@@ -75,61 +71,28 @@ public class AdminController {
         return "Admin";
     }
 
-    private String getAssessmentKey(Assessment assessment, String type) {
-        final String DEFAULT_EVAL_TYPE = "Ungrouped Assessments";
-        final String DEFAULT_ASSESS_TYPE = "Miscellaneous";
-
-        String key = "N/A_TEMP";
-
-        if (assessment.getRubrics() != null && !assessment.getRubrics().isEmpty()) {
-            if ("evaluationType".equals(type)) {
-                key = assessment.getRubrics().get(0).getEvaluationType();
-            } else if ("assessmentType".equals(type)) {
-                key = assessment.getRubrics().get(0).getAssessmentTypes();
-            }
-        }
-
-        if (key.equals("N/A_TEMP") && assessment.getCriteria() != null && !assessment.getCriteria().isEmpty()) {
-            if ("evaluationType".equals(type)) {
-                key = assessment.getCriteria().get(0).getEvaluationType();
-            } else if ("assessmentType".equals(type)) {
-                key = assessment.getCriteria().get(0).getAssessmentTypes();
-            }
-        }
-
-        if (key.equals("N/A_TEMP")) {
-            return "evaluationType".equals(type) ? DEFAULT_EVAL_TYPE : DEFAULT_ASSESS_TYPE;
-        }
-
-        return key;
-    }
-
+    /**
+     * Groups assessment components (Rubrics only) by Assessment Type.
+     * Uses a dummy outer map key to maintain template compatibility.
+     * @param assessment The assessment to group components from.
+     * @return A map structure: Map<DummyKey, Map<AssessmentType, List<Object>>>
+     */
     public Map<String, Map<String, List<Object>>> groupAssessmentComponents(Assessment assessment) {
-
         Map<String, Map<String, List<Object>>> grouped = new LinkedHashMap<>();
+        final String DUMMY_KEY = "ASSESSMENT_GROUPING";
+
+        Map<String, List<Object>> innerGroup = new LinkedHashMap<>();
 
         if (assessment.getRubrics() != null) {
             for (Rubric rubric : assessment.getRubrics()) {
-                String evalType = rubric.getEvaluationType();
                 String assessType = rubric.getAssessmentTypes();
-
-                grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
-                        .computeIfAbsent(assessType, k -> new ArrayList<>())
-                        .add(rubric);
+                
+                innerGroup.computeIfAbsent(assessType, k -> new ArrayList<>())
+                          .add(rubric);
             }
         }
-
-        if (assessment.getCriteria() != null) {
-            for (Criteria criteria : assessment.getCriteria()) {
-                String evalType = criteria.getEvaluationType();
-                String assessType = criteria.getAssessmentTypes();
-
-                grouped.computeIfAbsent(evalType, k -> new LinkedHashMap<>())
-                        .computeIfAbsent(assessType, k -> new ArrayList<>())
-                        .add(criteria);
-            }
-        }
-
+        
+        grouped.put(DUMMY_KEY, innerGroup);
         return grouped;
     }
 
@@ -142,9 +105,6 @@ public class AdminController {
 
         List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
 
-        BiFunction<Assessment, String, String> keyExtractor = this::getAssessmentKey;
-        model.addAttribute("getAssessmentKey", keyExtractor);
-
         Function<Assessment, Map<String, Map<String, List<Object>>>> componentGrouper = this::groupAssessmentComponents;
         model.addAttribute("groupAssessmentComponents", componentGrouper);
 
@@ -152,12 +112,11 @@ public class AdminController {
         model.addAttribute("isRubricType", rubricChecker);
 
         model.addAttribute("allAssessments", allAssessments);
-
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("deadlines", deadlineService.getAllDeadlines());
 
         if (!model.containsAttribute("deadlineToSave")) {
-             model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
+            model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
         }
         return "admin_home";
     }
@@ -168,17 +127,15 @@ public class AdminController {
         List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
         
         model.addAttribute("adminUsername", getLoggedInUsername());
-
         model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
         model.addAttribute("availableStudents", unassignedStudents); 
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
         model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
-
         model.addAttribute("allGroups", adminService.getAllGroups());
         model.addAttribute("allStudents", adminService.getAllStudents());
         
         if (!model.containsAttribute("randomizationInput")) {
-               model.addAttribute("randomizationInput", new RandomizationInputDto());
+            model.addAttribute("randomizationInput", new RandomizationInputDto());
         }
         
         model.addAttribute("availableStudentsCount", unassignedStudents.size()); 
@@ -218,8 +175,8 @@ public class AdminController {
         model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup());
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
         model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
-        
         model.addAttribute("adminUsername", getLoggedInUsername());
+        
         return "edit_group";
     }
 
@@ -242,9 +199,9 @@ public class AdminController {
     public String removeStudentFromGroup(@PathVariable Long studentId, RedirectAttributes redirectAttributes) {
         
         Long groupId = adminService.findStudentById(studentId)
-                                   .map(Student::getGroup)
-                                   .map(Group::getId)
-                                   .orElse(null);
+                                       .map(Student::getGroup)
+                                       .map(Group::getId)
+                                       .orElse(null);
         
         if (groupId == null) {
             redirectAttributes.addFlashAttribute("warning", "Student was not in a group or not found.");
@@ -285,35 +242,34 @@ public class AdminController {
         return "manage_students";
     }
 
-   @PostMapping("/manage-students")
-public String saveStudent(
-        @ModelAttribute Student student, 
-        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
-    try {
-        // Check for whitespace-insensitive duplicates
-        if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkStudentDuplicate(
-                student.getUsername(), 
-                student.getEmail(), 
-                student.getId()
-            );
-            
-            if (duplicateMessage != null) {
-                redirectAttributes.addFlashAttribute("student", student);
-                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                redirectAttributes.addFlashAttribute("isDuplicate", true);
-                return "redirect:/admin/manage-students";
+    @PostMapping("/manage-students")
+    public String saveStudent(
+            @ModelAttribute Student student, 
+            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+            RedirectAttributes redirectAttributes) {
+        try {
+            if (!confirmDuplicate) {
+                String duplicateMessage = adminService.checkStudentDuplicate(
+                    student.getUsername(), 
+                    student.getEmail(), 
+                    student.getId()
+                );
+                
+                if (duplicateMessage != null) {
+                    redirectAttributes.addFlashAttribute("student", student);
+                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                    redirectAttributes.addFlashAttribute("isDuplicate", true);
+                    return "redirect:/admin/manage-students";
+                }
             }
+            
+            adminService.saveStudent(student);
+            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
         }
-        
-        adminService.saveStudent(student);
-        redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
-    } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
+        return "redirect:/admin/manage-students";
     }
-    return "redirect:/admin/manage-students";
-}
 
     @GetMapping("/manage-lecturers")
     public String manageLecturers(Model model) {
@@ -327,34 +283,33 @@ public String saveStudent(
     }
 
     @PostMapping("/manage-lecturers")
-public String saveLecturer(
-        @ModelAttribute Lecturer lecturer, 
-        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
-    try {
-        // Check for whitespace-insensitive duplicates
-        if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkLecturerDuplicate(
-                lecturer.getUsername(), 
-                lecturer.getEmail(), 
-                lecturer.getId()
-            );
-            
-            if (duplicateMessage != null) {
-                redirectAttributes.addFlashAttribute("lecturer", lecturer);
-                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                redirectAttributes.addFlashAttribute("isDuplicate", true);
-                return "redirect:/admin/manage-lecturers";
+    public String saveLecturer(
+            @ModelAttribute Lecturer lecturer, 
+            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+            RedirectAttributes redirectAttributes) {
+        try {
+            if (!confirmDuplicate) {
+                String duplicateMessage = adminService.checkLecturerDuplicate(
+                    lecturer.getUsername(), 
+                    lecturer.getEmail(), 
+                    lecturer.getId()
+                );
+                
+                if (duplicateMessage != null) {
+                    redirectAttributes.addFlashAttribute("lecturer", lecturer);
+                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                    redirectAttributes.addFlashAttribute("isDuplicate", true);
+                    return "redirect:/admin/manage-lecturers";
+                }
             }
+            
+            adminService.saveLecturer(lecturer);
+            redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
         }
-        
-        adminService.saveLecturer(lecturer);
-        redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
-    } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
+        return "redirect:/admin/manage-lecturers";
     }
-    return "redirect:/admin/manage-lecturers";
-}
 
     @GetMapping("/manage-supervisors")
     public String manageSupervisors(Model model) {
@@ -368,34 +323,33 @@ public String saveLecturer(
     }
 
     @PostMapping("/manage-supervisors")
-public String saveIndustrialSupervisor(
-        @ModelAttribute IndustrialSupervisor industrialSupervisor, 
-        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
-    try {
-        // Check for whitespace-insensitive duplicates
-        if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkSupervisorDuplicate(
-                industrialSupervisor.getUsername(), 
-                industrialSupervisor.getEmail(), 
-                industrialSupervisor.getId()
-            );
-            
-            if (duplicateMessage != null) {
-                redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
-                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                redirectAttributes.addFlashAttribute("isDuplicate", true);
-                return "redirect:/admin/manage-supervisors";
+    public String saveIndustrialSupervisor(
+            @ModelAttribute IndustrialSupervisor industrialSupervisor, 
+            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+            RedirectAttributes redirectAttributes) {
+        try {
+            if (!confirmDuplicate) {
+                String duplicateMessage = adminService.checkSupervisorDuplicate(
+                    industrialSupervisor.getUsername(), 
+                    industrialSupervisor.getEmail(), 
+                    industrialSupervisor.getId()
+                );
+                
+                if (duplicateMessage != null) {
+                    redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
+                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                    redirectAttributes.addFlashAttribute("isDuplicate", true);
+                    return "redirect:/admin/manage-supervisors";
+                }
             }
+            
+            adminService.saveIndustrialSupervisor(industrialSupervisor);
+            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
         }
-        
-        adminService.saveIndustrialSupervisor(industrialSupervisor);
-        redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
-    } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
+        return "redirect:/admin/manage-supervisors";
     }
-    return "redirect:/admin/manage-supervisors";
-}
 
     @GetMapping("/delete-student/{id}")
     public String deleteStudent(@PathVariable Long id) {
@@ -456,8 +410,8 @@ public String saveIndustrialSupervisor(
 
     @PostMapping("/group-assignment/randomize/preview")
     public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
-                                     Model model,
-                                     RedirectAttributes redirectAttributes) {
+                                        Model model,
+                                        RedirectAttributes redirectAttributes) {
 
         int maxStudents = randomizationInput.getMaxStudentsPerGroup();
         long availableStudentsCount = adminService.getAvailableStudentsCount(); 
@@ -496,15 +450,12 @@ public String saveIndustrialSupervisor(
         model.addAttribute("actualGroupSize", actualGroupSize);
         model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
         model.addAttribute("studentLookupMap", studentLookupMap); 
-
         model.addAttribute("availableStudentsForAdd", unassignedStudents); 
-        
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
         model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
         
         return "group_assignment_preview"; 
     }
-    
     
     @PostMapping("/group-assignment/randomize/create") 
     public String createRandomGroups(
@@ -522,7 +473,6 @@ public String saveIndustrialSupervisor(
         return "redirect:/admin/group-assignment"; 
     }
 
-
     @GetMapping("/assessment/assign/{assessmentId}")
     public String showAssessmentAssignationForm(@PathVariable Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
         
@@ -536,7 +486,7 @@ public String saveIndustrialSupervisor(
         AssessmentAssignmentDto dto = new AssessmentAssignmentDto();
         dto.setAssessmentId(assessmentId);
         dto.setTitle(assessmentOpt.get().getTitle() + " - Assignment"); 
-        dto.setOpenType("INSTANT"); // Default to instant open
+        dto.setOpenType("INSTANT");
 
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("assessment", assessmentOpt.get());
@@ -549,7 +499,6 @@ public String saveIndustrialSupervisor(
     @PostMapping("/assessment/assign")
     public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
         
-        // Basic validation
         if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
              redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
              return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
@@ -565,7 +514,6 @@ public String saveIndustrialSupervisor(
         deadline.setTitle(dto.getTitle());
         deadline.setDate(dto.getEndDate());
 
-        // Handle Opening Date Logic
         if ("INSTANT".equalsIgnoreCase(dto.getOpenType())) {
             deadline.setOpenDate(new Date()); 
         } else if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null) {

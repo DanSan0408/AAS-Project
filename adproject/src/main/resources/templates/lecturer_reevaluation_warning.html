@@ -4,69 +4,153 @@
     <meta charset="UTF-8">
     <title>Re-evaluation Warning</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/lecturer_warning.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+    <style>
+        .warning-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .warning-icon {
+            font-size: 64px;
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+        
+        .warning-message {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .target-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .rubric-type-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .badge-group {
+            background: #e8f4f8;
+            color: #2980b9;
+            border: 2px solid #3498db;
+        }
+        
+        .badge-individual {
+            background: #e8f5e9;
+            color: #27ae60;
+            border: 2px solid #2ecc71;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .btn-proceed {
+            background: #e74c3c;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-proceed:hover {
+            background: #c0392b;
+        }
+        
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+        }
+    </style>
 </head>
 <body>
-    <div class="warning-container">
-        <div class="warning-icon">⚠️</div>
-        
-        <h2 class="warning-title">Re-evaluation Warning</h2>
-        
-        <p class="warning-message">
-            You have already evaluated this target for this assessment.
-            If you proceed, <strong>ALL EXISTING MARKS WILL BE REPLACED</strong> with the new evaluation.
-        </p>
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
 
-        <div class="warning-details">
-            <h4>📋 Evaluation Details:</h4>
-            <p><strong>Assessment:</strong> <span th:text="${assessment.title}"></span></p>
-            <p th:if="${targetType == 'GROUP'}">
-                <strong>Target Type:</strong> Group Evaluation<br/>
-                <strong>Group:</strong> <span th:text="${selectedGroup.groupName}"></span>
-            </p>
-            <p th:if="${targetType == 'STUDENT'}">
-                <strong>Target Type:</strong> Individual Evaluation<br/>
-                <strong>Student:</strong> <span th:text="${selectedStudent.username}"></span>
-            </p>
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
         </div>
 
-        <div class="warning-list">
-            <h4>⚠️ Important:</h4>
-            <ul>
-                <li>All previous marks for this evaluation will be permanently deleted</li>
-                <li>You cannot undo this action once confirmed</li>
-                <li>Make sure you want to completely replace the evaluation</li>
-                <li>Consider whether you need to re-evaluate or if the existing evaluation is sufficient</li>
-            </ul>
-        </div>
+        <div class="content-flex-container">
+            <div class="warning-container">
+                <div class="warning-icon">⚠️</div>
+                
+                <h2>Re-evaluation Warning</h2>
+                
+                <div class="warning-message">
+                    <p>You have already evaluated this target for <strong th:text="${assessment.title}">this assessment</strong>.</p>
+                    
+                    <div class="rubric-type-badge" 
+                         th:classappend="${rubricType == 'Group Assessment' ? 'badge-group' : 'badge-individual'}">
+                        <span th:text="${rubricType}">Rubric Type</span>
+                    </div>
+                    
+                    <div class="target-info">
+                        <p th:if="${selectedGroup != null}">
+                            Target: Group "<span th:text="${selectedGroup.groupName}">Group Name</span>"
+                        </p>
+                        <p th:if="${selectedStudent != null}">
+                            Target: Student "<span th:text="${selectedStudent.username}">Student Name</span>"
+                        </p>
+                    </div>
+                    
+                    <p><strong>If you proceed, your previous evaluation will be replaced.</strong></p>
+                    <p>Are you sure you want to re-evaluate?</p>
+                </div>
 
-        <div class="warning-buttons">
-            <form th:if="${selectedGroup != null}"
-                  th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
-                  method="post"
-                  onsubmit="return confirm('Are you absolutely sure you want to replace the existing evaluation?');">
-                <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
-                <input type="hidden" name="confirmReevaluation" value="true"/>
-                <button type="submit" class="btn-warning-confirm">
-                    ✓ Confirm Re-evaluation
-                </button>
-            </form>
-
-            <form th:if="${selectedStudent != null}"
-                  th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
-                  method="post"
-                  onsubmit="return confirm('Are you absolutely sure you want to replace the existing evaluation?');">
-                <input type="hidden" name="studentId" th:value="${selectedStudent.id}"/>
-                <input type="hidden" name="confirmReevaluation" value="true"/>
-                <button type="submit" class="btn-warning-confirm">
-                    ✓ Confirm Re-evaluation
-                </button>
-            </form>
-            
-            <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" 
-               class="btn-warning-cancel">
-                ✕ Choose Another Target
-            </a>
+                <div class="button-group">
+                    <form th:action="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id})}" method="get">
+                        <input type="hidden" name="rubricType" th:value="${rubricType}"/>
+                        <input type="hidden" name="groupId" th:if="${selectedGroup != null}" th:value="${selectedGroup.id}"/>
+                        <input type="hidden" name="studentId" th:if="${selectedStudent != null}" th:value="${selectedStudent.id}"/>
+                        <input type="hidden" name="confirmReevaluation" value="true"/>
+                        <button type="submit" class="btn-proceed">Yes, Proceed with Re-evaluation</button>
+                    </form>
+                    
+                    <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id}, rubricType=${rubricType})}" 
+                       class="btn-back">
+                        No, Go Back
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </body>

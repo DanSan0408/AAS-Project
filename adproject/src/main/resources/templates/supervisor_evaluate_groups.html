@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluate Groups - Industrial Supervisor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .groups-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #1abc9c;
+        }
+        
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .group-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .group-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .group-name {
+            color: #2c3e50;
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .group-info {
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #555;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+        
+        .students-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .students-title {
+            color: #34495e;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .student-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .student-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            color: #555;
+        }
+        
+        .evaluate-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 20px;
+            background: #1abc9c;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .evaluate-btn:hover {
+            background: #16a085;
+        }
+        
+        .no-groups {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .no-groups-icon {
+            font-size: 4em;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+        
+        .no-groups-text {
+            color: #7f8c8d;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS - Industrial Supervisor</h1>
+            </div>
+        </div>
+        
+        <div class="groups-container">
+            <h2 class="page-title">Evaluate Assigned Groups</h2>
+            
+            <!-- No groups message -->
+            <div th:if="${assignedGroups == null or #lists.isEmpty(assignedGroups)}" class="no-groups">
+                <div class="no-groups-icon">📋</div>
+                <p class="no-groups-text">You have no groups assigned yet. Please contact the administrator.</p>
+            </div>
+            
+            <!-- Groups grid -->
+            <div th:if="${assignedGroups != null and !#lists.isEmpty(assignedGroups)}" class="groups-grid">
+                <div th:each="group : ${assignedGroups}" class="group-card">
+                    <div class="group-header">
+                        <h3 class="group-name" th:text="${group.groupName}">Group Name</h3>
+                    </div>
+                    
+                    <div class="group-info">
+                        <div class="info-item">
+                            <span class="info-label">Group Size:</span>
+                            <span th:text="${#lists.size(group.students)}">0</span>
+                        </div>
+                        <div class="info-item" th:if="${group.academicSupervisor != null}">
+                            <span class="info-label">Academic Supervisor:</span>
+                            <span th:text="${group.academicSupervisor.username}">N/A</span>
+                        </div>
+                    </div>
+                    
+                    <div class="students-section" th:if="${group.students != null and !#lists.isEmpty(group.students)}">
+                        <h4 class="students-title">Group Members:</h4>
+                        <ul class="student-list">
+                            <li th:each="student : ${group.students}" class="student-item">
+                                <span th:text="${student.username}">Student Name</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" 
+                       class="evaluate-btn">
+                        Start Evaluation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

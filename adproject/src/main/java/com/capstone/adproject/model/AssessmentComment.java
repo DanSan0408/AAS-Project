@@ -66,6 +66,23 @@ public class AssessmentComment {
     // Anonymous identifier for peer comments (e.g., "Teammate 1", "Teammate 2")
     @Column(name = "anonymous_identifier")
     private String anonymousIdentifier;
+    
+    // ========== NEW FIELD FOR MULTIPLE COMMENTS ==========
+    
+    /**
+     * Index of the comment (0-based) when multiple comments are required
+     * 0 = first comment, 1 = second comment, etc.
+     * For backward compatibility, null or 0 represents the "overall" comment
+     */
+    @Column(name = "comment_index")
+    private Integer commentIndex = 0;
+    
+    /**
+     * Label/prompt for this comment (e.g., "Strengths", "Areas for Improvement")
+     * Optional - if null, uses default "Comment X"
+     */
+    @Column(name = "comment_label", length = 500)
+    private String commentLabel;
 
     // Enums
     public enum EvaluatorType {
@@ -89,6 +106,9 @@ public class AssessmentComment {
     public void prePersist() {
         if (submittedAt == null) {
             submittedAt = LocalDateTime.now();
+        }
+        if (commentIndex == null) {
+            commentIndex = 0;
         }
     }
 
@@ -172,17 +192,49 @@ public class AssessmentComment {
     public void setAnonymousIdentifier(String anonymousIdentifier) {
         this.anonymousIdentifier = anonymousIdentifier;
     }
+    
+    public Integer getCommentIndex() {
+        return commentIndex != null ? commentIndex : 0;
+    }
+    
+    public void setCommentIndex(Integer commentIndex) {
+        this.commentIndex = commentIndex;
+    }
+    
+    public String getCommentLabel() {
+        return commentLabel;
+    }
+    
+    public void setCommentLabel(String commentLabel) {
+        this.commentLabel = commentLabel;
+    }
 
     /**
      * Get display name for the evaluator
-     * - Students: Anonymous (Teammate 1, Teammate 2, or "You" for self)
+     * - Students: Anonymous (Teammate 1, Teammate 2, or "You" for self) if assessment configured as anonymous
      * - Lecturers/Supervisors: Show actual name
      */
     public String getDisplayName() {
         if (evaluatorType == EvaluatorType.STUDENT) {
+            // Check if assessment is configured for anonymous comments
+            if (assessment != null && !assessment.getCommentsAnonymous()) {
+                // Show real name if not anonymous
+                return evaluatorName != null ? evaluatorName : "Student";
+            }
+            // Otherwise show anonymous identifier
             return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
         } else {
             return evaluatorName != null ? evaluatorName : "Evaluator";
         }
+    }
+    
+    /**
+     * Get the display label for this comment
+     */
+    public String getDisplayLabel() {
+        if (commentLabel != null && !commentLabel.trim().isEmpty()) {
+            return commentLabel;
+        }
+        return "Comment " + (getCommentIndex() + 1);
     }
 }

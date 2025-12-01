@@ -11,9 +11,13 @@
             <span sec:authentication="name"></span>
         </div>
         <ul class="menu-list">
-            <li th:if="${userRole == 'STUDENT'}"><a href="/student/home">Dashboard</a></li>
-            <li th:if="${userRole == 'LECTURER'}"><a href="/lecturer/home">Dashboard</a></li>
-            <li th:if="${userRole == 'SUPERVISOR'}"><a href="/supervisor/home">Dashboard</a></li>
+            <!-- Dashboard -->
+            <li><a href="/supervisor/home">Dashboard</a></li>
+            
+            <!-- Evaluate Groups -->
+            <li><a href="/supervisor/evaluate">Evaluate Groups</a></li>
+            
+            <!-- Logout -->
             <li>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit">Logout</button>
