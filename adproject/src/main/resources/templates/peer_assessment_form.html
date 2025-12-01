@@ -36,7 +36,7 @@
                 </div>
             </div>
 
-            <!-- ⭐ NOTICES CONTAINER - Side by Side Layout -->
+            <!-- ⭐ NOTICES CONTAINER -->
             <div class="notices-container">
                 <!-- Re-evaluation Notice -->
                 <div th:if="${hasExistingEvaluation}" class="re-evaluation-notice">
@@ -65,7 +65,7 @@
                 </div>
             </div>
 
-            <!-- ⭐ FORM STARTS HERE - Below the notices -->
+            <!-- ⭐ FORM STARTS HERE -->
             <form id="assessmentForm" 
                   th:action="@{/student/assessment/{assessmentId}/evaluate/{studentId}/submit(assessmentId=${assessment.id}, studentId=${evaluatedStudent.id})}" 
                   method="post" 
@@ -73,137 +73,181 @@
                 
                 <div class="rubrics-container">
                     
-                    <!-- CRITERIA-BASED ASSESSMENT -->
-                    <div th:if="${criteria != null and !#lists.isEmpty(criteria)}">
+                    <!-- RUBRICS SECTION -->
+                    <div th:if="${rubrics != null and !#lists.isEmpty(rubrics)}">
                         <h2 style="color: #3498db; margin-bottom: 20px;">
-                            <i class="fas fa-clipboard-check"></i> Criteria-Based Assessment
+                            <i class="fas fa-tasks"></i> Assessment Rubrics
                         </h2>
                         
-                        <div th:each="criterion, iterStat : ${criteria}" class="criteria-section">
-                            <div class="criteria-header">
+                        <!-- Loop through Rubrics -->
+                        <div th:each="rubric, rubricIterStat : ${rubrics}" class="rubric-section">
+                            <div class="rubric-header">
                                 <h3>
-                                    <span th:text="${iterStat.count}">1</span>. 
-                                    <span th:text="${criterion.name}">Criterion Name</span>
-                                    <span class="clo-badge" style="margin-left: 10px;">
-                                        CLO <span th:text="${criterion.clo}">7</span>
-                                    </span>
-                                    <span class="marks-badge" style="margin-left: 10px;">
-                                        <span th:text="${#numbers.formatDecimal(criterion.cloMarks, 1, 2)}">0.60</span> marks
+                                    <span th:text="${rubricIterStat.count}">1</span>. 
+                                    <span th:text="${rubric.name}">Rubric Name</span>
+                                    <span class="assessment-type-badge" style="margin-left: 10px; background: #3498db; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;">
+                                        <span th:text="${rubric.assessmentTypes}">Individual Assessment</span>
                                     </span>
                                 </h3>
+                                <p th:if="${rubric.description != null and !rubric.description.isEmpty()}" 
+                                   class="rubric-description"
+                                   th:text="${rubric.description}">
+                                    Rubric Description
+                                </p>
+                                <div class="rubric-meta">
+                                    <span class="clo-badge">
+                                        CLO <span th:text="${rubric.clo}">1</span>
+                                    </span>
+                                    <span class="marks-badge">
+                                        <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">10.00</span> marks
+                                    </span>
+                                </div>
                             </div>
                             
-                            <div class="criteria-rating-scale">
-                                <div class="criteria-rating-option">
-                                    <input type="radio" 
-                                           th:id="'criteria_' + ${criterion.id} + '_0'" 
-                                           th:name="'criteria_' + ${criterion.id}" 
-                                           value="0"
-                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 0}"
-                                           required>
-                                    <label th:for="'criteria_' + ${criterion.id} + '_0'">
-                                        <span class="rating-level-badge">0</span>
-                                        <span class="rating-description">Unsatisfactory</span>
-                                    </label>
-                                </div>
+                            <!-- CASE 1: Rubric has Sub-rubrics with ratings -->
+                            <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}" 
+                                 class="sub-rubrics-container">
                                 
-                                <div class="criteria-rating-option">
-                                    <input type="radio" 
-                                           th:id="'criteria_' + ${criterion.id} + '_1'" 
-                                           th:name="'criteria_' + ${criterion.id}" 
-                                           value="1"
-                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 1}"
-                                           required>
-                                    <label th:for="'criteria_' + ${criterion.id} + '_1'">
-                                        <span class="rating-level-badge">1</span>
-                                        <span class="rating-description">Needs Improvement</span>
-                                    </label>
+                                <div th:each="subRubric, subIterStat : ${rubric.subRubrics}" 
+                                     class="sub-rubric-item">
+                                    <div class="sub-rubric-header">
+                                        <h4>
+                                            <span th:text="${rubricIterStat.count + '.' + subIterStat.count}">1.1</span>
+                                            <span th:text="${subRubric.name}">Sub-rubric Name</span>
+                                        </h4>
+                                        <p th:if="${subRubric.description != null and !subRubric.description.isEmpty()}" 
+                                           class="sub-rubric-description"
+                                           th:text="${subRubric.description}">
+                                            Description of what to evaluate
+                                        </p>
+                                        <p class="sub-rubric-marks">
+                                            <strong>Marks: </strong>
+                                            <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">5.00</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Rating options for this sub-rubric -->
+                                    <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}"
+                                         class="rating-options-grid">
+                                        <div th:each="rating : ${subRubric.ratings}" 
+                                             class="rating-option">
+                                            <input type="radio" 
+                                                   th:id="'subRubric_' + ${subRubric.id} + '_rating_' + ${rating.id}" 
+                                                   th:name="'subRubric_' + ${subRubric.id}"
+                                                   th:value="${rating.id}"
+                                                   th:checked="${existingSubRubricMarks != null and existingSubRubricMarks.containsKey(subRubric.id) and existingSubRubricMarks.get(subRubric.id).rating != null and existingSubRubricMarks.get(subRubric.id).rating.id == rating.id}"
+                                                   required>
+                                            <label th:for="'subRubric_' + ${subRubric.id} + '_rating_' + ${rating.id}"
+                                                   class="rating-label">
+                                                <div class="rating-header">
+                                                    <span class="rating-level" th:text="${rating.name}">Rating Name</span>
+                                                    <span class="rating-marks">
+                                                        <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span> marks
+                                                    </span>
+                                                </div>
+                                                <p class="rating-description" th:text="${rating.description ?: 'No description provided'}">
+                                                    Description of this rating level
+                                                </p>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
-                                
-                                <div class="criteria-rating-option">
-                                    <input type="radio" 
-                                           th:id="'criteria_' + ${criterion.id} + '_2'" 
-                                           th:name="'criteria_' + ${criterion.id}" 
-                                           value="2"
-                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 2}"
-                                           required>
-                                    <label th:for="'criteria_' + ${criterion.id} + '_2'">
-                                        <span class="rating-level-badge">2</span>
-                                        <span class="rating-description">Satisfactory</span>
-                                    </label>
-                                </div>
-                                
-                                <div class="criteria-rating-option">
-                                    <input type="radio" 
-                                           th:id="'criteria_' + ${criterion.id} + '_3'" 
-                                           th:name="'criteria_' + ${criterion.id}" 
-                                           value="3"
-                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 3}"
-                                           required>
-                                    <label th:for="'criteria_' + ${criterion.id} + '_3'">
-                                        <span class="rating-level-badge">3</span>
-                                        <span class="rating-description">Good</span>
-                                    </label>
-                                </div>
-                                
-                                <div class="criteria-rating-option">
-                                    <input type="radio" 
-                                           th:id="'criteria_' + ${criterion.id} + '_4'" 
-                                           th:name="'criteria_' + ${criterion.id}" 
-                                           value="4"
-                                           th:checked="${existingCriteriaMarks.containsKey(criterion.id) and existingCriteriaMarks.get(criterion.id).ratingLevel == 4}"
-                                           required>
-                                    <label th:for="'criteria_' + ${criterion.id} + '_4'">
-                                        <span class="rating-level-badge">4</span>
-                                        <span class="rating-description">Excellent</span>
-                                    </label>
+                            </div>
+                            
+                            <!-- CASE 2: Rubric has Direct Ratings (no sub-rubrics) -->
+                            <div th:if="${(rubric.subRubrics == null or #lists.isEmpty(rubric.subRubrics)) and rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}"
+                                 class="direct-ratings-container">
+                                <h4 style="color: #2ecc71; margin-top: 15px; margin-bottom: 10px;">
+                                    <i class="fas fa-star"></i> Rating Options
+                                </h4>
+                                <div class="rating-options-grid">
+                                    <div th:each="rating : ${rubric.ratings}" 
+                                         class="rating-option">
+                                        <input type="radio" 
+                                               th:id="'rubric_' + ${rubric.id} + '_rating_' + ${rating.id}" 
+                                               th:name="'rubric_' + ${rubric.id}"
+                                               th:value="${rating.id}"
+                                               th:checked="${existingRubricMarks != null and existingRubricMarks.containsKey(rubric.id) and existingRubricMarks.get(rubric.id).rating != null and existingRubricMarks.get(rubric.id).rating.id == rating.id}"
+                                               required>
+                                        <label th:for="'rubric_' + ${rubric.id} + '_rating_' + ${rating.id}"
+                                               class="rating-label">
+                                            <div class="rating-header">
+                                                <span class="rating-level" th:text="${rating.name}">Rating Name</span>
+                                                <span class="rating-marks">
+                                                    <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span> marks
+                                                </span>
+                                            </div>
+                                            <p class="rating-description" th:text="${rating.description ?: 'No description provided'}">
+                                                Description of this rating level
+                                            </p>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- RUBRICS (Likert Scale) - if any -->
-                    <div th:if="${rubrics != null and !#lists.isEmpty(rubrics)}">
-                        <h2 style="color: #3498db; margin-bottom: 20px;">
-                            <i class="fas fa-tasks"></i> Likert Scale Rubrics
-                        </h2>
-                        <!-- Rubric display logic here if needed -->
+
+                    <!-- NO RUBRICS MESSAGE -->
+                    <div th:if="${rubrics == null or #lists.isEmpty(rubrics)}" 
+                         class="no-rubrics-message">
+                        <i class="fas fa-info-circle" style="font-size: 2em; color: #95a5a6;"></i>
+                        <p>No assessment rubrics are available for this evaluation.</p>
                     </div>
                 </div>
 
-                <!-- MANDATORY OVERALL COMMENT SECTION -->
-                <div class="overall-comment-section">
-                    <h3>
+                <!-- ⭐⭐⭐ MULTIPLE COMMENTS SECTION - DYNAMIC BASED ON ASSESSMENT CONFIG ⭐⭐⭐ -->
+                <div class="comments-container">
+                    <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
                         <i class="fas fa-comments"></i> 
-                        Overall Comment 
+                        Feedback Comments
                         <span class="required-indicator">*</span>
                     </h3>
-                    <p style="color: #ecf0f1; margin-bottom: 15px;">
+                    
+                    <!-- Instruction Text -->
+                    <div style="background: #34495e; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                        <p style="color: #ecf0f1; margin-bottom: 10px;">
+                            <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                            <strong>Instructions:</strong>
+                        </p>
+                        <ul style="color: #ecf0f1; margin-left: 20px; line-height: 1.6;">
+                            <li>You must fill out <strong th:text="${assessment.commentCount}">1</strong> comment field(s)</li>
+                            <li>Each comment must be at least <strong th:text="${assessment.commentMinLength}">20</strong> characters</li>
+                            <li th:if="${assessment.commentsAnonymous}">Your comments will appear <strong>anonymously</strong> as "Teammate X"</li>
+                            <li th:unless="${assessment.commentsAnonymous}">Your comments will show <strong>your name</strong></li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Dynamic Comment Fields -->
+                    <div th:each="i : ${#numbers.sequence(0, assessment.commentCount - 1)}" class="comment-field-container">
+                        <div class="comment-field-header">
+                            <h4 th:text="${assessment.getCommentLabel(i)}">Comment Label</h4>
+                            <span class="char-counter" th:id="'charCount_' + ${i}">0 / <span th:text="${assessment.commentMinLength}">20</span> chars</span>
+                        </div>
+                        
+                        <textarea th:name="'comment_' + ${i}" 
+                                  th:id="'comment_' + ${i}"
+                                  th:placeholder="${'Write your ' + assessment.getCommentLabel(i).toLowerCase() + ' here...'}"
+                                  th:data-min-length="${assessment.commentMinLength}"
+                                  th:data-index="${i}"
+                                  class="comment-textarea"
+                                  required
+                                  th:attr="minlength=${assessment.commentMinLength}">[[${existingComments != null and i < existingComments.size() ? existingComments.get(i).commentText : ''}]]</textarea>
+                        
+                        <div class="comment-validation" th:id="'validation_' + ${i}" style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Minimum length not met</span>
+                        </div>
+                    </div>
+                    
+                    <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #1a252f; border-radius: 4px; border-left: 3px solid #f39c12;">
+                        <i class="fas fa-lightbulb" style="color: #f39c12;"></i>
+                        <strong>Tip:</strong> 
                         <span th:if="${isSelfAssessment}">
-                            Reflect on your own performance and contribution to the team. What are your strengths and areas for improvement?
+                            Be honest about your strengths and areas for growth. Self-reflection helps you improve!
                         </span>
                         <span th:unless="${isSelfAssessment}">
-                            Provide constructive feedback about <strong th:text="${evaluatedStudent.username}">this teammate</strong>'s contribution and collaboration.
+                            Be constructive and specific. Good feedback helps your teammates grow!
                         </span>
-                    </p>
-                    
-                    <textarea name="overallComment" 
-                              id="overallComment"
-                              placeholder="Write your overall comment here... (This comment is mandatory and will be shared with the student)"
-                              required
-                              minlength="20"
-                              th:text="${existingComment != null ? existingComment.commentText : ''}"></textarea>
-                    
-                    <div class="comment-hint" id="commentHint">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Note:</strong> 
-                        <span th:if="${isSelfAssessment}">
-                            Your self-reflection comment will be visible to you and may be reviewed by instructors.
-                        </span>
-                        <span th:unless="${isSelfAssessment}">
-                            Your comment will appear anonymously as "Teammate X" to maintain confidentiality.
-                        </span>
-                        Minimum 20 characters required.
                     </div>
                 </div>
 
@@ -250,75 +294,169 @@
     </div>
     
     <script th:inline="javascript">
-        // Character counter for comment
+        const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
+        const form = document.getElementById('assessmentForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const modal = document.getElementById('confirmModal');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const commentCount = /*[[${assessment.commentCount}]]*/ 1;
+        const minLength = /*[[${assessment.commentMinLength}]]*/ 20;
+        
         document.addEventListener('DOMContentLoaded', function() {
-            const textarea = document.getElementById('overallComment');
-            const hint = document.getElementById('commentHint');
-            const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
-            const form = document.getElementById('assessmentForm');
-            const submitBtn = document.getElementById('submitBtn');
-            const modal = document.getElementById('confirmModal');
-            const modalCancel = document.getElementById('modalCancel');
-            const modalConfirm = document.getElementById('modalConfirm');
-            
-            // Character counter
-            textarea.addEventListener('input', function() {
-                const length = this.value.length;
-                const minLength = 20;
+            // Setup character counters and validation for each comment field
+            for (let i = 0; i < commentCount; i++) {
+                const textarea = document.getElementById('comment_' + i);
+                const charCount = document.getElementById('charCount_' + i);
+                const validation = document.getElementById('validation_' + i);
                 
-                if (length < minLength) {
-                    hint.style.color = '#e74c3c';
-                    hint.innerHTML = '<i class="fas fa-exclamation-circle"></i> <strong>Minimum ' + minLength + ' characters required.</strong> Current: ' + length + ' characters.';
-                } else {
-                    hint.style.color = '#27ae60';
-                    hint.innerHTML = '<i class="fas fa-check-circle"></i> <strong>Good!</strong> Character count: ' + length;
-                }
-            });
+                if (!textarea) continue;
+                
+                // Update character count
+                textarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    charCount.textContent = length + ' / ' + minLength + ' chars';
+                    
+                    if (length < minLength) {
+                        charCount.style.color = '#e74c3c';
+                        validation.style.display = 'block';
+                        this.style.borderColor = '#e74c3c';
+                    } else {
+                        charCount.style.color = '#27ae60';
+                        validation.style.display = 'none';
+                        this.style.borderColor = '#27ae60';
+                    }
+                });
+                
+                // Trigger initial update
+                textarea.dispatchEvent(new Event('input'));
+            }
             
-            // ⭐ Confirmation logic for re-evaluation
+            // Submit button click handler
             submitBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Validate form first
+                // Validate all comment fields
+                let allValid = true;
+                for (let i = 0; i < commentCount; i++) {
+                    const textarea = document.getElementById('comment_' + i);
+                    if (textarea && textarea.value.length < minLength) {
+                        allValid = false;
+                        textarea.focus();
+                        break;
+                    }
+                }
+                
+                if (!allValid) {
+                    alert('Please ensure all comments meet the minimum length requirement of ' + minLength + ' characters.');
+                    return;
+                }
+                
+                // Validate form
                 if (!form.checkValidity()) {
                     form.reportValidity();
                     return;
                 }
                 
-                // If this is a re-evaluation, show confirmation
+                // If re-evaluation, show confirmation
                 if (hasExisting) {
                     modal.classList.add('active');
                 } else {
-                    // First time evaluation, submit directly
                     form.submit();
                 }
             });
             
-            // Modal cancel button
+            // Modal handlers
             modalCancel.addEventListener('click', function() {
                 modal.classList.remove('active');
             });
             
-            // Modal confirm button
             modalConfirm.addEventListener('click', function() {
                 modal.classList.remove('active');
                 form.submit();
             });
             
-            // Close modal on overlay click
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     modal.classList.remove('active');
                 }
             });
             
-            // Close modal on ESC key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && modal.classList.contains('active')) {
                     modal.classList.remove('active');
                 }
             });
+
+            // Visual feedback for radio selection
+            document.querySelectorAll('.rating-option input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const name = this.name;
+                    document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                        r.closest('.rating-option').classList.remove('selected');
+                    });
+                    this.closest('.rating-option').classList.add('selected');
+                });
+
+                if (radio.checked) {
+                    radio.closest('.rating-option').classList.add('selected');
+                }
+            });
         });
     </script>
+    
+    <style>
+        .comments-container {
+            margin-top: 40px;
+            padding: 25px;
+            background: #2c3e50;
+            border-radius: 8px;
+        }
+        
+        .comment-field-container {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #34495e;
+            border-radius: 6px;
+        }
+        
+        .comment-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .comment-field-header h4 {
+            color: #3498db;
+            margin: 0;
+            font-size: 1.1em;
+        }
+        
+        .char-counter {
+            color: #95a5a6;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .comment-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            background: #2c3e50;
+            border: 2px solid #4a6681;
+            border-radius: 6px;
+            color: #ecf0f1;
+            font-size: 1em;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+    </style>
 </body>
 </html>

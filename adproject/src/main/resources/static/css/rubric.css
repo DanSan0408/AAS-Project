@@ -1,6 +1,5 @@
 body {
     font-family: 'Arial', sans-serif;
-    /* BACKGROUND: #2c3e50 -> #152238 (Darkest) */
     background-color: #152238;
     margin: 0;
     padding: 0;
@@ -10,7 +9,6 @@ body {
 
 .sidebar {
     width: 280px;
-    /* SIDEBAR BG: #34495e -> #192841 (Darker) */
     background-color: #192841;
     padding: 20px;
     height: 100vh;
@@ -22,7 +20,6 @@ body {
 .logo {
     text-align: center;
     padding-bottom: 20px;
-    /* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border-bottom: 1px solid #1c2e4a;
     margin-bottom: 20px;
 }
@@ -68,7 +65,6 @@ body {
 }
 
 .menu-list a:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
     background-color: #1c2e4a;
 }
 
@@ -86,7 +82,6 @@ body {
     flex-grow: 1;
     margin-left: 150px;
     padding: 40px;
-    /* MAIN BG: #2c3e50 -> #152238 (Darkest) */
     background-color: #152238;
     display: flex;
     flex-direction: column;
@@ -94,7 +89,6 @@ body {
 }
 
 .card {
-    /* CARD BG: #34495e -> #192841 (Darker) */
     background-color: #192841;
     padding: 100px;
     border-radius: 12px;
@@ -127,9 +121,7 @@ body {
     width: 100%;
     padding: 15px;
     border-radius: 5px;
-    /* INPUT BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border: 1px solid #1c2e4a;
-    /* INPUT BG: #2c3e50 -> #203354 (Mid-tone dark) */
     background-color: #203354;
     color: #ecf0f1;
     box-sizing: border-box;
@@ -137,12 +129,10 @@ body {
 }
 
 .sub-rubric-card {
-    /* SUB-CARD BG: #2c3e50 -> #203354 (Mid-tone dark) */
     background-color: #203354;
     padding: 20px;
     border-radius: 8px;
     margin-top: 20px;
-    /* SUB-CARD BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border: 1px solid #1c2e4a;
     position: relative;
 }
@@ -154,7 +144,7 @@ body {
     margin-top: 15px;
 }
 
-/* Button variants (No color changes as they are accent colors) */
+/* Button variants */
 .btn {
     padding: 12px 20px;
     border-radius: 5px;
@@ -221,8 +211,16 @@ body {
     background-color: #2980b9;
 }
 
+.btn-warning {
+    background-color: #f39c12;
+    color: #212529;
+}
 
-/* Specific styles for `rubric-form.html` */
+.btn-warning:hover {
+    background-color: #e67e22;
+}
+
+/* Specific styles for rubric-form.html */
 .btn-danger.absolute-top-right {
     position: absolute;
     top: 10px;
@@ -230,7 +228,7 @@ body {
     padding: 5px 10px;
 }
 
-/* Table styles for `manage-assessment.html` and `view-assessment-rubrics.html` */
+/* Table styles */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -240,18 +238,15 @@ table {
 th,
 td {
     padding: 12px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border-bottom: 1px solid #1c2e4a;
     text-align: left;
 }
 
 th {
-    /* HEADER BG: #4a6681 -> #23395d (Deepest Mid-tone) */
     background-color: #23395d;
 }
 
 tr:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
     background-color: #1c2e4a;
 }
 
@@ -275,14 +270,13 @@ tr:hover {
     color: #ecf0f1;
 }
 
-/* Styles for `view-assessment-rubrics.html` */
+/* Styles for view-assessment-rubrics.html */
 .page-header {
     width: 100%;
     max-width: 1200px;
     text-align: center;
     margin-bottom: 20px;
     padding: 20px;
-    /* PAGE HEADER BG: #34495e -> #192841 (Darker) */
     background-color: #192841;
     border-radius: 12px;
 }
@@ -292,7 +286,6 @@ tr:hover {
     max-width: 1200px;
     margin-bottom: 25px;
     padding: 25px;
-    /* RUBRIC CONTAINER BG: #34495e -> #192841 (Darker) */
     background-color: #192841;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -302,7 +295,6 @@ tr:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border-bottom: 2px solid #1c2e4a;
     padding-bottom: 10px;
     margin-bottom: 15px;
@@ -332,12 +324,10 @@ tr:hover {
 .ratings-table td {
     text-align: left;
     padding: 8px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border: 1px solid #1c2e4a;
 }
 
 .ratings-table th {
-    /* HEADER BG: #2c3e50 -> #23395d (Deepest Mid-tone) */
     background-color: #23395d;
 }
 
@@ -345,7 +335,7 @@ form.inline {
     display: inline;
 }
 
-/* Styles for `manage-assessment.html` */
+/* Styles for manage-assessment.html */
 #assessment-form {
     display: flex;
     justify-content: center;
@@ -357,9 +347,7 @@ form.inline {
     flex-grow: 1;
     padding: 10px;
     border-radius: 5px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
     border: 1px solid #1c2e4a;
-    /* INPUT BG: #2c3e50 -> #203354 (Mid-tone dark) */
     background-color: #203354;
     color: #ecf0f1;
 }
@@ -384,7 +372,6 @@ form.inline {
 }
 
 .menu-list form button:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
     background-color: #1c2e4a;
 }
 
@@ -392,4 +379,59 @@ form.inline {
     display: flex;
     gap: 5px;
     align-items: center;
+}
+
+/* Button container */
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Flash messages */
+.flash-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    text-align: center;
+    z-index: 1000;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+/* Info text style */
+.info-text {
+    color: #95a5a6;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* Form section header */
+.form-section-header {
+    color: #3498db;
+    border-bottom: 1px solid #3498db;
+    padding-bottom: 10px;
+    margin-top: 20px;
 }

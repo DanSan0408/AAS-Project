@@ -55,15 +55,12 @@
                         <p><strong>Components:</strong></p>
                         <ul>
                             <li th:if="${!assessment.rubrics.isEmpty()}">
-                                <span th:text="${assessment.rubrics.size()}">0</span> Likert Scale Rubric(s)
-                            </li>
-                            <li th:if="${!assessment.criteria.isEmpty()}">
-                                <span th:text="${assessment.criteria.size()}">0</span> Criteria-Based Rubric(s)
+                                <span th:text="${assessment.rubrics.size()}">0</span> Rubric(s)
                             </li>
                         </ul>
                     </div>
 
-                    <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id})}" 
+                    <a th:href="@{/lecturer/assessments/{id}/select-rubric-type(id=${assessment.id})}" 
                         class="btn-evaluate">
                         Start Assessment
                     </a>

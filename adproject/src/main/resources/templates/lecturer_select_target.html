@@ -19,9 +19,19 @@
 
         <div class="content-flex-container">
             <div class="selection-container">
-                <a th:href="@{/lecturer/assessments}" class="btn-back">← Back to Assessments</a>
+                <a th:href="@{/lecturer/assessments/{id}/select-rubric-type(id=${assessment.id})}" class="btn-back">
+                    ← Back to Rubric Type Selection
+                </a>
 
-                <h2 th:text="'Select Target for: ' + ${assessment.title}">Select Target</h2>
+                <h2>
+                    <span th:if="${isGroupAssessment}">Select Group for: </span>
+                    <span th:unless="${isGroupAssessment}">Select Student for: </span>
+                    <span th:text="${assessment.title}">Assessment Title</span>
+                </h2>
+
+                <div class="rubric-type-badge" th:classappend="${isGroupAssessment ? 'badge-group' : 'badge-individual'}">
+                    <span th:text="${rubricType}">Rubric Type</span>
+                </div>
 
                 <!-- Messages -->
                 <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
@@ -31,22 +41,24 @@
                 <div class="instruction-box">
                     <h4>📋 Instructions</h4>
                     <ul>
-                        <li><strong>Step 1:</strong> Select a group or student to evaluate based on the evaluation type</li>
+                        <li th:if="${isGroupAssessment}"><strong>Step 1:</strong> Select a group to evaluate</li>
+                        <li th:unless="${isGroupAssessment}"><strong>Step 1:</strong> Select a student to evaluate</li>
                         <li><strong>Step 2:</strong> If already evaluated, you'll see a warning before proceeding</li>
-                        <li><strong>Step 3:</strong> Complete the evaluation form</li>
+                        <li><strong>Step 3:</strong> Complete the evaluation form for all rubrics</li>
                         <li>✓ Green checkmark indicates already evaluated targets</li>
                     </ul>
                 </div>
 
-                <!-- GROUP EVALUATION TARGETS -->
-                <div th:if="${hasGroupEvaluation}" class="target-section">
-                    <h3>📊 Group Evaluation - Select a Group</h3>
-                    <p>Choose a group to evaluate for Group Evaluation rubrics/criteria.</p>
+                <!-- GROUP TARGETS -->
+                <div th:if="${isGroupAssessment}" class="target-section">
+                    <h3>📊 Select a Group</h3>
+                    <p>Choose a group to evaluate for <strong th:text="${rubricType}">Group Assessment</strong> rubrics.</p>
 
                     <div class="target-grid">
                         <form th:each="group : ${allGroups}" 
-                              th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
-                              method="post">
+                              th:action="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id})}"
+                              method="get">
+                            <input type="hidden" name="rubricType" th:value="${rubricType}"/>
                             <input type="hidden" name="groupId" th:value="${group.id}"/>
                             
                             <div class="target-card" 
@@ -62,22 +74,24 @@
                                 </div>
                                 
                                 <button type="submit" class="btn-select">
-                                    Select Group
+                                    <span th:if="${groupEvaluationStatus.get(group.id)}">✓ Re-evaluate Group</span>
+                                    <span th:unless="${groupEvaluationStatus.get(group.id)}">Select Group</span>
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- INDIVIDUAL EVALUATION TARGETS -->
-                <div th:if="${hasIndividualEvaluation}" class="target-section">
-                    <h3>👤 Individual Evaluation - Select a Student</h3>
-                    <p>Choose a student to evaluate for Individual Evaluation rubrics/criteria.</p>
+                <!-- STUDENT TARGETS -->
+                <div th:unless="${isGroupAssessment}" class="target-section">
+                    <h3>👤 Select a Student</h3>
+                    <p>Choose a student to evaluate for <strong th:text="${rubricType}">Individual Assessment</strong> rubrics.</p>
 
                     <div class="target-grid">
                         <form th:each="student : ${allStudents}" 
-                              th:action="@{/lecturer/assessments/{id}/confirm-target(id=${assessment.id})}"
-                              method="post">
+                              th:action="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id})}"
+                              method="get">
+                            <input type="hidden" name="rubricType" th:value="${rubricType}"/>
                             <input type="hidden" name="studentId" th:value="${student.id}"/>
                             
                             <div class="target-card" 
@@ -89,7 +103,8 @@
                                 </div>
                                 
                                 <button type="submit" class="btn-select">
-                                    Select Student
+                                    <span th:if="${studentEvaluationStatus.get(student.id)}">✓ Re-evaluate Student</span>
+                                    <span th:unless="${studentEvaluationStatus.get(student.id)}">Select Student</span>
                                 </button>
                             </div>
                         </form>
@@ -98,5 +113,28 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .rubric-type-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .badge-group {
+            background: #e8f4f8;
+            color: #2980b9;
+            border: 2px solid #3498db;
+        }
+
+        .badge-individual {
+            background: #e8f5e9;
+            color: #27ae60;
+            border: 2px solid #2ecc71;
+        }
+    </style>
 </body>
 </html>

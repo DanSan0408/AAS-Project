@@ -72,15 +72,12 @@ public class MarkService {
             Long rubricId = entry.getKey();
             Long ratingId = entry.getValue();
             
-            // This assumes you have methods to fetch Rubric and Rating by ID
-            // You'll need to inject RubricRepository and RatingRepository
-            // For now, creating placeholder mark
             Mark mark = new Mark();
             mark.setEvaluatorStudent(evaluator);
             mark.setEvaluatedStudent(evaluated);
             mark.setAssessment(assessment);
             mark.setAssessmentType(evaluator.getId().equals(evaluated.getId()) ? 
-        "Self Assessment" : "Peer Assessment");
+                "Self Assessment" : "Peer Assessment");
             mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
             mark.setSubmittedAt(LocalDateTime.now());
             

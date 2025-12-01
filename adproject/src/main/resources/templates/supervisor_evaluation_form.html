@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Form - Industrial Supervisor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .evaluation-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        
+        .context-info {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .context-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .context-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        
+        .context-label {
+            font-weight: 600;
+            color: #34495e;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .evaluation-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .student-section {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .student-section:last-child {
+            border-bottom: none;
+        }
+        
+        .student-header {
+            background: #3498db;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .student-name {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .rubric-evaluation {
+            margin-bottom: 30px;
+        }
+        
+        .rubric-header {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .rubric-name {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+        }
+        
+        .rubric-details {
+            color: #555;
+            font-size: 0.95em;
+        }
+        
+        .rating-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .rating-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .rating-option:hover {
+            background: #e8f4f8;
+            border-color: #3498db;
+        }
+        
+        .rating-option input[type="radio"] {
+            margin-right: 10px;
+        }
+        
+        .rating-option input[type="radio"]:checked + label {
+            font-weight: 600;
+        }
+        
+        .rating-label {
+            flex: 1;
+        }
+        
+        .rating-marks {
+            color: #1abc9c;
+            font-weight: 600;
+        }
+        
+        .comment-section {
+            margin-top: 20px;
+        }
+        
+        .comments-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .comments-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .comment-label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+        }
+        
+        .required-indicator {
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+        
+        .comment-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-cancel {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn-submit {
+            background: #1abc9c;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background: #16a085;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #95a5a6;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #7f8c8d;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS - Industrial Supervisor</h1>
+            </div>
+        </div>
+        
+        <div class="evaluation-container">
+            <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" class="back-btn">← Back to Assessment Selection</a>
+            
+            <h2 class="page-title">Evaluate Group Assessment</h2>
+            
+            <!-- Context Information -->
+            <div class="context-info">
+                <div class="context-row">
+                    <div class="context-item">
+                        <span class="context-label">Group:</span>
+                        <span th:text="${group.groupName}">Group Name</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">Assessment:</span>
+                        <span th:text="${assessment.title}">Assessment Title</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">Total Marks:</span>
+                        <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">10.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Information Alert -->
+            <div class="alert alert-info" th:if="${isGroupAssessment}">
+                <strong>Group Assessment:</strong> All students in this group will receive the same marks. You only need to evaluate once.
+            </div>
+            
+            <div class="alert alert-info" th:if="${!isGroupAssessment}">
+                <strong>Individual Assessment:</strong> Each student will be evaluated separately with individual marks.
+            </div>
+            
+            <!-- Evaluation Form -->
+            <form th:action="@{/supervisor/evaluate/submit}" method="post" class="evaluation-form">
+                <input type="hidden" name="groupId" th:value="${group.id}"/>
+                <input type="hidden" name="assessmentId" th:value="${assessment.id}"/>
+                <input type="hidden" name="isGroupAssessment" th:value="${isGroupAssessment}"/>
+                
+                <!-- For Group Assessment: Evaluate once, apply to all -->
+                <th:block th:if="${isGroupAssessment}">
+                    <div class="student-section">
+                        <div class="student-header">
+                            <h3 class="student-name">Group Evaluation (applies to all members)</h3>
+                        </div>
+                        
+                        <!-- Loop through each rubric -->
+                        <div th:each="rubric : ${assessment.rubrics}" class="rubric-evaluation">
+                            <div class="rubric-header">
+                                <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                <div class="rubric-details">
+                                    <span>Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong></span>
+                                    <span th:if="${rubric.description != null}"> | Description: <span th:text="${rubric.description}">Description</span></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Rating Options -->
+                            <div class="rating-options" th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                <label th:each="rating : ${rubric.ratings}" class="rating-option">
+                                    <input type="radio" 
+                                           th:name="${'rubric[' + rubric.id + '].rating'}"
+                                           th:value="${rating.id}"
+                                           required/>
+                                    <span class="rating-label" th:text="${rating.level}">Rating Level</span>
+                                    <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2) + ' marks'}">5.00 marks</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Multiple Comments Section -->
+                        <div class="comments-section">
+                            <h4 class="comments-title">Feedback Comments</h4>
+                            <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}" class="comment-section">
+                                <label class="comment-label" th:for="${'comment-' + i}">
+                                    <span th:text="${assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'Comment ' + (i + 1)}">Comment 1</span>
+                                    <span class="required-indicator" th:if="${assessment.commentRequired}">*</span>
+                                </label>
+                                <textarea 
+                                    th:id="${'comment-' + i}"
+                                    th:name="${'comments[' + i + ']'}"
+                                    class="comment-textarea"
+                                    th:required="${assessment.commentRequired}"
+                                    th:placeholder="${'Enter ' + (assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'comment ' + (i + 1)) + '...'}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+                
+                <!-- For Individual Assessment: Evaluate each student separately -->
+                <th:block th:if="${!isGroupAssessment}">
+                    <!-- Loop through each student -->
+                    <div th:each="student, iterStat : ${students}" class="student-section">
+                        <div class="student-header">
+                            <h3 class="student-name" th:text="${'Student: ' + student.username}">Student Name</h3>
+                        </div>
+                        
+                        <!-- Loop through each rubric -->
+                        <div th:each="rubric : ${assessment.rubrics}" class="rubric-evaluation">
+                            <div class="rubric-header">
+                                <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                <div class="rubric-details">
+                                    <span>Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong></span>
+                                    <span th:if="${rubric.description != null}"> | Description: <span th:text="${rubric.description}">Description</span></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Rating Options -->
+                            <div class="rating-options" th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                <label th:each="rating : ${rubric.ratings}" class="rating-option">
+                                    <input type="radio" 
+                                           th:name="${'student[' + iterStat.index + '].rubric[' + rubric.id + '].rating'}"
+                                           th:value="${rating.id}"
+                                           required/>
+                                    <span class="rating-label" th:text="${rating.level}">Rating Level</span>
+                                    <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2) + ' marks'}">5.00 marks</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Multiple Comments for this Student -->
+                        <div class="comments-section">
+                            <h4 class="comments-title">Feedback Comments for this Student</h4>
+                            <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}" class="comment-section">
+                                <label class="comment-label" th:for="${'student-' + iterStat.index + '-comment-' + i}">
+                                    <span th:text="${assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'Comment ' + (i + 1)}">Comment 1</span>
+                                    <span class="required-indicator" th:if="${assessment.commentRequired}">*</span>
+                                </label>
+                                <textarea 
+                                    th:id="${'student-' + iterStat.index + '-comment-' + i}"
+                                    th:name="${'student[' + iterStat.index + '].comments[' + i + ']'}"
+                                    class="comment-textarea"
+                                    th:required="${assessment.commentRequired}"
+                                    th:placeholder="${'Enter ' + (assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'comment ' + (i + 1)) + '...'}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" class="btn btn-cancel">Cancel</a>
+                    <button type="submit" class="btn btn-submit">Submit Evaluation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

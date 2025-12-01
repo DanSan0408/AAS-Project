@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +38,14 @@ public class AssessmentCommentService {
      * Ensures consistency - same evaluator always gets same teammate number for a student
      */
     public String getAnonymousIdentifier(Student evaluatedStudent, Long evaluatorId, Assessment assessment) {
+        // Check if assessment requires anonymous comments
+        if (!assessment.getCommentsAnonymous()) {
+            // Return the evaluator's real name
+            return studentRepository.findById(evaluatorId)
+                    .map(Student::getUsername)
+                    .orElse("Student");
+        }
+        
         // Get all peer comments for this student in this assessment
         List<AssessmentComment> peerComments = commentRepository.findPeerCommentsForStudentInAssessment(
                 evaluatedStudent, assessment);
@@ -50,71 +57,109 @@ public class AssessmentCommentService {
             }
         }
         
+        // Count unique evaluators
+        long uniqueEvaluators = peerComments.stream()
+                .map(AssessmentComment::getEvaluatorId)
+                .distinct()
+                .count();
+        
         // Assign new teammate number
-        int nextTeammateNumber = peerComments.size() + 1;
+        int nextTeammateNumber = (int) uniqueEvaluators + 1;
         return "Teammate " + nextTeammateNumber;
     }
     
     /**
-     * Submit peer comment (from student to peer)
+     * Submit multiple peer comments (from student to peer)
+     * @param commentTexts List of comment texts, one for each configured comment field
      */
     @Transactional
-    public AssessmentComment submitPeerComment(Student evaluator, Student evaluatedStudent, 
-                                                Assessment assessment, String commentText) {
+    public List<AssessmentComment> submitPeerComments(Student evaluator, Student evaluatedStudent, 
+                                                       Assessment assessment, List<String> commentTexts) {
         
-        // Check if comment already exists
-        Optional<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
-                evaluator.getId(), 
+        List<AssessmentComment> savedComments = new ArrayList<>();
+        
+        // Get anonymous identifier (consistent across all comments from this evaluator)
+        String identifier = getAnonymousIdentifier(evaluatedStudent, evaluator.getId(), assessment);
+        String evaluatorName = evaluator.getUsername();
+        
+        // Delete existing comments from this evaluator to this student in this assessment
+        List<AssessmentComment> existingComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
+                evaluator.getId(),
                 AssessmentComment.EvaluatorType.STUDENT,
-                evaluatedStudent, 
+                evaluatedStudent,
                 assessment);
         
-        AssessmentComment comment;
-        if (existing.isPresent()) {
-            comment = existing.get();
-            comment.setCommentText(commentText);
-        } else {
-            comment = new AssessmentComment();
-            comment.setEvaluatorId(evaluator.getId());
-            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-            comment.setEvaluatedStudent(evaluatedStudent);
-            comment.setAssessment(assessment);
-            comment.setCommentText(commentText);
-            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
-            
-            // Set anonymous identifier
-            String identifier = getAnonymousIdentifier(evaluatedStudent, evaluator.getId(), assessment);
-            comment.setAnonymousIdentifier(identifier);
+        if (!existingComments.isEmpty()) {
+            commentRepository.deleteAll(existingComments);
         }
         
-        return commentRepository.save(comment);
+        // Create new comments
+        for (int i = 0; i < commentTexts.size(); i++) {
+            String commentText = commentTexts.get(i);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                continue; // Skip empty comments
+            }
+            
+            AssessmentComment comment = new AssessmentComment();
+            comment.setEvaluatorId(evaluator.getId());
+            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+            comment.setEvaluatorName(evaluatorName);
+            comment.setEvaluatedStudent(evaluatedStudent);
+            comment.setAssessment(assessment);
+            comment.setCommentText(commentText.trim());
+            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
+            comment.setAnonymousIdentifier(identifier);
+            comment.setCommentIndex(i);
+            comment.setCommentLabel(assessment.getCommentLabel(i));
+            
+            savedComments.add(commentRepository.save(comment));
+        }
+        
+        return savedComments;
     }
     
     /**
-     * Submit self comment
+     * Submit multiple self comments
+     * @param commentTexts List of comment texts, one for each configured comment field
      */
     @Transactional
-    public AssessmentComment submitSelfComment(Student student, Assessment assessment, String commentText) {
+    public List<AssessmentComment> submitSelfComments(Student student, Assessment assessment, List<String> commentTexts) {
         
-        Optional<AssessmentComment> existing = commentRepository.findSelfCommentForStudentInAssessment(
+        List<AssessmentComment> savedComments = new ArrayList<>();
+        
+        // Delete existing self comments
+        List<AssessmentComment> existingComments = commentRepository.findSelfCommentsForStudentInAssessment(
                 student, assessment, student.getId());
         
-        AssessmentComment comment;
-        if (existing.isPresent()) {
-            comment = existing.get();
-            comment.setCommentText(commentText);
-        } else {
-            comment = new AssessmentComment();
-            comment.setEvaluatorId(student.getId());
-            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-            comment.setEvaluatedStudent(student);
-            comment.setAssessment(assessment);
-            comment.setCommentText(commentText);
-            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SELF);
-            comment.setAnonymousIdentifier("You (Self)");
+        if (!existingComments.isEmpty()) {
+            commentRepository.deleteAll(existingComments);
         }
         
-        return commentRepository.save(comment);
+        // Create new comments
+        for (int i = 0; i < commentTexts.size(); i++) {
+            String commentText = commentTexts.get(i);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                continue; // Skip empty comments
+            }
+            
+            AssessmentComment comment = new AssessmentComment();
+            comment.setEvaluatorId(student.getId());
+            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+            comment.setEvaluatorName(student.getUsername());
+            comment.setEvaluatedStudent(student);
+            comment.setAssessment(assessment);
+            comment.setCommentText(commentText.trim());
+            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SELF);
+            comment.setAnonymousIdentifier("You (Self)");
+            comment.setCommentIndex(i);
+            comment.setCommentLabel(assessment.getCommentLabel(i));
+            
+            savedComments.add(commentRepository.save(comment));
+        }
+        
+        return savedComments;
     }
     
     /**
@@ -125,15 +170,16 @@ public class AssessmentCommentService {
                                                      Student evaluatedStudent, Assessment assessment,
                                                      String commentText) {
         
-        Optional<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
+        // For lecturers, we maintain backward compatibility with single comment
+        List<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 lecturerId,
                 AssessmentComment.EvaluatorType.LECTURER,
                 evaluatedStudent,
                 assessment);
         
         AssessmentComment comment;
-        if (existing.isPresent()) {
-            comment = existing.get();
+        if (!existing.isEmpty()) {
+            comment = existing.get(0);
             comment.setCommentText(commentText);
         } else {
             comment = new AssessmentComment();
@@ -144,6 +190,7 @@ public class AssessmentCommentService {
             comment.setAssessment(assessment);
             comment.setCommentText(commentText);
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+            comment.setCommentIndex(0);
         }
         
         return commentRepository.save(comment);
@@ -157,15 +204,16 @@ public class AssessmentCommentService {
                                                        Student evaluatedStudent, Assessment assessment,
                                                        String commentText) {
         
-        Optional<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
+        // For supervisors, we maintain backward compatibility with single comment
+        List<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 supervisorId,
                 AssessmentComment.EvaluatorType.SUPERVISOR,
                 evaluatedStudent,
                 assessment);
         
         AssessmentComment comment;
-        if (existing.isPresent()) {
-            comment = existing.get();
+        if (!existing.isEmpty()) {
+            comment = existing.get(0);
             comment.setCommentText(commentText);
         } else {
             comment = new AssessmentComment();
@@ -176,6 +224,7 @@ public class AssessmentCommentService {
             comment.setAssessment(assessment);
             comment.setCommentText(commentText);
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
+            comment.setCommentIndex(0);
         }
         
         return commentRepository.save(comment);
@@ -240,12 +289,12 @@ public class AssessmentCommentService {
     }
     
     /**
-     * Get existing comment for edit
+     * Get existing comments for edit - returns all comments from evaluator to student in assessment
      */
-    public Optional<AssessmentComment> getExistingComment(Long evaluatorId, 
-                                                           AssessmentComment.EvaluatorType evaluatorType,
-                                                           Student evaluatedStudent, 
-                                                           Assessment assessment) {
+    public List<AssessmentComment> getExistingComments(Long evaluatorId, 
+                                                        AssessmentComment.EvaluatorType evaluatorType,
+                                                        Student evaluatedStudent, 
+                                                        Assessment assessment) {
         return commentRepository.findByEvaluatorAndStudentAndAssessment(
                 evaluatorId, evaluatorType, evaluatedStudent, assessment);
     }
@@ -254,12 +303,21 @@ public class AssessmentCommentService {
      * Check if student has submitted all required comments for an assessment
      */
     public boolean hasSubmittedAllComments(Student evaluator, Assessment assessment, List<Student> teamMembers) {
-        long submittedCount = commentRepository.countByEvaluatorAndAssessment(
-                evaluator.getId(),
-                AssessmentComment.EvaluatorType.STUDENT,
-                assessment);
+        int requiredCommentCount = assessment.getCommentCount();
         
-        // Should have comments for all team members (including self)
-        return submittedCount >= teamMembers.size();
+        for (Student member : teamMembers) {
+            List<AssessmentComment> comments = commentRepository.findByEvaluatorAndStudentAndAssessment(
+                    evaluator.getId(),
+                    AssessmentComment.EvaluatorType.STUDENT,
+                    member,
+                    assessment);
+            
+            // Check if all required comments are submitted for this team member
+            if (comments.size() < requiredCommentCount) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 }

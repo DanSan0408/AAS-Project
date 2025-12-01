@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,14 +22,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
-import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentRepository;
-import com.capstone.adproject.repositories.CriteriaRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
@@ -59,9 +56,6 @@ public class StudentController {
     
     @Autowired
     private RubricRepository rubricRepository;
-    
-    @Autowired
-    private CriteriaRepository criteriaRepository;
     
     @Autowired
     private RatingRepository ratingRepository;
@@ -117,40 +111,31 @@ public class StudentController {
         
         Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
 
+        // Simplified grouping function, removing Criteria and EvaluationType logic
         Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
             
-            Stream<Object> combinedComponents = Stream.concat(
-                assessment.getRubrics().stream().map(r -> (Object)r),
-                assessment.getCriteria().stream().map(c -> (Object)c)
-            );
+            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
+            final String DUMMY_KEY = "ASSESSMENT_GROUPING"; 
+            
+            // Get all Rubric components
+            Stream<Object> combinedComponents = Stream.empty();
+            if (assessment.getRubrics() != null) {
+                combinedComponents = assessment.getRubrics().stream().map(r -> (Object)r);
+            }
             
             List<Object> components = combinedComponents.collect(Collectors.toList());
 
-            Map<String, List<Object>> byEvalType = components.stream()
+            // Group components by Assessment Type (inner map)
+            Map<String, List<Object>> byAssessType = components.stream()
                 .collect(Collectors.groupingBy(c -> {
                     if (c instanceof Rubric) {
-                        return ((Rubric) c).getEvaluationType();
-                    } else if (c instanceof Criteria) {
-                        return ((Criteria) c).getEvaluationType();
+                        return ((Rubric) c).getAssessmentTypes(); 
                     }
                     return "Unknown";
                 }, LinkedHashMap::new, Collectors.toList()));
 
-            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
-            
-            byEvalType.forEach((evalType, evalComponents) -> {
-                Map<String, List<Object>> byAssessType = evalComponents.stream()
-                    .collect(Collectors.groupingBy(c -> {
-                        if (c instanceof Rubric) {
-                            return ((Rubric) c).getAssessmentTypes();
-                        } else if (c instanceof Criteria) {
-                            return ((Criteria) c).getAssessmentTypes();
-                        }
-                        return "Unknown";
-                    }, LinkedHashMap::new, Collectors.toList()));
-                
-                finalGroup.put(evalType, byAssessType);
-            });
+            // Wrap in an outer map with a dummy key 
+            finalGroup.put(DUMMY_KEY, byAssessType);
 
             return finalGroup;
         };
@@ -190,8 +175,8 @@ public class StudentController {
         
         model.addAttribute("allAssessments", allAssessments); 
         model.addAttribute("currentStudent", currentStudent);
-        model.addAttribute("allDeadlines", allDeadlines); // ⭐ UPDATED: Pass all deadlines
-        model.addAttribute("deadlines", studentDeadlines); // Keep for compatibility
+        model.addAttribute("allDeadlines", allDeadlines); 
+        model.addAttribute("deadlines", studentDeadlines); 
         model.addAttribute("hasGroup", hasGroup);
         model.addAttribute("assessmentAccessMap", assessmentAccessMap);
         model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
@@ -216,19 +201,12 @@ public class StudentController {
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
         for (Assessment assessment : assessments) {
-            List<Rubric> individualRubrics = assessment.getRubrics().stream()
-                    .filter(r -> r.getEvaluationType() != null && 
-                            r.getEvaluationType().equalsIgnoreCase("Individual"))
-                    .collect(Collectors.toList());
+            // Simplified filtering logic - any assessment with rubrics is available
+            List<Rubric> rubrics = assessment.getRubrics();
             
-            List<Criteria> individualCriteria = assessment.getCriteria().stream()
-                    .filter(c -> c.getEvaluationType() != null && 
-                            c.getEvaluationType().equalsIgnoreCase("Individual"))
-                    .collect(Collectors.toList());
+            boolean hasComponents = !rubrics.isEmpty(); 
             
-            boolean hasIndividualComponents = !individualRubrics.isEmpty() || !individualCriteria.isEmpty();
-            
-            if (hasIndividualComponents && isAssessmentOpen(assessment, "STUDENT")) {
+            if (hasComponents && isAssessmentOpen(assessment, "STUDENT")) {
                 peerSelfAssessments.add(assessment);
             }
         }
@@ -252,202 +230,263 @@ public class StudentController {
         return "student_assessments";
     }
     
-    /**
-     * ⭐ UPDATED: Show form with re-evaluation detection
-     */
-    @GetMapping("/assessment/{assessmentId}/evaluate/{studentId}")
-    public String showPeerAssessmentForm(@PathVariable Long assessmentId, 
-                                         @PathVariable Long studentId,
-                                         Model model, 
-                                         Principal principal,
-                                         RedirectAttributes redirectAttributes) {
-        
-        Student evaluator = studentRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-        
-        Assessment assessment = assessmentRepository.findById(assessmentId)
-                .orElseThrow(() -> new RuntimeException("Assessment not found"));
-        
-        if (!isAssessmentOpen(assessment, "STUDENT")) {
-            redirectAttributes.addFlashAttribute("error", 
-                "This assessment is not currently open for evaluation.");
-            return "redirect:/student/assessments";
-        }
-        
-        Student evaluatedStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
-        
-        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
-            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
-            redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
-            return "redirect:/student/assessments";
-        }
-        
-        List<Rubric> assessmentRubrics = assessment.getRubrics().stream()
-                .filter(r -> r.getEvaluationType() != null && 
-                            r.getEvaluationType().equalsIgnoreCase("Individual"))
-                .collect(Collectors.toList());
-        
-        List<Criteria> assessmentCriteria = assessment.getCriteria().stream()
-                .filter(c -> c.getEvaluationType() != null && 
-                            c.getEvaluationType().equalsIgnoreCase("Individual"))
-                .collect(Collectors.toList());
-        
-        // ⭐ Check if previous evaluation exists
-        List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment);
-        boolean hasExistingEvaluation = !existingMarks.isEmpty();
-        
-        // Get existing comment
-        Optional<AssessmentComment> existingComment = commentService.getExistingComment(
-            evaluator.getId(),
-            AssessmentComment.EvaluatorType.STUDENT,
-            evaluatedStudent,
-            assessment
-        );
-        
-        // Prepare existing marks map for form pre-population
-        Map<Long, Mark> existingRubricMarksMap = existingMarks.stream()
-                .filter(m -> m.getRubric() != null)
-                .collect(Collectors.toMap(m -> m.getRubric().getId(), m -> m));
-        
-        Map<Long, Mark> existingCriteriaMarksMap = existingMarks.stream()
-                .filter(m -> m.getCriteria() != null)
-                .collect(Collectors.toMap(m -> m.getCriteria().getId(), m -> m));
-        
-        Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
-        
-        model.addAttribute("assessment", assessment);
-        model.addAttribute("rubrics", assessmentRubrics);
-        model.addAttribute("criteria", assessmentCriteria);
-        model.addAttribute("evaluator", evaluator);
-        model.addAttribute("evaluatedStudent", evaluatedStudent);
-        model.addAttribute("existingRubricMarks", existingRubricMarksMap);
-        model.addAttribute("existingCriteriaMarks", existingCriteriaMarksMap);
-        model.addAttribute("existingComment", existingComment.orElse(null));
-        model.addAttribute("hasExistingEvaluation", hasExistingEvaluation); // ⭐ NEW
-        model.addAttribute("isSelfAssessment", evaluator.getId().equals(evaluatedStudent.getId()));
-        model.addAttribute("deadline", deadline);
-        
-        return "peer_assessment_form";
-    }
+   @GetMapping("/assessment/{assessmentId}/evaluate/{studentId}")
+public String showPeerAssessmentForm(@PathVariable Long assessmentId, 
+                                     @PathVariable Long studentId,
+                                     Model model, 
+                                     Principal principal,
+                                     RedirectAttributes redirectAttributes) {
     
-    /**
-     * ⭐ CORRECTED: Submit with all required Mark fields set.
-     */
-    @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
-    public String submitPeerAssessment(@PathVariable Long assessmentId,
-                                         @PathVariable Long studentId,
-                                         @RequestParam Map<String, String> formData,
-                                         Principal principal,
-                                         RedirectAttributes redirectAttributes) {
-        
-        Student evaluator = studentRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-        
-        Assessment assessment = assessmentRepository.findById(assessmentId)
-                .orElseThrow(() -> new RuntimeException("Assessment not found"));
-        
-        if (!isAssessmentOpen(assessment, "STUDENT")) {
-            redirectAttributes.addFlashAttribute("error", 
-                "This assessment has been closed. Submissions are no longer accepted.");
-            return "redirect:/student/assessments";
-        }
-        
-        Student evaluatedStudent = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
-        
-        // Validate overall comment
-        String overallComment = formData.get("overallComment");
-        
-        if (overallComment == null || overallComment.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Overall comment is required!");
-            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
-        }
-        
-        if (overallComment.trim().length() < 20) {
-            redirectAttributes.addFlashAttribute("error", "Comment must be at least 20 characters!");
-            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
-        }
-        
-        // ⭐ DELETE EXISTING MARKS (if any) - this replaces old evaluation
-        List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment);
-        if (!existingMarks.isEmpty()) {
-            markRepository.deleteAll(existingMarks);
-        }
-        
-        List<Mark> marks = new ArrayList<>();
-        
-        // Handle RUBRIC ratings
-        for (Map.Entry<String, String> entry : formData.entrySet()) {
-            if (entry.getKey().startsWith("rating_")) {
-                Long rubricId = Long.parseLong(entry.getKey().substring(7));
-                Long ratingId = Long.parseLong(entry.getValue());
-                
-                Rubric rubric = rubricRepository.findById(rubricId)
-                        .orElseThrow(() -> new RuntimeException("Rubric not found"));
-                Rating rating = ratingRepository.findById(ratingId)
-                        .orElseThrow(() -> new RuntimeException("Rating not found"));
-                
-                Mark mark = new Mark();
-                mark.setEvaluatorStudent(evaluator);
-                mark.setEvaluatedStudent(evaluatedStudent);
-                mark.setAssessment(assessment);
-                mark.setRubric(rubric); // <-- Critical for @PrePersist (to set CLO, EvalType, etc.)
-                mark.setRating(rating); // <-- Critical for @PrePersist (to calculate MarkValue/CloMarks)
-                
-                // Set the basic assessment type which is used in the PrePersist
-                mark.setAssessmentType(evaluator.getId().equals(evaluatedStudent.getId()) ? 
-        "Self Assessment" : "Peer Assessment");
-                
-                mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
-                
-                marks.add(mark);
-            }
-        }
-        
-        // Handle CRITERIA ratings
-        for (Map.Entry<String, String> entry : formData.entrySet()) {
-            if (entry.getKey().startsWith("criteria_")) {
-                Long criteriaId = Long.parseLong(entry.getKey().substring(9));
-                Integer ratingLevel = Integer.parseInt(entry.getValue());
-                
-                Criteria criteria = criteriaRepository.findById(criteriaId)
-                        .orElseThrow(() -> new RuntimeException("Criteria not found"));
-                
-                Mark mark = new Mark();
-                mark.setEvaluatorStudent(evaluator);
-                mark.setEvaluatedStudent(evaluatedStudent);
-                mark.setAssessment(assessment);
-                mark.setCriteria(criteria); // <-- Critical for @PrePersist (to set CLO, EvalType, etc.)
-                mark.setRatingLevel(ratingLevel); // <-- Critical for @PrePersist (to calculate MarkValue/CloMarks)
-                
-                // Set the basic assessment type which is used in the PrePersist
-                mark.setAssessmentType(evaluator.getId().equals(evaluatedStudent.getId()) ? 
-        "Self Assessment" : "Peer Assessment");
-                
-                mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
-                
-                marks.add(mark);
-            }
-        }
-        
-        // Save new marks
-        if (!marks.isEmpty()) {
-            // This is where Hibernate triggers the @PrePersist method in the Mark entity
-            markService.saveAllMarks(marks); 
-        }
-        
-        // Save comment (will update if exists)
-        boolean isSelf = evaluator.getId().equals(evaluatedStudent.getId());
-        if (isSelf) {
-            commentService.submitSelfComment(evaluator, assessment, overallComment.trim());
-        } else {
-            commentService.submitPeerComment(evaluator, evaluatedStudent, assessment, overallComment.trim());
-        }
-        
-        redirectAttributes.addFlashAttribute("success", "Assessment and comment submitted successfully!");
+    Student evaluator = studentRepository.findByUsername(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (!isAssessmentOpen(assessment, "STUDENT")) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment is not currently open for evaluation.");
         return "redirect:/student/assessments";
     }
+    
+    Student evaluatedStudent = studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+    
+    if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
+        !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
+        return "redirect:/student/assessments";
+    }
+    
+    // Get all rubrics for this assessment
+    List<Rubric> assessmentRubrics = assessment.getRubrics();
+    
+    // Check if previous evaluation exists
+    List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment);
+    boolean hasExistingEvaluation = !existingMarks.isEmpty();
+    
+    // Get existing comments
+    List<AssessmentComment> existingComments = commentService.getExistingComments(
+        evaluator.getId(),
+        AssessmentComment.EvaluatorType.STUDENT,
+        evaluatedStudent,
+        assessment
+    );
+    
+    // Sort comments by index
+    existingComments.sort((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()));
+    
+    // Prepare existing marks maps for BOTH direct rubric ratings AND sub-rubric ratings
+    Map<Long, Mark> existingRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getRubric() != null && m.getSubRubric() == null)
+            .collect(Collectors.toMap(m -> m.getRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Map<Long, Mark> existingSubRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getSubRubric() != null)
+            .collect(Collectors.toMap(m -> m.getSubRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
+    
+    model.addAttribute("assessment", assessment);
+    model.addAttribute("rubrics", assessmentRubrics);
+    model.addAttribute("evaluator", evaluator);
+    model.addAttribute("evaluatedStudent", evaluatedStudent);
+    model.addAttribute("existingRubricMarks", existingRubricMarksMap);
+    model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
+    model.addAttribute("existingComments", existingComments); // NEW: Pass existing comments
+    model.addAttribute("hasExistingEvaluation", hasExistingEvaluation);
+    model.addAttribute("isSelfAssessment", evaluator.getId().equals(evaluatedStudent.getId()));
+    model.addAttribute("deadline", deadline);
+    
+    return "peer_assessment_form";
+}
+    
+    @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
+public String submitPeerAssessment(@PathVariable Long assessmentId,
+                                   @PathVariable Long studentId,
+                                   @RequestParam Map<String, String> formData,
+                                   Principal principal,
+                                   RedirectAttributes redirectAttributes) {
+    
+    Student evaluator = studentRepository.findByUsername(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (!isAssessmentOpen(assessment, "STUDENT")) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment has been closed. Submissions are no longer accepted.");
+        return "redirect:/student/assessments";
+    }
+    
+    Student evaluatedStudent = studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+    
+    // ========== EXTRACT AND VALIDATE COMMENTS ==========
+    int commentCount = assessment.getCommentCount();
+    int minLength = assessment.getCommentMinLength();
+    List<String> commentTexts = new ArrayList<>();
+    
+    for (int i = 0; i < commentCount; i++) {
+        String commentKey = "comment_" + i;
+        String commentText = formData.get(commentKey);
+        
+        // Validate each comment
+        if (commentText == null || commentText.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Comment " + (i + 1) + " is required!");
+            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+        }
+        
+        if (commentText.trim().length() < minLength) {
+            redirectAttributes.addFlashAttribute("error", 
+                "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
+            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+        }
+        
+        commentTexts.add(commentText.trim());
+    }
+    
+    // ========== DELETE EXISTING MARKS (if any) ==========
+    List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment);
+    if (!existingMarks.isEmpty()) {
+        markRepository.deleteAll(existingMarks);
+    }
+    
+    // ========== PROCESS RUBRIC RATINGS ==========
+    List<Mark> marks = new ArrayList<>();
+    boolean isSelfAssessment = evaluator.getId().equals(evaluatedStudent.getId());
+    String assessmentType = isSelfAssessment ? "Self Assessment" : "Peer Assessment";
+    
+    for (Map.Entry<String, String> entry : formData.entrySet()) {
+        String paramName = entry.getKey();
+        String paramValue = entry.getValue();
+        
+        // Skip comment parameters
+        if (paramName.startsWith("comment_")) {
+            continue;
+        }
+        
+        try {
+            // CASE 1: Direct Rating (rubric_X)
+            if (paramName.startsWith("rubric_")) {
+                Long rubricId = Long.parseLong(paramName.substring("rubric_".length()));
+                Long ratingId = Long.parseLong(paramValue);
+                
+                Rubric rubric = rubricRepository.findById(rubricId)
+                        .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                Rating rating = ratingRepository.findById(ratingId)
+                        .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                
+                Mark mark = new Mark();
+                mark.setEvaluatorStudent(evaluator);
+                mark.setEvaluatedStudent(evaluatedStudent);
+                mark.setAssessment(assessment);
+                mark.setRubric(rubric);
+                mark.setSubRubric(null);
+                mark.setRating(rating);
+                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setClo(rubric.getClo());
+                mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setAssessmentType(assessmentType);
+                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                
+                marks.add(mark);
+            }
+            // CASE 2: Sub-Rubric Rating (subRubric_X)
+            else if (paramName.startsWith("subRubric_")) {
+                Long subRubricId = Long.parseLong(paramName.substring("subRubric_".length()));
+                Long ratingId = Long.parseLong(paramValue);
+                
+                com.capstone.adproject.model.SubRubric subRubric = null;
+                Rubric parentRubric = null;
+                
+                for (Rubric r : assessment.getRubrics()) {
+                    if (r.getSubRubrics() != null) {
+                        for (com.capstone.adproject.model.SubRubric sr : r.getSubRubrics()) {
+                            if (sr.getId().equals(subRubricId)) {
+                                subRubric = sr;
+                                parentRubric = r;
+                                break;
+                            }
+                        }
+                    }
+                    if (subRubric != null) break;
+                }
+                
+                if (subRubric == null) {
+                    throw new RuntimeException("SubRubric not found: " + subRubricId);
+                }
+                
+                Rating rating = ratingRepository.findById(ratingId)
+                        .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                
+                Mark mark = new Mark();
+                mark.setEvaluatorStudent(evaluator);
+                mark.setEvaluatedStudent(evaluatedStudent);
+                mark.setAssessment(assessment);
+                mark.setRubric(parentRubric);
+                mark.setSubRubric(subRubric);
+                mark.setRating(rating);
+                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setClo(parentRubric.getClo());
+                
+                // Calculate pro-rated CLO marks
+                if (parentRubric.getMarks() != null && 
+                    parentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                    subRubric.getMarks() != null && 
+                    subRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                    parentRubric.getCloMarks() != null) {
+                    
+                    double subRubricProportion = subRubric.getMarks()
+                        .divide(parentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                        .doubleValue();
+                    
+                    double cloMarksForSubRubric = parentRubric.getCloMarks() * subRubricProportion;
+                    
+                    double achievementProportion = rating.getMarks()
+                        .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                        .doubleValue();
+                    
+                    double cloMarksAwarded = cloMarksForSubRubric * achievementProportion;
+                    
+                    mark.setCloMarks(cloMarksAwarded);
+                } else {
+                    mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                }
+                
+                mark.setAssessmentType(assessmentType);
+                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                
+                marks.add(mark);
+            }
+        } catch (NumberFormatException e) {
+            // Skip invalid parameters
+        }
+    }
+    
+    // Validate that at least one rating was selected
+    if (marks.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", 
+            "Please select at least one rating before submitting!");
+        return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+    }
+    
+    // Save marks
+    markService.saveAllMarks(marks);
+    
+    // ========== SAVE COMMENTS ==========
+    if (isSelfAssessment) {
+        commentService.submitSelfComments(evaluator, assessment, commentTexts);
+    } else {
+        commentService.submitPeerComments(evaluator, evaluatedStudent, assessment, commentTexts);
+    }
+    
+    redirectAttributes.addFlashAttribute("success", 
+        "Assessment and comments submitted successfully!");
+    return "redirect:/student/assessments";
+}
     
     @GetMapping("/comments")
     public String viewMyComments(Model model, Principal principal) {
@@ -487,8 +526,8 @@ public class StudentController {
     
     @GetMapping("/assessment/{assessmentId}/results")
     public String viewAssessmentResults(@PathVariable Long assessmentId,
-                                         Model model,
-                                         Principal principal) {
+                                             Model model,
+                                             Principal principal) {
         
         Student currentStudent = studentRepository.findByUsername(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -496,7 +535,7 @@ public class StudentController {
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));
         
-        List<Mark> receivedMarks = new ArrayList<>();
+        List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(currentStudent, assessment);
         
         Map<Rubric, Double> averageScores = receivedMarks.stream()
                 .filter(m -> m.getRubric() != null)

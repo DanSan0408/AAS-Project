@@ -15,13 +15,12 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
 
     List<Assessment> findByTitle(String title);
 
+
     @Query("SELECT DISTINCT a FROM Assessment a " +
-           "LEFT JOIN FETCH a.rubrics r " +
-           "LEFT JOIN FETCH r.subRubrics sr " +
-           "LEFT JOIN FETCH sr.ratings rat " +
-           "LEFT JOIN FETCH a.criteria c " +
-           "LEFT JOIN FETCH c.criteriaRatings crat " +
-           "WHERE a.id = :id")
-    Optional<Assessment> findByIdWithFullRubricDetails(@Param("id") Long id);
+          "LEFT JOIN FETCH a.rubrics r " +
+          "LEFT JOIN FETCH r.subRubrics sr " +
+          "LEFT JOIN FETCH sr.ratings rat " +
+          "WHERE a.id = :id")
+   Optional<Assessment> findByIdWithFullRubricDetails(@Param("id") Long id);
     
 }

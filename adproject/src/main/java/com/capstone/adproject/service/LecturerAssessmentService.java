@@ -10,15 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.model.Assessment;
-import com.capstone.adproject.model.Criteria;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.SubRubric;
+import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.AssessmentRepository;
-import com.capstone.adproject.repositories.CriteriaRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
@@ -36,7 +36,7 @@ public class LecturerAssessmentService {
     private final StudentRepository studentRepository;
     private final SubRubricRepository subRubricRepository;
     private final RatingRepository ratingRepository;
-    private final CriteriaRepository criteriaRepository;
+    private final AssessmentCommentRepository assessmentCommentRepository;
 
     public LecturerAssessmentService(
             MarkRepository markRepository,
@@ -45,14 +45,14 @@ public class LecturerAssessmentService {
             StudentRepository studentRepository,
             SubRubricRepository subRubricRepository,
             RatingRepository ratingRepository,
-            CriteriaRepository criteriaRepository) {
+            AssessmentCommentRepository assessmentCommentRepository) {
         this.markRepository = markRepository;
         this.assessmentRepository = assessmentRepository;
         this.groupRepository = groupRepository;
         this.studentRepository = studentRepository;
         this.subRubricRepository = subRubricRepository;
         this.ratingRepository = ratingRepository;
-        this.criteriaRepository = criteriaRepository;
+        this.assessmentCommentRepository = assessmentCommentRepository;
     }
 
     public List<Assessment> getAssessmentsForLecturerEvaluation() {
@@ -89,76 +89,51 @@ public class LecturerAssessmentService {
         return studentRepository.findByGroupId(groupId);
     }
 
-    public boolean hasGroupBeenEvaluatedForGroupEvaluationAndGroupAssessment(
-            Assessment assessment, Group group, Lecturer lecturer) {
+    /**
+     * NEW: Check if a target has been evaluated by this lecturer for this assessment and rubric type
+     */
+    public boolean hasTargetBeenEvaluated(
+            Assessment assessment, 
+            Lecturer lecturer, 
+            Long targetId, 
+            boolean isGroupTarget,
+            String rubricType) {
         
-        List<Student> groupMembers = studentRepository.findByGroupId(group.getId());
-        if (groupMembers.isEmpty()) {
-            return false;
+        if (isGroupTarget) {
+            List<Student> groupMembers = studentRepository.findByGroupId(targetId);
+            if (groupMembers.isEmpty()) {
+                return false;
+            }
+            
+            // Check if any group member has marks from this lecturer for this rubric type
+            Student anyMember = groupMembers.get(0);
+            List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+                anyMember, anyMember, assessment);
+            
+            return marks.stream()
+                .anyMatch(m -> m.getComments() != null && 
+                              m.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
+                              m.getAssessmentType() != null &&
+                              m.getAssessmentType().equalsIgnoreCase(rubricType));
+        } else {
+            Student student = studentRepository.findById(targetId).orElse(null);
+            if (student == null) {
+                return false;
+            }
+            
+            List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+                student, student, assessment);
+            
+            return marks.stream()
+                .anyMatch(m -> m.getComments() != null && 
+                              m.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
+                              m.getAssessmentType() != null &&
+                              m.getAssessmentType().equalsIgnoreCase(rubricType));
         }
-        
-        boolean hasGroupEvalGroupAssessRubrics = assessment.getRubrics().stream()
-            .anyMatch(r -> r.getEvaluationType() != null && 
-                          r.getEvaluationType().toLowerCase().contains("group") &&
-                          r.getAssessmentTypes() != null && 
-                          r.getAssessmentTypes().toLowerCase().contains("group"));
-        
-        boolean hasGroupEvalGroupAssessCriteria = assessment.getCriteria().stream()
-            .anyMatch(c -> c.getEvaluationType() != null && 
-                          c.getEvaluationType().toLowerCase().contains("group") &&
-                          c.getAssessmentTypes() != null && 
-                          c.getAssessmentTypes().toLowerCase().contains("group"));
-        
-        if (!hasGroupEvalGroupAssessRubrics && !hasGroupEvalGroupAssessCriteria) {
-            return false;
-        }
-        
-        Student anyMember = groupMembers.get(0);
-        List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
-            anyMember, anyMember, assessment);
-        
-        return marks.stream()
-            .anyMatch(m -> m.getComments() != null && 
-                          m.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
-                          m.getEvaluationType() != null &&
-                          m.getEvaluationType().toLowerCase().contains("group") &&
-                          m.getAssessmentType() != null &&
-                          m.getAssessmentType().toLowerCase().contains("group"));
-    }
-
-    public boolean hasStudentBeenEvaluatedForIndividualEvaluationAndIndividualAssessment(
-            Assessment assessment, Student student, Lecturer lecturer) {
-        
-        boolean hasIndivEvalIndivAssessRubrics = assessment.getRubrics().stream()
-            .anyMatch(r -> r.getEvaluationType() != null && 
-                          r.getEvaluationType().toLowerCase().contains("individual") &&
-                          r.getAssessmentTypes() != null && 
-                          r.getAssessmentTypes().toLowerCase().contains("individual"));
-        
-        boolean hasIndivEvalIndivAssessCriteria = assessment.getCriteria().stream()
-            .anyMatch(c -> c.getEvaluationType() != null && 
-                          c.getEvaluationType().toLowerCase().contains("individual") &&
-                          c.getAssessmentTypes() != null && 
-                          c.getAssessmentTypes().toLowerCase().contains("individual"));
-        
-        if (!hasIndivEvalIndivAssessRubrics && !hasIndivEvalIndivAssessCriteria) {
-            return false;
-        }
-        
-        List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
-            student, student, assessment);
-        
-        return marks.stream()
-            .anyMatch(m -> m.getComments() != null && 
-                          m.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
-                          m.getEvaluationType() != null &&
-                          m.getEvaluationType().toLowerCase().contains("individual") &&
-                          m.getAssessmentType() != null &&
-                          m.getAssessmentType().toLowerCase().contains("individual"));
     }
 
     /**
-     * NEW: Save evaluation scores with explicit evaluation and assessment types
+     * NEW: Save evaluation scores with support for multiple comments and rubric type
      */
     @Transactional
     public void saveEvaluationScores(
@@ -166,10 +141,9 @@ public class LecturerAssessmentService {
             Long lecturerId,
             Long targetId,
             boolean isGroupTarget,
-            String evaluationType,
-            String assessmentType,
+            String rubricType,
             Map<String, String> scores,
-            String comments) {
+            Map<Integer, String> comments) {
 
         Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
@@ -187,26 +161,35 @@ public class LecturerAssessmentService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        String lecturerComment = "LECTURER:" + lecturerId + ":" + (comments != null ? comments : "");
+        String lecturerIdentifier = "LECTURER:" + lecturerId;
 
         // Process each student
         for (Student student : studentsToEvaluate) {
-            // Delete existing marks for this specific evaluation/assessment type combination
+            // Delete existing marks from this lecturer for this assessment and rubric type
             List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
                 student, student, assessment);
             
             List<Mark> marksToDelete = existingMarks.stream()
                 .filter(m -> m.getComments() != null && 
-                            m.getComments().startsWith("LECTURER:" + lecturerId) &&
-                            m.getEvaluationType() != null &&
-                            m.getEvaluationType().equals(evaluationType) &&
+                            m.getComments().startsWith(lecturerIdentifier) &&
                             m.getAssessmentType() != null &&
-                            m.getAssessmentType().equals(assessmentType))
+                            m.getAssessmentType().equalsIgnoreCase(rubricType))
                 .collect(Collectors.toList());
             
             markRepository.deleteAll(marksToDelete);
 
-            // Create new marks
+            // Delete existing comments from this lecturer for this assessment
+            List<AssessmentComment> existingComments = assessmentCommentRepository
+                .findByEvaluatedStudentAndAssessment(student, assessment);
+            
+            List<AssessmentComment> commentsToDelete = existingComments.stream()
+                .filter(c -> c.getEvaluatorId().equals(lecturerId) &&
+                            c.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER)
+                .collect(Collectors.toList());
+            
+            assessmentCommentRepository.deleteAll(commentsToDelete);
+
+            // Create new marks for rubric scores
             for (Map.Entry<String, String> entry : scores.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
@@ -221,12 +204,12 @@ public class LecturerAssessmentService {
                 mark.setAssessment(assessment);
                 mark.setStatus(Mark.SubmissionStatus.FINAL);
                 mark.setSubmittedAt(now);
-                mark.setComments(lecturerComment);
-                mark.setEvaluationType(evaluationType);
-                mark.setAssessmentType(assessmentType);
+                mark.setComments(lecturerIdentifier);
+                mark.setAssessmentType(rubricType);
 
-                // Parse the key to determine score type
+                // Parse the key to get sub-rubric/rubric and rating
                 if (key.startsWith("subRubric_")) {
+                    // Handle sub-rubric ratings
                     String[] parts = key.split("_");
                     Long subRubricId = Long.parseLong(parts[1]);
 
@@ -238,21 +221,111 @@ public class LecturerAssessmentService {
                     mark.setRubric(subRubric.getRubric());
                     mark.setSubRubric(subRubric);
                     mark.setRating(rating);
-
-                } else if (key.startsWith("criteria_")) {
+                } else if (key.startsWith("rubric_")) {
+                    // Handle direct rubric ratings (no sub-rubric)
                     String[] parts = key.split("_");
-                    Long criteriaId = Long.parseLong(parts[1]);
-                    Integer ratingLevel = Integer.parseInt(value);
+                    Long rubricId = Long.parseLong(parts[1]);
+                    
+                    com.capstone.adproject.model.Rubric rubric = assessment.getRubrics().stream()
+                        .filter(r -> r.getId().equals(rubricId))
+                        .findFirst()
+                        .orElseThrow(() -> new EntityNotFoundException("Rubric not found"));
+                    
+                    Rating rating = ratingRepository.findById(Long.parseLong(value))
+                        .orElseThrow(() -> new EntityNotFoundException("Rating not found"));
 
-                    Criteria criteria = criteriaRepository.findById(criteriaId)
-                        .orElseThrow(() -> new EntityNotFoundException("Criteria not found"));
-
-                    mark.setCriteria(criteria);
-                    mark.setRatingLevel(ratingLevel);
+                    mark.setRubric(rubric);
+                    mark.setSubRubric(null); // Direct rating, no sub-rubric
+                    mark.setRating(rating);
                 }
 
                 markRepository.save(mark);
             }
+
+            // Create new assessment comments (supporting multiple comment fields)
+            if (comments != null && !comments.isEmpty()) {
+                for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                    int commentIndex = commentEntry.getKey();
+                    String commentText = commentEntry.getValue();
+                    
+                    if (commentText == null || commentText.trim().isEmpty()) {
+                        continue;
+                    }
+                    
+                    AssessmentComment comment = new AssessmentComment();
+                    comment.setEvaluatedStudent(student);
+                    comment.setEvaluatorId(lecturerId);
+                    comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+                    comment.setEvaluatorName("Lecturer"); // You can set actual lecturer name if available
+                    comment.setAssessment(assessment);
+                    comment.setCommentText(commentText);
+                    comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+                    comment.setSubmittedAt(now);
+                    comment.setCommentIndex(commentIndex);
+                    
+                    // Set label from assessment configuration
+                    comment.setCommentLabel(assessment.getCommentLabel(commentIndex));
+                    
+                    assessmentCommentRepository.save(comment);
+                }
+            }
         }
+    }
+    
+    /**
+     * NEW: Get existing marks for a lecturer evaluation to pre-populate the form
+     * Returns a map of "subRubric_X" or "rubric_X" -> ratingId
+     */
+    public Map<String, Long> getExistingMarks(Assessment assessment, Lecturer lecturer, 
+                                               Student student, String rubricType) {
+        Map<String, Long> existingMarks = new HashMap<>();
+        
+        List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+            student, student, assessment);
+        
+        // Filter marks from this lecturer for this rubric type
+        for (Mark mark : marks) {
+            if (mark.getComments() != null && 
+                mark.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
+                mark.getAssessmentType() != null &&
+                mark.getAssessmentType().equalsIgnoreCase(rubricType)) {
+                
+                // Create the key based on whether it's a sub-rubric or direct rubric
+                String key;
+                if (mark.getSubRubric() != null) {
+                    key = "subRubric_" + mark.getSubRubric().getId();
+                } else if (mark.getRubric() != null) {
+                    key = "rubric_" + mark.getRubric().getId();
+                } else {
+                    continue; // Skip invalid marks
+                }
+                
+                // Store the rating ID
+                if (mark.getRating() != null) {
+                    existingMarks.put(key, mark.getRating().getId());
+                }
+            }
+        }
+        
+        return existingMarks;
+    }
+    
+    /**
+     * NEW: Get existing comments for a lecturer evaluation to pre-populate the form
+     * Returns a map of commentIndex -> commentText
+     */
+    public Map<Integer, String> getExistingComments(Assessment assessment, Lecturer lecturer, 
+                                                     Student student) {
+        Map<Integer, String> existingComments = new HashMap<>();
+        
+        List<AssessmentComment> comments = assessmentCommentRepository
+            .findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
+                student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER);
+        
+        for (AssessmentComment comment : comments) {
+            existingComments.put(comment.getCommentIndex(), comment.getCommentText());
+        }
+        
+        return existingComments;
     }
 }

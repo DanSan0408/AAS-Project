@@ -70,7 +70,17 @@ public class AssessmentService {
     }
 
     public Optional<Assessment> getAssessmentById(Long id) {
-    // Assuming you have an AssessmentRepository
-    return assessmentRepository.findById(id); 
-}
+        // Assuming you have an AssessmentRepository
+        return assessmentRepository.findById(id); 
+    }
+
+    /**
+     * Find assessment by title
+     * Used by Industrial Supervisor to get the specific assessment they evaluate
+     * Returns the first match if multiple assessments have the same title
+     */
+    public Optional<Assessment> findByTitle(String title) {
+        List<Assessment> assessments = assessmentRepository.findByTitle(title);
+        return assessments.isEmpty() ? Optional.empty() : Optional.of(assessments.get(0));
+    }
 }

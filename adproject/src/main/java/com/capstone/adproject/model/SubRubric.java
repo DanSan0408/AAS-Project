@@ -1,5 +1,6 @@
 package com.capstone.adproject.model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class SubRubric {
 
     private String name;
     private String description;
+    private BigDecimal marks; // Marks allocated to this sub-rubric
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rubric_id")
@@ -42,6 +44,9 @@ public class SubRubric {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public BigDecimal getMarks() { return marks; }
+    public void setMarks(BigDecimal marks) { this.marks = marks; }
+
     public Rubric getRubric() { return rubric; }
     public void setRubric(Rubric rubric) { this.rubric = rubric; }
 
@@ -52,9 +57,6 @@ public class SubRubric {
         return ratings;
     }
 
-    /**
-     * Prevent replacing the managed collection entirely — Hibernate-safe.
-     */
     public void setRatings(List<Rating> ratings) {
         this.getRatings().clear();
         if (ratings != null) {
@@ -67,6 +69,7 @@ public class SubRubric {
     public void addRating(Rating rating) {
         if (rating != null) {
             rating.setSubRubric(this);
+            rating.setRubric(null); // Ensure rating belongs to sub-rubric, not directly to rubric
             getRatings().add(rating);
         }
     }
@@ -76,5 +79,18 @@ public class SubRubric {
             getRatings().remove(rating);
             rating.setSubRubric(null);
         }
+    }
+
+    // Calculate total marks from ratings
+    public BigDecimal calculateRatingsMarks() {
+        BigDecimal total = BigDecimal.ZERO;
+        if (ratings != null) {
+            for (Rating r : ratings) {
+                if (r.getMarks() != null) {
+                    total = total.add(r.getMarks());
+                }
+            }
+        }
+        return total;
     }
 }

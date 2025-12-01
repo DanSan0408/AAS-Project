@@ -32,17 +32,32 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
            "AND c.evaluatorType = :evaluatorType " +
            "AND c.evaluatedStudent = :student " +
            "AND c.assessment = :assessment")
-    Optional<AssessmentComment> findByEvaluatorAndStudentAndAssessment(
+    List<AssessmentComment> findByEvaluatorAndStudentAndAssessment(
             @Param("evaluatorId") Long evaluatorId,
             @Param("evaluatorType") AssessmentComment.EvaluatorType evaluatorType,
             @Param("student") Student student,
             @Param("assessment") Assessment assessment);
     
     /**
+     * Find a specific comment by evaluator, student, assessment, and comment index
+     */
+    @Query("SELECT c FROM AssessmentComment c WHERE c.evaluatorId = :evaluatorId " +
+           "AND c.evaluatorType = :evaluatorType " +
+           "AND c.evaluatedStudent = :student " +
+           "AND c.assessment = :assessment " +
+           "AND c.commentIndex = :commentIndex")
+    Optional<AssessmentComment> findByEvaluatorAndStudentAndAssessmentAndIndex(
+            @Param("evaluatorId") Long evaluatorId,
+            @Param("evaluatorType") AssessmentComment.EvaluatorType evaluatorType,
+            @Param("student") Student student,
+            @Param("assessment") Assessment assessment,
+            @Param("commentIndex") Integer commentIndex);
+    
+    /**
      * Get all comments for a student, ordered by assessment and submission date
      */
     @Query("SELECT c FROM AssessmentComment c WHERE c.evaluatedStudent = :student " +
-           "ORDER BY c.assessment.id, c.submittedAt DESC")
+           "ORDER BY c.assessment.id, c.commentIndex, c.submittedAt DESC")
     List<AssessmentComment> findAllCommentsForStudent(@Param("student") Student student);
     
     /**
@@ -52,7 +67,7 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
            "AND c.assessment = :assessment " +
            "AND c.evaluatorType = 'STUDENT' " +
            "AND c.assessmentType = 'PEER' " +
-           "ORDER BY c.submittedAt")
+           "ORDER BY c.commentIndex, c.submittedAt")
     List<AssessmentComment> findPeerCommentsForStudentInAssessment(
             @Param("student") Student student,
             @Param("assessment") Assessment assessment);
@@ -64,7 +79,7 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
            "AND c.assessment = :assessment " +
            "AND c.evaluatorId = :studentId " +
            "AND c.assessmentType = 'SELF'")
-    Optional<AssessmentComment> findSelfCommentForStudentInAssessment(
+    List<AssessmentComment> findSelfCommentsForStudentInAssessment(
             @Param("student") Student student,
             @Param("assessment") Assessment assessment,
             @Param("studentId") Long studentId);
@@ -74,7 +89,7 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
      */
     @Query("SELECT c FROM AssessmentComment c WHERE c.evaluatedStudent = :student " +
            "AND c.evaluatorType = 'LECTURER' " +
-           "ORDER BY c.assessment.id, c.submittedAt DESC")
+           "ORDER BY c.assessment.id, c.commentIndex, c.submittedAt DESC")
     List<AssessmentComment> findLecturerCommentsForStudent(@Param("student") Student student);
     
     /**
@@ -82,7 +97,7 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
      */
     @Query("SELECT c FROM AssessmentComment c WHERE c.evaluatedStudent = :student " +
            "AND c.evaluatorType = 'SUPERVISOR' " +
-           "ORDER BY c.assessment.id, c.submittedAt DESC")
+           "ORDER BY c.assessment.id, c.commentIndex, c.submittedAt DESC")
     List<AssessmentComment> findSupervisorCommentsForStudent(@Param("student") Student student);
     
     /**
@@ -95,4 +110,62 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
             @Param("evaluatorId") Long evaluatorId,
             @Param("evaluatorType") AssessmentComment.EvaluatorType evaluatorType,
             @Param("assessment") Assessment assessment);
+    
+    /**
+     * Delete all comments by evaluator for a student in an assessment
+     */
+    @Query("DELETE FROM AssessmentComment c WHERE c.evaluatorId = :evaluatorId " +
+           "AND c.evaluatorType = :evaluatorType " +
+           "AND c.evaluatedStudent = :student " +
+           "AND c.assessment = :assessment")
+    void deleteByEvaluatorAndStudentAndAssessment(
+            @Param("evaluatorId") Long evaluatorId,
+            @Param("evaluatorType") AssessmentComment.EvaluatorType evaluatorType,
+            @Param("student") Student student,
+            @Param("assessment") Assessment assessment);
+    
+    /**
+     * Find comments by evaluator ID and type
+     * Useful for finding all comments made by a specific lecturer or supervisor
+     */
+    List<AssessmentComment> findByEvaluatorIdAndEvaluatorType(
+        Long evaluatorId, 
+        AssessmentComment.EvaluatorType evaluatorType
+    );
+    
+    /**
+     * Find comments for a student in an assessment by evaluator type
+     * Useful for separating peer, self, lecturer, and supervisor comments
+     */
+    List<AssessmentComment> findByEvaluatedStudentAndAssessmentAndEvaluatorType(
+        Student evaluatedStudent, 
+        Assessment assessment,
+        AssessmentComment.EvaluatorType evaluatorType
+    );
+    
+    /**
+     * Find comments by evaluated student, assessment, evaluator ID and type
+     * Useful for checking if a specific evaluator has already commented
+     */
+    List<AssessmentComment> findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
+        Student evaluatedStudent,
+        Assessment assessment,
+        Long evaluatorId,
+        AssessmentComment.EvaluatorType evaluatorType
+    );
+    
+    /**
+     * Find all comments for an assessment
+     * Useful for admin review
+     */
+    List<AssessmentComment> findByAssessment(Assessment assessment);
+    
+    /**
+     * Find comments by assessment and evaluator type
+     * Useful for analyzing comment patterns by evaluator type
+     */
+    List<AssessmentComment> findByAssessmentAndEvaluatorType(
+        Assessment assessment,
+        AssessmentComment.EvaluatorType evaluatorType
+    );
 }
