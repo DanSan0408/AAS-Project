@@ -1,0 +1,445 @@
+/*
+ * Admin Home Dashboard Styles
+ * Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238 (Dark Blues/Navy)
+ */
+
+:root {
+    /* Define the core color palette */
+    --color-primary-dark: #23395d; /* Main Brand/Header/Primary Accent */
+    --color-secondary-dark: #203354; /* Main Headings/Strong Contrast */
+    --color-tertiary-dark: #1c2e4a; /* Section Headings/Grouping Borders */
+    --color-action-dark: #192841; /* Edit Buttons/Strong Text */
+    --color-darkest: #152238; /* Hover States/Deep Background elements */
+    
+    /* Functional Colors */
+    --color-background-light: #f4f7f6;
+    --color-surface-white: #ffffff;
+    --color-border-light: #e0e0e0;
+    --color-text-body: #333;
+    --color-text-subtle: #555;
+    
+    /* Alert/Specific Action Colors */
+    --color-success: #2ecc71; /* Green */
+    --color-error: #e74c3c; /* Red/Delete */
+    --color-info: #3498db; /* Lecturer/Blue */
+    --color-warning: #f7941d; /* Assign/Orange */
+    --color-config: #9b59b6; /* Configure Comments/Purple */
+}
+
+/* --- General Layout & Typography --- */
+body {
+    background-color: var(--color-background-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-text-body);
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+/* Ensure main content takes up remaining space and has padding */
+.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 250px; /* Adjust based on your sidebar width */
+}
+
+/* Page Headers */
+.header {
+    background-color: var(--color-surface-white);
+    border-bottom: 3px solid var(--color-primary-dark);
+    padding: 10px 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+}
+
+.header-container img {
+    height: 40px;
+    margin-right: 15px;
+}
+
+.header-container h1 {
+    color: var(--color-primary-dark);
+    font-size: 1.8em;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Success/Error Messages */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.alert-success {
+    color: #155724; /* Specific darker green for contrast on light green background */
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24; /* Specific darker red for contrast on light red background */
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* --- Content Structure --- */
+.content-flex-container {
+    display: flex;
+    gap: 30px;
+}
+
+.rubric-section,
+.deadline-section {
+    padding: 20px;
+    background-color: var(--color-surface-white);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    height: fit-content;
+}
+
+.rubric-section {
+    flex: 3;
+}
+
+.deadline-section {
+    flex: 1.5;
+    min-width: 300px;
+}
+
+.rubric-section h2,
+.deadline-section h2 {
+    color: var(--color-tertiary-dark);
+    border-bottom: 2px solid var(--color-primary-dark);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+/* --- Assessment Boxes (Rubric List) --- */
+.rubric-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.assessment-box {
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    padding: 20px;
+    background-color: var(--color-surface-white);
+    transition: box-shadow 0.3s ease;
+}
+
+.assessment-box:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.assessment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.assessment-header h3 {
+    color: var(--color-secondary-dark);
+    font-size: 1.3em;
+    margin: 0;
+    font-weight: 600;
+}
+
+.assessment-header-buttons {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Total Marks section */
+.total-marks {
+    background-color: #f0f4f7; /* Light neutral blue based on palette */
+    border: 1px solid #d0d7de;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    color: var(--color-action-dark);
+}
+
+.total-marks p {
+    margin: 5px 0;
+    font-size: 0.95em;
+}
+
+.total-marks span {
+    font-weight: bold;
+    color: var(--color-primary-dark);
+}
+
+/* Assessment Type Grouping */
+.assess-type-group {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f0f5f8;
+    border-left: 4px solid var(--color-primary-dark);
+    border-radius: 5px;
+}
+
+.assess-type-group h5 {
+    color: var(--color-tertiary-dark);
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #c8d8e3;
+    font-weight: 600;
+}
+
+.rubric-assessment {
+    background: var(--color-surface-white);
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e7ecef;
+}
+
+.rubric-assessment h6 {
+    color: var(--color-secondary-dark);
+    font-size: 1em;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.rubric-details p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: var(--color-text-subtle);
+}
+
+.rubric-details span {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+
+/* --- Buttons (Actionable elements) --- */
+
+/* Main 'Add Rubric' and 'Assign Assessment' Buttons */
+.add-rubric-button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Default 'Add Rubric' style (using primary dark) */
+.add-rubric-button:not([style]) {
+    background-color: var(--color-primary-dark) !important; 
+}
+.add-rubric-button:not([style]):hover {
+    background-color: var(--color-tertiary-dark) !important;
+}
+
+/* Styles for buttons with inline overrides (using defined functional colors) */
+.add-rubric-button[style*="background-color: #9b59b6"] {
+    background-color: var(--color-config) !important; /* Configure Comments */
+}
+.add-rubric-button[style*="background-color: #9b59b6"]:hover {
+    background-color: #8e44ad !important;
+}
+
+.add-rubric-button[style*="background-color: #f7941d"] {
+    background-color: var(--color-warning) !important; /* Assign Assessment */
+}
+.add-rubric-button[style*="background-color: #f7941d"]:hover {
+    background-color: #e67e22 !important;
+}
+
+.add-rubric-button i {
+    margin-right: 5px;
+}
+
+.add-rubric-button:active {
+    transform: scale(0.98);
+}
+
+/* Edit/Delete Buttons for individual rubrics */
+.rubric-action-btn {
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.edit-btn {
+    background-color: var(--color-action-dark);
+    color: white;
+}
+.edit-btn:hover {
+    background-color: var(--color-darkest);
+}
+
+.delete-btn {
+    background-color: var(--color-error);
+    color: white;
+}
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+
+/* --- Deadline Section --- */
+.deadline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.deadline-item {
+    background-color: var(--color-surface-white);
+    border-left: 5px solid var(--color-primary-dark);
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.deadline-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.deadline-display p {
+    margin: 5px 0;
+    font-size: 0.95em;
+    color: var(--color-text-subtle);
+}
+
+.deadline-display strong {
+    color: var(--color-action-dark);
+}
+
+.date-info {
+    font-weight: 600;
+    color: var(--color-primary-dark);
+}
+
+/* Assessor Type Badges */
+.deadline-type-badge {
+    padding: 3px 7px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 700;
+    color: white;
+    margin-left: 8px;
+}
+
+.badge-student {
+    background-color: var(--color-success);
+}
+.badge-lecturer {
+    background-color: var(--color-info);
+}
+.badge-supervisor {
+    background-color: #f1c40f; /* Yellow - keeping this slightly unique */
+    color: #333;
+}
+.badge-general {
+    background-color: var(--color-config);
+}
+
+.instant-badge {
+    background-color: #95a5a6;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.deadline-actions {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--color-border-light);
+}
+
+
+/* --- Add New General Deadline Form --- */
+.add-new-deadline {
+    border-top: 2px solid var(--color-border-light);
+    padding-top: 20px;
+    margin-top: 20px;
+    background-color: #fcfcfc;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.add-new-deadline h3 {
+    color: var(--color-tertiary-dark);
+    font-size: 1.2em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.add-new-deadline label {
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    font-weight: 600;
+    color: #4a6681;
+    font-size: 0.9em;
+}
+
+.add-new-deadline input[type="text"],
+.add-new-deadline input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.save-deadlines-button {
+    background-color: var(--color-success);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.save-deadlines-button:hover {
+    background-color: #27ae60;
+}
+
+.no-deadlines-message {
+    padding: 20px;
+    background-color: #f4f7f6;
+    border: 1px dashed #c0d0e0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #666;
+}

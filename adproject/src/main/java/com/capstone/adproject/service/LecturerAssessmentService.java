@@ -90,7 +90,7 @@ public class LecturerAssessmentService {
     }
 
     /**
-     * NEW: Check if a target has been evaluated by this lecturer for this assessment and rubric type
+     * Check if a target has been evaluated by this lecturer for this assessment and rubric type
      */
     public boolean hasTargetBeenEvaluated(
             Assessment assessment, 
@@ -133,12 +133,14 @@ public class LecturerAssessmentService {
     }
 
     /**
-     * NEW: Save evaluation scores with support for multiple comments and rubric type
+     * Save evaluation scores with support for multiple comments and rubric type
+     * ✅ UPDATED: Now sets rubricAssessmentType on comments
      */
     @Transactional
     public void saveEvaluationScores(
             Long assessmentId,
             Long lecturerId,
+            String lecturerName,
             Long targetId,
             boolean isGroupTarget,
             String rubricType,
@@ -178,13 +180,14 @@ public class LecturerAssessmentService {
             
             markRepository.deleteAll(marksToDelete);
 
-            // Delete existing comments from this lecturer for this assessment
+            // Delete existing comments from this lecturer for this assessment and rubric type
             List<AssessmentComment> existingComments = assessmentCommentRepository
                 .findByEvaluatedStudentAndAssessment(student, assessment);
             
             List<AssessmentComment> commentsToDelete = existingComments.stream()
                 .filter(c -> c.getEvaluatorId().equals(lecturerId) &&
-                            c.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER)
+                            c.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER &&
+                            rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
                 .collect(Collectors.toList());
             
             assessmentCommentRepository.deleteAll(commentsToDelete);
@@ -242,7 +245,7 @@ public class LecturerAssessmentService {
                 markRepository.save(mark);
             }
 
-            // Create new assessment comments (supporting multiple comment fields)
+            // ✅ UPDATED: Create new assessment comments with rubricAssessmentType
             if (comments != null && !comments.isEmpty()) {
                 for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
                     int commentIndex = commentEntry.getKey();
@@ -256,15 +259,16 @@ public class LecturerAssessmentService {
                     comment.setEvaluatedStudent(student);
                     comment.setEvaluatorId(lecturerId);
                     comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
-                    comment.setEvaluatorName("Lecturer"); // You can set actual lecturer name if available
+                    comment.setEvaluatorName(lecturerName);
                     comment.setAssessment(assessment);
                     comment.setCommentText(commentText);
                     comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
                     comment.setSubmittedAt(now);
                     comment.setCommentIndex(commentIndex);
                     
-                    // Set label from assessment configuration
-                    comment.setCommentLabel(assessment.getCommentLabel(commentIndex));
+                    // ✅ Set label and rubric assessment type based on rubric type
+                    comment.setCommentLabel(assessment.getCommentLabelForType(rubricType, commentIndex));
+                    comment.setRubricAssessmentType(rubricType); // ✅ CRITICAL: Set the rubric type
                     
                     assessmentCommentRepository.save(comment);
                 }
@@ -273,7 +277,7 @@ public class LecturerAssessmentService {
     }
     
     /**
-     * NEW: Get existing marks for a lecturer evaluation to pre-populate the form
+     * Get existing marks for a lecturer evaluation to pre-populate the form
      * Returns a map of "subRubric_X" or "rubric_X" -> ratingId
      */
     public Map<String, Long> getExistingMarks(Assessment assessment, Lecturer lecturer, 
@@ -311,16 +315,19 @@ public class LecturerAssessmentService {
     }
     
     /**
-     * NEW: Get existing comments for a lecturer evaluation to pre-populate the form
+     * Get existing comments for a lecturer evaluation to pre-populate the form
+     * ✅ UPDATED: Now filters by rubric type
      * Returns a map of commentIndex -> commentText
      */
     public Map<Integer, String> getExistingComments(Assessment assessment, Lecturer lecturer, 
-                                                     Student student) {
+                                                     Student student, String rubricType) {
         Map<Integer, String> existingComments = new HashMap<>();
         
         List<AssessmentComment> comments = assessmentCommentRepository
             .findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
-                student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER);
+                student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER).stream()
+            .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+            .collect(Collectors.toList());
         
         for (AssessmentComment comment : comments) {
             existingComments.put(comment.getCommentIndex(), comment.getCommentText());

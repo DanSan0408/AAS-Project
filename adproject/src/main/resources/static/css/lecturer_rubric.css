@@ -1,0 +1,352 @@
+/* =======================================================
+    LECTURER SELECT RUBRIC TYPE - COMPREHENSIVE CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette */
+    --bg-darkest: #152238;
+    --bg-darker: #192841;
+    --bg-mid-tone: #1c2e4a;
+    --bg-light: #203354;
+    --bg-lightest: #23395d;
+    
+    /* Accent Colors */
+    --accent-blue: #3498db;
+    --accent-green: #2ecc71;
+    --accent-teal: #1abc9c;
+    --accent-purple: #9b59b6;
+    
+    /* UI Colors */
+    --bg-page: #f4f6f8;
+    --bg-content: #ffffff;
+    --bg-card-light: #f8f9fa;
+    --border-light: #e0e0e0;
+    --border-medium: #cccccc;
+    --text-dark: #2c3e50;
+    --text-medium: #555555;
+    --text-light: #7f8c8d;
+    
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+}
+
+/* ==================== GLOBAL STYLES ==================== */
+body {
+    background-color: var(--bg-page);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+/* ==================== LAYOUT & CONTAINERS ==================== */
+.main-content {
+    padding: var(--spacing-md);
+    min-height: 100vh;
+}
+
+.content-flex-container {
+    padding: var(--spacing-lg) 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.rubric-type-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+    background: var(--bg-light);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ==================== HEADER ==================== */
+.rubric-type-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 3px solid var(--border-light);
+}
+
+.rubric-type-header h2 {
+    color: var(--bg-content);
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.rubric-type-header p {
+    color: var(--text-light);
+    font-size: 16px;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* ==================== BACK BUTTON ==================== */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #95a5a6;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+    transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+    background: #7f8c8d;
+    transform: translateX(-3px);
+}
+
+/* ==================== INSTRUCTION BOX ==================== */
+.instruction-box {
+    background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f3 100%);
+    border: 2px solid var(--accent-blue);
+    border-left: 5px solid var(--accent-blue);
+    padding: var(--spacing-md);
+    border-radius: 10px;
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
+}
+
+.instruction-box h4 {
+    color: var(--bg-lightest);
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.instruction-box p {
+    color: var(--text-dark);
+    line-height: 1.7;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.instruction-box strong {
+    color: var(--bg-light);
+    font-weight: 700;
+}
+
+/* ==================== RUBRIC TYPE GRID ==================== */
+.rubric-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+/* ==================== RUBRIC TYPE CARD ==================== */
+.rubric-type-card {
+    background: white;
+    border: 3px solid var(--border-light);
+    border-radius: 12px;
+    padding: var(--spacing-xl);
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.rubric-type-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal));
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.rubric-type-card:hover::before {
+    transform: scaleX(1);
+}
+
+.rubric-type-card:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(52, 152, 219, 0.2);
+}
+
+.rubric-type-icon {
+    font-size: 72px;
+    margin-bottom: var(--spacing-md);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: transform 0.3s ease;
+}
+
+.rubric-type-card:hover .rubric-type-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.rubric-type-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--bg-lightest);
+    margin-bottom: 15px;
+}
+
+.rubric-type-description {
+    color: var(--text-medium);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+    min-height: 80px;
+}
+
+/* ==================== SELECT TYPE BUTTON ==================== */
+.btn-select-type {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.btn-select-type:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-select-type:active {
+    transform: translateY(0);
+}
+
+/* ==================== ALTERNATE CARD STYLING ==================== */
+.rubric-type-card:nth-child(2) {
+    border-top-color: var(--accent-green);
+}
+
+.rubric-type-card:nth-child(2)::before {
+    background: linear-gradient(90deg, var(--accent-green), var(--accent-teal));
+}
+
+.rubric-type-card:nth-child(2):hover {
+    border-color: var(--accent-green);
+    box-shadow: 0 12px 30px rgba(46, 204, 113, 0.2);
+}
+
+.rubric-type-card:nth-child(2) .btn-select-type {
+    background: linear-gradient(135deg, var(--accent-green) 0%, #27ae60 100%);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.rubric-type-card:nth-child(2) .btn-select-type:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+}
+
+/* ==================== MEDIA QUERIES ==================== */
+@media (max-width: 768px) {
+    .rubric-type-container {
+        padding: var(--spacing-md);
+        margin: 0 var(--spacing-sm);
+    }
+
+    .rubric-type-header h2 {
+        font-size: 26px;
+    }
+
+    .rubric-type-header p {
+        font-size: 14px;
+    }
+
+    .rubric-type-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .rubric-type-card {
+        padding: var(--spacing-md);
+    }
+
+    .rubric-type-icon {
+        font-size: 60px;
+    }
+
+    .rubric-type-title {
+        font-size: 22px;
+    }
+
+    .rubric-type-description {
+        font-size: 13px;
+        min-height: auto;
+    }
+
+    .instruction-box {
+        padding: 15px;
+    }
+
+    .btn-back {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rubric-type-container {
+        padding: 15px;
+    }
+
+    .rubric-type-header h2 {
+        font-size: 24px;
+    }
+
+    .rubric-type-card {
+        padding: 20px;
+    }
+
+    .rubric-type-icon {
+        font-size: 50px;
+    }
+
+    .btn-select-type {
+        font-size: 14px;
+        padding: 12px 24px;
+    }
+}
+
+/* ==================== ANIMATION ==================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rubric-type-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.rubric-type-card:nth-child(2) {
+    animation-delay: 0.1s;
+}

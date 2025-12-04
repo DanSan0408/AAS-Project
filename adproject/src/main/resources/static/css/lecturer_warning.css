@@ -1,199 +1,346 @@
 /* =======================================================
-    LECTURER RE-EVALUATION WARNING PAGE - DEDICATED CSS
+    LECTURER RE-EVALUATION WARNING - COMPREHENSIVE CSS
     Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
-    
-    NOTE: Using bright red/orange for high visibility warning.
+    Warning Colors: Red/Orange for high visibility
     ======================================================= */
 
 /* ==================== ROOT VARIABLES ==================== */
 :root {
-    /* Primary Palette - Dark Blue Theme */
-    --primary-dark: #23395d;      /* Main Headings */
-    --primary-darker: #203354;    /* Detail Headers */
-    --primary-darkest-bg: #1c2e4a; /* Deep Borders/Accents */
-    --primary-night: #192841;     
-    --primary-midnight: #152238;  
+    /* Primary Palette */
+    --bg-darkest: #152238;
+    --bg-darker: #192841;
+    --bg-mid-tone: #1c2e4a;
+    --bg-light: #203354;
+    --bg-lightest: #23395d;
     
-    /* Warning and Action Colors */
-    --warning-red: #e74c3c;       /* Strong warning color */
-    --warning-orange: #f39c12;    /* Icon and main alert border */
-    --warning-light-bg: #fffbf5;  /* Very light warning background */
+    /* Warning Colors */
+    --warning-red: #e74c3c;
+    --warning-red-dark: #c0392b;
+    --warning-orange: #f39c12;
+    --warning-orange-dark: #e67e22;
+    --warning-light-bg: #fffbf5;
     
-    /* General UI Colors */
-    --bg-page: #f0f4f8;           /* Light page background */
-    --bg-card: #ffffff;           /* Container background */
-    --text-color: #333333;
+    /* UI Colors */
+    --bg-page: #f0f4f8;
+    --bg-card: #ffffff;
+    --text-dark: #333333;
+    --text-medium: #555555;
+    --text-light: #7f8c8d;
+    
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
 }
 
-/* ==================== PAGE & CONTAINER ==================== */
+/* ==================== GLOBAL STYLES ==================== */
 body {
     background-color: var(--bg-page);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+/* ==================== LAYOUT & CONTAINERS ==================== */
+.main-content {
+    padding: var(--spacing-md);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-flex-container {
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    font-family: Arial, sans-serif;
+    padding: var(--spacing-lg) 0;
 }
 
+/* ==================== WARNING CONTAINER ==================== */
 .warning-container {
     max-width: 650px;
     width: 90%;
-    padding: 40px;
+    padding: var(--spacing-xl);
     background: var(--bg-card);
     border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     text-align: center;
-    border-top: 5px solid var(--warning-orange);
+    border-top: 6px solid var(--warning-orange);
+    animation: slideIn 0.4s ease-out;
 }
 
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== WARNING ICON ==================== */
 .warning-icon {
-    font-size: 50px;
-    margin-bottom: 20px;
+    font-size: 64px;
+    margin-bottom: var(--spacing-md);
     color: var(--warning-orange);
+    animation: pulse 2s ease-in-out infinite;
 }
 
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* ==================== WARNING TITLE ==================== */
 .warning-title {
     color: var(--warning-red);
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin: 0 0 var(--spacing-md) 0;
+    padding-bottom: 15px;
     border-bottom: 2px dashed var(--warning-orange);
-    padding-bottom: 10px;
 }
 
+/* ==================== WARNING MESSAGE ==================== */
 .warning-message {
-    font-size: 17px;
-    color: var(--text-color);
-    line-height: 1.6;
-    margin-bottom: 30px;
-    padding: 15px;
+    font-size: 16px;
+    color: var(--text-dark);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
     background-color: var(--warning-light-bg);
-    border: 1px solid var(--warning-orange);
-    border-radius: 8px;
+    border: 2px solid var(--warning-orange);
+    border-radius: 10px;
+}
+
+.warning-message p {
+    margin: 10px 0;
 }
 
 .warning-message strong {
     color: var(--warning-red);
-    font-weight: 900;
+    font-weight: 700;
 }
 
-/* ==================== DETAILS SECTION ==================== */
-.warning-details {
-    text-align: left;
-    margin-bottom: 25px;
-    padding: 15px;
-    background-color: #f7f9fc;
-    border-left: 5px solid var(--primary-darker);
-    border-radius: 6px;
-}
-
-.warning-details h4 {
-    color: var(--primary-dark);
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 16px;
-}
-
-.warning-details p {
-    margin: 5px 0;
-    font-size: 15px;
-    color: var(--text-color);
-}
-
-.warning-details strong {
-    color: var(--primary-darker);
-}
-
-/* ==================== LIST OF WARNINGS ==================== */
-.warning-list {
-    text-align: left;
-    margin-bottom: 30px;
-    padding: 15px;
-    border: 1px solid var(--warning-red);
-    background-color: #fcebeb;
+.warning-emphasis {
+    font-size: 18px;
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(135deg, #fcebeb 0%, #f8d7da 100%);
+    border: 2px solid var(--warning-red);
     border-radius: 8px;
 }
 
-.warning-list h4 {
-    color: var(--warning-red);
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 16px;
-}
-
-.warning-list ul {
-    list-style: disc;
-    margin-left: 20px;
-    padding-left: 0;
-    color: var(--warning-red);
+/* ==================== RUBRIC TYPE BADGE ==================== */
+.rubric-type-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
     font-size: 14px;
+    font-weight: 700;
+    margin: 15px 0;
+    letter-spacing: 0.5px;
 }
 
-.warning-list li {
-    margin-bottom: 8px;
-    line-height: 1.4;
+.badge-group {
+    background: #e8f4f8;
+    color: #2980b9;
+    border: 2px solid #3498db;
 }
 
-/* ==================== BUTTONS ==================== */
-.warning-buttons {
+.badge-individual {
+    background: #e8f5e9;
+    color: #27ae60;
+    border: 2px solid #2ecc71;
+}
+
+/* ==================== TARGET INFO ==================== */
+.target-info {
+    background: linear-gradient(135deg, #f7f9fc 0%, #eef4fb 100%);
+    border: 2px solid var(--bg-lightest);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.target-info p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--bg-lightest);
+}
+
+.target-info span {
+    color: var(--bg-light);
+    font-weight: 700;
+}
+
+/* ==================== BUTTON GROUP ==================== */
+.button-group {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
     flex-wrap: wrap;
 }
 
-.warning-buttons form, .warning-buttons a {
-    flex: 1 1 200px;
+.button-group form {
+    flex: 1 1 250px;
+    max-width: 100%;
 }
 
-.btn-warning-confirm {
+.button-group a {
+    flex: 1 1 250px;
+    max-width: 100%;
+}
+
+/* ==================== PROCEED BUTTON ==================== */
+.btn-proceed {
     width: 100%;
-    padding: 15px;
-    background-color: var(--warning-red);
+    padding: 16px;
+    background: linear-gradient(135deg, var(--warning-red) 0%, var(--warning-red-dark) 100%);
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
 }
 
-.btn-warning-confirm:hover {
-    background-color: #c0392b; /* Darker red */
+.btn-proceed:hover {
+    background: linear-gradient(135deg, var(--warning-red-dark) 0%, #a93226 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(231, 76, 60, 0.4);
 }
 
-.btn-warning-cancel {
+.btn-proceed:active {
+    transform: translateY(0);
+}
+
+/* ==================== BACK BUTTON ==================== */
+.btn-back {
     display: block;
     width: 100%;
-    padding: 15px;
-    background-color: var(--primary-dark);
+    padding: 16px;
+    background: linear-gradient(135deg, var(--bg-lightest) 0%, var(--bg-light) 100%);
     color: white;
     text-decoration: none;
     border-radius: 8px;
     font-size: 16px;
-    font-weight: bold;
-    transition: background-color 0.2s ease;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(35, 57, 93, 0.2);
 }
 
-.btn-warning-cancel:hover {
-    background-color: var(--primary-darker);
+.btn-back:hover {
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-mid-tone) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(35, 57, 93, 0.3);
 }
 
 /* ==================== MEDIA QUERIES ==================== */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .warning-container {
-        padding: 20px;
-        margin: 20px;
+        padding: var(--spacing-md);
+        margin: var(--spacing-md);
+    }
+
+    .warning-title {
+        font-size: 26px;
+    }
+
+    .warning-icon {
+        font-size: 50px;
+    }
+
+    .warning-message {
+        font-size: 15px;
+        padding: 15px;
+    }
+
+    .warning-emphasis {
+        font-size: 16px;
+    }
+
+    .button-group {
+        flex-direction: column-reverse;
+        gap: 15px;
+    }
+
+    .button-group form,
+    .button-group a {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .warning-container {
+        padding: var(--spacing-md);
+        width: 95%;
     }
 
     .warning-title {
         font-size: 24px;
     }
-    
-    .warning-buttons {
-        flex-direction: column;
-        gap: 15px;
+
+    .warning-icon {
+        font-size: 48px;
     }
+
+    .warning-message {
+        font-size: 14px;
+    }
+
+    .rubric-type-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .target-info p {
+        font-size: 14px;
+    }
+
+    .btn-proceed,
+    .btn-back {
+        font-size: 14px;
+        padding: 14px;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+.btn-proceed:focus,
+.btn-back:focus {
+    outline: 3px solid var(--warning-orange);
+    outline-offset: 2px;
+}
+
+/* ==================== ADDITIONAL EFFECTS ==================== */
+.warning-container::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--warning-red), var(--warning-orange), var(--warning-red));
+    border-radius: 12px 12px 0 0;
+}
+
+.warning-container {
+    position: relative;
 }

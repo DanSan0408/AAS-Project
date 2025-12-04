@@ -50,84 +50,120 @@
                         <span th:text="${assessmentEntry.key}">Assessment Name</span>
                     </h2>
                     
-                    <!-- Self Comment -->
-                    <div th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}" 
-                         class="comment-category">
-                        <h3 class="category-title">
-                            <i class="fas fa-user"></i> Your Self-Reflection
-                        </h3>
-                        <div th:each="comment : ${assessmentEntry.value['self']}" class="comment-card self-comment">
-                            <div class="comment-header">
-                                <span class="evaluator-badge badge-self">
-                                    <i class="fas fa-user-circle"></i>
-                                    You (Self)
-                                </span>
-                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                    <!-- Three-Column Layout -->
+                    <div class="comments-grid">
+                        
+                        <!-- COLUMN 1: Student Comments (Self + Peer) -->
+                        <div class="comment-column column-student">
+                            <h3>
+                                <i class="fas fa-users"></i>
+                                Student Comments
+                            </h3>
+                            
+                            <!-- Self Comment -->
+                            <div th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}">
+                                <div th:each="comment : ${assessmentEntry.value['self']}" class="comment-card">
+                                    <div class="comment-header">
+                                        <span class="evaluator-badge badge-self">
+                                            <i class="fas fa-user-circle"></i>
+                                            You (Self)
+                                        </span>
+                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                    </div>
+                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                    <div class="comment-text" th:text="${comment.commentText}">
+                                        Self reflection comment text here...
+                                    </div>
+                                </div>
                             </div>
-                            <div class="comment-text" th:text="${comment.commentText}">
-                                Self reflection comment text here...
+                            
+                            <!-- Peer Comments -->
+                            <div th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}">
+                                <div th:each="comment : ${assessmentEntry.value['peer']}" class="comment-card">
+                                    <div class="comment-header">
+                                        <span class="evaluator-badge badge-peer">
+                                            <i class="fas fa-user-friends"></i>
+                                            <span th:text="${comment.displayName}">Teammate 1</span>
+                                        </span>
+                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                    </div>
+                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                    <div class="comment-text" th:text="${comment.commentText}">
+                                        Peer comment text here...
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Peer Comments (Anonymous) -->
-                    <div th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}" 
-                         class="comment-category">
-                        <h3 class="category-title">
-                            <i class="fas fa-users"></i> Peer Feedback (Anonymous)
-                        </h3>
-                        <div th:each="comment : ${assessmentEntry.value['peer']}" class="comment-card">
-                            <div class="comment-header">
-                                <span class="evaluator-badge badge-peer">
-                                    <i class="fas fa-user-friends"></i>
-                                    <span th:text="${comment.anonymousIdentifier}">Teammate 1</span>
-                                </span>
-                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-                            </div>
-                            <div class="comment-text" th:text="${comment.commentText}">
-                                Peer comment text here...
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Lecturer Comments -->
-                    <div th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}" 
-                         class="comment-category">
-                        <h3 class="category-title">
-                            <i class="fas fa-chalkboard-teacher"></i> Lecturer Feedback
-                        </h3>
-                        <div th:each="comment : ${assessmentEntry.value['lecturer']}" class="comment-card lecturer-comment">
-                            <div class="comment-header">
-                                <span class="evaluator-badge badge-lecturer">
-                                    <i class="fas fa-graduation-cap"></i>
-                                    <span th:text="${comment.evaluatorName}">Dr. Hakim</span>
-                                </span>
-                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-                            </div>
-                            <div class="comment-text" th:text="${comment.commentText}">
-                                Lecturer comment text here...
+                            
+                            <!-- No Student Comments -->
+                            <div th:if="${(assessmentEntry.value['self'] == null or assessmentEntry.value['self'].isEmpty()) and (assessmentEntry.value['peer'] == null or assessmentEntry.value['peer'].isEmpty())}" 
+                                 class="no-comments-in-column">
+                                <i class="fas fa-comments"></i>
+                                <p>No student comments yet</p>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Supervisor Comments -->
-                    <div th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}" 
-                         class="comment-category">
-                        <h3 class="category-title">
-                            <i class="fas fa-user-tie"></i> Industrial Supervisor Feedback
-                        </h3>
-                        <div th:each="comment : ${assessmentEntry.value['supervisor']}" class="comment-card supervisor-comment">
-                            <div class="comment-header">
-                                <span class="evaluator-badge badge-supervisor">
-                                    <i class="fas fa-briefcase"></i>
-                                    <span th:text="${comment.evaluatorName}">Mr. Ahmad</span>
-                                </span>
-                                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                        
+                        <!-- COLUMN 2: Lecturer Comments -->
+                        <div class="comment-column column-lecturer">
+                            <h3>
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                Lecturer Comments
+                            </h3>
+                            
+                            <div th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}">
+                                <div th:each="comment : ${assessmentEntry.value['lecturer']}" class="comment-card">
+                                    <div class="comment-header">
+                                        <span class="evaluator-badge badge-lecturer">
+                                            <i class="fas fa-graduation-cap"></i>
+                                            <span th:text="${comment.evaluatorName}">Dr. Hakim</span>
+                                        </span>
+                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                    </div>
+                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                    <div class="comment-text" th:text="${comment.commentText}">
+                                        Lecturer comment text here...
+                                    </div>
+                                </div>
                             </div>
-                            <div class="comment-text" th:text="${comment.commentText}">
-                                Supervisor comment text here...
+                            
+                            <!-- No Lecturer Comments -->
+                            <div th:if="${assessmentEntry.value['lecturer'] == null or assessmentEntry.value['lecturer'].isEmpty()}" 
+                                 class="no-comments-in-column">
+                                <i class="fas fa-graduation-cap"></i>
+                                <p>No lecturer comments yet</p>
                             </div>
                         </div>
+                        
+                        <!-- COLUMN 3: Supervisor Comments -->
+                        <div class="comment-column column-supervisor">
+                            <h3>
+                                <i class="fas fa-user-tie"></i>
+                                Supervisor Comments
+                            </h3>
+                            
+                            <div th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}">
+                                <div th:each="comment : ${assessmentEntry.value['supervisor']}" class="comment-card">
+                                    <div class="comment-header">
+                                        <span class="evaluator-badge badge-supervisor">
+                                            <i class="fas fa-briefcase"></i>
+                                            <span th:text="${comment.evaluatorName}">Mr. Ahmad</span>
+                                        </span>
+                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                    </div>
+                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                    <div class="comment-text" th:text="${comment.commentText}">
+                                        Supervisor comment text here...
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- No Supervisor Comments -->
+                            <div th:if="${assessmentEntry.value['supervisor'] == null or assessmentEntry.value['supervisor'].isEmpty()}" 
+                                 class="no-comments-in-column">
+                                <i class="fas fa-briefcase"></i>
+                                <p>No supervisor comments yet</p>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
             </div>

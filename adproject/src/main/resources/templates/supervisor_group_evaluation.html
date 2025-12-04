@@ -62,6 +62,12 @@
             border: 1px solid #ffeaa7;
         }
         
+        .alert-required {
+            background: #ffe4e1;
+            color: #c0392b;
+            border: 1px solid #e74c3c;
+        }
+        
         .evaluation-form {
             background: white;
             padding: 30px;
@@ -100,6 +106,34 @@
         .rubric-details {
             color: #555;
             font-size: 0.95em;
+            margin-bottom: 15px;
+        }
+        
+        .sub-rubric-container {
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .sub-rubric-name {
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .sub-rubric-marks {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            font-weight: normal;
+        }
+        
+        .sub-rubric-description {
+            color: #666;
+            font-size: 0.9em;
             margin-bottom: 15px;
         }
         
@@ -228,6 +262,15 @@
             background: #7f8c8d;
         }
         
+        .btn-skip {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-skip:hover {
+            background: #2980b9;
+        }
+        
         .btn-submit {
             background: #1abc9c;
             color: white;
@@ -235,6 +278,12 @@
         
         .btn-submit:hover {
             background: #16a085;
+        }
+        
+        .btn-submit:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         
         .back-btn {
@@ -286,6 +335,11 @@
                 </div>
             </div>
             
+            <!-- Alert for required group evaluation (if they tried to skip but got redirected) -->
+            <div th:if="${requiresGroupEvaluation}" class="alert alert-required">
+                <strong>⚠️ Group Evaluation Required:</strong> Please complete the group evaluation first before proceeding to student evaluation, or click "Skip to Students" to proceed directly.
+            </div>
+            
             <!-- Alert for Group Assessment -->
             <div class="alert alert-info">
                 <strong>Group Assessment:</strong> All students in this group will receive the same marks for these rubrics.
@@ -310,20 +364,66 @@
                             <span th:if="${rubric.clo != null}"> | CLO: <strong th:text="${rubric.clo}">1</strong></span>
                         </div>
                         
-                        <!-- Rating Options -->
-                        <div class="rating-options" th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
-                            <div th:each="rating : ${rubric.ratings}" class="rating-option">
-                                <input type="radio" 
-                                       th:id="${'rubric-' + rubric.id + '-rating-' + rating.id}"
-                                       th:name="${'rubric[' + rubric.id + ']'}"
-                                       th:value="${rating.id}"
-                                       th:checked="${existingRatings != null and existingRatings[rubric.id] == rating.id}"
-                                       required/>
-                                <label th:for="${'rubric-' + rubric.id + '-rating-' + rating.id}">
-                                    <span class="rating-label" th:text="${rating.level}">Rating Level</span>
-                                    <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
-                                </label>
+                        <!-- Check if rubric has direct ratings (no sub-rubrics) -->
+                        <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                            <div class="rating-options">
+                                <div th:each="rating : ${rubric.ratings}" class="rating-option">
+                                    <input type="radio" 
+                                           th:id="${'rubric-' + rubric.id + '-rating-' + rating.id}"
+                                           th:name="${'rubric[' + rubric.id + ']'}"
+                                           th:value="${rating.id}"
+                                           th:checked="${existingRatings != null and existingRatings[rubric.id] == rating.id}"
+                                           required/>
+                                    <label th:for="${'rubric-' + rubric.id + '-rating-' + rating.id}">
+                                        <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                        <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                    </label>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <!-- Check if rubric has sub-rubrics -->
+                        <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
+                                <h5 class="sub-rubric-name">
+                                    <span th:text="${subRubric.name}">Sub-Rubric Name</span>
+                                    <span class="sub-rubric-marks" th:if="${subRubric.marks != null}">
+                                        (<span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks)
+                                    </span>
+                                </h5>
+                                <p th:if="${subRubric.description != null and !#strings.isEmpty(subRubric.description)}" 
+                                   class="sub-rubric-description"
+                                   th:text="${subRubric.description}">Description</p>
+                                
+                                <!-- Sub-rubric ratings -->
+                                <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}" class="rating-options">
+                                    <div th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                        <input type="radio" 
+                                               th:id="${'subrubric-' + subRubric.id + '-rating-' + rating.id}"
+                                               th:name="${'subRubric[' + subRubric.id + ']'}"
+                                               th:value="${rating.id}"
+                                               th:checked="${existingRatings != null and existingRatings[subRubric.id] == rating.id}"
+                                               required/>
+                                        <label th:for="${'subrubric-' + subRubric.id + '-rating-' + rating.id}">
+                                            <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                            <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- No ratings in sub-rubric -->
+                                <div th:if="${subRubric.ratings == null or #lists.isEmpty(subRubric.ratings)}" class="alert alert-warning" style="margin-top: 10px;">
+                                    <strong>⚠️ No ratings configured for this sub-rubric.</strong>
+                                    <p style="margin: 5px 0 0 0;">Please configure rating levels in the admin panel before evaluation.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- No Ratings and No Sub-Rubrics - Show Warning -->
+                        <div th:if="${(rubric.ratings == null or #lists.isEmpty(rubric.ratings)) and (rubric.subRubrics == null or #lists.isEmpty(rubric.subRubrics))}" 
+                             class="alert alert-warning" style="margin-top: 10px;">
+                            <strong>⚠️ No ratings or sub-rubrics configured for this rubric.</strong>
+                            <p style="margin: 5px 0 0 0;">Please configure rating levels or sub-rubrics in the admin panel before evaluation.</p>
                         </div>
                     </div>
                 </div>
@@ -334,14 +434,12 @@
                     <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}" class="comment-field">
                         <label class="comment-label" th:for="${'comment-' + i}">
                             <span th:text="${assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'Comment ' + (i + 1)}">Comment 1</span>
-                            <span class="required-indicator" th:if="${assessment.commentRequired}">*</span>
                         </label>
                         <textarea 
                             th:id="${'comment-' + i}"
                             th:name="${'comments[' + i + ']'}"
                             class="comment-textarea"
                             th:text="${existingComments != null and i < #lists.size(existingComments) ? existingComments[i] : ''}"
-                            th:required="${assessment.commentRequired}"
                             th:placeholder="${'Enter ' + (assessment.getCommentLabel(i) != null ? assessment.getCommentLabel(i) : 'comment ' + (i + 1)) + '...'}"></textarea>
                     </div>
                 </div>
@@ -349,6 +447,15 @@
                 <!-- Form Actions -->
                 <div class="form-actions">
                     <a th:href="@{/supervisor/evaluate}" class="btn btn-cancel">Cancel</a>
+                    
+                    <!-- Skip button - always show if there are individual rubrics -->
+                    <a th:if="${hasIndividualRubrics}" 
+                       th:href="@{/supervisor/evaluate/group/{groupId}/students(groupId=${group.id}, skip='true')}" 
+                       class="btn btn-skip">
+                       Skip to Students
+                    </a>
+                    
+                    <!-- Submit button - only enable if all rubrics have ratings -->
                     <button type="submit" class="btn btn-submit">
                         <span th:if="${hasIndividualRubrics}">Next: Evaluate Students</span>
                         <span th:unless="${hasIndividualRubrics}">Submit Evaluation</span>

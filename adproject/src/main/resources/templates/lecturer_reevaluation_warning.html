@@ -4,99 +4,7 @@
     <meta charset="UTF-8">
     <title>Re-evaluation Warning</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
-    <style>
-        .warning-container {
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 30px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        
-        .warning-icon {
-            font-size: 64px;
-            color: #f39c12;
-            margin-bottom: 20px;
-        }
-        
-        .warning-message {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .target-info {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            font-weight: bold;
-        }
-        
-        .rubric-type-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 14px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        
-        .badge-group {
-            background: #e8f4f8;
-            color: #2980b9;
-            border: 2px solid #3498db;
-        }
-        
-        .badge-individual {
-            background: #e8f5e9;
-            color: #27ae60;
-            border: 2px solid #2ecc71;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .btn-proceed {
-            background: #e74c3c;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-proceed:hover {
-            background: #c0392b;
-        }
-        
-        .btn-back {
-            background: #95a5a6;
-            color: white;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-back:hover {
-            background: #7f8c8d;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/lecturer_warning.css}">
 </head>
 <body>
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
@@ -113,7 +21,7 @@
             <div class="warning-container">
                 <div class="warning-icon">⚠️</div>
                 
-                <h2>Re-evaluation Warning</h2>
+                <h2 class="warning-title">Re-evaluation Warning</h2>
                 
                 <div class="warning-message">
                     <p>You have already evaluated this target for <strong th:text="${assessment.title}">this assessment</strong>.</p>
@@ -132,7 +40,7 @@
                         </p>
                     </div>
                     
-                    <p><strong>If you proceed, your previous evaluation will be replaced.</strong></p>
+                    <p class="warning-emphasis"><strong>If you proceed, your previous evaluation will be replaced.</strong></p>
                     <p>Are you sure you want to re-evaluate?</p>
                 </div>
 

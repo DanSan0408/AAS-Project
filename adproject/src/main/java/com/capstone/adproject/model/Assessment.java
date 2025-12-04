@@ -27,38 +27,61 @@ public class Assessment {
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rubric> rubrics = new ArrayList<>();
     
-    // ========== COMMENT CONFIGURATION FIELDS ==========
+    // ========== COMMENT CONFIGURATION FIELDS - NOW SEPARATED BY ASSESSMENT TYPE ==========
+    
+    // ===== GROUP ASSESSMENT COMMENTS =====
     
     /**
-     * Number of comment fields students must fill out
-     * Default: 1 (just the overall comment)
+     * Number of comment fields for GROUP assessments
      */
-    @Column(name = "comment_count")
-    private Integer commentCount = 1;
+    @Column(name = "group_comment_count")
+    private Integer groupCommentCount = 0;
     
     /**
-     * Minimum character length for each comment
-     * Default: 20
+     * Minimum character length for GROUP assessment comments
      */
-    @Column(name = "comment_min_length")
-    private Integer commentMinLength = 20;
+    @Column(name = "group_comment_min_length")
+    private Integer groupCommentMinLength = 20;
     
     /**
-     * Whether commenters should be shown as anonymous to the evaluated student
-     * true = anonymous (students see "Teammate 1", "Teammate 2", etc.)
-     * false = show real names
-     * Default: true (anonymous)
+     * Whether GROUP assessment comments should be anonymous
      */
-    @Column(name = "comments_anonymous")
-    private Boolean commentsAnonymous = true;
+    @Column(name = "group_comments_anonymous")
+    private Boolean groupCommentsAnonymous = true;
     
     /**
-     * Labels/prompts for each comment field (optional)
-     * If not set, defaults to "Comment 1", "Comment 2", etc.
+     * Labels/prompts for GROUP assessment comment fields
      */
     @ElementCollection
     @Column(name = "label", length = 500)
-    private List<String> commentLabels = new ArrayList<>();
+    private List<String> groupCommentLabels = new ArrayList<>();
+    
+    // ===== INDIVIDUAL ASSESSMENT COMMENTS =====
+    
+    /**
+     * Number of comment fields for INDIVIDUAL assessments
+     */
+    @Column(name = "individual_comment_count")
+    private Integer individualCommentCount = 0;
+    
+    /**
+     * Minimum character length for INDIVIDUAL assessment comments
+     */
+    @Column(name = "individual_comment_min_length")
+    private Integer individualCommentMinLength = 20;
+    
+    /**
+     * Whether INDIVIDUAL assessment comments should be anonymous
+     */
+    @Column(name = "individual_comments_anonymous")
+    private Boolean individualCommentsAnonymous = true;
+    
+    /**
+     * Labels/prompts for INDIVIDUAL assessment comment fields
+     */
+    @ElementCollection
+    @Column(name = "label", length = 500)
+    private List<String> individualCommentLabels = new ArrayList<>();
 
     // ========== GETTERS AND SETTERS ==========
     
@@ -79,53 +102,141 @@ public class Assessment {
         this.rubrics = rubrics; 
     }
     
-    // Comment configuration getters/setters
+    // ===== GROUP ASSESSMENT COMMENT GETTERS/SETTERS =====
     
-    public Integer getCommentCount() {
-        return commentCount != null ? commentCount : 1;
+    public Integer getGroupCommentCount() {
+        return groupCommentCount != null ? groupCommentCount : 0;
     }
     
-    public void setCommentCount(Integer commentCount) {
-        this.commentCount = commentCount;
+    public void setGroupCommentCount(Integer groupCommentCount) {
+        this.groupCommentCount = groupCommentCount;
     }
     
-    public Integer getCommentMinLength() {
-        return commentMinLength != null ? commentMinLength : 20;
+    public Integer getGroupCommentMinLength() {
+        return groupCommentMinLength != null ? groupCommentMinLength : 20;
     }
     
-    public void setCommentMinLength(Integer commentMinLength) {
-        this.commentMinLength = commentMinLength;
+    public void setGroupCommentMinLength(Integer groupCommentMinLength) {
+        this.groupCommentMinLength = groupCommentMinLength;
     }
     
-    public Boolean getCommentsAnonymous() {
-        return commentsAnonymous != null ? commentsAnonymous : true;
+    public Boolean getGroupCommentsAnonymous() {
+        return groupCommentsAnonymous != null ? groupCommentsAnonymous : true;
     }
     
-    public void setCommentsAnonymous(Boolean commentsAnonymous) {
-        this.commentsAnonymous = commentsAnonymous;
+    public void setGroupCommentsAnonymous(Boolean groupCommentsAnonymous) {
+        this.groupCommentsAnonymous = groupCommentsAnonymous;
     }
     
-    public List<String> getCommentLabels() {
-        if (commentLabels == null) {
-            commentLabels = new ArrayList<>();
+    public List<String> getGroupCommentLabels() {
+        if (groupCommentLabels == null) {
+            groupCommentLabels = new ArrayList<>();
         }
-        return commentLabels;
+        return groupCommentLabels;
     }
     
-    public void setCommentLabels(List<String> commentLabels) {
-        this.commentLabels = commentLabels;
+    public void setGroupCommentLabels(List<String> groupCommentLabels) {
+        this.groupCommentLabels = groupCommentLabels;
+    }
+    
+    public String getGroupCommentLabel(int index) {
+    if (groupCommentLabels == null || groupCommentLabels.isEmpty() || index >= groupCommentLabels.size()) {
+        return "Group Comment " + (index + 1);
+    }
+    return groupCommentLabels.get(index);
+}
+    
+    // ===== INDIVIDUAL ASSESSMENT COMMENT GETTERS/SETTERS =====
+    
+    public Integer getIndividualCommentCount() {
+        return individualCommentCount != null ? individualCommentCount : 0;
+    }
+    
+    public void setIndividualCommentCount(Integer individualCommentCount) {
+        this.individualCommentCount = individualCommentCount;
+    }
+    
+    public Integer getIndividualCommentMinLength() {
+        return individualCommentMinLength != null ? individualCommentMinLength : 20;
+    }
+    
+    public void setIndividualCommentMinLength(Integer individualCommentMinLength) {
+        this.individualCommentMinLength = individualCommentMinLength;
+    }
+    
+    public Boolean getIndividualCommentsAnonymous() {
+        return individualCommentsAnonymous != null ? individualCommentsAnonymous : true;
+    }
+    
+    public void setIndividualCommentsAnonymous(Boolean individualCommentsAnonymous) {
+        this.individualCommentsAnonymous = individualCommentsAnonymous;
+    }
+    
+    public List<String> getIndividualCommentLabels() {
+        if (individualCommentLabels == null) {
+            individualCommentLabels = new ArrayList<>();
+        }
+        return individualCommentLabels;
+    }
+    
+    public void setIndividualCommentLabels(List<String> individualCommentLabels) {
+        this.individualCommentLabels = individualCommentLabels;
+    }
+    
+    public String getIndividualCommentLabel(int index) {
+    if (index < 0) {                         // ✅ ADD THIS
+        return "Individual Comment 1";       // ✅ ADD THIS
+    }                                        // ✅ ADD THIS
+    if (individualCommentLabels == null || individualCommentLabels.isEmpty() || index >= individualCommentLabels.size()) {
+        return "Individual Comment " + (index + 1);
+    }
+    return individualCommentLabels.get(index);  // ✅ NOW SAFE
+}
+    
+    // ===== HELPER METHODS =====
+    
+    /**
+     * Get comment count based on assessment type
+     */
+    public Integer getCommentCountForType(String assessmentType) {
+        if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
+            return getGroupCommentCount();
+        } else {
+            return getIndividualCommentCount();
+        }
     }
     
     /**
-     * Get label for a specific comment index (0-based)
-     * Returns default label if custom label not set
+     * Get comment min length based on assessment type
      */
-    public String getCommentLabel(int index) {
-        if (commentLabels != null && index < commentLabels.size() && 
-            commentLabels.get(index) != null && !commentLabels.get(index).trim().isEmpty()) {
-            return commentLabels.get(index);
+    public Integer getCommentMinLengthForType(String assessmentType) {
+        if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
+            return getGroupCommentMinLength();
+        } else {
+            return getIndividualCommentMinLength();
         }
-        return "Comment " + (index + 1);
+    }
+    
+    /**
+     * Get comments anonymous setting based on assessment type
+     */
+    public Boolean getCommentsAnonymousForType(String assessmentType) {
+        if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
+            return getGroupCommentsAnonymous();
+        } else {
+            return getIndividualCommentsAnonymous();
+        }
+    }
+    
+    /**
+     * Get comment label based on assessment type and index
+     */
+    public String getCommentLabelForType(String assessmentType, int index) {
+        if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
+            return getGroupCommentLabel(index);
+        } else {
+            return getIndividualCommentLabel(index);
+        }
     }
 
     @Transient

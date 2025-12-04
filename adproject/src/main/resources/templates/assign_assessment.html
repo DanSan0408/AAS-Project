@@ -10,6 +10,14 @@
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
     <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>Deadline Assignment</h1>
+            </div>
+        </div>
+
+    <div class="main-content">
         <div class="head">
              <div class="card" style="max-width: 800px; margin: 0 auto;"> 
                 
@@ -34,7 +42,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="assessorType">Who will be the **Assessor**?</label>
+                            <label for="assessorType">Who will be the Assessor?</label>
                             <select th:field="*{assessorType}" id="assessorType" required>
                                 <option value="">-- Select Assessor Role --</option>
                                 <option th:each="type : ${assessorTypes}" th:value="${type}" th:text="${type}"></option>
@@ -47,11 +55,11 @@
                             <label style="margin-bottom: 10px; display: block;">Assessment Opening Time:</label>
                             <div class="radio-group">
                                 <input type="radio" th:field="*{openType}" value="INSTANT" id="openInstant" checked/> 
-                                <label for="openInstant">Open **Instantly** (Now)</label>
+                                <label for="openInstant">Open Instantly (Now)</label>
                             </div>
                             <div class="radio-group" style="margin-top: 5px;">
                                 <input type="radio" th:field="*{openType}" value="SCHEDULED" id="openScheduled"/> 
-                                <label for="openScheduled">Open on a **Scheduled Date**</label>
+                                <label for="openScheduled">Open on a Scheduled Date</label>
                             </div>
                         </div>
 

@@ -72,8 +72,9 @@ public class LecturerController {
         List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
         model.addAttribute("allAssessments", allAssessments);
         
-        List<Deadline> deadlines = deadlineService.getAllDeadlines();
-        model.addAttribute("deadlines", deadlines);
+        // ✅ CHANGED: Use "allDeadlines" instead of "deadlines" to match template
+        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        model.addAttribute("allDeadlines", allDeadlines);
 
         // --- EXPOSE UTILITY FUNCTIONS ---
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);

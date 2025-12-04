@@ -13,104 +13,281 @@
     --accent-green: #2ecc71;
     --accent-red: #e74c3c;
     --date-highlight: #f1c40f;
+	--white-content: #ffff;
+	
+	/* Sidebar Dimensions */
+    --sidebar-width: 260px;
 }
 
 body {
  	font-family: 'Arial', sans-serif;
- 	/* BACKGROUND: #2c3e50 -> #152238 (Darkest) */
  	background-color: var(--dark-bg); 
  	margin: 0;
  	padding: 0;
  	display: flex;
- 	color: var(--text-light); /* Kept for bright text */
+ 	color: var(--text-light);
 }
 
+/* ==========================================================
+ 	SIDEBAR STYLES
+ 	========================================================== */
+
+/* Sidebar Container */
 .sidebar {
- 	width: 280px;
- 	/* SIDEBAR BG: #34495e -> #192841 (Darker) */
- 	background-color: var(--darker-bg); 
- 	padding: 20px;
- 	height: 100vh;
- 	position: fixed;
- 	box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
- 	z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: linear-gradient(180deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
+    color: white;
+    padding: 20px 0;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-.logo {
- 	text-align: center;
- 	padding-bottom: 20px;
- 	/* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
- 	border-bottom: 1px solid var(--mid-tone-bg);
- 	margin-bottom: 20px;
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
 }
 
-.logo h2 {
- 	margin: 0;
- 	color: var(--text-light);
+.sidebar::-webkit-scrollbar-track {
+    background: var(--darker-bg);
 }
 
-.user-profile {
- 	display: flex;
- 	align-items: center;
- 	justify-content: center;
- 	margin-bottom: 20px;
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--deep-mid-tone);
+    border-radius: 3px;
 }
 
-.user-profile img {
- 	width: 60px;
- 	height: 60px;
- 	border-radius: 50%;
- 	border: 2px solid var(--text-light);
- 	margin-right: 15px;
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #23395d;
 }
 
-.user-profile span {
- 	font-weight: bold;
+/* Logo Section */
+.sidebar .logo {
+    text-align: center;
+    padding: 20px 15px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--mid-tone-bg);
 }
 
-.menu-list {
- 	list-style: none;
- 	padding: 0;
- 	margin: 0;
+.sidebar .logo h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.menu-list a {
- 	display: block;
- 	padding: 15px 20px;
- 	color: var(--text-light);
- 	text-decoration: none;
- 	border-radius: 8px;
- 	margin-bottom: 10px;
- 	transition: background-color 0.3s ease;
+/* User Profile Section */
+.sidebar .user-profile {
+    text-align: center;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    margin-left: 15px;
+    margin-right: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
-.menu-list a:hover {
- 	/* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
- 	background-color: var(--mid-tone-bg);
+/* Profile Image */
+.sidebar .user-profile img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
 }
 
-.logout-link {
- 	position: absolute;
- 	bottom: 20px;
- 	left: 50%;
- 	transform: translateX(-50%);
- 	color: var(--accent-red);
- 	text-decoration: none;
- 	font-weight: bold;
+/* Initials Placeholder (for Industrial Supervisor) */
+.sidebar .user-profile .initials-placeholder {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, #23395d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    border: 3px solid var(--primary-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    margin-bottom: 5px;
+}
+
+/* Username Text */
+.sidebar .user-profile span,
+.sidebar .user-profile p {
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    word-break: break-word;
+    text-align: center;
+}
+
+.sidebar .user-profile p {
+    line-height: 1.4;
+}
+
+/* Menu List */
+.sidebar .menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.sidebar .menu-list li {
+    margin-bottom: 5px;
+    position: relative;
+}
+
+/* Menu Links */
+.sidebar .menu-list li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 20px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hover Effect - Left Border */
+.sidebar .menu-list li a::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: var(--primary-blue);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar .menu-list li a:hover::before {
+    transform: scaleY(1);
+}
+
+/* Hover Background */
+.sidebar .menu-list li a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding-left: calc(20px + 8px);
+}
+
+/* Active Link */
+.sidebar .menu-list li a.active {
+    background: linear-gradient(90deg, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.1) 100%);
+    color: white;
+    border-left: 4px solid var(--primary-blue);
+    font-weight: 700;
+}
+
+/* Icons in Menu (if Font Awesome is used) */
+.sidebar .menu-list li a i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Logout Section */
+.sidebar .menu-list li.logout-item {
+    margin-top: auto;
+    border-top: 2px solid var(--mid-tone-bg);
+    padding-top: 15px;
+}
+
+.sidebar .menu-list li form {
+    margin: 0;
+    padding: 0;
+}
+
+/* Logout Button */
+.sidebar .menu-list li form button,
+.sidebar .menu-list li form .logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 15px 20px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar .menu-list li form button::before,
+.sidebar .menu-list li form .logout-btn::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: var(--accent-red);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.sidebar .menu-list li form button:hover,
+.sidebar .menu-list li form .logout-btn:hover {
+    background: rgba(231, 76, 60, 0.15);
+    color: white;
+    padding-left: calc(20px + 8px);
+}
+
+.sidebar .menu-list li form button:hover::before,
+.sidebar .menu-list li form .logout-btn:hover::before {
+    transform: scaleY(1);
+}
+
+/* Logout Icon */
+.sidebar .menu-list li form button i,
+.sidebar .menu-list li form .logout-btn i {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
 }
 
 .main-content {
  	flex-grow: 1;
- 	margin-left: 320px; 
+ 	margin-left: 260px; 
  	padding: 40px;
- 	/* MAIN BG: #2c3e50 -> #152238 (Darkest) */
  	background-color: var(--dark-bg); 
  	display: flex;
  	justify-content: flex-start;
  	align-items: flex-start;
  	flex-direction: column;
  	min-height: 100vh; 
- 	width: calc(100% - 320px); 
+ 	width: calc(100% - 260px); 
 }
 
 .header {
@@ -125,6 +302,7 @@ body {
  	display: flex;
  	align-items: center;
  	gap: 15px;
+	color: var(--white-content);
 }
 
 .header-container img {
@@ -167,7 +345,6 @@ body {
 }
 
 .rubric-section {
- 	/* SECTION BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	padding: 30px 30px;
  	border-radius: 12px;
@@ -179,7 +356,6 @@ body {
 }
 
 .deadline-section {
- 	/* SECTION BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	padding: 20px;
  	border-radius: 12px;
@@ -208,6 +384,11 @@ body {
  		width: 100%;
  		min-width: unset;
  	}
+ 	
+ 	.main-content {
+ 		margin-left: 0;
+ 		width: 100%;
+ 	}
 }
 
 /* ==========================================================
@@ -220,7 +401,6 @@ body {
  	padding: 20px;
  	margin-bottom: 30px; 
  	border-radius: 10px;
- 	/* ASSESSMENT BOX BG: #3e5a76 -> #203354 (Mid-tone) */
  	background-color: var(--deep-mid-tone); 
 }
 
@@ -234,7 +414,6 @@ body {
 
 .total-marks {
  	padding-top: 10px;
- 	/* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
  	border-top: 2px solid var(--mid-tone-bg);
  	margin-top: 10px;
  	margin-bottom: 20px;
@@ -257,7 +436,6 @@ body {
  	margin-top: 20px;
  	padding-left: 15px;
  	border-left: 4px solid #27abcc; 
- 	/* EVAL TYPE GROUP BG: #4a6681 -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg); 
  	padding: 10px;
  	border-radius: 5px;
@@ -275,54 +453,70 @@ body {
 
 /* --- ASSESSMENT TYPE GROUP (Inner Group) --- */
 .assess-type-group {
- 	padding-left: 15px;
- 	border-left: 3px solid #106f9b; 
- 	margin-top: 15px;
- 	margin-bottom: 15px;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    background: var(--mid-tone-bg);
+    border-left: 4px solid var(--deep-mid-tone);
 }
 
 .assess-type-group h5 {
- 	font-size: 1.2em;
- 	color: #d1cccc; 
- 	margin-top: 0;
- 	margin-bottom: 15px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    color: var(--white-content);
+    font-size: 1.2em;
+    margin-top: 0;
+    border-bottom: 2px solid var(--darker-bg);
 }
 
 /* --- INDIVIDUAL RUBRIC/CRITERIA BOX --- */
 .rubric-assessment {
- 	/* RUBRIC CARD BG: #2c3e50 -> #152238 (Darkest) */
- 	background-color: var(--dark-bg); 
- 	border-radius: 8px;
- 	padding: 15px;
- 	margin-bottom: 20px;
- 	border: 1px solid var(--text-mid); 
- 	margin-top: 15px; 
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    background-color: var(--dark-bg);
+    border: 1px solid var(--text-mid);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .rubric-assessment h6 {
- 	font-size: 1.1em; 
- 	color: var(--text-light);
- 	/* DIVIDER: #34495e -> #192841 (Darker) */
- 	border-bottom: 1px solid var(--darker-bg); 
- 	padding-bottom: 5px;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--darker-bg);
+    padding-bottom: 5px;
 }
 
 .rubric-details p {
- 	font-size: 1.05em;
- 	margin: 5px 0;
- 	line-height: 1.5;
- 	color: var(--text-mid);
+    margin: 5px 0;
+    line-height: 1.5;
+    font-size: 1.05em;
+    color: var(--text-mid);
+}
+
+.rubric-details span {
+    font-weight: 600;
+    color: var(--text-light);
 }
 
 .rubric-details strong {
- 	color: var(--text-light);
+    color: var(--text-light);
+}
+    
+/* Button container styling */
+.assessment-header-buttons {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
 }
 
 /* ==========================================================
  	4. BUTTONS & DEADLINES
  	========================================================== */
 
-/* General Action Buttons - NO CHANGE */
+/* General Action Buttons */
 .rubric-action-btn {
  	padding: 5px 10px;
  	border-radius: 5px;
@@ -363,33 +557,12 @@ body {
  	background-color: var(--accent-green);
 }
 
-/* Sidebar Logout Button - NO CHANGE */
-.menu-list form button {
- 	display: block;
- 	width: 100%;
- 	text-align: left;
- 	padding: 15px 20px;
- 	color: var(--text-light);
- 	background-color: transparent;
- 	border: none;
- 	cursor: pointer;
- 	border-radius: 8px;
- 	margin-bottom: 10px;
- 	transition: background-color 0.3s ease;
- 	font-size: 17px;
-}
-
-.menu-list form button:hover {
- 	/* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
- 	background-color: var(--mid-tone-bg);
-}
-
 /* ----------------------------------------------------------
-   4.1 DEADLINE SPECIFIC STYLES (From Admin Home)
+   4.1 DEADLINE SPECIFIC STYLES
    ---------------------------------------------------------- */
 
 .deadline-item {
-    background-color: var(--deep-mid-tone); /* Adjusted from darkest to deep-mid for contrast */
+    background-color: var(--deep-mid-tone);
     border: 1px solid var(--mid-tone-bg);
     border-radius: 8px;
     padding: 20px; 
@@ -438,7 +611,7 @@ body {
 .deadline-type-badge {
     display: inline-block;
     padding: 3px 10px;
-    border-radius: 20px; /* Pill shape for neatness */
+    border-radius: 20px;
     font-size: 0.75em; 
     font-weight: bold;
     margin-left: 10px;
@@ -449,7 +622,7 @@ body {
 .badge-student { background-color: #27ae60; color: white; }
 .badge-lecturer { background-color: #2980b9; color: white; }
 .badge-supervisor { background-color: #8e44ad; color: white; }
-.badge-general { background-color: #95a5a6; color: #2c3e50; } /* Darker text on lighter badge */
+.badge-general { background-color: #95a5a6; color: #2c3e50; }
 
 /* --- DATE/TIME DISPLAY --- */
 .date-info {
@@ -459,7 +632,7 @@ body {
     border-radius: 4px;
     font-family: monospace;
     font-size: 0.9em;
-    color: var(--date-highlight); /* Highlight date/time in yellow */
+    color: var(--date-highlight);
     font-weight: bold;
 }
 
@@ -476,7 +649,7 @@ body {
 .deadline-actions {
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px dashed var(--mid-tone-bg); /* Use dashed line for softer separation */
+    border-top: 1px dashed var(--mid-tone-bg);
     display: flex;
     gap: 10px;
 }
@@ -493,11 +666,11 @@ body {
 
 /* Form for adding new deadlines */
 .add-new-deadline {
-    background-color: var(--mid-tone-bg); /* Darker background for the form container */
+    background-color: var(--mid-tone-bg);
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
-    border-top: 1px solid var(--mid-tone-bg); /* Match the form's background border */
+    border-top: 1px solid var(--mid-tone-bg);
 }
 
 .add-new-deadline h3 {
@@ -523,9 +696,7 @@ body {
 .add-new-deadline input {
  	padding: 8px;
  	border-radius: 5px;
- 	/* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
  	border: 1px solid var(--mid-tone-bg);
- 	/* INPUT BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg);
  	color: var(--text-light);
  	width: 100%;
@@ -549,11 +720,10 @@ body {
 
 
 /* ==========================================================
- 	5. NEW USER MANAGEMENT STYLES (from previous task)
+ 	5. USER MANAGEMENT STYLES
  	========================================================== */
 
 .card {
- 	/* CARD BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	padding: 25px;
  	border-radius: 12px;
@@ -564,7 +734,6 @@ body {
 }
 
 .card-header h1 {
- 	/* CARD HEADER TEXT: #3498db -> #23395d (Deepest Mid-tone) */
  	color: #23395d; 
  	border-bottom: 2px solid #23395d;
  	padding-bottom: 10px;
@@ -580,7 +749,6 @@ body {
 }
 
 .user-editing-sidebar {
- 	/* SIDEBAR BG: #2c3e50 -> #152238 (Darkest) */
  	background-color: var(--dark-bg); 
  	padding: 15px;
  	border-radius: 8px;
@@ -599,7 +767,6 @@ body {
 }
 
 .user-editing-sidebar a:hover {
- 	/* HOVER BG: #34495e -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg);
 }
 
@@ -611,7 +778,6 @@ body {
 
 .user-editing-main {
  	flex-grow: 1;
- 	/* MAIN CONTENT BG: #3e5a76 -> #203354 (Mid-tone) */
  	background-color: var(--deep-mid-tone); 
  	padding: 20px;
  	border-radius: 8px;
@@ -620,7 +786,6 @@ body {
 
 /* User Management Form Styles */
 .add-form-container {
- 	/* FORM BG: #192841 -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg); 
  	padding: 20px;
  	border-radius: 8px;
@@ -654,7 +819,6 @@ body {
  	padding: 10px;
  	border: 1px solid #34495e; 
  	border-radius: 5px;
- 	/* INPUT BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	color: var(--text-light);
  	box-sizing: border-box;
@@ -680,7 +844,6 @@ table {
  	width: 100%;
  	border-collapse: collapse;
  	margin-top: 20px;
- 	/* TABLE BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	border-radius: 8px;
  	overflow: hidden;
@@ -688,7 +851,6 @@ table {
 }
 
 thead {
- 	/* HEADER BG: #2c3e50 -> #23395d (Deepest Mid-tone) */
  	background-color: #23395d; 
  	color: white;
 }
@@ -699,18 +861,15 @@ th, td {
  	border-bottom: 1px solid var(--mid-tone-bg);
 }
 
-/* TABLE ROW BG: #3e5a76 -> #203354 (Mid-tone) */
 tbody tr {
  	background-color: var(--deep-mid-tone);
 }
 
 tbody tr:nth-child(even) {
- 	/* EVEN ROW BG: #34495e -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg); 
 }
 
 tbody tr:hover {
- 	/* HOVER BG: #4a6681 -> #23395d (Deepest Mid-tone) */
  	background-color: #23395d; 
 }
 
@@ -770,7 +929,6 @@ tbody tr:hover {
 }
 
 .randomize-section {
- 	/* RANDOMIZE BG: #192841 -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg); 
  	padding: 20px;
  	border-radius: 8px;
@@ -816,7 +974,6 @@ tbody tr:hover {
 
 /* Group Preview Page Styles */
 .add-student-container {
- 	/* ADD STUDENT BG: #34495e -> #1c2e4a (Mid-tone) */
  	background-color: var(--mid-tone-bg); 
  	padding: 15px;
  	border-radius: 8px;
@@ -831,7 +988,6 @@ tbody tr:hover {
  	padding: 0;
  	max-height: 250px;
  	overflow-y: auto;
- 	/* LIST BG: #192841 -> #152238 (Darkest) */
  	background-color: var(--dark-bg); 
  	padding: 10px;
  	border-radius: 6px;
@@ -866,7 +1022,6 @@ tbody tr:hover {
  	padding: 10px;
  	border: 1px solid #34495e; 
  	border-radius: 5px;
- 	/* INPUT BG: #34495e -> #192841 (Darker) */
  	background-color: var(--darker-bg); 
  	color: var(--text-light);
  	box-sizing: border-box;
@@ -874,16 +1029,48 @@ tbody tr:hover {
 
 /* Style for the radio button group */
 .radio-group label {
- 	font-weight: normal; /* Don't bold the radio label */
+ 	font-weight: normal;
  	margin-left: 5px;
  	color: var(--text-light);
  	display: inline;
 }
 
 .radio-group input[type="radio"] {
- 	/* Use accent color if desired, otherwise default will do */
  	accent-color: var(--primary-blue); 
- 	width: auto; /* Radio buttons shouldn't be full width */
+ 	width: auto;
  	height: auto;
  	margin-right: 5px;
+}
+
+/* ==========================================================
+ 	6. RESPONSIVE DESIGN
+ 	========================================================== */
+
+@media (max-width: 768px) {
+ 	.main-content {
+ 		margin-left: 0;
+ 		width: 100%;
+ 		padding: 20px;
+ 	}
+ 	
+ 	.header-container h1 {
+ 		font-size: 1.8rem;
+ 	}
+ 	
+ 	.header-container img {
+ 		width: 150px;
+ 	}
+ 	
+ 	.user-editing-container {
+ 		flex-direction: column;
+ 	}
+ 	
+ 	.user-editing-sidebar {
+ 		width: 100%;
+ 		min-width: unset;
+ 	}
+ 	
+ 	.content-layout {
+ 		flex-direction: column;
+ 	}
 }

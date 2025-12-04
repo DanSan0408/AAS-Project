@@ -123,66 +123,254 @@
 }
 
 /* ==========================================
-   3. RATING SCALE
-   ========================================== */
+ * 2. CRITERIA SECTION (RUBRICS) & RATING SCALE 
+ * (NEW STYLES)
+ * ========================================== */
 
-.criteria-rating-scale {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
+/* Main Rubric Container */
+.rubric-section {
+    background-color: #34495e; /* Section BG: Dark slate blue */
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-left: 5px solid #3498db; /* Primary blue accent */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.criteria-rating-option {
+.rubric-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.rubric-header {
+    margin-bottom: 15px;
+}
+
+.rubric-header h3 {
+    color: #ecf0f1; /* Light color for main rubric title */
+    margin: 0 0 10px 0;
+    font-size: 1.4em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.rubric-description {
+    color: #bdc3c7; /* Mid-tone text */
+    font-style: italic;
+    font-size: 0.95em;
+    margin-bottom: 15px;
+    border-left: 3px solid #7f8c8d;
+    padding-left: 10px;
+}
+
+.rubric-meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #4a627a; /* Subtle divider */
+}
+
+/* Badges (CLO, Marks, Type) */
+.clo-badge, .marks-badge, .assessment-type-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.clo-badge {
+    background-color: #7f8c8d; /* Grey */
+    color: #2c3e50;
+}
+
+.marks-badge {
+    background-color: #2ecc71; /* Green */
+    color: white;
+}
+
+.assessment-type-badge {
+    background-color: #3498db; /* Blue */
+    color: white;
+}
+
+/* --- Sub-Rubrics Container (If present) --- */
+
+.sub-rubrics-container {
+    background-color: #2c3e50; /* Slightly darker BG for contrast */
+    padding: 20px;
+    border-radius: 8px; /* Slightly larger radius for a softer look */
+    margin-top: 20px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2); /* Subtle inset shadow */
+}
+
+.sub-rubric-item {
+    /* Use padding to separate items, remove top padding for the first one */
+    padding: 15px 0;
+    border-bottom: 1px solid #34495e; /* Subtle divider */
+    transition: background-color 0.2s ease;
+}
+
+.sub-rubric-item:first-child {
+    padding-top: 0;
+}
+
+.sub-rubric-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sub-rubric-header {
+    display: flex; /* Flex for title and marks in one line (responsive) */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 15px; /* Space between title and marks */
+}
+
+.sub-rubric-header h4 {
+    /* Main Sub-Rubric Title */
+    color: #2ecc71; /* Green for sub-rubric headings */
+    font-size: 1.1em; /* Slightly smaller for better hierarchy */
+    margin: 0;
+    font-weight: 700; /* Bold title */
+    flex-grow: 1;
+}
+
+.sub-rubric-marks {
+    /* Display the marks as a pill/badge for better visual separation */
+    font-size: 0.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    background-color: #f39c12; /* Yellow/Orange accent for marks */
+    padding: 4px 10px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.sub-rubric-description {
+    font-size: 0.9em;
+    color: #95a5a6;
+    margin-bottom: 15px; /* More space before the ratings */
+    line-height: 1.5;
+}
+
+/* --- Direct Rating Options (if no sub-rubrics) --- */
+
+.direct-ratings-container {
+    /* Use the same styling as sub-rubrics-container for consistency */
+    background-color: #2c3e50;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.direct-ratings-container h4 {
+    color: #2ecc71;
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #34495e; /* Add a subtle separator */
+    padding-bottom: 10px;
+}
+
+/* --- Rating Options Grid (Used for both direct and sub-rubric ratings) --- */
+
+.rating-options-grid {
+    /* Adjust minmax for better balance on wider screens */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px; /* Tighter gap for tidiness */
+}
+
+.rating-option {
+    /* No change needed here, it's just a container */
     position: relative;
 }
 
-.criteria-rating-option input[type="radio"] {
+.rating-option input[type="radio"] {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
-.criteria-rating-option label {
+.rating-label {
+    /* Enhanced visual appeal and professional look */
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 15px 10px;
-    background-color: #34495e;
-    border: 2px solid #34495e;
-    border-radius: 8px;
+    justify-content: flex-start;
+    align-items: flex-start;
     cursor: pointer;
+    padding: 15px;
+    border: 1px solid #4a627a; /* Thinner default border */
+    border-radius: 6px; /* Slightly smaller radius for professionalism */
+    background-color: #203354; /* Consistent, slightly lighter BG for option boxes */
     transition: all 0.3s ease;
-    text-align: center;
-    min-height: 90px;
+    min-height: 100%;
+    height: 100%; /* Ensure all labels in a row have the same height */
+    box-sizing: border-box;
 }
 
-.criteria-rating-option input[type="radio"]:checked + label {
-    background-color: #3498db;
-    border-color: #2980b9;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-}
-
-.criteria-rating-option label:hover {
+.rating-option:hover .rating-label {
     border-color: #3498db;
-    background-color: #2c3e50;
-    transform: translateY(-2px);
+    background-color: #27406a; /* Hover feedback */
 }
 
-.rating-level-badge {
-    display: block;
-    font-size: 1.8em;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #fff;
+/* Styling for the selected rating */
+.rating-option input[type="radio"]:checked + .rating-label,
+.rating-option.selected .rating-label {
+    background-color: #3498db; /* Primary blue selected BG for strong feedback */
+    border-color: #2980b9;
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.5); /* Stronger shadow on select */
+}
+
+/* Ensure selected state colors are readable */
+.rating-option.selected .rating-level,
+.rating-option.selected .rating-marks,
+.rating-option.selected .rating-description {
+    color: white !important;
+}
+
+.rating-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align header items to start */
+    margin-bottom: 8px; /* More space before description */
+    width: 100%;
+}
+
+.rating-level {
+    font-weight: 700;
+    color: #ecf0f1;
+    font-size: 1.2em; /* Slightly larger level text */
+    line-height: 1.2;
+}
+
+.rating-marks {
+    /* Style marks as a clean pill/tag */
+    color: #2c3e50; /* Dark text on light background */
+    background-color: #2ecc71;
+    font-weight: 700;
+    font-size: 0.85em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    line-height: 1.5; /* Ensure badge text doesn't look squished */
 }
 
 .rating-description {
-    font-size: 0.9em;
+    font-size: 0.85em;
     color: #bdc3c7;
-    font-weight: 500;
+    margin: 0;
+    line-height: 1.4;
+    text-align: left; /* Ensure description is left-aligned */
 }
 
 /* ==========================================
@@ -389,47 +577,28 @@
    6. RESPONSIVE DESIGN
    ========================================== */
 
-@media (max-width: 768px) {
-    .notices-container {
-        grid-template-columns: 1fr;
+@media (max-width: 600px) {
+    /* Below 600px, use fewer columns for readability */
+    .rating-options-grid {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 10px;
     }
-    
-    .criteria-rating-scale {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 8px;
+
+    .sub-rubric-header {
+        flex-direction: column; /* Stack title and marks */
+        align-items: flex-start;
     }
-    
-    .criteria-rating-option label {
-        padding: 12px 8px;
-        min-height: 80px;
-    }
-    
-    .rating-level-badge {
-        font-size: 1.5em;
-    }
-    
-    .modal-content {
-        padding: 25px;
-        width: 95%;
-    }
-    
-    .modal-actions {
-        flex-direction: column;
-    }
-    
-    .modal-btn {
-        width: 100%;
-        justify-content: center;
+
+    .sub-rubric-header h4 {
+        margin-bottom: 5px;
     }
 }
 
-@media (max-width: 480px) {
-    .criteria-rating-scale {
+@media (max-width: 400px) {
+    /* On small mobile, stack the rating options */
+    .rating-options-grid {
         grid-template-columns: 1fr;
-    }
-    
-    .rating-level-badge {
-        font-size: 1.3em;
+        gap: 10px;
     }
 }
 

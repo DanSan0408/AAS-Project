@@ -37,18 +37,21 @@ public class AssessmentCommentService {
      * Get or create anonymous identifier for peer comments
      * Ensures consistency - same evaluator always gets same teammate number for a student
      */
-    public String getAnonymousIdentifier(Student evaluatedStudent, Long evaluatorId, Assessment assessment) {
-        // Check if assessment requires anonymous comments
-        if (!assessment.getCommentsAnonymous()) {
+    public String getAnonymousIdentifier(Student evaluatedStudent, Long evaluatorId, Assessment assessment, String rubricAssessmentType) {
+        // Check if assessment requires anonymous comments based on rubric type
+        Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
+        if (isAnonymous != null && !isAnonymous) {
             // Return the evaluator's real name
             return studentRepository.findById(evaluatorId)
                     .map(Student::getUsername)
                     .orElse("Student");
         }
         
-        // Get all peer comments for this student in this assessment
+        // Get all peer comments for this student in this assessment with this rubric type
         List<AssessmentComment> peerComments = commentRepository.findPeerCommentsForStudentInAssessment(
-                evaluatedStudent, assessment);
+                evaluatedStudent, assessment).stream()
+                .filter(c -> rubricAssessmentType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
         
         // Check if this evaluator already has a teammate number
         for (AssessmentComment comment : peerComments) {
@@ -70,6 +73,7 @@ public class AssessmentCommentService {
     
     /**
      * Submit multiple peer comments (from student to peer)
+     * ✅ UPDATED: Now sets rubricAssessmentType to "Individual Assessment"
      * @param commentTexts List of comment texts, one for each configured comment field
      */
     @Transactional
@@ -79,15 +83,18 @@ public class AssessmentCommentService {
         List<AssessmentComment> savedComments = new ArrayList<>();
         
         // Get anonymous identifier (consistent across all comments from this evaluator)
-        String identifier = getAnonymousIdentifier(evaluatedStudent, evaluator.getId(), assessment);
+        String identifier = getAnonymousIdentifier(evaluatedStudent, evaluator.getId(), assessment, "Individual Assessment");
         String evaluatorName = evaluator.getUsername();
         
-        // Delete existing comments from this evaluator to this student in this assessment
+        // Delete existing comments from this evaluator to this student in this assessment (Individual type only)
         List<AssessmentComment> existingComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 evaluator.getId(),
                 AssessmentComment.EvaluatorType.STUDENT,
                 evaluatedStudent,
-                assessment);
+                assessment).stream()
+                .filter(c -> c.getRubricAssessmentType() == null || 
+                             "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
         
         if (!existingComments.isEmpty()) {
             commentRepository.deleteAll(existingComments);
@@ -111,7 +118,8 @@ public class AssessmentCommentService {
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
             comment.setAnonymousIdentifier(identifier);
             comment.setCommentIndex(i);
-            comment.setCommentLabel(assessment.getCommentLabel(i));
+            comment.setCommentLabel(assessment.getIndividualCommentLabel(i));
+            comment.setRubricAssessmentType("Individual Assessment"); // ✅ NEW
             
             savedComments.add(commentRepository.save(comment));
         }
@@ -121,6 +129,7 @@ public class AssessmentCommentService {
     
     /**
      * Submit multiple self comments
+     * ✅ UPDATED: Now sets rubricAssessmentType to "Individual Assessment"
      * @param commentTexts List of comment texts, one for each configured comment field
      */
     @Transactional
@@ -128,9 +137,12 @@ public class AssessmentCommentService {
         
         List<AssessmentComment> savedComments = new ArrayList<>();
         
-        // Delete existing self comments
+        // Delete existing self comments (Individual type only)
         List<AssessmentComment> existingComments = commentRepository.findSelfCommentsForStudentInAssessment(
-                student, assessment, student.getId());
+                student, assessment, student.getId()).stream()
+                .filter(c -> c.getRubricAssessmentType() == null || 
+                             "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
         
         if (!existingComments.isEmpty()) {
             commentRepository.deleteAll(existingComments);
@@ -154,7 +166,59 @@ public class AssessmentCommentService {
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SELF);
             comment.setAnonymousIdentifier("You (Self)");
             comment.setCommentIndex(i);
-            comment.setCommentLabel(assessment.getCommentLabel(i));
+            comment.setCommentLabel(assessment.getIndividualCommentLabel(i));
+            comment.setRubricAssessmentType("Individual Assessment"); // ✅ NEW
+            
+            savedComments.add(commentRepository.save(comment));
+        }
+        
+        return savedComments;
+    }
+    
+    /**
+     * ✅ NEW: Submit team evaluation comments (Group Assessment)
+     * @param student The student submitting (all group members get same comments)
+     * @param assessment The assessment
+     * @param commentTexts List of comment texts
+     */
+    @Transactional
+    public List<AssessmentComment> submitTeamComments(Student student, Assessment assessment, List<String> commentTexts) {
+        
+        List<AssessmentComment> savedComments = new ArrayList<>();
+        
+        // Delete existing team comments for this student
+        List<AssessmentComment> existingComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
+                student.getId(),
+                AssessmentComment.EvaluatorType.STUDENT,
+                student,
+                assessment).stream()
+                .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
+        
+        if (!existingComments.isEmpty()) {
+            commentRepository.deleteAll(existingComments);
+        }
+        
+        // Create new team comments
+        for (int i = 0; i < commentTexts.size(); i++) {
+            String commentText = commentTexts.get(i);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                continue;
+            }
+            
+            AssessmentComment comment = new AssessmentComment();
+            comment.setEvaluatorId(student.getId());
+            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+            comment.setEvaluatorName(student.getUsername());
+            comment.setEvaluatedStudent(student);
+            comment.setAssessment(assessment);
+            comment.setCommentText(commentText.trim());
+            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM); // ✅ NEW type
+            comment.setAnonymousIdentifier("You (Team Evaluation)");
+            comment.setCommentIndex(i);
+            comment.setCommentLabel(assessment.getGroupCommentLabel(i));
+            comment.setRubricAssessmentType("Group Assessment"); // ✅ CRITICAL
             
             savedComments.add(commentRepository.save(comment));
         }
@@ -164,18 +228,21 @@ public class AssessmentCommentService {
     
     /**
      * Submit lecturer comment
+     * ✅ UPDATED: Now requires rubricType parameter to set rubricAssessmentType
      */
     @Transactional
     public AssessmentComment submitLecturerComment(Long lecturerId, String lecturerName,
                                                      Student evaluatedStudent, Assessment assessment,
-                                                     String commentText) {
+                                                     String commentText, String rubricType) {
         
         // For lecturers, we maintain backward compatibility with single comment
         List<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 lecturerId,
                 AssessmentComment.EvaluatorType.LECTURER,
                 evaluatedStudent,
-                assessment);
+                assessment).stream()
+                .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
         
         AssessmentComment comment;
         if (!existing.isEmpty()) {
@@ -191,6 +258,7 @@ public class AssessmentCommentService {
             comment.setCommentText(commentText);
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
             comment.setCommentIndex(0);
+            comment.setRubricAssessmentType(rubricType); // ✅ NEW
         }
         
         return commentRepository.save(comment);
@@ -198,18 +266,21 @@ public class AssessmentCommentService {
     
     /**
      * Submit supervisor comment
+     * ✅ UPDATED: Now requires rubricType parameter to set rubricAssessmentType
      */
     @Transactional
     public AssessmentComment submitSupervisorComment(Long supervisorId, String supervisorName,
                                                        Student evaluatedStudent, Assessment assessment,
-                                                       String commentText) {
+                                                       String commentText, String rubricType) {
         
         // For supervisors, we maintain backward compatibility with single comment
         List<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 supervisorId,
                 AssessmentComment.EvaluatorType.SUPERVISOR,
                 evaluatedStudent,
-                assessment);
+                assessment).stream()
+                .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                .collect(Collectors.toList());
         
         AssessmentComment comment;
         if (!existing.isEmpty()) {
@@ -225,6 +296,7 @@ public class AssessmentCommentService {
             comment.setCommentText(commentText);
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
             comment.setCommentIndex(0);
+            comment.setRubricAssessmentType(rubricType); // ✅ NEW
         }
         
         return commentRepository.save(comment);
@@ -254,6 +326,7 @@ public class AssessmentCommentService {
             // Separate into categories
             List<AssessmentComment> selfComments = new ArrayList<>();
             List<AssessmentComment> peerComments = new ArrayList<>();
+            List<AssessmentComment> teamComments = new ArrayList<>();
             List<AssessmentComment> lecturerComments = new ArrayList<>();
             List<AssessmentComment> supervisorComments = new ArrayList<>();
             
@@ -264,6 +337,9 @@ public class AssessmentCommentService {
                         break;
                     case PEER:
                         peerComments.add(comment);
+                        break;
+                    case TEAM:
+                        teamComments.add(comment);
                         break;
                     case LECTURER_EVALUATION:
                         lecturerComments.add(comment);
@@ -276,6 +352,7 @@ public class AssessmentCommentService {
             
             categorized.put("self", selfComments);
             categorized.put("peer", peerComments);
+            categorized.put("team", teamComments);
             categorized.put("lecturer", lecturerComments);
             categorized.put("supervisor", supervisorComments);
             
@@ -301,19 +378,40 @@ public class AssessmentCommentService {
     
     /**
      * Check if student has submitted all required comments for an assessment
+     * ✅ UPDATED: Now checks both Individual and Group comment requirements
      */
     public boolean hasSubmittedAllComments(Student evaluator, Assessment assessment, List<Student> teamMembers) {
-        int requiredCommentCount = assessment.getCommentCount();
+        int requiredIndividualCommentCount = assessment.getIndividualCommentCount();
+        int requiredGroupCommentCount = assessment.getGroupCommentCount();
         
+        // Check individual comments (peer/self)
         for (Student member : teamMembers) {
             List<AssessmentComment> comments = commentRepository.findByEvaluatorAndStudentAndAssessment(
                     evaluator.getId(),
                     AssessmentComment.EvaluatorType.STUDENT,
                     member,
-                    assessment);
+                    assessment).stream()
+                    .filter(c -> c.getRubricAssessmentType() == null || 
+                                 "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                    .collect(Collectors.toList());
             
-            // Check if all required comments are submitted for this team member
-            if (comments.size() < requiredCommentCount) {
+            // Check if all required individual comments are submitted for this team member
+            if (comments.size() < requiredIndividualCommentCount) {
+                return false;
+            }
+        }
+        
+        // Check team comments (group assessment)
+        if (requiredGroupCommentCount > 0) {
+            List<AssessmentComment> teamComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
+                    evaluator.getId(),
+                    AssessmentComment.EvaluatorType.STUDENT,
+                    evaluator,
+                    assessment).stream()
+                    .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                    .collect(Collectors.toList());
+            
+            if (teamComments.size() < requiredGroupCommentCount) {
                 return false;
             }
         }

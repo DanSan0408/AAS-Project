@@ -1,263 +1,63 @@
+/* =======================================================
+    RUBRIC MANAGEMENT - COMPREHENSIVE CSS
+    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+    ======================================================= */
+
+/* ==================== ROOT VARIABLES ==================== */
+:root {
+    /* Primary Palette */
+    --bg-darkest: #152238;
+    --bg-darker: #192841;
+    --bg-mid-tone: #1c2e4a;
+    --bg-light: #203354;
+    --bg-lightest: #23395d;
+    
+    /* Accent Colors */
+    --accent-blue: #3498db;
+    --accent-green: #2ecc71;
+    --accent-orange: #f39c12;
+    --accent-red: #e74c3c;
+    --accent-teal: #1abc9c;
+    --accent-purple: #9b59b6;
+    
+    /* Text Colors */
+    --text-light: #ecf0f1;
+    --text-mid: #bdc3c7;
+    --text-subtle: #95a5a6;
+}
+
+/* ==================== LAYOUT ==================== */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #152238;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--bg-darkest);
     margin: 0;
     padding: 0;
-    display: flex;
-    color: #ecf0f1;
-}
-
-.sidebar {
-    width: 280px;
-    background-color: #192841;
-    padding: 20px;
-    height: 100vh;
-    position: fixed;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-.logo {
-    text-align: center;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #1c2e4a;
-    margin-bottom: 20px;
-}
-
-.logo h2 {
-    margin: 0;
-    color: #ecf0f1;
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.user-profile img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: 2px solid #ecf0f1;
-    margin-right: 15px;
-}
-
-.user-profile span {
-    font-weight: 700;
-}
-
-.menu-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.menu-list a {
-    display: block;
-    padding: 15px 20px;
-    color: #ecf0f1;
-    text-decoration: none;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-}
-
-.menu-list a:hover {
-    background-color: #1c2e4a;
-}
-
-.logout-link {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #e74c3c;
-    text-decoration: none;
-    font-weight: 700;
+    color: var(--text-light);
 }
 
 .main-content {
-    flex-grow: 1;
-    margin-left: 150px;
+    margin-left: 260px;
     padding: 40px;
-    background-color: #152238;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.card {
-    background-color: #192841;
-    padding: 100px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+/* ==================== HEADER ==================== */
+.header {
     width: 100%;
-    max-width: 1200px;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
 }
 
-.card h1 {
-    border-bottom: 2px solid #ecf0f1;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 700;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 15px;
-    border-radius: 5px;
-    border: 1px solid #1c2e4a;
-    background-color: #203354;
-    color: #ecf0f1;
-    box-sizing: border-box;
-    font-size: 20px;
-}
-
-.sub-rubric-card {
-    background-color: #203354;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    border: 1px solid #1c2e4a;
-    position: relative;
-}
-
-.rating-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-/* Button variants */
-.btn {
-    padding: 12px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #fff;
-    cursor: pointer;
-    border: none;
-    font-weight: 700;
-    transition: background-color 0.3s;
-    display: inline-block;
-    margin: 2px;
-    font-size: 16px;
-}
-
-.btn-primary {
-    background-color: #3498db;
-}
-
-.btn-primary:hover {
-    background-color: #2980b9;
-}
-
-.btn-secondary {
-    background-color: #27ae60;
-}
-
-.btn-secondary:hover {
-    background-color: #2ecc71;
-}
-
-.btn-danger {
-    background-color: #e74c3c;
-}
-
-.btn-danger:hover {
-    background-color: #c0392b;
-}
-
-.btn-add {
-    background-color: #16a085;
-}
-
-.btn-add:hover {
-    background-color: #1abc9c;
-}
-
-.btn-edit {
-    background-color: #538b99;
-}
-
-.btn-delete {
-    background-color: #f34312;
-}
-
-.btn-edit:hover {
-    background-color: #f1c40f;
-}
-
-.btn-view {
-    background-color: #3498db;
-}
-
-.btn-view:hover {
-    background-color: #2980b9;
-}
-
-.btn-warning {
-    background-color: #f39c12;
-    color: #212529;
-}
-
-.btn-warning:hover {
-    background-color: #e67e22;
-}
-
-/* Specific styles for rubric-form.html */
-.btn-danger.absolute-top-right {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-}
-
-/* Table styles */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th,
-td {
-    padding: 12px;
-    border-bottom: 1px solid #1c2e4a;
-    text-align: left;
-}
-
-th {
-    background-color: #23395d;
-}
-
-tr:hover {
-    background-color: #1c2e4a;
-}
-
-/* Other shared styles */
 .header-container {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 20px;
-    margin-left: 150px;
 }
 
 .header-container img {
@@ -267,140 +67,437 @@ tr:hover {
 
 .header-container h1 {
     margin: 0;
-    color: #ecf0f1;
+    color: var(--text-light);
+    font-size: 2.5rem;
 }
 
-/* Styles for view-assessment-rubrics.html */
+/* ==================== CARD & CONTAINERS ==================== */
+.card {
+    background-color: var(--bg-darker);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 20px;
+}
+
+.card h1 {
+    color: var(--text-light);
+    border-bottom: 2px solid var(--bg-lightest);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* ==================== FORM ELEMENTS ==================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--text-mid);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 5px;
+    border: 1px solid var(--bg-lightest);
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ==================== SUB-RUBRIC & RATING CARDS ==================== */
+.section-container {
+    border: 2px solid var(--bg-lightest);
+    border-radius: 8px;
+    padding: 25px;
+    margin-top: 30px;
+    background-color: var(--bg-mid-tone);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--bg-lightest);
+    padding-bottom: 15px;
+}
+
+.section-header h2 {
+    margin: 0;
+    color: var(--accent-blue);
+    font-size: 1.6em;
+}
+
+.sub-rubric-card {
+    background-color: var(--bg-light);
+    padding: 25px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 2px solid var(--bg-lightest);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rating-card {
+    background-color: var(--bg-light);
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border: 1px dashed var(--bg-lightest);
+    position: relative;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--accent-red);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+}
+
+/* ==================== MARKS INFO ==================== */
+.sub-rubric-marks-info {
+    background-color: var(--bg-darkest);
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border-left: 4px solid var(--accent-orange);
+    font-size: 0.9em;
+}
+
+.sub-rubric-marks-info p {
+    margin: 5px 0;
+    color: var(--text-mid);
+}
+
+.marks-warning {
+    color: var(--accent-red);
+    font-weight: bold;
+}
+
+.marks-ok {
+    color: var(--accent-green);
+    font-weight: bold;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn {
+    padding: 12px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+    border: none;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2980b9 100%);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, var(--accent-green) 0%, #27ae60 100%);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+}
+
+.btn-add {
+    background: linear-gradient(135deg, var(--accent-teal) 0%, #16a085 100%);
+    box-shadow: 0 4px 10px rgba(26, 188, 156, 0.3);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(26, 188, 156, 0.4);
+}
+
+.btn-edit {
+    background-color: #538b99;
+}
+
+.btn-edit:hover {
+    background-color: var(--accent-orange);
+}
+
+.btn-delete,
+.btn-danger {
+    background-color: var(--accent-red);
+}
+
+.btn-delete:hover,
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-view {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, #2980b9 100%);
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--accent-orange) 0%, #e67e22 100%);
+}
+
+.btn-configure {
+    background-color: var(--accent-purple) !important;
+    color: white !important;
+}
+
+.btn-configure:hover {
+    background-color: #8e44ad !important;
+}
+
+.btn-assign {
+    background-color: var(--accent-orange) !important;
+    color: white !important;
+}
+
+.btn-assign:hover {
+    background-color: #e67e22 !important;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+/* ==================== TABLE STYLES ==================== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: var(--bg-darker);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: var(--bg-lightest);
+    color: white;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--bg-mid-tone);
+}
+
+th {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 13px;
+}
+
+tbody tr {
+    background-color: var(--bg-light);
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--bg-mid-tone);
+}
+
+tbody tr:hover {
+    background-color: var(--bg-lightest);
+}
+
+/* ==================== ACTION BUTTONS IN TABLE ==================== */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+
+/* ==================== ASSESSMENT FORM ==================== */
+#assessment-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 1200px;
+}
+
+#assessment-form input {
+    flex-grow: 1;
+    min-width: 300px;
+    padding: 15px 20px;
+    font-size: 18px;
+    border-radius: 8px;
+    border: 2px solid var(--bg-lightest);
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    transition: all 0.2s ease;
+}
+
+#assessment-form input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
+}
+
+#assessment-form button {
+    padding: 15px 30px;
+    font-size: 18px;
+    white-space: nowrap;
+}
+
+/* ==================== RUBRIC CONTAINERS ==================== */
 .page-header {
     width: 100%;
     max-width: 1200px;
     text-align: center;
-    margin-bottom: 20px;
-    padding: 20px;
-    background-color: #192841;
+    margin: 0 auto 30px;
+    padding: 30px;
+    background-color: var(--bg-darker);
     border-radius: 12px;
+}
+
+.page-header h1 {
+    color: var(--text-light);
+    margin: 0 0 10px 0;
+    font-size: 2.2rem;
+}
+
+.page-header p {
+    color: var(--text-mid);
+    margin: 0;
+}
+
+.assessment-summary {
+    background-color: var(--bg-darker);
+    padding: 25px;
+    border-radius: 12px;
+    margin: 0 auto 30px;
+    border: 2px solid var(--bg-lightest);
+    width: 100%;
+    max-width: 1200px;
 }
 
 .rubric-container {
     width: 100%;
     max-width: 1200px;
-    margin-bottom: 25px;
-    padding: 25px;
-    background-color: #192841;
+    margin: 0 auto 30px;
+    padding: 30px;
+    background-color: var(--bg-darker);
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid var(--bg-lightest);
 }
 
 .rubric-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #1c2e4a;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--bg-lightest);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .rubric-header h2 {
     margin: 0;
+    color: var(--text-light);
 }
 
 .sub-rubric {
-    margin-top: 20px;
-    padding-left: 20px;
-    border-left: 3px solid #16a085;
+    margin-top: 25px;
+    padding-left: 25px;
+    border-left: 4px solid var(--accent-teal);
 }
 
 .sub-rubric h4 {
+    color: var(--text-light);
     margin-top: 0;
 }
 
-.ratings-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.ratings-table th,
-.ratings-table td {
-    text-align: left;
-    padding: 8px;
-    border: 1px solid #1c2e4a;
-}
-
-.ratings-table th {
-    background-color: #23395d;
-}
-
-form.inline {
-    display: inline;
-}
-
-/* Styles for manage-assessment.html */
-#assessment-form {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-
-#assessment-form input {
-    flex-grow: 1;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #1c2e4a;
-    background-color: #203354;
-    color: #ecf0f1;
-}
-
-#assessment-form button {
-    padding: 10px 15px;
-}
-
-.menu-list form button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 15px 20px;
-    color: #ecf0f1;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-    font-size: 17px;
-}
-
-.menu-list form button:hover {
-    background-color: #1c2e4a;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-/* Button container */
-.button-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+/* ==================== RATINGS DISPLAY ==================== */
+.ratings-section {
     margin-top: 20px;
 }
 
-/* Flash messages */
-.flash-message {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 15px 30px;
+.ratings-section h5 {
+    color: var(--accent-orange);
+    border-bottom: 1px solid var(--bg-lightest);
+    padding-bottom: 8px;
+}
+
+.rating-display {
+    padding: 15px;
+    background-color: var(--bg-mid-tone);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--accent-blue);
+}
+
+.rating-display strong {
+    color: var(--accent-blue);
+}
+
+/* ==================== ALERTS & MESSAGES ==================== */
+.flash-message,
+.alert-success,
+.alert-error,
+.alert-warning {
+    padding: 15px 20px;
+    margin-bottom: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    font-weight: bold;
-    text-align: center;
-    z-index: 1000;
+    font-weight: 600;
 }
 
 .alert-success {
@@ -421,17 +518,107 @@ form.inline {
     border: 1px solid #ffeeba;
 }
 
-/* Info text style */
-.info-text {
-    color: #95a5a6;
-    font-style: italic;
-    font-size: 0.9em;
+.btn-confirm-save {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    border-color: #ffc107 !important;
 }
 
-/* Form section header */
+.glow-effect {
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
+    animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
+    100% { box-shadow: 0 0 20px rgba(255, 193, 7, 1); }
+}
+
+/* ==================== INFO TEXT ==================== */
+.info-text {
+    color: var(--text-subtle);
+    font-style: italic;
+    font-size: 0.9em;
+    margin-bottom: 15px;
+}
+
+/* ==================== FORM SECTION HEADERS ==================== */
 .form-section-header {
-    color: #3498db;
-    border-bottom: 1px solid #3498db;
+    color: var(--accent-blue);
+    border-bottom: 2px solid var(--accent-blue);
     padding-bottom: 10px;
-    margin-top: 20px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1000px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .rubric-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .card {
+        padding: 20px;
+    }
+    
+    .section-container {
+        padding: 15px;
+    }
+    
+    .sub-rubric-card,
+    .rating-card {
+        padding: 15px;
+    }
+    
+    .button-container {
+        flex-direction: column-reverse;
+    }
+    
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .header-container h1 {
+        font-size: 1.8rem;
+    }
+    
+    .header-container img {
+        max-width: 150px;
+    }
+}
+
+/* ==================== VIEW RUBRICS PAGE SPECIFIC ==================== */
+.rubric-type-section {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 30px;
+}
+
+.rubric-type-section h2 {
+    color: var(--text-light);
+    border-bottom: 2px solid var(--accent-blue);
+    padding-bottom: 10px;
+    margin-top: 30px;
+}
+
+/* Center add rubric button */
+.add-rubric-center {
+    width: 100%;
+    max-width: 1200px;
+    text-align: center;
+    margin: 40px auto;
 }
