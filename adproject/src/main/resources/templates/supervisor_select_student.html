@@ -197,9 +197,10 @@
                     <div class="context-item">
                         <span class="context-label">Total Students:</span>
                         <span th:text="${students != null ? #lists.size(students) : 0}">0</span>
-                   <div class="context-item">
-                    <span class="context-label">Evaluated:</span>
-                    <span th:text="${students != null and studentEvaluationStatus != null ? #lists.size(students.?[#vars.studentEvaluationStatus.get(#this.id) == true]) : 0}">0</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-label">Evaluated:</span>
+                        <span th:text="${studentEvaluationStatus != null ? studentEvaluationStatus.values().?[#this == true].size() : 0}">0</span>
                     </div>
                 </div>
             </div>
@@ -214,24 +215,25 @@
                 <a th:href="@{/supervisor/evaluate}" class="back-btn" style="display: inline-block; margin-top: 20px;">← Back to Groups</a>
             </div>
             
+            <!-- Students Grid -->
             <div th:if="${students != null and !#lists.isEmpty(students)}" class="students-grid">
-    <div th:each="student : ${students}" class="student-card">
-        <h3 class="student-name" th:text="${student.username}">Student Name</h3>
-        
-        <div th:if="${studentEvaluationStatus[student.id]}" class="status-badge status-evaluated">
-            ✓ Evaluated
-        </div>
-        <div th:unless="${studentEvaluationStatus[student.id]}" class="status-badge status-pending">
-            ⏳ Pending
-        </div>
-        
-        <a th:href="@{/supervisor/evaluate/group/{groupId}/student/{studentId}(groupId=${group.id}, studentId=${student.id})}" 
-            th:class="${studentEvaluationStatus[student.id] ? 'evaluate-btn re-evaluate' : 'evaluate-btn'}">
-            <span th:if="${studentEvaluationStatus[student.id]}">Re-evaluate Student</span>
-            <span th:unless="${studentEvaluationStatus[student.id]}">Evaluate Student</span>
-        </a>
-    </div>
-</div>
+                <div th:each="student : ${students}" class="student-card">
+                    <h3 class="student-name" th:text="${student.username}">Student Name</h3>
+                    
+                    <div th:if="${studentEvaluationStatus[student.id]}" class="status-badge status-evaluated">
+                        ✓ Evaluated
+                    </div>
+                    <div th:unless="${studentEvaluationStatus[student.id]}" class="status-badge status-pending">
+                        ⏳ Pending
+                    </div>
+                    
+                    <a th:href="@{/supervisor/evaluate/group/{groupId}/student/{studentId}(groupId=${group.id}, studentId=${student.id})}" 
+                       th:class="${studentEvaluationStatus[student.id] ? 'evaluate-btn re-evaluate' : 'evaluate-btn'}">
+                        <span th:if="${studentEvaluationStatus[student.id]}">Re-evaluate Student</span>
+                        <span th:unless="${studentEvaluationStatus[student.id]}">Evaluate Student</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </body>

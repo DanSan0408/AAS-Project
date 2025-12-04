@@ -25,6 +25,7 @@ import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
 import com.capstone.adproject.service.RubricService;
@@ -38,14 +39,26 @@ public class LecturerAssessmentController {
     private final LecturerAssessmentService lecturerAssessmentService;
     private final RubricService rubricService;
     private final DeadlineService deadlineService;
+    private final LecturerRepository lecturerRepository;
 
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
             RubricService rubricService,
-            DeadlineService deadlineService) {
+            DeadlineService deadlineService,
+            LecturerRepository lecturerRepository) {
         this.lecturerAssessmentService = lecturerAssessmentService;
         this.rubricService = rubricService;
         this.deadlineService = deadlineService;
+        this.lecturerRepository = lecturerRepository;
+    }
+
+    /**
+     * Helper method to get current lecturer from authentication
+     */
+    private Lecturer getCurrentLecturer(Authentication authentication) {
+        String username = authentication.getName();
+        return lecturerRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Lecturer not found: " + username));
     }
 
     /**
@@ -134,8 +147,6 @@ public class LecturerAssessmentController {
             return "redirect:/lecturer/assessments";
         }
         
-        // Always show selection page if rubrics exist
-        // (Even if only one type - gives clarity to lecturer about what they're evaluating)
         model.addAttribute("assessment", assessment);
         model.addAttribute("hasGroupRubrics", hasGroupRubrics);
         model.addAttribute("hasIndividualRubrics", hasIndividualRubrics);
@@ -155,8 +166,7 @@ public class LecturerAssessmentController {
             RedirectAttributes redirectAttributes) {
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
-        Lecturer lecturer = new Lecturer();
-        lecturer.setId((long) authentication.getName().hashCode());
+        Lecturer lecturer = getCurrentLecturer(authentication);
 
         boolean isGroupAssessment = rubricType.equalsIgnoreCase("Group Assessment");
 
@@ -222,8 +232,7 @@ public class LecturerAssessmentController {
             RedirectAttributes redirectAttributes) {
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
-        Lecturer lecturer = new Lecturer();
-        lecturer.setId((long) authentication.getName().hashCode());
+        Lecturer lecturer = getCurrentLecturer(authentication);
 
         Group selectedGroup = null;
         Student selectedStudent = null;
@@ -292,7 +301,7 @@ public class LecturerAssessmentController {
             studentsToAssess = lecturerAssessmentService.getStudentsByGroup(groupId);
         }
 
-        // ✅ NEW: Fetch existing marks and comments if re-evaluating
+        // Fetch existing marks and comments if re-evaluating
         Map<String, Long> existingMarks = new HashMap<>();
         Map<Integer, String> existingComments = new HashMap<>();
         
@@ -306,7 +315,7 @@ public class LecturerAssessmentController {
                 existingMarks = lecturerAssessmentService.getExistingMarks(
                     assessment, lecturer, sampleStudent, rubricType);
                 existingComments = lecturerAssessmentService.getExistingComments(
-                    assessment, lecturer, sampleStudent);
+                assessment, lecturer, sampleStudent, rubricType);
             }
         }
 
@@ -317,8 +326,8 @@ public class LecturerAssessmentController {
         model.addAttribute("rubricType", rubricType);
         model.addAttribute("assessmentRubrics", assessmentRubrics);
         model.addAttribute("studentsToAssess", studentsToAssess);
-        model.addAttribute("existingMarks", existingMarks);  // ✅ NEW
-        model.addAttribute("existingComments", existingComments);  // ✅ NEW
+        model.addAttribute("existingMarks", existingMarks);
+        model.addAttribute("existingComments", existingComments);
 
         return "lecturer_evaluation_form";
     }
@@ -336,7 +345,7 @@ public class LecturerAssessmentController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
-        Long lecturerId = (long) authentication.getName().hashCode();
+        Lecturer lecturer = getCurrentLecturer(authentication);
 
         try {
             // Extract scores from params (both sub-rubric and direct rubric scores)
@@ -375,10 +384,11 @@ public class LecturerAssessmentController {
             Long targetId = groupId != null ? groupId : studentId;
             boolean isGroupTarget = groupId != null;
 
-            // Save the evaluation
+            // Save the evaluation - pass lecturer object with username
             lecturerAssessmentService.saveEvaluationScores(
                 assessmentId, 
-                lecturerId, 
+                lecturer.getId(),
+                lecturer.getUsername(),  // ✅ PASS LECTURER NAME
                 targetId, 
                 isGroupTarget,
                 rubricType,

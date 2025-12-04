@@ -409,53 +409,59 @@ public class AdminController {
     }
 
     @PostMapping("/group-assignment/randomize/preview")
-    public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
-                                        Model model,
-                                        RedirectAttributes redirectAttributes) {
+public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
+                                    Model model,
+                                    RedirectAttributes redirectAttributes) {
 
-        int maxStudents = randomizationInput.getMaxStudentsPerGroup();
-        long availableStudentsCount = adminService.getAvailableStudentsCount(); 
+    int maxStudents = randomizationInput.getMaxStudentsPerGroup();
+    long availableStudentsCount = adminService.getAvailableStudentsCount(); 
 
-        if (maxStudents < 1) {
-            redirectAttributes.addFlashAttribute("error", "Cannot randomize: the max group size is invalid.");
-            return "redirect:/admin/group-assignment"; 
-        }
-        
-        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
-        
-        if (unassignedStudents.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "No students are currently unassigned.");
-            return "redirect:/admin/group-assignment"; 
-        }
-        
-        Collections.shuffle(unassignedStudents);
-        
-        int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
-        
-        GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
-        singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
-        
-        List<Long> studentIds = unassignedStudents.subList(0, actualGroupSize).stream()
-            .map(Student::getId)
-            .collect(Collectors.toList());
-            
-        singleRandomGroup.setSelectedStudentIds(studentIds);
-
-        Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
-            .collect(Collectors.toMap(Student::getId, Function.identity()));
-        
-        model.addAttribute("randomGroupPreview", singleRandomGroup); 
-        model.addAttribute("availableStudentsCount", availableStudentsCount);
-        model.addAttribute("maxStudentsPerGroup", maxStudents);
-        model.addAttribute("actualGroupSize", actualGroupSize);
-        model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
-        model.addAttribute("studentLookupMap", studentLookupMap); 
-        model.addAttribute("availableStudentsForAdd", unassignedStudents); 
-        model.addAttribute("availableLecturers", adminService.getAllLecturers());
-        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
-        
-        return "group_assignment_preview"; 
+    if (maxStudents < 1) {
+        redirectAttributes.addFlashAttribute("error", "Cannot randomize: the max group size is invalid.");
+        return "redirect:/admin/group-assignment"; 
     }
+    
+    List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
+    
+    if (unassignedStudents.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", "No students are currently unassigned.");
+        return "redirect:/admin/group-assignment"; 
+    }
+    
+    Collections.shuffle(unassignedStudents);
+    
+    int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
+    
+    GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
+    singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
+    
+    List<Long> studentIds = unassignedStudents.subList(0, actualGroupSize).stream()
+        .map(Student::getId)
+        .collect(Collectors.toList());
+        
+    singleRandomGroup.setSelectedStudentIds(studentIds);
+
+    Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
+        .collect(Collectors.toMap(Student::getId, Function.identity()));
+    
+    // Add the comma-separated string for easier template processing
+    String selectedStudentIdsStr = studentIds.stream()
+        .map(String::valueOf)
+        .collect(Collectors.joining(","));
+    
+    model.addAttribute("randomGroupPreview", singleRandomGroup); 
+    model.addAttribute("selectedStudentIdsStr", selectedStudentIdsStr);  // NEW
+    model.addAttribute("availableStudentsCount", availableStudentsCount);
+    model.addAttribute("maxStudentsPerGroup", maxStudents);
+    model.addAttribute("actualGroupSize", actualGroupSize);
+    model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
+    model.addAttribute("studentLookupMap", studentLookupMap); 
+    model.addAttribute("availableStudentsForAdd", unassignedStudents); 
+    model.addAttribute("availableLecturers", adminService.getAllLecturers());
+    model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
+    
+    return "group_assignment_preview"; 
+}
     
     @PostMapping("/group-assignment/randomize/create") 
     public String createRandomGroups(

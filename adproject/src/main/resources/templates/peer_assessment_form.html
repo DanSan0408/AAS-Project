@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Peer Assessment Form</title>
+    <title>Assessment Form</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/peer_assess.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -15,7 +15,8 @@
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1 th:text="${isSelfAssessment ? 'Self Assessment' : 'Peer Assessment'}">Assessment</h1>
+                <!-- ✅ UPDATED: Dynamic title based on evaluation type -->
+                <h1 th:text="${isTeamEvaluation != null and isTeamEvaluation ? 'Team Evaluation' : (isSelfAssessment ? 'Self Assessment' : 'Peer Assessment')}">Assessment</h1>
             </div>
         </div>
         
@@ -28,10 +29,16 @@
                         <span class="label">Evaluator:</span>
                         <strong th:text="${evaluator.username}">Your Name</strong>
                     </div>
+                    <!-- ✅ UPDATED: Dynamic evaluating target -->
                     <div class="evaluated-info">
                         <span class="label">Evaluating:</span>
-                        <strong th:text="${evaluatedStudent.username}">Student Name</strong>
+                        <strong th:if="${isTeamEvaluation != null and isTeamEvaluation}">Your Team</strong>
+                        <strong th:unless="${isTeamEvaluation != null and isTeamEvaluation}" 
+                                th:text="${evaluatedStudent.username}">Student Name</strong>
                         <span th:if="${isSelfAssessment}" class="self-badge">(Yourself)</span>
+                        <span th:if="${isTeamEvaluation != null and isTeamEvaluation}" 
+                              class="self-badge" 
+                              style="background: #9b59b6;">(Group Assessment)</span>
                     </div>
                 </div>
             </div>
@@ -43,11 +50,16 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     <div>
                         <h4>⚠️ Re-evaluation Notice</h4>
-                        <p>
+                        <p th:if="${isTeamEvaluation == null or !isTeamEvaluation}">
                             You have already submitted an evaluation for 
                             <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.username}">this student</strong>.
                             Your previous responses have been loaded below. If you submit again, 
                             <strong>your new evaluation will replace the existing one.</strong>
+                        </p>
+                        <p th:if="${isTeamEvaluation != null and isTeamEvaluation}">
+                            You have already submitted a team evaluation. 
+                            Your previous responses have been loaded below. If you submit again, 
+                            <strong>your new evaluation will replace the existing one for all group members.</strong>
                         </p>
                     </div>
                 </div>
@@ -66,8 +78,11 @@
             </div>
 
             <!-- ⭐ FORM STARTS HERE -->
+            <!-- ✅ UPDATED: Dynamic form action based on evaluation type -->
             <form id="assessmentForm" 
-                  th:action="@{/student/assessment/{assessmentId}/evaluate/{studentId}/submit(assessmentId=${assessment.id}, studentId=${evaluatedStudent.id})}" 
+                  th:action="${isTeamEvaluation != null and isTeamEvaluation ? 
+                               '/student/assessment/' + assessment.id + '/team-evaluate/submit' : 
+                               '/student/assessment/' + assessment.id + '/evaluate/' + evaluatedStudent.id + '/submit'}" 
                   method="post" 
                   class="assessment-form">
                 
@@ -85,7 +100,10 @@
                                 <h3>
                                     <span th:text="${rubricIterStat.count}">1</span>. 
                                     <span th:text="${rubric.name}">Rubric Name</span>
-                                    <span class="assessment-type-badge" style="margin-left: 10px; background: #3498db; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;">
+                                    <span class="assessment-type-badge" 
+                                          th:style="${rubric.assessmentTypes != null and rubric.assessmentTypes.toLowerCase().contains('group') ? 
+                                                     'margin-left: 10px; background: #9b59b6; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;' : 
+                                                     'margin-left: 10px; background: #3498db; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;'}">
                                         <span th:text="${rubric.assessmentTypes}">Individual Assessment</span>
                                     </span>
                                 </h3>
@@ -195,59 +213,90 @@
                     </div>
                 </div>
 
-                <!-- ⭐⭐⭐ MULTIPLE COMMENTS SECTION - DYNAMIC BASED ON ASSESSMENT CONFIG ⭐⭐⭐ -->
-                <div class="comments-container">
-                    <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-                        <i class="fas fa-comments"></i> 
-                        Feedback Comments
-                        <span class="required-indicator">*</span>
-                    </h3>
+                <!-- ⭐⭐⭐ MULTIPLE COMMENTS SECTION - FIXED WITH PROPER NULL HANDLING ⭐⭐⭐ -->
+                <!-- ✅ FIXED: Determine which comment configuration to use -->
+                <div th:with="isTeam=${isTeamEvaluation != null and isTeamEvaluation},
+                              commentCount=${isTeam ? assessment.groupCommentCount : assessment.individualCommentCount},
+                              minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
+                              commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
+                              hasComments=${commentCount != null and commentCount > 0}">
                     
-                    <!-- Instruction Text -->
-                    <div style="background: #34495e; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-                        <p style="color: #ecf0f1; margin-bottom: 10px;">
-                            <i class="fas fa-info-circle" style="color: #3498db;"></i>
-                            <strong>Instructions:</strong>
-                        </p>
-                        <ul style="color: #ecf0f1; margin-left: 20px; line-height: 1.6;">
-                            <li>You must fill out <strong th:text="${assessment.commentCount}">1</strong> comment field(s)</li>
-                            <li>Each comment must be at least <strong th:text="${assessment.commentMinLength}">20</strong> characters</li>
-                            <li th:if="${assessment.commentsAnonymous}">Your comments will appear <strong>anonymously</strong> as "Teammate X"</li>
-                            <li th:unless="${assessment.commentsAnonymous}">Your comments will show <strong>your name</strong></li>
-                        </ul>
-                    </div>
-                    
-                    <!-- Dynamic Comment Fields -->
-                    <div th:each="i : ${#numbers.sequence(0, assessment.commentCount - 1)}" class="comment-field-container">
-                        <div class="comment-field-header">
-                            <h4 th:text="${assessment.getCommentLabel(i)}">Comment Label</h4>
-                            <span class="char-counter" th:id="'charCount_' + ${i}">0 / <span th:text="${assessment.commentMinLength}">20</span> chars</span>
+                    <!-- Only show comments section if comments are configured -->
+                    <div th:if="${hasComments}" class="comments-container">
+                        <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                            <i class="fas fa-comments"></i> 
+                            Feedback Comments
+                            <span class="required-indicator">*</span>
+                        </h3>
+                        
+                        <!-- Instruction Text -->
+                        <div style="background: #34495e; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                            <p style="color: #ecf0f1; margin-bottom: 10px;">
+                                <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                                <strong>Instructions:</strong>
+                            </p>
+                            <ul style="color: #ecf0f1; margin-left: 20px; line-height: 1.6;">
+                                <li>You must fill out <strong><span th:text="${commentCount}">1</span></strong> comment field(s)</li>
+                                <li>Each comment must be at least <strong><span th:text="${minLength}">20</span></strong> characters</li>
+                                <li th:if="${commentsAnonymous}">Your comments will appear <strong>anonymously</strong></li>
+                                <li th:unless="${commentsAnonymous}">Your comments will show <strong>your name</strong></li>
+                            </ul>
                         </div>
                         
-                        <textarea th:name="'comment_' + ${i}" 
-                                  th:id="'comment_' + ${i}"
-                                  th:placeholder="${'Write your ' + assessment.getCommentLabel(i).toLowerCase() + ' here...'}"
-                                  th:data-min-length="${assessment.commentMinLength}"
-                                  th:data-index="${i}"
-                                  class="comment-textarea"
-                                  required
-                                  th:attr="minlength=${assessment.commentMinLength}">[[${existingComments != null and i < existingComments.size() ? existingComments.get(i).commentText : ''}]]</textarea>
+                        <!-- Dynamic Comment Fields -->
+                        <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}">
+                            <!-- Get the label for this comment -->
+                            <div th:with="commentLabel=${isTeam ? assessment.getGroupCommentLabel(i) : assessment.getIndividualCommentLabel(i)},
+                                          existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
+                                
+                                <div class="comment-field-container">
+                                    <div class="comment-field-header">
+                                        <h4 th:text="${commentLabel}">Comment Question</h4>
+                                        <span class="char-counter" th:id="'charCount_' + ${i}">
+                                            <span th:text="${existingComment != null ? #strings.length(existingComment.commentText) : 0}">0</span> / 
+                                            <span th:text="${minLength}">20</span> chars
+                                        </span>
+                                    </div>
+                                    
+                                    <textarea th:name="'comment_' + ${i}" 
+                                              th:id="'comment_' + ${i}"
+                                              th:placeholder="'Write your ' + ${#strings.toLowerCase(commentLabel)} + ' here...'"
+                                              th:attr="data-min-length=${minLength}, data-index=${i}"
+                                              class="comment-textarea"
+                                              required
+                                              th:minlength="${minLength}"
+                                              th:text="${existingComment != null ? existingComment.commentText : ''}">
+                                    </textarea>
+                                    
+                                    <div class="comment-validation" 
+                                         th:id="'validation_' + ${i}" 
+                                         style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <span>Minimum length not met (<span th:text="${minLength}">20</span> characters required)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <div class="comment-validation" th:id="'validation_' + ${i}" style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <span>Minimum length not met</span>
+                        <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #1a252f; border-radius: 4px; border-left: 3px solid #f39c12;">
+                            <i class="fas fa-lightbulb" style="color: #f39c12;"></i>
+                            <strong>Tip:</strong> 
+                            <span th:if="${isTeam}">
+                                Reflect on your team's overall collaboration, communication, and effectiveness!
+                            </span>
+                            <span th:if="${!isTeam and isSelfAssessment}">
+                                Be honest about your strengths and areas for growth. Self-reflection helps you improve!
+                            </span>
+                            <span th:if="${!isTeam and !isSelfAssessment}">
+                                Be constructive and specific. Good feedback helps your teammates grow!
+                            </span>
                         </div>
                     </div>
                     
-                    <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #1a252f; border-radius: 4px; border-left: 3px solid #f39c12;">
-                        <i class="fas fa-lightbulb" style="color: #f39c12;"></i>
-                        <strong>Tip:</strong> 
-                        <span th:if="${isSelfAssessment}">
-                            Be honest about your strengths and areas for growth. Self-reflection helps you improve!
-                        </span>
-                        <span th:unless="${isSelfAssessment}">
-                            Be constructive and specific. Good feedback helps your teammates grow!
-                        </span>
+                    <!-- Show message if no comments configured -->
+                    <div th:unless="${hasComments}" class="comments-container" style="text-align: center; padding: 30px;">
+                        <i class="fas fa-info-circle" style="font-size: 2em; color: #95a5a6;"></i>
+                        <p style="color: #95a5a6; margin-top: 15px;">No comments are required for this evaluation.</p>
                     </div>
                 </div>
 
@@ -271,9 +320,12 @@
                 <h3 class="modal-title">Confirm Re-evaluation</h3>
             </div>
             <div class="modal-body">
-                <p>
+                <p th:if="${isTeamEvaluation == null or !isTeamEvaluation}">
                     You have already submitted an evaluation for 
                     <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.username}">this student</strong>.
+                </p>
+                <p th:if="${isTeamEvaluation != null and isTeamEvaluation}">
+                    You have already submitted a team evaluation. This will apply to all group members.
                 </p>
                 <p>
                     <strong>Are you sure you want to re-evaluate?</strong>
@@ -293,29 +345,34 @@
         </div>
     </div>
     
+    <!-- ✅ SIMPLIFIED JAVASCRIPT - Comment fields are now server-rendered -->
     <script th:inline="javascript">
         const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
+        const isTeamEval = /*[[${isTeamEvaluation}]]*/ false;
+        
         const form = document.getElementById('assessmentForm');
         const submitBtn = document.getElementById('submitBtn');
         const modal = document.getElementById('confirmModal');
         const modalCancel = document.getElementById('modalCancel');
         const modalConfirm = document.getElementById('modalConfirm');
-        const commentCount = /*[[${assessment.commentCount}]]*/ 1;
-        const minLength = /*[[${assessment.commentMinLength}]]*/ 20;
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup character counters and validation for each comment field
-            for (let i = 0; i < commentCount; i++) {
-                const textarea = document.getElementById('comment_' + i);
-                const charCount = document.getElementById('charCount_' + i);
-                const validation = document.getElementById('validation_' + i);
+            // Setup character counters and validation for all comment textareas
+            const commentTextareas = document.querySelectorAll('.comment-textarea');
+            
+            commentTextareas.forEach(function(textarea) {
+                const index = textarea.getAttribute('data-index');
+                const minLength = parseInt(textarea.getAttribute('data-min-length'));
+                const charCount = document.getElementById('charCount_' + index);
+                const validation = document.getElementById('validation_' + index);
                 
-                if (!textarea) continue;
+                if (!charCount || !validation) return;
                 
-                // Update character count
+                // Update character count on input
                 textarea.addEventListener('input', function() {
                     const length = this.value.length;
-                    charCount.textContent = length + ' / ' + minLength + ' chars';
+                    const currentSpan = charCount.querySelector('span:first-child') || charCount;
+                    currentSpan.textContent = length;
                     
                     if (length < minLength) {
                         charCount.style.color = '#e74c3c';
@@ -330,7 +387,7 @@
                 
                 // Trigger initial update
                 textarea.dispatchEvent(new Event('input'));
-            }
+            });
             
             // Submit button click handler
             submitBtn.addEventListener('click', function(e) {
@@ -338,17 +395,19 @@
                 
                 // Validate all comment fields
                 let allValid = true;
-                for (let i = 0; i < commentCount; i++) {
-                    const textarea = document.getElementById('comment_' + i);
-                    if (textarea && textarea.value.length < minLength) {
-                        allValid = false;
-                        textarea.focus();
-                        break;
-                    }
-                }
+                let firstInvalid = null;
                 
-                if (!allValid) {
-                    alert('Please ensure all comments meet the minimum length requirement of ' + minLength + ' characters.');
+                commentTextareas.forEach(function(textarea) {
+                    const minLength = parseInt(textarea.getAttribute('data-min-length'));
+                    if (textarea.value.length < minLength) {
+                        allValid = false;
+                        if (!firstInvalid) firstInvalid = textarea;
+                    }
+                });
+                
+                if (!allValid && firstInvalid) {
+                    alert('Please ensure all comments meet the minimum length requirement.');
+                    firstInvalid.focus();
                     return;
                 }
                 

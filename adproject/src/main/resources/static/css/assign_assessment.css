@@ -1,78 +1,107 @@
 /* ==========================================================
- * ASSIGN ASSESSMENT PAGE STYLES
+ * ASSIGN ASSESSMENT PAGE STYLES (DARK THEME)
  * Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
  * ========================================================== */
 
 /* Define variables for the dark palette and common colors */
 :root {
-    --primary-blue: #3498db;
-    --accent-red: #e74c3c;
-    --text-light: #ecf0f1;
-    --text-mid: #bdc3c7;
+    --primary-blue: #3498db; /* Action Blue */
+    --accent-red: #e74c3c; /* Error/Deadline Red */
+    --accent-grey: #7f8c8d; /* Cancel/Neutral Grey */
+    --text-light: #ecf0f1; /* White-ish text for headings/labels */
+    --text-mid: #bdc3c7; /* Mid-tone text for helper/body */
     
-    /* Dark Theme Colors */
-    --darkest-bg: #152238; 
-    --darker-bg: #192841; 
-    --mid-tone-bg: #1c2e4a; 
-    --deep-mid-tone: #203354; 
-    --deepest-mid-tone: #23395d; 
+    /* Dark Theme Colors (Blues) */
+    --darkest-bg: #152238; /* Body/Input BG */
+    --darker-bg: #192841; /* Card BG */
+    --mid-tone-bg: #1c2e4a; /* Border/HR/Subtle Accent */
+    --deep-mid-tone: #203354; /* Form Container BG */
+    --deepest-mid-tone: #23395d; /* Primary Accent/Strongest Contrast */
 }
 
-/* --- Layout and Card Overrides --- */
 
-/* The outer card container (max-width: 800px set inline in HTML, but styled here) */
+/* --- Layout and Card Overrides --- */
+.header {
+    padding-top : 30px;
+}
+
+.main-content {
+    /* Restore top padding now that the header is gone */
+    padding: 20px; 
+}
+
+/* Clear any complex centering attempts on the parent */
+.head {
+    /* Ensure no flexbox or specific width properties interfere */
+    display: block; 
+    width: auto;
+    margin: 0;
+    padding: 0;
+}
+
 .head .card {
-    /* CARD BG: #34495e -> #192841 (Darker) */
     background-color: var(--darker-bg); 
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     color: var(--text-light);
+    
+    max-width: 800px;
+    
+    /* Keep the centering mechanism to find the middle point */
+    margin: 0 auto 0 250px !important; 
+    
+    width: 100%; 
+    box-sizing: border-box; 
+    padding-top: 30px; 
 }
 
 .card-header h1 {
-    /* CARD HEADER TEXT: #3498db -> #23395d (Deepest Mid-tone) */
     color: var(--text-light);
     border-bottom: 2px solid var(--deepest-mid-tone);
     padding-bottom: 10px;
     margin-bottom: 25px;
     font-size: 2rem;
     text-align: left;
+    font-weight: 500;
+}
+
+.card-header h1 span {
+    color: var(--primary-blue);
+    font-weight: 600;
 }
 
 /* --- Form Container --- */
 
 .add-form-container {
-    /* FORM BG: #192841 -> #203354 (Deep Mid-tone) for contrast inside the card */
     background-color: var(--deep-mid-tone);
     padding: 25px;
     border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 /* --- Labels, Inputs, and Selects --- */
 
 .form-group label {
-    font-weight: bold;
-    color: var(--text-light); /* Make labels bright */
+    font-weight: 600;
+    color: var(--text-light);
     margin-bottom: 8px;
     display: block;
+    font-size: 1.05em;
 }
 
 .form-group input[type="text"],
 .form-group input[type="date"],
 .form-group select {
     width: 100%;
-    padding: 10px;
-    /* Border: #34495e -> #1c2e4a (Mid-tone) */
+    padding: 10px 15px;
     border: 1px solid var(--mid-tone-bg); 
     border-radius: 5px;
-    /* INPUT BG: #34495e -> #192841 (Darker) */
-    background-color: var(--darker-bg); 
+    background-color: var(--darkest-bg); /* Use darkest background for input fields */
     color: var(--text-light);
     box-sizing: border-box;
     font-size: 1em;
@@ -80,101 +109,159 @@
 
 .form-group input:focus,
 .form-group select:focus {
-    outline: none;
+    outline: 2px solid var(--primary-blue);
     border-color: var(--primary-blue);
 }
 
 /* Small helper text style */
 .form-group small {
-    /* Inherit style from previous components for consistency */
     color: var(--text-mid); 
 }
 
 /* Specific red text for the deadline warning */
-.form-group small[style*="e74c3c"] {
-    color: var(--accent-red) !important;
-    font-weight: bold;
+.form-group small:last-child {
+    /* Target the small tag containing the deadline warning text */
+    color: var(--accent-red); 
+    font-weight: 600;
 }
 
 /* Horizontal Rule style */
 hr {
-    /* Border color: #34495e -> #1c2e4a (Mid-tone) */
-    border-color: var(--mid-tone-bg) !important;
-    margin: 25px 0;
+    border: none;
+    border-top: 1px solid var(--mid-tone-bg);
+    margin: 30px 0;
 }
 
-/* --- Radio Group and Checkboxes --- */
+/* --- Radio Group (Open Type) --- */
+
+/* --- Radio Group (Open Type) --- */
 
 .radio-group {
-    /* Ensure radio buttons are visible and labels are aligned */
     display: flex;
     align-items: center;
-    margin-top: 5px;
+    margin-top: 8px;
+    cursor: pointer; /* Makes the entire area clickable */
 }
 
+/* Hide the native radio button */
 .radio-group input[type="radio"] {
-    /* Use accent color for radio buttons */
-    accent-color: var(--primary-blue); 
-    width: auto;
-    height: auto;
-    margin-right: 8px;
-    /* Reset background and border for radio buttons */
-    background-color: transparent;
-    border: none;
-    padding: 0;
+    position: absolute; /* Take it out of flow */
+    opacity: 0; /* Hide it visually */
+    pointer-events: none; /* Ensure it doesn't interfere with clicks on the label */
+    width: 0;
+    height: 0;
 }
 
 .radio-group label {
-    font-weight: normal; 
-    color: var(--text-light);
-    display: inline;
+    /* Base label styles */
+    font-weight: 400;
+    color: var(--text-mid);
+    display: inline-flex; /* Use flex to align the custom indicator with the text */
+    align-items: center;
     margin-bottom: 0;
+    cursor: pointer;
+    padding-left: 25px; /* Add padding for the custom indicator space */
+    position: relative; /* Establish context for the indicator */
+    transition: color 0.2s;
+}
+
+/* 1. The custom outer circle (the radio button itself) */
+.radio-group label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--text-mid); /* Subtle grey border when unchecked */
+    border-radius: 50%;
+    background-color: var(--darkest-bg); /* Dark fill */
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+/* 2. The custom inner dot (the checked state indicator) */
+.radio-group label::after {
+    content: '';
+    position: absolute;
+    left: 5px; /* Center the dot inside the 16px circle */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-blue); /* Blue dot */
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.2s;
+}
+
+/* CHECKED STATE: Apply styles when the input is checked */
+.radio-group input[type="radio"]:checked + label::before {
+    border-color: var(--primary-blue); /* Blue border when checked */
+}
+
+.radio-group input[type="radio"]:checked + label::after {
+    opacity: 1; /* Show the blue dot */
+}
+
+/* HOVER STATE: Enhanced focus/hover effect */
+.radio-group label:hover::before {
+    border-color: var(--primary-blue);
+}
+
+.radio-group input[type="radio"]:checked + label {
+    color: var(--text-light); /* Make the text brighter when selected */
 }
 
 /* --- Buttons --- */
 
 .save-deadlines-button {
     padding: 12px;
-    /* Button BG: #3498db (Primary Blue) */
-    background-color: var(--primary-blue) !important;
+    background-color: var(--primary-blue);
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 1.1em;
+    font-weight: 600;
     width: 100%;
     box-sizing: border-box;
     transition: background-color 0.3s;
+    margin-top: 20px; /* Use the CSS margin */
 }
 
 .save-deadlines-button:hover {
-    background-color: #2980b9 !important; /* Darker blue on hover */
+    background-color: var(--deepest-mid-tone); 
 }
 
-/* Cancel Button Link (uses .action-button class from style.css) */
+/* Cancel Button Link */
 .action-button {
-    /* Inherit general action button styles but ensure block display */
-    background-color: #7f8c8d; /* Grey for Cancel */
+    /* Using primary-dark for the cancel button */
+    background-color: var(--accent-grey); 
     color: white;
     padding: 12px 15px;
-    border-radius: 5px;
+    border-radius: 6px;
     font-size: 1.1em;
     text-decoration: none;
     transition: background-color 0.3s;
+    width: 100%;
+    box-sizing: border-box;
+    display: block; 
+    text-align: center;
+    margin-top: 10px; /* Use the CSS margin */
 }
 
 .action-button:hover {
-    background-color: #6c7a7e;
+    background-color: #5d6d7e;
 }
 
 /* --- Alert Message --- */
 .alert-danger {
-    /* Use standard alert styles, ensure visibility */
-    background-color: #c0392b;
-    color: white;
-    border: 1px solid var(--accent-red);
+    background-color: var(--accent-red);
+    color: var(--text-light);
+    border: 1px solid #c0392b;
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
-    font-weight: bold;
+    font-weight: 600;
 }

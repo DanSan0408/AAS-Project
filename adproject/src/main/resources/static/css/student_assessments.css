@@ -123,12 +123,339 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
+/* ✅ NEW: Evaluation grid styling with proper ordering */
+.evaluation-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.evaluation-grid h4 {
+    color: var(--text-primary);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+/* ✅ NEW: Control visual order of evaluation cards */
+.evaluation-card {
+    width: 95%;
+    background: var(--bg-darker);
+    border-radius: 8px;
+    padding: 15px;
+    border: 2px solid var(--bg-light-gray);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.evaluation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ✅ CRITICAL: Set visual order for evaluation cards */
+.evaluation-card.self-assessment {
+    order: 1; /* Self Assessment appears FIRST */
+    border-color: #f39c12;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.05));
+    margin-right:50px;
+}
+
+.evaluation-card.team-assessment {
+    order: 2; /* Team Evaluation appears SECOND (below Self Assessment) */
+    border-color: #9b59b6;
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.05));
+}
+
+.evaluation-card.peer-assessment {
+    order: 3; /* Peer Assessments appear THIRD (last) */
+    border-color: #3498db;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1), rgba(52, 152, 219, 0.05));
+}
+
+/* ✅ Evaluation card header styling */
+.evaluation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--bg-light-gray);
+}
+
+.evaluation-header h5 {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+/* ✅ Assessment type badges */
+.assessment-type-badge {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.assessment-type-badge.self {
+    background: #f39c12;
+    color: #fff;
+}
+
+.assessment-type-badge.peer {
+    background: #3498db;
+    color: #fff;
+}
+
+.assessment-type-badge.team {
+    background: #9b59b6;
+    color: #fff;
+}
+
+/* ✅ Evaluation body styling */
+.evaluation-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.evaluation-body p {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin: 0 0 10px 0;
+    line-height: 1.5;
+}
+
+/* ✅ Member evaluation row */
+.member-eval {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: var(--bg-mid-tone);
+    border-radius: 6px;
+    gap: 15px;
+}
+
+.member-eval .member-name {
+    color: var(--text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.member-eval .member-name i {
+    color: var(--icon);
+}
+
+/* ✅ Evaluate buttons styling */
+.btn-evaluate {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9em;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-evaluate i {
+    font-size: 0.9em;
+}
+
+/* Self assessment button */
+.btn-evaluate.btn-self {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: #fff;
+}
+
+.btn-evaluate.btn-self:hover {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(230, 126, 34, 0.3);
+}
+
+/* Peer assessment button */
+.btn-evaluate.btn-peer {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: #fff;
+}
+
+.btn-evaluate.btn-peer:hover {
+    background: linear-gradient(135deg, #2980b9, #1f618d);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3);
+}
+
+/* Team evaluation button (for full-width button) */
+.btn-evaluate[href*="team-evaluate"] {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: #fff;
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 1em;
+}
+
+.btn-evaluate[href*="team-evaluate"]:hover {
+    background: linear-gradient(135deg, #8e44ad, #732d91);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(142, 68, 173, 0.3);
+}
+
 /* 🔹 Responsive layout */
 @media (max-width: 900px) {
     .content-container {
         padding: 20px;
     }
+    
     .member-card {
         flex: 1 1 100%;
     }
+    
+    .member-eval {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .btn-evaluate {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ✅ Additional utility styles */
+.no-assessments {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-mute);
+}
+
+.no-assessments i {
+    font-size: 3em;
+    color: var(--text-mute);
+    margin-bottom: 15px;
+}
+
+.no-assessments p {
+    margin: 10px 0;
+    color: var(--text-secondary);
+}
+
+/* Assessment title styling */
+.assessment-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.assessment-title h3 {
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.assessment-title h3 i {
+    color: var(--icon);
+}
+
+.marks-badge {
+    background: var(--bg-darker);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    border: 1px solid var(--bg-light-gray);
+}
+
+.marks-badge strong {
+    color: #2ecc71;
+    font-size: 1.1em;
+}
+
+/* Deadline info styling */
+.deadline-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: var(--bg-darker);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid var(--bg-light-gray);
+}
+
+.deadline-info i {
+    font-size: 1.5em;
+    color: var(--icon);
+}
+
+.deadline-details {
+    flex: 1;
+}
+
+.deadline-details p {
+    margin: 5px 0;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+}
+
+.deadline-details strong {
+    color: var(--text-primary);
+}
+
+.deadline-status {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85em;
+    text-transform: uppercase;
+}
+
+.deadline-status.status-open {
+    background: #2ecc71;
+    color: #fff;
+}
+
+.deadline-status i {
+    margin-right: 5px;
+}
+
+/* Alert messages */
+.alert {
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert i {
+    font-size: 1.2em;
+}
+
+.alert-danger {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+}
+
+.alert-success {
+    background: rgba(46, 204, 113, 0.1);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
 }

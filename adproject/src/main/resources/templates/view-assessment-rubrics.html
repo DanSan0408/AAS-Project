@@ -3,34 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title th:text="${assessment.title} + ' Rubrics'">View Rubrics</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/rubric.css}">
-    <style>
-        .main-content { font-size: 1.1em; }
-        .page-header h1 { font-size: 2.2em; }
-        .rubric-container h2 { font-size: 1.8em; }
-        h2 { font-size: 1.5em !important; }
-        table th, table td, .rubric-header strong, .rubric-header p, .sub-rubric h4, .sub-rubric p, .rating-display strong, .rating-display span { font-size: 1.1em; }
-        .btn { padding: 15px 25px !important; font-size: 17px !important; }
-        .rubric-container { padding: 30px; margin-bottom: 35px; background-color: #34495e; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-        
-        .assessment-summary { margin-top: 20px; margin-bottom: 40px; padding: 30px; background-color: #2c3e50; border-radius: 12px; max-width: 1200px; color: #ecf0f1; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); border: 2px solid #3498db; text-align: left; }
-        
-        .ratings-section { margin-top: 15px; border: 1px solid #4a6681; border-radius: 6px; padding: 15px; background-color: #2c3e50; }
-        .ratings-section h5 { color: #3498db; font-size: 1.2em; margin-top: 0; margin-bottom: 10px; border-bottom: 1px dotted #3498db; padding-bottom: 5px; }
-        .rating-display { 
-            padding: 10px; 
-            margin: 8px 0;
-            background-color: #1a252f;
-            border-radius: 4px;
-            border-left: 3px solid #f39c12;
-        }
-        .rating-display strong { color: #f39c12; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
+
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
+            </div>
+        </div>
+        
         <div class="page-header">
             <h1 th:text="${assessment.title}">Assessment Title</h1>
             <p>Below are all the rubrics associated with this assessment.</p>
@@ -57,57 +45,114 @@
             </div>
         </div>
         
-        <!-- Comment Configuration Section -->
-        <div class="assessment-summary" th:if="${assessment.commentCount != null and assessment.commentCount > 0}">
-            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">Comment Configuration</h3>
+        <!-- ✅ UPDATED: Comment Configuration Section - Now shows both Group and Individual -->
+        <div class="assessment-summary" th:if="${(assessment.groupCommentCount != null and assessment.groupCommentCount > 0) or (assessment.individualCommentCount != null and assessment.individualCommentCount > 0)}">
+            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">
+                <i class="fas fa-comments"></i> Comment Configuration
+            </h3>
             
-            <p style="margin-bottom: 15px;">
-                <strong>Total Comment Questions: </strong>
-                <span th:text="${assessment.commentCount}" style="color: #f39c12; font-weight: bold;">0</span>
-            </p>
-            
-            <p style="margin-bottom: 15px;">
-                <strong>Minimum Length: </strong>
-                <span th:text="${assessment.commentMinLength}" style="color: #ecf0f1;">20</span>
-                <span style="color: #95a5a6;"> characters</span>
-            </p>
-            
-            <p style="margin-bottom: 15px;">
-                <strong>Anonymous Comments: </strong>
-                <span th:text="${assessment.commentsAnonymous ? 'Yes' : 'No'}" 
-                      th:style="${assessment.commentsAnonymous ? 'color: #2ecc71;' : 'color: #e74c3c;'}" 
-                      style="font-weight: bold;">No</span>
-            </p>
-            
-            <h4 style="color: #ecf0f1; margin-top: 20px; border-bottom: 1px dotted #4a6681; padding-bottom: 5px; font-size: 1.3em;">Comment Questions:</h4>
-            
-            <div th:if="${assessment.commentLabels != null and not #lists.isEmpty(assessment.commentLabels)}">
-                <div th:each="label, iterStat : ${assessment.commentLabels}" style="margin-left: 20px; margin-bottom: 10px;">
-                    <p style="margin: 5px 0;">
-                        <strong style="color: #f39c12;" th:text="${'Question ' + (iterStat.index + 1) + ':'}">Question 1:</strong>
-                        <span th:text="${label}" style="color: #ecf0f1;">Comment question text</span>
-                    </p>
+            <!-- GROUP ASSESSMENT COMMENTS -->
+            <div th:if="${assessment.groupCommentCount != null and assessment.groupCommentCount > 0}" 
+                 style="background: rgba(155, 89, 182, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #9b59b6;">
+                <h4 style="color: #9b59b6; margin-bottom: 15px; font-size: 1.3em;">
+                    <i class="fas fa-users"></i> Group Assessment Comments
+                </h4>
+                
+                <p style="margin-bottom: 10px;">
+                    <strong>Total Questions: </strong>
+                    <span th:text="${assessment.groupCommentCount}" style="color: #9b59b6; font-weight: bold;">0</span>
+                </p>
+                
+                <p style="margin-bottom: 10px;">
+                    <strong>Minimum Length: </strong>
+                    <span th:text="${assessment.groupCommentMinLength}" style="color: #ecf0f1;">20</span>
+                    <span style="color: #95a5a6;"> characters</span>
+                </p>
+                
+                <p style="margin-bottom: 15px;">
+                    <strong>Anonymous: </strong>
+                    <span th:text="${assessment.groupCommentsAnonymous ? 'Yes' : 'No'}" 
+                          th:style="${assessment.groupCommentsAnonymous ? 'color: #2ecc71;' : 'color: #e74c3c;'}" 
+                          style="font-weight: bold;">No</span>
+                </p>
+                
+                <h5 style="color: #9b59b6; margin-top: 15px; margin-bottom: 10px;">Comment Questions:</h5>
+                
+                <div th:if="${assessment.groupCommentLabels != null and not #lists.isEmpty(assessment.groupCommentLabels)}">
+                    <div th:each="label, iterStat : ${assessment.groupCommentLabels}" style="margin-left: 20px; margin-bottom: 8px;">
+                        <p style="margin: 5px 0;">
+                            <strong style="color: #9b59b6;" th:text="${'Q' + (iterStat.index + 1) + ':'}">Q1:</strong>
+                            <span th:text="${label}" style="color: #ecf0f1;">Comment question text</span>
+                        </p>
+                    </div>
+                </div>
+                <div th:if="${assessment.groupCommentLabels == null or #lists.isEmpty(assessment.groupCommentLabels)}">
+                    <p style="margin-left: 20px; color: #7f8c8d;">No questions configured.</p>
                 </div>
             </div>
-            <div th:if="${assessment.commentLabels == null or #lists.isEmpty(assessment.commentLabels)}">
-                <p style="margin-left: 20px; color: #7f8c8d;">No comment questions configured.</p>
+            
+            <!-- INDIVIDUAL ASSESSMENT COMMENTS -->
+            <div th:if="${assessment.individualCommentCount != null and assessment.individualCommentCount > 0}" 
+                 style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2ecc71;">
+                <h4 style="color: #2ecc71; margin-bottom: 15px; font-size: 1.3em;">
+                    <i class="fas fa-user"></i> Individual Assessment Comments
+                </h4>
+                
+                <p style="margin-bottom: 10px;">
+                    <strong>Total Questions: </strong>
+                    <span th:text="${assessment.individualCommentCount}" style="color: #2ecc71; font-weight: bold;">0</span>
+                </p>
+                
+                <p style="margin-bottom: 10px;">
+                    <strong>Minimum Length: </strong>
+                    <span th:text="${assessment.individualCommentMinLength}" style="color: #ecf0f1;">20</span>
+                    <span style="color: #95a5a6;"> characters</span>
+                </p>
+                
+                <p style="margin-bottom: 15px;">
+                    <strong>Anonymous: </strong>
+                    <span th:text="${assessment.individualCommentsAnonymous ? 'Yes' : 'No'}" 
+                          th:style="${assessment.individualCommentsAnonymous ? 'color: #2ecc71;' : 'color: #e74c3c;'}" 
+                          style="font-weight: bold;">No</span>
+                </p>
+                
+                <h5 style="color: #2ecc71; margin-top: 15px; margin-bottom: 10px;">Comment Questions:</h5>
+                
+                <div th:if="${assessment.individualCommentLabels != null and not #lists.isEmpty(assessment.individualCommentLabels)}">
+                    <div th:each="label, iterStat : ${assessment.individualCommentLabels}" style="margin-left: 20px; margin-bottom: 8px;">
+                        <p style="margin: 5px 0;">
+                            <strong style="color: #2ecc71;" th:text="${'Q' + (iterStat.index + 1) + ':'}">Q1:</strong>
+                            <span th:text="${label}" style="color: #ecf0f1;">Comment question text</span>
+                        </p>
+                    </div>
+                </div>
+                <div th:if="${assessment.individualCommentLabels == null or #lists.isEmpty(assessment.individualCommentLabels)}">
+                    <p style="margin-left: 20px; color: #7f8c8d;">No questions configured.</p>
+                </div>
             </div>
             
             <!-- Edit Comment Config Button -->
             <div style="text-align: center; margin-top: 20px;">
                 <a th:href="@{/admin/comment-config/{id}(id=${assessment.id})}" class="btn btn-edit" style="background-color: #3498db;">
-                    Edit Comment Configuration
+                    <i class="fas fa-edit"></i> Edit Comment Configuration
                 </a>
             </div>
         </div>
         
-        <!-- No Comment Configuration Message -->
-        <div class="assessment-summary" th:if="${assessment.commentCount == null or assessment.commentCount == 0}" style="background-color: #34495e; border: 2px solid #7f8c8d;">
-            <h3 style="color: #95a5a6; border-bottom: 2px solid #7f8c8d; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">Comment Configuration</h3>
+        <!-- ✅ UPDATED: No Comment Configuration Message -->
+        <div class="assessment-summary" 
+             th:if="${(assessment.groupCommentCount == null or assessment.groupCommentCount == 0) and (assessment.individualCommentCount == null or assessment.individualCommentCount == 0)}" 
+             style="background-color: #34495e; border: 2px solid #7f8c8d;">
+            <h3 style="color: #95a5a6; border-bottom: 2px solid #7f8c8d; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">
+                <i class="fas fa-comments"></i> Comment Configuration
+            </h3>
             <p style="color: #bdc3c7; text-align: center;">No comment configuration has been set up for this assessment.</p>
+            <p style="color: #95a5a6; text-align: center; font-size: 0.9em; margin-top: 10px;">
+                You can configure separate comment requirements for Group Assessment and Individual Assessment rubrics.
+            </p>
             <div style="text-align: center; margin-top: 15px;">
                 <a th:href="@{/admin/comment-config/{id}(id=${assessment.id})}" class="btn btn-add" style="background-color: #27ae60;">
-                    Configure Comments
+                    <i class="fas fa-plus-circle"></i> Configure Comments
                 </a>
             </div>
         </div>

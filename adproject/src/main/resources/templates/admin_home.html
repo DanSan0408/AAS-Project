@@ -5,59 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Home</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Updated styles for Assessment Type grouping */
-        .assess-type-group {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-left: 4px solid #e74c3c;
-            border-radius: 5px;
-        }
-
-        .assess-type-group h5 {
-            color: #2c3e50;
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .rubric-assessment {
-            background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .rubric-assessment h6 {
-            color: #34495e;
-            font-size: 1em;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .rubric-details p {
-            margin: 5px 0;
-            font-size: 0.9em;
-            color: #555;
-        }
-
-        .rubric-details span {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        /* Button container styling */
-        .assessment-header-buttons {
-            display: inline-flex;
-            gap: 10px;
-            align-items: center;
-        }
-    </style>
 </head>
 <body>
     <div th:replace="fragments/sidebar :: sidebar"></div> 

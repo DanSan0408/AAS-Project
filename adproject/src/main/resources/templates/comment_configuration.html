@@ -5,288 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configure Comments - [[${assessment.title}]]</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/comment.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .config-container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 30px;
-            background: #2c3e50;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        
-        .config-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #3498db;
-        }
-        
-        .config-header h1 {
-            color: #3498db;
-            margin-bottom: 10px;
-        }
-        
-        .config-header p {
-            color: #95a5a6;
-            font-size: 0.95em;
-        }
-        
-        /* Comment Items Container */
-        .comments-list {
-            margin-bottom: 30px;
-        }
-        
-        .comment-item {
-            background: #34495e;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-            position: relative;
-        }
-        
-        .comment-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .comment-item-header h3 {
-            color: #3498db;
-            margin: 0;
-            font-size: 1.2em;
-        }
-        
-        .remove-comment-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.3s;
-        }
-        
-        .remove-comment-btn:hover {
-            background: #c0392b;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            color: #ecf0f1;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .form-group label .required {
-            color: #e74c3c;
-            margin-left: 3px;
-        }
-        
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            background: #2c3e50;
-            border: 2px solid #4a6681;
-            border-radius: 6px;
-            color: #ecf0f1;
-            font-size: 1em;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-        
-        .inline-group {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-        }
-        
-        .inline-group .form-group {
-            flex: 1;
-        }
-        
-        .toggle-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: #2c3e50;
-            border-radius: 6px;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #7f8c8d;
-            transition: .4s;
-            border-radius: 30px;
-        }
-        
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .toggle-slider {
-            background-color: #3498db;
-        }
-        
-        input:checked + .toggle-slider:before {
-            transform: translateX(30px);
-        }
-        
-        .toggle-label {
-            flex: 1;
-            color: #ecf0f1;
-            font-size: 1em;
-        }
-        
-        .help-text {
-            color: #95a5a6;
-            font-size: 0.9em;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        
-        .add-comment-section {
-            text-align: center;
-            margin: 30px 0;
-        }
-        
-        .btn-add-comment {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            transition: all 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        .btn-add-comment:hover {
-            background: #229954;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 6px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: #3498db;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-        
-        .btn-secondary {
-            background: #7f8c8d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #6c7a7b;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            background: #34495e;
-            border-radius: 8px;
-            border: 2px dashed #4a6681;
-        }
-        
-        .empty-state i {
-            font-size: 3em;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-        }
-        
-        .empty-state p {
-            color: #95a5a6;
-            font-size: 1.1em;
-        }
-        
-        .info-box {
-            background: #1a252f;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 15px;
-            border-left: 4px solid #f39c12;
-        }
-        
-        .info-box strong {
-            color: #f39c12;
-        }
-        
-        .info-box p {
-            color: #ecf0f1;
-            margin: 5px 0;
-            font-size: 0.95em;
-        }
-    </style>
+    
 </head>
 <body>
     <div th:replace="fragments/sidebar :: sidebar"></div>
@@ -319,38 +40,87 @@
                     <strong>Assessment:</strong> <span th:text="${assessment.title}">Assessment Title</span>
                 </p>
                 <p style="font-size: 0.9em; margin-top: 10px;">
-                    Define the comment questions students must answer during peer/self assessments
+                    Configure different comment requirements for Group Assessment and Individual Assessment rubrics
+                </p>
+            </div>
+            
+            <!-- Rubric Types Available Notice -->
+            <div class="info-box" style="margin-bottom: 20px;">
+                <strong><i class="fas fa-info-circle"></i> Available Rubric Types:</strong>
+                <p th:if="${hasGroupRubrics}">
+                    ✅ <strong>Group Assessment</strong> rubrics are configured
+                </p>
+                <p th:if="${hasIndividualRubrics}">
+                    ✅ <strong>Individual Assessment</strong> rubrics are configured
+                </p>
+                <p th:if="${!hasGroupRubrics && !hasIndividualRubrics}" style="color: #e74c3c;">
+                    ⚠️ No rubrics configured for this assessment. Please add rubrics first.
                 </p>
             </div>
             
             <form th:action="@{/admin/comment-config/{id}/save(id=${assessment.id})}" method="post" id="commentConfigForm">
                 
-                <!-- Comments List Container -->
-                <div id="commentsContainer" class="comments-list">
-                    <!-- Empty State (shown when no comments) -->
-                    <div id="emptyState" class="empty-state" style="display: none;">
-                        <i class="fas fa-comments-slash"></i>
-                        <p>No comment questions defined yet.</p>
-                        <p style="font-size: 0.9em; color: #7f8c8d;">Click "Add Comment Question" below to create your first comment requirement.</p>
+                <!-- ========== GROUP ASSESSMENT COMMENTS SECTION ========== -->
+                <div th:if="${hasGroupRubrics}" class="assessment-type-section" style="border: 2px solid #3498db; padding: 20px; border-radius: 8px; margin-bottom: 30px; background: rgba(52, 152, 219, 0.05);">
+                    <h2 style="color: #3498db; margin-bottom: 15px;">
+                        <i class="fas fa-users"></i> Group Assessment Comments
+                    </h2>
+                    <p style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 20px;">
+                        These comments will be required when evaluating <strong>Group Assessment</strong> rubrics
+                    </p>
+                    
+                    <!-- Group Comments List Container -->
+                    <div id="groupCommentsContainer" class="comments-list">
+                        <!-- Empty State for group -->
+                        <div id="groupEmptyState" class="empty-state" style="display: none;">
+                            <i class="fas fa-comments-slash"></i>
+                            <p>No group comment questions defined yet.</p>
+                            <p style="font-size: 0.9em; color: #7f8c8d;">Click "Add Group Comment Question" below to create group evaluation comments.</p>
+                        </div>
                     </div>
                     
-                    <!-- Comment items will be added here dynamically -->
+                    <!-- Add Group Comment Button -->
+                    <div class="add-comment-section">
+                        <button type="button" id="addGroupCommentBtn" class="btn-add-comment" style="background: #3498db;">
+                            <i class="fas fa-plus-circle"></i> Add Group Comment Question
+                        </button>
+                    </div>
                 </div>
                 
-                <!-- Add Comment Button -->
-                <div class="add-comment-section">
-                    <button type="button" id="addCommentBtn" class="btn-add-comment">
-                        <i class="fas fa-plus-circle"></i> Add Comment Question
-                    </button>
+                <!-- ========== INDIVIDUAL ASSESSMENT COMMENTS SECTION ========== -->
+                <div th:if="${hasIndividualRubrics}" class="assessment-type-section" style="border: 2px solid #2ecc71; padding: 20px; border-radius: 8px; margin-bottom: 30px; background: rgba(46, 204, 113, 0.05);">
+                    <h2 style="color: #2ecc71; margin-bottom: 15px;">
+                        <i class="fas fa-user"></i> Individual Assessment Comments
+                    </h2>
+                    <p style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 20px;">
+                        These comments will be required when evaluating <strong>Individual Assessment</strong> rubrics
+                    </p>
+                    
+                    <!-- Individual Comments List Container -->
+                    <div id="individualCommentsContainer" class="comments-list">
+                        <!-- Empty State for individual -->
+                        <div id="individualEmptyState" class="empty-state" style="display: none;">
+                            <i class="fas fa-comments-slash"></i>
+                            <p>No individual comment questions defined yet.</p>
+                            <p style="font-size: 0.9em; color: #7f8c8d;">Click "Add Individual Comment Question" below to create individual evaluation comments.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Add Individual Comment Button -->
+                    <div class="add-comment-section">
+                        <button type="button" id="addIndividualCommentBtn" class="btn-add-comment" style="background: #2ecc71;">
+                            <i class="fas fa-plus-circle"></i> Add Individual Comment Question
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Info Box -->
                 <div class="info-box">
                     <strong><i class="fas fa-info-circle"></i> How it works:</strong>
-                    <p>• Each comment question will appear as a separate text field during student evaluations</p>
-                    <p>• Students must answer all questions to submit their evaluation</p>
-                    <p>• You can set different minimum character requirements for each question</p>
-                    <p>• Visibility setting controls whether students see the commenter's name or "Teammate X"</p>
+                    <p>• <strong>Group comments</strong> appear when evaluators assess Group Assessment rubrics</p>
+                    <p>• <strong>Individual comments</strong> appear when evaluators assess Individual Assessment rubrics</p>
+                    <p>• Students must answer all required questions to submit their evaluation</p>
+                    <p>• You can set different requirements for each assessment type</p>
                 </div>
                 
                 <!-- Submit Buttons -->
@@ -368,25 +138,31 @@
     
     <script th:inline="javascript">
         // Load existing configuration from server
-        const existingLabels = /*[[${assessment.commentLabels}]]*/ [];
-        const existingMinLength = /*[[${assessment.commentMinLength}]]*/ 20;
-        const existingAnonymous = /*[[${assessment.commentsAnonymous}]]*/ true;
+        const existingGroupLabels = /*[[${assessment.groupCommentLabels}]]*/ [];
+        const existingGroupMinLength = /*[[${assessment.groupCommentMinLength}]]*/ 20;
+        const existingGroupAnonymous = /*[[${assessment.groupCommentsAnonymous}]]*/ true;
         
-        let commentCounter = 0;
+        const existingIndividualLabels = /*[[${assessment.individualCommentLabels}]]*/ [];
+        const existingIndividualMinLength = /*[[${assessment.individualCommentMinLength}]]*/ 20;
+        const existingIndividualAnonymous = /*[[${assessment.individualCommentsAnonymous}]]*/ true;
         
-        // Comment template
-        function createCommentItem(label = '', minLength = 20, anonymous = true) {
-            commentCounter++;
-            const id = 'comment_' + commentCounter;
+        let groupCommentCounter = 0;
+        let individualCommentCounter = 0;
+        
+        // Group Comment template
+        function createGroupCommentItem(label = '', minLength = 20, anonymous = true) {
+            groupCommentCounter++;
+            const id = 'group_comment_' + groupCommentCounter;
             
             const div = document.createElement('div');
             div.className = 'comment-item';
             div.setAttribute('data-comment-id', id);
+            div.style.borderLeft = '4px solid #3498db';
             
             div.innerHTML = `
                 <div class="comment-item-header">
-                    <h3>Comment Question #<span class="comment-number">${commentCounter}</span></h3>
-                    <button type="button" class="remove-comment-btn" onclick="removeComment('${id}')">
+                    <h3 style="color: #3498db;">Group Comment #<span class="comment-number">${groupCommentCounter}</span></h3>
+                    <button type="button" class="remove-comment-btn" onclick="removeComment('${id}', 'group')">
                         <i class="fas fa-trash"></i> Remove
                     </button>
                 </div>
@@ -395,10 +171,10 @@
                     <label>
                         Question/Prompt <span class="required">*</span>
                     </label>
-                    <textarea name="commentLabels" 
-                              placeholder="e.g., What are this person's key strengths?"
+                    <textarea name="groupCommentLabels" 
+                              placeholder="e.g., How well did this group collaborate?"
                               required>${label}</textarea>
-                    <p class="help-text">This is the question students will see when providing feedback</p>
+                    <p class="help-text">This question will appear during group evaluations</p>
                 </div>
                 
                 <div class="inline-group">
@@ -407,12 +183,11 @@
                             Minimum Characters <span class="required">*</span>
                         </label>
                         <input type="number" 
-                               name="commentMinLengths" 
+                               name="groupCommentMinLengths" 
                                value="${minLength}"
                                min="10" 
                                max="500"
                                required>
-                        <p class="help-text">Minimum characters required for this comment</p>
                     </div>
                     
                     <div class="form-group">
@@ -420,7 +195,7 @@
                         <div class="toggle-group">
                             <label class="toggle-switch">
                                 <input type="checkbox" 
-                                       name="commentAnonymous" 
+                                       name="groupCommentAnonymous" 
                                        value="true"
                                        ${anonymous ? 'checked' : ''}>
                                 <span class="toggle-slider"></span>
@@ -428,7 +203,7 @@
                             <div class="toggle-label">
                                 <strong>Anonymous</strong>
                                 <p class="help-text" style="margin-top: 5px; margin-bottom: 0;">
-                                    When enabled, comments appear as "Teammate X"
+                                    Comments appear as "Teammate X"
                                 </p>
                             </div>
                         </div>
@@ -439,46 +214,120 @@
             return div;
         }
         
-        // Add comment function
-        function addComment(label = '', minLength = 20, anonymous = true) {
-            const container = document.getElementById('commentsContainer');
-            const emptyState = document.getElementById('emptyState');
+        // Individual Comment template
+        function createIndividualCommentItem(label = '', minLength = 20, anonymous = true) {
+            individualCommentCounter++;
+            const id = 'individual_comment_' + individualCommentCounter;
             
-            // Hide empty state
+            const div = document.createElement('div');
+            div.className = 'comment-item';
+            div.setAttribute('data-comment-id', id);
+            div.style.borderLeft = '4px solid #2ecc71';
+            
+            div.innerHTML = `
+                <div class="comment-item-header">
+                    <h3 style="color: #2ecc71;">Individual Comment #<span class="comment-number">${individualCommentCounter}</span></h3>
+                    <button type="button" class="remove-comment-btn" onclick="removeComment('${id}', 'individual')">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        Question/Prompt <span class="required">*</span>
+                    </label>
+                    <textarea name="individualCommentLabels" 
+                              placeholder="e.g., What are this person's key strengths?"
+                              required>${label}</textarea>
+                    <p class="help-text">This question will appear during individual evaluations</p>
+                </div>
+                
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label>
+                            Minimum Characters <span class="required">*</span>
+                        </label>
+                        <input type="number" 
+                               name="individualCommentMinLengths" 
+                               value="${minLength}"
+                               min="10" 
+                               max="500"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Visibility</label>
+                        <div class="toggle-group">
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       name="individualCommentAnonymous" 
+                                       value="true"
+                                       ${anonymous ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <div class="toggle-label">
+                                <strong>Anonymous</strong>
+                                <p class="help-text" style="margin-top: 5px; margin-bottom: 0;">
+                                    Comments appear as "Teammate X"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+        
+        // Add group comment
+        function addGroupComment(label = '', minLength = 20, anonymous = true) {
+            const container = document.getElementById('groupCommentsContainer');
+            const emptyState = document.getElementById('groupEmptyState');
+            
             emptyState.style.display = 'none';
             
-            // Create and add new comment item
-            const commentItem = createCommentItem(label, minLength, anonymous);
+            const commentItem = createGroupCommentItem(label, minLength, anonymous);
             container.appendChild(commentItem);
             
-            // Renumber all comments
-            renumberComments();
-            
-            // Scroll to new item
+            renumberComments('group');
             commentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         
-        // Remove comment function
-        function removeComment(id) {
+        // Add individual comment
+        function addIndividualComment(label = '', minLength = 20, anonymous = true) {
+            const container = document.getElementById('individualCommentsContainer');
+            const emptyState = document.getElementById('individualEmptyState');
+            
+            emptyState.style.display = 'none';
+            
+            const commentItem = createIndividualCommentItem(label, minLength, anonymous);
+            container.appendChild(commentItem);
+            
+            renumberComments('individual');
+            commentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // Remove comment
+        function removeComment(id, type) {
             const item = document.querySelector(`[data-comment-id="${id}"]`);
             if (item) {
                 if (confirm('Are you sure you want to remove this comment question?')) {
                     item.remove();
-                    renumberComments();
+                    renumberComments(type);
                     
                     // Show empty state if no comments left
-                    const container = document.getElementById('commentsContainer');
+                    const container = document.getElementById(type + 'CommentsContainer');
                     const commentItems = container.querySelectorAll('.comment-item');
                     if (commentItems.length === 0) {
-                        document.getElementById('emptyState').style.display = 'block';
+                        document.getElementById(type + 'EmptyState').style.display = 'block';
                     }
                 }
             }
         }
         
         // Renumber comments
-        function renumberComments() {
-            const container = document.getElementById('commentsContainer');
+        function renumberComments(type) {
+            const container = document.getElementById(type + 'CommentsContainer');
             const commentItems = container.querySelectorAll('.comment-item');
             commentItems.forEach((item, index) => {
                 const numberSpan = item.querySelector('.comment-number');
@@ -490,48 +339,40 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Add existing comments
-            if (existingLabels && existingLabels.length > 0) {
-                existingLabels.forEach(label => {
-                    addComment(label, existingMinLength, existingAnonymous);
+            // Add existing group comments
+            if (existingGroupLabels && existingGroupLabels.length > 0) {
+                existingGroupLabels.forEach(label => {
+                    addGroupComment(label, existingGroupMinLength, existingGroupAnonymous);
                 });
             } else {
-                // Show empty state
-                document.getElementById('emptyState').style.display = 'block';
+                const groupEmpty = document.getElementById('groupEmptyState');
+                if (groupEmpty) groupEmpty.style.display = 'block';
             }
             
-            // Add comment button handler
-            document.getElementById('addCommentBtn').addEventListener('click', function() {
-                addComment('', 20, true);
-            });
-            
-            // Form validation
-            document.getElementById('commentConfigForm').addEventListener('submit', function(e) {
-                const container = document.getElementById('commentsContainer');
-                const commentItems = container.querySelectorAll('.comment-item');
-                
-                if (commentItems.length === 0) {
-                    e.preventDefault();
-                    alert('Please add at least one comment question before saving.');
-                    return false;
-                }
-                
-                // Validate all questions are filled
-                let allValid = true;
-                commentItems.forEach(item => {
-                    const textarea = item.querySelector('textarea[name="commentLabels"]');
-                    if (!textarea.value.trim()) {
-                        allValid = false;
-                        textarea.focus();
-                    }
+            // Add existing individual comments
+            if (existingIndividualLabels && existingIndividualLabels.length > 0) {
+                existingIndividualLabels.forEach(label => {
+                    addIndividualComment(label, existingIndividualMinLength, existingIndividualAnonymous);
                 });
-                
-                if (!allValid) {
-                    e.preventDefault();
-                    alert('Please fill in all comment questions.');
-                    return false;
-                }
-            });
+            } else {
+                const individualEmpty = document.getElementById('individualEmptyState');
+                if (individualEmpty) individualEmpty.style.display = 'block';
+            }
+            
+            // Button handlers
+            const addGroupBtn = document.getElementById('addGroupCommentBtn');
+            if (addGroupBtn) {
+                addGroupBtn.addEventListener('click', function() {
+                    addGroupComment('', 20, true);
+                });
+            }
+            
+            const addIndividualBtn = document.getElementById('addIndividualCommentBtn');
+            if (addIndividualBtn) {
+                addIndividualBtn.addEventListener('click', function() {
+                    addIndividualComment('', 20, true);
+                });
+            }
         });
     </script>
 </body>

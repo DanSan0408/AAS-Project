@@ -67,7 +67,7 @@ public class AssessmentComment {
     @Column(name = "anonymous_identifier")
     private String anonymousIdentifier;
     
-    // ========== NEW FIELD FOR MULTIPLE COMMENTS ==========
+    // ========== FIELDS FOR MULTIPLE COMMENTS ==========
     
     /**
      * Index of the comment (0-based) when multiple comments are required
@@ -83,6 +83,16 @@ public class AssessmentComment {
      */
     @Column(name = "comment_label", length = 500)
     private String commentLabel;
+    
+    // ========== NEW FIELD FOR RUBRIC ASSESSMENT TYPE ==========
+    
+    /**
+     * NEW: Rubric assessment type this comment is associated with
+     * Values: "Group Assessment", "Individual Assessment"
+     * This allows comments to be specific to group or individual evaluations
+     */
+    @Column(name = "rubric_assessment_type", length = 50)
+    private String rubricAssessmentType;
 
     // Enums
     public enum EvaluatorType {
@@ -94,6 +104,7 @@ public class AssessmentComment {
     public enum CommentAssessmentType {
         PEER,
         SELF,
+        TEAM,  // NEW: For team/group evaluations by students
         LECTURER_EVALUATION,
         SUPERVISOR_EVALUATION
     }
@@ -208,6 +219,14 @@ public class AssessmentComment {
     public void setCommentLabel(String commentLabel) {
         this.commentLabel = commentLabel;
     }
+    
+    public String getRubricAssessmentType() {
+        return rubricAssessmentType;
+    }
+    
+    public void setRubricAssessmentType(String rubricAssessmentType) {
+        this.rubricAssessmentType = rubricAssessmentType;
+    }
 
     /**
      * Get display name for the evaluator
@@ -216,10 +235,13 @@ public class AssessmentComment {
      */
     public String getDisplayName() {
         if (evaluatorType == EvaluatorType.STUDENT) {
-            // Check if assessment is configured for anonymous comments
-            if (assessment != null && !assessment.getCommentsAnonymous()) {
-                // Show real name if not anonymous
-                return evaluatorName != null ? evaluatorName : "Student";
+            // Check if assessment is configured for anonymous comments based on rubric type
+            if (assessment != null) {
+                Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
+                if (isAnonymous != null && !isAnonymous) {
+                    // Show real name if not anonymous
+                    return evaluatorName != null ? evaluatorName : "Student";
+                }
             }
             // Otherwise show anonymous identifier
             return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
@@ -235,6 +257,12 @@ public class AssessmentComment {
         if (commentLabel != null && !commentLabel.trim().isEmpty()) {
             return commentLabel;
         }
-        return "Comment " + (getCommentIndex() + 1);
+        
+        // Default label based on rubric assessment type
+        if (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group")) {
+            return "Group Comment " + (getCommentIndex() + 1);
+        } else {
+            return "Individual Comment " + (getCommentIndex() + 1);
+        }
     }
 }

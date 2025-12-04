@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Randomized Group</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+    <link rel="stylesheet" th:href="@{/css/group_preview.css}">
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div> 
@@ -38,9 +40,10 @@
                         </strong> Edit the group details and members below before saving.
                     </p>
                     
-                    <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" th:object="${randomGroupPreview}" method="post"> 
+                    <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" method="post"> 
                         
-                        <input type="hidden" id="selectedStudentIdsInput" th:field="*{selectedStudentIds}" />
+                        <!-- Hidden input with initial comma-separated student IDs -->
+                        <input type="hidden" id="selectedStudentIdsInput" name="selectedStudentIds" th:value="${selectedStudentIdsStr}" />
 
                         <table class="group-table">
                             <thead>
@@ -53,12 +56,13 @@
                             <tbody>
                                 <tr>
                                     <td>
-                                        <input type="text" th:field="*{groupName}" 
+                                        <input type="text" name="groupName" 
+                                                th:value="${randomGroupPreview.groupName}"
                                                 placeholder="Enter Group Name" required/>
                                     </td>
                                     
                                     <td>
-                                        <select th:field="*{academicSupervisorId}" required>
+                                        <select name="academicSupervisorId" required>
                                             <option value="">-- Select Lecturer --</option>
                                             <option th:each="lecturer : ${availableLecturers}"
                                                     th:value="${lecturer.id}"
@@ -67,7 +71,7 @@
                                     </td>
                                     
                                     <td>
-                                        <select th:field="*{industrialSupervisorId}" required>
+                                        <select name="industrialSupervisorId" required>
                                             <option value="">-- Select Supervisor --</option>
                                             <option th:each="supervisor : ${availableSupervisors}"
                                                     th:value="${supervisor.id}"
@@ -81,7 +85,7 @@
                         <h2>Group Members (<span id="currentGroupSize">0</span> / <span th:text="${maxStudentsPerGroup}"></span>)</h2>
                         
                         <ul id="student-display-list">
-                            </ul>
+                        </ul>
                         
                         <div class="add-student-container">
                             <label for="addStudentSelect">Add Student (Unassigned):</label>
@@ -89,8 +93,7 @@
                                 <option value="">-- Select Student to Add --</option>
                                 <option th:each="student : ${availableStudentsForAdd}"
                                         th:value="${student.id}"
-                                        th:text="${student.username}"
-                                        th:data-name="${student.username}">
+                                        th:text="${student.username}">
                                 </option>
                             </select>
                             <button type="button" id="addStudentButton" class="btn btn-secondary">Add</button>
@@ -103,34 +106,57 @@
                         </div>
                     </form>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 
-    <script th:inline="javascript">
-        /*<![CDATA[*/
+
+    <script>
+        // Get initial data from the hidden input
+        var hiddenInput = document.getElementById('selectedStudentIdsInput');
+        var initialIdsString = hiddenInput.value;
         
-        // Data passed from the controller
-        // FIX: Use the safer /*[[...]]*/ syntax for complex/integer objects and maps
-        var studentLookupMap = /*[[${studentLookupMap}]]*/ {}; 
-        var initialStudentIds = /*[[${randomGroupPreview.selectedStudentIds}]]*/ []; 
-        var maxGroupSize = /*[[${maxStudentsPerGroup}]]*/ 0;
+        console.log("Initial IDs string from hidden input:", initialIdsString);
+        
+        // Parse the comma-separated student IDs
+        var currentStudentIds = [];
+        if (initialIdsString && initialIdsString.trim() !== '') {
+            currentStudentIds = initialIdsString.split(',').map(function(id) {
+                return parseInt(id.trim());
+            }).filter(function(id) {
+                return !isNaN(id);
+            });
+        }
+        
+        console.log("Parsed student IDs:", currentStudentIds);
+        
+        // Build student lookup map from the dropdown options
+        var studentLookupMap = {};
+        var addStudentSelect = document.getElementById('addStudentSelect');
+        Array.from(addStudentSelect.options).forEach(function(option) {
+            if (option.value) {
+                var id = parseInt(option.value);
+                studentLookupMap[id] = {
+                    id: id,
+                    username: option.text
+                };
+            }
+        });
+        
+        console.log("Student lookup map:", studentLookupMap);
+        
+        // Get max group size from the page
+        var maxGroupSize = parseInt(document.querySelector('h2 span:last-of-type').textContent);
         
         // DOM elements
         var studentList = document.getElementById('student-display-list');
-        var hiddenInput = document.getElementById('selectedStudentIdsInput');
-        var addStudentSelect = document.getElementById('addStudentSelect');
         var addStudentButton = document.getElementById('addStudentButton');
         var sizeWarning = document.getElementById('sizeWarning');
         var currentGroupSizeElement = document.getElementById('currentGroupSize');
 
-        // Store the current student IDs in an array
-        // Ensure all IDs are integers for proper comparison
-        var currentStudentIds = Array.from(initialStudentIds || []).map(id => parseInt(id));
-
         function updateHiddenInput() {
-            // The hidden input expects a comma-separated string
             hiddenInput.value = currentStudentIds.join(',');
+            console.log("Hidden input updated to:", hiddenInput.value);
         }
 
         function updateGroupSizeDisplay() {
@@ -148,11 +174,25 @@
         }
 
         function renderStudents() {
-            studentList.innerHTML = ''; // Clear existing list
+            console.log("Rendering students. Current IDs:", currentStudentIds);
+            studentList.innerHTML = '';
+
+            if (currentStudentIds.length === 0) {
+                var emptyMessage = document.createElement('li');
+                emptyMessage.textContent = 'No students selected yet.';
+                emptyMessage.style.fontStyle = 'italic';
+                emptyMessage.style.color = '#95a5a6';
+                studentList.appendChild(emptyMessage);
+                updateHiddenInput();
+                updateGroupSizeDisplay();
+                return;
+            }
 
             currentStudentIds.forEach(function(studentId) {
                 var student = studentLookupMap[studentId];
                 var name = student ? student.username : 'Student ID: ' + studentId + ' (Not Found)';
+                
+                console.log("Rendering student:", studentId, name);
                 
                 var listItem = document.createElement('li');
                 listItem.className = 'student-item';
@@ -171,22 +211,21 @@
                 listItem.appendChild(removeButton);
                 studentList.appendChild(listItem);
                 
-                // Hide the student from the 'Add Student' dropdown if they are currently in the group
+                // Hide this student from the dropdown
                 var optionToHide = addStudentSelect.querySelector('option[value="' + studentId + '"]');
                 if (optionToHide) {
                     optionToHide.style.display = 'none';
                 }
             });
             
-            // Re-show students in the dropdown who were removed from the list
-            // Iterate over all options and check if the student is NOT in the current group
+            // Show students not in the group in the dropdown
             Array.from(addStudentSelect.options).forEach(function(option) {
-                 if (option.value) { // Skip the default "-- Select Student to Add --" option
-                     var id = parseInt(option.value);
-                     if (!currentStudentIds.includes(id)) {
-                         option.style.display = '';
-                     }
-                 }
+                if (option.value) {
+                    var id = parseInt(option.value);
+                    if (!currentStudentIds.includes(id)) {
+                        option.style.display = '';
+                    }
+                }
             });
 
             updateHiddenInput();
@@ -195,7 +234,10 @@
         
         function removeStudent(event) {
             var studentId = parseInt(event.target.getAttribute('data-student-id'));
-            currentStudentIds = currentStudentIds.filter(id => id !== studentId);
+            console.log("Removing student:", studentId);
+            currentStudentIds = currentStudentIds.filter(function(id) {
+                return id !== studentId;
+            });
             renderStudents();
         }
 
@@ -208,20 +250,22 @@
             if (selectedId) {
                 var studentId = parseInt(selectedId);
                 
-                // Only add if not already in the list
                 if (!currentStudentIds.includes(studentId)) {
+                    console.log("Adding student:", studentId);
                     currentStudentIds.push(studentId);
-                    // Reset the dropdown after adding
                     addStudentSelect.value = ""; 
                     renderStudents();
                 }
             }
         };
 
-        // Initial render when the page loads
-        document.addEventListener('DOMContentLoaded', renderStudents);
-
-        /*]]>*/
+        // Initial render
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log("=== Page Loaded ===");
+            console.log("Current Student IDs:", currentStudentIds);
+            console.log("Max Group Size:", maxGroupSize);
+            renderStudents();
+        });
     </script>
 </body>
 </html>

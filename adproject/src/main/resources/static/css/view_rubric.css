@@ -1,0 +1,306 @@
+/* ==========================================================
+ * VIEW RUBRIC STYLES (DARK THEME)
+ * Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
+ * ========================================================== */
+
+:root {
+    /* Base Dark Palette */
+    --color-deepest-accent: #23395d; /* Primary Accent / Strongest Contrast (e.g., strong borders, text highlights) */
+    --color-deep-bg: #203354; /* Assessment Summary Card BG (Lighter dark tone) */
+    --color-mid-bg: #1c2e4a; /* Rubric Container BG */
+    --color-darker-bg: #192841; /* General Card BG / Border Color */
+    --color-darkest-bg: #152238; /* Body/Rating Display BG */
+
+    /* Functional Colors (Translating previous light colors) */
+    --color-primary-action: #3498db; /* Blue (Assessment Titles, Major Buttons, Main Border) */
+    --color-success: #2ecc71; /* Green (Anonymous = Yes) */
+    --color-error: #e74c3c; /* Red (Delete Button, Anonymous = No) */
+    --color-warning: #f39c12; /* Orange/Yellow (Marks, Important Data Highlights) */
+    --color-subtle-grey: #7f8c8d; /* Subtle Text/Dividers/Empty State Border */
+
+    /* Text Colors */
+    --color-text-light: #ecf0f1; /* White-ish text */
+    --color-text-mid: #bdc3c7; /* Subtle text */
+}
+
+/* --- General Layout --- */
+.main-content {
+    color: var(--color-text-light);
+    font-size: 1.1em;
+    padding: 20px;
+}
+
+.page-header {
+    margin-bottom: 30px;
+    max-width: 1200px;
+}
+
+.page-header h1 {
+    font-size: 2.2em;
+    color: var(--color-primary-action);
+    border-bottom: 2px solid var(--color-deepest-accent);
+    padding-bottom: 10px;
+}
+
+.page-header p {
+    color: var(--color-text-mid);
+    margin-top: 10px;
+}
+
+/* --- Assessment Summary Card (Top Section) --- */
+.assessment-summary {
+    /* Uses the deep-bg for a slightly lighter dark contrast */
+    background-color: var(--color-deep-bg); 
+    border: 2px solid var(--color-primary-action); 
+    color: var(--color-text-light); 
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); 
+    padding: 30px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    border-radius: 12px;
+    max-width: 1200px;
+    text-align: left;
+}
+
+.assessment-summary h3 {
+    color: var(--color-primary-action);
+    border-bottom: 2px solid var(--color-primary-action);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.6em;
+}
+
+.assessment-summary h4 {
+    color: var(--color-text-light);
+    border-bottom: 1px dotted var(--color-darker-bg); /* Subtle dotted divider */
+    padding-bottom: 5px;
+    margin-top: 20px;
+    font-size: 1.3em;
+}
+
+.assessment-summary p {
+    margin-bottom: 15px;
+    color: var(--color-text-mid);
+}
+
+.assessment-summary strong {
+    color: var(--color-text-light);
+}
+
+/* Data highlights (Marks, Count, Yes/No) */
+.assessment-summary span[style*="f39c12"],
+.assessment-summary span[style*="ecf0f1"] {
+    color: var(--color-warning) !important; /* Orange for marks/counts */
+    font-weight: bold;
+}
+
+.assessment-summary span[style*="2ecc71"] {
+    color: var(--color-success) !important; /* Green for 'Yes' */
+}
+.assessment-summary span[style*="e74c3c"] {
+    color: var(--color-error) !important; /* Red for 'No' */
+}
+
+/* Comment section specific adjustments */
+.assessment-summary .comment-questions div p span {
+    color: var(--color-text-light) !important; /* Ensure question text is bright */
+}
+
+/* Empty State/No Comment Config Message */
+.assessment-summary[style*="34495e"] {
+    background-color: var(--color-mid-bg) !important;
+    border: 2px solid var(--color-subtle-grey) !important;
+}
+.assessment-summary[style*="34495e"] h3 {
+    color: var(--color-text-mid) !important;
+    border-bottom: 2px solid var(--color-subtle-grey) !important;
+}
+.assessment-summary[style*="34495e"] p {
+    color: var(--color-text-mid) !important;
+}
+
+
+/* --- Rubric Grouping and Containers --- */
+
+h2 { 
+    font-size: 1.5em !important; 
+}
+h2 span { /* Assessment Type Header */
+    color: var(--color-text-light);
+    border-bottom: 2px solid var(--color-primary-action);
+    padding-bottom: 5px;
+    margin-top: 20px;
+    display: block;
+}
+
+.rubric-container {
+    /* MATCH assessment-summary styling for consistency */
+    background-color: var(--color-deep-bg); 
+    border: 2px solid var(--color-primary-action); 
+    color: var(--color-text-light); 
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); 
+    padding: 30px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+    border-radius: 12px;
+    max-width: 1200px;
+    text-align: left;
+}
+
+.rubric-container h2 {
+    font-size: 1.8em;
+    color: var(--color-primary-action);
+    margin-bottom: 10px;
+}
+
+.rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--color-darker-bg);
+}
+
+.rubric-header > div:first-child {
+    flex-grow: 1;
+}
+
+.rubric-header p {
+    margin: 8px 0;
+    color: var(--color-text-mid);
+}
+
+.rubric-header strong {
+    color: var(--color-text-light);
+}
+
+.rubric-header span[style*="f39c12"] {
+    color: var(--color-warning) !important;
+}
+
+
+/* --- Sub-Rubrics and Rating Sections --- */
+
+.sub-rubric {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px dotted var(--color-darker-bg);
+}
+
+.sub-rubric h4 {
+    font-size: 1.3em !important;
+    color: var(--color-text-light);
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.sub-rubric p {
+    margin: 5px 0;
+    color: var(--color-text-mid);
+}
+
+.sub-rubric p strong {
+    color: var(--color-warning);
+}
+
+.sub-rubric p[style*="95a5a6"] {
+    color: var(--color-subtle-grey) !important;
+    font-size: 0.95em !important;
+}
+
+.ratings-section {
+    background-color: var(--color-darker-bg); 
+    border: 1px solid var(--color-darker-bg); 
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 6px;
+}
+
+.ratings-section h5 {
+    color: var(--color-primary-action); 
+    font-size: 1.2em; 
+    margin-top: 0; 
+    margin-bottom: 10px; 
+    border-bottom: 1px dotted var(--color-primary-action); 
+    padding-bottom: 5px; 
+}
+
+.rating-display { 
+    background-color: var(--color-darkest-bg); /* Darkest BG for high contrast */
+    border-left: 3px solid var(--color-warning); /* Orange accent bar */
+    padding: 10px; 
+    margin: 8px 0;
+    border-radius: 4px;
+    color: var(--color-text-mid);
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.4);
+}
+
+.rating-display strong { 
+    color: var(--color-warning) !important; /* Orange rating name */
+}
+
+.rating-display span {
+    color: var(--color-text-light); /* Rating description text */
+}
+
+/* --- Buttons --- */
+
+/* Base button cleanup */
+.btn { 
+    padding: 10px 20px !important; 
+    font-size: 1em !important; 
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-block;
+}
+
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+/* Global Add Rubric Button */
+div[style*="text-align:center"] a.btn-add {
+    background-color: var(--color-primary-action) !important;
+    color: white;
+}
+div[style*="text-align:center"] a.btn-add:hover {
+    background-color: var(--color-deepest-accent) !important;
+}
+
+/* Edit/Configure Buttons */
+.btn-edit, .assessment-summary a.btn {
+    background-color: var(--color-primary-action);
+    color: white;
+}
+.btn-edit:hover, .assessment-summary a.btn:hover {
+    background-color: #2980b9;
+}
+
+/* Delete Button */
+.btn-delete {
+    background-color: var(--color-error);
+    color: white;
+}
+.btn-delete:hover {
+    background-color: #c0392b;
+}
+
+form.inline {
+    display: inline;
+}
+
+/* Empty State */
+div[style*="4a6681"] {
+    background-color: var(--color-mid-bg) !important;
+    border: 1px dashed var(--color-subtle-grey);
+}
+div[style*="4a6681"] p {
+    color: var(--color-text-light) !important;
+}
