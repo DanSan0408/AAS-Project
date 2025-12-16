@@ -95,16 +95,17 @@ public class RubricController {
         return "redirect:/rubrics/manage";
     }
 
-    /**
-     * ✅ FIXED: View all rubrics for an assessment
-     * Now returns proper nested Map structure: Map<String, Map<String, List<Object>>>
-     */
     @GetMapping("/view/{assessmentId}")
     @Transactional
     public String viewAssessmentRubrics(@PathVariable Long assessmentId, Model model) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId); 
 
-        // ✅ FIXED: Use nested Map structure with dummy outer key
+        // ✅ Initialize display orders for existing rubrics if they don't have them
+        rubricService.initializeRubricOrders(assessmentId);
+        
+        // Reload to get updated display orders
+        assessment = rubricService.findAssessmentById(assessmentId);
+
         Map<String, Map<String, List<Object>>> groupedRubrics = new LinkedHashMap<>();
         final String DUMMY_KEY = "ASSESSMENT_GROUPING";
         Map<String, List<Object>> innerGroup = new LinkedHashMap<>();
@@ -112,7 +113,6 @@ public class RubricController {
         if (assessment.getRubrics() != null) {
             Hibernate.initialize(assessment.getRubrics());
             for (Rubric rubric : assessment.getRubrics()) {
-                // Initialize sub-rubrics and ratings
                 if (rubric.getSubRubrics() != null) {
                     Hibernate.initialize(rubric.getSubRubrics()); 
                     rubric.getSubRubrics().forEach(subRubric -> {
@@ -121,12 +121,10 @@ public class RubricController {
                         }
                     });
                 }
-                // Initialize direct ratings
                 if (rubric.getRatings() != null) {
                     Hibernate.initialize(rubric.getRatings());
                 }
 
-                // ✅ FIXED: Group by assessment type in the inner map
                 String assessmentType = rubric.getAssessmentTypes();
                 if (assessmentType == null || assessmentType.trim().isEmpty()) {
                     assessmentType = "Uncategorized";
@@ -135,7 +133,20 @@ public class RubricController {
             }
         }
         
-        // ✅ FIXED: Add inner map to outer map with dummy key
+        // Sort rubrics within each assessment type by display_order
+        for (List<Object> rubrics : innerGroup.values()) {
+            rubrics.sort((o1, o2) -> {
+                if (o1 instanceof Rubric && o2 instanceof Rubric) {
+                    Integer order1 = ((Rubric) o1).getDisplayOrder();
+                    Integer order2 = ((Rubric) o2).getDisplayOrder();
+                    if (order1 == null) order1 = 0;
+                    if (order2 == null) order2 = 0;
+                    return Integer.compare(order1, order2);
+                }
+                return 0;
+            });
+        }
+        
         groupedRubrics.put(DUMMY_KEY, innerGroup);
 
         model.addAttribute("assessment", assessment);
@@ -150,7 +161,6 @@ public class RubricController {
         Rubric rubric = new Rubric();
         rubric.setAssessment(assessment);
         
-        // Initialize empty lists - admin can add sub-rubrics or ratings as needed
         rubric.setSubRubrics(new ArrayList<>());
         rubric.setRatings(new ArrayList<>());
         
@@ -166,15 +176,12 @@ public class RubricController {
     @GetMapping("/edit/{rubricId}")
     @Transactional
     public String showEditRubricForm(@PathVariable Long rubricId, Model model) {
-        // Check if rubric data exists in flash attributes (from duplicate check redirect)
         if (!model.containsAttribute("rubric")) {
             Rubric rubric = rubricService.findRubricById(rubricId);
             
-            // Initialize collections
             if (rubric.getSubRubrics() == null) {
                 rubric.setSubRubrics(new ArrayList<>());
             } else {
-                // Initialize ratings within sub-rubrics
                 for (SubRubric subRubric : rubric.getSubRubrics()) {
                     if (subRubric.getRatings() == null) {
                         subRubric.setRatings(new ArrayList<>());
@@ -189,8 +196,6 @@ public class RubricController {
             model.addAttribute("rubric", rubric);
         }
         
-        Long assessmentId = ((Rubric) model.getAttribute("rubric")).getAssessment().getId();
-        
         model.addAttribute("pageTitle", "Edit Rubric");
         model.addAttribute("formAction", "/rubrics/save"); 
         
@@ -203,11 +208,26 @@ public class RubricController {
     @Transactional
     public String saveOrUpdateRubric(@ModelAttribute Rubric rubric, 
                                      @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
+                                     @RequestParam Map<String, String> allParams,
                                      RedirectAttributes redirectAttributes,
                                      Model model) {
         
         Long assessmentId = rubric.getAssessment().getId();
         Long rubricId = rubric.getId();
+
+        // ✅ CRITICAL FIX: Manually process checkbox values from raw parameters
+        List<String> commentLabels = rubric.getRubricCommentLabels();
+        if (commentLabels != null && !commentLabels.isEmpty()) {
+            List<Boolean> anonymousFlags = new ArrayList<>();
+            
+            for (int i = 0; i < commentLabels.size(); i++) {
+                String paramKey = "rubricCommentAnonymousFlags[" + i + "]";
+                boolean isChecked = allParams.containsKey(paramKey) && "true".equals(allParams.get(paramKey));
+                anonymousFlags.add(isChecked);
+            }
+            
+            rubric.setRubricCommentAnonymousFlags(anonymousFlags);
+        }
 
         // Duplicate check
         if (!duplicateConfirmed) {
@@ -253,7 +273,7 @@ public class RubricController {
                 if (subRubric.getRatings() != null) {
                     for (Rating rating : subRubric.getRatings()) {
                         rating.setSubRubric(subRubric);
-                        rating.setRubric(null); // Ensure it belongs to sub-rubric
+                        rating.setRubric(null);
                     }
                 }
             }
@@ -263,7 +283,7 @@ public class RubricController {
         if (rubric.getRatings() != null) {
             for (Rating rating : rubric.getRatings()) {
                 rating.setRubric(rubric);
-                rating.setSubRubric(null); // Ensure it belongs directly to rubric
+                rating.setSubRubric(null);
             }
         }
         
@@ -274,18 +294,13 @@ public class RubricController {
         return "redirect:/rubrics/view/" + savedRubric.getAssessment().getId();
     }
 
-    /**
-     * ✅ UPDATED: Validate only that individual ratings don't exceed their parent marks
-     * No longer checks if sub-rubrics + direct ratings total equals rubric marks
-     */
     private String validateIndividualRatingMarks(Rubric rubric) {
         if (rubric.getMarks() == null) {
-            return null; // No validation needed if no total marks set
+            return null;
         }
 
         BigDecimal rubricMarks = rubric.getMarks();
 
-        // Validate sub-rubric ratings - each rating must not exceed its sub-rubric marks
         if (rubric.getSubRubrics() != null && !rubric.getSubRubrics().isEmpty()) {
             for (SubRubric subRubric : rubric.getSubRubrics()) {
                 if (subRubric.getMarks() != null && subRubric.getRatings() != null) {
@@ -302,7 +317,6 @@ public class RubricController {
             }
         }
 
-        // Validate direct ratings - each rating must not exceed rubric marks
         if (rubric.getRatings() != null && !rubric.getRatings().isEmpty()) {
             for (Rating rating : rubric.getRatings()) {
                 if (rating.getMarks() != null && rating.getMarks().compareTo(rubricMarks) > 0) {
@@ -333,5 +347,42 @@ public class RubricController {
         model.addAttribute("newAssessment", assessment);
         model.addAttribute("assessments", rubricService.findAllAssessments());
         return "manage-assessments";
+    }
+    
+    // ==================== REORDERING ENDPOINTS ====================
+    
+    /**
+     * Move entire assessment type block (Individual/Group) up or down
+     */
+    @PostMapping("/assessment/{assessmentId}/move-block")
+    public String moveAssessmentBlock(@PathVariable Long assessmentId,
+                                       @RequestParam String blockType,
+                                       @RequestParam String direction,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
+        } catch (Exception e) {
+            // Silent fail
+        }
+        return "redirect:/rubrics/view/" + assessmentId;
+    }
+    
+    /**
+     * Move individual rubric up or down within its assessment type
+     */
+    @PostMapping("/rubric/{rubricId}/move")
+    public String moveRubric(@PathVariable Long rubricId,
+                              @RequestParam String direction,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            Rubric rubric = rubricService.findRubricById(rubricId);
+            Long assessmentId = rubric.getAssessment().getId();
+            
+            rubricService.moveRubric(rubricId, direction);
+            
+            return "redirect:/rubrics/view/" + assessmentId;
+        } catch (Exception e) {
+            return "redirect:/rubrics/manage";
+        }
     }
 }

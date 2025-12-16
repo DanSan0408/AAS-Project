@@ -37,6 +37,18 @@
                 <div th:each="assessment : ${assessments}" class="assessment-card">
                     <h3 th:text="${assessment.title}">Assessment Title</h3>
                     
+                    <!-- ✅ Show status badge -->
+                    <div class="status-container">
+                        <span th:if="${openAssessmentIds.contains(assessment.id)}" 
+                              class="status-badge status-open">
+                            ● OPEN
+                        </span>
+                        <span th:unless="${openAssessmentIds.contains(assessment.id)}" 
+                              class="status-badge status-closed">
+                            ● CLOSED
+                        </span>
+                    </div>
+                    
                     <div class="assessment-details">
                         <p><strong>Total Marks:</strong> 
                             <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
@@ -60,13 +72,59 @@
                         </ul>
                     </div>
 
-                    <a th:href="@{/lecturer/assessments/{id}/select-rubric-type(id=${assessment.id})}" 
-                        class="btn-evaluate">
+                    <!-- ✅ FIXED: Changed from select-rubric-type to select-group -->
+                    <a th:if="${openAssessmentIds.contains(assessment.id)}"
+                       th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
+                       class="btn-evaluate">
                         Start Assessment
                     </a>
+                    
+                    <!-- ✅ Show disabled button if closed -->
+                    <button th:unless="${openAssessmentIds.contains(assessment.id)}"
+                            class="btn-evaluate btn-disabled" 
+                            disabled>
+                        Assessment Closed
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+    
+    <style>
+        .status-container {
+            margin: 10px 0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-open {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .status-closed {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-disabled {
+            background-color: #7f8c8d !important;
+            color: #bdc3c7 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #7f8c8d !important;
+            transform: none !important;
+        }
+    </style>
 </body>
 </html>

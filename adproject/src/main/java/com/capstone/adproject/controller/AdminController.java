@@ -16,6 +16,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,11 +37,16 @@ import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.LecturerGroupAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.GroupRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
+import com.capstone.adproject.service.RubricService;
 
 @Controller
 @RequestMapping("/admin")
@@ -49,11 +55,26 @@ public class AdminController {
     private final AdminService adminService;
     private final AssessmentService assessmentService;
     private final DeadlineService deadlineService;
+    private final RubricService rubricService;
+    private final GroupRepository groupRepository;
+    private final LecturerRepository lecturerRepository;
+    private final LecturerGroupAssignmentRepository assignmentRepository;
 
-    public AdminController(AdminService adminService, AssessmentService assessmentService, DeadlineService deadlineService) {
+    public AdminController(
+            AdminService adminService, 
+            AssessmentService assessmentService, 
+            DeadlineService deadlineService,
+            RubricService rubricService,
+            GroupRepository groupRepository,
+            LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository assignmentRepository) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
+        this.rubricService = rubricService;
+        this.groupRepository = groupRepository;
+        this.lecturerRepository = lecturerRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
     @InitBinder
@@ -119,6 +140,129 @@ public class AdminController {
             model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
         }
         return "admin_home";
+    }
+
+    /**
+     * ⭐ NEW: Show lecturer assignment page for a specific assessment
+     */
+    @GetMapping("/lecturer-assignments/{assessmentId}")
+    @Transactional
+    public String showLecturerAssignmentPage(
+            @PathVariable Long assessmentId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+        
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (assessment == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
+            return "redirect:/admin/home";
+        }
+        
+        List<Group> allGroups = groupRepository.findAllWithStudents();
+        List<Lecturer> allLecturers = lecturerRepository.findAll();
+        
+        // Get existing assignments
+        List<LecturerGroupAssignment> existingAssignments = 
+            assignmentRepository.findByAssessment(assessment);
+        
+        // Build map of group -> list of assigned lecturers
+        Map<Long, List<Lecturer>> groupLecturerMap = new java.util.HashMap<>();
+        for (Group group : allGroups) {
+            List<Lecturer> assignedLecturers = existingAssignments.stream()
+                .filter(a -> a.getGroup().getId().equals(group.getId()))
+                .map(LecturerGroupAssignment::getLecturer)
+                .collect(Collectors.toList());
+            groupLecturerMap.put(group.getId(), assignedLecturers);
+        }
+        
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("allGroups", allGroups);
+        model.addAttribute("allLecturers", allLecturers);
+        model.addAttribute("groupLecturerMap", groupLecturerMap);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        
+        return "admin_assign_lecturers";
+    }
+
+    /**
+     * ⭐ NEW: Save lecturer assignments for an assessment
+     */
+    @PostMapping("/lecturer-assignments/{assessmentId}/save")
+    @Transactional
+    public String saveLecturerAssignments(
+            @PathVariable Long assessmentId,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes redirectAttributes) {
+        
+        try {
+            Assessment assessment = rubricService.findAssessmentById(assessmentId);
+            if (assessment == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
+                return "redirect:/admin/home";
+            }
+            
+            // Delete existing assignments for this assessment
+            assignmentRepository.deleteByAssessment(assessment);
+            assignmentRepository.flush();
+            
+            // Parse and save new assignments
+            // Format: group_<groupId>_lecturer_<index> = lecturerId
+            Map<Long, List<Long>> groupLecturerAssignments = new java.util.HashMap<>();
+            
+            for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                
+                if (key.startsWith("group_") && key.contains("_lecturer_")) {
+                    if (value == null || value.trim().isEmpty() || value.equals("none")) {
+                        continue; // Skip empty assignments
+                    }
+                    
+                    // Extract group ID from key (format: group_<groupId>_lecturer_<index>)
+                    String[] parts = key.split("_");
+                    Long groupId = Long.parseLong(parts[1]);
+                    Long lecturerId = Long.parseLong(value);
+                    
+                    groupLecturerAssignments
+                        .computeIfAbsent(groupId, k -> new ArrayList<>())
+                        .add(lecturerId);
+                }
+            }
+            
+            // Create assignment entities
+            List<LecturerGroupAssignment> assignments = new ArrayList<>();
+            for (Map.Entry<Long, List<Long>> entry : groupLecturerAssignments.entrySet()) {
+                Long groupId = entry.getKey();
+                Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+                
+                for (Long lecturerId : entry.getValue()) {
+                    Lecturer lecturer = lecturerRepository.findById(lecturerId)
+                        .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                    
+                    // Avoid duplicates
+                    if (!assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer)) {
+                        LecturerGroupAssignment assignment = new LecturerGroupAssignment();
+                        assignment.setAssessment(assessment);
+                        assignment.setGroup(group);
+                        assignment.setLecturer(lecturer);
+                        assignments.add(assignment);
+                    }
+                }
+            }
+            
+            assignmentRepository.saveAll(assignments);
+            
+            redirectAttributes.addFlashAttribute("successMessage", 
+                "Lecturer assignments saved successfully for " + assessment.getTitle() + "!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "Error saving assignments: " + e.getMessage());
+            return "redirect:/admin/lecturer-assignments/" + assessmentId;
+        }
+        
+        return "redirect:/rubrics/view/" + assessmentId;
     }
 
     @GetMapping("/group-assignment")
@@ -409,59 +553,59 @@ public class AdminController {
     }
 
     @PostMapping("/group-assignment/randomize/preview")
-public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
-                                    Model model,
-                                    RedirectAttributes redirectAttributes) {
+    public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
+                                        Model model,
+                                        RedirectAttributes redirectAttributes) {
 
-    int maxStudents = randomizationInput.getMaxStudentsPerGroup();
-    long availableStudentsCount = adminService.getAvailableStudentsCount(); 
+        int maxStudents = randomizationInput.getMaxStudentsPerGroup();
+        long availableStudentsCount = adminService.getAvailableStudentsCount(); 
 
-    if (maxStudents < 1) {
-        redirectAttributes.addFlashAttribute("error", "Cannot randomize: the max group size is invalid.");
-        return "redirect:/admin/group-assignment"; 
-    }
-    
-    List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
-    
-    if (unassignedStudents.isEmpty()) {
-        redirectAttributes.addFlashAttribute("error", "No students are currently unassigned.");
-        return "redirect:/admin/group-assignment"; 
-    }
-    
-    Collections.shuffle(unassignedStudents);
-    
-    int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
-    
-    GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
-    singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
-    
-    List<Long> studentIds = unassignedStudents.subList(0, actualGroupSize).stream()
-        .map(Student::getId)
-        .collect(Collectors.toList());
+        if (maxStudents < 1) {
+            redirectAttributes.addFlashAttribute("error", "Cannot randomize: the max group size is invalid.");
+            return "redirect:/admin/group-assignment"; 
+        }
         
-    singleRandomGroup.setSelectedStudentIds(studentIds);
+        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
+        
+        if (unassignedStudents.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "No students are currently unassigned.");
+            return "redirect:/admin/group-assignment"; 
+        }
+        
+        Collections.shuffle(unassignedStudents);
+        
+        int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
+        
+        GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
+        singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
+        
+        List<Long> studentIds = unassignedStudents.subList(0, actualGroupSize).stream()
+            .map(Student::getId)
+            .collect(Collectors.toList());
+            
+        singleRandomGroup.setSelectedStudentIds(studentIds);
 
-    Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
-        .collect(Collectors.toMap(Student::getId, Function.identity()));
-    
-    // Add the comma-separated string for easier template processing
-    String selectedStudentIdsStr = studentIds.stream()
-        .map(String::valueOf)
-        .collect(Collectors.joining(","));
-    
-    model.addAttribute("randomGroupPreview", singleRandomGroup); 
-    model.addAttribute("selectedStudentIdsStr", selectedStudentIdsStr);  // NEW
-    model.addAttribute("availableStudentsCount", availableStudentsCount);
-    model.addAttribute("maxStudentsPerGroup", maxStudents);
-    model.addAttribute("actualGroupSize", actualGroupSize);
-    model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
-    model.addAttribute("studentLookupMap", studentLookupMap); 
-    model.addAttribute("availableStudentsForAdd", unassignedStudents); 
-    model.addAttribute("availableLecturers", adminService.getAllLecturers());
-    model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
-    
-    return "group_assignment_preview"; 
-}
+        Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
+            .collect(Collectors.toMap(Student::getId, Function.identity()));
+        
+        // Add the comma-separated string for easier template processing
+        String selectedStudentIdsStr = studentIds.stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        
+        model.addAttribute("randomGroupPreview", singleRandomGroup); 
+        model.addAttribute("selectedStudentIdsStr", selectedStudentIdsStr);
+        model.addAttribute("availableStudentsCount", availableStudentsCount);
+        model.addAttribute("maxStudentsPerGroup", maxStudents);
+        model.addAttribute("actualGroupSize", actualGroupSize);
+        model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
+        model.addAttribute("studentLookupMap", studentLookupMap); 
+        model.addAttribute("availableStudentsForAdd", unassignedStudents); 
+        model.addAttribute("availableLecturers", adminService.getAllLecturers());
+        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
+        
+        return "group_assignment_preview"; 
+    }
     
     @PostMapping("/group-assignment/randomize/create") 
     public String createRandomGroups(

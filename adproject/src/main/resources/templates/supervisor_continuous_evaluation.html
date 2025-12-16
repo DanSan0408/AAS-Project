@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Evaluation - Industrial Supervisor</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .evaluation-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .page-subtitle {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+        
+        /* Context Info */
+        .context-info {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .context-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        
+        .context-label {
+            font-weight: 600;
+            color: #34495e;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        
+        .context-value {
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* Progress Bar */
+        .progress-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-title {
+            font-size: 1.2em;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .progress-percentage {
+            font-size: 1.5em;
+            color: #1abc9c;
+            font-weight: 700;
+        }
+        
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1abc9c, #16a085);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .progress-details {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* Evaluation Form */
+        .evaluation-form {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Section Headers */
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section-header.group-section {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .section-header.student-section {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-subtitle {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        /* Section Content */
+        .section-content {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        /* Rubric Evaluation */
+        .rubric-evaluation {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .rubric-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .rubric-name {
+            color: #2c3e50;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+        
+        .rubric-details {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        .rubric-details span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        /* Sub-rubric */
+        .sub-rubric-container {
+            margin: 20px 0 20px 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #9b59b6;
+        }
+        
+        .sub-rubric-header {
+            margin-bottom: 15px;
+        }
+        
+        .sub-rubric-name {
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .sub-rubric-marks {
+            color: #95a5a6;
+            font-size: 0.9em;
+        }
+        
+        .sub-rubric-description {
+            color: #666;
+            font-size: 0.95em;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        
+        /* Rating Options */
+        .rating-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .rating-option {
+            position: relative;
+        }
+        
+        .rating-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .rating-option label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .rating-option input[type="radio"]:checked + label {
+            background: #e8f4f8;
+            border-color: #3498db;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+        
+        .rating-option label:hover {
+            background: #f8f9fa;
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .rating-label {
+            flex: 1;
+            color: #2c3e50;
+        }
+        
+        .rating-marks {
+            color: #1abc9c;
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-left: 10px;
+        }
+        
+        /* Comments Section */
+        .comments-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .comments-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .comments-title {
+            color: #2c3e50;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .comment-field {
+            margin-bottom: 25px;
+        }
+        
+        .comment-label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .comment-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .char-counter {
+            text-align: right;
+            font-size: 0.85em;
+            color: #95a5a6;
+            margin-top: 5px;
+        }
+        
+        /* Rubric-Specific Comments */
+        .rubric-comments-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(155, 89, 182, 0.1);
+            border-left: 4px solid #9b59b6;
+            border-radius: 6px;
+        }
+        
+        .rubric-comments-header {
+            color: #9b59b6;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .rubric-comment-field {
+            margin-bottom: 15px;
+        }
+        
+        .rubric-comment-field label {
+            display: block;
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .rubric-comment-field textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            background: white;
+            border: 2px solid #9b59b6;
+            border-radius: 6px;
+            color: #2c3e50;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+        
+        .rubric-comment-field textarea:focus {
+            outline: none;
+            border-color: #8e44ad;
+            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
+        }
+        
+        .rubric-comment-hint {
+            font-size: 0.85em;
+            color: #95a5a6;
+            margin-top: 3px;
+        }
+        
+        /* Student Separator */
+        .student-separator {
+            height: 30px;
+            background: linear-gradient(to bottom, #f8f9fa, transparent);
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 25px 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 99;
+        }
+        
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-back {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-save {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn-submit {
+            background: #1abc9c;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background: #16a085;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
+        }
+        
+        /* Loading State */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+        
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>UTM CAS - Industrial Supervisor</h1>
+            </div>
+        </div>
+        
+        <div class="evaluation-container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h2 class="page-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    Continuous Evaluation Form
+                </h2>
+                <p class="page-subtitle">Complete evaluation for group and all students in one form</p>
+            </div>
+            
+            <!-- Context Information -->
+            <div class="context-info">
+                <div class="context-item">
+                    <span class="context-label">Group</span>
+                    <span class="context-value" th:text="${group.groupName}">Group Name</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Assessment</span>
+                    <span class="context-value">Industrial Supervisor Assessment</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Total Students</span>
+                    <span class="context-value" th:text="${#lists.size(students)}">0</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Status</span>
+                    <span class="context-value" th:text="${progress.status}">NOT_STARTED</span>
+                </div>
+            </div>
+            
+            <!-- Re-evaluation Warning -->
+            <div th:if="${isReEvaluation}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Re-evaluation Notice:</strong> You have already started or completed this evaluation. 
+                    Submitting this form will update your previous evaluation.
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <div>
+                    <strong>Instructions:</strong> This form contains the group evaluation followed by individual 
+                    student evaluations. You can save your progress at any time and return later to complete it.
+                </div>
+            </div>
+            
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-title">
+                        <i class="fas fa-tasks"></i> Overall Progress
+                    </span>
+                    <span class="progress-percentage" th:text="${#numbers.formatDecimal(progress.percentage, 1, 0)} + '%'">0%</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" 
+                         th:style="${'width: ' + progress.percentage + '%'}"
+                         th:text="${progress.percentage >= 10 ? (#numbers.formatDecimal(progress.percentage, 1, 0) + '%') : ''}">
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <span>
+                        <i class="fas fa-users"></i>
+                        Group: <strong th:text="${progress.groupComplete ? 'Complete' : 'Pending'}">Pending</strong>
+                    </span>
+                    <span>
+                        <i class="fas fa-user-check"></i>
+                        Students: <strong th:text="${progress.studentsEvaluated + ' / ' + progress.totalStudents}">0 / 0</strong>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Evaluation Form -->
+            <form th:action="@{/supervisor/evaluate/group/{groupId}/save(groupId=${group.id})}" 
+                  method="post" 
+                  class="evaluation-form"
+                  id="evaluationForm">
+                
+                <!-- ========== GROUP ASSESSMENT SECTION ========== -->
+                <div th:if="${!#lists.isEmpty(groupRubrics)}">
+                    <div class="section-header group-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-users"></i>
+                            Group Assessment
+                        </h3>
+                        <p class="section-subtitle">
+                            These evaluations apply to all students in the group
+                        </p>
+                    </div>
+                    
+                    <div class="section-content">
+                        <!-- Loop through group rubrics -->
+                        <div th:each="rubric : ${groupRubrics}" class="rubric-evaluation">
+                            <div class="rubric-header">
+                                <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                <div class="rubric-details">
+                                    <span>
+                                        <i class="fas fa-star"></i>
+                                        <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
+                                    </span>
+                                    <span th:if="${rubric.clo != null}">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        CLO <strong th:text="${rubric.clo}">1</strong>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Direct Rubric Ratings -->
+                            <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                <div class="rating-options">
+                                    <div th:each="rating : ${rubric.ratings}" class="rating-option">
+                                        <input type="radio" 
+                                               th:id="${'group_rubric_' + rubric.id + '_rating_' + rating.id}"
+                                               th:name="${'group_rubric[' + rubric.id + ']'}"
+                                               th:value="${rating.id}"
+                                               th:checked="${existingData.groupRubricRatings != null and existingData.groupRubricRatings[rubric.id] == rating.id}"/>
+                                        <label th:for="${'group_rubric_' + rubric.id + '_rating_' + rating.id}">
+                                            <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                            <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sub-rubrics -->
+                            <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
+                                <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
+                                    <div class="sub-rubric-header">
+                                        <h5 class="sub-rubric-name">
+                                            <span th:text="${subRubric.name}">Sub-Rubric Name</span>
+                                            <span class="sub-rubric-marks" th:if="${subRubric.marks != null}">
+                                                (<span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks)
+                                            </span>
+                                        </h5>
+                                        <p th:if="${subRubric.description != null and !#strings.isEmpty(subRubric.description)}" 
+                                           class="sub-rubric-description"
+                                           th:text="${subRubric.description}">Description</p>
+                                    </div>
+                                    
+                                    <!-- Sub-rubric ratings -->
+                                    <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}" class="rating-options">
+                                        <div th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                            <input type="radio" 
+                                                   th:id="${'group_subrubric_' + subRubric.id + '_rating_' + rating.id}"
+                                                   th:name="${'group_subrubric[' + subRubric.id + ']'}"
+                                                   th:value="${rating.id}"
+                                                   th:checked="${existingData.groupSubRubricRatings != null and existingData.groupSubRubricRatings[subRubric.id] == rating.id}"/>
+                                            <label th:for="${'group_subrubric_' + subRubric.id + '_rating_' + rating.id}">
+                                                <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Rubric-Specific Comments -->
+                            <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
+                                 class="rubric-comments-section">
+                                <h5 class="rubric-comments-header">
+                                    <i class="fas fa-comment-dots"></i> Comments for this Rubric
+                                </h5>
+                                
+                                <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
+                                     class="rubric-comment-field">
+                                    <label th:for="${'group_rubric_' + rubric.id + '_comment_' + i}">
+                                        <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                        <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                    </label>
+                                    <textarea 
+                                        th:id="${'group_rubric_' + rubric.id + '_comment_' + i}"
+                                        th:name="${'group_rubric_' + rubric.id + '_comment_' + i}"
+                                        th:text="${existingData.groupRubricComments != null and existingData.groupRubricComments[rubric.id] != null ? existingData.groupRubricComments[rubric.id][i] : ''}"
+                                        placeholder="Enter your feedback for this rubric..."></textarea>
+                                    <div class="rubric-comment-hint">
+                                        Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Group Comments -->
+                        <div th:if="${groupCommentCount > 0}" class="comments-section">
+                            <div class="comments-header">
+                                <h4 class="comments-title">
+                                    <i class="fas fa-comments"></i>
+                                    Group Feedback Comments
+                                </h4>
+                            </div>
+                            
+                            <div th:each="i : ${#numbers.sequence(0, groupCommentCount - 1)}" class="comment-field">
+                                <label class="comment-label" th:for="${'group_comment_' + i}">
+                                    <i class="fas fa-comment-dots"></i>
+                                    <span th:text="${assessment.getGroupCommentLabel(i)}">Comment</span>
+                                </label>
+                                <textarea 
+                                    th:id="${'group_comment_' + i}"
+                                    th:name="${'group_comment[' + i + ']'}"
+                                    class="comment-textarea"
+                                    th:attr="data-min-length=${assessment.getGroupCommentMinLength(i)}"
+                                    th:placeholder="${'Enter your feedback (min ' + assessment.getGroupCommentMinLength(i) + ' characters)...'}"
+                                    th:text="${existingData.groupComments != null and i < #lists.size(existingData.groupComments) ? existingData.groupComments[i] : ''}"></textarea>
+                                <div class="char-counter">
+                                    <span th:id="${'group_comment_' + i + '_counter'}">0</span> / 
+                                    <span th:text="${assessment.getGroupCommentMinLength(i)}">20</span> characters minimum
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Student Separator -->
+                <div class="student-separator"></div>
+                
+                <!-- ========== INDIVIDUAL STUDENT SECTIONS ========== -->
+                <div th:if="${!#lists.isEmpty(individualRubrics)}" th:each="student, iterStat : ${students}">
+                    <div class="section-header student-section">
+                        <h3 class="section-title">
+                            <i class="fas fa-user"></i>
+                            <span th:text="${'Student ' + (iterStat.index + 1) + ': ' + student.username}">Student Name</span>
+                        </h3>
+                        <p class="section-subtitle">
+                            Individual evaluation for this student
+                        </p>
+                    </div>
+                    
+                    <div class="section-content">
+                        <!-- Get existing data for this student -->
+                        <th:block th:with="studentData=${existingData.studentData != null ? existingData.studentData[student.id] : null}">
+                            
+                            <!-- Loop through individual rubrics -->
+                            <div th:each="rubric : ${individualRubrics}" class="rubric-evaluation">
+                                <div class="rubric-header">
+                                    <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                    <div class="rubric-details">
+                                        <span>
+                                            <i class="fas fa-star"></i>
+                                            <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
+                                        </span>
+                                        <span th:if="${rubric.clo != null}">
+                                            <i class="fas fa-graduation-cap"></i>
+                                            CLO <strong th:text="${rubric.clo}">1</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Direct Rubric Ratings -->
+                                <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                    <div class="rating-options">
+                                        <div th:each="rating : ${rubric.ratings}" class="rating-option">
+                                            <input type="radio" 
+                                                   th:id="${'student_' + student.id + '_rubric_' + rubric.id + '_rating_' + rating.id}"
+                                                   th:name="${'student_' + student.id + '_rubric[' + rubric.id + ']'}"
+                                                   th:value="${rating.id}"
+                                                   th:checked="${studentData != null and studentData.rubricRatings != null and studentData.rubricRatings[rubric.id] == rating.id}"/>
+                                            <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_rating_' + rating.id}">
+                                                <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sub-rubrics -->
+                                <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
+                                    <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
+                                        <div class="sub-rubric-header">
+                                            <h5 class="sub-rubric-name">
+                                                <span th:text="${subRubric.name}">Sub-Rubric Name</span>
+                                                <span class="sub-rubric-marks" th:if="${subRubric.marks != null}">
+                                                    (<span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks)
+                                                </span>
+                                            </h5>
+                                            <p th:if="${subRubric.description != null and !#strings.isEmpty(subRubric.description)}" 
+                                               class="sub-rubric-description"
+                                               th:text="${subRubric.description}">Description</p>
+                                        </div>
+                                        
+                                        <!-- Sub-rubric ratings -->
+                                        <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}" class="rating-options">
+                                            <div th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                                <input type="radio" 
+                                                       th:id="${'student_' + student.id + '_subrubric_' + subRubric.id + '_rating_' + rating.id}"
+                                                       th:name="${'student_' + student.id + '_subrubric[' + subRubric.id + ']'}"
+                                                       th:value="${rating.id}"
+                                                       th:checked="${studentData != null and studentData.subRubricRatings != null and studentData.subRubricRatings[subRubric.id] == rating.id}"/>
+                                                <label th:for="${'student_' + student.id + '_subrubric_' + subRubric.id + '_rating_' + rating.id}">
+                                                    <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                    <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Rubric-Specific Comments -->
+                                <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
+                                     class="rubric-comments-section">
+                                    <h5 class="rubric-comments-header">
+                                        <i class="fas fa-comment-dots"></i> Comments for this Rubric
+                                    </h5>
+                                    
+                                    <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
+                                         class="rubric-comment-field">
+                                        <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}">
+                                            <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                            <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                        </label>
+                                        <textarea 
+                                            th:id="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
+                                            th:name="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
+                                            th:text="${studentData != null and studentData.rubricComments != null and studentData.rubricComments[rubric.id] != null ? studentData.rubricComments[rubric.id][i] : ''}"
+                                            placeholder="Enter your feedback for this rubric..."></textarea>
+                                        <div class="rubric-comment-hint">
+                                            Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Individual Comments -->
+                            <div th:if="${individualCommentCount > 0}" class="comments-section">
+                                <div class="comments-header">
+                                    <h4 class="comments-title">
+                                        <i class="fas fa-comments"></i>
+                                        <span th:text="${'Feedback for ' + student.username}">Student Feedback</span>
+                                    </h4>
+                                </div>
+                                
+                                <div th:each="i : ${#numbers.sequence(0, individualCommentCount - 1)}" class="comment-field">
+                                    <label class="comment-label" th:for="${'student_' + student.id + '_comment_' + i}">
+                                        <i class="fas fa-comment-dots"></i>
+                                        <span th:text="${assessment.getIndividualCommentLabel(i)}">Comment</span>
+                                    </label>
+                                    <textarea 
+                                        th:id="${'student_' + student.id + '_comment_' + i}"
+                                        th:name="${'student_' + student.id + '_comment[' + i + ']'}"
+                                        class="comment-textarea"
+                                        th:attr="data-min-length=${assessment.getIndividualCommentMinLength(i)}"
+                                        th:placeholder="${'Enter your feedback (min ' + assessment.getIndividualCommentMinLength(i) + ' characters)...'}"
+                                        th:text="${studentData != null and studentData.comments != null and i < #lists.size(studentData.comments) ? studentData.comments[i] : ''}"></textarea>
+                                    <div class="char-counter">
+                                        <span th:id="${'student_' + student.id + '_comment_' + i + '_counter'}">0</span> / 
+                                        <span th:text="${assessment.getIndividualCommentMinLength(i)}">20</span> characters minimum
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </th:block>
+                    </div>
+                    
+                    <!-- Separator between students (except last) -->
+                    <div th:if="${!iterStat.last}" class="student-separator"></div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a th:href="@{/supervisor/evaluate}" class="btn btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Groups
+                    </a>
+                    <button type="submit" name="action" value="save" class="btn btn-save">
+                        <i class="fas fa-save"></i>
+                        Save Progress
+                    </button>
+                    <button type="submit" name="action" value="complete" class="btn btn-submit">
+                        <i class="fas fa-check-circle"></i>
+                        Submit Complete
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Character counter for textareas
+        document.addEventListener('DOMContentLoaded', function() {
+            const textareas = document.querySelectorAll('.comment-textarea');
+            
+            textareas.forEach(function(textarea) {
+                const counterId = textarea.id + '_counter';
+                const counter = document.getElementById(counterId);
+                
+                if (counter) {
+                    // Update counter on input
+                    textarea.addEventListener('input', function() {
+                        counter.textContent = this.value.length;
+                    });
+                    
+                    // Initialize counter
+                    counter.textContent = textarea.value.length;
+                }
+            });
+            
+            // Smooth scroll to sections
+            const sectionHeaders = document.querySelectorAll('.section-header');
+            sectionHeaders.forEach(header => {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', function() {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        });
+        
+        // Form submission validation
+        document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+            const action = e.submitter.value;
+            
+            if (action === 'complete') {
+                // Optional: Add validation for complete submission
+                // For now, we'll let the backend handle validation
+            }
+        });
+    </script>
+</body>
+</html>

@@ -14,11 +14,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
-/**
- * Entity to store overall comments for assessments
- * Separate from individual rubric/criteria marks
- */
+
 @Entity
 @Table(name = "assessment_comments")
 public class AssessmentComment {
@@ -27,74 +25,58 @@ public class AssessmentComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Student being evaluated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluated_student_id", nullable = false)
     private Student evaluatedStudent;
 
-    // Person giving the comment (can be Student, Lecturer, or Supervisor)
     @Column(name = "evaluator_id", nullable = false)
     private Long evaluatorId;
 
-    // Type of evaluator (STUDENT, LECTURER, SUPERVISOR)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EvaluatorType evaluatorType;
 
-    // Name of evaluator (for display purposes - lecturers/supervisors show name, students are anonymous)
     @Column(name = "evaluator_name")
     private String evaluatorName;
 
-    // Assessment this comment belongs to
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assessment_id", nullable = false)
     private Assessment assessment;
 
-    // The overall comment text
     @Column(columnDefinition = "TEXT", nullable = false)
     private String commentText;
 
-    // Assessment type (for context)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CommentAssessmentType assessmentType;
 
-    // Timestamp
     @Column(nullable = false)
     private LocalDateTime submittedAt;
 
-    // Anonymous identifier for peer comments (e.g., "Teammate 1", "Teammate 2")
     @Column(name = "anonymous_identifier")
     private String anonymousIdentifier;
     
-    // ========== FIELDS FOR MULTIPLE COMMENTS ==========
-    
-    /**
-     * Index of the comment (0-based) when multiple comments are required
-     * 0 = first comment, 1 = second comment, etc.
-     * For backward compatibility, null or 0 represents the "overall" comment
-     */
     @Column(name = "comment_index")
     private Integer commentIndex = 0;
     
-    /**
-     * Label/prompt for this comment (e.g., "Strengths", "Areas for Improvement")
-     * Optional - if null, uses default "Comment X"
-     */
     @Column(name = "comment_label", length = 500)
     private String commentLabel;
     
-    // ========== NEW FIELD FOR RUBRIC ASSESSMENT TYPE ==========
-    
-    /**
-     * NEW: Rubric assessment type this comment is associated with
-     * Values: "Group Assessment", "Individual Assessment"
-     * This allows comments to be specific to group or individual evaluations
-     */
     @Column(name = "rubric_assessment_type", length = 50)
     private String rubricAssessmentType;
 
-    // Enums
+    
+    @Transient
+    private String cachedDisplayName;
+    
+    // ========== NEW: RUBRIC-SPECIFIC COMMENT FIELD ==========
+    
+    /**
+     * ID of the specific rubric this comment is for (null for general assessment comments)
+     */
+    @Column(name = "rubric_id")
+    private Long rubricId;
+
     public enum EvaluatorType {
         STUDENT,
         LECTURER,
@@ -104,12 +86,11 @@ public class AssessmentComment {
     public enum CommentAssessmentType {
         PEER,
         SELF,
-        TEAM,  // NEW: For team/group evaluations by students
+        TEAM,
         LECTURER_EVALUATION,
         SUPERVISOR_EVALUATION
     }
 
-    // Constructors
     public AssessmentComment() {
     }
 
@@ -124,141 +105,84 @@ public class AssessmentComment {
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Student getEvaluatedStudent() { return evaluatedStudent; }
+    public void setEvaluatedStudent(Student evaluatedStudent) { this.evaluatedStudent = evaluatedStudent; }
 
-    public Student getEvaluatedStudent() {
-        return evaluatedStudent;
-    }
+    public Long getEvaluatorId() { return evaluatorId; }
+    public void setEvaluatorId(Long evaluatorId) { this.evaluatorId = evaluatorId; }
 
-    public void setEvaluatedStudent(Student evaluatedStudent) {
-        this.evaluatedStudent = evaluatedStudent;
-    }
+    public EvaluatorType getEvaluatorType() { return evaluatorType; }
+    public void setEvaluatorType(EvaluatorType evaluatorType) { this.evaluatorType = evaluatorType; }
 
-    public Long getEvaluatorId() {
-        return evaluatorId;
-    }
+    public String getEvaluatorName() { return evaluatorName; }
+    public void setEvaluatorName(String evaluatorName) { this.evaluatorName = evaluatorName; }
 
-    public void setEvaluatorId(Long evaluatorId) {
-        this.evaluatorId = evaluatorId;
-    }
+    public Assessment getAssessment() { return assessment; }
+    public void setAssessment(Assessment assessment) { this.assessment = assessment; }
 
-    public EvaluatorType getEvaluatorType() {
-        return evaluatorType;
-    }
+    public String getCommentText() { return commentText; }
+    public void setCommentText(String commentText) { this.commentText = commentText; }
 
-    public void setEvaluatorType(EvaluatorType evaluatorType) {
-        this.evaluatorType = evaluatorType;
-    }
+    public CommentAssessmentType getAssessmentType() { return assessmentType; }
+    public void setAssessmentType(CommentAssessmentType assessmentType) { this.assessmentType = assessmentType; }
 
-    public String getEvaluatorName() {
-        return evaluatorName;
-    }
+    public LocalDateTime getSubmittedAt() { return submittedAt; }
+    public void setSubmittedAt(LocalDateTime submittedAt) { this.submittedAt = submittedAt; }
 
-    public void setEvaluatorName(String evaluatorName) {
-        this.evaluatorName = evaluatorName;
-    }
-
-    public Assessment getAssessment() {
-        return assessment;
-    }
-
-    public void setAssessment(Assessment assessment) {
-        this.assessment = assessment;
-    }
-
-    public String getCommentText() {
-        return commentText;
-    }
-
-    public void setCommentText(String commentText) {
-        this.commentText = commentText;
-    }
-
-    public CommentAssessmentType getAssessmentType() {
-        return assessmentType;
-    }
-
-    public void setAssessmentType(CommentAssessmentType assessmentType) {
-        this.assessmentType = assessmentType;
-    }
-
-    public LocalDateTime getSubmittedAt() {
-        return submittedAt;
-    }
-
-    public void setSubmittedAt(LocalDateTime submittedAt) {
-        this.submittedAt = submittedAt;
-    }
-
-    public String getAnonymousIdentifier() {
-        return anonymousIdentifier;
-    }
-
-    public void setAnonymousIdentifier(String anonymousIdentifier) {
-        this.anonymousIdentifier = anonymousIdentifier;
-    }
+    public String getAnonymousIdentifier() { return anonymousIdentifier; }
+    public void setAnonymousIdentifier(String anonymousIdentifier) { this.anonymousIdentifier = anonymousIdentifier; }
     
-    public Integer getCommentIndex() {
-        return commentIndex != null ? commentIndex : 0;
-    }
+    public Integer getCommentIndex() { return commentIndex != null ? commentIndex : 0; }
+    public void setCommentIndex(Integer commentIndex) { this.commentIndex = commentIndex; }
     
-    public void setCommentIndex(Integer commentIndex) {
-        this.commentIndex = commentIndex;
-    }
+    public String getCommentLabel() { return commentLabel; }
+    public void setCommentLabel(String commentLabel) { this.commentLabel = commentLabel; }
     
-    public String getCommentLabel() {
-        return commentLabel;
-    }
+    public String getRubricAssessmentType() { return rubricAssessmentType; }
+    public void setRubricAssessmentType(String rubricAssessmentType) { this.rubricAssessmentType = rubricAssessmentType; }
     
-    public void setCommentLabel(String commentLabel) {
-        this.commentLabel = commentLabel;
-    }
-    
-    public String getRubricAssessmentType() {
-        return rubricAssessmentType;
-    }
-    
-    public void setRubricAssessmentType(String rubricAssessmentType) {
-        this.rubricAssessmentType = rubricAssessmentType;
-    }
+    public Long getRubricId() { return rubricId; }
+    public void setRubricId(Long rubricId) { this.rubricId = rubricId; }
 
-    /**
-     * Get display name for the evaluator
-     * - Students: Anonymous (Teammate 1, Teammate 2, or "You" for self) if assessment configured as anonymous
-     * - Lecturers/Supervisors: Show actual name
-     */
     public String getDisplayName() {
-        if (evaluatorType == EvaluatorType.STUDENT) {
-            // Check if assessment is configured for anonymous comments based on rubric type
-            if (assessment != null) {
-                Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
-                if (isAnonymous != null && !isAnonymous) {
-                    // Show real name if not anonymous
-                    return evaluatorName != null ? evaluatorName : "Student";
-                }
-            }
-            // Otherwise show anonymous identifier
-            return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
-        } else {
-            return evaluatorName != null ? evaluatorName : "Evaluator";
-        }
+    // If already processed by controller, use cached value
+    if (cachedDisplayName != null) {
+        return cachedDisplayName;
     }
     
-    /**
-     * Get the display label for this comment
-     */
+    // Fallback logic (shouldn't normally be used if controller sets cachedDisplayName)
+    if (evaluatorType == EvaluatorType.STUDENT) {
+        if (assessment != null) {
+            Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
+            if (isAnonymous != null && !isAnonymous) {
+                return evaluatorName != null ? evaluatorName : "Student";
+            }
+        }
+        return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
+    } else if (evaluatorType == EvaluatorType.LECTURER || evaluatorType == EvaluatorType.SUPERVISOR) {
+        // For lecturers and supervisors, check if anonymousIdentifier was set
+        // (this happens for rubric-specific comments with anonymity enabled)
+        if (anonymousIdentifier != null && !anonymousIdentifier.equals(evaluatorName)) {
+            return anonymousIdentifier; // Return "Lecturer" or "Supervisor" if anonymous
+        }
+        return evaluatorName != null ? evaluatorName : "Evaluator";
+    } else {
+        return evaluatorName != null ? evaluatorName : "Evaluator";
+    }
+}
+
+public void setDisplayName(String displayName) {
+    this.cachedDisplayName = displayName;
+}
+    
     public String getDisplayLabel() {
         if (commentLabel != null && !commentLabel.trim().isEmpty()) {
             return commentLabel;
         }
         
-        // Default label based on rubric assessment type
         if (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group")) {
             return "Group Comment " + (getCommentIndex() + 1);
         } else {

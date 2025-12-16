@@ -82,6 +82,12 @@ public class Mark {
     @Column(nullable = false)
     private SubmissionStatus status = SubmissionStatus.DRAFT;
 
+    @Column(name = "supervisor_id")
+private Long supervisorId;
+
+@Column(name = "is_supervisor_mark")
+private Boolean isSupervisorMark = false;
+
     // Enum
     public enum SubmissionStatus {
         DRAFT,
@@ -189,4 +195,20 @@ public class Mark {
             this.cloMarks = 0.0;
         }
     }
+    
+public Long getSupervisorId() {
+    return supervisorId;
+}
+
+public void setSupervisorId(Long supervisorId) {
+    this.supervisorId = supervisorId;
+}
+
+public Boolean getIsSupervisorMark() {
+    return isSupervisorMark;
+}
+
+public void setIsSupervisorMark(Boolean isSupervisorMark) {
+    this.isSupervisorMark = isSupervisorMark;
+}
 }

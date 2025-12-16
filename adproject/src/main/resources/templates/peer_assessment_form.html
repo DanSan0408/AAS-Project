@@ -7,6 +7,79 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/peer_assess.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* ✅ NEW: Rubric-specific comments styling */
+        .rubric-comments-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(155, 89, 182, 0.1);
+            border-left: 4px solid #9b59b6;
+            border-radius: 6px;
+        }
+        
+        .rubric-comments-header {
+            color: #9b59b6;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .rubric-comment-field-container {
+            margin-bottom: 15px;
+        }
+        
+        .rubric-comment-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .rubric-comment-field-header h5 {
+            color: #9b59b6;
+            margin: 0;
+            font-size: 0.95em;
+        }
+        
+        .rubric-char-counter {
+            color: #95a5a6;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .rubric-comment-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            background: #2c3e50;
+            border: 2px solid #9b59b6;
+            border-radius: 4px;
+            color: #ecf0f1;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        .rubric-comment-textarea:focus {
+            outline: none;
+            border-color: #8e44ad;
+        }
+        
+        .rubric-comment-hint {
+            font-size: 0.85em;
+            color: #95a5a6;
+            margin-top: 3px;
+        }
+        
+        .rubric-comment-validation {
+            display: none;
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
 <body>
     <div th:replace="fragments/student_sidebar :: sidebar"></div>
@@ -15,7 +88,6 @@
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <!-- ✅ UPDATED: Dynamic title based on evaluation type -->
                 <h1 th:text="${isTeamEvaluation != null and isTeamEvaluation ? 'Team Evaluation' : (isSelfAssessment ? 'Self Assessment' : 'Peer Assessment')}">Assessment</h1>
             </div>
         </div>
@@ -29,7 +101,6 @@
                         <span class="label">Evaluator:</span>
                         <strong th:text="${evaluator.username}">Your Name</strong>
                     </div>
-                    <!-- ✅ UPDATED: Dynamic evaluating target -->
                     <div class="evaluated-info">
                         <span class="label">Evaluating:</span>
                         <strong th:if="${isTeamEvaluation != null and isTeamEvaluation}">Your Team</strong>
@@ -43,9 +114,8 @@
                 </div>
             </div>
 
-            <!-- ⭐ NOTICES CONTAINER -->
+            <!-- NOTICES CONTAINER -->
             <div class="notices-container">
-                <!-- Re-evaluation Notice -->
                 <div th:if="${hasExistingEvaluation}" class="re-evaluation-notice">
                     <i class="fas fa-exclamation-triangle"></i>
                     <div>
@@ -64,7 +134,6 @@
                     </div>
                 </div>
 
-                <!-- Deadline Warning -->
                 <div th:if="${deadline != null}" class="deadline-warning">
                     <i class="fas fa-clock"></i>
                     <div class="deadline-warning-content">
@@ -77,8 +146,7 @@
                 </div>
             </div>
 
-            <!-- ⭐ FORM STARTS HERE -->
-            <!-- ✅ UPDATED: Dynamic form action based on evaluation type -->
+            <!-- FORM STARTS HERE -->
             <form id="assessmentForm" 
                   th:action="${isTeamEvaluation != null and isTeamEvaluation ? 
                                '/student/assessment/' + assessment.id + '/team-evaluate/submit' : 
@@ -88,7 +156,6 @@
                 
                 <div class="rubrics-container">
                     
-                    <!-- RUBRICS SECTION -->
                     <div th:if="${rubrics != null and !#lists.isEmpty(rubrics)}">
                         <h2 style="color: #3498db; margin-bottom: 20px;">
                             <i class="fas fa-tasks"></i> Assessment Rubrics
@@ -144,7 +211,6 @@
                                         </p>
                                     </div>
                                     
-                                    <!-- Rating options for this sub-rubric -->
                                     <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}"
                                          class="rating-options-grid">
                                         <div th:each="rating : ${subRubric.ratings}" 
@@ -172,7 +238,7 @@
                                 </div>
                             </div>
                             
-                            <!-- CASE 2: Rubric has Direct Ratings (no sub-rubrics) -->
+                            <!-- CASE 2: Rubric has Direct Ratings -->
                             <div th:if="${(rubric.subRubrics == null or #lists.isEmpty(rubric.subRubrics)) and rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}"
                                  class="direct-ratings-container">
                                 <h4 style="color: #2ecc71; margin-top: 15px; margin-bottom: 10px;">
@@ -202,10 +268,51 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- ✅ NEW: Rubric-Specific Comments Section -->
+                            <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
+                                 class="rubric-comments-section">
+                                <h4 class="rubric-comments-header">
+                                    <i class="fas fa-comment-dots"></i> 
+                                    <span>Specific Comments for this Rubric</span>
+                                </h4>
+                                
+                                <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}">
+                                    <div th:with="existingComment=${existingRubricComments != null and existingRubricComments.containsKey(rubric.id) and existingRubricComments.get(rubric.id) != null and i < #lists.size(existingRubricComments.get(rubric.id)) ? existingRubricComments.get(rubric.id).get(i) : null}">
+                                        
+                                        <div class="rubric-comment-field-container">
+                                            <div class="rubric-comment-field-header">
+                                                <h5 th:text="${rubric.getRubricCommentLabel(i)}">Comment Question</h5>
+                                                <span class="rubric-char-counter" th:id="'rubric_' + ${rubric.id} + '_charCount_' + ${i}">
+                                                    <span th:text="${existingComment != null ? #strings.length(existingComment.commentText) : 0}">0</span>
+                                                </span>
+                                            </div>
+                                            
+                                            <textarea 
+                                                th:name="'rubric_' + ${rubric.id} + '_comment_' + ${i}" 
+                                                th:id="'rubric_' + ${rubric.id} + '_comment_' + ${i}"
+                                                th:placeholder="'Write your ' + ${#strings.toLowerCase(rubric.getRubricCommentLabel(i))} + ' here...'"
+                                                th:attr="data-min-length=${rubric.rubricCommentMinLength}, data-index=${i}, data-rubric-id=${rubric.id}"
+                                                class="rubric-comment-textarea"
+                                                th:text="${existingComment != null ? existingComment.commentText : ''}">
+                                            </textarea>
+                                            
+                                            <div class="rubric-comment-validation" 
+                                                 th:id="'rubric_' + ${rubric.id} + '_validation_' + ${i}">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                                <span>Minimum length not met (<span th:text="${rubric.rubricCommentMinLength}">20</span> characters required)</span>
+                                            </div>
+                                            
+                                            <div class="rubric-comment-hint" th:if="${rubric.rubricCommentMinLength > 0}">
+                                                Suggested minimum: <span th:text="${rubric.rubricCommentMinLength}">20</span> characters
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- NO RUBRICS MESSAGE -->
                     <div th:if="${rubrics == null or #lists.isEmpty(rubrics)}" 
                          class="no-rubrics-message">
                         <i class="fas fa-info-circle" style="font-size: 2em; color: #95a5a6;"></i>
@@ -213,23 +320,20 @@
                     </div>
                 </div>
 
-                <!-- ⭐⭐⭐ MULTIPLE COMMENTS SECTION - FIXED WITH PROPER NULL HANDLING ⭐⭐⭐ -->
-                <!-- ✅ FIXED: Determine which comment configuration to use -->
+                <!-- ASSESSMENT-LEVEL COMMENTS SECTION -->
                 <div th:with="isTeam=${isTeamEvaluation != null and isTeamEvaluation},
                               commentCount=${isTeam ? assessment.groupCommentCount : assessment.individualCommentCount},
                               minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
                               commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
                               hasComments=${commentCount != null and commentCount > 0}">
                     
-                    <!-- Only show comments section if comments are configured -->
                     <div th:if="${hasComments}" class="comments-container">
                         <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
                             <i class="fas fa-comments"></i> 
-                            Feedback Comments
+                            Overall Feedback Comments
                             <span class="required-indicator">*</span>
                         </h3>
                         
-                        <!-- Instruction Text -->
                         <div style="background: #34495e; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
                             <p style="color: #ecf0f1; margin-bottom: 10px;">
                                 <i class="fas fa-info-circle" style="color: #3498db;"></i>
@@ -243,9 +347,7 @@
                             </ul>
                         </div>
                         
-                        <!-- Dynamic Comment Fields -->
                         <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}">
-                            <!-- Get the label for this comment -->
                             <div th:with="commentLabel=${isTeam ? assessment.getGroupCommentLabel(i) : assessment.getIndividualCommentLabel(i)},
                                           existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
                                 
@@ -293,10 +395,9 @@
                         </div>
                     </div>
                     
-                    <!-- Show message if no comments configured -->
                     <div th:unless="${hasComments}" class="comments-container" style="text-align: center; padding: 30px;">
                         <i class="fas fa-info-circle" style="font-size: 2em; color: #95a5a6;"></i>
-                        <p style="color: #95a5a6; margin-top: 15px;">No comments are required for this evaluation.</p>
+                        <p style="color: #95a5a6; margin-top: 15px;">No overall comments are required for this evaluation.</p>
                     </div>
                 </div>
 
@@ -312,7 +413,7 @@
         </div>
     </div>
     
-    <!-- ⭐ Confirmation Modal -->
+    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -345,7 +446,6 @@
         </div>
     </div>
     
-    <!-- ✅ SIMPLIFIED JAVASCRIPT - Comment fields are now server-rendered -->
     <script th:inline="javascript">
         const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
         const isTeamEval = /*[[${isTeamEvaluation}]]*/ false;
@@ -357,7 +457,7 @@
         const modalConfirm = document.getElementById('modalConfirm');
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup character counters and validation for all comment textareas
+            // Setup character counters for assessment-level comments
             const commentTextareas = document.querySelectorAll('.comment-textarea');
             
             commentTextareas.forEach(function(textarea) {
@@ -368,7 +468,6 @@
                 
                 if (!charCount || !validation) return;
                 
-                // Update character count on input
                 textarea.addEventListener('input', function() {
                     const length = this.value.length;
                     const currentSpan = charCount.querySelector('span:first-child') || charCount;
@@ -385,7 +484,46 @@
                     }
                 });
                 
-                // Trigger initial update
+                textarea.dispatchEvent(new Event('input'));
+            });
+            
+            // ✅ NEW: Setup character counters for rubric-specific comments
+            const rubricCommentTextareas = document.querySelectorAll('.rubric-comment-textarea');
+            
+            rubricCommentTextareas.forEach(function(textarea) {
+                const rubricId = textarea.getAttribute('data-rubric-id');
+                const index = textarea.getAttribute('data-index');
+                const minLength = parseInt(textarea.getAttribute('data-min-length')) || 0;
+                const charCountId = 'rubric_' + rubricId + '_charCount_' + index;
+                const validationId = 'rubric_' + rubricId + '_validation_' + index;
+                
+                const charCount = document.getElementById(charCountId);
+                const validation = document.getElementById(validationId);
+                
+                if (!charCount) return;
+                
+                textarea.addEventListener('input', function() {
+                    const length = this.value.length;
+                    const currentSpan = charCount.querySelector('span:first-child') || charCount;
+                    currentSpan.textContent = length;
+                    
+                    if (validation) {
+                        if (minLength > 0 && length < minLength && length > 0) {
+                            charCount.style.color = '#e74c3c';
+                            validation.style.display = 'block';
+                            this.style.borderColor = '#e74c3c';
+                        } else if (length >= minLength) {
+                            charCount.style.color = '#27ae60';
+                            validation.style.display = 'none';
+                            this.style.borderColor = '#9b59b6';
+                        } else {
+                            charCount.style.color = '#95a5a6';
+                            validation.style.display = 'none';
+                            this.style.borderColor = '#9b59b6';
+                        }
+                    }
+                });
+                
                 textarea.dispatchEvent(new Event('input'));
             });
             
@@ -393,7 +531,7 @@
             submitBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Validate all comment fields
+                // Validate all assessment-level comment fields
                 let allValid = true;
                 let firstInvalid = null;
                 
@@ -406,7 +544,7 @@
                 });
                 
                 if (!allValid && firstInvalid) {
-                    alert('Please ensure all comments meet the minimum length requirement.');
+                    alert('Please ensure all overall comments meet the minimum length requirement.');
                     firstInvalid.focus();
                     return;
                 }
@@ -417,7 +555,7 @@
                     return;
                 }
                 
-                // If re-evaluation, show confirmation
+                // Show confirmation if re-evaluation
                 if (hasExisting) {
                     modal.classList.add('active');
                 } else {
