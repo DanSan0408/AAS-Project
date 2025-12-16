@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -25,12 +27,14 @@ public class Rubric {
 
     private String name;
     private String description;
-    private BigDecimal marks; // Total marks for this rubric
+    private BigDecimal marks;
     private Integer clo;
     private Double cloMarks;
-
-    // assessmentTypes kept for categorization (Individual Assessment, Group Assessment)
     private String assessmentTypes;
+    
+    // ✅ NEW: Display order for reordering rubrics within their assessment type
+    @Column(name = "display_order")
+    private Integer displayOrder = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assessment_id")
@@ -39,9 +43,31 @@ public class Rubric {
     @OneToMany(mappedBy = "rubric", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubRubric> subRubrics = new ArrayList<>();
 
-    // Direct ratings on the rubric (when no sub-rubrics are used)
     @OneToMany(mappedBy = "rubric", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rating> ratings = new ArrayList<>();
+
+    // ========== NEW: INDIVIDUAL RUBRIC COMMENT CONFIGURATION ==========
+    
+    /**
+     * Labels/prompts for rubric-specific comment fields
+     */
+    @ElementCollection
+    @Column(name = "comment_label", length = 500)
+    private List<String> rubricCommentLabels = new ArrayList<>();
+    
+    /**
+     * Minimum character lengths for each comment question (one per question)
+     */
+    @ElementCollection
+    @Column(name = "comment_min_length")
+    private List<Integer> rubricCommentMinLengths = new ArrayList<>();
+    
+    /**
+     * Anonymity settings for each comment question (one per question)
+     */
+    @ElementCollection
+    @Column(name = "comment_anonymous")
+    private List<Boolean> rubricCommentAnonymousFlags = new ArrayList<>();
 
     // Getters and Setters
     public Long getId() { return id; }
@@ -58,6 +84,10 @@ public class Rubric {
     
     public Assessment getAssessment() { return assessment; }
     public void setAssessment(Assessment assessment) { this.assessment = assessment; }
+    
+    // ✅ NEW: Display order getter/setter
+    public Integer getDisplayOrder() { return displayOrder; }
+    public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
     
     public List<SubRubric> getSubRubrics() { 
         if (subRubrics == null) {
@@ -110,17 +140,91 @@ public class Rubric {
     public String getAssessmentTypes() { return assessmentTypes; }
     public void setAssessmentTypes(String assessmentTypes) { this.assessmentTypes = assessmentTypes; }
 
-    // Helper method to check if this rubric has sub-rubrics
+    // ===== RUBRIC-SPECIFIC COMMENT GETTERS/SETTERS =====
+    
+    public List<String> getRubricCommentLabels() {
+        if (rubricCommentLabels == null) {
+            rubricCommentLabels = new ArrayList<>();
+        }
+        return rubricCommentLabels;
+    }
+    
+    public void setRubricCommentLabels(List<String> rubricCommentLabels) {
+        this.rubricCommentLabels = rubricCommentLabels;
+    }
+    
+    public List<Integer> getRubricCommentMinLengths() {
+        if (rubricCommentMinLengths == null) {
+            rubricCommentMinLengths = new ArrayList<>();
+        }
+        return rubricCommentMinLengths;
+    }
+    
+    public void setRubricCommentMinLengths(List<Integer> rubricCommentMinLengths) {
+        this.rubricCommentMinLengths = rubricCommentMinLengths;
+    }
+    
+    public List<Boolean> getRubricCommentAnonymousFlags() {
+        if (rubricCommentAnonymousFlags == null) {
+            rubricCommentAnonymousFlags = new ArrayList<>();
+        }
+        return rubricCommentAnonymousFlags;
+    }
+    
+    public void setRubricCommentAnonymousFlags(List<Boolean> rubricCommentAnonymousFlags) {
+        this.rubricCommentAnonymousFlags = rubricCommentAnonymousFlags;
+    }
+    
+    public Integer getRubricCommentCount() {
+        return rubricCommentLabels != null ? rubricCommentLabels.size() : 0;
+    }
+    
+    public String getRubricCommentLabel(int index) {
+        if (rubricCommentLabels == null || index >= rubricCommentLabels.size()) {
+            return "Comment " + (index + 1);
+        }
+        return rubricCommentLabels.get(index);
+    }
+    
+    public Integer getRubricCommentMinLength(int index) {
+        if (rubricCommentMinLengths == null || index >= rubricCommentMinLengths.size()) {
+            return 20; // Default
+        }
+        return rubricCommentMinLengths.get(index);
+    }
+    
+    public Boolean isRubricCommentAnonymous(int index) {
+        System.out.println("=== isRubricCommentAnonymous DEBUG ===");
+        System.out.println("Checking index: " + index);
+        System.out.println("rubricCommentAnonymousFlags: " + rubricCommentAnonymousFlags);
+        
+        if (rubricCommentAnonymousFlags == null) {
+            System.out.println("Flags list is NULL - returning false");
+            return false;
+        }
+        
+        System.out.println("Flags list size: " + rubricCommentAnonymousFlags.size());
+        
+        if (index >= rubricCommentAnonymousFlags.size()) {
+            System.out.println("Index out of bounds - returning false");
+            return false;
+        }
+        
+        Boolean flag = rubricCommentAnonymousFlags.get(index);
+        System.out.println("Flag at index " + index + ": " + flag);
+        System.out.println("====================================");
+        
+        return flag != null ? flag : false;
+    }
+
     public boolean hasSubRubrics() {
         return subRubrics != null && !subRubrics.isEmpty();
     }
 
-    // Helper method to check if this rubric has direct ratings
     public boolean hasDirectRatings() {
         return ratings != null && !ratings.isEmpty();
     }
 
-    // Calculate total marks from sub-rubrics and direct ratings
     public BigDecimal calculateChildrenMarks() {
         BigDecimal total = BigDecimal.ZERO;
         
@@ -141,5 +245,39 @@ public class Rubric {
         }
         
         return total;
+    }
+    
+    // Deprecated - kept for backward compatibility
+    @Deprecated
+    public Boolean getCommentsAnonymous() {
+        // Return true if ANY comment is anonymous
+        if (rubricCommentAnonymousFlags != null && !rubricCommentAnonymousFlags.isEmpty()) {
+            return rubricCommentAnonymousFlags.stream().anyMatch(flag -> flag != null && flag);
+        }
+        return false;
+    }
+    
+    @Deprecated
+    public void setCommentsAnonymous(Boolean commentsAnonymous) {
+        // This is now handled per-comment
+    }
+    
+    @Deprecated
+    public Integer getRubricCommentMinLength() {
+        // Return the first min length or default
+        if (rubricCommentMinLengths != null && !rubricCommentMinLengths.isEmpty()) {
+            return rubricCommentMinLengths.get(0);
+        }
+        return 20;
+    }
+    
+    @Deprecated
+    public void setRubricCommentMinLength(Integer minLength) {
+        // This is now handled per-comment
+    }
+    
+    @Deprecated
+    public void setRubricCommentCount(Integer count) {
+        // Count is now automatically derived from labels list
     }
 }

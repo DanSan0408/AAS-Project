@@ -29,19 +29,18 @@ public class RubricService {
     private final AssessmentRepository assessmentRepository;
     private final RubricRepository rubricRepository;
     private final SubRubricRepository subRubricRepository;
-    private final MarkRepository markRepository;  // ✅ NEW
+    private final MarkRepository markRepository;
 
     public RubricService(AssessmentRepository assessmentRepository, 
                          RubricRepository rubricRepository,
                          SubRubricRepository subRubricRepository,
-                         MarkRepository markRepository) {  // ✅ NEW
+                         MarkRepository markRepository) {
         this.assessmentRepository = assessmentRepository;
         this.rubricRepository = rubricRepository;
         this.subRubricRepository = subRubricRepository;
-        this.markRepository = markRepository;  // ✅ NEW
+        this.markRepository = markRepository;
     }
 
-    // Helper Method to Calculate Marks
     public void calculateAssessmentMarks(Assessment assessment) {
         if (assessment == null) return;
 
@@ -82,6 +81,9 @@ public class RubricService {
         for (Rubric rubric : assessment.getRubrics()) {
             Hibernate.initialize(rubric.getSubRubrics());
             Hibernate.initialize(rubric.getRatings());
+            Hibernate.initialize(rubric.getRubricCommentLabels());
+            Hibernate.initialize(rubric.getRubricCommentMinLengths());
+            Hibernate.initialize(rubric.getRubricCommentAnonymousFlags());
             
             if (rubric.getSubRubrics() != null) {
                 for (SubRubric subRubric : rubric.getSubRubrics()) {
@@ -99,9 +101,6 @@ public class RubricService {
         return assessmentRepository.save(assessment);
     }
     
-    /**
-     * ✅ UPDATED: Delete assessment with cascade deletion of marks
-     */
     @Transactional
     public void deleteAssessment(Long id){
         if (!assessmentRepository.existsById(id)) {
@@ -110,7 +109,6 @@ public class RubricService {
         
         Assessment assessment = assessmentRepository.findById(id).orElse(null);
         if (assessment != null && assessment.getRubrics() != null) {
-            // Delete marks for all rubrics in this assessment
             for (Rubric rubric : assessment.getRubrics()) {
                 deleteMarksForRubric(rubric);
             }
@@ -124,9 +122,11 @@ public class RubricService {
         Rubric rubric = rubricRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + id));
         
-        // Initialize lazy collections
         Hibernate.initialize(rubric.getSubRubrics());
         Hibernate.initialize(rubric.getRatings());
+        Hibernate.initialize(rubric.getRubricCommentLabels());
+        Hibernate.initialize(rubric.getRubricCommentMinLengths());
+        Hibernate.initialize(rubric.getRubricCommentAnonymousFlags());
         
         if (rubric.getSubRubrics() != null) {
             for (SubRubric sr : rubric.getSubRubrics()) {
@@ -137,12 +137,11 @@ public class RubricService {
         return rubric;
     }
 
-
     @Transactional
     public Rubric saveRubric(Rubric formRubric) { 
         
-        // Logic for UPDATING an existing Rubric
         if (formRubric.getId() != null) {
+            // ===== UPDATING EXISTING RUBRIC =====
             
             Rubric existingRubric = rubricRepository.findById(formRubric.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + formRubric.getId()));
@@ -154,17 +153,35 @@ public class RubricService {
             existingRubric.setAssessmentTypes(formRubric.getAssessmentTypes());
             existingRubric.setClo(formRubric.getClo());
             existingRubric.setCloMarks(formRubric.getCloMarks());
-
-            // --- Handle SubRubrics Collection ---
-            updateSubRubrics(existingRubric, formRubric.getSubRubrics());
+            existingRubric.setDisplayOrder(formRubric.getDisplayOrder());
             
-            // --- Handle Direct Ratings Collection ---
+            // ✅ UPDATED: Set normalized lists
+            existingRubric.setRubricCommentLabels(formRubric.getRubricCommentLabels());
+            existingRubric.setRubricCommentMinLengths(formRubric.getRubricCommentMinLengths());
+            existingRubric.setRubricCommentAnonymousFlags(formRubric.getRubricCommentAnonymousFlags());
+
+            updateSubRubrics(existingRubric, formRubric.getSubRubrics());
             updateDirectRatings(existingRubric, formRubric.getRatings());
             
             return rubricRepository.save(existingRubric);
             
         } else {
-            // Logic for SAVING a BRAND NEW Rubric
+            // ===== SAVING NEW RUBRIC =====
+            
+            // Set display order for new rubric
+            if (formRubric.getDisplayOrder() == null) {
+                Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
+                
+                String assessmentType = formRubric.getAssessmentTypes();
+                long maxOrder = assessment.getRubrics().stream()
+                    .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
+                    .mapToInt(r -> r.getDisplayOrder() != null ? r.getDisplayOrder() : 0)
+                    .max()
+                    .orElse(-1);
+                
+                formRubric.setDisplayOrder((int) maxOrder + 1);
+            }
             
             if (formRubric.getSubRubrics() != null) {
                 for (SubRubric subRubric : formRubric.getSubRubrics()) {
@@ -186,7 +203,6 @@ public class RubricService {
                 }
             }
             
-            // Load parent Assessment and save
             if (formRubric.getAssessment() != null && formRubric.getAssessment().getId() != null) {
                 Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
                     .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
@@ -209,7 +225,6 @@ public class RubricService {
                                              .filter(java.util.Objects::nonNull)
                                              .collect(Collectors.toSet());
 
-        // Remove orphans
         managedSubRubrics.removeIf(sr -> sr.getId() != null && !formSubRubricIds.contains(sr.getId()));
         
         Map<Long, SubRubric> existingSubRubricMap = managedSubRubrics.stream()
@@ -222,17 +237,14 @@ public class RubricService {
             SubRubric targetSubRubric;
 
             if (formSubRubric.getId() != null && existingSubRubricMap.containsKey(formSubRubric.getId())) {
-                // Update existing SubRubric
                 targetSubRubric = existingSubRubricMap.get(formSubRubric.getId());
                 targetSubRubric.setDescription(formSubRubric.getDescription());
                 targetSubRubric.setName(formSubRubric.getName()); 
                 targetSubRubric.setMarks(formSubRubric.getMarks());
                 
-                // Update ratings within this sub-rubric
                 updateSubRubricRatings(targetSubRubric, formSubRubric.getRatings());
                 
             } else {
-                // Add new SubRubric
                 targetSubRubric = formSubRubric;
                 if (targetSubRubric.getRatings() != null) {
                     targetSubRubric.getRatings().forEach(r -> {
@@ -262,7 +274,6 @@ public class RubricService {
                                      .filter(java.util.Objects::nonNull)
                                      .collect(Collectors.toSet());
         
-        // Remove orphans
         managedRatings.removeIf(r -> r.getId() != null && !formRatingIds.contains(r.getId()));
         
         Map<Long, Rating> existingRatingMap = managedRatings.stream()
@@ -306,7 +317,6 @@ public class RubricService {
                                      .filter(java.util.Objects::nonNull)
                                      .collect(Collectors.toSet());
         
-        // Remove orphans
         managedRatings.removeIf(r -> r.getId() != null && !formRatingIds.contains(r.getId()));
         
         Map<Long, Rating> existingRatingMap = managedRatings.stream()
@@ -338,10 +348,6 @@ public class RubricService {
         managedRatings.addAll(finalOrderedRatings);
     }
 
-    /**
-     * ✅ UPDATED: Delete rubric with cascade deletion of marks
-     * Deletes all marks associated with the rubric and its sub-rubrics before deleting the rubric
-     */
     @Transactional
     public void deleteRubric(Long rubricId) {
         if (!rubricRepository.existsById(rubricId)) {
@@ -350,27 +356,18 @@ public class RubricService {
         
         Rubric rubric = rubricRepository.findById(rubricId).orElse(null);
         if (rubric != null) {
-            // ✅ NEW: Delete all marks first
             deleteMarksForRubric(rubric);
         }
         
         rubricRepository.deleteById(rubricId);
     }
 
-    /**
-     * ✅ NEW: Helper method to delete all marks associated with a rubric
-     * Handles marks for:
-     * - The rubric itself
-     * - All sub-rubrics under the rubric
-     */
     private void deleteMarksForRubric(Rubric rubric) {
-        // Delete marks directly associated with this rubric
         List<Mark> rubricMarks = markRepository.findByRubric(rubric);
         if (!rubricMarks.isEmpty()) {
             markRepository.deleteAll(rubricMarks);
         }
         
-        // Delete marks associated with sub-rubrics
         if (rubric.getSubRubrics() != null) {
             for (SubRubric subRubric : rubric.getSubRubrics()) {
                 List<Mark> subRubricMarks = markRepository.findBySubRubric(subRubric);
@@ -386,13 +383,11 @@ public class RubricService {
             return false;
         }
         
-        // Normalize the input name by removing all whitespace and converting to lowercase
         String normalizedName = name.replaceAll("\\s+", "").toLowerCase();
         
         Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
         if (assessment != null && assessment.getRubrics() != null) {
             for (Rubric rubric : assessment.getRubrics()) {
-                // Skip the rubric being edited
                 if (rubricIdToExclude != null && rubric.getId().equals(rubricIdToExclude)) {
                     continue;
                 }
@@ -407,5 +402,121 @@ public class RubricService {
         }
         
         return false;
+    }
+    
+    // ==================== REORDERING METHODS ====================
+    
+    /**
+     * Move entire assessment type block (Individual/Group) up or down
+     * This swaps the order values between Individual and Group assessment blocks
+     */
+    @Transactional
+    public void moveAssessmentBlock(Long assessmentId, String blockType, String direction) {
+        Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
+        
+        Integer individualOrder = assessment.getIndividualOrder() != null ? assessment.getIndividualOrder() : 0;
+        Integer groupOrder = assessment.getGroupOrder() != null ? assessment.getGroupOrder() : 1;
+        
+        if ("Individual".equalsIgnoreCase(blockType)) {
+            if ("down".equalsIgnoreCase(direction) && individualOrder < groupOrder) {
+                // Swap: Individual goes down, Group goes up
+                assessment.setIndividualOrder(groupOrder);
+                assessment.setGroupOrder(individualOrder);
+            } else if ("up".equalsIgnoreCase(direction) && individualOrder > groupOrder) {
+                // Swap: Individual goes up, Group goes down
+                assessment.setIndividualOrder(groupOrder);
+                assessment.setGroupOrder(individualOrder);
+            }
+        } else if ("Group".equalsIgnoreCase(blockType)) {
+            if ("down".equalsIgnoreCase(direction) && groupOrder < individualOrder) {
+                // Swap: Group goes down, Individual goes up
+                assessment.setGroupOrder(individualOrder);
+                assessment.setIndividualOrder(groupOrder);
+            } else if ("up".equalsIgnoreCase(direction) && groupOrder > individualOrder) {
+                // Swap: Group goes up, Individual goes down
+                assessment.setGroupOrder(individualOrder);
+                assessment.setIndividualOrder(groupOrder);
+            }
+        }
+        
+        assessmentRepository.save(assessment);
+    }
+    
+    /**
+     * Move individual rubric up or down within its assessment type
+     */
+    @Transactional
+    public void moveRubric(Long rubricId, String direction) {
+        Rubric rubric = rubricRepository.findById(rubricId)
+            .orElseThrow(() -> new EntityNotFoundException("Rubric not found"));
+        
+        Assessment assessment = rubric.getAssessment();
+        String assessmentType = rubric.getAssessmentTypes();
+        
+        // Get all rubrics of the same assessment type, sorted by display_order
+        List<Rubric> sameTypeRubrics = assessment.getRubrics().stream()
+            .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
+            .sorted((r1, r2) -> {
+                Integer order1 = r1.getDisplayOrder() != null ? r1.getDisplayOrder() : 0;
+                Integer order2 = r2.getDisplayOrder() != null ? r2.getDisplayOrder() : 0;
+                return Integer.compare(order1, order2);
+            })
+            .collect(Collectors.toList());
+        
+        int currentIndex = sameTypeRubrics.indexOf(rubric);
+        
+        if (currentIndex == -1) {
+            throw new IllegalStateException("Rubric not found in its assessment type list");
+        }
+        
+        if ("up".equalsIgnoreCase(direction) && currentIndex > 0) {
+            // Swap with previous rubric
+            Rubric previousRubric = sameTypeRubrics.get(currentIndex - 1);
+            Integer tempOrder = rubric.getDisplayOrder();
+            rubric.setDisplayOrder(previousRubric.getDisplayOrder());
+            previousRubric.setDisplayOrder(tempOrder);
+            
+            rubricRepository.save(rubric);
+            rubricRepository.save(previousRubric);
+            
+        } else if ("down".equalsIgnoreCase(direction) && currentIndex < sameTypeRubrics.size() - 1) {
+            // Swap with next rubric
+            Rubric nextRubric = sameTypeRubrics.get(currentIndex + 1);
+            Integer tempOrder = rubric.getDisplayOrder();
+            rubric.setDisplayOrder(nextRubric.getDisplayOrder());
+            nextRubric.setDisplayOrder(tempOrder);
+            
+            rubricRepository.save(rubric);
+            rubricRepository.save(nextRubric);
+        }
+    }
+    
+    /**
+     * Initialize display orders for rubrics if not set
+     * Call this when needed to ensure all rubrics have proper ordering
+     */
+    @Transactional
+    public void initializeRubricOrders(Long assessmentId) {
+        Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
+        
+        Map<String, List<Rubric>> rubricsByType = new HashMap<>();
+        
+        for (Rubric rubric : assessment.getRubrics()) {
+            String type = rubric.getAssessmentTypes();
+            rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
+        }
+        
+        for (Map.Entry<String, List<Rubric>> entry : rubricsByType.entrySet()) {
+            List<Rubric> rubrics = entry.getValue();
+            for (int i = 0; i < rubrics.size(); i++) {
+                Rubric rubric = rubrics.get(i);
+                if (rubric.getDisplayOrder() == null) {
+                    rubric.setDisplayOrder(i);
+                    rubricRepository.save(rubric);
+                }
+            }
+        }
     }
 }

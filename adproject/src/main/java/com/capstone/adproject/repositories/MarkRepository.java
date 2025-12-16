@@ -77,9 +77,30 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
         Assessment assessment
     );
     
-    // ✅ NEW: Find all marks for a specific rubric (for cascade deletion)
+    // Find all marks for a specific rubric (for cascade deletion)
     List<Mark> findByRubric(Rubric rubric);
     
-    // ✅ NEW: Find all marks for a specific sub-rubric (for cascade deletion)
+    // Find all marks for a specific sub-rubric (for cascade deletion)
     List<Mark> findBySubRubric(SubRubric subRubric);
+    
+    // ========== INDUSTRIAL SUPERVISOR EVALUATION METHODS ==========
+    
+    /**
+     * Count marks by supervisor ID and assessment (for progress tracking)
+     */
+    @Query("SELECT COUNT(m) FROM Mark m WHERE m.supervisorId = :supervisorId " +
+           "AND m.assessment.id = :assessmentId")
+    Long countBySupervisorIdAndAssessmentId(
+            @Param("supervisorId") Long supervisorId,
+            @Param("assessmentId") Long assessmentId);
+    
+    /**
+     * Find marks by evaluator student ID, evaluated student ID and assessment ID
+     */
+    @Query("SELECT m FROM Mark m WHERE m.evaluatorStudent.id = :evaluatorId " +
+           "AND m.evaluatedStudent.id = :evaluatedId AND m.assessment.id = :assessmentId")
+    List<Mark> findByEvaluatorStudentIdAndEvaluatedStudentIdAndAssessmentId(
+            @Param("evaluatorId") Long evaluatorId,
+            @Param("evaluatedId") Long evaluatedId,
+            @Param("assessmentId") Long assessmentId);
 }

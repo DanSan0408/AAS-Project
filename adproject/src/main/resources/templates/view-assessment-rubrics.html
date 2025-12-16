@@ -1,17 +1,464 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${assessment.title} + ' Rubrics'">View Rubrics</title>
+    <title th:text="${assessment.title} + ' - Rubrics & Comments'">View Rubrics</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/rubric.css}">
     <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .assessment-block {
+            margin: 40px auto;
+            max-width: 1200px;
+            background: linear-gradient(135deg, #1a252f 0%, #2c3e50 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .block-header {
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .block-header.group {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .block-header.individual {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .block-title {
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 0;
+        }
+        
+        /* ✅ NEW: Block reordering arrows */
+        .block-reorder-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .block-reorder-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+        }
+        
+        .block-reorder-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(1.05);
+        }
+        
+        .block-reorder-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .block-content {
+            padding: 30px;
+        }
+        
+        .content-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-divider {
+            margin: 30px 0 20px 0;
+            padding: 15px;
+            background: rgba(243, 156, 18, 0.1);
+            border-left: 4px solid #f39c12;
+            border-radius: 6px;
+        }
+        
+        .section-divider h3 {
+            margin: 0;
+            color: #f39c12;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* ✅ NEW: Action buttons at bottom of each section */
+        .section-actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .rubric-card {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid #4a6681;
+        }
+        
+        .rubric-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a6681;
+        }
+        
+        .rubric-info h3 {
+            color: #ecf0f1;
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+        
+        .rubric-info p {
+            color: #95a5a6;
+            margin: 5px 0;
+        }
+        
+        .rubric-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 12px;
+        }
+        
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            background: rgba(52, 152, 219, 0.2);
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .meta-badge i {
+            color: #3498db;
+        }
+        
+        /* ✅ NEW: Rubric reordering controls */
+        .rubric-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .rubric-reorder-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-right: 8px;
+        }
+        
+        .rubric-reorder-btn {
+            background: rgba(243, 156, 18, 0.2);
+            border: 1px solid #f39c12;
+            color: #f39c12;
+            width: 28px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+        
+        .rubric-reorder-btn:hover {
+            background: rgba(243, 156, 18, 0.4);
+            transform: scale(1.05);
+        }
+        
+        .rubric-reorder-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-edit {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            background: #e67e22;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+        
+        .sub-rubric-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2c3e50;
+            border-radius: 6px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .sub-rubric-section h4 {
+            color: #f39c12;
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .ratings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .rating-card {
+            background: #1a252f;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #4a6681;
+        }
+        
+        .rating-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .rating-name {
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .rating-marks {
+            background: #27ae60;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .rating-description {
+            color: #bdc3c7;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .rubric-comments-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(155, 89, 182, 0.15);
+            border-left: 4px solid #9b59b6;
+            border-radius: 6px;
+        }
+        
+        .rubric-comments-box h4 {
+            color: #9b59b6;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .comment-question {
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            background: #2c3e50;
+            border-radius: 5px;
+            border-left: 3px solid #9b59b6;
+        }
+        
+        .comment-question:last-child {
+            margin-bottom: 0;
+        }
+        
+        .question-number {
+            color: #9b59b6;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .question-text {
+            color: #ecf0f1;
+            margin: 5px 0 8px 0;
+            font-size: 0.95em;
+        }
+        
+        .question-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: #95a5a6;
+        }
+        
+        .question-meta i {
+            margin-right: 3px;
+        }
+        
+        .assessment-comments-section {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 25px;
+            border: 2px solid #4a6681;
+        }
+        
+        .comments-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a6681;
+        }
+        
+        .comments-section-header h3 {
+            color: #ecf0f1;
+            margin: 0;
+            font-size: 1.4em;
+        }
+        
+        .comments-summary {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+        }
+        
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-label {
+            color: #95a5a6;
+            font-weight: 600;
+        }
+        
+        .summary-value {
+            color: #ecf0f1;
+            font-weight: bold;
+        }
+        
+        .comment-item {
+            background: #2c3e50;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .comment-item.individual {
+            border-left-color: #2ecc71;
+        }
+        
+        .comment-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .comment-number-badge {
+            background: #f39c12;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .comment-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .comment-item-text {
+            color: #ecf0f1;
+            line-height: 1.5;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h3 {
+            color: #95a5a6;
+            margin-bottom: 10px;
+        }
+        
+        .rubric-comment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #9b59b6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
@@ -21,231 +468,580 @@
         
         <div class="page-header">
             <h1 th:text="${assessment.title}">Assessment Title</h1>
-            <p>Below are all the rubrics associated with this assessment.</p>
+            <p>Manage rubrics and comment configurations for this assessment.</p>
+            
+            <!-- Messages -->
+            <div th:if="${successMessage}" class="alert alert-success" style="margin-top: 15px;">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger" style="margin-top: 15px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
+            
+            <!-- ✅ MOVED: Global action buttons (top level only) -->
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-primary" style="background-color: #e67e22;">
+                    <i class="fas fa-user-tie"></i> Lecturer Assignments
+                </a>
+            </div>
         </div>
 
+        <!-- Summary -->
         <div class="assessment-summary">
-            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">Assessment Summary</h3>
+            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px;">
+                Assessment Summary
+            </h3>
+            <p><strong>Total Marks:</strong> <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}" style="color: #f39c12; font-weight: bold;">0.00</span></p>
             
-            <p style="margin-bottom: 15px;">
-                <strong>Total Assessment Marks: </strong>
-                <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}" style="color: #f39c12; font-weight: bold;">0.00</span>
-            </p>
-            
-            <h4 style="color: #ecf0f1; margin-top: 20px; border-bottom: 1px dotted #4a6681; padding-bottom: 5px; font-size: 1.3em;">CLO Marks Distribution:</h4>
-            
+            <h4 style="color: #ecf0f1; margin-top: 15px;">CLO Distribution:</h4>
             <div th:each="clo : ${assessment.cloMarks}" style="margin-left: 20px;">
-                <p style="margin: 8px 0;">
-                    <strong th:text="${'CLO ' + clo.key + ' Total Marks:'}">Total CLO X Marks:</strong>
-                    <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span>
-                </p>
+                <p><strong th:text="${'CLO ' + clo.key + ':'}">CLO X:</strong> <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span></p>
             </div>
-            <div th:if="${#maps.isEmpty(assessment.cloMarks)}">
-                <p style="margin-left: 20px; color: #7f8c8d;">No CLO marks are currently assigned.</p>
+            <div th:if="${#maps.isEmpty(assessment.cloMarks)}" style="margin-left: 20px; color: #7f8c8d;">
+                <p>No CLO marks assigned yet.</p>
             </div>
         </div>
         
-        <!-- ✅ UPDATED: Comment Configuration Section - Now shows both Group and Individual -->
-        <div class="assessment-summary" th:if="${(assessment.groupCommentCount != null and assessment.groupCommentCount > 0) or (assessment.individualCommentCount != null and assessment.individualCommentCount > 0)}">
-            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">
-                <i class="fas fa-comments"></i> Comment Configuration
-            </h3>
+        <!-- ==================== DETERMINE BLOCK ORDER ==================== -->
+        <!-- Prepare data once at the top level -->
+        <th:block th:with="
+            individualOrder=${assessment.individualOrder != null ? assessment.individualOrder : 0},
+            groupOrder=${assessment.groupOrder != null ? assessment.groupOrder : 1},
+            showIndividualFirst=${individualOrder < groupOrder},
+            groupRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Group Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Group Assessment') : null},
+            individualRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Individual Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Individual Assessment') : null},
+            hasGroupContent=${groupRubrics != null || (assessment.groupCommentCount != null && assessment.groupCommentCount > 0)},
+            hasIndividualContent=${individualRubrics != null || (assessment.individualCommentCount != null && assessment.individualCommentCount > 0)}">
             
-            <!-- GROUP ASSESSMENT COMMENTS -->
-            <div th:if="${assessment.groupCommentCount != null and assessment.groupCommentCount > 0}" 
-                 style="background: rgba(155, 89, 182, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #9b59b6;">
-                <h4 style="color: #9b59b6; margin-bottom: 15px; font-size: 1.3em;">
-                    <i class="fas fa-users"></i> Group Assessment Comments
-                </h4>
-                
-                <p style="margin-bottom: 10px;">
-                    <strong>Total Questions: </strong>
-                    <span th:text="${assessment.groupCommentCount}" style="color: #9b59b6; font-weight: bold;">0</span>
-                </p>
-                
-                <p style="margin-bottom: 10px;">
-                    <strong>Minimum Length: </strong>
-                    <span th:text="${assessment.groupCommentMinLength}" style="color: #ecf0f1;">20</span>
-                    <span style="color: #95a5a6;"> characters</span>
-                </p>
-                
-                <p style="margin-bottom: 15px;">
-                    <strong>Anonymous: </strong>
-                    <span th:text="${assessment.groupCommentsAnonymous ? 'Yes' : 'No'}" 
-                          th:style="${assessment.groupCommentsAnonymous ? 'color: #2ecc71;' : 'color: #e74c3c;'}" 
-                          style="font-weight: bold;">No</span>
-                </p>
-                
-                <h5 style="color: #9b59b6; margin-top: 15px; margin-bottom: 10px;">Comment Questions:</h5>
-                
-                <div th:if="${assessment.groupCommentLabels != null and not #lists.isEmpty(assessment.groupCommentLabels)}">
-                    <div th:each="label, iterStat : ${assessment.groupCommentLabels}" style="margin-left: 20px; margin-bottom: 8px;">
-                        <p style="margin: 5px 0;">
-                            <strong style="color: #9b59b6;" th:text="${'Q' + (iterStat.index + 1) + ':'}">Q1:</strong>
-                            <span th:text="${label}" style="color: #ecf0f1;">Comment question text</span>
-                        </p>
-                    </div>
-                </div>
-                <div th:if="${assessment.groupCommentLabels == null or #lists.isEmpty(assessment.groupCommentLabels)}">
-                    <p style="margin-left: 20px; color: #7f8c8d;">No questions configured.</p>
-                </div>
-            </div>
+            <!-- Render blocks in correct order based on individualOrder vs groupOrder -->
+            <!-- INDIVIDUAL FIRST (if individualOrder < groupOrder) -->
+            <th:block th:if="${showIndividualFirst}">
+                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+            </th:block>
             
-            <!-- INDIVIDUAL ASSESSMENT COMMENTS -->
-            <div th:if="${assessment.individualCommentCount != null and assessment.individualCommentCount > 0}" 
-                 style="background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #2ecc71;">
-                <h4 style="color: #2ecc71; margin-bottom: 15px; font-size: 1.3em;">
-                    <i class="fas fa-user"></i> Individual Assessment Comments
-                </h4>
-                
-                <p style="margin-bottom: 10px;">
-                    <strong>Total Questions: </strong>
-                    <span th:text="${assessment.individualCommentCount}" style="color: #2ecc71; font-weight: bold;">0</span>
-                </p>
-                
-                <p style="margin-bottom: 10px;">
-                    <strong>Minimum Length: </strong>
-                    <span th:text="${assessment.individualCommentMinLength}" style="color: #ecf0f1;">20</span>
-                    <span style="color: #95a5a6;"> characters</span>
-                </p>
-                
-                <p style="margin-bottom: 15px;">
-                    <strong>Anonymous: </strong>
-                    <span th:text="${assessment.individualCommentsAnonymous ? 'Yes' : 'No'}" 
-                          th:style="${assessment.individualCommentsAnonymous ? 'color: #2ecc71;' : 'color: #e74c3c;'}" 
-                          style="font-weight: bold;">No</span>
-                </p>
-                
-                <h5 style="color: #2ecc71; margin-top: 15px; margin-bottom: 10px;">Comment Questions:</h5>
-                
-                <div th:if="${assessment.individualCommentLabels != null and not #lists.isEmpty(assessment.individualCommentLabels)}">
-                    <div th:each="label, iterStat : ${assessment.individualCommentLabels}" style="margin-left: 20px; margin-bottom: 8px;">
-                        <p style="margin: 5px 0;">
-                            <strong style="color: #2ecc71;" th:text="${'Q' + (iterStat.index + 1) + ':'}">Q1:</strong>
-                            <span th:text="${label}" style="color: #ecf0f1;">Comment question text</span>
-                        </p>
-                    </div>
-                </div>
-                <div th:if="${assessment.individualCommentLabels == null or #lists.isEmpty(assessment.individualCommentLabels)}">
-                    <p style="margin-left: 20px; color: #7f8c8d;">No questions configured.</p>
-                </div>
-            </div>
+            <!-- GROUP FIRST (if groupOrder < individualOrder) -->
+            <th:block th:unless="${showIndividualFirst}">
+                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+            </th:block>
             
-            <!-- Edit Comment Config Button -->
-            <div style="text-align: center; margin-top: 20px;">
-                <a th:href="@{/admin/comment-config/{id}(id=${assessment.id})}" class="btn btn-edit" style="background-color: #3498db;">
-                    <i class="fas fa-edit"></i> Edit Comment Configuration
+        </th:block>
+        
+        <!-- GLOBAL EMPTY STATE -->
+        <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
+                      (assessment.groupCommentCount == null || assessment.groupCommentCount == 0) && 
+                      (assessment.individualCommentCount == null || assessment.individualCommentCount == 0)}" 
+             class="empty-state" 
+             style="margin: 60px auto; max-width: 1200px; padding: 80px 40px; background: #2c3e50; border-radius: 12px;">
+            <i class="fas fa-inbox"></i>
+            <h3>No Content Yet</h3>
+            <p style="margin-bottom: 30px;">Start building your assessment by adding rubrics and configuring comments.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Rubric
                 </a>
             </div>
         </div>
+    </div>
+    
+    <!-- ==================== FRAGMENT DEFINITIONS (Hidden - used by th:insert above) ==================== -->
+    <div style="display: none;">
         
-        <!-- ✅ UPDATED: No Comment Configuration Message -->
-        <div class="assessment-summary" 
-             th:if="${(assessment.groupCommentCount == null or assessment.groupCommentCount == 0) and (assessment.individualCommentCount == null or assessment.individualCommentCount == 0)}" 
-             style="background-color: #34495e; border: 2px solid #7f8c8d;">
-            <h3 style="color: #95a5a6; border-bottom: 2px solid #7f8c8d; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">
-                <i class="fas fa-comments"></i> Comment Configuration
-            </h3>
-            <p style="color: #bdc3c7; text-align: center;">No comment configuration has been set up for this assessment.</p>
-            <p style="color: #95a5a6; text-align: center; font-size: 0.9em; margin-top: 10px;">
-                You can configure separate comment requirements for Group Assessment and Individual Assessment rubrics.
-            </p>
-            <div style="text-align: center; margin-top: 15px;">
-                <a th:href="@{/admin/comment-config/{id}(id=${assessment.id})}" class="btn btn-add" style="background-color: #27ae60;">
-                    <i class="fas fa-plus-circle"></i> Configure Comments
-                </a>
-            </div>
-        </div>
-        
-        <!-- Add Rubric Button -->
-        <div style="width:100%; max-width:1200px; text-align:center; margin-bottom:40px; margin-top:40px;">
-            <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-add" style="background-color: #0789d4;">
-                Add Rubric
-            </a>
-        </div>
-        
-        <!-- Display Rubrics Grouped by Assessment Type -->
-        <div th:if="${groupedRubrics != null and !groupedRubrics.isEmpty()}">
-            <!-- Outer loop - dummy key (not displayed) -->
-            <div th:each="evalTypeEntry : ${groupedRubrics}">
+        <!-- ==================== GROUP ASSESSMENT BLOCK (fragment definition) ==================== -->
+        <th:block th:fragment="group-block(groupRubrics)">
+        <div class="assessment-block">
+            
+            <div class="block-header group">
+                <h2 class="block-title">
+                    <i class="fas fa-users"></i>
+                    <span>Group Assessment</span>
+                </h2>
                 
-                <!-- Inner loop - Assessment Type -->
-                <div th:each="assessmentEntry : ${evalTypeEntry.value}" style="margin-top: 30px; width: 100%; max-width: 1200px;">
-                    <h2 style="color: #ecf0f1; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 20px;">
-                        <span th:text="${'Assessment Type: ' + assessmentEntry.key}">Assessment Type</span>
-                    </h2>
+                <!-- ✅ NEW: Block reordering arrows -->
+                <div class="block-reorder-controls">
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="blockType" value="Group"/>
+                        <input type="hidden" name="direction" value="up"/>
+                        <button type="submit" class="block-reorder-btn" title="Move block up">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </form>
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="blockType" value="Group"/>
+                        <input type="hidden" name="direction" value="down"/>
+                        <button type="submit" class="block-reorder-btn" title="Move block down">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="block-content">
+                
+                <!-- RUBRICS -->
+                <div th:if="${groupRubrics != null}" class="content-section">
+                    <div class="section-divider">
+                        <h3>
+                            <i class="fas fa-list-check"></i>
+                            <span>Rubrics</span>
+                        </h3>
+                    </div>
                     
-                    <!-- Rubric loop -->
-                    <div th:each="rubric : ${assessmentEntry.value}" style="margin-top: 20px;">
-                        <div class="rubric-container">
-                            <div class="rubric-header">
-                                <div>
-                                    <h2 th:text="${rubric.name}">Rubric Name</h2>
-                                    <p th:text="${rubric.description}" style="margin:8px 0;">Rubric Description</p>
-                                    
-                                    <strong>Type: <span style="color: #f39c12;">Likert Scale (5-Point)</span></strong>
-                                    <br>
-                                    
-                                    <strong>Assessment Type: <span th:text="${rubric.assessmentTypes}">Individual Assessment</span></strong>
-                                    <br>
-
-                                    <strong>Total Marks: <span th:text="${rubric.marks}">100</span></strong>
-                                    <br>
-                                    <strong>CLO: <span th:text="${rubric.clo}">1</span></strong><br>
-                                    <strong>CLO Marks: <span th:text="${rubric.cloMarks}">50</span></strong>
+                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card">
+                        <div class="rubric-card-header">
+                            <div class="rubric-info">
+                                <h3 th:text="${rubric.name}">Rubric Name</h3>
+                                <p th:if="${rubric.description}" th:text="${rubric.description}">Rubric Description</p>
+                                
+                                <div class="rubric-meta">
+                                    <span class="meta-badge">
+                                        <i class="fas fa-chart-simple"></i>
+                                        <strong>Marks:</strong> <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</span>
+                                    </span>
+                                    <span class="meta-badge">
+                                        <i class="fas fa-bullseye"></i>
+                                        <strong>CLO:</strong> <span th:text="${rubric.clo}">1</span>
+                                    </span>
+                                    <span class="meta-badge">
+                                        <i class="fas fa-award"></i>
+                                        <strong>CLO Marks:</strong> <span th:text="${#numbers.formatDecimal(rubric.cloMarks, 1, 2)}">0</span>
+                                    </span>
+                                    <span th:if="${rubric.rubricCommentCount > 0}" class="rubric-comment-badge">
+                                        <i class="fas fa-comment"></i>
+                                        <span th:text="${rubric.rubricCommentCount + ' comment(s)'}">0 comments</span>
+                                    </span>
                                 </div>
-                                <div class="action-buttons">
-                                    <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn btn-edit">Edit</a>
-                                    <form class="inline" th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this rubric?');">
-                                        <button type="submit" class="btn btn-delete">Delete</button>
+                            </div>
+                            <div class="rubric-actions">
+                                <!-- ✅ NEW: Rubric reordering arrows -->
+                                <div class="rubric-reorder-controls">
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" name="direction" value="up"/>
+                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.first}" title="Move up">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" name="direction" value="down"/>
+                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.last}" title="Move down">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
                                     </form>
                                 </div>
-                            </div>
-
-                            <!-- Sub-Rubrics -->
-                            <div class="sub-rubric" th:each="subRubric : ${rubric.subRubrics}">
-                                <h4 th:text="${subRubric.name}" style="font-size: 1.25em; margin-top: 20px;">Sub-Rubric Name</h4>
-                                <p th:text="${subRubric.description}" style="margin:5px 0;">Sub-Rubric Description</p>
-                                <p><strong>Marks:</strong> <span th:text="${subRubric.marks}">10</span></p>
-                                <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
-                                    *Student mark is calculated based on the average of selected rating levels (0-4).
-                                </p>
                                 
-                                <!-- Rating Levels for Sub-Rubrics -->
-                                <div class="ratings-section" th:if="${subRubric.ratings != null and not #lists.isEmpty(subRubric.ratings)}">
-                                    <h5>Rating Levels (0-4)</h5>
-                                    <div th:each="rating : ${subRubric.ratings}" class="rating-display">
-                                        <strong th:text="${rating.name}">Rating Name</strong>
-                                        <span th:if="${rating.marks != null}"> - Marks: <span th:text="${rating.marks}">0</span></span>
-                                        <br>
-                                        <span th:text="${rating.description ?: 'No description provided.'}">Rating Description</span>
+                                <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Delete this rubric and all its data?');">
+                                    <button type="submit" class="btn-sm btn-delete">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Sub-Rubrics with Ratings -->
+                        <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
+                                <h4 th:text="${subRubric.name}">Sub-Rubric Name</h4>
+                                <p th:if="${subRubric.description}" th:text="${subRubric.description}" style="color: #95a5a6; margin: 5px 0 10px 0;">Description</p>
+                                <p style="color: #ecf0f1;"><strong>Marks:</strong> <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></p>
+                                
+                                <div th:if="${subRubric.ratings != null && !#lists.isEmpty(subRubric.ratings)}">
+                                    <h5 style="color: #3498db; margin: 15px 0 10px 0;">Rating Levels:</h5>
+                                    <div class="ratings-grid">
+                                        <div th:each="rating : ${subRubric.ratings}" class="rating-card">
+                                            <div class="rating-card-header">
+                                                <span class="rating-name" th:text="${rating.name}">Rating</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                            </div>
+                                            <div class="rating-description" th:text="${rating.description ?: 'No description'}">Description</div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div th:if="${subRubric.ratings == null or #lists.isEmpty(subRubric.ratings)}">
-                                    <p style="color: #f39c12; margin-top: 10px;">No rating levels found for this sub-rubric.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Direct Ratings -->
+                        <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" style="margin-top: 20px;">
+                            <h4 style="color: #2ecc71; margin-bottom: 15px;">
+                                <i class="fas fa-star"></i> Direct Rating Levels
+                            </h4>
+                            <div class="ratings-grid">
+                                <div th:each="rating : ${rubric.ratings}" class="rating-card">
+                                    <div class="rating-card-header">
+                                        <span class="rating-name" th:text="${rating.name}">Rating</span>
+                                        <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                    </div>
+                                    <div class="rating-description" th:text="${rating.description ?: 'No description'}">Description</div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Rubric-Specific Comments -->
+                        <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
+                            <h4>
+                                <i class="fas fa-comment-dots"></i>
+                                <span>Rubric-Specific Comments (<span th:text="${rubric.rubricCommentCount}">0</span>)</span>
+                            </h4>
                             
-                            <!-- Direct Ratings (if no sub-rubrics) -->
-                            <div th:if="${rubric.ratings != null and not #lists.isEmpty(rubric.ratings)}" class="ratings-section" style="margin-top: 20px;">
-                                <h5>Direct Rating Levels</h5>
-                                <div th:each="rating : ${rubric.ratings}" class="rating-display">
-                                    <strong th:text="${rating.name}">Rating Name</strong>
-                                    <span th:if="${rating.marks != null}"> - Marks: <span th:text="${rating.marks}">0</span></span>
-                                    <br>
-                                    <span th:text="${rating.description ?: 'No description provided.'}">Rating Description</span>
+                            <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-question">
+                                <div class="question-number">Question <span th:text="${i + 1}">1</span></div>
+                                <div class="question-text" th:text="${rubric.getRubricCommentLabel(i)}">What are the strengths?</div>
+                                <div class="question-meta">
+                                    <span>
+                                        <i class="fas fa-text-width"></i> 
+                                        Min: <strong th:text="${rubric.getRubricCommentMinLength(i)}">20</strong> chars
+                                    </span>
+                                    <span>
+                                        <i th:class="${rubric.isRubricCommentAnonymous(i) ? 'fas fa-user-secret' : 'fas fa-user'}"></i>
+                                        <strong th:text="${rubric.isRubricCommentAnonymous(i) ? 'Anonymous' : 'Named'}">Named</strong>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- ✅ NEW: Action buttons at bottom of rubrics section -->
+                    <div class="section-actions">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Add Group Rubric
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- ASSESSMENT-LEVEL COMMENTS -->
+                <div th:if="${assessment.groupCommentCount != null && assessment.groupCommentCount > 0}" class="content-section">
+                    <div class="section-divider">
+                        <h3>
+                            <i class="fas fa-comments"></i>
+                            <span>Overall Assessment Comments</span>
+                        </h3>
+                    </div>
+                    
+                    <div class="assessment-comments-section">
+                        <div class="comments-section-header">
+                            <h3>Group Assessment Feedback</h3>
+                            <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn-sm btn-edit">
+                                <i class="fas fa-cog"></i> Configure
+                            </a>
+                        </div>
+                        
+                        <div class="comments-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">Total Questions:</span>
+                                <span class="summary-value" th:text="${assessment.groupCommentCount}">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Minimum Length:</span>
+                                <span class="summary-value" th:text="${assessment.groupCommentMinLength + ' characters'}">20 chars</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Anonymity:</span>
+                                <span class="summary-value" th:text="${assessment.groupCommentsAnonymous ? 'Anonymous' : 'Named'}">Named</span>
+                            </div>
+                        </div>
+                        
+                        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-item">
+                            <div class="comment-item-header">
+                                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                                <div class="comment-item-actions">
+                                    <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                                       class="btn-sm btn-edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                                          method="post" style="display: inline;"
+                                          onsubmit="return confirm('Delete this question?');">
+                                        <input type="hidden" name="type" value="group"/>
+                                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                                        <button type="submit" class="btn-sm btn-delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="comment-item-text" th:text="${label}">Question text</div>
+                        </div>
+                    </div>
+                    
+                    <!-- ✅ NEW: Action button at bottom of comments section -->
+                    <div class="section-actions">
+                        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+                            <i class="fas fa-cog"></i> Configure Group Comments
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div th:if="${groupRubrics == null && (assessment.groupCommentCount == null || assessment.groupCommentCount == 0)}" class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>No Group Assessment Content</h3>
+                    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Rubric
+                        </a>
+                        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+                            <i class="fas fa-cog"></i> Configure Group Comments
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+        </th:block>
         
-        <!-- Empty State -->
-        <div th:if="${groupedRubrics == null or groupedRubrics.isEmpty()}" style="padding: 25px; background-color: #4a6681; border-radius: 8px; text-align: center; max-width: 1200px; margin-top: 40px;">
-            <p style="font-size: 1.1em;">No Rubrics have been added to this assessment yet.</p>
+        <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK (fragment definition) ==================== -->
+        <th:block th:fragment="individual-block(individualRubrics)">
+        <div class="assessment-block">
+            
+            <div class="block-header individual">
+                <h2 class="block-title">
+                    <i class="fas fa-user"></i>
+                    <span>Individual Assessment</span>
+                </h2>
+                
+                <!-- ✅ NEW: Block reordering arrows -->
+                <div class="block-reorder-controls">
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="blockType" value="Individual"/>
+                        <input type="hidden" name="direction" value="up"/>
+                        <button type="submit" class="block-reorder-btn" title="Move block up">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </form>
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post" style="display: inline;">
+                        <input type="hidden" name="blockType" value="Individual"/>
+                        <input type="hidden" name="direction" value="down"/>
+                        <button type="submit" class="block-reorder-btn" title="Move block down">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="block-content">
+                
+                <!-- RUBRICS -->
+                <div th:if="${individualRubrics != null}" class="content-section">
+                    <div class="section-divider">
+                        <h3>
+                            <i class="fas fa-list-check"></i>
+                            <span>Rubrics</span>
+                        </h3>
+                    </div>
+                    
+                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card">
+                        <div class="rubric-card-header">
+                            <div class="rubric-info">
+                                <h3 th:text="${rubric.name}">Rubric Name</h3>
+                                <p th:if="${rubric.description}" th:text="${rubric.description}">Rubric Description</p>
+                                
+                                <div class="rubric-meta">
+                                    <span class="meta-badge">
+                                        <i class="fas fa-chart-simple"></i>
+                                        <strong>Marks:</strong> <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</span>
+                                    </span>
+                                    <span class="meta-badge">
+                                        <i class="fas fa-bullseye"></i>
+                                        <strong>CLO:</strong> <span th:text="${rubric.clo}">1</span>
+                                    </span>
+                                    <span class="meta-badge">
+                                        <i class="fas fa-award"></i>
+                                        <strong>CLO Marks:</strong> <span th:text="${#numbers.formatDecimal(rubric.cloMarks, 1, 2)}">0</span>
+                                    </span>
+                                    <span th:if="${rubric.rubricCommentCount > 0}" class="rubric-comment-badge">
+                                        <i class="fas fa-comment"></i>
+                                        <span th:text="${rubric.rubricCommentCount + ' comment(s)'}">0 comments</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="rubric-actions">
+                                <!-- ✅ NEW: Rubric reordering arrows -->
+                                <div class="rubric-reorder-controls">
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" name="direction" value="up"/>
+                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.first}" title="Move up">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" name="direction" value="down"/>
+                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.last}" title="Move down">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                
+                                <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Delete this rubric and all its data?');">
+                                    <button type="submit" class="btn-sm btn-delete">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Sub-Rubrics with Ratings (same as Group) -->
+                        <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
+                                <h4 th:text="${subRubric.name}">Sub-Rubric Name</h4>
+                                <p th:if="${subRubric.description}" th:text="${subRubric.description}" style="color: #95a5a6; margin: 5px 0 10px 0;">Description</p>
+                                <p style="color: #ecf0f1;"><strong>Marks:</strong> <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></p>
+                                
+                                <div th:if="${subRubric.ratings != null && !#lists.isEmpty(subRubric.ratings)}">
+                                    <h5 style="color: #3498db; margin: 15px 0 10px 0;">Rating Levels:</h5>
+                                    <div class="ratings-grid">
+                                        <div th:each="rating : ${subRubric.ratings}" class="rating-card">
+                                            <div class="rating-card-header">
+                                                <span class="rating-name" th:text="${rating.name}">Rating</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                            </div>
+                                            <div class="rating-description" th:text="${rating.description ?: 'No description'}">Description</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Direct Ratings -->
+                        <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" style="margin-top: 20px;">
+                            <h4 style="color: #2ecc71; margin-bottom: 15px;">
+                                <i class="fas fa-star"></i> Direct Rating Levels
+                            </h4>
+                            <div class="ratings-grid">
+                                <div th:each="rating : ${rubric.ratings}" class="rating-card">
+                                    <div class="rating-card-header">
+                                        <span class="rating-name" th:text="${rating.name}">Rating</span>
+                                        <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                    </div>
+                                    <div class="rating-description" th:text="${rating.description ?: 'No description'}">Description</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rubric-Specific Comments -->
+                        <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
+                            <h4>
+                                <i class="fas fa-comment-dots"></i>
+                                <span>Rubric-Specific Comments (<span th:text="${rubric.rubricCommentCount}">0</span>)</span>
+                            </h4>
+                            
+                            <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-question">
+                                <div class="question-number">Question <span th:text="${i + 1}">1</span></div>
+                                <div class="question-text" th:text="${rubric.getRubricCommentLabel(i)}">What are the strengths?</div>
+                                <div class="question-meta">
+                                    <span>
+                                        <i class="fas fa-text-width"></i> 
+                                        Min: <strong th:text="${rubric.getRubricCommentMinLength(i)}">20</strong> chars
+                                    </span>
+                                    <span>
+                                        <i th:class="${rubric.isRubricCommentAnonymous(i) ? 'fas fa-user-secret' : 'fas fa-user'}"></i>
+                                        <strong th:text="${rubric.isRubricCommentAnonymous(i) ? 'Anonymous' : 'Named'}">Named</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ✅ NEW: Action buttons at bottom of rubrics section -->
+                    <div class="section-actions">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Add Individual Rubric
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- ASSESSMENT-LEVEL COMMENTS -->
+                <div th:if="${assessment.individualCommentCount != null && assessment.individualCommentCount > 0}" class="content-section">
+                    <div class="section-divider">
+                        <h3>
+                            <i class="fas fa-comments"></i>
+                            <span>Overall Assessment Comments</span>
+                        </h3>
+                    </div>
+                    
+                    <div class="assessment-comments-section">
+                        <div class="comments-section-header">
+                            <h3>Individual Assessment Feedback</h3>
+                            <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn-sm btn-edit">
+                                <i class="fas fa-cog"></i> Configure
+                            </a>
+                        </div>
+                        
+                        <div class="comments-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">Total Questions:</span>
+                                <span class="summary-value" th:text="${assessment.individualCommentCount}">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Minimum Length:</span>
+                                <span class="summary-value" th:text="${assessment.individualCommentMinLength + ' characters'}">20 chars</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Anonymity:</span>
+                                <span class="summary-value" th:text="${assessment.individualCommentsAnonymous ? 'Anonymous' : 'Named'}">Named</span>
+                            </div>
+                        </div>
+                        
+                        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-item individual">
+                            <div class="comment-item-header">
+                                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                                <div class="comment-item-actions">
+                                    <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                                       class="btn-sm btn-edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                                          method="post" style="display: inline;"
+                                          onsubmit="return confirm('Delete this question?');">
+                                        <input type="hidden" name="type" value="individual"/>
+                                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                                        <button type="submit" class="btn-sm btn-delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="comment-item-text" th:text="${label}">Question text</div>
+                        </div>
+                    </div>
+                    
+                    <!-- ✅ NEW: Action button at bottom of comments section -->
+                    <div class="section-actions">
+                        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+                            <i class="fas fa-cog"></i> Configure Individual Comments
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div th:if="${individualRubrics == null && (assessment.individualCommentCount == null || assessment.individualCommentCount == 0)}" class="empty-state">
+                    <i class="fas fa-user"></i>
+                    <h3>No Individual Assessment Content</h3>
+                    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Rubric
+                        </a>
+                        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+                            <i class="fas fa-cog"></i> Configure Individual Comments
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+        </th:block>
+        
+    </th:block>
+    <!-- End of hidden fragment definitions -->
+    
 </body>
 </html>

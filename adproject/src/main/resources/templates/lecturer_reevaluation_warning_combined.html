@@ -24,36 +24,26 @@
                 <h2 class="warning-title">Re-evaluation Warning</h2>
                 
                 <div class="warning-message">
-                    <p>You have already evaluated this target for <strong th:text="${assessment.title}">this assessment</strong>.</p>
-                    
-                    <div class="rubric-type-badge" 
-                         th:classappend="${rubricType == 'Group Assessment' ? 'badge-group' : 'badge-individual'}">
-                        <span th:text="${rubricType}">Rubric Type</span>
-                    </div>
+                    <p>You have already evaluated this group for <strong th:text="${assessment.title}">this assessment</strong>.</p>
                     
                     <div class="target-info">
-                        <p th:if="${selectedGroup != null}">
+                        <p>
                             Target: Group "<span th:text="${selectedGroup.groupName}">Group Name</span>"
-                        </p>
-                        <p th:if="${selectedStudent != null}">
-                            Target: Student "<span th:text="${selectedStudent.username}">Student Name</span>"
                         </p>
                     </div>
                     
-                    <p class="warning-emphasis"><strong>If you proceed, your previous evaluation will be replaced.</strong></p>
+                    <p class="warning-emphasis"><strong>If you proceed, your previous evaluation (both group and individual assessments) will be replaced.</strong></p>
                     <p>Are you sure you want to re-evaluate?</p>
                 </div>
 
                 <div class="button-group">
                     <form th:action="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id})}" method="get">
-                        <input type="hidden" name="rubricType" th:value="${rubricType}"/>
-                        <input type="hidden" name="groupId" th:if="${selectedGroup != null}" th:value="${selectedGroup.id}"/>
-                        <input type="hidden" name="studentId" th:if="${selectedStudent != null}" th:value="${selectedStudent.id}"/>
+                        <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
                         <input type="hidden" name="confirmReevaluation" value="true"/>
                         <button type="submit" class="btn-proceed">Yes, Proceed with Re-evaluation</button>
                     </form>
                     
-                    <a th:href="@{/lecturer/assessments/{id}/select-target(id=${assessment.id}, rubricType=${rubricType})}" 
+                    <a th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
                        class="btn-back">
                         No, Go Back
                     </a>

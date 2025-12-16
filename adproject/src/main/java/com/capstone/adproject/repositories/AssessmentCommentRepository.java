@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
@@ -114,6 +116,8 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
     /**
      * Delete all comments by evaluator for a student in an assessment
      */
+    @Modifying
+    @Transactional
     @Query("DELETE FROM AssessmentComment c WHERE c.evaluatorId = :evaluatorId " +
            "AND c.evaluatorType = :evaluatorType " +
            "AND c.evaluatedStudent = :student " +
@@ -168,4 +172,35 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
         Assessment assessment,
         AssessmentComment.EvaluatorType evaluatorType
     );
+    
+    // ========== INDUSTRIAL SUPERVISOR EVALUATION METHODS ==========
+    
+    /**
+     * Find supervisor comments for a specific student in an assessment
+     */
+    @Query("SELECT c FROM AssessmentComment c WHERE c.evaluatorId = :supervisorId " +
+           "AND c.evaluatedStudent.id = :studentId " +
+           "AND c.assessment.id = :assessmentId " +
+           "AND c.evaluatorType = 'SUPERVISOR' " +
+           "ORDER BY c.commentIndex")
+    List<AssessmentComment> findSupervisorCommentsForStudent(
+            @Param("supervisorId") Long supervisorId,
+            @Param("studentId") Long studentId,
+            @Param("assessmentId") Long assessmentId);
+    
+    /**
+     * Delete supervisor comments for a student with specific assessment type (for re-evaluation)
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM AssessmentComment c WHERE c.evaluatorId = :supervisorId " +
+           "AND c.evaluatedStudent.id = :studentId " +
+           "AND c.assessment.id = :assessmentId " +
+           "AND c.evaluatorType = 'SUPERVISOR' " +
+           "AND c.rubricAssessmentType = :rubricAssessmentType")
+    void deleteSupervisorCommentsForStudent(
+            @Param("supervisorId") Long supervisorId,
+            @Param("studentId") Long studentId,
+            @Param("assessmentId") Long assessmentId,
+            @Param("rubricAssessmentType") String rubricAssessmentType);
 }

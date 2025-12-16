@@ -5,6 +5,7 @@
     <title th:text="${pageTitle}">Rubric Form</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/rubric.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .alert-warning {
             background-color: #fff3cd;
@@ -86,6 +87,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
+            z-index: 10;
         }
 
         .remove-btn:hover {
@@ -136,6 +138,38 @@
             font-style: italic;
             font-size: 0.9em;
             margin-bottom: 15px;
+        }
+        
+        .comment-card {
+            background-color: #34495e;
+            padding: 15px;
+            padding-top: 35px; /* Make room for remove button */
+            border-radius: 6px;
+            margin-top: 10px;
+            border: 1px solid #9b59b6;
+            position: relative;
+        }
+        
+        .anonymity-toggle-section {
+            background: rgba(155, 89, 182, 0.1);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 3px solid #9b59b6;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -234,7 +268,6 @@
                                 <input type="number" step="0.01" th:field="*{subRubrics[__${subIterStat.index}__].marks}" required class="child-marks sub-rubric-marks" data-subindex="${subIterStat.index}">
                             </div>
                             
-                            <!-- Sub-Rubric Marks Status - Shows individual rating checks -->
                             <div class="sub-rubric-marks-info" data-subindex="${subIterStat.index}">
                                 <p>Sub-Rubric Marks: <span class="subrubric-total">0.00</span></p>
                                 <p>Max Rating: <span class="subrubric-max-rating">0.00</span></p>
@@ -285,7 +318,6 @@
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics. These ratings belong directly to the rubric. Leave empty if using sub-rubrics instead.</p>
                     
-                    <!-- Direct Ratings Marks Status - Shows individual rating checks -->
                     <div class="sub-rubric-marks-info" id="direct-ratings-info" style="border-left: 3px solid #2ecc71;">
                         <p>Rubric Marks: <span id="rubric-total-for-direct">0.00</span></p>
                         <p>Max Rating: <span id="direct-ratings-max">0.00</span></p>
@@ -316,6 +348,77 @@
                     </div>
                 </div>
                 
+                <hr style="border-color: #4a6681; margin: 30px 0;">
+                
+                <!-- Rubric-Specific Comments Section -->
+                <div class="section-container" style="border-color: #9b59b6;">
+                    <div class="section-header">
+                        <h2 style="margin: 0; color: #9b59b6;">
+                            <i class="fas fa-comment-dots"></i> Rubric-Specific Comments
+                        </h2>
+                        <button type="button" id="addRubricCommentBtn" class="btn btn-secondary" style="background-color: #9b59b6;">+ Add Comment Question</button>
+                    </div>
+                    <p class="info-text">
+                        Add optional comment questions specific to this rubric only. Each question can have its own character requirement and anonymity setting.
+                    </p>
+                    
+                    <div id="rubric-comments-container">
+                        <!-- Existing rubric comments -->
+                        <div th:each="commentLabel, iterStat : *{rubricCommentLabels}" class="comment-card" th:attr="data-comment-index=${iterStat.index}">
+                            <button type="button" class="remove-btn remove-rubric-comment-btn">Remove</button>
+                            
+                            <div class="form-group">
+                                <label>
+                                    Comment Question #<span class="comment-number" th:text="${iterStat.index + 1}">1</span>
+                                </label>
+                                <textarea th:name="'rubricCommentLabels[' + ${iterStat.index} + ']'"
+                                          th:text="${commentLabel}"
+                                          rows="2"
+                                          placeholder="e.g., What specific improvements would you suggest for this area?"
+                                          style="width: 100%;"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Minimum Character Length</label>
+                                <input type="number" 
+                                       th:name="'rubricCommentMinLengths[' + ${iterStat.index} + ']'"
+                                       th:value="${rubric.rubricCommentMinLengths != null and iterStat.index < rubric.rubricCommentMinLengths.size() ? rubric.rubricCommentMinLengths[iterStat.index] : 20}"
+                                       min="10" 
+                                       max="500"
+                                       placeholder="20"
+                                       style="width: 200px;">
+                                <p class="info-text" style="margin-top: 5px;">Characters required for this question (10-500)</p>
+                            </div>
+                            
+                            <div class="form-group">
+    <label class="checkbox-label">
+        <!-- ✅ REMOVE THE HIDDEN INPUT -->
+        <!-- Checkbox only - no hidden input -->
+        <input type="checkbox" 
+               th:name="'rubricCommentAnonymousFlags[' + ${iterStat.index} + ']'"
+               th:checked="${rubric.rubricCommentAnonymousFlags != null and iterStat.index < rubric.rubricCommentAnonymousFlags.size() and rubric.rubricCommentAnonymousFlags[iterStat.index]}"
+               value="true"
+               class="anonymous-checkbox"
+               th:attr="data-index=${iterStat.index}">
+        <span>
+            <i class="fas fa-user-secret"></i> Make this comment anonymous
+        </span>
+    </label>
+    <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
+        When enabled, students see anonymous identifiers instead of real names for this specific comment.
+    </p>
+</div>
+                        </div>
+                    </div>
+                    
+                    <div id="rubric-comments-empty" th:if="${rubric.rubricCommentLabels == null or #lists.isEmpty(rubric.rubricCommentLabels)}" 
+                         style="text-align: center; padding: 20px; color: #95a5a6;">
+                        <i class="fas fa-comment-slash" style="font-size: 2em; margin-bottom: 10px;"></i>
+                        <p>No rubric-specific comments configured yet.</p>
+                        <p style="font-size: 0.9em;">Click "Add Comment Question" to create comments specific to this rubric.</p>
+                    </div>
+                </div>
+                
                 <div class="button-container" style="margin-top: 30px;">
                     <a th:href="@{/rubrics/view/{id}(id=${rubric.assessment.id})}" class="btn btn-danger">Cancel</a>
                     <button type="submit" id="submitButton" class="btn btn-primary">Save Rubric</button>
@@ -328,6 +431,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('sub-rubrics-container');
         const directRatingsContainer = document.getElementById('direct-ratings-container');
+        const rubricCommentsContainer = document.getElementById('rubric-comments-container');
+        const rubricCommentsEmpty = document.getElementById('rubric-comments-empty');
         const rubricMarksInput = document.getElementById('rubricMarks');
         const cloMarksInput = document.getElementById('cloMarks');
         const messageBox = document.getElementById('submission-message');
@@ -335,6 +440,7 @@
         
         let subRubricIndex = 0;
         let directRatingIndex = 0;
+        let rubricCommentIndex = 0;
         let subRubricRatingIndices = {};
         
         /*<![CDATA[*/
@@ -348,6 +454,12 @@
             directRatingIndex = /*[[${rubric.ratings != null ? rubric.ratings.size() : 0}]]*/ 0;
         } catch(e) {
             directRatingIndex = 0;
+        }
+        
+        try {
+            rubricCommentIndex = /*[[${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}]]*/ 0;
+        } catch(e) {
+            rubricCommentIndex = 0;
         }
         
         /*[# th:if="${rubric != null and rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}"]*/
@@ -396,7 +508,6 @@
             cloMarksInput.value = rubricMarksInput.value;
         }
 
-        // Check if any individual rating exceeds sub-rubric marks
         function updateSubRubricMarksStatus(subIndex) {
             const subRubricCard = document.querySelector(`.sub-rubric-card:has(.sub-rubric-marks[data-subindex="${subIndex}"])`);
             if (!subRubricCard) return;
@@ -410,7 +521,6 @@
             let maxRating = 0;
             let exceedingRatings = [];
             
-            // Check each rating individually
             subRubricCard.querySelectorAll(`.sub-rating-marks[data-subindex="${subIndex}"]`).forEach((input, idx) => {
                 const ratingValue = parseFloat(input.value) || 0;
                 
@@ -418,7 +528,6 @@
                     maxRating = ratingValue;
                 }
                 
-                // Check if this individual rating exceeds sub-rubric marks
                 if (ratingValue > subRubricMarks) {
                     exceedingRatings.push({
                         index: idx + 1,
@@ -452,13 +561,11 @@
             }
         }
 
-        // Check if any individual direct rating exceeds rubric marks
         function updateDirectRatingsMarksStatus() {
             const rubricMarks = parseFloat(rubricMarksInput.value) || 0;
             let maxRating = 0;
             let exceedingRatings = [];
             
-            // Check each direct rating individually
             document.querySelectorAll('.direct-rating-marks').forEach((input, idx) => {
                 const ratingValue = parseFloat(input.value) || 0;
                 
@@ -466,7 +573,6 @@
                     maxRating = ratingValue;
                 }
                 
-                // Check if this individual rating exceeds rubric marks
                 if (ratingValue > rubricMarks) {
                     exceedingRatings.push({
                         index: idx + 1,
@@ -497,19 +603,15 @@
             }
         }
 
-        // Update marks status
         function updateMarksStatus() {
-            // Update sub-rubric statuses
             document.querySelectorAll('.sub-rubric-marks[data-subindex]').forEach(input => {
                 const subIndex = input.getAttribute('data-subindex');
                 updateSubRubricMarksStatus(subIndex);
             });
             
-            // Update direct ratings status
             updateDirectRatingsMarksStatus();
         }
 
-        // Add event listeners for marks inputs
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('child-marks') || 
                 e.target.classList.contains('sub-rubric-marks') || 
@@ -629,8 +731,99 @@
             directRatingIndex++;
             updateMarksStatus();
         });
+        
+        // ✅ FIXED: Add Rubric Comment with proper checkbox handling
+        document.getElementById('addRubricCommentBtn').addEventListener('click', function() {
+            if (rubricCommentsEmpty) {
+                rubricCommentsEmpty.style.display = 'none';
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'comment-card';
+            card.setAttribute('data-comment-index', rubricCommentIndex);
+            card.innerHTML = `
+                <button type="button" class="remove-btn remove-rubric-comment-btn">Remove</button>
+                
+                <div class="form-group">
+                    <label>
+                        Comment Question #<span class="comment-number">${rubricCommentIndex + 1}</span>
+                    </label>
+                    <textarea name="rubricCommentLabels[${rubricCommentIndex}]"
+                              rows="2"
+                              placeholder="e.g., What specific improvements would you suggest for this area?"
+                              style="width: 100%;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Minimum Character Length</label>
+                    <input type="number" 
+                           name="rubricCommentMinLengths[${rubricCommentIndex}]"
+                           min="10" 
+                           max="500"
+                           value="20"
+                           placeholder="20"
+                           style="width: 200px;">
+                    <p class="info-text" style="margin-top: 5px;">Characters required for this question (10-500)</p>
+                </div>
+                
+                <div class="form-group">
+    <label class="checkbox-label">
+        <input type="checkbox" 
+               name="rubricCommentAnonymousFlags[${rubricCommentIndex}]"
+               value="true"
+               class="anonymous-checkbox"
+               data-index="${rubricCommentIndex}">
+        <span>
+            <i class="fas fa-user-secret"></i> Make this comment anonymous
+        </span>
+    </label>
+    <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
+        When enabled, students see anonymous identifiers instead of real names for this specific comment.
+    </p>
+</div>
+            `;
+            rubricCommentsContainer.appendChild(card);
+            rubricCommentIndex++;
+            renumberRubricComments();
+        });
+        
+        // ✅ FIXED: Renumber function that also updates field names
+        function renumberRubricComments() {
+            const comments = rubricCommentsContainer.querySelectorAll('.comment-card');
+            comments.forEach((card, index) => {
+                // Update visual number
+                const numberSpan = card.querySelector('.comment-number');
+                if (numberSpan) {
+                    numberSpan.textContent = index + 1;
+                }
+                
+                // Update data attribute
+                card.setAttribute('data-comment-index', index);
+                
+                // Update field names to maintain proper indexing
+                const textarea = card.querySelector('textarea[name^="rubricCommentLabels"]');
+                if (textarea) {
+                    textarea.name = `rubricCommentLabels[${index}]`;
+                }
+                
+                const minLengthInput = card.querySelector('input[name^="rubricCommentMinLengths"]');
+                if (minLengthInput) {
+                    minLengthInput.name = `rubricCommentMinLengths[${index}]`;
+                }
+                
+                const hiddenCheckbox = card.querySelector('input[type="hidden"][name^="rubricCommentAnonymousFlags"]');
+                if (hiddenCheckbox) {
+                    hiddenCheckbox.name = `rubricCommentAnonymousFlags[${index}]`;
+                }
+                
+                const checkbox = card.querySelector('input[type="checkbox"][name^="rubricCommentAnonymousFlags"]');
+                if (checkbox) {
+                    checkbox.name = `rubricCommentAnonymousFlags[${index}]`;
+                }
+            });
+        }
 
-        // Remove handlers
+        // ✅ FIXED: Remove handlers with proper event delegation
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-sub-rubric-btn')) {
                 e.target.closest('.sub-rubric-card').remove();
@@ -643,6 +836,15 @@
             if (e.target.classList.contains('remove-direct-rating-btn')) {
                 e.target.closest('.rating-card').remove();
                 updateMarksStatus();
+            }
+            if (e.target.classList.contains('remove-rubric-comment-btn')) {
+                e.target.closest('.comment-card').remove();
+                renumberRubricComments();
+                
+                const remainingComments = rubricCommentsContainer.querySelectorAll('.comment-card');
+                if (remainingComments.length === 0 && rubricCommentsEmpty) {
+                    rubricCommentsEmpty.style.display = 'block';
+                }
             }
         });
 
@@ -674,21 +876,18 @@
             });
         }
 
-        // Form validation - only check individual rating limits
+        // Form validation
         if (!duplicateFound) {
             rubricForm.addEventListener('submit', function(event) {
-                // Validate each sub-rubric's ratings - check if any individual rating exceeds
                 let subRubricValidationFailed = false;
                 document.querySelectorAll('.sub-rubric-card').forEach(card => {
                     const subIndex = card.querySelector('.sub-rubric-marks').getAttribute('data-subindex');
                     const subRubricMarks = parseFloat(card.querySelector('.sub-rubric-marks').value) || 0;
                     const subRubricName = card.querySelector('.sub-rubric-name').value;
                     
-                    // Check each individual rating
                     card.querySelectorAll(`.sub-rating-marks[data-subindex="${subIndex}"]`).forEach((input, idx) => {
                         const ratingValue = parseFloat(input.value) || 0;
                         
-                        // Only fail if this individual rating exceeds sub-rubric marks
                         if (ratingValue > subRubricMarks) {
                             showMessage(`Sub-rubric "${subRubricName}": Rating #${idx + 1} (${ratingValue.toFixed(2)}) exceeds sub-rubric marks (${subRubricMarks.toFixed(2)})`);
                             subRubricValidationFailed = true;
@@ -701,17 +900,14 @@
                     return;
                 }
                 
-                // Validate direct ratings - check if any individual rating exceeds
                 const directRatingsCount = document.querySelectorAll('.direct-rating-marks').length;
                 if (directRatingsCount > 0) {
                     const rubricMarks = parseFloat(rubricMarksInput.value) || 0;
                     
-                    // Check each direct rating individually
                     let directRatingValidationFailed = false;
                     document.querySelectorAll('.direct-rating-marks').forEach((input, idx) => {
                         const ratingValue = parseFloat(input.value) || 0;
                         
-                        // Only fail if this individual rating exceeds rubric marks
                         if (ratingValue > rubricMarks) {
                             showMessage(`Direct Rating #${idx + 1} (${ratingValue.toFixed(2)}) exceeds rubric marks (${rubricMarks.toFixed(2)})`);
                             directRatingValidationFailed = true;
@@ -728,6 +924,10 @@
 
         // Initial marks status update
         updateMarksStatus();
+        
+        if (rubricCommentIndex === 0 && rubricCommentsEmpty) {
+            rubricCommentsEmpty.style.display = 'block';
+        }
     });
 </script>
 </body>
