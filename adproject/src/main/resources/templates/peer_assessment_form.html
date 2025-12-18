@@ -322,10 +322,10 @@
 
                 <!-- ASSESSMENT-LEVEL COMMENTS SECTION -->
                 <div th:with="isTeam=${isTeamEvaluation != null and isTeamEvaluation},
-                              commentCount=${isTeam ? assessment.groupCommentCount : assessment.individualCommentCount},
-                              minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
-                              commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
-                              hasComments=${commentCount != null and commentCount > 0}">
+                            commentLabels=${isTeam ? assessment.groupCommentLabels : assessment.individualCommentLabels},
+                            minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
+                            commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
+                            hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                     
                     <div th:if="${hasComments}" class="comments-container">
                         <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
@@ -340,16 +340,16 @@
                                 <strong>Instructions:</strong>
                             </p>
                             <ul style="color: #ecf0f1; margin-left: 20px; line-height: 1.6;">
-                                <li>You must fill out <strong><span th:text="${commentCount}">1</span></strong> comment field(s)</li>
+                                <li>You must fill out <strong><span th:text="${#lists.size(commentLabels)}">1</span></strong> comment field(s)</li>
                                 <li>Each comment must be at least <strong><span th:text="${minLength}">20</span></strong> characters</li>
                                 <li th:if="${commentsAnonymous}">Your comments will appear <strong>anonymously</strong></li>
                                 <li th:unless="${commentsAnonymous}">Your comments will show <strong>your name</strong></li>
                             </ul>
                         </div>
                         
-                        <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}">
-                            <div th:with="commentLabel=${isTeam ? assessment.getGroupCommentLabel(i) : assessment.getIndividualCommentLabel(i)},
-                                          existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
+                        <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}">
+                            <div th:with="commentLabel=${commentLabels[i]},
+                                        existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
                                 
                                 <div class="comment-field-container">
                                     <div class="comment-field-header">
@@ -361,18 +361,18 @@
                                     </div>
                                     
                                     <textarea th:name="'comment_' + ${i}" 
-                                              th:id="'comment_' + ${i}"
-                                              th:placeholder="'Write your ' + ${#strings.toLowerCase(commentLabel)} + ' here...'"
-                                              th:attr="data-min-length=${minLength}, data-index=${i}"
-                                              class="comment-textarea"
-                                              required
-                                              th:minlength="${minLength}"
-                                              th:text="${existingComment != null ? existingComment.commentText : ''}">
+                                            th:id="'comment_' + ${i}"
+                                            th:placeholder="'Write your ' + ${#strings.toLowerCase(commentLabel)} + ' here...'"
+                                            th:attr="data-min-length=${minLength}, data-index=${i}"
+                                            class="comment-textarea"
+                                            required
+                                            th:minlength="${minLength}"
+                                            th:text="${existingComment != null ? existingComment.commentText : ''}">
                                     </textarea>
                                     
                                     <div class="comment-validation" 
-                                         th:id="'validation_' + ${i}" 
-                                         style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
+                                        th:id="'validation_' + ${i}" 
+                                        style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
                                         <i class="fas fa-exclamation-circle"></i>
                                         <span>Minimum length not met (<span th:text="${minLength}">20</span> characters required)</span>
                                     </div>
@@ -394,6 +394,7 @@
                             </span>
                         </div>
                     </div>
+                </div>
                     
                     <div th:unless="${hasComments}" class="comments-container" style="text-align: center; padding: 30px;">
                         <i class="fas fa-info-circle" style="font-size: 2em; color: #95a5a6;"></i>

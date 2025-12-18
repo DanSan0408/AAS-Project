@@ -235,9 +235,9 @@
                         </div>
 
                         <!-- Group Assessment-Level Comments -->
-                        <div th:with="commentCount=${assessment.groupCommentCount},
-                                      minLength=${assessment.groupCommentMinLength},
-                                      hasComments=${commentCount != null and commentCount > 0}">
+                        <div th:with="commentLabels=${assessment.groupCommentLabels},
+                                    minLength=${assessment.groupCommentMinLength},
+                                    hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                             
                             <div th:if="${hasComments}" class="comments-section">
                                 <div class="comments-header">
@@ -247,16 +247,16 @@
                                     </p>
                                 </div>
 
-                                <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}" class="comment-field">
+                                <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                     <label class="comment-label" th:for="'group_comment_' + ${i}">
-                                        <span th:text="${assessment.getGroupCommentLabel(i)}">Comment</span>
+                                        <span th:text="${commentLabels[i]}">Comment</span>
                                         <span class="optional-indicator" style="color: #95a5a6; font-weight: normal;"> (Optional - save anytime)</span>
                                     </label>
                                     <textarea 
                                         class="comment-textarea"
                                         th:id="'group_comment_' + ${i}"
                                         th:name="'group_comment_' + ${i}"
-                                        th:text="${existingGroupComments != null ? existingGroupComments.get(i) : ''}"
+                                        th:text="${existingGroupComments != null and i < #lists.size(existingGroupComments) ? existingGroupComments.get(i) : ''}"
                                         placeholder="Enter your feedback here..."></textarea>
                                     <div class="comment-hint" th:if="${minLength > 0}" style="color: #95a5a6;">
                                         Suggested minimum: <span th:text="${minLength}">20</span> characters (required for completion)
@@ -360,9 +360,9 @@
                             </div>
 
                             <!-- Individual Assessment-Level Comments -->
-                            <div th:with="commentCount=${assessment.individualCommentCount},
-                                          minLength=${assessment.individualCommentMinLength},
-                                          hasComments=${commentCount != null and commentCount > 0}">
+                            <div th:with="commentLabels=${assessment.individualCommentLabels},
+                                        minLength=${assessment.individualCommentMinLength},
+                                        hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                                 
                                 <div th:if="${hasComments}" class="comments-section">
                                     <div class="comments-header">
@@ -372,16 +372,16 @@
                                         </p>
                                     </div>
 
-                                    <div th:each="i : ${#numbers.sequence(0, commentCount - 1)}" class="comment-field">
+                                    <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                         <label class="comment-label" th:for="'student_' + ${student.id} + '_comment_' + ${i}">
-                                            <span th:text="${assessment.getIndividualCommentLabel(i)}">Comment</span>
+                                            <span th:text="${commentLabels[i]}">Comment</span>
                                             <span class="optional-indicator" style="color: #95a5a6; font-weight: normal;"> (Optional - save anytime)</span>
                                         </label>
                                         <textarea 
                                             class="comment-textarea"
                                             th:id="'student_' + ${student.id} + '_comment_' + ${i}"
                                             th:name="'student_' + ${student.id} + '_comment_' + ${i}"
-                                            th:text="${existingIndividualComments.get(student.id) != null ? existingIndividualComments.get(student.id).get(i) : ''}"
+                                            th:text="${existingIndividualComments.get(student.id) != null and i < #lists.size(existingIndividualComments.get(student.id)) ? existingIndividualComments.get(student.id).get(i) : ''}"
                                             placeholder="Enter your feedback here..."></textarea>
                                         <div class="comment-hint" th:if="${minLength > 0}" style="color: #95a5a6;">
                                             Suggested minimum: <span th:text="${minLength}">20</span> characters (required for completion)

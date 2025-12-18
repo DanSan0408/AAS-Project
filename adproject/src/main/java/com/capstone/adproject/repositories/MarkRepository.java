@@ -103,4 +103,11 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
             @Param("evaluatorId") Long evaluatorId,
             @Param("evaluatedId") Long evaluatedId,
             @Param("assessmentId") Long assessmentId);
+
+            // In MarkRepository.java
+List<Mark> findByEvaluatorStudentAndEvaluatedStudent(Student evaluatorStudent, Student evaluatedStudent);
+
+List<Mark> findByAssessment(Assessment assessment);
+
+List<Mark> findByEvaluatedStudentAndAssessmentAndRubric(Student evaluatedStudent, Assessment assessment, Rubric rubric);
 }

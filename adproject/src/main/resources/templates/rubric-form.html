@@ -94,29 +94,6 @@
             background-color: #c0392b;
         }
 
-        .sub-rubric-marks-info {
-            background-color: #1a252f;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            border-left: 3px solid #f39c12;
-            font-size: 0.9em;
-        }
-
-        .sub-rubric-marks-info p {
-            margin: 3px 0;
-        }
-
-        .marks-warning {
-            color: #e74c3c;
-            font-weight: bold;
-        }
-
-        .marks-ok {
-            color: #2ecc71;
-            font-weight: bold;
-        }
-
         #submission-message {
             display: none;
             position: fixed;
@@ -264,16 +241,12 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Marks *</label>
-                                <input type="number" step="0.01" th:field="*{subRubrics[__${subIterStat.index}__].marks}" required class="child-marks sub-rubric-marks" data-subindex="${subIterStat.index}">
-                            </div>
-                            
-                            <div class="sub-rubric-marks-info" data-subindex="${subIterStat.index}">
-                                <p>Sub-Rubric Marks: <span class="subrubric-total">0.00</span></p>
-                                <p>Max Rating: <span class="subrubric-max-rating">0.00</span></p>
-                                <p class="subrubric-status marks-ok">✓ No ratings added yet</p>
-                                <p class="info-text" style="margin-top: 5px;">Each individual rating must not exceed sub-rubric marks.</p>
-                            </div>
+                            <label>Marks (Auto-calculated from highest rating)</label>
+                            <input type="number" step="0.01" th:field="*{subRubrics[__${subIterStat.index}__].marks}" readonly class="sub-rubric-marks-auto" data-subindex="${subIterStat.index}" style="background-color: #e9ecef; cursor: not-allowed;">
+                            <p class="info-text" style="margin-top: 5px; color: #6c757d;">
+                                <i class="fas fa-info-circle"></i> This value is automatically set to the highest rating mark for this sub-rubric.
+                            </p>
+                        </div>
                             
                             <!-- Ratings within Sub-Rubric -->
                             <div style="margin-top: 15px; padding: 10px; background-color: #2c3e50; border-radius: 6px;">
@@ -318,13 +291,6 @@
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics. These ratings belong directly to the rubric. Leave empty if using sub-rubrics instead.</p>
                     
-                    <div class="sub-rubric-marks-info" id="direct-ratings-info" style="border-left: 3px solid #2ecc71;">
-                        <p>Rubric Marks: <span id="rubric-total-for-direct">0.00</span></p>
-                        <p>Max Rating: <span id="direct-ratings-max">0.00</span></p>
-                        <p id="direct-ratings-status" class="marks-ok">✓ No direct ratings added yet</p>
-                        <p class="info-text" style="margin-top: 5px;">Each individual rating must not exceed rubric marks.</p>
-                    </div>
-                    
                     <div id="direct-ratings-container">
                         <div th:each="rating, ratingIterStat : *{ratings}" class="rating-card">
                             <button type="button" class="remove-btn remove-direct-rating-btn">Remove</button>
@@ -342,7 +308,7 @@
 
                             <div class="form-group">
                                 <label>Marks *</label>
-                                <input type="number" step="0.01" th:field="*{ratings[__${ratingIterStat.index}__].marks}" required class="child-marks direct-rating-marks">
+                                <input type="number" step="0.01" th:field="*{ratings[__${ratingIterStat.index}__].marks}" required class="direct-rating-marks">
                             </div>
                         </div>
                     </div>
@@ -391,23 +357,21 @@
                             </div>
                             
                             <div class="form-group">
-    <label class="checkbox-label">
-        <!-- ✅ REMOVE THE HIDDEN INPUT -->
-        <!-- Checkbox only - no hidden input -->
-        <input type="checkbox" 
-               th:name="'rubricCommentAnonymousFlags[' + ${iterStat.index} + ']'"
-               th:checked="${rubric.rubricCommentAnonymousFlags != null and iterStat.index < rubric.rubricCommentAnonymousFlags.size() and rubric.rubricCommentAnonymousFlags[iterStat.index]}"
-               value="true"
-               class="anonymous-checkbox"
-               th:attr="data-index=${iterStat.index}">
-        <span>
-            <i class="fas fa-user-secret"></i> Make this comment anonymous
-        </span>
-    </label>
-    <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
-        When enabled, students see anonymous identifiers instead of real names for this specific comment.
-    </p>
-</div>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" 
+                                           th:name="'rubricCommentAnonymousFlags[' + ${iterStat.index} + ']'"
+                                           th:checked="${rubric.rubricCommentAnonymousFlags != null and iterStat.index < rubric.rubricCommentAnonymousFlags.size() and rubric.rubricCommentAnonymousFlags[iterStat.index]}"
+                                           value="true"
+                                           class="anonymous-checkbox"
+                                           th:attr="data-index=${iterStat.index}">
+                                    <span>
+                                        <i class="fas fa-user-secret"></i> Make this comment anonymous
+                                    </span>
+                                </label>
+                                <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
+                                    When enabled, students see anonymous identifiers instead of real names for this specific comment.
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
@@ -501,170 +465,50 @@
         // Sync CLO Marks with Rubric Marks
         rubricMarksInput.addEventListener('input', function() {
             cloMarksInput.value = this.value;
-            updateMarksStatus();
         });
 
         if (rubricMarksInput.value) {
             cloMarksInput.value = rubricMarksInput.value;
         }
 
-        function updateSubRubricMarksStatus(subIndex) {
-            const subRubricCard = document.querySelector(`.sub-rubric-card:has(.sub-rubric-marks[data-subindex="${subIndex}"])`);
-            if (!subRubricCard) return;
-            
-            const subRubricMarksInput = subRubricCard.querySelector(`.sub-rubric-marks[data-subindex="${subIndex}"]`);
-            const marksInfo = subRubricCard.querySelector(`.sub-rubric-marks-info[data-subindex="${subIndex}"]`);
-            
-            if (!subRubricMarksInput || !marksInfo) return;
-            
-            const subRubricMarks = parseFloat(subRubricMarksInput.value) || 0;
-            let maxRating = 0;
-            let exceedingRatings = [];
-            
-            subRubricCard.querySelectorAll(`.sub-rating-marks[data-subindex="${subIndex}"]`).forEach((input, idx) => {
-                const ratingValue = parseFloat(input.value) || 0;
-                
-                if (ratingValue > maxRating) {
-                    maxRating = ratingValue;
-                }
-                
-                if (ratingValue > subRubricMarks) {
-                    exceedingRatings.push({
-                        index: idx + 1,
-                        value: ratingValue
-                    });
-                }
-            });
-            
-            const totalSpan = marksInfo.querySelector('.subrubric-total');
-            const maxRatingSpan = marksInfo.querySelector('.subrubric-max-rating');
-            const statusEl = marksInfo.querySelector('.subrubric-status');
-            
-            totalSpan.textContent = subRubricMarks.toFixed(2);
-            maxRatingSpan.textContent = maxRating.toFixed(2);
-            
-            const hasRatings = subRubricCard.querySelectorAll(`.sub-rating-marks[data-subindex="${subIndex}"]`).length > 0;
-            
-            if (!hasRatings) {
-                statusEl.className = 'subrubric-status marks-ok';
-                statusEl.textContent = '✓ No ratings added yet';
-            } else if (exceedingRatings.length > 0) {
-                statusEl.className = 'subrubric-status marks-warning';
-                if (exceedingRatings.length === 1) {
-                    statusEl.textContent = `⚠ Rating #${exceedingRatings[0].index} (${exceedingRatings[0].value.toFixed(2)}) exceeds sub-rubric marks (${subRubricMarks.toFixed(2)})`;
-                } else {
-                    statusEl.textContent = `⚠ ${exceedingRatings.length} rating(s) exceed sub-rubric marks`;
-                }
-            } else {
-                statusEl.className = 'subrubric-status marks-ok';
-                statusEl.textContent = `✓ All ratings OK (max: ${maxRating.toFixed(2)} / ${subRubricMarks.toFixed(2)})`;
-            }
-        }
+       // Add Sub-Rubric
+document.getElementById('addSubRubricBtn').addEventListener('click', function() {
+    const card = document.createElement('div');
+    card.className = 'sub-rubric-card';
+    card.innerHTML = `
+        <button type="button" class="remove-btn remove-sub-rubric-btn">Remove</button>
+        <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
+        
+        <div class="form-group">
+            <label>Sub-Rubric Name *</label>
+            <input type="text" name="subRubrics[${subRubricIndex}].name" required class="sub-rubric-name">
+        </div>
+        
+        <div class="form-group">
+            <label>Description</label>
+            <textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea>
+        </div>
 
-        function updateDirectRatingsMarksStatus() {
-            const rubricMarks = parseFloat(rubricMarksInput.value) || 0;
-            let maxRating = 0;
-            let exceedingRatings = [];
-            
-            document.querySelectorAll('.direct-rating-marks').forEach((input, idx) => {
-                const ratingValue = parseFloat(input.value) || 0;
-                
-                if (ratingValue > maxRating) {
-                    maxRating = ratingValue;
-                }
-                
-                if (ratingValue > rubricMarks) {
-                    exceedingRatings.push({
-                        index: idx + 1,
-                        value: ratingValue
-                    });
-                }
-            });
-            
-            document.getElementById('rubric-total-for-direct').textContent = rubricMarks.toFixed(2);
-            document.getElementById('direct-ratings-max').textContent = maxRating.toFixed(2);
-            
-            const statusEl = document.getElementById('direct-ratings-status');
-            const hasDirectRatings = document.querySelectorAll('.direct-rating-marks').length > 0;
-            
-            if (!hasDirectRatings) {
-                statusEl.className = 'marks-ok';
-                statusEl.textContent = '✓ No direct ratings added yet';
-            } else if (exceedingRatings.length > 0) {
-                statusEl.className = 'marks-warning';
-                if (exceedingRatings.length === 1) {
-                    statusEl.textContent = `⚠ Rating #${exceedingRatings[0].index} (${exceedingRatings[0].value.toFixed(2)}) exceeds rubric marks (${rubricMarks.toFixed(2)})`;
-                } else {
-                    statusEl.textContent = `⚠ ${exceedingRatings.length} rating(s) exceed rubric marks`;
-                }
-            } else {
-                statusEl.className = 'marks-ok';
-                statusEl.textContent = `✓ All ratings OK (max: ${maxRating.toFixed(2)} / ${rubricMarks.toFixed(2)})`;
-            }
-        }
-
-        function updateMarksStatus() {
-            document.querySelectorAll('.sub-rubric-marks[data-subindex]').forEach(input => {
-                const subIndex = input.getAttribute('data-subindex');
-                updateSubRubricMarksStatus(subIndex);
-            });
-            
-            updateDirectRatingsMarksStatus();
-        }
-
-        document.addEventListener('input', function(e) {
-            if (e.target.classList.contains('child-marks') || 
-                e.target.classList.contains('sub-rubric-marks') || 
-                e.target.classList.contains('direct-rating-marks') ||
-                e.target.classList.contains('sub-rating-marks') ||
-                e.target.id === 'rubricMarks') {
-                updateMarksStatus();
-            }
-        });
-
-        // Add Sub-Rubric
-        document.getElementById('addSubRubricBtn').addEventListener('click', function() {
-            const card = document.createElement('div');
-            card.className = 'sub-rubric-card';
-            card.innerHTML = `
-                <button type="button" class="remove-btn remove-sub-rubric-btn">Remove</button>
-                <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
-                
-                <div class="form-group">
-                    <label>Sub-Rubric Name *</label>
-                    <input type="text" name="subRubrics[${subRubricIndex}].name" required class="sub-rubric-name">
-                </div>
-                
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Marks *</label>
-                    <input type="number" step="0.01" name="subRubrics[${subRubricIndex}].marks" required class="child-marks sub-rubric-marks" data-subindex="${subRubricIndex}">
-                </div>
-                
-                <div class="sub-rubric-marks-info" data-subindex="${subRubricIndex}">
-                    <p>Sub-Rubric Marks: <span class="subrubric-total">0.00</span></p>
-                    <p>Max Rating: <span class="subrubric-max-rating">0.00</span></p>
-                    <p class="subrubric-status marks-ok">✓ No ratings added yet</p>
-                    <p class="info-text" style="margin-top: 5px;">Each individual rating must not exceed sub-rubric marks.</p>
-                </div>
-                
-                <div style="margin-top: 15px; padding: 10px; background-color: #2c3e50; border-radius: 6px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <h4 style="margin: 0; color: #f39c12;">Ratings for this Sub-Rubric</h4>
-                        <button type="button" class="btn btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}" style="padding: 5px 10px; font-size: 12px;">+ Add Rating</button>
-                    </div>
-                    <div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
-                </div>
-            `;
-            container.appendChild(card);
-            subRubricRatingIndices[subRubricIndex] = 0;
-            subRubricIndex++;
-            updateMarksStatus();
-        });
+        <div class="form-group">
+            <label>Marks (Auto-calculated from highest rating)</label>
+            <input type="number" step="0.01" name="subRubrics[${subRubricIndex}].marks" readonly class="sub-rubric-marks-auto" data-subindex="${subRubricIndex}" style="background-color: #e9ecef; cursor: not-allowed;" value="0">
+            <p class="info-text" style="margin-top: 5px; color: #6c757d;">
+                <i class="fas fa-info-circle"></i> This value is automatically set to the highest rating mark for this sub-rubric.
+            </p>
+        </div>
+        
+        <div style="margin-top: 15px; padding: 10px; background-color: #2c3e50; border-radius: 6px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #f39c12;">Ratings for this Sub-Rubric</h4>
+                <button type="button" class="btn btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}" style="padding: 5px 10px; font-size: 12px;">+ Add Rating</button>
+            </div>
+            <div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
+        </div>
+    `;
+    container.appendChild(card);
+    subRubricRatingIndices[subRubricIndex] = 0;
+    subRubricIndex++;
+});
 
         // Add Rating to Sub-Rubric
         document.addEventListener('click', function(e) {
@@ -700,7 +544,6 @@
                 `;
                 ratingsContainer.appendChild(ratingCard);
                 subRubricRatingIndices[subIndex]++;
-                updateMarksStatus();
             }
         });
 
@@ -724,15 +567,14 @@
 
                 <div class="form-group">
                     <label>Marks *</label>
-                    <input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="child-marks direct-rating-marks">
+                    <input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="direct-rating-marks">
                 </div>
             `;
             directRatingsContainer.appendChild(card);
             directRatingIndex++;
-            updateMarksStatus();
         });
         
-        // ✅ FIXED: Add Rubric Comment with proper checkbox handling
+        // Add Rubric Comment
         document.getElementById('addRubricCommentBtn').addEventListener('click', function() {
             if (rubricCommentsEmpty) {
                 rubricCommentsEmpty.style.display = 'none';
@@ -767,27 +609,27 @@
                 </div>
                 
                 <div class="form-group">
-    <label class="checkbox-label">
-        <input type="checkbox" 
-               name="rubricCommentAnonymousFlags[${rubricCommentIndex}]"
-               value="true"
-               class="anonymous-checkbox"
-               data-index="${rubricCommentIndex}">
-        <span>
-            <i class="fas fa-user-secret"></i> Make this comment anonymous
-        </span>
-    </label>
-    <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
-        When enabled, students see anonymous identifiers instead of real names for this specific comment.
-    </p>
-</div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               name="rubricCommentAnonymousFlags[${rubricCommentIndex}]"
+                               value="true"
+                               class="anonymous-checkbox"
+                               data-index="${rubricCommentIndex}">
+                        <span>
+                            <i class="fas fa-user-secret"></i> Make this comment anonymous
+                        </span>
+                    </label>
+                    <p class="info-text" style="margin-top: 5px; margin-left: 28px;">
+                        When enabled, students see anonymous identifiers instead of real names for this specific comment.
+                    </p>
+                </div>
             `;
             rubricCommentsContainer.appendChild(card);
             rubricCommentIndex++;
             renumberRubricComments();
         });
         
-        // ✅ FIXED: Renumber function that also updates field names
+        // Renumber rubric comments
         function renumberRubricComments() {
             const comments = rubricCommentsContainer.querySelectorAll('.comment-card');
             comments.forEach((card, index) => {
@@ -811,11 +653,6 @@
                     minLengthInput.name = `rubricCommentMinLengths[${index}]`;
                 }
                 
-                const hiddenCheckbox = card.querySelector('input[type="hidden"][name^="rubricCommentAnonymousFlags"]');
-                if (hiddenCheckbox) {
-                    hiddenCheckbox.name = `rubricCommentAnonymousFlags[${index}]`;
-                }
-                
                 const checkbox = card.querySelector('input[type="checkbox"][name^="rubricCommentAnonymousFlags"]');
                 if (checkbox) {
                     checkbox.name = `rubricCommentAnonymousFlags[${index}]`;
@@ -823,19 +660,16 @@
             });
         }
 
-        // ✅ FIXED: Remove handlers with proper event delegation
+        // Remove handlers
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-sub-rubric-btn')) {
                 e.target.closest('.sub-rubric-card').remove();
-                updateMarksStatus();
             }
             if (e.target.classList.contains('remove-rating-btn')) {
                 e.target.closest('.rating-card').remove();
-                updateMarksStatus();
             }
             if (e.target.classList.contains('remove-direct-rating-btn')) {
                 e.target.closest('.rating-card').remove();
-                updateMarksStatus();
             }
             if (e.target.classList.contains('remove-rubric-comment-btn')) {
                 e.target.closest('.comment-card').remove();
@@ -876,59 +710,86 @@
             });
         }
 
-        // Form validation
-        if (!duplicateFound) {
-            rubricForm.addEventListener('submit', function(event) {
-                let subRubricValidationFailed = false;
-                document.querySelectorAll('.sub-rubric-card').forEach(card => {
-                    const subIndex = card.querySelector('.sub-rubric-marks').getAttribute('data-subindex');
-                    const subRubricMarks = parseFloat(card.querySelector('.sub-rubric-marks').value) || 0;
-                    const subRubricName = card.querySelector('.sub-rubric-name').value;
-                    
-                    card.querySelectorAll(`.sub-rating-marks[data-subindex="${subIndex}"]`).forEach((input, idx) => {
-                        const ratingValue = parseFloat(input.value) || 0;
-                        
-                        if (ratingValue > subRubricMarks) {
-                            showMessage(`Sub-rubric "${subRubricName}": Rating #${idx + 1} (${ratingValue.toFixed(2)}) exceeds sub-rubric marks (${subRubricMarks.toFixed(2)})`);
-                            subRubricValidationFailed = true;
-                        }
-                    });
-                });
-                
-                if (subRubricValidationFailed) {
-                    event.preventDefault();
-                    return;
-                }
-                
-                const directRatingsCount = document.querySelectorAll('.direct-rating-marks').length;
-                if (directRatingsCount > 0) {
-                    const rubricMarks = parseFloat(rubricMarksInput.value) || 0;
-                    
-                    let directRatingValidationFailed = false;
-                    document.querySelectorAll('.direct-rating-marks').forEach((input, idx) => {
-                        const ratingValue = parseFloat(input.value) || 0;
-                        
-                        if (ratingValue > rubricMarks) {
-                            showMessage(`Direct Rating #${idx + 1} (${ratingValue.toFixed(2)}) exceeds rubric marks (${rubricMarks.toFixed(2)})`);
-                            directRatingValidationFailed = true;
-                        }
-                    });
-                    
-                    if (directRatingValidationFailed) {
-                        event.preventDefault();
-                        return;
-                    }
-                }
-            });
-        }
-
-        // Initial marks status update
-        updateMarksStatus();
-        
+        // Show empty state if needed
         if (rubricCommentIndex === 0 && rubricCommentsEmpty) {
             rubricCommentsEmpty.style.display = 'block';
         }
+
+        // ✅ NEW: Auto-calculate sub-rubric marks when ratings change
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('sub-rating-marks')) {
+                const subIndex = e.target.getAttribute('data-subindex');
+                updateSubRubricMarks(subIndex);
+            }
+        });
+
+        // ✅ NEW: Auto-calculate when ratings are added
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-sub-rating-btn')) {
+                const subIndex = e.target.getAttribute('data-subindex');
+                // Delay to let the rating be added first
+                setTimeout(() => updateSubRubricMarks(subIndex), 100);
+            }
+            
+            // Existing remove handlers...
+            if (e.target.classList.contains('remove-sub-rubric-btn')) {
+                e.target.closest('.sub-rubric-card').remove();
+            }
+            if (e.target.classList.contains('remove-rating-btn')) {
+                const subIndex = e.target.closest('.sub-ratings-container').getAttribute('data-subindex');
+                e.target.closest('.rating-card').remove();
+                // Recalculate after removing
+                if (subIndex) {
+                    setTimeout(() => updateSubRubricMarks(subIndex), 100);
+                }
+            }
+            if (e.target.classList.contains('remove-direct-rating-btn')) {
+                e.target.closest('.rating-card').remove();
+            }
+            if (e.target.classList.contains('remove-rubric-comment-btn')) {
+                e.target.closest('.comment-card').remove();
+                renumberRubricComments();
+                
+                const remainingComments = rubricCommentsContainer.querySelectorAll('.comment-card');
+                if (remainingComments.length === 0 && rubricCommentsEmpty) {
+                    rubricCommentsEmpty.style.display = 'block';
+                }
+            }
+        });
+
+        /**
+         * ✅ NEW: Auto-calculate sub-rubric marks based on highest rating
+         */
+        function updateSubRubricMarks(subIndex) {
+            const ratingsContainer = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
+            if (!ratingsContainer) return;
+            
+            const ratingInputs = ratingsContainer.querySelectorAll('.sub-rating-marks');
+            let maxMark = 0;
+            
+            ratingInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                if (value > maxMark) {
+                    maxMark = value;
+                }
+            });
+            
+            // Update sub-rubric marks field
+            const subRubricMarksInput = document.querySelector(`.sub-rubric-marks-auto[data-subindex="${subIndex}"]`);
+            if (subRubricMarksInput) {
+                subRubricMarksInput.value = maxMark.toFixed(2);
+            }
+        }
+
+        // ✅ Initialize auto-calculation for existing sub-rubrics
+        document.querySelectorAll('.sub-rubric-marks-auto').forEach(input => {
+            const subIndex = input.getAttribute('data-subindex');
+            updateSubRubricMarks(subIndex);
+        });
+
     });
+
+
 </script>
 </body>
 </html>

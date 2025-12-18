@@ -80,6 +80,58 @@
     .btn-assign:hover {
         background-color: #e67e22 !important;
     }
+    
+    /* ⭐ NEW: Dropdown Styles */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .dropdown-toggle::after {
+        content: " ▼";
+        font-size: 0.7em;
+        margin-left: 5px;
+    }
+    
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        z-index: 1000;
+        min-width: 200px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        margin-top: 2px;
+    }
+    
+    .dropdown-menu.show {
+        display: block;
+    }
+    
+    .dropdown-item {
+        display: block;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .dropdown-item i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+    
+    .dropdown-divider {
+        height: 1px;
+        background-color: #e9ecef;
+        margin: 0;
+    }
 </style>
 </head>
 <body>
@@ -127,7 +179,7 @@
                         <tr>
                             <th>ID</th>
                             <th>Title</th>
-                            <th style="width: 400px;">Actions</th>
+                            <th style="width: 450px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,7 +187,7 @@
                             <td th:text="${assessment.id}">1</td>
                             <td th:text="${assessment.title}">Final Year Project</td>
                             <td>
-                                <!-- ✅ MODIFIED: Enhanced Action Buttons with Configure Comments and Assign Assessment -->
+                                <!-- ✅ MODIFIED: Enhanced Action Buttons with Dropdown Configure Comments -->
                                 <div class="action-buttons">
                                     <!-- View Rubrics Button -->
                                     <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" 
@@ -144,14 +196,28 @@
                                         <i class="fas fa-eye"></i> View Rubrics
                                     </a>
                                     
-                                    <!-- ⭐ NEW: Configure Comments Button -->
-                                    <a th:href="@{/admin/comment-config/{id}(id=${assessment.id})}" 
-                                       class="btn btn-configure"
-                                       title="Configure comment requirements">
-                                        <i class="fas fa-comments"></i> Configure Comments
-                                    </a>
+                                    <!-- ⭐ NEW: Configure Comments Dropdown -->
+                                    <div class="dropdown">
+                                        <button type="button"
+                                                class="btn btn-configure dropdown-toggle"
+                                                th:onclick="'toggleDropdown(' + ${assessment.id} + ')'"
+                                                title="Configure comment requirements">
+                                            <i class="fas fa-comments"></i> Configure Comments
+                                        </button>
+                                        <div th:id="'dropdown-' + ${assessment.id}" class="dropdown-menu">
+                                            <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" 
+                                               class="dropdown-item">
+                                                <i class="fas fa-users"></i> Group Comments
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" 
+                                               class="dropdown-item">
+                                                <i class="fas fa-user"></i> Individual Comments
+                                            </a>
+                                        </div>
+                                    </div>
                                     
-                                    <!-- ⭐ NEW: Assign Assessment Button -->
+                                    <!-- ⭐ Assign Assessment Button -->
                                     <a th:href="@{/admin/assessment/assign/{id}(id=${assessment.id})}" 
                                        class="btn btn-assign"
                                        title="Assign assessment and set deadlines">
@@ -192,41 +258,59 @@
     </div>
     
 <script th:inline="javascript">
+    // ⭐ NEW: Dropdown Toggle Function
+    function toggleDropdown(assessmentId) {
+        const dropdownId = 'dropdown-' + assessmentId;
+        const dropdown = document.getElementById(dropdownId);
+        
+        // Close all other dropdowns first
+        document.querySelectorAll('.dropdown-menu').forEach(d => {
+            if (d.id !== dropdownId) {
+                d.classList.remove('show');
+            }
+        });
+        
+        // Toggle this dropdown
+        dropdown.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-menu').forEach(d => {
+                d.classList.remove('show');
+            });
+        }
+    });
+
+    // Duplicate detection logic (UNCHANGED)
     document.addEventListener('DOMContentLoaded', function() {
         const assessmentForm = document.getElementById('assessment-form');
         const saveButton = document.getElementById('saveButton');
         const confirmedInput = document.getElementById('duplicateConfirmed');
 
-        // FIX: Add Console Log to confirm if the variable is being passed
         const duplicateFound = /*[[${duplicateFound}]]*/ false;
         console.log("Duplicate Check Status (Thymeleaf Value):", duplicateFound);
 
         if (duplicateFound) {
-            
-            // FIX: Safely retrieve the title from the newAssessment object
             const assessmentObject = /*[[${newAssessment}]]*/ null;
             let currentTitle = 'Untitled Assessment';
             
             if (assessmentObject && assessmentObject.title) {
                 currentTitle = assessmentObject.title;
             } else {
-                // This will log if the newAssessment object failed to transfer
                 console.error("Flash attribute 'newAssessment' or its title property is missing.");
             }
 
             console.log("Title for Alert:", currentTitle);
 
-
             saveButton.textContent = 'Confirm Duplicate Save';
             saveButton.classList.remove('btn-add');
             saveButton.classList.remove('btn-primary');
-            // --- CHANGE MADE HERE ---
-            saveButton.classList.remove('btn-warning'); // Remove the generic warning class
-            saveButton.classList.add('btn-confirm-save', 'glow-effect'); // Add the new, visible class
+            saveButton.classList.remove('btn-warning');
+            saveButton.classList.add('btn-confirm-save', 'glow-effect');
 
-            // --- Define the function reference for easy removal ---
             const handleSubmit = function(event) {
-                // Prevent the initial submission
                 event.preventDefault(); 
                 
                 const confirmed = confirm("WARNING: An Assessment with the title '" 
@@ -234,20 +318,14 @@
                     + "' already exists. Do you really want to save this duplicate?");
                 
                 if (confirmed) {
-                    // 1. Remove the listener to prevent infinite loop
                     assessmentForm.removeEventListener('submit', handleSubmit); 
-                    
-                    // 2. Set the hidden field to 'true'
                     confirmedInput.value = 'true';
-                    
-                    // 3. Submit the form naturally
                     assessmentForm.submit(); 
                 } else {
                     alert("Duplicate save cancelled. Please change the title if you don't want a duplicate.");
                 }
             };
             
-            // Attach the new submission handler
             assessmentForm.addEventListener('submit', handleSubmit);
         }
     });

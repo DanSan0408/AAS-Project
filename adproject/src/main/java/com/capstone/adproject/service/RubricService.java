@@ -1,5 +1,6 @@
 package com.capstone.adproject.service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,80 +139,112 @@ public class RubricService {
     }
 
     @Transactional
-    public Rubric saveRubric(Rubric formRubric) { 
+public Rubric saveRubric(Rubric formRubric) { 
+    
+    if (formRubric.getId() != null) {
+        // ===== UPDATING EXISTING RUBRIC =====
         
-        if (formRubric.getId() != null) {
-            // ===== UPDATING EXISTING RUBRIC =====
+        Rubric existingRubric = rubricRepository.findById(formRubric.getId())
+            .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + formRubric.getId()));
             
-            Rubric existingRubric = rubricRepository.findById(formRubric.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + formRubric.getId()));
-                
-            // Update scalar fields
-            existingRubric.setName(formRubric.getName());
-            existingRubric.setDescription(formRubric.getDescription());
-            existingRubric.setMarks(formRubric.getMarks());
-            existingRubric.setAssessmentTypes(formRubric.getAssessmentTypes());
-            existingRubric.setClo(formRubric.getClo());
-            existingRubric.setCloMarks(formRubric.getCloMarks());
-            existingRubric.setDisplayOrder(formRubric.getDisplayOrder());
-            
-            // ✅ UPDATED: Set normalized lists
-            existingRubric.setRubricCommentLabels(formRubric.getRubricCommentLabels());
-            existingRubric.setRubricCommentMinLengths(formRubric.getRubricCommentMinLengths());
-            existingRubric.setRubricCommentAnonymousFlags(formRubric.getRubricCommentAnonymousFlags());
+        // Update scalar fields
+        existingRubric.setName(formRubric.getName());
+        existingRubric.setDescription(formRubric.getDescription());
+        existingRubric.setMarks(formRubric.getMarks());
+        existingRubric.setAssessmentTypes(formRubric.getAssessmentTypes());
+        existingRubric.setClo(formRubric.getClo());
+        existingRubric.setCloMarks(formRubric.getCloMarks());
+        existingRubric.setDisplayOrder(formRubric.getDisplayOrder());
+        
+        existingRubric.setRubricCommentLabels(formRubric.getRubricCommentLabels());
+        existingRubric.setRubricCommentMinLengths(formRubric.getRubricCommentMinLengths());
+        existingRubric.setRubricCommentAnonymousFlags(formRubric.getRubricCommentAnonymousFlags());
 
-            updateSubRubrics(existingRubric, formRubric.getSubRubrics());
-            updateDirectRatings(existingRubric, formRubric.getRatings());
+        updateSubRubrics(existingRubric, formRubric.getSubRubrics());
+        updateDirectRatings(existingRubric, formRubric.getRatings());
+        
+        // ✅ NEW: Auto-calculate sub-rubric marks after updating
+        autoCalculateSubRubricMarks(existingRubric);
+        
+        return rubricRepository.save(existingRubric);
+        
+    } else {
+        // ===== SAVING NEW RUBRIC =====
+        
+        // Set display order for new rubric
+        if (formRubric.getDisplayOrder() == null) {
+            Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
             
-            return rubricRepository.save(existingRubric);
+            String assessmentType = formRubric.getAssessmentTypes();
+            long maxOrder = assessment.getRubrics().stream()
+                .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
+                .mapToInt(r -> r.getDisplayOrder() != null ? r.getDisplayOrder() : 0)
+                .max()
+                .orElse(-1);
             
-        } else {
-            // ===== SAVING NEW RUBRIC =====
-            
-            // Set display order for new rubric
-            if (formRubric.getDisplayOrder() == null) {
-                Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
+            formRubric.setDisplayOrder((int) maxOrder + 1);
+        }
+        
+        if (formRubric.getSubRubrics() != null) {
+            for (SubRubric subRubric : formRubric.getSubRubrics()) {
+                subRubric.setRubric(formRubric);
                 
-                String assessmentType = formRubric.getAssessmentTypes();
-                long maxOrder = assessment.getRubrics().stream()
-                    .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
-                    .mapToInt(r -> r.getDisplayOrder() != null ? r.getDisplayOrder() : 0)
-                    .max()
-                    .orElse(-1);
-                
-                formRubric.setDisplayOrder((int) maxOrder + 1);
-            }
-            
-            if (formRubric.getSubRubrics() != null) {
-                for (SubRubric subRubric : formRubric.getSubRubrics()) {
-                    subRubric.setRubric(formRubric);
-                    
-                    if (subRubric.getRatings() != null) {
-                        for (Rating rating : subRubric.getRatings()) {
-                            rating.setSubRubric(subRubric);
-                            rating.setRubric(null);
-                        }
+                if (subRubric.getRatings() != null) {
+                    for (Rating rating : subRubric.getRatings()) {
+                        rating.setSubRubric(subRubric);
+                        rating.setRubric(null);
                     }
                 }
             }
-            
-            if (formRubric.getRatings() != null) {
-                for (Rating rating : formRubric.getRatings()) {
-                    rating.setRubric(formRubric);
-                    rating.setSubRubric(null);
-                }
-            }
-            
-            if (formRubric.getAssessment() != null && formRubric.getAssessment().getId() != null) {
-                Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
-                formRubric.setAssessment(assessment); 
-            }
-
-            return rubricRepository.save(formRubric);
         }
+        
+        if (formRubric.getRatings() != null) {
+            for (Rating rating : formRubric.getRatings()) {
+                rating.setRubric(formRubric);
+                rating.setSubRubric(null);
+            }
+        }
+        
+        if (formRubric.getAssessment() != null && formRubric.getAssessment().getId() != null) {
+            Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
+            formRubric.setAssessment(assessment); 
+        }
+
+        // ✅ NEW: Auto-calculate sub-rubric marks before saving
+        autoCalculateSubRubricMarks(formRubric);
+
+        return rubricRepository.save(formRubric);
     }
+}
+
+/**
+ * ✅ NEW: Automatically set sub-rubric marks to highest rating mark
+ */
+private void autoCalculateSubRubricMarks(Rubric rubric) {
+    if (rubric.getSubRubrics() == null || rubric.getSubRubrics().isEmpty()) {
+        return;
+    }
+    
+    for (SubRubric subRubric : rubric.getSubRubrics()) {
+        if (subRubric.getRatings() == null || subRubric.getRatings().isEmpty()) {
+            // No ratings, set marks to 0
+            subRubric.setMarks(BigDecimal.ZERO);
+            continue;
+        }
+        
+        // Find the highest rating mark
+        BigDecimal maxRatingMark = subRubric.getRatings().stream()
+            .map(Rating::getMarks)
+            .filter(mark -> mark != null)
+            .max(BigDecimal::compareTo)
+            .orElse(BigDecimal.ZERO);
+        
+        // Set sub-rubric marks to the highest rating mark
+        subRubric.setMarks(maxRatingMark);
+    }
+}
 
     private void updateSubRubrics(Rubric existingRubric, List<SubRubric> formSubRubrics) {
         List<SubRubric> managedSubRubrics = existingRubric.getSubRubrics();

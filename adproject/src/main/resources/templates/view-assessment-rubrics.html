@@ -512,8 +512,8 @@
             showIndividualFirst=${individualOrder < groupOrder},
             groupRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Group Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Group Assessment') : null},
             individualRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Individual Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Individual Assessment') : null},
-            hasGroupContent=${groupRubrics != null || (assessment.groupCommentCount != null && assessment.groupCommentCount > 0)},
-            hasIndividualContent=${individualRubrics != null || (assessment.individualCommentCount != null && assessment.individualCommentCount > 0)}">
+            hasGroupContent=${groupRubrics != null || (assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels))},
+            hasIndividualContent=${individualRubrics != null || (assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels))}">
             
             <!-- Render blocks in correct order based on individualOrder vs groupOrder -->
             <!-- INDIVIDUAL FIRST (if individualOrder < groupOrder) -->
@@ -532,8 +532,8 @@
         
         <!-- GLOBAL EMPTY STATE -->
         <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
-                      (assessment.groupCommentCount == null || assessment.groupCommentCount == 0) && 
-                      (assessment.individualCommentCount == null || assessment.individualCommentCount == 0)}" 
+                      (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
+                      (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
              class="empty-state" 
              style="margin: 60px auto; max-width: 1200px; padding: 80px 40px; background: #2c3e50; border-radius: 12px;">
             <i class="fas fa-inbox"></i>
@@ -715,84 +715,91 @@
                 </div>
                 
                 <!-- ASSESSMENT-LEVEL COMMENTS -->
-                <div th:if="${assessment.groupCommentCount != null && assessment.groupCommentCount > 0}" class="content-section">
-                    <div class="section-divider">
-                        <h3>
-                            <i class="fas fa-comments"></i>
-                            <span>Overall Assessment Comments</span>
-                        </h3>
-                    </div>
-                    
-                    <div class="assessment-comments-section">
-                        <div class="comments-section-header">
-                            <h3>Group Assessment Feedback</h3>
-                            <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn-sm btn-edit">
-                                <i class="fas fa-cog"></i> Configure
-                            </a>
-                        </div>
-                        
-                        <div class="comments-summary">
-                            <div class="summary-row">
-                                <span class="summary-label">Total Questions:</span>
-                                <span class="summary-value" th:text="${assessment.groupCommentCount}">0</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="summary-label">Minimum Length:</span>
-                                <span class="summary-value" th:text="${assessment.groupCommentMinLength + ' characters'}">20 chars</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="summary-label">Anonymity:</span>
-                                <span class="summary-value" th:text="${assessment.groupCommentsAnonymous ? 'Anonymous' : 'Named'}">Named</span>
-                            </div>
-                        </div>
-                        
-                        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-item">
-                            <div class="comment-item-header">
-                                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
-                                <div class="comment-item-actions">
-                                    <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
-                                       class="btn-sm btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                          method="post" style="display: inline;"
-                                          onsubmit="return confirm('Delete this question?');">
-                                        <input type="hidden" name="type" value="group"/>
-                                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
-                                        <button type="submit" class="btn-sm btn-delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="comment-item-text" th:text="${label}">Question text</div>
-                        </div>
-                    </div>
-                    
-                    <!-- ✅ NEW: Action button at bottom of comments section -->
-                    <div class="section-actions">
-                        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
-                            <i class="fas fa-cog"></i> Configure Group Comments
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Empty State -->
-                <div th:if="${groupRubrics == null && (assessment.groupCommentCount == null || assessment.groupCommentCount == 0)}" class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <h3>No Group Assessment Content</h3>
-                    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add Rubric
-                        </a>
-                        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
-                            <i class="fas fa-cog"></i> Configure Group Comments
-                        </a>
-                    </div>
-                </div>
+<div class="content-section">
+    <div class="section-divider">
+        <h3>
+            <i class="fas fa-comments"></i>
+            <span>Overall Assessment Comments</span>
+        </h3>
+    </div>
+    
+    <div th:if="${assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels)}" 
+         class="assessment-comments-section">
+        <div class="comments-section-header">
+            <h3>Group Assessment Feedback</h3>
+            <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn-sm btn-edit">
+                <i class="fas fa-cog"></i> Configure
+            </a>
+        </div>
+        
+        <div class="comments-summary">
+            <div class="summary-row">
+                <span class="summary-label">Total Questions:</span>
+                <span class="summary-value" th:text="${#lists.size(assessment.groupCommentLabels)}">0</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Minimum Length:</span>
+                <span class="summary-value" th:text="${assessment.getGroupCommentMinLength(0) + ' characters'}">20 chars</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Anonymity:</span>
+                <span class="summary-value" th:text="${assessment.isGroupCommentAnonymous(0) ? 'Anonymous' : 'Named'}">Named</span>
             </div>
         </div>
+        
+        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-item">
+            <div class="comment-item-header">
+                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                <div class="comment-item-actions">
+                    <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                       class="btn-sm btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                          method="post" style="display: inline;"
+                          onsubmit="return confirm('Delete this question?');">
+                        <input type="hidden" name="type" value="group"/>
+                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                        <button type="submit" class="btn-sm btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="comment-item-text" th:text="${label}">Question text</div>
+        </div>
+    </div>
+    
+    <!-- Empty state when no comments configured -->
+    <div th:if="${assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)}"
+         style="text-align: center; padding: 30px; background: rgba(155, 89, 182, 0.1); border-radius: 8px; border: 2px dashed #9b59b6;">
+        <i class="fas fa-comments" style="font-size: 3em; color: #9b59b6; opacity: 0.3; margin-bottom: 15px;"></i>
+        <h4 style="color: #9b59b6; margin-bottom: 10px;">No Group Comments Configured</h4>
+        <p style="color: #95a5a6; margin-bottom: 20px;">Set up comment questions for group assessment feedback.</p>
+    </div>
+    
+    <!-- ✅ ALWAYS SHOW: Configure button -->
+    <div class="section-actions">
+        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+            <i class="fas fa-cog"></i> Configure Group Comments
+        </a>
+    </div>
+</div>
+                
+                <!-- Empty State for Group Block -->
+<div th:if="${groupRubrics == null && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="empty-state">
+    <i class="fas fa-users"></i>
+    <h3>No Group Assessment Content</h3>
+    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Rubric
+        </a>
+        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+            <i class="fas fa-cog"></i> Configure Comments
+        </a>
+    </div>
+</div>
         </th:block>
         
         <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK (fragment definition) ==================== -->
@@ -960,87 +967,94 @@
                 </div>
                 
                 <!-- ASSESSMENT-LEVEL COMMENTS -->
-                <div th:if="${assessment.individualCommentCount != null && assessment.individualCommentCount > 0}" class="content-section">
-                    <div class="section-divider">
-                        <h3>
-                            <i class="fas fa-comments"></i>
-                            <span>Overall Assessment Comments</span>
-                        </h3>
-                    </div>
-                    
-                    <div class="assessment-comments-section">
-                        <div class="comments-section-header">
-                            <h3>Individual Assessment Feedback</h3>
-                            <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn-sm btn-edit">
-                                <i class="fas fa-cog"></i> Configure
-                            </a>
-                        </div>
-                        
-                        <div class="comments-summary">
-                            <div class="summary-row">
-                                <span class="summary-label">Total Questions:</span>
-                                <span class="summary-value" th:text="${assessment.individualCommentCount}">0</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="summary-label">Minimum Length:</span>
-                                <span class="summary-value" th:text="${assessment.individualCommentMinLength + ' characters'}">20 chars</span>
-                            </div>
-                            <div class="summary-row">
-                                <span class="summary-label">Anonymity:</span>
-                                <span class="summary-value" th:text="${assessment.individualCommentsAnonymous ? 'Anonymous' : 'Named'}">Named</span>
-                            </div>
-                        </div>
-                        
-                        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-item individual">
-                            <div class="comment-item-header">
-                                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
-                                <div class="comment-item-actions">
-                                    <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
-                                       class="btn-sm btn-edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                          method="post" style="display: inline;"
-                                          onsubmit="return confirm('Delete this question?');">
-                                        <input type="hidden" name="type" value="individual"/>
-                                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
-                                        <button type="submit" class="btn-sm btn-delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="comment-item-text" th:text="${label}">Question text</div>
-                        </div>
-                    </div>
-                    
-                    <!-- ✅ NEW: Action button at bottom of comments section -->
-                    <div class="section-actions">
-                        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
-                            <i class="fas fa-cog"></i> Configure Individual Comments
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Empty State -->
-                <div th:if="${individualRubrics == null && (assessment.individualCommentCount == null || assessment.individualCommentCount == 0)}" class="empty-state">
-                    <i class="fas fa-user"></i>
-                    <h3>No Individual Assessment Content</h3>
-                    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add Rubric
-                        </a>
-                        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
-                            <i class="fas fa-cog"></i> Configure Individual Comments
-                        </a>
-                    </div>
-                </div>
+<div class="content-section">
+    <div class="section-divider">
+        <h3>
+            <i class="fas fa-comments"></i>
+            <span>Overall Assessment Comments</span>
+        </h3>
+    </div>
+    
+    <div th:if="${assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels)}" 
+         class="assessment-comments-section">
+        <div class="comments-section-header">
+            <h3>Individual Assessment Feedback</h3>
+            <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn-sm btn-edit">
+                <i class="fas fa-cog"></i> Configure
+            </a>
+        </div>
+        
+        <div class="comments-summary">
+            <div class="summary-row">
+                <span class="summary-label">Total Questions:</span>
+                <span class="summary-value" th:text="${#lists.size(assessment.individualCommentLabels)}">0</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Minimum Length:</span>
+                <span class="summary-value" th:text="${assessment.getIndividualCommentMinLength(0) + ' characters'}">20 chars</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">Anonymity:</span>
+                <span class="summary-value" th:text="${assessment.isIndividualCommentAnonymous(0) ? 'Anonymous' : 'Named'}">Named</span>
             </div>
         </div>
+        
+        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-item individual">
+            <div class="comment-item-header">
+                <span class="comment-number-badge">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                <div class="comment-item-actions">
+                    <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                       class="btn-sm btn-edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                          method="post" style="display: inline;"
+                          onsubmit="return confirm('Delete this question?');">
+                        <input type="hidden" name="type" value="individual"/>
+                        <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                        <button type="submit" class="btn-sm btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="comment-item-text" th:text="${label}">Question text</div>
+        </div>
+    </div>
+    
+    <!-- Empty state when no comments configured -->
+    <div th:if="${assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels)}"
+         style="text-align: center; padding: 30px; background: rgba(155, 89, 182, 0.1); border-radius: 8px; border: 2px dashed #9b59b6;">
+        <i class="fas fa-comments" style="font-size: 3em; color: #9b59b6; opacity: 0.3; margin-bottom: 15px;"></i>
+        <h4 style="color: #9b59b6; margin-bottom: 10px;">No Individual Comments Configured</h4>
+        <p style="color: #95a5a6; margin-bottom: 20px;">Set up comment questions for individual assessment feedback.</p>
+    </div>
+    
+    <!-- ✅ ALWAYS SHOW: Configure button -->
+    <div class="section-actions">
+        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+            <i class="fas fa-cog"></i> Configure Individual Comments
+        </a>
+    </div>
+</div>
+                
+                <!-- Empty State for Individual Block -->
+<div th:if="${individualRubrics == null && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="empty-state">
+    <i class="fas fa-user"></i>
+    <h3>No Individual Assessment Content</h3>
+    <p style="margin-bottom: 20px;">Add rubrics or configure comments to get started.</p>
+    <div style="display: flex; gap: 12px; justify-content: center;">
+        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Rubric
+        </a>
+        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary" style="background-color: #9b59b6;">
+            <i class="fas fa-cog"></i> Configure Comments
+        </a>
+    </div>
+</div>
         </th:block>
         
-    </th:block>
+    </div>
     <!-- End of hidden fragment definitions -->
     
 </body>

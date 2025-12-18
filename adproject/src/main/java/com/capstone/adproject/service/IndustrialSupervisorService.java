@@ -527,9 +527,6 @@ public class IndustrialSupervisorService {
         markRepository.saveAll(newMarks);
     }
     
-    /**
-     * Save comments for a student
-     */
     @Transactional
 private void saveCommentsForStudent(
         IndustrialSupervisor supervisor,
@@ -537,6 +534,16 @@ private void saveCommentsForStudent(
         Assessment assessment,
         List<String> comments,
         String rubricAssessmentType) {
+    
+    // ✅ FIXED: Check if comments are configured before processing
+    List<String> commentLabels = "Group Assessment".equals(rubricAssessmentType) ?
+        assessment.getGroupCommentLabels() :
+        assessment.getIndividualCommentLabels();
+    
+    if (commentLabels == null || commentLabels.isEmpty()) {
+        // No comments configured for this assessment type - skip entirely
+        return;
+    }
     
     // Build list of non-empty comments first
     List<AssessmentComment> newComments = new ArrayList<>();
@@ -555,7 +562,7 @@ private void saveCommentsForStudent(
         comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
         comment.setCommentIndex(i);
         comment.setRubricAssessmentType(rubricAssessmentType);
-        comment.setRubricId(null); // General assessment comment
+        comment.setRubricId(null);
         
         // Set label and anonymity
         if ("Group Assessment".equals(rubricAssessmentType)) {
@@ -565,7 +572,7 @@ private void saveCommentsForStudent(
             if (isAnonymous != null && isAnonymous) {
                 comment.setAnonymousIdentifier("Supervisor");
             } else {
-                comment.setAnonymousIdentifier(supervisor.getUsername()); // ✅ SET NON-ANONYMOUS NAME
+                comment.setAnonymousIdentifier(supervisor.getUsername());
             }
         } else {
             comment.setCommentLabel(assessment.getIndividualCommentLabel(i));
@@ -574,7 +581,7 @@ private void saveCommentsForStudent(
             if (isAnonymous != null && isAnonymous) {
                 comment.setAnonymousIdentifier("Supervisor");
             } else {
-                comment.setAnonymousIdentifier(supervisor.getUsername()); // ✅ SET NON-ANONYMOUS NAME
+                comment.setAnonymousIdentifier(supervisor.getUsername());
             }
         }
         
@@ -588,14 +595,13 @@ private void saveCommentsForStudent(
             .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
             .stream()
             .filter(c -> rubricAssessmentType.equals(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() == null) // Only general comments
+            .filter(c -> c.getRubricId() == null)
             .collect(Collectors.toList());
         
         if (!existingComments.isEmpty()) {
             commentRepository.deleteAll(existingComments);
         }
         
-        // Save new comments
         commentRepository.saveAll(newComments);
     }
 }
@@ -657,13 +663,13 @@ private void saveRubricCommentsForStudent(
             comment.setRubricId(rubricId);
             comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
             
-            // ✅ FIXED: Check rubric's anonymity setting for this specific comment
-Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
-if (isAnonymous != null && isAnonymous) {
-    comment.setAnonymousIdentifier("Supervisor"); // ✅ FIXED
-} else {
-    comment.setAnonymousIdentifier(supervisor.getUsername());
-}
+            // Check rubric's anonymity setting for this specific comment
+            Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+            if (isAnonymous != null && isAnonymous) {
+                comment.setAnonymousIdentifier("Supervisor");
+            } else {
+                comment.setAnonymousIdentifier(supervisor.getUsername());
+            }
             
             newComments.add(comment);
         }
@@ -673,7 +679,6 @@ if (isAnonymous != null && isAnonymous) {
         }
     }
 }
-
     
     /**
      * Load existing evaluation data
