@@ -1,6 +1,5 @@
 package com.capstone.adproject.controller;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -249,14 +248,7 @@ public class RubricController {
             }
         }
 
-        // Validate individual rating marks
-        String marksError = validateIndividualRatingMarks(rubric);
-        if (marksError != null) {
-            redirectAttributes.addFlashAttribute("rubric", rubric);
-            redirectAttributes.addFlashAttribute("errorMessage", marksError);
-            String redirectPath = (rubricId == null) ? "/rubrics/add/" + assessmentId : "/rubrics/edit/" + rubricId;
-            return "redirect:" + redirectPath;
-        }
+        // ✅ REMOVED: validateIndividualRatingMarks() call - no more marks validation
 
         // Set CLO Marks equal to Total Marks
         if (rubric.getMarks() != null) {
@@ -294,40 +286,7 @@ public class RubricController {
         return "redirect:/rubrics/view/" + savedRubric.getAssessment().getId();
     }
 
-    private String validateIndividualRatingMarks(Rubric rubric) {
-        if (rubric.getMarks() == null) {
-            return null;
-        }
-
-        BigDecimal rubricMarks = rubric.getMarks();
-
-        if (rubric.getSubRubrics() != null && !rubric.getSubRubrics().isEmpty()) {
-            for (SubRubric subRubric : rubric.getSubRubrics()) {
-                if (subRubric.getMarks() != null && subRubric.getRatings() != null) {
-                    BigDecimal subRubricMarks = subRubric.getMarks();
-                    
-                    for (Rating rating : subRubric.getRatings()) {
-                        if (rating.getMarks() != null && rating.getMarks().compareTo(subRubricMarks) > 0) {
-                            return "Rating '" + rating.getName() + "' (" + rating.getMarks() + 
-                                   ") in sub-rubric '" + subRubric.getName() + 
-                                   "' cannot exceed sub-rubric marks (" + subRubricMarks + ").";
-                        }
-                    }
-                }
-            }
-        }
-
-        if (rubric.getRatings() != null && !rubric.getRatings().isEmpty()) {
-            for (Rating rating : rubric.getRatings()) {
-                if (rating.getMarks() != null && rating.getMarks().compareTo(rubricMarks) > 0) {
-                    return "Direct rating '" + rating.getName() + "' (" + rating.getMarks() + 
-                           ") cannot exceed rubric marks (" + rubricMarks + ").";
-                }
-            }
-        }
-
-        return null;
-    }
+    // ✅ REMOVED: validateIndividualRatingMarks() method entirely
     
     @PostMapping("/delete/{rubricId}")
     public String deleteRubric(@PathVariable Long rubricId, RedirectAttributes redirectAttributes) {

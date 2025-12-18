@@ -352,7 +352,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
 }
 
     
-    @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
+   @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
 public String submitPeerAssessment(@PathVariable Long assessmentId,
                                    @PathVariable Long studentId,
                                    @RequestParam Map<String, String> formData,
@@ -374,28 +374,31 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
     
-    // Extract assessment-level comments
-    int commentCount = assessment.getIndividualCommentCount();
-    int minLength = assessment.getIndividualCommentMinLength();
+    // ✅ FIXED: Extract assessment-level comments ONLY if configured
     List<String> commentTexts = new ArrayList<>();
+    List<String> commentLabels = assessment.getIndividualCommentLabels();
     
-    for (int i = 0; i < commentCount; i++) {
-        String commentKey = "comment_" + i;
-        String commentText = formData.get(commentKey);
+    if (commentLabels != null && !commentLabels.isEmpty()) {
+        int minLength = assessment.getIndividualCommentMinLength();
         
-        if (commentText == null || commentText.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Comment " + (i + 1) + " is required!");
-            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+        for (int i = 0; i < commentLabels.size(); i++) {
+            String commentKey = "comment_" + i;
+            String commentText = formData.get(commentKey);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " is required!");
+                return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+            }
+            
+            if (commentText.trim().length() < minLength) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
+                return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+            }
+            
+            commentTexts.add(commentText.trim());
         }
-        
-        if (commentText.trim().length() < minLength) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
-            return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
-        }
-        
-        commentTexts.add(commentText.trim());
     }
     
     // ✅ NEW: Extract rubric-specific comments
@@ -542,83 +545,66 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     
     markService.saveAllMarks(marks);
     
-    // Save assessment-level comments
-    if (isSelfAssessment) {
-        commentService.submitSelfComments(evaluator, assessment, commentTexts);
-    } else {
-        commentService.submitPeerComments(evaluator, evaluatedStudent, assessment, commentTexts);
-    }
-    
-    if (!rubricComments.isEmpty()) {
-    for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
-        Long rubricId = rubricEntry.getKey();
-        Map<Integer, String> comments = rubricEntry.getValue();
-        
-        Rubric rubric = rubricRepository.findById(rubricId)
-            .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
-        
-        for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
-            Integer commentIndex = commentEntry.getKey();
-            String commentText = commentEntry.getValue();
-            
-            if (commentText == null || commentText.trim().isEmpty()) {
-                continue;
-            }
-            
-            // ✅ CRITICAL: Check if THIS specific comment should be anonymous
-            boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
-            
-            // ✅ DEBUG LOGGING
-            System.out.println("====================================");
-            System.out.println("SAVING RUBRIC COMMENT");
-            System.out.println("Rubric ID: " + rubricId);
-            System.out.println("Rubric Name: " + rubric.getName());
-            System.out.println("Comment Index: " + commentIndex);
-            System.out.println("Comment Label: " + rubric.getRubricCommentLabel(commentIndex));
-            System.out.println("Is Self Assessment: " + isSelfAssessment);
-            System.out.println("Is Anonymous: " + isAnonymous);
-            System.out.println("Evaluator Username: " + evaluator.getUsername());
-            System.out.println("Evaluator ID: " + evaluator.getId());
-            System.out.println("Evaluated Student: " + evaluatedStudent.getUsername());
-            
-            AssessmentComment comment = new AssessmentComment();
-            comment.setEvaluatorId(evaluator.getId());
-            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-            comment.setEvaluatorName(evaluator.getUsername());
-            comment.setEvaluatedStudent(evaluatedStudent);
-            comment.setAssessment(assessment);
-            comment.setCommentText(commentText.trim());
-            comment.setAssessmentType(isSelfAssessment ? 
-                AssessmentComment.CommentAssessmentType.SELF : 
-                AssessmentComment.CommentAssessmentType.PEER);
-            comment.setCommentIndex(commentIndex);
-            comment.setRubricAssessmentType("Individual Assessment");
-            comment.setRubricId(rubricId);
-            comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
-            
-            String anonymousIdentifier = null;
-            
-            if (isSelfAssessment) {
-                // Self assessment always shows "You (Self)"
-                anonymousIdentifier = "You (Self)";
-            } else if (isAnonymous) {
-                // ✅ Anonymous peer comment: generate identifier like "Teammate 1"
-                anonymousIdentifier = commentService.getRubricAnonymousIdentifier(
-                    evaluatedStudent, evaluator.getId(), assessment, rubricId, commentIndex);
-            } else {
-                // ✅ Non-anonymous peer comment: use real name
-                anonymousIdentifier = evaluator.getUsername();
-            }
-            
-            comment.setAnonymousIdentifier(anonymousIdentifier);
-            
-            System.out.println("Anonymous Identifier SET TO: " + anonymousIdentifier);
-            System.out.println("====================================");
-            
-            commentService.saveComment(comment);
+    // ✅ FIXED: Save assessment-level comments ONLY if configured
+    if (!commentTexts.isEmpty()) {
+        if (isSelfAssessment) {
+            commentService.submitSelfComments(evaluator, assessment, commentTexts);
+        } else {
+            commentService.submitPeerComments(evaluator, evaluatedStudent, assessment, commentTexts);
         }
     }
-}
+    
+    // Save rubric-specific comments
+    if (!rubricComments.isEmpty()) {
+        for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
+            Long rubricId = rubricEntry.getKey();
+            Map<Integer, String> comments = rubricEntry.getValue();
+            
+            Rubric rubric = rubricRepository.findById(rubricId)
+                .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+            
+            for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                Integer commentIndex = commentEntry.getKey();
+                String commentText = commentEntry.getValue();
+                
+                if (commentText == null || commentText.trim().isEmpty()) {
+                    continue;
+                }
+                
+                boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                
+                AssessmentComment comment = new AssessmentComment();
+                comment.setEvaluatorId(evaluator.getId());
+                comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+                comment.setEvaluatorName(evaluator.getUsername());
+                comment.setEvaluatedStudent(evaluatedStudent);
+                comment.setAssessment(assessment);
+                comment.setCommentText(commentText.trim());
+                comment.setAssessmentType(isSelfAssessment ? 
+                    AssessmentComment.CommentAssessmentType.SELF : 
+                    AssessmentComment.CommentAssessmentType.PEER);
+                comment.setCommentIndex(commentIndex);
+                comment.setRubricAssessmentType("Individual Assessment");
+                comment.setRubricId(rubricId);
+                comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                
+                String anonymousIdentifier = null;
+                
+                if (isSelfAssessment) {
+                    anonymousIdentifier = "You (Self)";
+                } else if (isAnonymous) {
+                    anonymousIdentifier = commentService.getRubricAnonymousIdentifier(
+                        evaluatedStudent, evaluator.getId(), assessment, rubricId, commentIndex);
+                } else {
+                    anonymousIdentifier = evaluator.getUsername();
+                }
+                
+                comment.setAnonymousIdentifier(anonymousIdentifier);
+                
+                commentService.saveComment(comment);
+            }
+        }
+    }
     
     redirectAttributes.addFlashAttribute("success", 
         "Assessment and comments submitted successfully!");
@@ -726,7 +712,6 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     return "peer_assessment_form";
 }
 
-// Update submitTeamEvaluation to handle rubric comments
 @PostMapping("/assessment/{assessmentId}/team-evaluate/submit")
 public String submitTeamEvaluation(@PathVariable Long assessmentId,
                                     @RequestParam Map<String, String> formData,
@@ -752,28 +737,31 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     
     List<Student> groupMembers = studentRepository.findByGroup(evaluator.getGroup());
     
-    // Extract and validate assessment-level comments
-    int commentCount = assessment.getGroupCommentCount();
-    int minLength = assessment.getGroupCommentMinLength();
+    // ✅ FIXED: Extract and validate assessment-level comments ONLY if configured
     List<String> commentTexts = new ArrayList<>();
+    List<String> commentLabels = assessment.getGroupCommentLabels();
     
-    for (int i = 0; i < commentCount; i++) {
-        String commentKey = "comment_" + i;
-        String commentText = formData.get(commentKey);
+    if (commentLabels != null && !commentLabels.isEmpty()) {
+        int minLength = assessment.getGroupCommentMinLength();
         
-        if (commentText == null || commentText.trim().isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Comment " + (i + 1) + " is required!");
-            return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+        for (int i = 0; i < commentLabels.size(); i++) {
+            String commentKey = "comment_" + i;
+            String commentText = formData.get(commentKey);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " is required!");
+                return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+            }
+            
+            if (commentText.trim().length() < minLength) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
+                return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+            }
+            
+            commentTexts.add(commentText.trim());
         }
-        
-        if (commentText.trim().length() < minLength) {
-            redirectAttributes.addFlashAttribute("error", 
-                "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
-            return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
-        }
-        
-        commentTexts.add(commentText.trim());
     }
     
     // ✅ NEW: Extract rubric-specific comments
@@ -918,57 +906,57 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
     }
     
-    // Save assessment-level comments for all group members
-    for (Student member : groupMembers) {
-        commentService.submitTeamComments(member, assessment, commentTexts);
+    // ✅ FIXED: Save assessment-level comments for all group members ONLY if configured
+    if (!commentTexts.isEmpty()) {
+        for (Student member : groupMembers) {
+            commentService.submitTeamComments(member, assessment, commentTexts);
+        }
     }
     
+    // Save rubric-specific comments for all group members
     if (!rubricComments.isEmpty()) {
-    for (Student member : groupMembers) {
-        for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
-            Long rubricId = rubricEntry.getKey();
-            Map<Integer, String> comments = rubricEntry.getValue();
-            
-            Rubric rubric = rubricRepository.findById(rubricId)
-                .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
-            
-            for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
-                Integer commentIndex = commentEntry.getKey();
-                String commentText = commentEntry.getValue();
+        for (Student member : groupMembers) {
+            for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
+                Long rubricId = rubricEntry.getKey();
+                Map<Integer, String> comments = rubricEntry.getValue();
                 
-                if (commentText == null || commentText.trim().isEmpty()) {
-                    continue;
+                Rubric rubric = rubricRepository.findById(rubricId)
+                    .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                
+                for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                    Integer commentIndex = commentEntry.getKey();
+                    String commentText = commentEntry.getValue();
+                    
+                    if (commentText == null || commentText.trim().isEmpty()) {
+                        continue;
+                    }
+                    
+                    AssessmentComment comment = new AssessmentComment();
+                    comment.setEvaluatorId(member.getId());
+                    comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+                    comment.setEvaluatorName(member.getUsername());
+                    comment.setEvaluatedStudent(member);
+                    comment.setAssessment(assessment);
+                    comment.setCommentText(commentText.trim());
+                    comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
+                    comment.setCommentIndex(commentIndex);
+                    comment.setRubricAssessmentType("Group Assessment");
+                    comment.setRubricId(rubricId);
+                    comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                    
+                    boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                    
+                    if (isAnonymous) {
+                        comment.setAnonymousIdentifier("You (Team Evaluation)");
+                    } else {
+                        comment.setAnonymousIdentifier(member.getUsername());
+                    }
+                    
+                    commentService.saveComment(comment);
                 }
-                
-                AssessmentComment comment = new AssessmentComment();
-                comment.setEvaluatorId(member.getId());
-                comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                comment.setEvaluatorName(member.getUsername());
-                comment.setEvaluatedStudent(member);
-                comment.setAssessment(assessment);
-                comment.setCommentText(commentText.trim());
-                comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
-                comment.setCommentIndex(commentIndex);
-                comment.setRubricAssessmentType("Group Assessment");
-                comment.setRubricId(rubricId);
-                comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
-                
-                // ✅ CRITICAL: Check if THIS specific comment should be anonymous
-                boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
-                
-                if (isAnonymous) {
-                    // Team comments that are anonymous
-                    comment.setAnonymousIdentifier("You (Team Evaluation)");
-                } else {
-                    // Team comments that show real names
-                    comment.setAnonymousIdentifier(member.getUsername());
-                }
-                
-                commentService.saveComment(comment);
             }
         }
     }
-}
     
     redirectAttributes.addFlashAttribute("success", 
         "Team evaluation submitted successfully! All group members received the same marks.");
