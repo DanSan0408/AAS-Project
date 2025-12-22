@@ -4,248 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluate Groups - Industrial Supervisor</title>
+    
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .groups-container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .page-title {
-            color: #2c3e50;
-            font-size: 2em;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #1abc9c;
-        }
-        
-        /* Success/Error Messages */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 1em;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        
-        .group-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-        }
-        
-        .group-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-        
-        .group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #ecf0f1;
-        }
-        
-        .group-name {
-            color: #2c3e50;
-            font-size: 1.4em;
-            font-weight: 600;
-            margin: 0;
-            flex: 1;
-        }
-        
-        /* Progress Badge */
-        .progress-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-            white-space: nowrap;
-            margin-left: 10px;
-        }
-        
-        .badge-not-started {
-            background: #e0e0e0;
-            color: #666;
-        }
-        
-        .badge-in-progress {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .badge-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        /* Progress Bar */
-        .progress-container {
-            margin: 15px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-        
-        .progress-label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .progress-bar-wrapper {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #1abc9c, #16a085);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75em;
-            font-weight: 600;
-        }
-        
-        .progress-bar-fill.in-progress {
-            background: linear-gradient(90deg, #f39c12, #e67e22);
-        }
-        
-        .progress-bar-fill.completed {
-            background: linear-gradient(90deg, #27ae60, #229954);
-        }
-        
-        .group-info {
-            margin-bottom: 20px;
-        }
-        
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            color: #555;
-        }
-        
-        .info-label {
-            font-weight: 600;
-            color: #34495e;
-        }
-        
-        .students-section {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px solid #ecf0f1;
-        }
-        
-        .students-title {
-            color: #34495e;
-            font-size: 1.1em;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-        
-        .student-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .student-item {
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: #f8f9fa;
-            border-radius: 5px;
-            color: #555;
-        }
-        
-        .evaluate-btn {
-            display: block;
-            width: 100%;
-            padding: 12px 20px;
-            background: #1abc9c;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: background 0.3s ease;
-            margin-top: 20px;
-        }
-        
-        .evaluate-btn:hover {
-            background: #16a085;
-        }
-        
-        .evaluate-btn.in-progress {
-            background: #f39c12;
-        }
-        
-        .evaluate-btn.in-progress:hover {
-            background: #e67e22;
-        }
-        
-        .evaluate-btn.completed {
-            background: #27ae60;
-        }
-        
-        .evaluate-btn.completed:hover {
-            background: #229954;
-        }
-        
-        .no-groups {
-            text-align: center;
-            padding: 60px 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .no-groups-icon {
-            font-size: 4em;
-            color: #bdc3c7;
-            margin-bottom: 20px;
-        }
-        
-        .no-groups-text {
-            color: #7f8c8d;
-            font-size: 1.2em;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/supervisor_group.css}">
 </head>
 <body>
+    
     <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -257,7 +21,7 @@
         </div>
         
         <div class="groups-container">
-            <!-- Success/Error Messages -->
+            
             <div th:if="${successMessage}" class="alert alert-success">
                 <i class="fas fa-check-circle"></i>
                 <span th:text="${successMessage}"></span>
@@ -267,41 +31,41 @@
                 <span th:text="${errorMessage}"></span>
             </div>
             
-            <h2 class="page-title">Evaluate Assigned Groups</h2>
+            <div class="page-header-wrapper">
+                <h2 class="page-title">Evaluate Assigned Groups</h2>
+                <p class="page-subtitle">Select a group to begin or continue your evaluation.</p>
+            </div>
             
-            <!-- No groups message -->
             <div th:if="${assignedGroups == null or #lists.isEmpty(assignedGroups)}" class="no-groups">
                 <div class="no-groups-icon">📋</div>
                 <p class="no-groups-text">You have no groups assigned yet. Please contact the administrator.</p>
             </div>
             
-            <!-- Groups grid -->
             <div th:if="${assignedGroups != null and !#lists.isEmpty(assignedGroups)}" class="groups-grid">
+                
                 <div th:each="group : ${assignedGroups}" class="group-card">
-                    <div class="group-header">
+                    <div class="group-card-header">
                         <h3 class="group-name" th:text="${group.groupName}">Group Name</h3>
                         
-                        <!-- Progress Badge -->
                         <span th:with="progress=${groupProgress.get(group.id)}"
                               th:class="${'progress-badge badge-' + 
                                   (progress.status == 'COMPLETED' ? 'completed' : 
                                    progress.status == 'IN_PROGRESS' ? 'in-progress' : 'not-started')}"
                               th:text="${progress.status == 'COMPLETED' ? '✓ Completed' : 
-                                       progress.status == 'IN_PROGRESS' ? '⏳ In Progress' : '○ Not Started'}">
+                                         progress.status == 'IN_PROGRESS' ? '⏳ In Progress' : '○ Not Started'}">
                             Not Started
                         </span>
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div th:with="progress=${groupProgress.get(group.id)}" class="progress-container">
+                    <div th:with="progress=${groupProgress.get(group.id)}" class="progress-section">
                         <div class="progress-label">
                             <span>Progress</span>
                             <span th:text="${#numbers.formatDecimal(progress.percentage, 1, 0)} + '%'">0%</span>
                         </div>
                         <div class="progress-bar-wrapper">
                             <div th:class="${'progress-bar-fill ' + 
-                                    (progress.status == 'COMPLETED' ? 'completed' : 
-                                     progress.status == 'IN_PROGRESS' ? 'in-progress' : '')}"
+                                          (progress.status == 'COMPLETED' ? 'completed' : 
+                                           progress.status == 'IN_PROGRESS' ? 'in-progress' : '')}"
                                  th:style="${'width: ' + progress.percentage + '%'}"
                                  th:text="${progress.percentage >= 20 ? (#numbers.formatDecimal(progress.percentage, 1, 0) + '%') : ''}">
                             </div>
@@ -310,15 +74,15 @@
                     
                     <div class="group-info">
                         <div class="info-item">
-                            <span class="info-label">Group Size:</span>
+                            <span class="info-label"><i class="fas fa-users"></i> Group Size:</span>
                             <span th:text="${#lists.size(group.students)}">0</span>
                         </div>
                         <div class="info-item" th:if="${group.academicSupervisor != null}">
-                            <span class="info-label">Academic Supervisor:</span>
+                            <span class="info-label"><i class="fas fa-chalkboard-teacher"></i> Supervisor:</span>
                             <span th:text="${group.academicSupervisor.username}">N/A</span>
                         </div>
                         <div th:with="progress=${groupProgress.get(group.id)}" class="info-item">
-                            <span class="info-label">Students Evaluated:</span>
+                            <span class="info-label"><i class="fas fa-check-double"></i> Evaluated:</span>
                             <span th:text="${progress.studentsEvaluated + ' / ' + progress.totalStudents}">0 / 0</span>
                         </div>
                     </div>
@@ -327,21 +91,25 @@
                         <h4 class="students-title">Group Members:</h4>
                         <ul class="student-list">
                             <li th:each="student : ${group.students}" class="student-item">
+                                <span class="student-avatar" th:text="${#strings.substring(student.username,0,1)}">S</span>
                                 <span th:text="${student.username}">Student Name</span>
                             </li>
                         </ul>
                     </div>
                     
-                    <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" 
-                       th:with="progress=${groupProgress.get(group.id)}"
-                       th:class="${'evaluate-btn ' + 
-                           (progress.status == 'COMPLETED' ? 'completed' : 
-                            progress.status == 'IN_PROGRESS' ? 'in-progress' : '')}"
-                       th:text="${progress.status == 'COMPLETED' ? 'Review / Re-evaluate' : 
-                                progress.status == 'IN_PROGRESS' ? 'Continue Evaluation' : 'Start Evaluation'}">
-                        Start Evaluation
-                    </a>
+                    <div class="card-footer">
+                        <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" 
+                           th:with="progress=${groupProgress.get(group.id)}"
+                           th:class="${'evaluate-btn ' + 
+                               (progress.status == 'COMPLETED' ? 'btn-completed' : 
+                                progress.status == 'IN_PROGRESS' ? 'btn-in-progress' : 'btn-start')}"
+                           th:text="${progress.status == 'COMPLETED' ? 'Review / Re-evaluate' : 
+                                      progress.status == 'IN_PROGRESS' ? 'Continue Evaluation' : 'Start Evaluation'}">
+                            Start Evaluation
+                        </a>
+                    </div>
                 </div>
+                
             </div>
         </div>
     </div>

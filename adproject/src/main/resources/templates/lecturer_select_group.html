@@ -2,11 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Select Group - [[${assessment.title}]]</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_select.css}">
 </head>
 <body>
+
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -18,136 +20,67 @@
         </div>
 
         <div class="content-flex-container">
+            
             <div class="selection-container">
-                <h2 th:text="${assessment.title}">Assessment Title</h2>
-                <p class="instruction-text">Select a group to evaluate. You will assess both group and individual rubrics in a single form.</p>
+                <div class="dashboard-header">
+                    <h2 th:text="${assessment.title}">Assessment Title</h2>
+                    <p class="subtitle">Select a group below to begin or continue your evaluation.</p>
+                </div>
 
-                <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                <div class="alert-container">
+                    <div th:if="${errorMessage}" class="alert alert-error">
+                        <span class="icon">✖</span> <span th:text="${errorMessage}">Error</span>
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <span class="icon">✓</span> <span th:text="${successMessage}">Success</span>
+                    </div>
+                </div>
 
                 <div class="groups-grid">
                     <div th:each="group : ${assignedGroups}" class="group-card">
-                        <div class="group-card-header">
+                        
+                        <div class="card-top">
                             <h3 th:text="${group.groupName}">Group Name</h3>
                             
-                            <!-- ✅ UPDATED: Three status types -->
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'completed'}" 
-                                  class="status-badge status-completed">
-                                ✓ Completed
-                            </span>
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'in_progress'}" 
-                                  class="status-badge status-in-progress">
-                                ⚠ In Progress
-                            </span>
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'not_started'}" 
-                                  class="status-badge status-not-started">
-                                ○ Not Started
-                            </span>
+                            <div class="status-indicator">
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'completed'}" 
+                                      class="badge badge-completed">Completed</span>
+                                
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'in_progress'}" 
+                                      class="badge badge-progress">In Progress</span>
+                                
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'not_started'}" 
+                                      class="badge badge-pending">Not Started</span>
+                            </div>
                         </div>
-                        
-                        <div class="group-members" th:if="${group.students != null and !group.students.isEmpty()}">
-                            <strong>📋 Members:</strong>
-                            <ul>
-                                <li th:each="student : ${group.students}" th:text="${student.username}">Student</li>
-                            </ul>
+
+                        <div class="card-body">
+                            <div class="members-section" th:if="${group.students != null and !group.students.isEmpty()}">
+                                <label>Team Members</label>
+                                <ul class="member-list">
+                                    <li th:each="student : ${group.students}">
+                                        <span class="avatar-circle" th:text="${#strings.substring(student.username,0,1)}">U</span>
+                                        <span class="member-name" th:text="${student.username}">Student Name</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div th:if="${group.students == null or group.students.isEmpty()}" class="no-members">
+                                <p>No members assigned.</p>
+                            </div>
                         </div>
-                        
-                        <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, groupId=${group.id})}" 
-                           class="btn btn-evaluate">
-                            <!-- ✅ UPDATED: Dynamic button text -->
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'completed'}">Review/Re-evaluate</span>
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'in_progress'}">Continue Evaluation</span>
-                            <span th:if="${groupEvaluationStatus.get(group.id) == 'not_started'}">Start Evaluation</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
+
+                        <div class="card-footer">
+                            <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, groupId=${group.id})}" 
+                               class="btn-action">
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'completed'}">Review Evaluation</span>
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'in_progress'}">Continue</span>
+                                <span th:if="${groupEvaluationStatus.get(group.id) == 'not_started'}">Start Evaluation</span>
+                            </a>
+                        </div>
+
+                    </div> </div> </div>
         </div>
     </div>
 
-    <style>
-        .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .group-card {
-            background-color: #34495e;
-            border: 2px solid #4a6681;
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .group-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #4a6681;
-        }
-        
-        .group-card-header h3 {
-            margin: 0;
-            color: #3498db;
-        }
-        
-        .status-badge {
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        
-        /* ✅ UPDATED: Three status colors */
-        .status-completed {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .status-in-progress {
-            background-color: #f39c12;
-            color: #2c3e50;
-        }
-        
-        .status-not-started {
-            background-color: #95a5a6;
-            color: white;
-        }
-        
-        .group-members {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #2c3e50;
-            border-radius: 4px;
-        }
-        
-        .group-members strong {
-            color: #f39c12;
-        }
-        
-        .group-members ul {
-            margin: 5px 0 0 20px;
-            color: #ecf0f1;
-        }
-        
-        .btn-evaluate {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        
-        .btn-evaluate:hover {
-            background-color: #2980b9;
-        }
-    </style>
 </body>
 </html>
