@@ -203,4 +203,11 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
             @Param("studentId") Long studentId,
             @Param("assessmentId") Long assessmentId,
             @Param("rubricAssessmentType") String rubricAssessmentType);
+
+    // Find comments by evaluated student, assessment, and rubric assessment type
+    List<AssessmentComment> findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(
+            Student evaluatedStudent, Assessment assessment, String rubricAssessmentType);
+    
+    // Find comments by rubric ID
+    List<AssessmentComment> findByRubricId(Long rubricId);
 }

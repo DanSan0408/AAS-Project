@@ -1,0 +1,575 @@
+/* =======================================================
+   SUPERVISOR EVALUATION FORM - DARK THEME v2 (High Visibility)
+   Color Palette: #23395d (L1), #203354 (L2), #1c2e4a (M1), #192841 (D1), #152238 (D2)
+   ======================================================= */
+
+:root {
+    /* --- Requested Palette --- */
+    --sv-lightest: #23395d; /* L1 - Borders, Highlights, Hover */
+    --sv-light:    #203354; /* L2 - Section Headers */
+    --sv-mid:      #1c2e4a; /* M1 - Cards, Context Boxes */
+    --sv-dark:     #192841; /* D1 - Section Containers */
+    --sv-darkest:  #152238; /* D2 - Page BG, Recessed Inputs */
+
+    /* --- Functional Mapping for Visibility & Depth --- */
+    --page-bg:          var(--sv-darkest);
+    --container-bg:     var(--sv-dark);     /* Holds cards */
+    --card-bg:          var(--sv-mid);      /* The actual actionable cards */
+    --section-header-bg: var(--sv-light);   /* Major section dividers */
+    --input-bg:         var(--sv-darkest);  /* Recessed look for inputs */
+    --border-color:     var(--sv-lightest); /* High contrast borders */
+    --accent-hover:     var(--sv-lightest);
+    
+    /* --- Text Colors --- */
+    --text-main:      #ffffff; /* Pure white for maximum readability */
+    --text-muted:     #b0b8c1; /* Light gray for secondary text */
+    
+    /* --- Status Colors (Kept as requested in previous turns for usability) --- */
+    --status-green:   #2ecc71;
+    --status-yellow:  #f1c40f;
+    --status-blue:    #3498db;
+    --status-gray:    #95a5a6;
+
+    /* --- Spacing & Borders --- */
+    --radius-card: 12px;
+    --radius-btn: 6px;
+    --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.4); /* Stronger shadow for depth */
+    --shadow-input: inset 0 2px 5px rgba(0,0,0,0.5); /* Inner shadow for recessed look */
+}
+
+/* ==================== LAYOUT ==================== */
+body {
+    background-color: var(--page-bg);
+    color: var(--text-main);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.main-content {
+    min-height: 100vh;
+}
+
+.evaluation-container {
+    padding: 40px 20px 80px 20px; /* Added bottom padding for footer space */
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ==================== PAGE HEADER ==================== */
+.page-header-wrapper {
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+.page-title {
+    color: var(--text-main);
+    font-size: 2.2em;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-title i {
+    color: var(--status-blue);
+}
+
+.page-subtitle {
+    color: var(--text-muted);
+    font-size: 1.1em;
+    margin: 0;
+}
+
+/* ==================== CONTEXT INFO (Cards pop from background) ==================== */
+.context-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.context-item {
+    background-color: var(--card-bg); /* M1 - Mid tone */
+    padding: 20px;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-color); /* L1 border for definition */
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.context-item:hover {
+    border-color: var(--status-blue);
+    transform: translateY(-3px);
+}
+
+.context-label {
+    display: block;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.context-value {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* ==================== ALERTS ==================== */
+.alert {
+    padding: 15px 20px;
+    border-radius: var(--radius-btn);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    /* Use darker backgrounds with bright borders for visibility */
+    background-color: var(--sv-dark); 
+    border: 1px solid var(--border-color);
+    border-left-width: 5px;
+    box-shadow: var(--shadow-card);
+}
+
+.alert-info {
+    border-left-color: var(--status-blue);
+}
+.alert-info i { color: var(--status-blue); }
+
+.alert-warning {
+    border-left-color: var(--status-yellow);
+}
+.alert-warning i { color: var(--status-yellow); }
+
+.alert strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+/* ==================== PROGRESS SECTION ==================== */
+.progress-section {
+    background-color: var(--card-bg); /* M1 */
+    padding: 25px;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 40px;
+    box-shadow: var(--shadow-card);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.progress-title {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.progress-percentage {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--status-blue);
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 18px;
+    /* Darkest background for the track for contrast */
+    background-color: var(--sv-darkest); 
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-input);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    /* Use gradient for better visibility */
+    background: linear-gradient(90deg, var(--status-blue), var(--status-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    color: var(--text-main);
+    font-weight: bold;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    font-size: 0.95em;
+    color: var(--text-muted);
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.progress-details strong {
+    color: var(--text-main);
+    margin-left: 5px;
+}
+
+/* ==================== SECTION HEADERS (Hierarchy) ==================== */
+.section-header {
+    padding: 20px 30px;
+    /* Use L2 (Lightish) for headers so they stand out from the page bg */
+    background-color: var(--section-header-bg);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    margin-bottom: 0;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+}
+
+.group-section-header {
+    border-bottom: 3px solid var(--status-blue);
+}
+
+.student-section-header {
+    border-bottom: 3px solid var(--status-green);
+    margin-top: 50px; /* Extra spacing between major sections */
+}
+
+.section-title {
+    margin: 0;
+    font-size: 1.6em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-main);
+}
+
+.section-subtitle {
+    margin: 8px 0 0 0;
+    color: var(--text-muted);
+    font-size: 1em;
+}
+
+/* ==================== CONTENT CONTAINER ==================== */
+.section-content {
+    /* Use D1 (Dark) to contain the cards. Distinct from Page BG (D2) */
+    background-color: var(--container-bg);
+    padding: 30px;
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    box-shadow: var(--shadow-card);
+}
+
+/* ==================== RUBRIC CARD (The core items) ==================== */
+.rubric-card {
+    /* Use M1 (Mid) for cards so they pop off the D1 container */
+    background-color: var(--card-bg);
+    padding: 25px;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.rubric-name {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.rubric-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    font-size: 0.95em;
+    color: var(--text-muted);
+    background-color: rgba(0,0,0,0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.rubric-details strong {
+    color: var(--status-yellow);
+    font-size: 1.1em;
+}
+
+/* Sub-Rubrics */
+.sub-rubric-container {
+    /* Use D1 (Dark) to recess sub-rubrics slightly within the M1 card */
+    background-color: var(--sv-dark);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--status-blue);
+}
+
+.sub-rubric-header {
+    margin-bottom: 15px;
+}
+
+.sub-rubric-name {
+    margin: 0;
+    color: var(--text-main);
+    font-size: 1.1em;
+}
+
+.sub-rubric-description {
+    color: var(--text-muted);
+    font-size: 0.95em;
+    margin-top: 8px;
+    font-style: italic;
+}
+
+/* ==================== RATING OPTIONS (Radios) ==================== */
+.rating-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.rating-option {
+    position: relative;
+}
+
+.rating-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.rating-option label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 15px 10px;
+    /* Recessed look: Darkest background with bright border */
+    background-color: var(--input-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 100%;
+    box-shadow: var(--shadow-input);
+}
+
+/* Hover State */
+.rating-option label:hover {
+    border-color: var(--status-blue);
+    background-color: var(--sv-dark);
+    transform: translateY(-2px);
+}
+
+/* Checked State - High contrast */
+.rating-option input[type="radio"]:checked + label {
+    /* Use the lightest blue for the active state background */
+    background-color: var(--sv-lightest); 
+    border-color: var(--status-blue);
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+}
+
+.rating-label {
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 1em;
+    margin-bottom: 5px;
+}
+
+.rating-marks {
+    color: var(--status-green);
+    font-weight: 700;
+    font-size: 1.1em;
+    background-color: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* ==================== COMMENTS AREAS ==================== */
+.comments-section, .rubric-comments-section {
+    /* Recessed container for comments */
+    background-color: var(--sv-dark);
+    padding: 25px;
+    border-radius: 8px;
+    margin-top: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.comments-title {
+    color: var(--text-main);
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3em;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
+}
+
+.rubric-comments-header {
+    color: var(--text-main);
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.comment-field, .rubric-comment-field {
+    margin-bottom: 20px;
+}
+
+.comment-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 1em;
+}
+
+.optional-tag {
+    color: var(--text-muted);
+    font-size: 0.85em;
+    font-weight: normal;
+    background-color: rgba(0,0,0,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* High Visibility Textareas */
+textarea {
+    width: 100%;
+    min-height: 120px;
+    /* Darkest BG for recessed look */
+    background-color: var(--input-bg);
+    /* Bright border for definition */
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-main);
+    padding: 15px;
+    font-family: inherit;
+    font-size: 1em;
+    resize: vertical;
+    box-shadow: var(--shadow-input);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--status-blue);
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+    background-color: var(--sv-dark); /* Slightly lighter on focus */
+}
+
+textarea::placeholder {
+    color: rgba(255,255,255,0.4);
+}
+
+.char-counter, .rubric-comment-hint {
+    text-align: right;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+/* ==================== FORM ACTIONS (Sticky Footer) ==================== */
+.form-actions {
+    position: sticky;
+    bottom: 0;
+    /* Use M1 (Mid) for the footer bar so it stands out from page bg */
+    background-color: var(--sv-mid);
+    padding: 20px 30px;
+    border-top: 2px solid var(--border-color);
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    z-index: 999;
+}
+
+.btn {
+    padding: 12px 25px;
+    border-radius: var(--radius-btn);
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    color: white;
+    text-decoration: none;
+    font-size: 1em;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.btn-back {
+    background-color: var(--sv-lightest); /* Use palette color */
+    color: var(--text-main);
+}
+.btn-back:hover { background-color: #34495e; }
+
+.btn-save {
+    background-color: var(--status-blue);
+}
+.btn-save:hover { background-color: #2980b9; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .evaluation-container {
+        padding: 20px 15px 80px 15px;
+    }
+    
+    .rating-options {
+        grid-template-columns: 1fr 1fr; /* 2 columns on smaller screens */
+    }
+
+    .rubric-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .rubric-details {
+        align-items: flex-start;
+        width: 100%;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+     .rating-options {
+        grid-template-columns: 1fr; /* 1 column on very small screens */
+    }
+}

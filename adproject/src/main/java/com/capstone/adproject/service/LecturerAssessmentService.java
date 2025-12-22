@@ -360,6 +360,7 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
             mark.setAssessment(assessment);
             mark.setRating(rating);
             mark.setComments("LECTURER:" + lecturerId);
+            mark.setLecturer(lecturer);  // ✅ CRITICAL FIX: Set the lecturer field!
             mark.setAssessmentType(rubricType);
             mark.setStatus(Mark.SubmissionStatus.FINAL);
             
@@ -408,9 +409,8 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
             markRepository.saveAll(newMarks);
         }
         
-        // ✅ FIXED: Save assessment-level comments ONLY if configured
+        // Save assessment-level comments (rest of the code remains the same)
         if (comments != null && !comments.isEmpty()) {
-            // Check if comments are actually configured for this assessment type
             List<String> commentLabels = rubricType.equalsIgnoreCase("Group Assessment") ?
                 assessment.getGroupCommentLabels() :
                 assessment.getIndividualCommentLabels();
@@ -438,7 +438,6 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
                         assessment.getIndividualCommentLabel(commentEntry.getKey());
                     comment.setCommentLabel(label);
                     
-                    // Set anonymousIdentifier for assessment-level comments
                     Integer commentIndex = commentEntry.getKey();
                     Boolean isAnonymous = rubricType.equalsIgnoreCase("Group Assessment") ?
                         assessment.isGroupCommentAnonymous(commentIndex) :
@@ -455,7 +454,7 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
             }
         }
         
-        // Save rubric-specific comments with proper anonymity
+        // Save rubric-specific comments (rest remains the same)
         if (rubricComments != null && !rubricComments.isEmpty()) {
             for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                 Long rubricId = rubricEntry.getKey();
@@ -464,7 +463,6 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
                 Rubric rubric = rubricRepository.findById(rubricId)
                     .orElseThrow(() -> new RuntimeException("Rubric not found"));
                 
-                // Delete existing rubric-specific comments for this rubric
                 List<AssessmentComment> existingRubricComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
                         lecturerId,
                         AssessmentComment.EvaluatorType.LECTURER,
@@ -477,7 +475,6 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
                     assessmentCommentRepository.deleteAll(existingRubricComments);
                 }
                 
-                // Save new rubric-specific comments
                 for (Map.Entry<Integer, String> commentEntry : rubricCommentMap.entrySet()) {
                     Integer commentIndex = commentEntry.getKey();
                     String commentText = commentEntry.getValue();
@@ -499,7 +496,6 @@ public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lect
                     comment.setRubricId(rubricId);
                     comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
                     
-                    // Check rubric's anonymity setting for this specific comment
                     Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
                     if (isAnonymous != null && isAnonymous) {
                         comment.setAnonymousIdentifier("Lecturer");

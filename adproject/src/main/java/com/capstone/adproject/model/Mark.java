@@ -83,10 +83,15 @@ public class Mark {
     private SubmissionStatus status = SubmissionStatus.DRAFT;
 
     @Column(name = "supervisor_id")
-private Long supervisorId;
+    private Long supervisorId;
 
-@Column(name = "is_supervisor_mark")
-private Boolean isSupervisorMark = false;
+    @Column(name = "is_supervisor_mark")
+    private Boolean isSupervisorMark = false;
+
+    // NEW: Lecturer who created this mark
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lecturer_id")
+    private Lecturer lecturer;
 
     // Enum
     public enum SubmissionStatus {
@@ -144,6 +149,31 @@ private Boolean isSupervisorMark = false;
     public SubmissionStatus getStatus() { return status; }
     public void setStatus(SubmissionStatus status) { this.status = status; }
 
+    public Long getSupervisorId() {
+        return supervisorId;
+    }
+
+    public void setSupervisorId(Long supervisorId) {
+        this.supervisorId = supervisorId;
+    }
+
+    public Boolean getIsSupervisorMark() {
+        return isSupervisorMark;
+    }
+
+    public void setIsSupervisorMark(Boolean isSupervisorMark) {
+        this.isSupervisorMark = isSupervisorMark;
+    }
+
+    // NEW: Getter and Setter for Lecturer
+    public Lecturer getLecturer() {
+        return lecturer;
+    }
+
+    public void setLecturer(Lecturer lecturer) {
+        this.lecturer = lecturer;
+    }
+
     // Calculate mark value based on rating marks
     public void calculateMarkValue() {
         if (rating != null && rating.getMarks() != null) {
@@ -195,20 +225,4 @@ private Boolean isSupervisorMark = false;
             this.cloMarks = 0.0;
         }
     }
-    
-public Long getSupervisorId() {
-    return supervisorId;
-}
-
-public void setSupervisorId(Long supervisorId) {
-    this.supervisorId = supervisorId;
-}
-
-public Boolean getIsSupervisorMark() {
-    return isSupervisorMark;
-}
-
-public void setIsSupervisorMark(Boolean isSupervisorMark) {
-    this.isSupervisorMark = isSupervisorMark;
-}
 }

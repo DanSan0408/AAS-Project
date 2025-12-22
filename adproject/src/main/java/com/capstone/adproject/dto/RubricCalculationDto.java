@@ -1,63 +1,82 @@
 package com.capstone.adproject.dto;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import com.capstone.adproject.model.Rubric;
+
+/**
+ * DTO for rubric-specific calculations
+ */
 public class RubricCalculationDto {
-    private Long rubricId;
-    private String rubricName;
-    private String assessmentType; // "Group Assessment" or "Individual Assessment"
-    private Integer clo;
     
-    // For sub-rubric calculations
-    private Double subRubricFactor; // μ ln
+    private Rubric rubric;
     private Double rubricFactor; // Rf
-    private Double configuredRubricMark; // Rm (from rubric.getMarks())
-    private Double evaluatedRubricMark; // Mr = Rf × Rm
+    private Double evaluatedRubricMark; // Mr (unweighted)
+    private Double weightedRubricMark; // Wr = f × Mr (weighted for Group Assessment)
+    private Integer clo;
+    private String assessmentType; // "Group Assessment" or "Individual Assessment"
     
-    // For direct rating calculations
-    private Double averageRubricFactor; // μ Rf
-    
-    // Breakdown by lecturer/evaluator
-    private Map<Long, Double> evaluatorAverages; // μ srmln per evaluator
-    private Map<Long, Double> evaluatorRubricFactors; // Rf per evaluator
-    
-    public RubricCalculationDto() {
-        this.evaluatorAverages = new HashMap<>();
-        this.evaluatorRubricFactors = new HashMap<>();
-    }
+    // Evaluator details for display
+    private List<Map<String, Object>> evaluatorDetails = new ArrayList<>();
     
     // Getters and Setters
-    public Long getRubricId() { return rubricId; }
-    public void setRubricId(Long rubricId) { this.rubricId = rubricId; }
     
-    public String getRubricName() { return rubricName; }
-    public void setRubricName(String rubricName) { this.rubricName = rubricName; }
+    public Rubric getRubric() {
+        return rubric;
+    }
     
-    public String getAssessmentType() { return assessmentType; }
-    public void setAssessmentType(String assessmentType) { this.assessmentType = assessmentType; }
+    public void setRubric(Rubric rubric) {
+        this.rubric = rubric;
+    }
     
-    public Integer getClo() { return clo; }
-    public void setClo(Integer clo) { this.clo = clo; }
+    public Double getRubricFactor() {
+        return rubricFactor != null ? rubricFactor : 0.0;
+    }
     
-    public Double getSubRubricFactor() { return subRubricFactor; }
-    public void setSubRubricFactor(Double subRubricFactor) { this.subRubricFactor = subRubricFactor; }
+    public void setRubricFactor(Double rubricFactor) {
+        this.rubricFactor = rubricFactor;
+    }
     
-    public Double getRubricFactor() { return rubricFactor; }
-    public void setRubricFactor(Double rubricFactor) { this.rubricFactor = rubricFactor; }
+    public Double getEvaluatedRubricMark() {
+        return evaluatedRubricMark != null ? evaluatedRubricMark : 0.0;
+    }
     
-    public Double getConfiguredRubricMark() { return configuredRubricMark; }
-    public void setConfiguredRubricMark(Double configuredRubricMark) { this.configuredRubricMark = configuredRubricMark; }
+    public void setEvaluatedRubricMark(Double evaluatedRubricMark) {
+        this.evaluatedRubricMark = evaluatedRubricMark;
+    }
     
-    public Double getEvaluatedRubricMark() { return evaluatedRubricMark; }
-    public void setEvaluatedRubricMark(Double evaluatedRubricMark) { this.evaluatedRubricMark = evaluatedRubricMark; }
+    // NEW: Weighted rubric mark
+    public Double getWeightedRubricMark() {
+        return weightedRubricMark != null ? weightedRubricMark : 0.0;
+    }
     
-    public Double getAverageRubricFactor() { return averageRubricFactor; }
-    public void setAverageRubricFactor(Double averageRubricFactor) { this.averageRubricFactor = averageRubricFactor; }
+    public void setWeightedRubricMark(Double weightedRubricMark) {
+        this.weightedRubricMark = weightedRubricMark;
+    }
     
-    public Map<Long, Double> getEvaluatorAverages() { return evaluatorAverages; }
-    public void setEvaluatorAverages(Map<Long, Double> evaluatorAverages) { this.evaluatorAverages = evaluatorAverages; }
+    public Integer getClo() {
+        return clo != null ? clo : 0;
+    }
     
-    public Map<Long, Double> getEvaluatorRubricFactors() { return evaluatorRubricFactors; }
-    public void setEvaluatorRubricFactors(Map<Long, Double> evaluatorRubricFactors) { this.evaluatorRubricFactors = evaluatorRubricFactors; }
+    public void setClo(Integer clo) {
+        this.clo = clo;
+    }
+    
+    public String getAssessmentType() {
+        return assessmentType;
+    }
+    
+    public void setAssessmentType(String assessmentType) {
+        this.assessmentType = assessmentType;
+    }
+    
+    public List<Map<String, Object>> getEvaluatorDetails() {
+        return evaluatorDetails;
+    }
+    
+    public void setEvaluatorDetails(List<Map<String, Object>> evaluatorDetails) {
+        this.evaluatorDetails = evaluatorDetails;
+    }
 }
