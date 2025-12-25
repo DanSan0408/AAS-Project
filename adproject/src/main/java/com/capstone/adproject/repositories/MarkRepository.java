@@ -82,6 +82,8 @@ public interface MarkRepository extends JpaRepository<Mark, Long> {
     
     // Find all marks for a specific sub-rubric (for cascade deletion)
     List<Mark> findBySubRubric(SubRubric subRubric);
+
+    List<Mark> findByEvaluatedStudent(Student student);
     
     // ========== INDUSTRIAL SUPERVISOR EVALUATION METHODS ==========
     

@@ -1,0 +1,4 @@
+/* Supervisor-specific enhancements only */
+body.manage-users-page #supervisorTable tbody tr:hover {
+    background-color: rgba(74, 0, 24, 0.08) !important;
+}

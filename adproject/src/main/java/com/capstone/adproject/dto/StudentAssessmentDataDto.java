@@ -21,8 +21,12 @@ public class StudentAssessmentDataDto {
     private Map<Long, RubricCalculationDto> rubricCalculations = new HashMap<>();
     
     // CLO-based sums
-    private Map<Integer, Double> cloSums = new HashMap<>(); // SClonMrm
-    private Map<Integer, Double> cloWeightedSums = new HashMap<>(); // SClonWrm
+    private Map<Integer, Double> cloSums = new HashMap<>(); // SClonMrm - All rubrics raw
+    private Map<Integer, Double> cloWeightedSums = new HashMap<>(); // SClonWrm - Combined weighted
+    
+    // NEW: Separated CLO sums for display
+    private Map<Integer, Double> cloWeightedSumsGroupOnly = new HashMap<>(); // Only Group Assessment rubrics weighted
+    private Map<Integer, Double> cloSumsIndividualOnly = new HashMap<>(); // Only Individual Assessment rubrics raw
     
     // Total marks for this assessment
     private Double totalMarks = 0.0; // T
@@ -30,6 +34,9 @@ public class StudentAssessmentDataDto {
     // Comments
     private List<String> groupComments = new ArrayList<>();
     private List<String> individualComments = new ArrayList<>();
+    
+    private Double totalUnweightedMarks; // Total of Raw Marks
+    private Double totalWeightedMarks;   // Total of Weighted Marks
     
     // Getters and Setters
     
@@ -81,6 +88,24 @@ public class StudentAssessmentDataDto {
         this.cloWeightedSums = cloWeightedSums;
     }
     
+    // NEW GETTERS/SETTERS FOR SEPARATED SUMS
+    
+    public Map<Integer, Double> getCloWeightedSumsGroupOnly() {
+        return cloWeightedSumsGroupOnly;
+    }
+    
+    public void setCloWeightedSumsGroupOnly(Map<Integer, Double> cloWeightedSumsGroupOnly) {
+        this.cloWeightedSumsGroupOnly = cloWeightedSumsGroupOnly;
+    }
+    
+    public Map<Integer, Double> getCloSumsIndividualOnly() {
+        return cloSumsIndividualOnly;
+    }
+    
+    public void setCloSumsIndividualOnly(Map<Integer, Double> cloSumsIndividualOnly) {
+        this.cloSumsIndividualOnly = cloSumsIndividualOnly;
+    }
+    
     public Double getTotalMarks() {
         return totalMarks != null ? totalMarks : 0.0;
     }
@@ -103,5 +128,21 @@ public class StudentAssessmentDataDto {
     
     public void setIndividualComments(List<String> individualComments) {
         this.individualComments = individualComments;
+    }
+
+    public Double getTotalUnweightedMarks() {
+        return totalUnweightedMarks != null ? totalUnweightedMarks : 0.0;
+    }
+
+    public void setTotalUnweightedMarks(Double totalUnweightedMarks) {
+        this.totalUnweightedMarks = totalUnweightedMarks;
+    }
+
+    public Double getTotalWeightedMarks() {
+        return totalWeightedMarks != null ? totalWeightedMarks : 0.0;
+    }
+
+    public void setTotalWeightedMarks(Double totalWeightedMarks) {
+        this.totalWeightedMarks = totalWeightedMarks;
     }
 }

@@ -40,7 +40,7 @@ public class SecurityConfig {
         http
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/startup", "/login", "/css/**", "/js/**", "/images/**", "/forgot_password", "/reset_password/**").permitAll()
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", "/forgot_password", "/reset_password/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/rubrics/**").hasRole("ADMIN")
                 .requestMatchers("/student/**", "/student/assessment/**").hasRole("STUDENT")
@@ -66,7 +66,7 @@ public class SecurityConfig {
 
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/startup")
+                .logoutSuccessUrl("/login")
                 .permitAll()
             );
 

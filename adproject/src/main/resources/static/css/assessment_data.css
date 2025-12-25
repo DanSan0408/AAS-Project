@@ -1,0 +1,275 @@
+.data-container {
+    padding: 20px;
+}
+
+.page-header {
+    background: #34495e;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-header h2 {
+    color: #ecf0f1;
+    margin: 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-back {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-back:hover {
+    background: #7f8c8d;
+}
+
+.btn-print {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-print:hover {
+    background: #229954;
+}
+
+/* Group Filter Section */
+.group-filter-section {
+    background: #34495e;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.group-filter-section h3 {
+    color: #ecf0f1;
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+}
+
+.group-selector {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.group-selector label {
+    color: #ecf0f1;
+    font-weight: bold;
+}
+
+.group-selector select {
+    flex: 1;
+    max-width: 400px;
+    padding: 10px;
+    border-radius: 5px;
+    border: 2px solid #4a6681;
+    background: #2c3e50;
+    color: #ecf0f1;
+    font-size: 1em;
+}
+
+.group-selector select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* Student Data Table */
+.student-data-table {
+    width: 100%;
+    background: #34495e;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.student-header {
+    background: #2c3e50;
+    padding: 15px 20px;
+    border-bottom: 2px solid #4a6681;
+}
+
+.student-header h3 {
+    color: #ecf0f1;
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.student-subheader {
+    color: #95a5a6;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    background: #23395d;
+    color: #ecf0f1;
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #4a6681;
+    font-size: 0.85em;
+    line-height: 1.3;
+}
+
+.data-table td {
+    padding: 12px 10px;
+    border: 1px solid #4a6681;
+    color: #ecf0f1;
+    font-size: 0.85em;
+    vertical-align: top;
+    line-height: 1.4;
+}
+
+.data-table tr:hover {
+    background: rgba(52, 152, 219, 0.08);
+}
+
+/* Rubric Details */
+.rubric-name-cell {
+    font-weight: bold;
+    color: #3498db;
+    font-size: 0.9em;
+}
+
+.sub-rubric-row {
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.sub-rubric-name {
+    padding-left: 20px;
+    font-size: 0.85em;
+    color: #95a5a6;
+}
+
+.evaluator-rating-box {
+    padding: 6px 8px;
+    margin: 4px 0;
+    background: rgba(0,0,0,0.15);
+    border-radius: 3px;
+    font-size: 0.8em;
+    border-left: 2px solid #e67e22;
+}
+
+.evaluator-name {
+    color: #e67e22;
+    font-weight: 500;
+}
+
+.rating-value {
+    color: #2ecc71;
+    font-weight: bold;
+}
+
+.mark-value {
+    color: #f39c12;
+    font-weight: bold;
+}
+
+.formula-result {
+    background: rgba(155, 89, 182, 0.2);
+    padding: 8px;
+    border-radius: 4px;
+    margin: 4px 0;
+    border-left: 2px solid #9b59b6;
+}
+
+.formula-label {
+    color: #95a5a6;
+    font-size: 0.75em;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.formula-value {
+    color: #9b59b6;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.mu-ln-cell {
+    background: rgba(231, 76, 60, 0.15);
+    border-left: 4px solid #e74c3c !important;
+}
+
+.clo-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: bold;
+    display: inline-block;
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.comment-box {
+    background: #2c3e50;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 4px 0;
+    border-left: 3px solid #3498db;
+}
+
+.comment-evaluator {
+    color: #e67e22;
+    font-weight: 500;
+    font-size: 0.75em;
+    margin-bottom: 3px;
+}
+
+.comment-text {
+    color: #ecf0f1;
+    font-size: 0.8em;
+}
+
+.summary-section {
+    background: #27ae60;
+    color: white;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 6px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-weight: bold;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #95a5a6;
+    font-style: italic;
+}
+
+@media print {
+    .action-buttons, .btn, .group-filter-section {
+        display: none;
+    }
+}

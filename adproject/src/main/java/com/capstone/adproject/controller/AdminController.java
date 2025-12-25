@@ -686,4 +686,57 @@ public class AdminController {
         
         return "redirect:/admin/home"; 
     }
+
+    // Inside AdminController.class
+
+    // 1. Bulk Delete Students
+    @PostMapping("/bulk-delete-students")
+    public String bulkDeleteStudents(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No students selected for deletion.");
+            return "redirect:/admin/manage-students";
+        }
+        
+        try {
+            adminService.deleteStudentsByIds(ids);
+            redirectAttributes.addFlashAttribute("successMessage", "Selected students deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting students: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-students";
+    }
+
+    // 2. Bulk Delete Lecturers
+    @PostMapping("/bulk-delete-lecturers")
+    public String bulkDeleteLecturers(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No lecturers selected for deletion.");
+            return "redirect:/admin/manage-lecturers";
+        }
+
+        try {
+            adminService.deleteLecturersByIds(ids);
+            redirectAttributes.addFlashAttribute("successMessage", "Selected lecturers deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting lecturers: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-lecturers";
+    }
+
+    // 3. Bulk Delete Supervisors
+    @PostMapping("/bulk-delete-supervisors")
+    public String bulkDeleteSupervisors(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
+        if (ids == null || ids.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No supervisors selected for deletion.");
+            return "redirect:/admin/manage-supervisors";
+        }
+
+        try {
+            adminService.deleteIndustrialSupervisorsByIds(ids);
+            redirectAttributes.addFlashAttribute("successMessage", "Selected supervisors deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting supervisors: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-supervisors";
+    }
 }

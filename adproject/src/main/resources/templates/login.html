@@ -3,38 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <!-- Assuming login.css is placed in src/main/resources/static/css/ -->
+    <title>Login - UTM CAS</title>
+    <link rel="stylesheet" href="/css/critical.css"> 
     <link rel="stylesheet" href="/css/login.css">
-    <style>
-        .success-message {
-            color: #2ecc71; /* Green color from btn-success-custom */
-            font-weight: bold;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .forgot-password-link {
-            display: block;
-            text-align: right;
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #3498db;
-            transition: color 0.3s ease;
-        }
-        .forgot-password-link:hover {
-            color: #2980b9;
-        }
-        .logo {
-            max-width: 120px;
-            height: auto;
-            margin: 0 auto 20px; /* Center and add spacing */
-        }
-    </style>
+    <link rel="stylesheet" href="/css/loading.css">
 </head>
 <body>
+
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-container">
+            <img src="/images/utmbulat.png" alt="UTM CAS Logo" class="loading-logo"/>
+        </div>
+    </div>
+
     <div class="auth-container">
         <!-- Logo Image -->
-        <img th:src="@{/images/utmlogo.png}" alt="UTM Logo" class="logo" />
+        <img th:src="@{/images/logoUTM.png}" alt="UTM Logo" class="logo" />
         
         <h3 class="card-title text-center mb-4">Login</h3>
 
@@ -61,15 +45,16 @@
             
             <div class="form-group">
                 <label for="remember-me" class="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="remember-me" name="remember-me" class="mr-2"> Remember Me
+                    <input type="checkbox" id="remember-me" name="remember-me"> Remember Me
                 </label>
             </div>
             
-            <a th:href="@{/forgot_password}" class="forgot-password-link">Forgot Password?</a><br>
+            <a th:href="@{/forgot_password}" class="forgot-password-link">Forgot Password?</a>
             
             <button type="submit" class="auth-btn btn-primary-custom">Login</button>
-            
         </form>
     </div>
+
+    <script src="/js/loading.js"></script>
 </body>
 </html>

@@ -4,126 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="|Edit Group: ${group.groupName}|">Edit Group</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/manageUser.css}">
-    <link rel="stylesheet" th:href="@{/css/group_edit.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/manageUser.css}"> <link rel="stylesheet" th:href="@{/css/group_edit.css}">
 </head>
-<body>
+<body class="group-edit-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header-container">
-            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
             <h1>UTM CAS</h1>
         </div>
 
         <div class="card">
-            <h1 th:text="|Edit Group: ${group.groupName} (ID: ${group.id})|">Edit Group</h1>
-
-            <p th:if="${success}" class="message-success" th:text="${success}"></p>
-            <p th:if="${error}" class="message-error" th:text="${error}"></p>
-
-            <div class="content-layout">
-
-                <div class="form-panel">
-                    <h3>Group Details and Supervisor Assignment</h3>
-                    
-                    <form th:action="@{|/admin/group/edit/${group.id}|}" th:object="${groupAssignmentDto}" method="post" style="text-align: left;">
-                        
-                        <div class="form-group">
-                            <label for="groupName">Group Name:</label>
-                            <input type="text" id="groupName" th:field="*{groupName}" required> 
-                        </div>
-
-                        <hr/>
-
-                        <h3>Academic Supervisor (Lecturer)</h3>
-                        <div class="form-group">
-                            <label for="academicSupervisorId">Lecturer:</label>
-                            <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
-                                <option value="">-- Select Lecturer --</option>
-                                <option th:each="lecturer : ${availableLecturers}"
-                                        th:value="${lecturer.id}"
-                                        th:text="${lecturer.username}"
-                                        th:selected="${groupAssignmentDto.academicSupervisorId != null and lecturer.id == groupAssignmentDto.academicSupervisorId}">Lecturer Name</option>
-                            </select>
-                        </div>
-
-                        <hr/>
-
-                        <h3>Industrial Supervisor</h3>
-                        <div class="form-group">
-                            <label for="industrialSupervisorId">Industrial Supervisor:</label>
-                            <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                <option value="">-- Select Supervisor --</option>
-                                <option th:each="supervisor : ${availableSupervisors}"
-                                        th:value="${supervisor.id}"
-                                        th:text="${supervisor.username}"
-                                        th:selected="${groupAssignmentDto.industrialSupervisorId != null and supervisor.id == groupAssignmentDto.industrialSupervisorId}">Supervisor Name</option>
-                            </select>
-                        </div>
-                        
-                        <hr/>
-
-                        <h3>Add More Students (Currently Unassigned)</h3>
-                        <div th:if="${availableStudents.isEmpty()}">
-                            <p style="font-style: italic;">No unassigned students available to add.</p>
-                        </div>
-                        <table th:unless="${availableStudents.isEmpty()}" class="student-table" style="margin-top: 0;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 10%;">Select</th>
-                                    <th>Student Username</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="student : ${availableStudents}">
-                                    <td>
-                                        <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
-                                    </td>
-                                    <td th:text="${student.username}">Student Name</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        
-                        <hr/>
-
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">Update Group & Add Students</button>
-                    </form>
-                </div>
-
-                <div class="member-panel">
-                    <h3>Current Group Members (Size: <span th:text="${group.groupSize}">0</span>)</h3>
-                    
-                    <div th:if="${studentsInGroup.isEmpty()}">
-                        <p style="font-style: italic;">This group has no students assigned yet.</p>
-                    </div>
-                    
-                    <table th:unless="${studentsInGroup.isEmpty()}" class="student-table">
-                        <thead>
-                            <tr>
-                                <th>Student ID</th>
-                                <th>Username</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="student : ${studentsInGroup}">
-                                <td th:text="${student.id}">101</td>
-                                <td th:text="${student.username}">Student Name</td>
-                                <td>
-                                    <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"
-                                       onclick="return confirm('Are you sure you want to remove this student from the group?');">Remove</a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <br>
-                    <a th:href="@{/admin/group-assignment}" class="btn btn-secondary">Back to Group List</a>
-                </div>
+            <div class="card-header">
+                <h1>USER EDITING</h1>
             </div>
 
+            <div class="user-editing-container">
+                <div class="user-editing-sidebar">
+                    <a href="/admin/manage-students">Students</a>
+                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <a href="/admin/group-assignment" class="active">Group Assignment</a>
+                </div>
+
+                <div class="user-editing-main">
+                    <h2 th:text="|Edit Group: ${group.groupName} (ID: ${group.id})|">Edit Group</h2>
+
+                    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                    <div class="content-layout">
+
+                        <div class="form-panel">
+                            <h3>Group Details and Supervisor Assignment</h3>
+                            
+                            <form th:action="@{|/admin/group/edit/${group.id}|}" th:object="${groupAssignmentDto}" method="post" style="text-align: left;">
+                                
+                                <div class="form-group">
+                                    <label for="groupName">Group Name:</label>
+                                    <input type="text" id="groupName" th:field="*{groupName}" required> 
+                                </div>
+
+                                <hr/>
+
+                                <h3>Academic Supervisor (Lecturer)</h3>
+                                <div class="form-group">
+                                    <label for="academicSupervisorId">Lecturer:</label>
+                                    <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
+                                        <option value="">-- Select Lecturer --</option>
+                                        <option th:each="lecturer : ${availableLecturers}"
+                                                th:value="${lecturer.id}"
+                                                th:text="${lecturer.username}"
+                                                th:selected="${groupAssignmentDto.academicSupervisorId != null and lecturer.id == groupAssignmentDto.academicSupervisorId}">Lecturer Name</option>
+                                    </select>
+                                </div>
+
+                                <hr/>
+
+                                <h3>Industrial Supervisor</h3>
+                                <div class="form-group">
+                                    <label for="industrialSupervisorId">Industrial Supervisor:</label>
+                                    <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
+                                        <option value="">-- Select Supervisor --</option>
+                                        <option th:each="supervisor : ${availableSupervisors}"
+                                                th:value="${supervisor.id}"
+                                                th:text="${supervisor.username}"
+                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and supervisor.id == groupAssignmentDto.industrialSupervisorId}">Supervisor Name</option>
+                                    </select>
+                                </div>
+                                
+                                <hr/>
+
+                                <h3>Add More Students (Currently Unassigned)</h3>
+                                <div th:if="${availableStudents.isEmpty()}">
+                                    <p style="font-style: italic;">No unassigned students available to add.</p>
+                                </div>
+                                <table th:unless="${availableStudents.isEmpty()}" class="student-table" style="margin-top: 0;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 10%;">Select</th>
+                                            <th>Student Username</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="student : ${availableStudents}">
+                                            <td>
+                                                <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
+                                            </td>
+                                            <td th:text="${student.username}">Student Name</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <hr/>
+
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">Update Group & Add Students</button>
+                            </form>
+                        </div>
+
+                        <div class="member-panel">
+                            <h3>Current Group Members (Size: <span th:text="${group.groupSize}">0</span>)</h3>
+                            
+                            <div th:if="${studentsInGroup.isEmpty()}">
+                                <p style="font-style: italic;">This group has no students assigned yet.</p>
+                            </div>
+                            
+                            <table th:unless="${studentsInGroup.isEmpty()}" class="student-table">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Username</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="student : ${studentsInGroup}">
+                                        <td th:text="${student.id}">101</td>
+                                        <td th:text="${student.username}">Student Name</td>
+                                        <td>
+                                            <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"
+                                               onclick="return confirm('Are you sure you want to remove this student from the group?');">Remove</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <br>
+                            <a th:href="@{/admin/group-assignment}" class="btn btn-secondary" style="width: 100%; display:block; text-align:center;">Back to Group List</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
