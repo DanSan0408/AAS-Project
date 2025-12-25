@@ -30,8 +30,8 @@ public class AdminService {
 
     @Autowired
     public AdminService(StudentRepository studentRepository, LecturerRepository lecturerRepository, 
-                       IndustrialSupervisorRepository industrialSupervisorRepository, 
-                       GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
+                        IndustrialSupervisorRepository industrialSupervisorRepository, 
+                        GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.industrialSupervisorRepository = industrialSupervisorRepository;
@@ -41,20 +41,12 @@ public class AdminService {
 
     // ========== WHITESPACE-INSENSITIVE DUPLICATE CHECKERS ==========
     
-    /**
-     * Check if a student username or email is a duplicate (ignoring whitespace and case)
-     * @return A message describing the duplicate, or null if no duplicate exists
-     */
     public String checkStudentDuplicate(String username, String email, Long studentIdToExclude) {
         if (username != null) {
             String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            
             List<Student> allStudents = studentRepository.findAll();
             for (Student student : allStudents) {
-                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) {
-                    continue;
-                }
-                
+                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
                 if (student.getUsername() != null) {
                     String existingNormalized = student.getUsername().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedUsername)) {
@@ -63,16 +55,11 @@ public class AdminService {
                 }
             }
         }
-        
         if (email != null) {
             String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            
             List<Student> allStudents = studentRepository.findAll();
             for (Student student : allStudents) {
-                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) {
-                    continue;
-                }
-                
+                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
                 if (student.getEmail() != null) {
                     String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedEmail)) {
@@ -81,24 +68,15 @@ public class AdminService {
                 }
             }
         }
-        
-        return null; // No duplicate found
+        return null;
     }
     
-    /**
-     * Check if a lecturer username or email is a duplicate (ignoring whitespace and case)
-     * @return A message describing the duplicate, or null if no duplicate exists
-     */
     public String checkLecturerDuplicate(String username, String email, Long lecturerIdToExclude) {
         if (username != null) {
             String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            
             List<Lecturer> allLecturers = lecturerRepository.findAll();
             for (Lecturer lecturer : allLecturers) {
-                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) {
-                    continue;
-                }
-                
+                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
                 if (lecturer.getUsername() != null) {
                     String existingNormalized = lecturer.getUsername().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedUsername)) {
@@ -107,16 +85,11 @@ public class AdminService {
                 }
             }
         }
-        
         if (email != null) {
             String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            
             List<Lecturer> allLecturers = lecturerRepository.findAll();
             for (Lecturer lecturer : allLecturers) {
-                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) {
-                    continue;
-                }
-                
+                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
                 if (lecturer.getEmail() != null) {
                     String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedEmail)) {
@@ -125,24 +98,15 @@ public class AdminService {
                 }
             }
         }
-        
-        return null; // No duplicate found
+        return null;
     }
     
-    /**
-     * Check if a supervisor username or email is a duplicate (ignoring whitespace and case)
-     * @return A message describing the duplicate, or null if no duplicate exists
-     */
     public String checkSupervisorDuplicate(String username, String email, Long supervisorIdToExclude) {
         if (username != null) {
             String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            
             List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
             for (IndustrialSupervisor supervisor : allSupervisors) {
-                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) {
-                    continue;
-                }
-                
+                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
                 if (supervisor.getUsername() != null) {
                     String existingNormalized = supervisor.getUsername().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedUsername)) {
@@ -151,16 +115,11 @@ public class AdminService {
                 }
             }
         }
-        
         if (email != null) {
             String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            
             List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
             for (IndustrialSupervisor supervisor : allSupervisors) {
-                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) {
-                    continue;
-                }
-                
+                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
                 if (supervisor.getEmail() != null) {
                     String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
                     if (existingNormalized.equals(normalizedEmail)) {
@@ -169,14 +128,11 @@ public class AdminService {
                 }
             }
         }
-        
-        return null; // No duplicate found
+        return null;
     }
     
     // ========== END DUPLICATE CHECKERS ==========
 
-    // ... (rest of your existing methods remain the same)
-    
     public List<Student> getStudentsWithoutGroup() {
         return studentRepository.findByGroupIsNull();
     }
@@ -225,8 +181,19 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
         existingGroup.setGroupName(dto.getGroupName());
-        lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
-        industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+        
+        // Handle Supervisor Updates (Null safe)
+        if (dto.getAcademicSupervisorId() != null) {
+            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
+        } else {
+            existingGroup.setAcademicSupervisor(null);
+        }
+        
+        if (dto.getIndustrialSupervisorId() != null) {
+            industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+        } else {
+            existingGroup.setIndustrialSupervisor(null);
+        }
         
         groupRepository.save(existingGroup);
 
@@ -344,17 +311,95 @@ public class AdminService {
         industrialSupervisorRepository.save(industrialSupervisor);
     }
 
+    // ==========================================
+    // ⭐ SAFE DELETE METHODS START HERE
+    // ==========================================
+
+    @Transactional
     public void deleteStudentById(Long id) {
-        studentRepository.deleteById(id);
+        Student student = studentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // 1. Remove from Group 
+        if (student.getGroup() != null) {
+            removeStudentFromGroup(id);
+        }
+
+        // 2. Cleanup dependencies
+        studentRepository.deleteCalculatedResultsByStudentId(id); // Ghost Table
+        studentRepository.deleteMarksReceivedByStudent(id);       // Marks Received
+        studentRepository.deleteMarksGivenByStudent(id);          // Marks Given
+        studentRepository.deleteOverridesByStudent(id);           // Overrides
+
+        // 3. Delete Student
+        studentRepository.delete(student);
     }
 
+    @Transactional
     public void deleteLecturerById(Long id) {
-        lecturerRepository.deleteById(id);
+        Lecturer lecturer = lecturerRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+
+        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
+        lecturerRepository.unlinkFromGroups(id);
+
+        // 2. Delete assignments (LecturerGroupAssignment)
+        lecturerRepository.deleteGroupAssignments(id);
+
+        // 3. Delete Marks given by this lecturer
+        lecturerRepository.deleteMarksGiven(id);
+
+        // 4. Delete Lecturer
+        lecturerRepository.delete(lecturer);
     }
 
+    @Transactional
     public void deleteIndustrialSupervisorById(Long id) {
-        industrialSupervisorRepository.deleteById(id);
+        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+
+        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
+        industrialSupervisorRepository.unlinkFromGroups(id);
+
+        // 2. Delete Marks given by this supervisor
+        industrialSupervisorRepository.deleteMarksGiven(id);
+
+        // 3. Delete Supervisor
+        industrialSupervisorRepository.delete(supervisor);
     }
+
+    // ==========================================
+    // ⭐ SAFE BULK DELETE METHODS
+    // ==========================================
+
+    @Transactional
+    public void deleteStudentsByIds(List<Long> ids) {
+        if (ids == null) return;
+        // Loop ensures cleanup logic runs for every ID
+        for (Long id : ids) {
+            deleteStudentById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteLecturersByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteLecturerById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteIndustrialSupervisorById(id);
+        }
+    }
+
+    // ==========================================
+    // END SAFE DELETE METHODS
+    // ==========================================
 
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
@@ -370,8 +415,8 @@ public class AdminService {
         dto.setGroupName("Random Group (Ready to Edit)");
         
         List<Long> studentIds = availableStudents.stream()
-                                         .map(Student::getId)
-                                         .collect(Collectors.toList());
+                                                 .map(Student::getId)
+                                                 .collect(Collectors.toList());
 
         dto.setSelectedStudentIds(studentIds);
         return dto;

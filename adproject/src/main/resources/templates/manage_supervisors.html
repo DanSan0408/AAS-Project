@@ -5,42 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Supervisors</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
-    <style>
-        .alert-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        
-        .btn-confirm {
-            background-color: #ffc107 !important;
-            color: #212529 !important;
-            border-color: #ffc107 !important;
-            font-weight: bold;
-        }
-        
-        .glow-effect {
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.7);
-            animation: pulse 1.5s infinite alternate;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
-            100% { box-shadow: 0 0 20px rgba(255, 193, 7, 1); }
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/manage_supervisors.css}">
 </head>
-<body>
+<body class="manage-users-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header-container">
-            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
             <h1>UTM CAS</h1>
         </div>
         
@@ -89,35 +63,60 @@
                         </form>
                     </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="supervisor : ${supervisors}">
-                                <td th:text="${supervisor.id}"></td>
-                                <td th:text="${supervisor.username}"></td>
-                                <td th:text="${supervisor.email}"></td>
-                                <td>
-                                    <div class="table-actions">
-                                        <a th:href="@{/admin/edit-supervisor/{id}(id=${supervisor.id})}" class="action-button">Update</a>
-                                        <a th:href="@{/admin/delete-supervisor/{id}(id=${supervisor.id})}" class="action-button delete">Delete</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <form th:action="@{/admin/bulk-delete-supervisors}" method="post" id="bulkDeleteForm">
+                        <div class="header-actions">
+                            <h3>Existing Supervisors</h3>
+                            <button type="submit" 
+                                    class="action-button delete" 
+                                    style="padding: 8px 15px; font-size: 0.9em;"
+                                    onclick="return confirm('Are you sure you want to delete the selected supervisors? This cannot be undone.');">
+                                Delete Selected
+                            </button>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">
+                                        <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="supervisor : ${supervisors}">
+                                    <td style="text-align: center;">
+                                        <input type="checkbox" name="ids" th:value="${supervisor.id}" class="user-checkbox">
+                                    </td>
+                                    <td th:text="${supervisor.id}"></td>
+                                    <td th:text="${supervisor.username}"></td>
+                                    <td th:text="${supervisor.email}"></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <a th:href="@{/admin/edit-supervisor/{id}(id=${supervisor.id})}" class="action-button">Update</a>
+                                            <a th:href="@{/admin/delete-supervisor/{id}(id=${supervisor.id})}" class="action-button delete">Delete</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
     <script th:inline="javascript">
+        // Select All Script
+        function toggleSelectAll(source) {
+            checkboxes = document.getElementsByClassName('user-checkbox');
+            for(var i=0, n=checkboxes.length;i<n;i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const isDuplicate = /*[[${isDuplicate}]]*/ false;
             

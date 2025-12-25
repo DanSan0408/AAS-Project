@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Student Grades</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .edit-container { padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .filter-section { background: #34495e; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: white; display: flex; align-items: center; gap: 15px;}
+        .filter-section select { padding: 8px; border-radius: 4px; border: none; min-width: 200px; }
+        .filter-section button { padding: 8px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .data-table th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+        .data-table td { padding: 12px; border-bottom: 1px solid #ecf0f1; }
+        .inp-number { padding: 8px; width: 100px; border: 1px solid #bdc3c7; border-radius: 4px; }
+        .save-bar { margin-top: 20px; text-align: right; }
+        .btn-save { background: #27ae60; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; font-size: 1em; }
+    </style>
+</head>
+<body>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <h1>Edit Assessment Results</h1>
+            </div>
+        </div>
+
+        <div class="edit-container">
+            <form action="" method="get" class="filter-section">
+                <label><i class="fas fa-users"></i> Select Group:</label>
+                <select name="groupId" onchange="this.form.submit()">
+                    <option value="">-- Choose a Group --</option>
+                    <option th:each="g : ${groups}" 
+                            th:value="${g.id}" 
+                            th:text="${g.groupName}" 
+                            th:selected="${g.id == selectedGroupId}"></option>
+                </select>
+                <a th:href="@{/admin/data-views/overall}" style="color: #bdc3c7; margin-left: auto;">View Overall Report</a>
+            </form>
+
+            <form th:if="${selectedGroupId != null}" th:action="@{/admin/data-views/edit-overrides/save}" method="post" th:object="${form}">
+                <input type="hidden" name="groupId" th:value="${selectedGroupId}" />
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email</th>
+                            <th>Factor (Default/Calc)</th>
+                            <th>Grand Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="student, stat : ${students}">
+                            <td th:text="${student.username}">Name</td>
+                            <td th:text="${student.email}">Email</td> 
+                            
+                            <input type="hidden" th:field="*{updates[__${stat.index}__].studentId}" />
+                            
+                            <td>
+                                <input type="number" step="0.001" min="0" max="5" class="inp-number"
+                                       th:field="*{updates[__${stat.index}__].factor}" />
+                            </td>
+                            <td>
+                                <input type="number" step="0.01" min="0" max="100" class="inp-number"
+                                       th:field="*{updates[__${stat.index}__].grandTotal}" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="save-bar">
+                    <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save All Changes</button>
+                </div>
+            </form>
+            
+            <div th:if="${selectedGroupId == null}" style="text-align: center; color: #7f8c8d; padding: 40px;">
+                <h3>Please select a group to begin editing.</h3>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

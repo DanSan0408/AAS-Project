@@ -1,445 +1,657 @@
 /*
- * Admin Home Dashboard Styles
- * Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238 (Dark Blues/Navy)
+ * Admin Home Dashboard Styles - Refined & Professional
+ * Primary: Deep Maroon #4A0018
+ * Secondary: Graphite Grey #3F3F46
+ * Minimal Gold Accent: #F8A617
  */
 
 :root {
-    /* Define the core color palette */
-    --color-primary-dark: #23395d; /* Main Brand/Header/Primary Accent */
-    --color-secondary-dark: #203354; /* Main Headings/Strong Contrast */
-    --color-tertiary-dark: #1c2e4a; /* Section Headings/Grouping Borders */
-    --color-action-dark: #192841; /* Edit Buttons/Strong Text */
-    --color-darkest: #152238; /* Hover States/Deep Background elements */
-    
-    /* Functional Colors */
-    --color-background-light: #f4f7f6;
-    --color-surface-white: #ffffff;
-    --color-border-light: #e0e0e0;
-    --color-text-body: #333;
-    --color-text-subtle: #555;
-    
-    /* Alert/Specific Action Colors */
-    --color-success: #2ecc71; /* Green */
-    --color-error: #e74c3c; /* Red/Delete */
-    --color-info: #3498db; /* Lecturer/Blue */
-    --color-warning: #f7941d; /* Assign/Orange */
-    --color-config: #9b59b6; /* Configure Comments/Purple */
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-alert: #8B1E1E;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-primary-dark: #2D000E;
+    --color-secondary-light: #52525B;
+    --color-secondary-dark: #27272A;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+}
+
+/* --- Reset & Base Styles --- */
+* {
+    box-sizing: border-box;
 }
 
 /* --- General Layout & Typography --- */
-body {
-    background-color: var(--color-background-light);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--color-text-body);
+body.admin-page {
+    background-color: var(--color-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-secondary);
     margin: 0;
     padding: 0;
     display: flex;
 }
 
-/* Ensure main content takes up remaining space and has padding */
-.main-content {
-    flex-grow: 1;
-    padding: 20px;
-    margin-left: 250px; /* Adjust based on your sidebar width */
+/* Main Content - More breathing room */
+body.admin-page .main-content {
+    flex-grow: 1 !important;
+    padding: 30px 40px !important;
+    margin-left: 270px !important;
+    min-height: 100vh !important;
+    background-color: var(--color-background) !important;
+    width: auto !important;
 }
 
-/* Page Headers */
-.header {
-    background-color: var(--color-surface-white);
-    border-bottom: 3px solid var(--color-primary-dark);
-    padding: 10px 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* Page Headers - Centered and properly aligned */
+body.admin-page .header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
-.header-container {
-    display: flex;
-    align-items: center;
+body.admin-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
 }
 
-.header-container img {
-    height: 40px;
-    margin-right: 15px;
+body.admin-page .header-container img {
+    height: 55px !important;
+    width: auto !important;
+    filter: brightness(0) invert(1) !important;
 }
 
-.header-container h1 {
-    color: var(--color-primary-dark);
-    font-size: 1.8em;
-    margin: 0;
-    font-weight: 500;
+body.admin-page .header-container h1 {
+    color: var(--color-text) !important;
+    font-size: 2.2rem !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
 }
 
 /* Success/Error Messages */
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    font-weight: bold;
+body.admin-page .alert {
+    padding: 16px 24px !important;
+    margin-bottom: 24px !important;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+    border-left: 4px solid !important;
 }
 
-.alert-success {
-    color: #155724; /* Specific darker green for contrast on light green background */
-    background-color: #d4edda;
-    border-color: #c3e6cb;
+body.admin-page .alert-success {
+    color: #065F46 !important;
+    background-color: #D1FAE5 !important;
+    border-color: var(--color-success) !important;
 }
 
-.alert-danger {
-    color: #721c24; /* Specific darker red for contrast on light red background */
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
+body.admin-page .alert-danger {
+    color: #7F1D1D !important;
+    background-color: #FEE2E2 !important;
+    border-color: var(--color-alert) !important;
 }
 
 /* --- Content Structure --- */
-.content-flex-container {
-    display: flex;
-    gap: 30px;
+body.admin-page .content-flex-container {
+    display: flex !important;
+    gap: 35px !important;
+    align-items: flex-start !important;
 }
 
-.rubric-section,
-.deadline-section {
-    padding: 20px;
-    background-color: var(--color-surface-white);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    height: fit-content;
+/* Rubric Section - No box, flows freely, scrollable */
+body.admin-page .rubric-section {
+    flex: 2.5 !important;
+    background: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+    padding-right: 15px !important;
 }
 
-.rubric-section {
-    flex: 3;
+body.admin-page .rubric-section h2 {
+    color: var(--color-primary) !important;
+    font-size: 1.8em !important;
+    font-weight: 800 !important;
+    margin-bottom: 30px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+    position: sticky !important;
+    top: 0 !important;
+    background: var(--color-background) !important;
+    z-index: 10 !important;
+    margin-top: 0 !important;
 }
 
-.deadline-section {
-    flex: 1.5;
-    min-width: 300px;
+/* Deadline Section - Compact sidebar style */
+body.admin-page .deadline-section {
+    flex: 1 !important;
+    min-width: 350px !important;
+    max-width: 400px !important;
+    background: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
-.rubric-section h2,
-.deadline-section h2 {
-    color: var(--color-tertiary-dark);
-    border-bottom: 2px solid var(--color-primary-dark);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    font-size: 1.5em;
-    font-weight: 600;
+body.admin-page .deadline-section h2 {
+    color: var(--color-primary) !important;
+    font-size: 1.5em !important;
+    font-weight: 700 !important;
+    margin-bottom: 25px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid var(--color-primary) !important;
 }
 
-/* --- Assessment Boxes (Rubric List) --- */
-.rubric-list {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
+/* --- Assessment Boxes --- */
+body.admin-page .rubric-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 30px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-right: 0 !important;
 }
 
-.assessment-box {
-    border: 1px solid var(--color-border-light);
-    border-radius: 6px;
-    padding: 20px;
-    background-color: var(--color-surface-white);
-    transition: box-shadow 0.3s ease;
+body.admin-page .assessment-box {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    border-left: 5px solid var(--color-primary) !important;
+    border-radius: 16px !important;
+    padding: 28px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
-.assessment-box:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+body.admin-page .assessment-box:hover {
+    box-shadow: 0 8px 24px rgba(74, 0, 24, 0.12) !important;
+    transform: translateY(-2px) !important;
 }
 
-.assessment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 15px;
+body.admin-page .assessment-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 20px !important;
 }
 
-.assessment-header h3 {
-    color: var(--color-secondary-dark);
-    font-size: 1.3em;
-    margin: 0;
-    font-weight: 600;
+body.admin-page .assessment-header h3 {
+    color: var(--color-primary) !important;
+    font-size: 1.5em !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
 }
 
-.assessment-header-buttons {
-    display: inline-flex;
-    gap: 10px;
-    align-items: center;
+/* Total Marks Section - Maroon accent */
+body.admin-page .total-marks {
+    background: linear-gradient(135deg, rgba(74, 0, 24, 0.05) 0%, rgba(74, 0, 24, 0.02) 100%) !important;
+    border: 1px solid rgba(74, 0, 24, 0.15) !important;
+    border-left: 4px solid var(--color-primary) !important;
+    padding: 16px 20px !important;
+    border-radius: 10px !important;
+    margin-bottom: 25px !important;
+    margin-top: 0 !important;
+    padding-top: 16px !important;
+    border-top: 1px solid rgba(74, 0, 24, 0.15) !important;
 }
 
-/* Total Marks section */
-.total-marks {
-    background-color: #f0f4f7; /* Light neutral blue based on palette */
-    border: 1px solid #d0d7de;
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    color: var(--color-action-dark);
+body.admin-page .total-marks p {
+    margin: 6px 0 !important;
+    font-size: 0.95em !important;
+    color: var(--color-secondary) !important;
+    font-weight: normal !important;
+    font-style: normal !important;
 }
 
-.total-marks p {
-    margin: 5px 0;
-    font-size: 0.95em;
+body.admin-page .total-marks span {
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
 }
 
-.total-marks span {
-    font-weight: bold;
-    color: var(--color-primary-dark);
+body.admin-page .total-marks div p {
+    color: var(--color-secondary) !important;
+    font-style: normal !important;
 }
 
 /* Assessment Type Grouping */
-.assess-type-group {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f0f5f8;
-    border-left: 4px solid var(--color-primary-dark);
-    border-radius: 5px;
+body.admin-page .assess-type-group {
+    margin: 25px 0 !important;
+    padding: 20px !important;
+    background: var(--color-hover) !important;
+    border-left: 5px solid var(--color-primary) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    border-left: 5px solid var(--color-primary) !important;
 }
 
-.assess-type-group h5 {
-    color: var(--color-tertiary-dark);
-    font-size: 1.1em;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #c8d8e3;
-    font-weight: 600;
+body.admin-page .assess-type-group h5 {
+    color: var(--color-primary) !important;
+    font-size: 1.3em !important;
+    margin-bottom: 18px !important;
+    margin-top: 0 !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid var(--color-border) !important;
+    font-weight: 700 !important;
 }
 
-.rubric-assessment {
-    background: var(--color-surface-white);
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    border: 1px solid #e7ecef;
+body.admin-page .rubric-assessment {
+    background: var(--color-surface) !important;
+    padding: 18px !important;
+    margin: 14px 0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid var(--color-border) !important;
 }
 
-.rubric-assessment h6 {
-    color: var(--color-secondary-dark);
-    font-size: 1em;
-    margin-bottom: 10px;
-    font-weight: 600;
+body.admin-page .rubric-assessment h6 {
+    color: var(--color-primary) !important;
+    font-size: 1.1em !important;
+    margin-bottom: 12px !important;
+    font-weight: 700 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
 }
 
-.rubric-details p {
-    margin: 5px 0;
-    font-size: 0.9em;
-    color: var(--color-text-subtle);
+body.admin-page .rubric-details p {
+    margin: 6px 0 !important;
+    font-size: 0.9em !important;
+    color: var(--color-secondary) !important;
+    line-height: normal !important;
 }
 
-.rubric-details span {
-    font-weight: 600;
-    color: var(--color-primary-dark);
+body.admin-page .rubric-details span {
+    font-weight: 600 !important;
+    color: var(--color-primary) !important;
 }
 
-
-/* --- Buttons (Actionable elements) --- */
-
-/* Main 'Add Rubric' and 'Assign Assessment' Buttons */
-.add-rubric-button {
-    padding: 8px 15px;
-    border-radius: 5px;
-    text-decoration: none;
-    color: white;
-    font-weight: 600;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    display: inline-flex;
-    align-items: center;
+/* --- Buttons - Maroon focused --- */
+body.admin-page .add-rubric-button {
+    padding: 11px 20px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    color: var(--color-text) !important;
+    font-weight: 600 !important;
+    font-size: 0.9em !important;
+    transition: all 0.3s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    box-shadow: 0 2px 8px rgba(74, 0, 24, 0.2) !important;
+    margin-top: 0 !important;
 }
 
-/* Default 'Add Rubric' style (using primary dark) */
-.add-rubric-button:not([style]) {
-    background-color: var(--color-primary-dark) !important; 
-}
-.add-rubric-button:not([style]):hover {
-    background-color: var(--color-tertiary-dark) !important;
+body.admin-page .add-rubric-button:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.3) !important;
 }
 
-/* Styles for buttons with inline overrides (using defined functional colors) */
-.add-rubric-button[style*="background-color: #9b59b6"] {
-    background-color: var(--color-config) !important; /* Configure Comments */
-}
-.add-rubric-button[style*="background-color: #9b59b6"]:hover {
-    background-color: #8e44ad !important;
-}
-
-.add-rubric-button[style*="background-color: #f7941d"] {
-    background-color: var(--color-warning) !important; /* Assign Assessment */
-}
-.add-rubric-button[style*="background-color: #f7941d"]:hover {
-    background-color: #e67e22 !important;
+/* Specific button overrides */
+body.admin-page .add-rubric-button[style*="background-color: #9b59b6"],
+body.admin-page .add-rubric-button[style*="background-color: #f7941d"],
+body.admin-page .add-rubric-button[style*="background-color: #e67e22"] {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
 }
 
-.add-rubric-button i {
-    margin-right: 5px;
+/* Edit/Delete Buttons */
+body.admin-page .rubric-action-btn {
+    padding: 7px 14px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    font-size: 0.85em !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
 }
 
-.add-rubric-button:active {
-    transform: scale(0.98);
+body.admin-page .edit-btn {
+    background-color: var(--color-secondary) !important;
+    color: var(--color-text) !important;
 }
 
-/* Edit/Delete Buttons for individual rubrics */
-.rubric-action-btn {
-    padding: 5px 10px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 0.85em;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: background-color 0.2s ease;
+body.admin-page .edit-btn:hover {
+    background-color: var(--color-secondary-dark) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 }
 
-.edit-btn {
-    background-color: var(--color-action-dark);
-    color: white;
-}
-.edit-btn:hover {
-    background-color: var(--color-darkest);
+body.admin-page .delete-btn {
+    background-color: var(--color-alert) !important;
+    color: var(--color-text) !important;
 }
 
-.delete-btn {
-    background-color: var(--color-error);
-    color: white;
-}
-.delete-btn:hover {
-    background-color: #c0392b;
+body.admin-page .delete-btn:hover {
+    background-color: #7F1D1D !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(139, 30, 30, 0.3) !important;
 }
 
-
-/* --- Deadline Section --- */
-.deadline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 30px;
+/* --- Add New Deadline Form - SMALLER AND AT TOP --- */
+body.admin-page .add-new-deadline {
+    background: linear-gradient(135deg, rgba(74, 0, 24, 0.03) 0%, rgba(74, 0, 24, 0.01) 100%) !important;
+    border: 2px solid rgba(74, 0, 24, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    margin-bottom: 25px !important;
+    margin-top: 0 !important;
 }
 
-.deadline-item {
-    background-color: var(--color-surface-white);
-    border-left: 5px solid var(--color-primary-dark);
-    padding: 15px;
-    border-radius: 6px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
+body.admin-page .add-new-deadline h3 {
+    color: var(--color-primary) !important;
+    font-size: 1.1em !important;
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+    font-weight: 700 !important;
 }
 
-.deadline-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+body.admin-page .add-new-deadline label {
+    display: block !important;
+    margin-bottom: 5px !important;
+    margin-top: 10px !important;
+    font-weight: 600 !important;
+    color: var(--color-secondary) !important;
+    font-size: 0.85em !important;
 }
 
-.deadline-display p {
-    margin: 5px 0;
-    font-size: 0.95em;
-    color: var(--color-text-subtle);
+body.admin-page .add-new-deadline input[type="text"],
+body.admin-page .add-new-deadline input[type="date"] {
+    width: 100% !important;
+    padding: 10px !important;
+    margin-bottom: 12px !important;
+    border: 2px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    font-size: 0.9em !important;
+    transition: border-color 0.3s ease !important;
+    background-color: var(--color-surface) !important;
+    color: var(--color-secondary) !important;
 }
 
-.deadline-display strong {
-    color: var(--color-action-dark);
+body.admin-page .add-new-deadline input:focus {
+    outline: none !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
 }
 
-.date-info {
-    font-weight: 600;
-    color: var(--color-primary-dark);
+body.admin-page .save-deadlines-button {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    color: var(--color-text) !important;
+    padding: 11px 20px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    box-shadow: 0 2px 8px rgba(74, 0, 24, 0.2) !important;
+    margin-top: 0 !important;
 }
 
-/* Assessor Type Badges */
-.deadline-type-badge {
-    padding: 3px 7px;
-    border-radius: 12px;
-    font-size: 0.75em;
-    font-weight: 700;
-    color: white;
-    margin-left: 8px;
+body.admin-page .save-deadlines-button:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.3) !important;
 }
 
-.badge-student {
-    background-color: var(--color-success);
-}
-.badge-lecturer {
-    background-color: var(--color-info);
-}
-.badge-supervisor {
-    background-color: #f1c40f; /* Yellow - keeping this slightly unique */
-    color: #333;
-}
-.badge-general {
-    background-color: var(--color-config);
+/* --- Deadline List --- */
+body.admin-page .deadline-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-bottom: 30px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-right: 0 !important;
 }
 
-.instant-badge {
-    background-color: #95a5a6;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.75em;
-    font-weight: 700;
-    vertical-align: middle;
+body.admin-page .deadline-item {
+    background-color: var(--color-surface) !important;
+    border-left: 4px solid var(--color-primary) !important;
+    padding: 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid var(--color-border) !important;
+    border-left: 4px solid var(--color-primary) !important;
+    margin-bottom: 0 !important;
 }
 
-.deadline-actions {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--color-border-light);
+body.admin-page .deadline-item:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(74, 0, 24, 0.12) !important;
 }
 
-
-/* --- Add New General Deadline Form --- */
-.add-new-deadline {
-    border-top: 2px solid var(--color-border-light);
-    padding-top: 20px;
-    margin-top: 20px;
-    background-color: #fcfcfc;
-    padding: 15px;
-    border-radius: 6px;
+body.admin-page .deadline-display p {
+    margin: 6px 0 !important;
+    font-size: 0.95em !important;
+    color: var(--color-secondary) !important;
+    display: flex !important;
+    align-items: center !important;
+    line-height: normal !important;
 }
 
-.add-new-deadline h3 {
-    color: var(--color-tertiary-dark);
-    font-size: 1.2em;
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-weight: 500;
+body.admin-page .deadline-display strong {
+    color: var(--color-primary) !important;
+    font-weight: 700 !important;
+    display: inline-block !important;
+    min-width: auto !important;
+    margin-right: 10px !important;
 }
 
-.add-new-deadline label {
-    display: block;
-    margin-bottom: 5px;
-    margin-top: 10px;
-    font-weight: 600;
-    color: #4a6681;
-    font-size: 0.9em;
+body.admin-page .date-info {
+    font-weight: 600 !important;
+    color: var(--color-primary) !important;
+    background: rgba(74, 0, 24, 0.08) !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    display: inline-block !important;
+    font-family: monospace !important;
+    font-size: 0.9em !important;
 }
 
-.add-new-deadline input[type="text"],
-.add-new-deadline input[type="date"] {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+/* Assessor Type Badges - Maroon tones */
+body.admin-page .deadline-type-badge {
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.75em !important;
+    font-weight: 700 !important;
+    color: var(--color-text) !important;
+    margin-left: 8px !important;
+    display: inline-block !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
 }
 
-.save-deadlines-button {
-    background-color: var(--color-success);
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
+body.admin-page .instant-badge {
+    background-color: var(--color-alert) !important;
+    color: var(--color-text) !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-size: 0.75em !important;
+    font-weight: 700 !important;
 }
 
-.save-deadlines-button:hover {
-    background-color: #27ae60;
+body.admin-page .deadline-actions {
+    margin-top: 14px !important;
+    padding-top: 14px !important;
+    border-top: 1px solid var(--color-border) !important;
+    display: flex !important;
+    gap: 8px !important;
 }
 
-.no-deadlines-message {
-    padding: 20px;
-    background-color: #f4f7f6;
-    border: 1px dashed #c0d0e0;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    text-align: center;
-    color: #666;
+body.admin-page .no-deadlines-message {
+    padding: 24px !important;
+    background: var(--color-hover) !important;
+    border: 2px dashed var(--color-border) !important;
+    border-radius: 12px !important;
+    margin-bottom: 24px !important;
+    text-align: center !important;
+    color: var(--color-secondary) !important;
+    font-style: normal !important;
+}
+
+/* Comments Section */
+body.admin-page .assessment-comments-section {
+    background: var(--color-hover) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    border: 1px solid var(--color-border) !important;
+    margin-top: 18px !important;
+}
+
+body.admin-page .comments-section-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid var(--color-border) !important;
+}
+
+body.admin-page .comments-section-header h3 {
+    color: var(--color-primary) !important;
+    margin: 0 !important;
+    font-size: 1.2em !important;
+    font-weight: 700 !important;
+}
+
+body.admin-page .comments-summary {
+    background: rgba(74, 0, 24, 0.05) !important;
+    padding: 14px !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px !important;
+    font-size: 0.9em !important;
+    border-left: 4px solid var(--color-primary) !important;
+}
+
+body.admin-page .summary-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed var(--color-border) !important;
+}
+
+body.admin-page .summary-row:last-child {
+    border-bottom: none !important;
+}
+
+body.admin-page .summary-label {
+    color: var(--color-secondary) !important;
+    font-weight: 600 !important;
+}
+
+body.admin-page .summary-value {
+    color: var(--color-primary) !important;
+    font-weight: 700 !important;
+}
+
+body.admin-page .comment-item {
+    background: var(--color-surface) !important;
+    padding: 14px !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    border-left: 3px solid var(--color-primary) !important;
+}
+
+body.admin-page .comment-item-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 10px !important;
+}
+
+body.admin-page .comment-number-badge {
+    background: var(--color-primary) !important;
+    color: var(--color-text) !important;
+    padding: 4px 12px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 0.85em !important;
+}
+
+body.admin-page .comment-item-text {
+    color: var(--color-secondary) !important;
+    line-height: 1.6 !important;
+    margin-bottom: 10px !important;
+    font-size: 0.9em !important;
+}
+
+body.admin-page .question-meta {
+    display: flex !important;
+    gap: 16px !important;
+    font-size: 0.8em !important;
+    color: var(--color-secondary) !important;
+}
+
+body.admin-page .btn-sm {
+    padding: 6px 12px !important;
+    font-size: 0.8em !important;
+    border-radius: 6px !important;
+    border: none !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    transition: all 0.3s !important;
+    font-weight: 600 !important;
+}
+
+body.admin-page .btn-edit {
+    background: var(--color-secondary) !important;
+    color: var(--color-text) !important;
+}
+
+body.admin-page .btn-edit:hover {
+    background: var(--color-secondary-dark) !important;
+}
+
+body.admin-page .btn-delete {
+    background: var(--color-alert) !important;
+    color: var(--color-text) !important;
+}
+
+body.admin-page .btn-delete:hover {
+    background: #7F1D1D !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1000px) {
+    body.admin-page .content-flex-container {
+        flex-direction: column !important;
+    }
+    
+    body.admin-page .rubric-section, 
+    body.admin-page .deadline-section {
+        flex: none !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    body.admin-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+    }
 }

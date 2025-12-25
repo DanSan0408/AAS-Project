@@ -4,157 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Home</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        /* Comment sections styling - same as view-assessment-rubrics.html */
-        .assess-type-group {
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(52, 73, 94, 0.3);
-            border-radius: 8px;
-        }
-
-        .assessment-comments-section {
-            background: #34495e;
-            border-radius: 8px;
-            padding: 20px;
-            border: 2px solid #4a6681;
-            margin-top: 15px;
-        }
-
-        .comments-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4a6681;
-        }
-
-        .comments-section-header h3 {
-            color: #ecf0f1;
-            margin: 0;
-            font-size: 1.2em;
-        }
-
-        .comments-summary {
-            background: rgba(0,0,0,0.2);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px dashed rgba(255,255,255,0.1);
-        }
-
-        .summary-row:last-child {
-            border-bottom: none;
-        }
-
-        .summary-label {
-            color: #95a5a6;
-            font-weight: 600;
-        }
-
-        .summary-value {
-            color: #ecf0f1;
-            font-weight: bold;
-        }
-
-        .comment-item {
-            background: #2c3e50;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 3px solid #3498db;
-        }
-
-        .comment-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .comment-number-badge {
-            background: #f39c12;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.85em;
-        }
-
-        .comment-item-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .comment-item-text {
-            color: #ecf0f1;
-            line-height: 1.4;
-            margin-bottom: 8px;
-            font-size: 0.9em;
-        }
-
-        .question-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 0.8em;
-            color: #95a5a6;
-        }
-
-        .question-meta i {
-            margin-right: 3px;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.8em;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.3s;
-        }
-
-        .btn-edit {
-            background: #f39c12;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background: #e67e22;
-        }
-
-        .btn-delete {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background: #c0392b;
-        }
-    </style>
 </head>
-<body>
-    <div th:replace="fragments/sidebar :: sidebar"></div> 
+<body class="admin-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS - Admin Dashboard</h1>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         
@@ -408,6 +269,37 @@
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 
+
+                <!-- Add New General Deadline Form -->
+                <div class="add-new-deadline">
+                    <h3>Add New General Deadline</h3>
+                    
+                    <form id="newDeadlineForm"
+                          th:action="@{/deadlines/save}"
+                          method="post"
+                          th:object="${deadlineToSave}">
+                          
+                        <input type="hidden" th:field="*{id}" />
+                        
+                        <label for="new-title">Title:</label>
+                        <input type="text" 
+                               id="new-title" 
+                               th:field="*{title}" 
+                               placeholder="e.g., Proposal Submission"
+                               required/> 
+                        
+                        <label for="new-date">Deadline Date:</label>
+                        <input type="date" 
+                               id="new-date" 
+                               th:field="*{date}" 
+                               required/>
+                        
+                        <button type="submit" class="save-deadlines-button">
+                            Add Deadline
+                        </button>
+                    </form>
+                </div>
+                
                 <!-- Check if there are any deadlines -->
                 <div th:if="${deadlines != null and !#lists.isEmpty(deadlines)}" class="deadline-list">
                     <div th:each="deadline : ${deadlines}" class="deadline-item">
@@ -482,48 +374,13 @@
                 
                 <!-- No Deadlines Message -->
                 <div th:if="${deadlines == null or #lists.isEmpty(deadlines)}" class="no-deadlines-message">
-                    <p>📅 No deadlines have been set yet.</p>
+                    <p>No deadlines have been set yet.</p>
                     <p style="font-size: 0.9em;">Add a general deadline below or assign an assessment to create a deadline.</p>
-                </div>
-                
-                <!-- Add New General Deadline Form -->
-                <div class="add-new-deadline">
-                    <h3>➕ Add New General Deadline</h3>
-                    
-                    <form id="newDeadlineForm"
-                          th:action="@{/deadlines/save}"
-                          method="post"
-                          th:object="${deadlineToSave}">
-                          
-                        <input type="hidden" th:field="*{id}" />
-                        
-                        <label for="new-title">Title:</label>
-                        <input type="text" 
-                               id="new-title" 
-                               th:field="*{title}" 
-                               placeholder="e.g., Proposal Submission"
-                               required/> 
-                        
-                        <label for="new-date">Deadline Date:</label>
-                        <input type="date" 
-                               id="new-date" 
-                               th:field="*{date}" 
-                               required/>
-                        
-                        <button type="submit" class="save-deadlines-button">
-                            Add Deadline
-                        </button>
-                    </form>
-                    
-                    <p style="font-size: 0.85em; color: #95a5a6; margin-top: 10px;">
-                        💡 <strong>Tip:</strong> Use the "Assign Assessment" button above to create assessment-specific deadlines with open dates and assessor types.
-                    </p>
                 </div>
 
             </div>
         </div>
     </div>
-    
     <!-- Duplicate Detection Script -->
     <script th:inline="javascript">
     const isDuplicate = /*[[${isDuplicate}]]*/ false;

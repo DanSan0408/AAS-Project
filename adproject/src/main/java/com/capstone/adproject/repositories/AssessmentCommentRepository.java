@@ -210,4 +210,15 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
     
     // Find comments by rubric ID
     List<AssessmentComment> findByRubricId(Long rubricId);
+    
+    // NEW METHOD - Find comments by evaluated student, assessment, and rubric ID
+    @Query("SELECT ac FROM AssessmentComment ac " +
+           "WHERE ac.evaluatedStudent = :student " +
+           "AND ac.assessment = :assessment " +
+           "AND ac.rubricId = :rubricId")
+    List<AssessmentComment> findByEvaluatedStudentAndAssessmentAndRubricId(
+        @Param("student") Student evaluatedStudent, 
+        @Param("assessment") Assessment assessment, 
+        @Param("rubricId") Long rubricId
+    );
 }

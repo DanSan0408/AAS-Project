@@ -26,13 +26,13 @@ public class AuthController {
         this.emailService = emailService;
     }
 
-    //dapatkan request utk / and then bawak ke startup.html
+    // Redirect root path directly to login
     @GetMapping("/")
-    public String showStartupPage() {
-        return "startup";
+    public String redirectToLogin() {
+        return "redirect:/login";
     }
 
-    //dapatkan request utk login 
+    // Show login page
     @GetMapping("/login")
     public String showLoginPage(@RequestParam(value = "error", required = false) String error, Model model) {
         if (error != null) {

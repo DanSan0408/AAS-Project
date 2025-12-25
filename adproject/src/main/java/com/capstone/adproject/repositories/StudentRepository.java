@@ -4,7 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Student;
@@ -33,4 +35,24 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     // **New Method for Forgot Password - Find by Token**
     Optional<Student> findByResetPasswordToken(String resetPasswordToken);
+
+    // --- 1. THE CRITICAL FIX FOR YOUR ERROR ---
+    // This deletes the "ghost" data causing the error
+    @Modifying
+    @Query(value = "DELETE FROM calculated_results WHERE student_id = :studentId", nativeQuery = true)
+    void deleteCalculatedResultsByStudentId(@Param("studentId") Long studentId);
+
+    // --- 2. CLEANUP OTHER DEPENDENCIES ---
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.evaluatedStudent.id = :studentId")
+    void deleteMarksReceivedByStudent(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.evaluatorStudent.id = :studentId")
+    void deleteMarksGivenByStudent(@Param("studentId") Long studentId);
+    
+    @Modifying
+    @Query("DELETE FROM StudentResultOverride o WHERE o.student.id = :studentId")
+    void deleteOverridesByStudent(@Param("studentId") Long studentId);
+
 }

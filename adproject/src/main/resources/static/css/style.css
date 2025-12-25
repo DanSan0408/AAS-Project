@@ -29,255 +29,11 @@ body {
 }
 
 /* ==========================================================
- 	SIDEBAR STYLES
+ 	MAIN CONTENT AREA - Only for non-admin pages
  	========================================================== */
 
-/* Sidebar Container */
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: var(--sidebar-width);
-    height: 100vh;
-    background: linear-gradient(180deg, var(--dark-bg) 0%, var(--darker-bg) 100%);
-    color: white;
-    padding: 20px 0;
-    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-/* Custom Scrollbar for Sidebar */
-.sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: var(--darker-bg);
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: var(--deep-mid-tone);
-    border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: #23395d;
-}
-
-/* Logo Section */
-.sidebar .logo {
-    text-align: center;
-    padding: 20px 15px;
-    margin-bottom: 25px;
-    border-bottom: 2px solid var(--mid-tone-bg);
-}
-
-.sidebar .logo h2 {
-    margin: 0;
-    font-size: 26px;
-    font-weight: 700;
-    color: white;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* User Profile Section */
-.sidebar .user-profile {
-    text-align: center;
-    padding: 15px 20px;
-    margin-bottom: 25px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    margin-left: 15px;
-    margin-right: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Profile Image */
-.sidebar .user-profile img {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--primary-blue);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    margin-bottom: 5px;
-}
-
-/* Initials Placeholder (for Industrial Supervisor) */
-.sidebar .user-profile .initials-placeholder {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-blue) 0%, #23395d 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-weight: 700;
-    color: white;
-    border: 3px solid var(--primary-blue);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    margin-bottom: 5px;
-}
-
-/* Username Text */
-.sidebar .user-profile span,
-.sidebar .user-profile p {
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0;
-    word-break: break-word;
-    text-align: center;
-}
-
-.sidebar .user-profile p {
-    line-height: 1.4;
-}
-
-/* Menu List */
-.sidebar .menu-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    flex-grow: 1;
-}
-
-.sidebar .menu-list li {
-    margin-bottom: 5px;
-    position: relative;
-}
-
-/* Menu Links */
-.sidebar .menu-list li a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 15px 20px;
-    color: rgba(255, 255, 255, 0.85);
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-/* Hover Effect - Left Border */
-.sidebar .menu-list li a::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: var(--primary-blue);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
-.sidebar .menu-list li a:hover::before {
-    transform: scaleY(1);
-}
-
-/* Hover Background */
-.sidebar .menu-list li a:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    padding-left: calc(20px + 8px);
-}
-
-/* Active Link */
-.sidebar .menu-list li a.active {
-    background: linear-gradient(90deg, rgba(52, 152, 219, 0.3) 0%, rgba(52, 152, 219, 0.1) 100%);
-    color: white;
-    border-left: 4px solid var(--primary-blue);
-    font-weight: 700;
-}
-
-/* Icons in Menu (if Font Awesome is used) */
-.sidebar .menu-list li a i {
-    font-size: 18px;
-    width: 20px;
-    text-align: center;
-}
-
-/* Logout Section */
-.sidebar .menu-list li.logout-item {
-    margin-top: auto;
-    border-top: 2px solid var(--mid-tone-bg);
-    padding-top: 15px;
-}
-
-.sidebar .menu-list li form {
-    margin: 0;
-    padding: 0;
-}
-
-/* Logout Button */
-.sidebar .menu-list li form button,
-.sidebar .menu-list li form .logout-btn {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    width: 100%;
-    padding: 15px 20px;
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 15px;
-    font-weight: 500;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.sidebar .menu-list li form button::before,
-.sidebar .menu-list li form .logout-btn::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: var(--accent-red);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
-.sidebar .menu-list li form button:hover,
-.sidebar .menu-list li form .logout-btn:hover {
-    background: rgba(231, 76, 60, 0.15);
-    color: white;
-    padding-left: calc(20px + 8px);
-}
-
-.sidebar .menu-list li form button:hover::before,
-.sidebar .menu-list li form .logout-btn:hover::before {
-    transform: scaleY(1);
-}
-
-/* Logout Icon */
-.sidebar .menu-list li form button i,
-.sidebar .menu-list li form .logout-btn i {
-    font-size: 18px;
-    width: 20px;
-    text-align: center;
-}
-
-.main-content {
+/* These styles will be overridden by admin_home.css for admin pages */
+.main-content:not(.admin-main-content) {
  	flex-grow: 1;
  	margin-left: 260px; 
  	padding: 40px;
@@ -290,7 +46,8 @@ body {
  	width: calc(100% - 260px); 
 }
 
-.header {
+/* Header styles - Only for non-admin pages */
+body:not(.admin-page) .header {
  	width: 100%; 
  	display: flex;
  	justify-content: center;
@@ -298,19 +55,19 @@ body {
  	margin-bottom: 30px;
 }
 
-.header-container {
+body:not(.admin-page) .header-container {
  	display: flex;
  	align-items: center;
  	gap: 15px;
 	color: var(--white-content);
 }
 
-.header-container img {
+body:not(.admin-page) .header-container img {
  	width: 200px;
  	height: auto;
 }
 
-.header-container h1 {
+body:not(.admin-page) .header-container h1 {
  	font-size: 2.5rem;
  	margin: 0;
 }
@@ -333,18 +90,18 @@ body {
 }
 
 /* ==========================================================
- 	2. CONTENT LAYOUT (Side-by-Side)
+ 	2. CONTENT LAYOUT (Side-by-Side) - Only for non-admin pages
  	========================================================== */
 
-/* NEW CONTAINER TO HOLD RUBRIC AND DEADLINES SIDE-BY-SIDE */
-.content-flex-container {
+/* These will be overridden by admin_home.css */
+body:not(.admin-page) .content-flex-container {
  	display: flex;
  	gap: 30px; 
  	align-items: flex-start; 
  	width: 100%;
 }
 
-.rubric-section {
+body:not(.admin-page) .rubric-section {
  	background-color: var(--darker-bg); 
  	padding: 30px 30px;
  	border-radius: 12px;
@@ -355,7 +112,7 @@ body {
  	min-width: 60%;
 }
 
-.deadline-section {
+body:not(.admin-page) .deadline-section {
  	background-color: var(--darker-bg); 
  	padding: 20px;
  	border-radius: 12px;
@@ -367,8 +124,8 @@ body {
  	margin-top: 0; 
 }
 
-.rubric-list,
-.deadline-list {
+body:not(.admin-page) .rubric-list,
+body:not(.admin-page) .deadline-list {
  	max-height: 76vh;
  	overflow-y: auto;
  	padding-right: 15px;
@@ -396,7 +153,7 @@ body {
  	========================================================== */
 
 /* Assessment Box (Wraps everything for one assessment) */
-.assessment-box {
+body:not(.admin-page) .assessment-box {
  	border: 2px solid #3499db; 
  	padding: 20px;
  	margin-bottom: 30px; 
@@ -404,7 +161,7 @@ body {
  	background-color: var(--deep-mid-tone); 
 }
 
-.assessment-header h3 {
+body:not(.admin-page) .assessment-header h3 {
  	font-size: 1.8em; 
  	color: var(--text-light);
  	border-bottom: 2px solid #3499db;
@@ -412,7 +169,7 @@ body {
  	margin-bottom: 15px;
 }
 
-.total-marks {
+body:not(.admin-page) .total-marks {
  	padding-top: 10px;
  	border-top: 2px solid var(--mid-tone-bg);
  	margin-top: 10px;
@@ -420,91 +177,17 @@ body {
 }
 
 /* Total Marks Colors */
-.total-marks p {
+body:not(.admin-page) .total-marks p {
  	color: var(--accent-green); 
  	font-weight: bold;
 }
-.total-marks div p {
+
+body:not(.admin-page) .total-marks div p {
  	color: var(--text-light); 
  	font-style: italic;
  	font-weight: normal;
 }
 
-
-/* --- EVALUATION TYPE GROUP (Outer Group) --- */
-.eval-type-group {
- 	margin-top: 20px;
- 	padding-left: 15px;
- 	border-left: 4px solid #27abcc; 
- 	background-color: var(--mid-tone-bg); 
- 	padding: 10px;
- 	border-radius: 5px;
- 	margin-bottom: 20px;
-}
-
-.eval-type-group h4 {
- 	font-size: 1.4em;
- 	color: #d1cccc; 
- 	margin-top: 0;
- 	margin-bottom: 10px;
- 	border-bottom: 1px dashed var(--date-highlight);
- 	padding-bottom: 5px;
-}
-
-/* --- ASSESSMENT TYPE GROUP (Inner Group) --- */
-.assess-type-group {
-    margin: 20px 0;
-    padding: 15px;
-    border-radius: 5px;
-    background: var(--mid-tone-bg);
-    border-left: 4px solid var(--deep-mid-tone);
-}
-
-.assess-type-group h5 {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    color: var(--white-content);
-    font-size: 1.2em;
-    margin-top: 0;
-    border-bottom: 2px solid var(--darker-bg);
-}
-
-/* --- INDIVIDUAL RUBRIC/CRITERIA BOX --- */
-.rubric-assessment {
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    margin-top: 15px;
-    background-color: var(--dark-bg);
-    border: 1px solid var(--text-mid);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.rubric-assessment h6 {
-    margin-bottom: 10px;
-    font-weight: 600;
-    font-size: 1.1em;
-    color: var(--text-light);
-    border-bottom: 1px solid var(--darker-bg);
-    padding-bottom: 5px;
-}
-
-.rubric-details p {
-    margin: 5px 0;
-    line-height: 1.5;
-    font-size: 1.05em;
-    color: var(--text-mid);
-}
-
-.rubric-details span {
-    font-weight: 600;
-    color: var(--text-light);
-}
-
-.rubric-details strong {
-    color: var(--text-light);
-}
-    
 /* Button container styling */
 .assessment-header-buttons {
     display: inline-flex;
@@ -540,7 +223,7 @@ body {
  	opacity: 0.8;
 }
 
-.add-rubric-button {
+body:not(.admin-page) .add-rubric-button {
  	margin-top: 10px;
  	padding: 8px 15px;
  	background-color: #27ae60;
@@ -553,171 +236,83 @@ body {
  	display: inline-block;
 }
 
-.add-rubric-button:hover {
+body:not(.admin-page) .add-rubric-button:hover {
  	background-color: var(--accent-green);
 }
 
-/* ----------------------------------------------------------
-   4.1 DEADLINE SPECIFIC STYLES
-   ---------------------------------------------------------- */
-
-.deadline-item {
-    background-color: var(--deep-mid-tone);
-    border: 1px solid var(--mid-tone-bg);
-    border-radius: 8px;
-    padding: 20px; 
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+/* --- EVALUATION TYPE GROUP (Outer Group) --- */
+.eval-type-group {
+ 	margin-top: 20px;
+ 	padding-left: 15px;
+ 	border-left: 4px solid #27abcc; 
+ 	background-color: var(--mid-tone-bg); 
+ 	padding: 10px;
+ 	border-radius: 5px;
+ 	margin-bottom: 20px;
 }
 
-/* Container for the main information rows */
-.deadline-display {
-    display: flex;
-    flex-direction: column;
-}
-
-.deadline-item p {
-    margin: 6px 0;
-    color: var(--text-light);
-    display: flex; 
-    align-items: center;
-    font-size: 15px;
-    line-height: 1.4;
-}
-
-.deadline-item strong {
-    color: var(--primary-blue);
-    display: inline-block;
-    min-width: 120px; 
-    font-weight: 600; 
-    margin-right: 10px; 
-}
-@media (max-width: 600px) {
-    .deadline-item strong {
-        min-width: 90px;
-    }
-    .deadline-item p {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .deadline-item strong {
-        margin-bottom: 5px;
-    }
-}
-
-/* --- BADGES (Assessor Type) --- */
-.deadline-type-badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.75em; 
-    font-weight: bold;
-    margin-left: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.badge-student { background-color: #27ae60; color: white; }
-.badge-lecturer { background-color: #2980b9; color: white; }
-.badge-supervisor { background-color: #8e44ad; color: white; }
-.badge-general { background-color: #95a5a6; color: #2c3e50; }
-
-/* --- DATE/TIME DISPLAY --- */
-.date-info {
-    display: inline-block;
-    padding: 4px 10px;
-    background-color: var(--mid-tone-bg);
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-    color: var(--date-highlight);
-    font-weight: bold;
-}
-
-.instant-badge {
-    background-color: var(--accent-red);
-    color: white;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-size: 0.9em;
-}
-
-/* --- ACTIONS --- */
-.deadline-actions {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px dashed var(--mid-tone-bg);
-    display: flex;
-    gap: 10px;
-}
-
-/* --- MESSAGES & ADD FORM --- */
-.no-deadlines-message {
-    text-align: center;
-    padding: 30px;
-    color: #95a5a6;
-    font-style: italic;
-    border: 2px dashed var(--mid-tone-bg);
-    border-radius: 8px;
-}
-
-/* Form for adding new deadlines */
-.add-new-deadline {
-    background-color: var(--mid-tone-bg);
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
-    border-top: 1px solid var(--mid-tone-bg);
-}
-
-.add-new-deadline h3 {
- 	color: var(--primary-blue);
+.eval-type-group h4 {
+ 	font-size: 1.4em;
+ 	color: #d1cccc; 
  	margin-top: 0;
- 	margin-bottom: 15px;
-    font-size: 1.5em;
-    border-bottom: 1px solid var(--deep-mid-tone); 
+ 	margin-bottom: 10px;
+ 	border-bottom: 1px dashed var(--date-highlight);
+ 	padding-bottom: 5px;
+}
+
+/* --- ASSESSMENT TYPE GROUP (Inner Group) --- */
+body:not(.admin-page) .assess-type-group {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    background: var(--mid-tone-bg);
+    border-left: 4px solid var(--deep-mid-tone);
+}
+
+body:not(.admin-page) .assess-type-group h5 {
+    margin-bottom: 15px;
     padding-bottom: 10px;
+    color: var(--white-content);
+    font-size: 1.2em;
+    margin-top: 0;
+    border-bottom: 2px solid var(--darker-bg);
 }
 
-.add-new-deadline form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+/* --- INDIVIDUAL RUBRIC/CRITERIA BOX --- */
+body:not(.admin-page) .rubric-assessment {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    background-color: var(--dark-bg);
+    border: 1px solid var(--text-mid);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
-.add-new-deadline label {
-    font-weight: bold;
+body:not(.admin-page) .rubric-assessment h6 {
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 1.1em;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--darker-bg);
+    padding-bottom: 5px;
+}
+
+body:not(.admin-page) .rubric-details p {
+    margin: 5px 0;
+    line-height: 1.5;
+    font-size: 1.05em;
+    color: var(--text-mid);
+}
+
+body:not(.admin-page) .rubric-details span {
+    font-weight: 600;
     color: var(--text-light);
 }
 
-.add-new-deadline input {
- 	padding: 8px;
- 	border-radius: 5px;
- 	border: 1px solid var(--mid-tone-bg);
- 	background-color: var(--darker-bg);
- 	color: var(--text-light);
- 	width: 100%;
- 	box-sizing: border-box;
+body:not(.admin-page) .rubric-details strong {
+    color: var(--text-light);
 }
-
-.save-deadlines-button {
- 	padding: 10px 20px;
- 	background-color: #4f5abe; 
- 	color: white;
- 	border: none;
- 	border-radius: 5px;
- 	cursor: pointer;
- 	width: 100%;
- 	margin-top: 10px;
-}
-
-.save-deadlines-button:hover {
- 	background-color: #8e44ad;
-}
-
 
 /* ==========================================================
  	5. USER MANAGEMENT STYLES
