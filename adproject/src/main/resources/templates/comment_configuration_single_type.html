@@ -4,273 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configure [[${configType == 'group' ? 'Group' : 'Individual'}]] Comments - [[${assessment.title}]]</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/comment.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="comment-config-page">
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>Comment Configuration</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
-        <!-- Success/Error Messages -->
-        <div th:if="${successMessage}" class="alert alert-success" role="alert">
-            <i class="fas fa-check-circle"></i>
-            <span th:text="${successMessage}"></span>
-        </div>
-        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-circle"></i>
-            <span th:text="${errorMessage}"></span>
+        <div class="page-header">
+            <h1 th:text="${'Configure ' + (configType == 'group' ? 'Group' : 'Individual') + ' Comments'}">Configure Comments</h1>
+            <p th:text="${assessment.title}">Assessment Title</p>
         </div>
         
         <div class="config-container">
-            <div class="config-header">
-                <h1>
-                    <i th:class="${configType == 'group' ? 'fas fa-users' : 'fas fa-user'}"></i>
-                    <span th:text="${'Configure ' + (configType == 'group' ? 'Group' : 'Individual') + ' Assessment Comments'}">Configure Comments</span>
-                </h1>
-                <p>
-                    <strong>Assessment:</strong> <span th:text="${assessment.title}">Assessment Title</span>
-                </p>
-                <p style="font-size: 0.9em; margin-top: 10px;">
-                    Configure comment questions for <strong th:text="${configType == 'group' ? 'Group' : 'Individual'} + ' Assessment'">this assessment type</strong> rubrics. Each question has individual settings.
-                </p>
-            </div>
-            
             <form th:action="@{/admin/comment-config/{id}/{type}/save(id=${assessment.id}, type=${configType})}" method="post" id="commentConfigForm">
                 
-                <!-- ========== SINGLE ASSESSMENT TYPE SECTION ========== -->
-                <div class="assessment-type-section" 
-                     th:style="${'border: 2px solid ' + (configType == 'group' ? '#3498db' : '#2ecc71') + '; padding: 20px; border-radius: 8px; margin-bottom: 30px; background: rgba(' + (configType == 'group' ? '52, 152, 219' : '46, 204, 113') + ', 0.05);'}">
-                    
-                    <h2 th:style="${'color: ' + (configType == 'group' ? '#3498db' : '#2ecc71') + '; margin-bottom: 15px;'}">
-                        <i th:class="${configType == 'group' ? 'fas fa-users' : 'fas fa-user'}"></i>
-                        <span th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Assessment Comments'}">Assessment Comments</span>
-                    </h2>
-                    <p style="font-size: 0.9em; color: #7f8c8d; margin-bottom: 20px;">
-                        These comments will be required when evaluating <strong th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Assessment'}">Assessment</strong> rubrics. Each question has individual settings.
-                    </p>
-                    
-                    <!-- Comments List Container -->
-                    <div id="commentsContainer" class="comments-list">
-                        <!-- Empty State -->
-                        <div id="emptyState" class="empty-state" style="display: none;">
-                            <i class="fas fa-comments-slash"></i>
-                            <p>No comment questions defined yet.</p>
-                            <p style="font-size: 0.9em; color: #7f8c8d;">
-                                Click "Add Comment Question" below to create evaluation comments.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Add Comment Button -->
-                    <div class="add-comment-section">
-                        <button type="button" id="addCommentBtn" class="btn-add-comment" 
-                                th:style="${'background: ' + (configType == 'group' ? '#3498db' : '#2ecc71') + ';'}">
-                            <i class="fas fa-plus-circle"></i> 
-                            <span th:text="${'Add ' + (configType == 'group' ? 'Group' : 'Individual') + ' Comment Question'}">Add Comment Question</span>
-                        </button>
+                <div class="section-header" th:classappend="${configType == 'group' ? 'group-type' : 'individual-type'}">
+                    <h2 th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Feedback Questions'}">Questions</h2>
+                    <p>Add questions students must answer when evaluating this component.</p>
+                </div>
+
+                <div id="commentsContainer" class="comments-list">
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <p>No comment questions defined yet.</p>
                     </div>
                 </div>
                 
-                <!-- Info Box -->
-                <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Per-Question Settings:</strong>
-                    <p>• Each comment question has its <strong>own minimum character requirement</strong></p>
-                    <p>• Each comment question has its <strong>own anonymity setting</strong></p>
-                    <p>• <strong>Anonymous</strong> comments appear as "Teammate X"</p>
-                    <p>• <strong>Named</strong> comments show the evaluator's actual name</p>
-                    <p>• Students must answer all required questions to submit their evaluation</p>
-                </div>
-                
-                <!-- Submit Buttons -->
-                <div class="button-group">
-                    <a th:href="@{/admin/home}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Configuration
+                <div class="add-action">
+                    <button type="button" id="addCommentBtn" class="btn btn-add">
+                        <i class="fas fa-plus-circle"></i> Add Question
                     </button>
+                </div>
+                
+                <div class="sticky-footer">
+                    <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
                 </div>
             </form>
         </div>
     </div>
     
     <script th:inline="javascript">
-        // Load existing configuration from server
+        // Load existing configuration
         const configType = /*[[${configType}]]*/ 'group';
         const existingLabels = /*[[${configType == 'group' ? assessment.groupCommentLabels : assessment.individualCommentLabels}]]*/ [];
         const existingMinLengths = /*[[${configType == 'group' ? assessment.groupCommentMinLengths : assessment.individualCommentMinLengths}]]*/ [];
         const existingAnonymousFlags = /*[[${configType == 'group' ? assessment.groupCommentAnonymousFlags : assessment.individualCommentAnonymousFlags}]]*/ [];
         
-        const typeColor = configType === 'group' ? '#3498db' : '#2ecc71';
-        const typeName = configType === 'group' ? 'Group' : 'Individual';
-        
         let commentCounter = 0;
         
-        // Create comment item template
         function createCommentItem(label = '', minLength = 20, anonymous = true) {
             commentCounter++;
-            const id = 'comment_' + commentCounter;
-            
             const div = document.createElement('div');
-            div.className = 'comment-item';
-            div.setAttribute('data-comment-id', id);
-            div.style.borderLeft = '4px solid ' + typeColor;
+            div.className = 'comment-card';
+            div.setAttribute('data-id', commentCounter);
             
             div.innerHTML = `
-                <div class="comment-item-header">
-                    <h3 style="color: ${typeColor};">
-                        <i class="fas fa-question-circle"></i> 
-                        ${typeName} Question #<span class="comment-number">${commentCounter}</span>
-                    </h3>
-                    <button type="button" class="remove-comment-btn" onclick="removeComment('${id}')">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
+                <div class="comment-header">
+                    <span class="badge">Q<span class="comment-num">${commentCounter}</span></span>
+                    <button type="button" class="btn-icon-remove" onclick="removeComment(this)"><i class="fas fa-times"></i></button>
                 </div>
                 
                 <div class="form-group">
-                    <label>
-                        Question/Prompt <span class="required">*</span>
-                    </label>
-                    <textarea name="commentLabels" 
-                              placeholder="e.g., How well did this ${configType} perform?"
-                              required>${label}</textarea>
-                    <p class="help-text">This question will appear during ${configType} evaluations</p>
+                    <label>Question Prompt</label>
+                    <textarea name="commentLabels" required placeholder="e.g. What were the strengths?">${label}</textarea>
                 </div>
                 
-                <div class="inline-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
-                    <div class="form-group" style="margin: 0;">
-                        <label>
-                            <i class="fas fa-text-width"></i> Minimum Characters <span class="required">*</span>
-                        </label>
-                        <input type="number" 
-                               name="commentMinLengths" 
-                               value="${minLength}"
-                               min="10" 
-                               max="500"
-                               style="width: 100%;"
-                               required>
-                        <p class="help-text" style="margin-top: 5px;">Minimum length for this specific question</p>
+                <div class="settings-row">
+                    <div class="form-group setting-input">
+                        <label>Min Characters</label>
+                        <input type="number" name="commentMinLengths" value="${minLength}" min="10" max="500">
                     </div>
                     
-                    <div class="form-group" style="margin: 0;">
-                        <label>
-                            <i class="fas fa-user-secret"></i> Anonymity Setting
+                    <div class="form-group setting-check">
+                        <label class="toggle-label">
+                            <input type="checkbox" name="commentAnonymous" value="true" ${anonymous ? 'checked' : ''}>
+                            <span class="toggle-text">
+                                <i class="fas fa-user-secret"></i> Anonymous
+                            </span>
                         </label>
-                        <div class="toggle-group" style="margin-top: 10px;">
-                            <label class="toggle-switch">
-                                <input type="checkbox" 
-                                       name="commentAnonymous" 
-                                       value="true"
-                                       ${anonymous ? 'checked' : ''}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <div class="toggle-label">
-                                <strong class="anonymity-label">${anonymous ? 'Anonymous' : 'Named'}</strong>
-                                <p class="help-text anonymity-help" style="margin-top: 5px; margin-bottom: 0;">
-                                    ${anonymous ? 'Comments appear as "Teammate X"' : 'Shows evaluator\'s real name'}
-                                </p>
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
-            
-            // Add toggle handler
-            const toggle = div.querySelector('input[name="commentAnonymous"]');
-            toggle.addEventListener('change', function() {
-                updateAnonymityLabel(div, this.checked);
-            });
-            
             return div;
         }
         
-        // Update anonymity label text when toggle changes
-        function updateAnonymityLabel(itemDiv, isAnonymous) {
-            const label = itemDiv.querySelector('.anonymity-label');
-            const help = itemDiv.querySelector('.anonymity-help');
-            
-            if (label) {
-                label.textContent = isAnonymous ? 'Anonymous' : 'Named';
-            }
-            if (help) {
-                help.textContent = isAnonymous ? 
-                    'Comments appear as "Teammate X"' : 
-                    'Shows evaluator\'s real name';
-            }
+        function addComment(label, min, anon) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('commentsContainer').appendChild(createCommentItem(label, min, anon));
+            renumber();
         }
         
-        // Add comment
-        function addComment(label = '', minLength = 20, anonymous = true) {
-            const container = document.getElementById('commentsContainer');
-            const emptyState = document.getElementById('emptyState');
-            
-            emptyState.style.display = 'none';
-            
-            const commentItem = createCommentItem(label, minLength, anonymous);
-            container.appendChild(commentItem);
-            
-            renumberComments();
-            commentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        // Remove comment
-        function removeComment(id) {
-            const item = document.querySelector(`[data-comment-id="${id}"]`);
-            if (item) {
-                if (confirm('Are you sure you want to remove this comment question?')) {
-                    item.remove();
-                    renumberComments();
-                    
-                    // Show empty state if no comments left
-                    const container = document.getElementById('commentsContainer');
-                    const commentItems = container.querySelectorAll('.comment-item');
-                    if (commentItems.length === 0) {
-                        document.getElementById('emptyState').style.display = 'block';
-                    }
-                }
+        function removeComment(btn) {
+            btn.closest('.comment-card').remove();
+            renumber();
+            if(document.querySelectorAll('.comment-card').length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
             }
         }
         
-        // Renumber comments
-        function renumberComments() {
-            const container = document.getElementById('commentsContainer');
-            const commentItems = container.querySelectorAll('.comment-item');
-            commentItems.forEach((item, index) => {
-                const numberSpan = item.querySelector('.comment-number');
-                if (numberSpan) {
-                    numberSpan.textContent = index + 1;
-                }
-            });
+        function renumber() {
+            let i = 1;
+            document.querySelectorAll('.comment-num').forEach(span => span.textContent = i++);
+            commentCounter = i - 1;
         }
         
-        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Add existing comments
             if (existingLabels && existingLabels.length > 0) {
                 existingLabels.forEach((label, index) => {
-                    const minLength = existingMinLengths[index] || 20;
-                    const anonymous = existingAnonymousFlags[index] !== false; // default true
-                    addComment(label, minLength, anonymous);
+                    const min = existingMinLengths[index] || 20;
+                    const anon = existingAnonymousFlags[index] !== false;
+                    addComment(label, min, anon);
                 });
             } else {
                 document.getElementById('emptyState').style.display = 'block';
             }
             
-            // Button handler
-            const addBtn = document.getElementById('addCommentBtn');
-            if (addBtn) {
-                addBtn.addEventListener('click', function() {
-                    addComment('', 20, true);
-                });
-            }
+            document.getElementById('addCommentBtn').addEventListener('click', () => addComment('', 20, true));
         });
     </script>
 </body>

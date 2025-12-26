@@ -3,169 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <title>Assign Lecturers - [[${assessment.title}]]</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/rubric.css}">
-    <style>
-        .assignment-row {
-            background-color: #34495e;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            border: 1px solid #4a6681;
-        }
-        
-        .group-header {
-            font-size: 1.2em;
-            color: #3498db;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
-        .lecturer-assignment {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .lecturer-select {
-            flex: 1;
-            padding: 8px;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-            border: 1px solid #4a6681;
-            border-radius: 4px;
-        }
-        
-        .btn-add-lecturer {
-            background-color: #27ae60;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        
-        .btn-remove-lecturer {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        
-        .btn-add-lecturer:hover {
-            background-color: #229954;
-        }
-        
-        .btn-remove-lecturer:hover {
-            background-color: #c0392b;
-        }
-        
-        .students-list {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #2c3e50;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        
-        .students-list strong {
-            color: #f39c12;
-        }
-        
-        .students-list ul {
-            margin: 5px 0 0 20px;
-            color: #95a5a6;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_lecturers.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="assign-lecturer-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
-        <div class="card">
-            <h1>👥 Assign Lecturers to Groups</h1>
-            <h2 style="color: #3498db; margin-top: 10px;" th:text="${assessment.title}">Assessment Title</h2>
-            <p style="color: #95a5a6; margin-bottom: 30px;">
-                Assign one or more lecturers to evaluate each group. Lecturers will evaluate both group and individual rubrics for their assigned groups.
-            </p>
+        <div class="page-header">
+            <h1>Assign Lecturers to Groups</h1>
+            <h2 th:text="${assessment.title}">Assessment Title</h2>
+            <p>Assign one or more lecturers to evaluate each group. Lecturers will evaluate both group and individual rubrics.</p>
+            
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
 
-            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-            <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
-
-            <form th:action="@{/admin/lecturer-assignments/{id}/save(id=${assessment.id})}" method="post">
-                
-                <div th:each="group : ${allGroups}" class="assignment-row">
+        <form th:action="@{/admin/lecturer-assignments/{id}/save(id=${assessment.id})}" method="post">
+            
+            <div class="groups-container">
+                <div th:each="group : ${allGroups}" class="group-assignment-card">
                     <div class="group-header">
-                        🏷️ <span th:text="${group.groupName}">Group Name</span>
+                        <h3><i class="fas fa-users"></i> <span th:text="${group.groupName}">Group Name</span></h3>
+                        <span class="student-count-badge" th:if="${group.students != null}" th:text="${group.students.size() + ' Students'}">0 Students</span>
                     </div>
                     
-                    <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
-                        <strong>Students:</strong>
-                        <ul>
-                            <li th:each="student : ${group.students}" th:text="${student.username}">Student Name</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="lecturer-assignments-container" th:data-group-id="${group.id}">
-                        <!-- Existing assignments -->
-                        <div th:if="${groupLecturerMap.get(group.id) != null and !groupLecturerMap.get(group.id).isEmpty()}">
-                            <div th:each="lecturer, iterStat : ${groupLecturerMap.get(group.id)}" class="lecturer-assignment">
-                                <select th:name="'group_' + ${group.id} + '_lecturer_' + ${iterStat.index}" class="lecturer-select">
-                                    <option value="none">-- Select Lecturer --</option>
-                                    <option th:each="lec : ${allLecturers}" 
-                                            th:value="${lec.id}" 
-                                            th:text="${lec.username}"
-                                            th:selected="${lec.id == lecturer.id}">
-                                        Lecturer Name
-                                    </option>
-                                </select>
-                                <button type="button" class="btn-remove-lecturer" onclick="removeLecturerField(this)">
-                                    Remove
-                                </button>
-                            </div>
+                    <div class="card-body">
+                        <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
+                            <strong>Members:</strong>
+                            <span th:each="student, iterStat : ${group.students}">
+                                <span th:text="${student.username}">Student Name</span><span th:if="${!iterStat.last}">, </span>
+                            </span>
                         </div>
                         
-                        <!-- Default single field if no existing assignments -->
-                        <div th:if="${groupLecturerMap.get(group.id) == null or groupLecturerMap.get(group.id).isEmpty()}" 
-                             class="lecturer-assignment">
-                            <select th:name="'group_' + ${group.id} + '_lecturer_0'" class="lecturer-select">
-                                <option value="none">-- Select Lecturer --</option>
-                                <option th:each="lec : ${allLecturers}" 
-                                        th:value="${lec.id}" 
-                                        th:text="${lec.username}">
-                                    Lecturer Name
-                                </option>
-                            </select>
-                            <button type="button" class="btn-remove-lecturer" onclick="removeLecturerField(this)">
-                                Remove
+                        <div class="lecturer-section">
+                            <label>Assigned Lecturers:</label>
+                            <div class="lecturer-assignments-container" th:data-group-id="${group.id}">
+                                <div th:if="${groupLecturerMap.get(group.id) != null and !groupLecturerMap.get(group.id).isEmpty()}">
+                                    <div th:each="lecturer, iterStat : ${groupLecturerMap.get(group.id)}" class="lecturer-row">
+                                        <select th:name="'group_' + ${group.id} + '_lecturer_' + ${iterStat.index}" class="form-select">
+                                            <option value="none">-- Select Lecturer --</option>
+                                            <option th:each="lec : ${allLecturers}" 
+                                                    th:value="${lec.id}" 
+                                                    th:text="${lec.username}"
+                                                    th:selected="${lec.id == lecturer.id}">
+                                                Lecturer Name
+                                            </option>
+                                        </select>
+                                        <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${groupLecturerMap.get(group.id) == null or groupLecturerMap.get(group.id).isEmpty()}" class="lecturer-row">
+                                    <select th:name="'group_' + ${group.id} + '_lecturer_0'" class="form-select">
+                                        <option value="none">-- Select Lecturer --</option>
+                                        <option th:each="lec : ${allLecturers}" 
+                                                th:value="${lec.id}" 
+                                                th:text="${lec.username}">
+                                            Lecturer Name
+                                        </option>
+                                    </select>
+                                    <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn-link-add" th:onclick="'addLecturerField(' + ${group.id} + ')'">
+                                <i class="fas fa-plus-circle"></i> Add Another Lecturer
                             </button>
                         </div>
                     </div>
-                    
-                    <button type="button" class="btn-add-lecturer" 
-                            th:onclick="'addLecturerField(' + ${group.id} + ')'">
-                        + Add Another Lecturer
-                    </button>
                 </div>
+            </div>
 
-                <div class="button-container" style="margin-top: 30px;">
-                    <a th:href="@{/admin/home}" class="btn btn-cancel">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Assignments</button>
-                </div>
-            </form>
-        </div>
+            <div class="button-container">
+                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Assignments</button>
+            </div>
+        </form>
     </div>
 
     <script th:inline="javascript">
@@ -174,20 +102,18 @@
         
         function addLecturerField(groupId) {
             const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
-            const existingFields = container.querySelectorAll('.lecturer-assignment');
+            const existingFields = container.querySelectorAll('.lecturer-row');
             const newIndex = existingFields.length;
             
             const newField = document.createElement('div');
-            newField.className = 'lecturer-assignment';
+            newField.className = 'lecturer-row';
             newField.innerHTML = `
-                <select name="group_${groupId}_lecturer_${newIndex}" class="lecturer-select">
+                <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
                     <option value="none">-- Select Lecturer --</option>
-                    ${allLecturers.map(lec => 
-                        `<option value="${lec.id}">${lec.username}</option>`
-                    ).join('')}
+                    ${allLecturers.map(lec => `<option value="${lec.id}">${lec.username}</option>`).join('')}
                 </select>
-                <button type="button" class="btn-remove-lecturer" onclick="removeLecturerField(this)">
-                    Remove
+                <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                    <i class="fas fa-times"></i>
                 </button>
             `;
             
@@ -195,14 +121,16 @@
         }
         
         function removeLecturerField(button) {
-            const field = button.closest('.lecturer-assignment');
+            const field = button.closest('.lecturer-row');
             const container = field.parentElement;
             
             // Don't remove if it's the last field
-            if (container.querySelectorAll('.lecturer-assignment').length > 1) {
+            if (container.querySelectorAll('.lecturer-row').length > 1) {
                 field.remove();
             } else {
-                alert('At least one lecturer field must remain. Clear the selection if you don\'t want to assign anyone.');
+                // Reset the select instead of removing
+                const select = field.querySelector('select');
+                if(select) select.value = 'none';
             }
         }
     </script>
