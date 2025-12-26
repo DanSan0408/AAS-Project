@@ -4,59 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="'Data View - ' + ${assessment.title}">Assessment Data View</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/assessment_data.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="data-view-page">
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1 th:text="'Assessment Data: ' + ${assessment.title}">Assessment Data View</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
         <div class="data-container">
-            <!-- Page Header -->
             <div class="page-header">
-                <div>
+                <div class="header-content">
                     <h2>
-                        <i class="fas fa-chart-line"></i>
                         <span th:text="${assessment.title}">Assessment Title</span>
                     </h2>
-                    <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 5px;">
-                        <div style="font-size: 0.9em; color: #ecf0f1;">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Total Rubrics:</strong> 
-                            <span th:text="${assessment.rubrics != null ? assessment.rubrics.size() : 0}">0</span>
-                            <span style="margin-left: 15px;">|</span>
-                            <strong style="margin-left: 15px;">Total Marks:</strong>
-                            <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
-                        </div>
+                    <div class="assessment-meta">
+                        <span class="meta-item"><i class="fas fa-list"></i> <strong>Rubrics:</strong> <span th:text="${assessment.rubrics != null ? assessment.rubrics.size() : 0}">0</span></span>
+                        <span class="meta-separator">|</span>
+                        <span class="meta-item"><i class="fas fa-star"></i> <strong>Total Marks:</strong> <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span></span>
                     </div>
                 </div>
                 <div class="action-buttons">
-                    <a th:href="@{/admin/data-views}" class="btn btn-back">
-                        <i class="fas fa-arrow-left"></i> Back to Selection
+                    <a th:href="@{/admin/data-views}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
                     </a>
-                    <button onclick="window.print()" class="btn btn-print">
+                    <button onclick="window.print()" class="btn btn-primary">
                         <i class="fas fa-print"></i> Print
                     </button>
                 </div>
             </div>
             
-            <!-- Group Filter Section -->
-            <div class="group-filter-section">
-                <h3>
-                    <i class="fas fa-filter"></i> Filter by Group
-                </h3>
+            <div class="filter-card">
+                <h3><i class="fas fa-filter"></i> Filter Data</h3>
                 <form th:action="@{/admin/data-views/assessment/{id}(id=${assessment.id})}" method="get" class="group-selector">
-                    <label for="groupSelect">
-                        <i class="fas fa-users"></i> Select Group:
-                    </label>
+                    <label for="groupSelect">Select Group:</label>
                     <select id="groupSelect" name="groupId" onchange="this.form.submit()">
                         <option th:each="group : ${allGroups}" 
                                 th:value="${group.id}"
@@ -68,654 +54,129 @@
                 </form>
             </div>
             
-            <!-- Evaluators Information Section -->
-            <div style="background: #34495e; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="color: #ecf0f1; margin: 0 0 15px 0; font-size: 1.1em; border-bottom: 2px solid #4a6681; padding-bottom: 10px;">
+            <div class="evaluators-card">
+                <h3>
                     <i class="fas fa-user-tie"></i> Evaluators for 
-                    <span th:if="${selectedGroup != null}" th:text="${selectedGroup.groupName}">Selected Group</span>
+                    <span th:if="${selectedGroup != null}" th:text="${selectedGroup.groupName}" class="highlight">Selected Group</span>
                 </h3>
                 
-                <div th:if="${uniqueEvaluators != null and !uniqueEvaluators.isEmpty()}" 
-                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
-                    <div th:each="evaluator : ${uniqueEvaluators}" 
-                         style="background: #2c3e50; padding: 12px; border-radius: 6px; border-left: 3px solid #3498db;">
-                        <div style="color: #ecf0f1; font-weight: bold; margin-bottom: 5px;">
-                            <i class="fas fa-user"></i>
-                            <span th:text="${evaluator.value}">Evaluator Name</span>
+                <div th:if="${uniqueEvaluators != null and !uniqueEvaluators.isEmpty()}" class="evaluator-grid">
+                    <div th:each="evaluator : ${uniqueEvaluators}" class="evaluator-item">
+                        <div class="evaluator-name">
+                            <i class="fas fa-user"></i> <span th:text="${evaluator.value}">Name</span>
                         </div>
-                        <div style="color: #95a5a6; font-size: 0.85em;">
-                            <i class="fas fa-envelope"></i>
+                        <div class="evaluator-email">
                             <span th:text="${evaluator.key}">email@example.com</span>
                         </div>
                     </div>
                 </div>
                 
-                <div th:if="${uniqueEvaluators == null or uniqueEvaluators.isEmpty()}" 
-                     style="text-align: center; color: #95a5a6; padding: 20px; font-style: italic;">
-                    <i class="fas fa-info-circle"></i>
-                    No evaluators have submitted evaluations yet for this group.
+                <div th:if="${uniqueEvaluators == null or uniqueEvaluators.isEmpty()}" class="empty-message">
+                    <i class="fas fa-info-circle"></i> No evaluators have submitted evaluations yet.
                 </div>
             </div>
             
-            <!-- Student Data Tables -->
             <div th:if="${assessmentData.studentDataList != null and !assessmentData.studentDataList.isEmpty()}">
-                <div th:each="studentData : ${assessmentData.studentDataList}" class="student-data-table">
+                <div th:each="studentData : ${assessmentData.studentDataList}" class="student-card">
                     <div class="student-header">
                         <h3 th:text="${studentData.student.username}">Student Name</h3>
-                        <div class="student-subheader">
-                            <span th:text="'Email: ' + ${studentData.student.email}">Email</span>
-                            <span th:if="${studentData.student.group != null}" 
-                                  th:text="' | Team: ' + ${studentData.student.group.groupName}">
-                                | Team
-                            </span>
-                            <span th:if="${studentData.factor != 1.0}" 
-                                  th:text="' | Factor: ' + ${#numbers.formatDecimal(studentData.factor, 1, 3)}">
-                                | Factor
-                            </span>
+                        <div class="student-details">
+                            <span th:text="${studentData.student.email}">Email</span>
+                            <span th:if="${studentData.student.group != null}" class="detail-badge">Team: <span th:text="${studentData.student.group.groupName}">Team</span></span>
+                            <span th:if="${studentData.factor != 1.0}" class="detail-badge warning">Factor: <span th:text="${#numbers.formatDecimal(studentData.factor, 1, 3)}">1.0</span></span>
                         </div>
                     </div>
                     
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th style="min-width: 200px;">Rubric / Sub-Rubric</th>
-                                <th style="min-width: 100px;">CLO</th>
-                                <th style="min-width: 250px;">Evaluator Ratings</th>
-                                <th style="min-width: 150px;">μsrmln / Rf<br/><span style="font-weight: normal; font-size: 0.75em;">(Avg per Evaluator)</span></th>
-                                <th style="min-width: 120px;">μln / μRf<br/><span style="font-weight: normal; font-size: 0.75em;">(Overall Avg)</span></th>
-                                <th style="min-width: 120px;">Calculated Mark</th>
-                                <th style="min-width: 250px;">Comments</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Group Assessment Rubrics -->
-                            <tr th:if="${rubricsByType['Group Assessment'] != null and !rubricsByType['Group Assessment'].isEmpty()}">
-                                <td colspan="7" style="background: rgba(52, 152, 219, 0.2); font-weight: bold; text-align: center;">
-                                    <i class="fas fa-users"></i> GROUP ASSESSMENT RUBRICS
-                                </td>
-                            </tr>
-                            
-                            <th:block th:each="rubric : ${rubricsByType['Group Assessment']}">
-                                <th:block th:with="rubricCalc=${studentData.rubricCalculations[rubric.id]},
-                   rubricDetails=${studentRubricDetails.containsKey(studentData.student.id) and studentRubricDetails[studentData.student.id].containsKey(rubric.id) ? studentRubricDetails[studentData.student.id][rubric.id] : null}">
-                                    
-                                    <!-- Main Rubric Header Row -->
-                                    <tr>
-                                        <td class="rubric-name-cell" colspan="7">
-                                            <i class="fas fa-clipboard-check"></i>
-                                            <span th:text="${rubric.name}">Rubric Name</span>
-                                            <span style="color: #95a5a6; font-size: 0.85em; margin-left: 10px;">
-                                                (Max: <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0.00</span> marks)
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Sub-Rubric Rows -->
-                                    <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
-                                        <td class="sub-rubric-name">
-                                            <i class="fas fa-level-down-alt"></i>
-                                            <span th:text="${subRubric.name}">Sub-Rubric</span>
-                                            <div style="font-size: 0.75em; color: #7f8c8d; margin-top: 3px;" 
-                                                 th:if="${subRubric.description != null}">
-                                                <span th:text="${subRubric.description}">Description</span>
-                                            </div>
-                                            <div style="font-size: 0.75em; color: #95a5a6; margin-top: 3px;">
-                                                Max: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks
-                                            </div>
-                                        </td>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Rubric / Sub-Rubric</th>
+                                    <th style="width: 8%; text-align: center;">CLO</th>
+                                    <th style="width: 20%;">Ratings</th>
+                                    <th style="width: 12%; text-align: center;">Avg (Evaluator)</th>
+                                    <th style="width: 12%; text-align: center;">Avg (Overall)</th>
+                                    <th style="width: 12%; text-align: center;">Calc. Mark</th>
+                                    <th>Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${rubricsByType['Group Assessment'] != null and !rubricsByType['Group Assessment'].isEmpty()}" class="section-header-row">
+                                    <td colspan="7"><i class="fas fa-users"></i> GROUP ASSESSMENT</td>
+                                </tr>
+                                
+                                <th:block th:each="rubric : ${rubricsByType['Group Assessment']}">
+                                    <th:block th:with="rubricCalc=${studentData.rubricCalculations[rubric.id]},
+                       rubricDetails=${studentRubricDetails.containsKey(studentData.student.id) and studentRubricDetails[studentData.student.id].containsKey(rubric.id) ? studentRubricDetails[studentData.student.id][rubric.id] : null}">
                                         
-                                        <td style="text-align: center;">
-                                            <span class="clo-badge" th:text="'CLO ' + ${rubric.clo}">CLO 1</span>
-                                        </td>
-                                        
-                                        <!-- Evaluator Ratings for Sub-Rubric -->
-                                        <td>
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null and !rubricDetails.subRubricRatingsByEvaluator.isEmpty()}">
-                                                <div th:each="evaluatorEntry : ${rubricDetails.subRubricRatingsByEvaluator}" 
-                                                     class="evaluator-rating-box">
-                                                    <div>
-                                                        <i class="fas fa-user-tie"></i>
-                                                        <span class="evaluator-name" th:text="${evaluatorEntry.key}">Evaluator</span>
-                                                    </div>
-                                                    <div style="margin-top: 3px;">
-                                                        <span style="color: #95a5a6; font-size: 0.85em;" th:text="${subRubric.name}">Sub-Rubric</span>:
-                                                        <span class="rating-value" 
-                                                              th:text="${evaluatorEntry.value[subRubric.id] != null ? 
-                                                                         #numbers.formatDecimal(evaluatorEntry.value[subRubric.id], 1, 2) : 
-                                                                         'N/A'}">
-                                                            0.00
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.subRubricRatingsByEvaluator == null or rubricDetails.subRubricRatingsByEvaluator.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                No ratings yet
-                                            </span>
-                                        </td>
-                                        
-                                        <!-- μsrmln Column -->
-                                        <td>
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null and !rubricDetails.muSrmlnByEvaluator.isEmpty()}">
-                                                <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}" 
-                                                     class="formula-result">
-                                                    <span class="formula-label">
-                                                        <i class="fas fa-calculator"></i>
-                                                        <span th:text="${muEntry.key}">Evaluator</span>
-                                                    </span>
-                                                    <span class="formula-value" 
-                                                          th:text="${#numbers.formatDecimal(muEntry.value, 1, 3)}">0.000</span>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.muSrmlnByEvaluator == null or rubricDetails.muSrmlnByEvaluator.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                N/A
-                                            </span>
-                                        </td>
-                                        
-                                        <!-- μln Column -->
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}"
-                                            class="mu-ln-cell"
-                                            style="text-align: center;">
-                                            <div class="formula-result" style="background: rgba(231, 76, 60, 0.25); border-left: 3px solid #e74c3c;">
-                                                <span class="formula-label" style="color: #ecf0f1; font-weight: bold;">
-                                                    <i class="fas fa-chart-line"></i> μln
-                                                </span>
-                                                <div style="font-size: 1.4em; font-weight: bold; color: #e74c3c; margin: 5px 0;"
-                                                     th:text="${rubricDetails != null and rubricDetails.muLn != null ? 
-                                                               #numbers.formatDecimal(rubricDetails.muLn, 1, 3) : 
-                                                               'N/A'}">
-                                                    0.000
-                                                </div>
-                                            </div>
-                                            <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null and !rubricDetails.muSrmlnByEvaluator.isEmpty()}"
-                                                 style="font-size: 0.65em; color: #bdc3c7; margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                                                <div style="font-weight: bold; margin-bottom: 3px;">Formula:</div>
-                                                (<span th:each="muEntry, iterStat : ${rubricDetails.muSrmlnByEvaluator}">
-                                                    <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 3)}">0.000</span>
-                                                    <span th:if="${!iterStat.last}"> + </span>
-                                                </span>) / <span th:text="${#maps.size(rubricDetails.muSrmlnByEvaluator)}">n</span>
-                                            </div>
-                                        </td>
-                                        
-                                        <!-- Calculated Mark -->
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}"
-                                            style="text-align: center;">
-                                            <!-- Unweighted Mark (Mr) -->
-                                            <div style="background: rgba(52, 152, 219, 0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                                                <div style="font-size: 0.7em; color: #95a5a6; margin-bottom: 3px;">
-                                                    <i class="fas fa-calculator"></i> Evaluated Mark (Mr)
-                                                </div>
-                                                <div class="mark-value" style="font-size: 1.1em;"
-                                                     th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">
-                                                    0.00
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Weighted Mark (Wr = f × Mr) -->
-                                            <div style="background: rgba(155, 89, 182, 0.2); padding: 8px; border-radius: 4px; border-left: 3px solid #9b59b6;">
-                                                <div style="font-size: 0.7em; color: #95a5a6; margin-bottom: 3px;">
-                                                    <i class="fas fa-balance-scale"></i> Weighted Mark (Wr)
-                                                </div>
-                                                <div style="font-size: 1.3em; font-weight: bold; color: #9b59b6;"
-                                                     th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">
-                                                    0.00
-                                                </div>
-                                                <div style="font-size: 0.65em; color: #bdc3c7; margin-top: 3px;">
-                                                    = <span th:text="${#numbers.formatDecimal(studentData.factor, 1, 3)}">1.000</span> × 
-                                                    <span th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        
-                                        <!-- Comments -->
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}">
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}">
-                                                <div th:each="commentEntry : ${rubricDetails.evaluatorComments}" 
-                                                     class="comment-box">
-                                                    <div class="comment-evaluator">
-                                                        <i class="fas fa-user-tie"></i>
-                                                        <span th:text="${commentEntry.key}">Evaluator</span>
-                                                    </div>
-                                                    <div th:each="comment : ${commentEntry.value}" class="comment-text">
-                                                        <i class="fas fa-comment"></i>
-                                                        <span th:text="${comment}">Comment text</span>
-                                                    </div>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                No comments
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Direct Rating Rubric for GROUP ASSESSMENT -->
-                                    <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
-                                        <tr th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}">
-                                            <td>
-                                                <div style="padding-left: 15px; font-size: 0.85em; color: #95a5a6;">
-                                                    Direct Rating Rubric
-                                                </div>
-                                            </td>
-                                            
-                                            <td style="text-align: center;">
-                                                <span class="clo-badge" th:text="'CLO ' + ${rubric.clo}">CLO 1</span>
-                                            </td>
-                                            
-                                            <!-- Evaluator Ratings -->
-                                            <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails.directRatingsByEvaluator != null and !rubricDetails.directRatingsByEvaluator.isEmpty()}">
-                                                    <div th:each="evaluatorEntry : ${rubricDetails.directRatingsByEvaluator}" 
-                                                         class="evaluator-rating-box">
-                                                        <div>
-                                                            <i class="fas fa-user-tie"></i>
-                                                            <span class="evaluator-name" th:text="${evaluatorEntry.key}">Evaluator</span>
-                                                        </div>
-                                                        <div style="margin-top: 3px;">
-                                                            Rating (dr): 
-                                                            <span class="rating-value" 
-                                                                  th:text="${#numbers.formatDecimal(evaluatorEntry.value, 1, 2)}">
-                                                                0.00
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.directRatingsByEvaluator == null or rubricDetails.directRatingsByEvaluator.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    No ratings yet
-                                                </span>
-                                            </td>
-                                            
-                                            <!-- Rf Column -->
-                                            <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null and !rubricDetails.rfByEvaluator.isEmpty()}">
-                                                    <div th:each="rfEntry : ${rubricDetails.rfByEvaluator}" 
-                                                         class="formula-result">
-                                                        <span class="formula-label">
-                                                            <i class="fas fa-calculator"></i>
-                                                            <span th:text="${rfEntry.key}">Evaluator</span>
-                                                        </span>
-                                                        <div class="formula-value">
-                                                            Rf = <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
-                                                        </div>
-                                                        <div style="font-size: 0.7em; color: #bdc3c7; margin-top: 3px;">
-                                                            <span th:if="${rubricDetails.directRatingsByEvaluator != null and rubricDetails.directRatingsByEvaluator.containsKey(rfEntry.key)}">
-                                                                = <span th:text="${#numbers.formatDecimal(rubricDetails.directRatingsByEvaluator[rfEntry.key], 1, 2)}">0.00</span> / 
-                                                                <span th:text="${rubricDetails.drmax != null ? #numbers.formatDecimal(rubricDetails.drmax, 1, 2) : '0.00'}">0.00</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.rfByEvaluator == null or rubricDetails.rfByEvaluator.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    N/A
-                                                </span>
-                                            </td>
-                                            
-                                            <!-- μRf Column -->
-                                            <td class="mu-ln-cell" style="text-align: center;">
-                                                <div class="formula-result" style="background: rgba(231, 76, 60, 0.25); border-left: 3px solid #e74c3c;">
-                                                    <span class="formula-label" style="color: #ecf0f1; font-weight: bold;">
-                                                        <i class="fas fa-chart-line"></i> μRf
-                                                    </span>
-                                                    <div style="font-size: 1.4em; font-weight: bold; color: #e74c3c; margin: 5px 0;"
-                                                         th:text="${rubricDetails != null and rubricDetails.muRf != null ? 
-                                                                   #numbers.formatDecimal(rubricDetails.muRf, 1, 3) : 
-                                                                   'N/A'}">
-                                                        0.000
-                                                    </div>
-                                                </div>
-                                                <div th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null and !rubricDetails.rfByEvaluator.isEmpty()}"
-                                                     style="font-size: 0.65em; color: #bdc3c7; margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                                                    <div style="font-weight: bold; margin-bottom: 3px;">Formula:</div>
-                                                    (<span th:each="rfEntry, iterStat : ${rubricDetails.rfByEvaluator}">
-                                                        <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
-                                                        <span th:if="${!iterStat.last}"> + </span>
-                                                    </span>) / <span th:text="${#maps.size(rubricDetails.rfByEvaluator)}">n</span>
-                                                </div>
-                                            </td>
-                                            
-                                            <!-- Calculated Mark -->
-                                            <td style="text-align: center;">
-                                                <!-- Unweighted Mark (Mr) -->
-                                                <div style="background: rgba(52, 152, 219, 0.2); padding: 8px; border-radius: 4px; margin-bottom: 8px;">
-                                                    <div style="font-size: 0.7em; color: #95a5a6; margin-bottom: 3px;">
-                                                        <i class="fas fa-calculator"></i> Evaluated Mark (Mr)
-                                                    </div>
-                                                    <div class="mark-value" style="font-size: 1.1em;"
-                                                         th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">
-                                                        0.00
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Weighted Mark (Wr = f × Mr) -->
-                                                <div style="background: rgba(155, 89, 182, 0.2); padding: 8px; border-radius: 4px; border-left: 3px solid #9b59b6;">
-                                                    <div style="font-size: 0.7em; color: #95a5a6; margin-bottom: 3px;">
-                                                        <i class="fas fa-balance-scale"></i> Weighted Mark (Wr)
-                                                    </div>
-                                                    <div style="font-size: 1.3em; font-weight: bold; color: #9b59b6;"
-                                                         th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">
-                                                        0.00
-                                                    </div>
-                                                    <div style="font-size: 0.65em; color: #bdc3c7; margin-top: 3px;">
-                                                        = <span th:text="${#numbers.formatDecimal(studentData.factor, 1, 3)}">1.000</span> × 
-                                                        <span th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            
-                                            <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}">
-                                                    <div th:each="commentEntry : ${rubricDetails.evaluatorComments}" 
-                                                         class="comment-box">
-                                                        <div class="comment-evaluator" th:text="${commentEntry.key}">Evaluator</div>
-                                                        <div th:each="comment : ${commentEntry.value}" class="comment-text">
-                                                            <span th:text="${comment}">Comment text</span>
-                                                        </div>
-                                                    </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    No comments
-                                                </span>
+                                        <tr class="rubric-row">
+                                            <td colspan="7" class="rubric-title">
+                                                <span th:text="${rubric.name}">Rubric Name</span>
+                                                <small>(Max: <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0.00</span>)</small>
                                             </td>
                                         </tr>
-                                    </th:block>
-                                </th:block>
-                            </th:block>
-                            
-                            <!-- Individual Assessment Rubrics -->
-                            <tr th:if="${rubricsByType['Individual Assessment'] != null and !rubricsByType['Individual Assessment'].isEmpty()}">
-                                <td colspan="7" style="background: rgba(46, 204, 113, 0.2); font-weight: bold; text-align: center; padding-top: 20px;">
-                                    <i class="fas fa-user"></i> INDIVIDUAL ASSESSMENT RUBRICS
-                                </td>
-                            </tr>
-                            
-                            <th:block th:each="rubric : ${rubricsByType['Individual Assessment']}">
-                                <th:block th:with="rubricCalc=${studentData.rubricCalculations[rubric.id]},
-                   rubricDetails=${studentRubricDetails.containsKey(studentData.student.id) and studentRubricDetails[studentData.student.id].containsKey(rubric.id) ? studentRubricDetails[studentData.student.id][rubric.id] : null}">
-                                    
-                                    <tr>
-                                        <td class="rubric-name-cell" style="color: #2ecc71;" colspan="7">
-                                            <i class="fas fa-user-check"></i>
-                                            <span th:text="${rubric.name}">Rubric Name</span>
-                                            <span style="color: #95a5a6; font-size: 0.85em; margin-left: 10px;">
-                                                (Max: <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0.00</span> marks)
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    
-                                    <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
-                                        <td class="sub-rubric-name">
-                                            <i class="fas fa-level-down-alt"></i>
-                                            <span th:text="${subRubric.name}">Sub-Rubric</span>
-                                            <div style="font-size: 0.75em; color: #7f8c8d; margin-top: 3px;" 
-                                                 th:if="${subRubric.description != null}">
-                                                <span th:text="${subRubric.description}">Description</span>
-                                            </div>
-                                            <div style="font-size: 0.75em; color: #95a5a6; margin-top: 3px;">
-                                                Max: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks
-                                            </div>
-                                        </td>
                                         
-                                        <td style="text-align: center;">
-                                            <span class="clo-badge" style="background: #2ecc71;" th:text="'CLO ' + ${rubric.clo}">CLO 1</span>
-                                        </td>
-                                        
-                                        <td>
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null and !rubricDetails.subRubricRatingsByEvaluator.isEmpty()}">
-                                                <div th:each="evaluatorEntry : ${rubricDetails.subRubricRatingsByEvaluator}" 
-                                                     class="evaluator-rating-box">
-                                                    <div>
-                                                        <i class="fas fa-user-tie"></i>
-                                                        <span class="evaluator-name" th:text="${evaluatorEntry.key}">Evaluator</span>
-                                                    </div>
-                                                    <div style="margin-top: 3px;">
-                                                        <span style="color: #95a5a6; font-size: 0.85em;" th:text="${subRubric.name}">Sub-Rubric</span>:
-                                                        <span class="rating-value" 
-                                                              th:text="${evaluatorEntry.value[subRubric.id] != null ? 
-                                                                         #numbers.formatDecimal(evaluatorEntry.value[subRubric.id], 1, 2) : 
-                                                                         'N/A'}">
-                                                            0.00
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.subRubricRatingsByEvaluator == null or rubricDetails.subRubricRatingsByEvaluator.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                No ratings yet
-                                            </span>
-                                        </td>
-                                        
-                                        <td>
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null and !rubricDetails.muSrmlnByEvaluator.isEmpty()}">
-                                                <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}" 
-                                                     class="formula-result">
-                                                    <span class="formula-label">
-                                                        <i class="fas fa-calculator"></i>
-                                                        <span th:text="${muEntry.key}">Evaluator</span>
-                                                    </span>
-                                                    <span class="formula-value" 
-                                                          th:text="${#numbers.formatDecimal(muEntry.value, 1, 3)}">0.000</span>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.muSrmlnByEvaluator == null or rubricDetails.muSrmlnByEvaluator.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                N/A
-                                            </span>
-                                        </td>
-                                        
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}"
-                                            class="mu-ln-cell"
-                                            style="text-align: center;">
-                                            <div class="formula-result" style="background: rgba(231, 76, 60, 0.25); border-left: 3px solid #e74c3c;">
-                                                <span class="formula-label" style="color: #ecf0f1; font-weight: bold;">
-                                                    <i class="fas fa-chart-line"></i> μln
-                                                </span>
-                                                <div style="font-size: 1.4em; font-weight: bold; color: #e74c3c; margin: 5px 0;"
-                                                     th:text="${rubricDetails != null and rubricDetails.muLn != null ? 
-                                                               #numbers.formatDecimal(rubricDetails.muLn, 1, 3) : 
-                                                               'N/A'}">
-                                                    0.000
-                                                </div>
-                                            </div>
-                                            <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null and !rubricDetails.muSrmlnByEvaluator.isEmpty()}"
-                                                 style="font-size: 0.65em; color: #bdc3c7; margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                                                <div style="font-weight: bold; margin-bottom: 3px;">Formula:</div>
-                                                (<span th:each="muEntry, iterStat : ${rubricDetails.muSrmlnByEvaluator}">
-                                                    <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 3)}">0.000</span>
-                                                    <span th:if="${!iterStat.last}"> + </span>
-                                                </span>) / <span th:text="${#maps.size(rubricDetails.muSrmlnByEvaluator)}">n</span>
-                                            </div>
-                                        </td>
-                                        
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}"
-                                            style="text-align: center;">
-                                            <div class="mark-value" 
-                                                 style="font-size: 1.1em;"
-                                                 th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">
-                                                0.00
-                                            </div>
-                                            <div style="font-size: 0.7em; color: #95a5a6; margin-top: 5px;">
-                                                (No factor applied)
-                                            </div>
-                                        </td>
-                                        
-                                        <td th:if="${subRubricStat.first}" 
-                                            th:attr="rowspan=${#lists.size(rubric.subRubrics)}">
-                                            <th:block th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}">
-                                                <div th:each="commentEntry : ${rubricDetails.evaluatorComments}" 
-                                                     class="comment-box">
-                                                    <div class="comment-evaluator">
-                                                        <i class="fas fa-user-tie"></i>
-                                                        <span th:text="${commentEntry.key}">Evaluator</span>
-                                                    </div>
-                                                    <div th:each="comment : ${commentEntry.value}" class="comment-text">
-                                                        <i class="fas fa-comment"></i>
-                                                        <span th:text="${comment}">Comment text</span>
-                                                    </div>
-                                                </div>
-                                            </th:block>
-                                            <span th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" 
-                                                  style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                No comments
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    
-                                    <!-- Direct Rating Rubric for INDIVIDUAL ASSESSMENT -->
-                                    <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
-                                        <tr th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}">
+                                        <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
                                             <td>
-                                                <div style="padding-left: 15px; font-size: 0.85em; color: #95a5a6;">
-                                                    Direct Rating Rubric
-                                                </div>
+                                                <div class="sub-name" th:text="${subRubric.name}">Sub-Rubric</div>
+                                                <div class="sub-desc" th:if="${subRubric.description}" th:text="${subRubric.description}"></div>
                                             </td>
                                             
-                                            <td style="text-align: center;">
-                                                <span class="clo-badge" style="background: #2ecc71;" th:text="'CLO ' + ${rubric.clo}">CLO 1</span>
-                                            </td>
+                                            <td class="text-center"><span class="badge badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
                                             
                                             <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails['directRatingsByEvaluator'] != null and !rubricDetails['directRatingsByEvaluator'].isEmpty()}">
-                                                    <div th:each="evaluatorEntry : ${rubricDetails.directRatingsByEvaluator}" 
-                                                         class="evaluator-rating-box">
-                                                        <div>
-                                                            <i class="fas fa-user-tie"></i>
-                                                            <span class="evaluator-name" th:text="${evaluatorEntry.key}">Evaluator</span>
-                                                        </div>
-                                                        <div style="margin-top: 3px;">
-                                                            Rating (dr): 
-                                                            <span class="rating-value" 
-                                                                  th:text="${#numbers.formatDecimal(evaluatorEntry.value, 1, 2)}">
-                                                                0.00
-                                                            </span>
-                                                        </div>
+                                                <div th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null}" class="rating-list">
+                                                    <div th:each="evaluatorEntry : ${rubricDetails.subRubricRatingsByEvaluator}" class="rating-item">
+                                                        <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                        <span th:text="${evaluatorEntry.value[subRubric.id] != null ? #numbers.formatDecimal(evaluatorEntry.value[subRubric.id], 1, 2) : '-'}">0.00</span>
                                                     </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.directRatingsByEvaluator == null or rubricDetails.directRatingsByEvaluator.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    No ratings yet
-                                                </span>
-                                            </td>
-                                            
-                                            <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null and !rubricDetails.rfByEvaluator.isEmpty()}">
-                                                    <div th:each="rfEntry : ${rubricDetails.rfByEvaluator}" 
-                                                         class="formula-result">
-                                                        <span class="formula-label">
-                                                            <i class="fas fa-calculator"></i>
-                                                            <span th:text="${rfEntry.key}">Evaluator</span>
-                                                        </span>
-                                                        <div class="formula-value">
-                                                            Rf = <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
-                                                        </div>
-                                                        <div style="font-size: 0.7em; color: #bdc3c7; margin-top: 3px;">
-                                                            <span th:if="${rubricDetails.directRatingsByEvaluator != null and rubricDetails.directRatingsByEvaluator.containsKey(rfEntry.key)}">
-                                                                = <span th:text="${#numbers.formatDecimal(rubricDetails.directRatingsByEvaluator[rfEntry.key], 1, 2)}">0.00</span> / 
-                                                                <span th:text="${rubricDetails.drmax != null ? #numbers.formatDecimal(rubricDetails.drmax, 1, 2) : '0.00'}">0.00</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.rfByEvaluator == null or rubricDetails.rfByEvaluator.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    N/A
-                                                </span>
-                                            </td>
-                                            
-                                            <td class="mu-ln-cell" style="text-align: center;">
-                                                <div class="formula-result" style="background: rgba(231, 76, 60, 0.25); border-left: 3px solid #e74c3c;">
-                                                    <span class="formula-label" style="color: #ecf0f1; font-weight: bold;">
-                                                        <i class="fas fa-chart-line"></i> μRf
-                                                    </span>
-                                                    <div style="font-size: 1.4em; font-weight: bold; color: #e74c3c; margin: 5px 0;"
-                                                         th:text="${rubricDetails != null and rubricDetails.muRf != null ? 
-                                                                   #numbers.formatDecimal(rubricDetails.muRf, 1, 3) : 
-                                                                   'N/A'}">
-                                                        0.000
-                                                    </div>
-                                                </div>
-                                                <div th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null and !rubricDetails.rfByEvaluator.isEmpty()}"
-                                                     style="font-size: 0.65em; color: #bdc3c7; margin-top: 8px; padding-top: 5px; border-top: 1px dashed rgba(255,255,255,0.2);">
-                                                    <div style="font-weight: bold; margin-bottom: 3px;">Formula:</div>
-                                                    (<span th:each="rfEntry, iterStat : ${rubricDetails.rfByEvaluator}">
-                                                        <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
-                                                        <span th:if="${!iterStat.last}"> + </span>
-                                                    </span>) / <span th:text="${#maps.size(rubricDetails.rfByEvaluator)}">n</span>
                                                 </div>
                                             </td>
                                             
-                                            <td style="text-align: center;">
-                                                <div class="mark-value" 
-                                                     style="font-size: 1.1em;"
-                                                     th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">
-                                                    0.00
-                                                </div>
-                                                <div style="font-size: 0.7em; color: #95a5a6; margin-top: 5px;">
-                                                    (No factor applied)
+                                            <td class="text-center">
+                                                <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null}" class="calc-list">
+                                                    <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}">
+                                                        <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 2)}">0.00</span>
+                                                    </div>
                                                 </div>
                                             </td>
                                             
-                                            <td>
-                                                <th:block th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}">
-                                                    <div th:each="commentEntry : ${rubricDetails.evaluatorComments}" 
-                                                         class="comment-box">
-                                                        <div class="comment-evaluator" th:text="${commentEntry.key}">Evaluator</div>
-                                                        <div th:each="comment : ${commentEntry.value}" class="comment-text">
-                                                            <span th:text="${comment}">Comment text</span>
-                                                        </div>
+                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left">
+                                                <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
+                                            </td>
+                                            
+                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
+                                                <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
+                                            </td>
+                                            
+                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
+                                                <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}" class="comments-list">
+                                                    <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
+                                                        <strong th:text="${commentEntry.key}">Eval</strong>: 
+                                                        <span th:each="c : ${commentEntry.value}" th:text="${c}">Comment</span>
                                                     </div>
-                                                </th:block>
-                                                <span th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" 
-                                                      style="color: #95a5a6; font-style: italic; font-size: 0.8em;">
-                                                    No comments
-                                                </span>
+                                                </div>
                                             </td>
                                         </tr>
-                                    </th:block>
+                                        
+                                        </th:block>
                                 </th:block>
-                            </th:block>
-                        </tbody>
-                    </table>
-                    
-                    <!-- Summary Section -->
-                    <div class="summary-section">
-                        <h4 style="margin: 0 0 15px 0; font-size: 1.1em; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px;">
-                            <i class="fas fa-calculator"></i> Assessment Summary
-                        </h4>
+                            </tbody>
+                        </table>
                         
-                        <div class="summary-row" style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; margin-bottom: 10px;">
-                            <span style="font-size: 1.1em;">Total Assessment Marks (T):</span>
-                            <span style="font-size: 1.2em;" th:text="${#numbers.formatDecimal(studentData.totalMarks, 1, 2)}">0.00</span>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <h5 style="font-size: 0.95em; color: rgba(255,255,255,0.8); margin-bottom: 8px;">
-                                <i class="fas fa-graduation-cap"></i> Weighted CLO Breakdown:
-                            </h5>
-                            <div th:each="entry : ${studentData.cloWeightedSums}" class="summary-row" 
-                                 style="padding: 6px 8px; margin: 4px 0; background: rgba(0,0,0,0.15); border-radius: 3px;">
-                                <span th:text="'CLO ' + ${entry.key} + ' (Weighted Sum):'">CLO Sum</span>
-                                <span th:text="${#numbers.formatDecimal(entry.value, 1, 2)}">0.00</span>
+                        <div class="summary-section">
+                            <div class="summary-row total">
+                                <span>Total Assessment Marks:</span>
+                                <span th:text="${#numbers.formatDecimal(studentData.totalMarks, 1, 2)}">0.00</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Empty State -->
-            <div th:if="${assessmentData.studentDataList == null or assessmentData.studentDataList.isEmpty()}" 
-                 class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p style="font-size: 1.1em; margin: 10px 0;">No evaluation data available for this group yet.</p>
-                <p style="font-size: 0.9em;">Data will appear here once evaluations are submitted for students in the selected group.</p>
+            <div th:if="${assessmentData.studentDataList == null or assessmentData.studentDataList.isEmpty()}" class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No evaluation data found for this group.</p>
             </div>
         </div>
     </div>

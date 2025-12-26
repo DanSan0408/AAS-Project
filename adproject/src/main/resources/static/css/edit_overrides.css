@@ -1,0 +1,153 @@
+/* =======================================================
+   EDIT OVERRIDES - Professional Maroon Theme
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-background: #F4F2EE;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+}
+
+* { box-sizing: border-box; }
+
+body.edit-overrides-page {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+body.edit-overrides-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px 40px 100px 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Header */
+body.edit-overrides-page .header-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.edit-overrides-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.edit-overrides-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
+
+body.edit-overrides-page .edit-container { width: 100% !important; max-width: 1000px !important; }
+
+body.edit-overrides-page .page-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+}
+
+body.edit-overrides-page .page-header h1 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 1.8rem !important;
+}
+
+/* Cards */
+body.edit-overrides-page .card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+body.edit-overrides-page .filter-form { display: flex !important; align-items: center !important; }
+body.edit-overrides-page .filter-form label { font-weight: 600 !important; margin-right: 15px !important; }
+body.edit-overrides-page select { padding: 10px !important; border-radius: 6px !important; border: 1px solid var(--color-border) !important; font-size: 1rem !important; min-width: 250px !important; }
+
+/* Table */
+body.edit-overrides-page .table-card { padding: 0 !important; overflow: hidden !important; }
+body.edit-overrides-page .data-table { width: 100% !important; border-collapse: collapse !important; }
+
+body.edit-overrides-page th {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    padding: 15px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+}
+
+body.edit-overrides-page td {
+    padding: 15px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    vertical-align: middle !important;
+}
+
+body.edit-overrides-page .student-name { font-weight: 600 !important; color: var(--color-primary) !important; }
+body.edit-overrides-page .student-email { color: #666 !important; font-size: 0.9rem !important; }
+
+body.edit-overrides-page .inp-number {
+    width: 100% !important;
+    padding: 8px !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+body.edit-overrides-page .inp-number:focus {
+    border-color: var(--color-primary) !important;
+    outline: none !important;
+    background-color: #fff5f5 !important;
+}
+
+/* Footer */
+body.edit-overrides-page .sticky-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 270px !important;
+    right: 0 !important;
+    background-color: white !important;
+    padding: 15px 40px !important;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    z-index: 100 !important;
+    border-top: 1px solid var(--color-border) !important;
+}
+
+body.edit-overrides-page .btn {
+    padding: 10px 25px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body.edit-overrides-page .btn-primary { background-color: var(--color-primary) !important; color: white !important; }
+body.edit-overrides-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
+
+/* Empty State */
+body.edit-overrides-page .empty-state {
+    text-align: center !important;
+    padding: 50px !important;
+    color: #94a3b8 !important;
+    border: 2px dashed var(--color-border) !important;
+    border-radius: 12px !important;
+}
+body.edit-overrides-page .empty-state i { font-size: 3rem !important; margin-bottom: 15px !important; opacity: 0.5 !important; }

@@ -2,77 +2,23 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Overall Assessment Data</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/overall_data.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .overall-container { padding: 20px; overflow-x: auto; }
-        .page-header { background: #34495e; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .page-header h2 { color: #ecf0f1; margin: 0; }
-        .action-buttons { display: flex; gap: 10px; }
-        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: all 0.3s; }
-        .btn-back { background: #95a5a6; color: white; }
-        .btn-print { background: #27ae60; color: white; }
-        .btn-edit { background: #f39c12; color: white; }
-        
-        .overall-table { width: 100%; background: #34495e; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-        .overall-table table { width: 100%; border-collapse: collapse; min-width: 1400px; }
-        .overall-table th { background: #23395d; color: #ecf0f1; padding: 12px 8px; text-align: center; font-weight: bold; border: 1px solid #4a6681; font-size: 0.8em; position: sticky; top: 0; z-index: 10; }
-        .overall-table td { padding: 10px 8px; border: 1px solid #4a6681; color: #ecf0f1; font-size: 0.8em; vertical-align: middle; text-align: center; }
-        
-        /* Sticky Columns */
-        .overall-table th:nth-child(1), .overall-table td:nth-child(1) { min-width: 180px; width: 180px; left: 0px; z-index: 6; text-align: left; }
-        .overall-table th:nth-child(2), .overall-table td:nth-child(2) { min-width: 150px; width: 150px; left: 180px; z-index: 6; text-align: left; }
-        .overall-table th:nth-child(3), .overall-table td:nth-child(3) { min-width: 90px; width: 90px; background: rgba(155, 89, 182, 0.2) !important; left: 330px; z-index: 6; }
-        .overall-table th:nth-child(4), .overall-table td:nth-child(4) { min-width: 110px; width: 110px; background: rgba(231, 76, 60, 0.2) !important; border-right: 3px solid #f39c12; left: 420px; z-index: 6; }
-
-        .overall-table tr:hover { background: rgba(52, 152, 219, 0.08); }
-        .overall-table th:nth-child(1), .overall-table th:nth-child(2), .overall-table th:nth-child(3), .overall-table th:nth-child(4),
-        .overall-table td:nth-child(1), .overall-table td:nth-child(2), .overall-table td:nth-child(3), .overall-table td:nth-child(4) { position: sticky; background: #2c3e50; z-index: 5; }
-
-        /* Column Specific Colors */
-        .assessment-header { background: #3498db !important; color: white !important; }
-        .clo-header { background: #2c3e50 !important; color: #95a5a6 !important; font-size: 0.75em; }
-        .clo-weighted-header { background: #2c3e50 !important; color: #f39c12 !important; font-size: 0.75em; }
-        
-        .clo-value { color: #3498db; }
-        .weighted-value { color: #f39c12; font-weight: normal; }
-        
-        .total-normal-value { color: #bdc3c7; font-weight: bold; background: rgba(255,255,255,0.05); }
-        .total-weighted-value { color: #2ecc71; font-weight: bold; background: rgba(46, 204, 113, 0.1); border-right: 2px solid #4a6681; }
-
-        .grand-total-header { background: #27ae60 !important; color: white !important; }
-        .grade-header { background: #2c3e50 !important; color: #ecf0f1 !important; }
-        .grand-total-value { background: rgba(39, 174, 96, 0.2); color: #2ecc71; font-weight: bold; border-left: 3px solid #27ae60 !important; }
-        
-        .factor-badge { background: #9b59b6; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; display: inline-block; min-width: 60px; }
-        .factor-capped { background: #e74c3c; }
-        .factor-zero { background: #95a5a6; }
-        .capped-indicator { font-size: 0.65em; color: #e74c3c; margin-top: 2px; }
-        .overridden-value { color: #f39c12; font-weight: bold; position: relative; }
-        .overridden-value::after { content: '*'; color: #f39c12; position: absolute; top: -5px; right: -5px; font-size: 1.2em; }
-
-        @media print {
-            .action-buttons, .btn, .btn-edit { display: none; }
-            .overall-table th, .overall-table td { position: static; }
-        }
-    </style>
 </head>
-<body>
+<body class="overall-data-page">
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>Overall Assessment Data - All Students</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
         <div class="overall-container">
             <div class="page-header">
-                <h2><i class="fas fa-table"></i> Complete Assessment Overview</h2>
+                <h2><i class="fas fa-table"></i> Overall Assessment Data</h2>
                 <div class="action-buttons">
                     <a th:href="@{/admin/data-views/edit-overrides}" class="btn btn-edit">
                         <i class="fas fa-edit"></i> Edit Grades
@@ -82,17 +28,16 @@
                 </div>
             </div>
             
-            <div class="overall-table">
-                <table>
+            <div class="table-wrapper">
+                <table class="overall-table">
                     <thead>
                         <tr>
-                            <th rowspan="2">Team Name</th>
-                            <th rowspan="2">Student Name</th>
-                            <th rowspan="2">Factor</th>
-                            <th rowspan="2">Capped Factor<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
+                            <th rowspan="2" class="sticky-col first-col">Team Name</th>
+                            <th rowspan="2" class="sticky-col second-col">Student Name</th>
+                            <th rowspan="2" class="sticky-col third-col">Factor</th>
+                            <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
                             
                             <th:block th:each="assessment : ${assessments}">
-                                <!-- Calculate column span: raw CLOs + weighted CLOs (only those with group rubrics) + 2 totals -->
                                 <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
                                     <th th:colspan="${assessment.cloMarks.size() + (cloWithGroupSet != null ? #sets.size(cloWithGroupSet) : 0) + 2}"
                                         class="assessment-header" th:text="${assessment.title}"></th>
@@ -105,22 +50,16 @@
                         <tr>
                             <th:block th:each="assessment : ${assessments}">
                                 <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
-                                    
-                                    <!-- CLO Headers (Raw) - Always show all CLOs -->
                                     <th:block th:each="cloEntry : ${assessment.cloMarks}">
                                         <th class="clo-header" th:text="'CLO ' + ${cloEntry.key}"></th>
                                     </th:block>
-                                    
-                                    <!-- CLO Headers (Weighted) - Only for CLOs that have Group rubrics -->
                                     <th:block th:each="cloEntry : ${assessment.cloMarks}">
                                         <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
                                             <th class="clo-weighted-header" th:text="'CLO ' + ${cloEntry.key} + ' (W)'"></th>
                                         </th:block>
                                     </th:block>
-                                    
-                                    <!-- Total Headers - Always show both -->
-                                    <th class="clo-header">Total (Raw)</th>
-                                    <th class="clo-weighted-header">Total (W)</th>
+                                    <th class="total-header">Total (Raw)</th>
+                                    <th class="total-w-header">Total (W)</th>
                                 </th:block>
                             </th:block>
                         </tr>
@@ -128,16 +67,15 @@
                     <tbody>
                         <tr th:each="student : ${students}">
                             <th:block th:with="data=${studentOverallData[student.id]}">
-                                <td th:text="${data['teamName']}"></td>
-                                <td th:text="${student.username}"></td>
+                                <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
+                                <td class="sticky-col second-col" th:text="${student.username}"></td>
                                 
-                                <td>
+                                <td class="sticky-col third-col">
                                     <span class="factor-badge" 
                                           th:classappend="${data['factor'] == null || data['factor'] == 0.0 ? 'factor-zero' : (data['factor'] >= 1.05 ? 'factor-capped' : '')}"
                                           th:text="${data['factor'] != null && data['factor'] > 0 ? #numbers.formatDecimal(data['factor'], 1, 3) : '0.000'}"></span>
                                 </td>
-                                
-                                <td>
+                                <td class="sticky-col fourth-col">
                                     <span class="factor-badge"
                                           th:classappend="${data['factor'] == null || data['factor'] == 0.0 ? 'factor-zero' : (data['factor'] >= 1.05 ? 'factor-capped' : '')}"
                                           th:text="${data['factor'] != null && data['factor'] >= 1.05 ? '1.050' : (data['factor'] != null && data['factor'] > 0 ? #numbers.formatDecimal(data['factor'], 1, 3) : '0.000')}"></span>
@@ -146,15 +84,11 @@
                                 
                                 <th:block th:each="assessmentData : ${data['assessmentDataList']}">
                                     <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessmentData.assessment.id]}">
-                                        
-                                        <!-- CLO Raw Values - Always show all CLOs -->
                                         <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
                                             <td class="clo-value">
                                                 <span th:text="${assessmentData.cloSums.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloSums[cloEntry.key], 1, 2) : '-'}"></span>
                                             </td>
                                         </th:block>
-                                        
-                                        <!-- CLO Weighted Values - Only for CLOs with Group rubrics -->
                                         <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
                                             <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
                                                 <td class="weighted-value">
@@ -162,13 +96,9 @@
                                                 </td>
                                             </th:block>
                                         </th:block>
-
-                                        <!-- Total Raw - Always show -->
                                         <td class="total-normal-value">
                                             <span th:text="${#numbers.formatDecimal(assessmentData.totalUnweightedMarks, 1, 2)}"></span>
                                         </td>
-
-                                        <!-- Total Weighted - Always show -->
                                         <td class="total-weighted-value">
                                             <span th:text="${#numbers.formatDecimal(assessmentData.totalWeightedMarks, 1, 2)}"></span>
                                         </td>
@@ -179,7 +109,6 @@
                                     <span th:text="${#numbers.formatDecimal(data['grandTotal'], 1, 2)}"
                                           th:classappend="${data['isOverridden'] == true ? 'overridden-value' : ''}"></span>
                                 </td>
-                                
                                 <td style="font-weight: bold; font-size: 1.1em;">
                                     <span th:text="${data['grade']}"></span>
                                 </td>
@@ -187,19 +116,6 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            
-            <div style="background: #34495e; padding: 20px; border-radius: 8px; margin-top: 20px;">
-                <h3 style="color: #ecf0f1; margin-bottom: 15px;"><i class="fas fa-info-circle"></i> Legend</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; color: #ecf0f1; font-size: 0.9em;">
-                    <div><strong style="color: #3498db;">CLO:</strong> Raw marks per CLO from all rubrics.</div>
-                    <div><strong style="color: #f39c12;">CLO (W):</strong> Weighted marks for CLOs with Group Assessment rubrics only.</div>
-                    <div><strong style="color: #bdc3c7;">Total (Raw):</strong> Sum of all raw marks.</div>
-                    <div><strong style="color: #2ecc71;">Total (W):</strong> Sum of weighted marks (Group weighted + Individual raw).</div>
-                    <div><strong style="color: #9b59b6;">Factor:</strong> Peer assessment factor (0.000 if not calculated).</div>
-                    <div><strong style="color: #e74c3c;">Capped:</strong> Factor exceeds 1.05 and has been capped.</div>
-                    <div style="grid-column: 1 / -1;"><strong>Important:</strong> CLO (W) columns only appear for CLOs that contain Group Assessment rubrics. Individual Assessment rubrics within the same CLO are never weighted.</div>
-                </div>
             </div>
         </div>
     </div>

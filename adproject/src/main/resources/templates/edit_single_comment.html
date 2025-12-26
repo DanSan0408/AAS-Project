@@ -4,139 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Comment Question - [[${assessment.title}]]</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/comment.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/edit_comment.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <div th:replace="fragments/sidebar :: sidebar"></div>
+<body class="edit-comment-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header">
-            <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>Edit Comment Question</h1>
-            </div>
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM CAS</h1>
         </div>
         
-        <!-- Success/Error Messages -->
-        <div th:if="${successMessage}" class="alert alert-success" role="alert">
-            <i class="fas fa-check-circle"></i>
-            <span th:text="${successMessage}"></span>
-        </div>
-        <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
-            <i class="fas fa-exclamation-circle"></i>
-            <span th:text="${errorMessage}"></span>
-        </div>
-        
-        <div class="config-container" style="max-width: 800px;">
-            <div class="config-header">
-                <h1>
-                    <i th:class="${type == 'group' ? 'fas fa-users' : 'fas fa-user'}"></i>
-                    <span th:text="${'Edit ' + (type == 'group' ? 'Group' : 'Individual') + ' Comment Question #' + (index + 1)}">Edit Comment Question</span>
-                </h1>
-                <p>
-                    <strong>Assessment:</strong> <span th:text="${assessment.title}">Assessment Title</span>
-                </p>
-                <p style="font-size: 0.9em; margin-top: 10px; color: #7f8c8d;">
-                    Editing question <strong th:text="${index + 1}">1</strong> for <strong th:text="${type == 'group' ? 'Group' : 'Individual'} + ' Assessment'">Assessment</strong>
-                </p>
-            </div>
+        <div class="page-header">
+            <h1 th:text="${'Edit ' + (type == 'group' ? 'Group' : 'Individual') + ' Question #' + (index + 1)}">Edit Question</h1>
+            <p th:text="${assessment.title}">Assessment Title</p>
             
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+        
+        <div class="card">
             <form th:action="@{/admin/comment-config/{id}/{type}/edit/{idx}/save(id=${assessment.id}, type=${type}, idx=${index})}" method="post">
                 
-                <div class="comment-item" th:style="${'border-left: 4px solid ' + (type == 'group' ? '#3498db' : '#2ecc71') + ';'}">
+                <div class="comment-edit-box" th:classappend="${type == 'group' ? 'group-border' : 'individual-border'}">
                     <div class="form-group">
-                        <label>
-                            <i class="fas fa-question-circle"></i> Question/Prompt <span class="required">*</span>
-                        </label>
+                        <label>Question / Prompt <span class="required">*</span></label>
                         <textarea name="label" 
-                                  placeholder="e.g., How well did this group/individual perform?"
                                   required 
-                                  style="min-height: 100px;"
-                                  th:text="${label}">Question text</textarea>
-                        <p class="help-text">This question will appear during evaluations</p>
+                                  placeholder="e.g., How well did this group/individual perform?"
+                                  th:text="${label}"></textarea>
+                        <p class="help-text">This question will appear to students during evaluation.</p>
                     </div>
                     
-                    <div class="inline-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
-                        <div class="form-group" style="margin: 0;">
-                            <label>
-                                <i class="fas fa-text-width"></i> Minimum Characters <span class="required">*</span>
-                            </label>
-                            <input type="number" 
-                                   name="minLength" 
-                                   th:value="${minLength}"
-                                   min="10" 
-                                   max="500"
-                                   style="width: 100%;"
-                                   required>
-                            <p class="help-text" style="margin-top: 5px;">
-                                Evaluators must write at least this many characters
-                            </p>
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label>Minimum Characters <span class="required">*</span></label>
+                            <input type="number" name="minLength" th:value="${minLength}" min="10" max="500" required>
                         </div>
                         
-                        <div class="form-group" style="margin: 0;">
-                            <label>
-                                <i class="fas fa-user-secret"></i> Anonymity Setting
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="isAnonymous" value="true" th:checked="${isAnonymous}">
+                                <span><i class="fas fa-user-secret"></i> Make Anonymous</span>
                             </label>
-                            <div class="toggle-group" style="margin-top: 10px;">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" 
-                                           name="isAnonymous" 
-                                           value="true"
-                                           th:checked="${isAnonymous}">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <div class="toggle-label">
-                                    <strong id="anonymityLabel" th:text="${isAnonymous ? 'Anonymous' : 'Named'}">Anonymous</strong>
-                                    <p class="help-text" id="anonymityHelp" style="margin-top: 5px; margin-bottom: 0;">
-                                        <span th:if="${isAnonymous}">Comments appear as "Teammate X"</span>
-                                        <span th:unless="${isAnonymous}">Shows evaluator's real name</span>
-                                    </p>
-                                </div>
-                            </div>
+                            <p class="help-text" id="anonymityHelp">
+                                <span th:if="${isAnonymous}">Currently: Comments appear as "Teammate X"</span>
+                                <span th:unless="${isAnonymous}">Currently: Shows evaluator's real name</span>
+                            </p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Info Box -->
-                <div class="info-box" style="margin-top: 30px;">
-                    <strong><i class="fas fa-info-circle"></i> About This Setting:</strong>
-                    <p>• <strong>Anonymous:</strong> Students see comments as "Teammate 1", "Teammate 2", etc.</p>
-                    <p>• <strong>Named:</strong> Students see the actual name of who wrote the comment</p>
-                    <p>• Changes apply immediately to all future evaluations</p>
-                    <p>• Past comments are not affected by this change</p>
-                </div>
-                
-                <!-- Submit Buttons -->
-                <div class="button-group" style="margin-top: 30px;">
-                    <a th:href="@{/admin/home}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
+                <div class="button-container">
+                    <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
     
     <script>
-        // Update anonymity label dynamically
         document.addEventListener('DOMContentLoaded', function() {
             const toggle = document.querySelector('input[name="isAnonymous"]');
-            const label = document.getElementById('anonymityLabel');
             const help = document.getElementById('anonymityHelp');
             
-            if (toggle && label && help) {
+            if (toggle && help) {
                 toggle.addEventListener('change', function() {
-                    if (this.checked) {
-                        label.textContent = 'Anonymous';
-                        help.innerHTML = 'Comments appear as "Teammate X"';
-                    } else {
-                        label.textContent = 'Named';
-                        help.innerHTML = "Shows evaluator's real name";
-                    }
+                    help.textContent = this.checked ? 
+                        'Currently: Comments appear as "Teammate X"' : 
+                        'Currently: Shows evaluator\'s real name';
                 });
             }
         });
