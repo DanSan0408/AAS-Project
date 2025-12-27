@@ -1,228 +1,362 @@
-/* ==========================================================
-   🎨 COLOR PALETTE & GLOBAL STYLES (For better maintainability)
-   ========================================================== */
+/* =======================================================
+   INDUSTRIAL SUPERVISOR HOME - NAVY & GOLD THEME
+   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
 :root {
-    /* Primary / Accent Colors */
-    --color-primary: #3498db;      /* Blue (Main Accent) */
-    --color-primary-dark: #2980b9; /* Darker Blue (Hover/Shadow) */
-    --color-success: #2ecc71;      /* Green */
-    --color-warning: #e67e22;      /* Orange */
-    --color-danger: #e74c3c;       /* Red */
-    --color-purple: #9b59b6;       /* Purple */
-    --color-teal: #1abc9c;         /* Teal */
-
-    /* Backgrounds / Grays */
-    --bg-darkest: #152238;     /* Darkest Blue/Gray (Inputs, Header/Footer) */
-    --bg-darker: #192841;      /* Darker Background (Main content sections, Box-shadow color) */
-    --bg-mid-tone: #203354;    /* Mid-tone Background (Card content areas, Member rows) */
-    --bg-light-gray: #34495e;  /* Light Gray (Borders, Dividers) */
-    --bg-white: #ecf0f1;       /* Near White */
-
-    /* Text */
-    --text-primary: #ecf0f1;   /* Light Text (Headings, Main Text) */
-    --text-secondary: #bdc3c7; /* Secondary Text (Descriptions, Smaller text) */
-    --text-mute: #7f8c8d;      /* Muted Text (Icons, Placeholders) */
+    --supervisor-primary: #002B5B;
+    --supervisor-secondary: #3F3F46;
+    --supervisor-accent: #F8A617;
+    --supervisor-background: #F4F2EE;
+    --supervisor-alert: #8B1E1E;
+    --supervisor-text: #FAFAFA;
+    --supervisor-text-dark: #2B2B2B;
+    --supervisor-primary-light: #004080;
+    --supervisor-primary-dark: #001F3F;
+    --supervisor-secondary-light: #52525B;
+    --supervisor-secondary-dark: #27272A;
+    --supervisor-surface: #FFFFFF;
+    --supervisor-border: #E5E7EB;
+    --supervisor-hover: #F9FAFB;
+    --supervisor-success: #059669;
 }
 
-/* Base Card Style (Applied to all main sections) */
-.card,
-.assessment-info,
-.assessment-form {
-    background-color: var(--bg-darker); 
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px; 
-    border: 1px solid var(--bg-light-gray);
+/* --- Reset & Base Styles --- */
+* {
+    box-sizing: border-box;
 }
 
-/* ==========================================================
-   LECTURER-SPECIFIC LAYOUTS
-   ========================================================== */
-
-/* Flex Container for home page (Rubric/Deadline side-by-side) */
-.content-flex-container {
+/* --- General Layout & Typography --- */
+body.supervisor-page {
+    background-color: var(--supervisor-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--supervisor-secondary);
+    margin: 0;
+    padding: 0;
     display: flex;
-    gap: 30px; 
-    align-items: flex-start; 
-    width: 100%;
 }
 
-.rubric-section {
-    flex: 2; 
-    min-width: 60%;
-    display: flex;
-    flex-direction: column;
+/* Main Content */
+body.supervisor-page .main-content {
+    flex-grow: 1 !important;
+    padding: 30px 40px !important;
+    margin-left: 270px !important;
+    min-height: 100vh !important;
+    background-color: var(--supervisor-background) !important;
+    width: auto !important;
 }
 
-.deadline-section {
-    flex: 1; 
-    min-width: 300px;
-    margin-top: 0; 
-    display: flex;
-    flex-direction: column;
+/* Page Headers */
+body.supervisor-page .header {
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(0, 43, 91, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
-.rubric-list,
-.deadline-list {
-    max-height: 76vh;
-    overflow-y: auto;
-    padding-right: 15px;
+body.supervisor-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
 }
 
-/* Responsive adjustments */
+body.supervisor-page .header-container img {
+    height: 55px !important;
+    width: auto !important;
+    max-width: 200px !important;
+    filter: brightness(0) invert(1) !important;
+}
+
+body.supervisor-page .header-container h1 {
+    color: var(--supervisor-text) !important;
+    font-size: 2.2rem !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+/* Success/Error Messages */
+body.supervisor-page .alert {
+    padding: 16px 24px !important;
+    margin-bottom: 24px !important;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+    border-left: 4px solid !important;
+}
+
+body.supervisor-page .alert-success {
+    color: #065F46 !important;
+    background-color: #D1FAE5 !important;
+    border-color: var(--supervisor-success) !important;
+}
+
+body.supervisor-page .alert-danger {
+    color: #7F1D1D !important;
+    background-color: #FEE2E2 !important;
+    border-color: var(--supervisor-alert) !important;
+}
+
+/* --- Content Structure --- */
+body.supervisor-page .content-flex-container {
+    display: flex !important;
+    gap: 35px !important;
+    align-items: flex-start !important;
+}
+
+/* Rubric Section */
+body.supervisor-page .rubric-section {
+    flex: 2.5 !important;
+    background: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    max-height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+    padding-right: 15px !important;
+}
+
+body.supervisor-page .rubric-section h2 {
+    color: var(--supervisor-primary) !important;
+    font-size: 1.8em !important;
+    font-weight: 800 !important;
+    margin-bottom: 30px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 3px solid var(--supervisor-primary) !important;
+    position: sticky !important;
+    top: 0 !important;
+    background: var(--supervisor-background) !important;
+    z-index: 10 !important;
+    margin-top: 0 !important;
+}
+
+/* Deadline Section */
+body.supervisor-page .deadline-section {
+    flex: 1 !important;
+    min-width: 350px !important;
+    max-width: 400px !important;
+    background: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+
+body.supervisor-page .deadline-section h2 {
+    color: var(--supervisor-primary) !important;
+    font-size: 1.5em !important;
+    font-weight: 700 !important;
+    margin-bottom: 25px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 3px solid var(--supervisor-primary) !important;
+}
+
+/* --- Assessment Boxes --- */
+body.supervisor-page .rubric-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 30px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-right: 0 !important;
+}
+
+body.supervisor-page .assessment-box {
+    background-color: var(--supervisor-surface) !important;
+    border: 1px solid var(--supervisor-border) !important;
+    border-left: 5px solid var(--supervisor-primary) !important;
+    border-radius: 16px !important;
+    padding: 28px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+body.supervisor-page .assessment-box:hover {
+    box-shadow: 0 8px 24px rgba(0, 43, 91, 0.12) !important;
+    transform: translateY(-2px) !important;
+}
+
+body.supervisor-page .assessment-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 20px !important;
+}
+
+body.supervisor-page .assessment-header h3 {
+    color: var(--supervisor-primary) !important;
+    font-size: 1.5em !important;
+    margin: 0 !important;
+    font-weight: 700 !important;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+/* Total Marks Section */
+body.supervisor-page .total-marks {
+    background: linear-gradient(135deg, rgba(0, 43, 91, 0.05) 0%, rgba(0, 43, 91, 0.02) 100%) !important;
+    border: 1px solid rgba(0, 43, 91, 0.15) !important;
+    border-left: 4px solid var(--supervisor-primary) !important;
+    padding: 16px 20px !important;
+    border-radius: 10px !important;
+    margin-bottom: 25px !important;
+    margin-top: 0 !important;
+}
+
+body.supervisor-page .total-marks p {
+    margin: 6px 0 !important;
+    font-size: 0.95em !important;
+    color: var(--supervisor-secondary) !important;
+    font-weight: normal !important;
+}
+
+body.supervisor-page .total-marks span {
+    font-weight: 700 !important;
+    color: var(--supervisor-primary) !important;
+}
+
+/* Assessment Type Grouping */
+body.supervisor-page .assess-type-group {
+    margin: 25px 0 !important;
+    padding: 20px !important;
+    background: var(--supervisor-hover) !important;
+    border-left: 5px solid var(--supervisor-accent) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--supervisor-border) !important;
+    border-left: 5px solid var(--supervisor-accent) !important;
+}
+
+body.supervisor-page .assess-type-group h5 {
+    color: var(--supervisor-primary) !important;
+    font-size: 1.3em !important;
+    margin-bottom: 18px !important;
+    margin-top: 0 !important;
+    padding-bottom: 12px !important;
+    border-bottom: 2px solid var(--supervisor-border) !important;
+    font-weight: 700 !important;
+}
+
+body.supervisor-page .rubric-assessment {
+    background: var(--supervisor-surface) !important;
+    padding: 18px !important;
+    margin: 14px 0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid var(--supervisor-border) !important;
+}
+
+body.supervisor-page .rubric-assessment h6 {
+    color: var(--supervisor-primary) !important;
+    font-size: 1.1em !important;
+    margin-bottom: 12px !important;
+    font-weight: 700 !important;
+}
+
+body.supervisor-page .rubric-details p {
+    margin: 6px 0 !important;
+    font-size: 0.9em !important;
+    color: var(--supervisor-secondary) !important;
+}
+
+body.supervisor-page .rubric-details span {
+    font-weight: 600 !important;
+    color: var(--supervisor-primary) !important;
+}
+
+/* --- Deadline List --- */
+body.supervisor-page .deadline-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    margin-bottom: 30px !important;
+}
+
+body.supervisor-page .deadline-item {
+    background-color: var(--supervisor-surface) !important;
+    border-left: 4px solid var(--supervisor-primary) !important;
+    padding: 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.3s ease !important;
+    border: 1px solid var(--supervisor-border) !important;
+    border-left: 4px solid var(--supervisor-accent) !important;
+    margin-bottom: 0 !important;
+}
+
+body.supervisor-page .deadline-item.supervisor-deadline {
+    border-left-color: var(--supervisor-primary) !important;
+}
+
+body.supervisor-page .deadline-item.student-deadline {
+    border-left-color: var(--supervisor-accent) !important;
+}
+
+body.supervisor-page .deadline-item.lecturer-deadline {
+    border-left-color: var(--supervisor-secondary) !important;
+}
+
+body.supervisor-page .deadline-item:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(0, 43, 91, 0.12) !important;
+}
+
+body.supervisor-page .deadline-display p {
+    margin: 6px 0 !important;
+    font-size: 0.95em !important;
+    color: var(--supervisor-secondary) !important;
+}
+
+body.supervisor-page .deadline-display strong {
+    color: var(--supervisor-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Deadline Badges */
+body.supervisor-page .deadline-badge {
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.75em !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-block !important;
+}
+
+body.supervisor-page .badge-supervisor {
+    background-color: var(--supervisor-primary) !important;
+    color: var(--supervisor-text) !important;
+}
+
+body.supervisor-page .badge-student {
+    background-color: var(--supervisor-accent) !important;
+    color: var(--supervisor-text-dark) !important;
+}
+
+body.supervisor-page .badge-lecturer {
+    background-color: var(--supervisor-secondary) !important;
+    color: var(--supervisor-text) !important;
+}
+
+/* Responsive Design */
 @media (max-width: 1000px) {
-    .content-flex-container {
-        flex-direction: column; 
+    body.supervisor-page .content-flex-container {
+        flex-direction: column !important;
     }
-    .rubric-section, .deadline-section {
-        flex: none;
-        width: 100%;
-        min-width: unset;
+    
+    body.supervisor-page .rubric-section, 
+    body.supervisor-page .deadline-section {
+        flex: none !important;
+        width: 100% !important;
+        max-width: none !important;
     }
-}
-
-/* ==========================================================
-   RUBRIC VIEW STYLES
-   ========================================================== */
-
-/* Assessment Box (Wraps everything for one assessment) */
-.assessment-box {
-    border: 2px solid var(--color-primary); 
-    padding: 20px;
-    margin-bottom: 30px; 
-    border-radius: 10px;
-    background-color: var(--bg-mid-tone); 
-}
-
-.assessment-header h3 {
-    font-size: 1.8em; 
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--color-primary);
-    padding-bottom: 5px;
-    margin-bottom: 15px;
-}
-
-.total-marks {
-    padding-top: 10px;
-    border-top: 2px solid var(--bg-darkest);
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
-
-.total-marks p {
-    color: var(--color-success); 
-    font-weight: bold;
-}
-
-.total-marks div p {
-    color: var(--bg-white); 
-    font-style: italic;
-    font-weight: normal;
-}
-
-/* Assessment Type Group */
-.assess-type-group {
-    padding-left: 15px;
-    border-left: 3px solid var(--color-primary-dark); 
-    margin-top: 15px;
-    margin-bottom: 15px;
-}
-
-.assess-type-group h5 {
-    font-size: 1.2em;
-    color: var(--text-secondary); 
-    margin-top: 0;
-    margin-bottom: 15px;
-}
-
-/* Individual Rubric Box */
-.rubric-assessment {
-    background-color: var(--bg-darkest); 
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid var(--text-secondary); 
-    margin-top: 15px; 
-}
-
-.rubric-assessment h6 {
-    font-size: 1.1em; 
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--bg-darker); 
-    padding-bottom: 5px;
-}
-
-.rubric-details p {
-    font-size: 1.05em;
-    margin: 5px 0;
-    line-height: 1.5;
-    color: var(--text-secondary);
-}
-
-/* ==========================================================
-   DEADLINE STYLES - MATCHING STUDENT HOME PAGE
-   ========================================================== */
-
-.deadline-item {
-    background-color: var(--bg-darkest); 
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column; 
-    border: 1px solid var(--bg-light-gray);
-    border-left: 4px solid #95a5a6; /* Default border */
-}
-
-/* Colored left border based on assessor type */
-.deadline-item.student-deadline {
-    border-left-color: var(--color-primary);
-}
-
-.deadline-item.lecturer-deadline {
-    border-left-color: var(--color-purple);
-}
-
-.deadline-item.supervisor-deadline {
-    border-left-color: var(--color-teal);
-}
-
-.deadline-display {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    padding: 5px 0;
-    color: var(--bg-white);
-}
-
-/* Deadline Badge Styles */
-.deadline-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.85em;
-    font-weight: bold;
-    margin-left: 10px;
-}
-
-.badge-student {
-    background-color: var(--color-primary);
-    color: white;
-}
-
-.badge-lecturer {
-    background-color: var(--color-purple);
-    color: white;
-}
-
-.badge-supervisor {
-    background-color: var(--color-teal);
-    color: white;
-}
-
-.badge-general {
-    background-color: #95a5a6;
-    color: white;
+    
+    body.supervisor-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+    }
 }

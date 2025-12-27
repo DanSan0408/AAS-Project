@@ -1,18 +1,19 @@
 /* =======================================================
-   STUDENT SIDEBAR - IRON BURGUNDY & GOLD THEME
-   Primary: #7A1E2D | Secondary: #3F3F46 | BG: #F4F2EE
+   INDUSTRIAL SUPERVISOR SIDEBAR - NAVY & GOLD THEME
+   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
    ======================================================= */
 
 :root {
-    --student-primary: #7A1E2D;      /* Iron Burgundy */
-    --student-primary-light: #9A2B3E; /* Lighter Burgundy for gradients */
-    --student-secondary: #3F3F46;    /* Graphite Grey */
-    --student-accent: #F8A617;       /* Gold */
-    --student-background: #F4F2EE;   /* Light Sand Grey */
-    --student-text: #FAFAFA;         /* Off White */
-    --student-text-dark: #2B2B2B;    /* Dark Text */
-    --student-border: #D4D1CC;       /* Muted Sand */
-    --student-alert: #8B1E1E;        /* Dark Red */
+    --supervisor-primary: #002B5B;
+    --supervisor-primary-light: #004080;
+    --supervisor-secondary: #3F3F46;
+    --supervisor-accent: #F8A617;
+    --supervisor-background: #F4F2EE;
+    --supervisor-text: #2B2B2B;
+    --supervisor-text-light: #FAFAFA;
+    --supervisor-hover: #EDEAE6;
+    --supervisor-border: #D4D1CC;
+    --supervisor-alert: #8B1E1E;
 }
 
 /* ==================== SIDEBAR CONTAINER ==================== */
@@ -22,13 +23,12 @@
     left: 15px;
     width: 240px;
     height: calc(100vh - 30px);
-    /* Gradient from White to Light Sand */
-    background: linear-gradient(180deg, #FFFFFF 0%, #F4F2EE 100%);
-    color: var(--student-text-dark);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%);
+    color: var(--supervisor-secondary);
     padding: 0;
-    box-shadow: 0 4px 20px rgba(122, 30, 45, 0.15); /* Burgundy shadow tint */
+    box-shadow: 0 4px 20px rgba(0, 43, 91, 0.12);
     border-radius: 16px;
-    border: 1px solid rgba(122, 30, 45, 0.1);
+    border: 1px solid rgba(0, 43, 91, 0.1);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -39,15 +39,18 @@
 .sidebar::-webkit-scrollbar {
     width: 5px;
 }
+
 .sidebar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .sidebar::-webkit-scrollbar-thumb {
-    background: var(--student-primary);
+    background: var(--supervisor-primary);
     border-radius: 10px;
 }
+
 .sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--student-primary-light);
+    background: var(--supervisor-primary-light);
 }
 
 /* ==================== LOGO SECTION ==================== */
@@ -55,8 +58,7 @@
     text-align: center;
     padding: 30px 20px 25px;
     margin-bottom: 20px;
-    /* Burgundy Gradient */
-    background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-light) 100%);
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
     border-radius: 16px 16px 0 0;
 }
 
@@ -64,7 +66,7 @@
     margin: 0;
     font-size: 28px;
     font-weight: 800;
-    color: var(--student-text);
+    color: var(--supervisor-text-light);
     letter-spacing: 4px;
     text-transform: uppercase;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -75,15 +77,14 @@
     text-align: center;
     padding: 16px 20px;
     margin: 0 15px 20px;
-    /* Graphite Grey Background for Contrast */
-    background: var(--student-primary);
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(63, 63, 70, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.15);
 }
 
 .sidebar .user-profile span,
 .sidebar .user-profile p {
-    color: var(--student-text); /* Off White */
+    color: var(--supervisor-text-light);
     font-size: 14px;
     font-weight: 600;
     margin: 0;
@@ -109,7 +110,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    color: var(--student-secondary); /* Graphite Text */
+    color: var(--supervisor-secondary);
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
@@ -118,20 +119,20 @@
     position: relative;
 }
 
-/* Hover Effect - Uses Gold tint */
+/* Hover Effect */
 .sidebar .menu-list li a:hover {
-    background: linear-gradient(90deg, rgba(248, 166, 23, 0.15) 0%, transparent 100%);
-    color: var(--student-primary);
+    background: linear-gradient(90deg, rgba(0, 43, 91, 0.05) 0%, transparent 100%);
+    color: var(--supervisor-primary);
     transform: translateX(4px);
     padding-left: 20px;
 }
 
-/* Active Link - Uses Iron Burgundy Gradient */
+/* Active Link */
 .sidebar .menu-list li a.active {
-    background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-light) 100%);
-    color: var(--student-text); /* Off White */
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
+    color: var(--supervisor-text-light);
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(122, 30, 45, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.25);
 }
 
 .sidebar .menu-list li a.active:hover {
@@ -140,11 +141,12 @@
 }
 
 /* ==================== LOGOUT SECTION ==================== */
-.sidebar .menu-list li:last-child {
+.sidebar .menu-list li:last-child,
+.sidebar .menu-list li.logout-item {
     margin-top: auto;
     margin-bottom: 20px;
     padding-top: 15px;
-    border-top: 1px solid rgba(122, 30, 45, 0.1);
+    border-top: 1px solid rgba(0, 43, 91, 0.1);
 }
 
 .sidebar .menu-list li form {
@@ -153,7 +155,8 @@
 }
 
 /* Logout Button */
-.sidebar .menu-list li form button {
+.sidebar .menu-list li form button,
+.sidebar .menu-list li form .logout-btn {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -162,17 +165,19 @@
     padding: 14px 16px;
     background: transparent;
     border: none;
-    color: var(--student-alert);
+    color: var(--supervisor-alert);
     font-size: 15px;
     font-weight: 600;
     text-align: left;
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 10px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
-.sidebar .menu-list li form button:hover {
-    background: linear-gradient(90deg, rgba(139, 30, 30, 0.1) 0%, transparent 100%);
+.sidebar .menu-list li form button:hover,
+.sidebar .menu-list li form .logout-btn:hover {
+    background: linear-gradient(90deg, rgba(139, 30, 30, 0.08) 0%, transparent 100%);
     transform: translateX(4px);
     padding-left: 20px;
 }

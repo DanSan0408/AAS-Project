@@ -4,37 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peer & Self Assessments</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/student.css}">
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/student_assessments.css}">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        /* ✅ NEW: Team evaluation specific styles */
-        .team-assessment {
-            border: 2px solid #9b59b6 !important;
-            background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(155, 89, 182, 0.05)) !important;
-        }
-
-        .assessment-type-badge.team {
-            background: #9b59b6;
-        }
-
-        .btn-evaluate[href*="team-evaluate"] {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-        }
-
-        .btn-evaluate[href*="team-evaluate"]:hover {
-            background: linear-gradient(135deg, #8e44ad, #732d91);
-        }
-        
-        .evaluation-card.team-assessment .evaluation-body p {
-            font-size: 0.9em;
-            color: #7f8c8d;
-            margin-bottom: 15px;
-        }
-    </style>
 </head>
 <body>
     <div th:replace="fragments/student_sidebar :: sidebar"></div>
@@ -42,8 +14,8 @@
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>Peer & Self Assessment Portal</h1>
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         
@@ -83,7 +55,7 @@
                 <div th:if="${#lists.isEmpty(assessments)}" class="no-assessments">
                     <i class="fas fa-inbox"></i>
                     <p>No peer or self assessments are currently open.</p>
-                    <p style="font-size: 0.9em; color: #95a5a6;">
+                    <p style="font-size: 0.9em; color: #7F8C8D;">
                         Assessments will appear here once your administrator opens them. Check back later or contact your administrator for more information.
                     </p>
                 </div>
@@ -109,7 +81,7 @@
                                     <strong>Opened:</strong> 
                                     <span th:if="${deadline.openDate != null}" 
                                           th:text="${#dates.format(deadline.openDate, 'dd MMM yyyy, HH:mm')}">
-                                        04 Nov 2025, 14:00
+                                            04 Nov 2025, 14:00
                                     </span>
                                     <span th:unless="${deadline.openDate != null}">
                                         Immediately
@@ -119,7 +91,7 @@
                                     <strong>Deadline:</strong> 
                                     <span class="time-remaining" 
                                           th:text="${#dates.format(deadline.date, 'dd MMM yyyy, HH:mm')}">
-                                        19 Nov 2025, 23:59
+                                            19 Nov 2025, 23:59
                                     </span>
                                 </p>
                             </div>
@@ -131,7 +103,6 @@
                         <div class="evaluation-grid">
                             <h4>Evaluate Your Team Members:</h4>
                             
-                            <!-- Self Assessment -->
                             <div class="evaluation-card self-assessment">
                                 <div class="evaluation-header">
                                     <h5>Self Assessment</h5>
@@ -151,7 +122,6 @@
                                 </div>
                             </div>
 
-                            <!-- Peer Assessments -->
                             <div class="evaluation-card peer-assessment">
                                 <div class="evaluation-header">
                                     <h5>Peer Assessments</h5>
@@ -173,7 +143,6 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ NEW: TEAM EVALUATION SECTION -->
                             <div class="evaluation-card team-assessment">
                                 <div class="evaluation-header">
                                     <h5>Team Evaluation</h5>

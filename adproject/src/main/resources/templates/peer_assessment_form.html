@@ -4,82 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assessment Form</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/peer_assess.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* ✅ NEW: Rubric-specific comments styling */
-        .rubric-comments-section {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(155, 89, 182, 0.1);
-            border-left: 4px solid #9b59b6;
-            border-radius: 6px;
-        }
-        
-        .rubric-comments-header {
-            color: #9b59b6;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .rubric-comment-field-container {
-            margin-bottom: 15px;
-        }
-        
-        .rubric-comment-field-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .rubric-comment-field-header h5 {
-            color: #9b59b6;
-            margin: 0;
-            font-size: 0.95em;
-        }
-        
-        .rubric-char-counter {
-            color: #95a5a6;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-        
-        .rubric-comment-textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 10px;
-            background: #2c3e50;
-            border: 2px solid #9b59b6;
-            border-radius: 4px;
-            color: #ecf0f1;
-            font-family: inherit;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-        
-        .rubric-comment-textarea:focus {
-            outline: none;
-            border-color: #8e44ad;
-        }
-        
-        .rubric-comment-hint {
-            font-size: 0.85em;
-            color: #95a5a6;
-            margin-top: 3px;
-        }
-        
-        .rubric-comment-validation {
-            display: none;
-            color: #e74c3c;
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
-    </style>
 </head>
 <body>
     <div th:replace="fragments/student_sidebar :: sidebar"></div>
@@ -87,8 +14,8 @@
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1 th:text="${isTeamEvaluation != null and isTeamEvaluation ? 'Team Evaluation' : (isSelfAssessment ? 'Self Assessment' : 'Peer Assessment')}">Assessment</h1>
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         
@@ -109,12 +36,11 @@
                         <span th:if="${isSelfAssessment}" class="self-badge">(Yourself)</span>
                         <span th:if="${isTeamEvaluation != null and isTeamEvaluation}" 
                               class="self-badge" 
-                              style="background: #9b59b6;">(Group Assessment)</span>
+                              style="background: #7A1E2D; color: white;">(Group Assessment)</span>
                     </div>
                 </div>
             </div>
 
-            <!-- NOTICES CONTAINER -->
             <div class="notices-container">
                 <div th:if="${hasExistingEvaluation}" class="re-evaluation-notice">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -146,7 +72,6 @@
                 </div>
             </div>
 
-            <!-- FORM STARTS HERE -->
             <form id="assessmentForm" 
                   th:action="${isTeamEvaluation != null and isTeamEvaluation ? 
                                '/student/assessment/' + assessment.id + '/team-evaluate/submit' : 
@@ -157,11 +82,10 @@
                 <div class="rubrics-container">
                     
                     <div th:if="${rubrics != null and !#lists.isEmpty(rubrics)}">
-                        <h2 style="color: #3498db; margin-bottom: 20px;">
+                        <h2 style="color: #7A1E2D; margin-bottom: 20px;">
                             <i class="fas fa-tasks"></i> Assessment Rubrics
                         </h2>
                         
-                        <!-- Loop through Rubrics -->
                         <div th:each="rubric, rubricIterStat : ${rubrics}" class="rubric-section">
                             <div class="rubric-header">
                                 <h3>
@@ -169,8 +93,8 @@
                                     <span th:text="${rubric.name}">Rubric Name</span>
                                     <span class="assessment-type-badge" 
                                           th:style="${rubric.assessmentTypes != null and rubric.assessmentTypes.toLowerCase().contains('group') ? 
-                                                     'margin-left: 10px; background: #9b59b6; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;' : 
-                                                     'margin-left: 10px; background: #3498db; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;'}">
+                                                     'margin-left: 10px; background: #7A1E2D; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;' : 
+                                                     'margin-left: 10px; background: #3F3F46; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;'}">
                                         <span th:text="${rubric.assessmentTypes}">Individual Assessment</span>
                                     </span>
                                 </h3>
@@ -183,13 +107,9 @@
                                     <span class="clo-badge">
                                         CLO <span th:text="${rubric.clo}">1</span>
                                     </span>
-                                    <span class="marks-badge">
-                                        <span th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">10.00</span> marks
-                                    </span>
                                 </div>
                             </div>
                             
-                            <!-- CASE 1: Rubric has Sub-rubrics with ratings -->
                             <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}" 
                                  class="sub-rubrics-container">
                                 
@@ -226,7 +146,8 @@
                                                 <div class="rating-header">
                                                     <span class="rating-level" th:text="${rating.name}">Rating Name</span>
                                                     <span class="rating-marks">
-                                                        <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span> marks
+                                                        Rating : 
+                                                        <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span>
                                                     </span>
                                                 </div>
                                                 <p class="rating-description" th:text="${rating.description ?: 'No description provided'}">
@@ -238,10 +159,9 @@
                                 </div>
                             </div>
                             
-                            <!-- CASE 2: Rubric has Direct Ratings -->
                             <div th:if="${(rubric.subRubrics == null or #lists.isEmpty(rubric.subRubrics)) and rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}"
                                  class="direct-ratings-container">
-                                <h4 style="color: #2ecc71; margin-top: 15px; margin-bottom: 10px;">
+                                <h4 style="color: #7A1E2D; margin-top: 15px; margin-bottom: 10px;">
                                     <i class="fas fa-star"></i> Rating Options
                                 </h4>
                                 <div class="rating-options-grid">
@@ -258,7 +178,8 @@
                                             <div class="rating-header">
                                                 <span class="rating-level" th:text="${rating.name}">Rating Name</span>
                                                 <span class="rating-marks">
-                                                    <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span> marks
+                                                    Rating : 
+                                                    <span th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">1.0</span>
                                                 </span>
                                             </div>
                                             <p class="rating-description" th:text="${rating.description ?: 'No description provided'}">
@@ -269,7 +190,6 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ NEW: Rubric-Specific Comments Section -->
                             <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                  class="rubric-comments-section">
                                 <h4 class="rubric-comments-header">
@@ -320,26 +240,25 @@
                     </div>
                 </div>
 
-                <!-- ASSESSMENT-LEVEL COMMENTS SECTION -->
                 <div th:with="isTeam=${isTeamEvaluation != null and isTeamEvaluation},
-                            commentLabels=${isTeam ? assessment.groupCommentLabels : assessment.individualCommentLabels},
-                            minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
-                            commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
-                            hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
+                           commentLabels=${isTeam ? assessment.groupCommentLabels : assessment.individualCommentLabels},
+                           minLength=${isTeam ? assessment.groupCommentMinLength : assessment.individualCommentMinLength},
+                           commentsAnonymous=${isTeam ? assessment.groupCommentsAnonymous : assessment.individualCommentsAnonymous},
+                           hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                     
                     <div th:if="${hasComments}" class="comments-container">
-                        <h3 style="color: #3498db; margin-bottom: 20px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+                        <h3 style="color: #7A1E2D; margin-bottom: 20px; border-bottom: 2px solid #F8A617; padding-bottom: 10px;">
                             <i class="fas fa-comments"></i> 
                             Overall Feedback Comments
                             <span class="required-indicator">*</span>
                         </h3>
                         
-                        <div style="background: #34495e; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3498db;">
-                            <p style="color: #ecf0f1; margin-bottom: 10px;">
-                                <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                        <div style="background: #F4F2EE; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #7A1E2D;">
+                            <p style="color: #3F3F46; margin-bottom: 10px;">
+                                <i class="fas fa-info-circle" style="color: #7A1E2D;"></i>
                                 <strong>Instructions:</strong>
                             </p>
-                            <ul style="color: #ecf0f1; margin-left: 20px; line-height: 1.6;">
+                            <ul style="color: #3F3F46; margin-left: 20px; line-height: 1.6;">
                                 <li>You must fill out <strong><span th:text="${#lists.size(commentLabels)}">1</span></strong> comment field(s)</li>
                                 <li>Each comment must be at least <strong><span th:text="${minLength}">20</span></strong> characters</li>
                                 <li th:if="${commentsAnonymous}">Your comments will appear <strong>anonymously</strong></li>
@@ -349,7 +268,7 @@
                         
                         <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}">
                             <div th:with="commentLabel=${commentLabels[i]},
-                                        existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
+                                       existingComment=${existingComments != null and !#lists.isEmpty(existingComments) and i < #lists.size(existingComments) ? existingComments.get(i) : null}">
                                 
                                 <div class="comment-field-container">
                                     <div class="comment-field-header">
@@ -371,8 +290,8 @@
                                     </textarea>
                                     
                                     <div class="comment-validation" 
-                                        th:id="'validation_' + ${i}" 
-                                        style="display: none; color: #e74c3c; margin-top: 5px; font-size: 0.9em;">
+                                         th:id="'validation_' + ${i}" 
+                                         style="display: none; color: #8B1E1E; margin-top: 5px; font-size: 0.9em;">
                                         <i class="fas fa-exclamation-circle"></i>
                                         <span>Minimum length not met (<span th:text="${minLength}">20</span> characters required)</span>
                                     </div>
@@ -380,8 +299,8 @@
                             </div>
                         </div>
                         
-                        <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #1a252f; border-radius: 4px; border-left: 3px solid #f39c12;">
-                            <i class="fas fa-lightbulb" style="color: #f39c12;"></i>
+                        <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #FFFDF9; border-radius: 4px; border-left: 3px solid #F8A617;">
+                            <i class="fas fa-lightbulb" style="color: #F8A617;"></i>
                             <strong>Tip:</strong> 
                             <span th:if="${isTeam}">
                                 Reflect on your team's overall collaboration, communication, and effectiveness!
@@ -414,7 +333,6 @@
         </div>
     </div>
     
-    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -432,7 +350,7 @@
                 <p>
                     <strong>Are you sure you want to re-evaluate?</strong>
                 </p>
-                <p style="color: #e74c3c; font-weight: bold;">
+                <p style="color: #8B1E1E; font-weight: bold;">
                     ⚠️ This will replace your previous evaluation and cannot be undone.
                 </p>
             </div>
@@ -475,20 +393,20 @@
                     currentSpan.textContent = length;
                     
                     if (length < minLength) {
-                        charCount.style.color = '#e74c3c';
+                        charCount.style.color = '#8B1E1E';
                         validation.style.display = 'block';
-                        this.style.borderColor = '#e74c3c';
+                        this.style.borderColor = '#8B1E1E';
                     } else {
-                        charCount.style.color = '#27ae60';
+                        charCount.style.color = '#4CAF7D';
                         validation.style.display = 'none';
-                        this.style.borderColor = '#27ae60';
+                        this.style.borderColor = '#4CAF7D';
                     }
                 });
                 
                 textarea.dispatchEvent(new Event('input'));
             });
             
-            // ✅ NEW: Setup character counters for rubric-specific comments
+            // Setup character counters for rubric-specific comments
             const rubricCommentTextareas = document.querySelectorAll('.rubric-comment-textarea');
             
             rubricCommentTextareas.forEach(function(textarea) {
@@ -510,17 +428,17 @@
                     
                     if (validation) {
                         if (minLength > 0 && length < minLength && length > 0) {
-                            charCount.style.color = '#e74c3c';
+                            charCount.style.color = '#8B1E1E';
                             validation.style.display = 'block';
-                            this.style.borderColor = '#e74c3c';
+                            this.style.borderColor = '#8B1E1E';
                         } else if (length >= minLength) {
-                            charCount.style.color = '#27ae60';
+                            charCount.style.color = '#4CAF7D';
                             validation.style.display = 'none';
-                            this.style.borderColor = '#9b59b6';
+                            this.style.borderColor = '#4CAF7D';
                         } else {
-                            charCount.style.color = '#95a5a6';
+                            charCount.style.color = '#7F8C8D';
                             validation.style.display = 'none';
-                            this.style.borderColor = '#9b59b6';
+                            this.style.borderColor = '#D4D1CC';
                         }
                     }
                 });
@@ -602,59 +520,5 @@
             });
         });
     </script>
-    
-    <style>
-        .comments-container {
-            margin-top: 40px;
-            padding: 25px;
-            background: #2c3e50;
-            border-radius: 8px;
-        }
-        
-        .comment-field-container {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #34495e;
-            border-radius: 6px;
-        }
-        
-        .comment-field-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .comment-field-header h4 {
-            color: #3498db;
-            margin: 0;
-            font-size: 1.1em;
-        }
-        
-        .char-counter {
-            color: #95a5a6;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        
-        .comment-textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 12px;
-            background: #2c3e50;
-            border: 2px solid #4a6681;
-            border-radius: 6px;
-            color: #ecf0f1;
-            font-size: 1em;
-            font-family: inherit;
-            resize: vertical;
-            transition: border-color 0.3s;
-        }
-        
-        .comment-textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-    </style>
 </body>
 </html>

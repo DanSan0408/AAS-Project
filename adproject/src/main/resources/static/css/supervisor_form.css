@@ -1,575 +1,647 @@
 /* =======================================================
-   SUPERVISOR EVALUATION FORM - DARK THEME v2 (High Visibility)
-   Color Palette: #23395d (L1), #203354 (L2), #1c2e4a (M1), #192841 (D1), #152238 (D2)
+   SUPERVISOR EVALUATION FORM - NAVY & GOLD THEME
+   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
    ======================================================= */
 
 :root {
-    /* --- Requested Palette --- */
-    --sv-lightest: #23395d; /* L1 - Borders, Highlights, Hover */
-    --sv-light:    #203354; /* L2 - Section Headers */
-    --sv-mid:      #1c2e4a; /* M1 - Cards, Context Boxes */
-    --sv-dark:     #192841; /* D1 - Section Containers */
-    --sv-darkest:  #152238; /* D2 - Page BG, Recessed Inputs */
-
-    /* --- Functional Mapping for Visibility & Depth --- */
-    --page-bg:          var(--sv-darkest);
-    --container-bg:     var(--sv-dark);     /* Holds cards */
-    --card-bg:          var(--sv-mid);      /* The actual actionable cards */
-    --section-header-bg: var(--sv-light);   /* Major section dividers */
-    --input-bg:         var(--sv-darkest);  /* Recessed look for inputs */
-    --border-color:     var(--sv-lightest); /* High contrast borders */
-    --accent-hover:     var(--sv-lightest);
-    
-    /* --- Text Colors --- */
-    --text-main:      #ffffff; /* Pure white for maximum readability */
-    --text-muted:     #b0b8c1; /* Light gray for secondary text */
-    
-    /* --- Status Colors (Kept as requested in previous turns for usability) --- */
-    --status-green:   #2ecc71;
-    --status-yellow:  #f1c40f;
-    --status-blue:    #3498db;
-    --status-gray:    #95a5a6;
-
-    /* --- Spacing & Borders --- */
-    --radius-card: 12px;
-    --radius-btn: 6px;
-    --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.4); /* Stronger shadow for depth */
-    --shadow-input: inset 0 2px 5px rgba(0,0,0,0.5); /* Inner shadow for recessed look */
+    --supervisor-primary: #002B5B;
+    --supervisor-primary-light: #004080;
+    --supervisor-secondary: #3F3F46;
+    --supervisor-accent: #F8A617;
+    --supervisor-background: #F4F2EE;
+    --supervisor-text: #FAFAFA;
+    --supervisor-text-dark: #2B2B2B;
+    --supervisor-surface: #FFFFFF;
+    --supervisor-border: #E5E7EB;
+    --supervisor-hover: #F9FAFB;
+    --supervisor-success: #059669;
+    --supervisor-warning: #F59E0B;
+    --supervisor-info: #3B82F6;
 }
 
 /* ==================== LAYOUT ==================== */
-body {
-    background-color: var(--page-bg);
-    color: var(--text-main);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+body.supervisor-page {
+    background-color: var(--supervisor-background);
+    color: var(--supervisor-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.main-content {
+body.supervisor-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
     min-height: 100vh;
 }
 
-.evaluation-container {
-    padding: 40px 20px 80px 20px; /* Added bottom padding for footer space */
+/* ==================== HEADER ==================== */
+body.supervisor-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.supervisor-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.supervisor-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--supervisor-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+body.supervisor-page .evaluation-container {
+    padding: 0 0 80px 0;
     max-width: 1400px;
     margin: 0 auto;
 }
 
 /* ==================== PAGE HEADER ==================== */
-.page-header-wrapper {
-    margin-bottom: 30px;
-    border-bottom: 2px solid var(--border-color);
+body.supervisor-page .page-header-wrapper {
+    margin-bottom: 35px;
+    border-bottom: 3px solid var(--supervisor-primary);
     padding-bottom: 15px;
 }
 
-.page-title {
-    color: var(--text-main);
+body.supervisor-page .page-title {
+    color: var(--supervisor-primary);
     font-size: 2.2em;
     margin: 0 0 10px 0;
     display: flex;
     align-items: center;
     gap: 15px;
+    font-weight: 800;
 }
 
-.page-title i {
-    color: var(--status-blue);
+body.supervisor-page .page-title i {
+    color: var(--supervisor-accent);
 }
 
-.page-subtitle {
-    color: var(--text-muted);
+body.supervisor-page .page-subtitle {
+    color: var(--supervisor-secondary);
     font-size: 1.1em;
     margin: 0;
+    font-weight: 500;
 }
 
-/* ==================== CONTEXT INFO (Cards pop from background) ==================== */
-.context-info {
+/* ==================== CONTEXT INFO ==================== */
+body.supervisor-page .context-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
 
-.context-item {
-    background-color: var(--card-bg); /* M1 - Mid tone */
+body.supervisor-page .context-item {
+    background-color: var(--supervisor-surface);
     padding: 20px;
-    border-radius: var(--radius-card);
-    border: 1px solid var(--border-color); /* L1 border for definition */
-    box-shadow: var(--shadow-card);
-    transition: transform 0.2s, border-color 0.2s;
+    border-radius: 12px;
+    border: 1px solid var(--supervisor-border);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
 }
 
-.context-item:hover {
-    border-color: var(--status-blue);
-    transform: translateY(-3px);
+body.supervisor-page .context-item:hover {
+    border-color: var(--supervisor-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.1);
 }
 
-.context-label {
+body.supervisor-page .context-label {
     display: block;
-    font-size: 0.9em;
-    color: var(--text-muted);
+    font-size: 0.85em;
+    color: var(--supervisor-secondary);
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 600;
+    letter-spacing: 0.5px;
+    font-weight: 700;
 }
 
-.context-value {
+body.supervisor-page .context-value {
     font-size: 1.3em;
     font-weight: 700;
-    color: var(--text-main);
+    color: var(--supervisor-primary);
 }
 
 /* ==================== ALERTS ==================== */
-.alert {
-    padding: 15px 20px;
-    border-radius: var(--radius-btn);
-    margin-bottom: 20px;
+body.supervisor-page .alert {
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
     display: flex;
     align-items: flex-start;
     gap: 15px;
-    /* Use darker backgrounds with bright borders for visibility */
-    background-color: var(--sv-dark); 
-    border: 1px solid var(--border-color);
-    border-left-width: 5px;
-    box-shadow: var(--shadow-card);
+    border-left: 4px solid;
+    font-weight: 500;
 }
 
-.alert-info {
-    border-left-color: var(--status-blue);
+body.supervisor-page .alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--supervisor-info);
+    color: #1E3A8A;
 }
-.alert-info i { color: var(--status-blue); }
 
-.alert-warning {
-    border-left-color: var(--status-yellow);
+body.supervisor-page .alert-info i {
+    color: var(--supervisor-info);
 }
-.alert-warning i { color: var(--status-yellow); }
 
-.alert strong {
-    color: var(--text-main);
-    font-weight: 600;
+body.supervisor-page .alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: var(--supervisor-warning);
+    color: #78350F;
+}
+
+body.supervisor-page .alert-warning i {
+    color: var(--supervisor-warning);
+}
+
+body.supervisor-page .alert strong {
+    font-weight: 700;
 }
 
 /* ==================== PROGRESS SECTION ==================== */
-.progress-section {
-    background-color: var(--card-bg); /* M1 */
+body.supervisor-page .progress-section {
+    background-color: var(--supervisor-surface);
     padding: 25px;
-    border-radius: var(--radius-card);
-    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    border: 1px solid var(--supervisor-border);
     margin-bottom: 40px;
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.progress-header {
+body.supervisor-page .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
 
-.progress-title {
+body.supervisor-page .progress-title {
     font-size: 1.2em;
-    font-weight: 600;
-}
-
-.progress-percentage {
-    font-size: 1.5em;
     font-weight: 700;
-    color: var(--status-blue);
+    color: var(--supervisor-primary);
 }
 
-.progress-bar-wrapper {
+body.supervisor-page .progress-title i {
+    color: var(--supervisor-accent);
+    margin-right: 8px;
+}
+
+body.supervisor-page .progress-percentage {
+    font-size: 1.8em;
+    font-weight: 800;
+    color: var(--supervisor-primary);
+}
+
+body.supervisor-page .progress-bar-wrapper {
     width: 100%;
-    height: 18px;
-    /* Darkest background for the track for contrast */
-    background-color: var(--sv-darkest); 
+    height: 20px;
+    background-color: var(--supervisor-hover);
     border-radius: 10px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--supervisor-border);
     overflow: hidden;
     margin-bottom: 20px;
-    box-shadow: var(--shadow-input);
 }
 
-.progress-bar-fill {
+body.supervisor-page .progress-bar-fill {
     height: 100%;
-    /* Use gradient for better visibility */
-    background: linear-gradient(90deg, var(--status-blue), var(--status-green));
+    background: linear-gradient(90deg, var(--supervisor-primary), var(--supervisor-primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8em;
-    color: var(--text-main);
-    font-weight: bold;
+    font-size: 0.75em;
+    color: var(--supervisor-text);
+    font-weight: 700;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.progress-details {
+body.supervisor-page .progress-details {
     display: flex;
     flex-wrap: wrap;
     gap: 30px;
     font-size: 0.95em;
-    color: var(--text-muted);
+    color: var(--supervisor-secondary);
     padding-top: 15px;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid var(--supervisor-border);
 }
 
-.progress-details strong {
-    color: var(--text-main);
+body.supervisor-page .progress-details strong {
+    color: var(--supervisor-primary);
     margin-left: 5px;
+    font-weight: 700;
 }
 
-/* ==================== SECTION HEADERS (Hierarchy) ==================== */
-.section-header {
-    padding: 20px 30px;
-    /* Use L2 (Lightish) for headers so they stand out from the page bg */
-    background-color: var(--section-header-bg);
-    border-radius: var(--radius-card) var(--radius-card) 0 0;
+body.supervisor-page .progress-details i {
+    color: var(--supervisor-accent);
+    margin-right: 5px;
+}
+
+/* ==================== SECTION HEADERS ==================== */
+body.supervisor-page .section-header {
+    padding: 22px 30px;
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
+    border-radius: 12px 12px 0 0;
     margin-bottom: 0;
-    border: 1px solid var(--border-color);
-    border-bottom: none;
+    margin-top: 40px;
 }
 
-.group-section-header {
-    border-bottom: 3px solid var(--status-blue);
+body.supervisor-page .section-header:first-of-type {
+    margin-top: 0;
 }
 
-.student-section-header {
-    border-bottom: 3px solid var(--status-green);
-    margin-top: 50px; /* Extra spacing between major sections */
+body.supervisor-page .group-section-header {
+    border-bottom: 3px solid var(--supervisor-accent);
 }
 
-.section-title {
+body.supervisor-page .student-section-header {
+    border-bottom: 3px solid var(--supervisor-success);
+}
+
+body.supervisor-page .section-title {
     margin: 0;
     font-size: 1.6em;
     display: flex;
     align-items: center;
     gap: 12px;
-    color: var(--text-main);
+    color: var(--supervisor-text);
+    font-weight: 700;
 }
 
-.section-subtitle {
+body.supervisor-page .section-title i {
+    color: var(--supervisor-accent);
+}
+
+body.supervisor-page .section-subtitle {
     margin: 8px 0 0 0;
-    color: var(--text-muted);
+    color: rgba(250, 250, 250, 0.9);
     font-size: 1em;
+    font-weight: 400;
 }
 
 /* ==================== CONTENT CONTAINER ==================== */
-.section-content {
-    /* Use D1 (Dark) to contain the cards. Distinct from Page BG (D2) */
-    background-color: var(--container-bg);
+body.supervisor-page .section-content {
+    background-color: var(--supervisor-surface);
     padding: 30px;
-    border-radius: 0 0 var(--radius-card) var(--radius-card);
-    border: 1px solid var(--border-color);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid var(--supervisor-border);
     border-top: none;
-    box-shadow: var(--shadow-card);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-/* ==================== RUBRIC CARD (The core items) ==================== */
-.rubric-card {
-    /* Use M1 (Mid) for cards so they pop off the D1 container */
-    background-color: var(--card-bg);
+/* ==================== RUBRIC CARD ==================== */
+body.supervisor-page .rubric-card {
+    background-color: var(--supervisor-hover);
     padding: 25px;
-    border-radius: var(--radius-card);
-    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    border: 1px solid var(--supervisor-border);
     margin-bottom: 25px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
 }
 
-.rubric-header {
+body.supervisor-page .rubric-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.08);
+}
+
+body.supervisor-page .rubric-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-bottom: 2px solid rgba(255,255,255,0.1);
+    border-bottom: 2px solid var(--supervisor-border);
     padding-bottom: 15px;
     margin-bottom: 20px;
 }
 
-.rubric-name {
+body.supervisor-page .rubric-name {
     margin: 0;
-    color: var(--text-main);
+    color: var(--supervisor-primary);
     font-size: 1.3em;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.rubric-details {
+body.supervisor-page .rubric-details {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 5px;
-    font-size: 0.95em;
-    color: var(--text-muted);
-    background-color: rgba(0,0,0,0.2);
-    padding: 8px 12px;
-    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--supervisor-secondary);
+    background-color: var(--supervisor-surface);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--supervisor-border);
 }
 
-.rubric-details strong {
-    color: var(--status-yellow);
-    font-size: 1.1em;
+body.supervisor-page .rubric-details strong {
+    color: var(--supervisor-accent);
+    font-size: 1.2em;
+    font-weight: 800;
+}
+
+body.supervisor-page .rubric-details i {
+    color: var(--supervisor-primary);
+    margin-right: 5px;
 }
 
 /* Sub-Rubrics */
-.sub-rubric-container {
-    /* Use D1 (Dark) to recess sub-rubrics slightly within the M1 card */
-    background-color: var(--sv-dark);
+body.supervisor-page .sub-rubric-container {
+    background-color: var(--supervisor-surface);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-bottom: 20px;
-    border: 1px solid var(--border-color);
-    border-left: 4px solid var(--status-blue);
+    border: 1px solid var(--supervisor-border);
+    border-left: 4px solid var(--supervisor-accent);
 }
 
-.sub-rubric-header {
+body.supervisor-page .sub-rubric-header {
     margin-bottom: 15px;
 }
 
-.sub-rubric-name {
+body.supervisor-page .sub-rubric-name {
     margin: 0;
-    color: var(--text-main);
+    color: var(--supervisor-primary);
     font-size: 1.1em;
+    font-weight: 700;
 }
 
-.sub-rubric-description {
-    color: var(--text-muted);
-    font-size: 0.95em;
+body.supervisor-page .sub-rubric-marks {
+    color: var(--supervisor-secondary);
+    font-weight: 600;
+}
+
+body.supervisor-page .sub-rubric-description {
+    color: var(--supervisor-secondary);
+    font-size: 0.9em;
     margin-top: 8px;
     font-style: italic;
 }
 
-/* ==================== RATING OPTIONS (Radios) ==================== */
-.rating-options {
+/* ==================== RATING OPTIONS ==================== */
+body.supervisor-page .rating-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
     margin-top: 15px;
 }
 
-.rating-option {
+body.supervisor-page .rating-option {
     position: relative;
 }
 
-.rating-option input[type="radio"] {
+body.supervisor-page .rating-option input[type="radio"] {
     position: absolute;
     opacity: 0;
 }
 
-.rating-option label {
+body.supervisor-page .rating-option label {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 15px 10px;
-    /* Recessed look: Darkest background with bright border */
-    background-color: var(--input-bg);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
+    padding: 16px 12px;
+    background-color: var(--supervisor-surface);
+    border: 2px solid var(--supervisor-border);
+    border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     height: 100%;
-    box-shadow: var(--shadow-input);
+    min-height: 90px;
 }
 
-/* Hover State */
-.rating-option label:hover {
-    border-color: var(--status-blue);
-    background-color: var(--sv-dark);
+body.supervisor-page .rating-option label:hover {
+    border-color: var(--supervisor-primary);
+    background-color: var(--supervisor-hover);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.1);
 }
 
-/* Checked State - High contrast */
-.rating-option input[type="radio"]:checked + label {
-    /* Use the lightest blue for the active state background */
-    background-color: var(--sv-lightest); 
-    border-color: var(--status-blue);
-    box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+body.supervisor-page .rating-option input[type="radio"]:checked + label {
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
+    border-color: var(--supervisor-primary);
+    box-shadow: 0 4px 16px rgba(0, 43, 91, 0.25);
 }
 
-.rating-label {
-    color: var(--text-main);
+body.supervisor-page .rating-option input[type="radio"]:checked + label .rating-label,
+body.supervisor-page .rating-option input[type="radio"]:checked + label .rating-marks {
+    color: var(--supervisor-text);
+}
+
+body.supervisor-page .rating-label {
+    color: var(--supervisor-text-dark);
     font-weight: 600;
     font-size: 1em;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
-.rating-marks {
-    color: var(--status-green);
-    font-weight: 700;
-    font-size: 1.1em;
-    background-color: rgba(0,0,0,0.3);
-    padding: 2px 8px;
-    border-radius: 10px;
+body.supervisor-page .rating-marks {
+    color: var(--supervisor-accent);
+    font-weight: 800;
+    font-size: 1.2em;
+    background-color: rgba(248, 166, 23, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
 }
 
 /* ==================== COMMENTS AREAS ==================== */
-.comments-section, .rubric-comments-section {
-    /* Recessed container for comments */
-    background-color: var(--sv-dark);
+body.supervisor-page .comments-section,
+body.supervisor-page .rubric-comments-section {
+    background-color: var(--supervisor-surface);
     padding: 25px;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-top: 25px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--supervisor-border);
 }
 
-.comments-title {
-    color: var(--text-main);
+body.supervisor-page .comments-title,
+body.supervisor-page .rubric-comments-header {
+    color: var(--supervisor-primary);
     margin: 0 0 20px 0;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 1.3em;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 10px;
+    font-size: 1.2em;
+    border-bottom: 2px solid var(--supervisor-border);
+    padding-bottom: 12px;
+    font-weight: 700;
 }
 
-.rubric-comments-header {
-    color: var(--text-main);
-    font-size: 1.1em;
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+body.supervisor-page .comments-title i,
+body.supervisor-page .rubric-comments-header i {
+    color: var(--supervisor-accent);
 }
 
-.comment-field, .rubric-comment-field {
+body.supervisor-page .comment-field,
+body.supervisor-page .rubric-comment-field {
     margin-bottom: 20px;
 }
 
-.comment-label {
+body.supervisor-page .comment-label {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    color: var(--text-main);
-    font-weight: 600;
+    color: var(--supervisor-primary);
+    font-weight: 700;
     font-size: 1em;
 }
 
-.optional-tag {
-    color: var(--text-muted);
+body.supervisor-page .comment-label i {
+    color: var(--supervisor-accent);
+    margin-right: 6px;
+}
+
+body.supervisor-page .optional-tag {
+    color: var(--supervisor-secondary);
     font-size: 0.85em;
-    font-weight: normal;
-    background-color: rgba(0,0,0,0.2);
-    padding: 2px 6px;
+    font-weight: 500;
+    background-color: var(--supervisor-hover);
+    padding: 3px 8px;
     border-radius: 4px;
 }
 
-/* High Visibility Textareas */
-textarea {
+/* Textareas */
+body.supervisor-page textarea,
+body.supervisor-page .comment-textarea {
     width: 100%;
     min-height: 120px;
-    /* Darkest BG for recessed look */
-    background-color: var(--input-bg);
-    /* Bright border for definition */
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-main);
+    background-color: var(--supervisor-surface);
+    border: 2px solid var(--supervisor-border);
+    border-radius: 10px;
+    color: var(--supervisor-text-dark);
     padding: 15px;
     font-family: inherit;
     font-size: 1em;
     resize: vertical;
-    box-shadow: var(--shadow-input);
-    transition: border-color 0.3s, box-shadow 0.3s;
+    transition: all 0.3s ease;
 }
 
-textarea:focus {
+body.supervisor-page textarea:focus,
+body.supervisor-page .comment-textarea:focus {
     outline: none;
-    border-color: var(--status-blue);
-    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
-    background-color: var(--sv-dark); /* Slightly lighter on focus */
+    border-color: var(--supervisor-primary);
+    box-shadow: 0 0 0 3px rgba(0, 43, 91, 0.1);
 }
 
-textarea::placeholder {
-    color: rgba(255,255,255,0.4);
+body.supervisor-page textarea::placeholder {
+    color: #9CA3AF;
 }
 
-.char-counter, .rubric-comment-hint {
+body.supervisor-page .char-counter,
+body.supervisor-page .rubric-comment-hint {
     text-align: right;
     font-size: 0.85em;
-    color: var(--text-muted);
+    color: var(--supervisor-secondary);
     margin-top: 8px;
     font-weight: 500;
 }
 
-/* ==================== FORM ACTIONS (Sticky Footer) ==================== */
-.form-actions {
-    position: sticky;
-    bottom: 0;
-    /* Use M1 (Mid) for the footer bar so it stands out from page bg */
-    background-color: var(--sv-mid);
-    padding: 20px 30px;
-    border-top: 2px solid var(--border-color);
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: flex-end;
-    gap: 20px;
-    z-index: 999;
+/* ==================== SEPARATORS ==================== */
+body.supervisor-page .student-separator {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--supervisor-border), transparent);
+    margin: 40px 0;
 }
 
-.btn {
-    padding: 12px 25px;
-    border-radius: var(--radius-btn);
+/* ==================== FORM ACTIONS ==================== */
+body.supervisor-page .form-actions {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--supervisor-surface);
+    padding: 20px 30px;
+    border-top: 2px solid var(--supervisor-border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    z-index: 999;
+    border-radius: 12px 12px 0 0;
+}
+
+body.supervisor-page .btn {
+    padding: 14px 28px;
+    border-radius: 10px;
     border: none;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    transition: all 0.2s;
-    color: white;
+    transition: all 0.3s ease;
+    color: var(--supervisor-text);
     text-decoration: none;
     font-size: 1em;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn:hover {
+body.supervisor-page .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-.btn-back {
-    background-color: var(--sv-lightest); /* Use palette color */
-    color: var(--text-main);
+body.supervisor-page .btn-back {
+    background: linear-gradient(135deg, var(--supervisor-secondary), var(--supervisor-secondary));
+    color: var(--supervisor-text);
 }
-.btn-back:hover { background-color: #34495e; }
 
-.btn-save {
-    background-color: var(--status-blue);
+body.supervisor-page .btn-back:hover {
+    background: linear-gradient(135deg, #52525B, var(--supervisor-secondary));
 }
-.btn-save:hover { background-color: #2980b9; }
+
+body.supervisor-page .btn-save {
+    background: linear-gradient(135deg, var(--supervisor-primary), var(--supervisor-primary-light));
+}
+
+body.supervisor-page .btn-save:hover {
+    background: linear-gradient(135deg, var(--supervisor-primary-light), var(--supervisor-primary));
+}
+
+body.supervisor-page .btn i {
+    font-size: 1.1em;
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    .evaluation-container {
-        padding: 20px 15px 80px 15px;
+    body.supervisor-page .main-content {
+        margin-left: 0;
+        padding: 20px;
     }
     
-    .rating-options {
-        grid-template-columns: 1fr 1fr; /* 2 columns on smaller screens */
+    body.supervisor-page .evaluation-container {
+        padding: 0 0 80px 0;
+    }
+    
+    body.supervisor-page .rating-options {
+        grid-template-columns: 1fr 1fr;
     }
 
-    .rubric-header {
+    body.supervisor-page .rubric-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
+        gap: 12px;
     }
     
-    .rubric-details {
+    body.supervisor-page .rubric-details {
         align-items: flex-start;
         width: 100%;
     }
     
-    .form-actions {
+    body.supervisor-page .form-actions {
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
     }
     
-    .btn {
+    body.supervisor-page .btn {
         width: 100%;
         justify-content: center;
     }
 }
 
 @media (max-width: 480px) {
-     .rating-options {
-        grid-template-columns: 1fr; /* 1 column on very small screens */
+    body.supervisor-page .rating-options {
+        grid-template-columns: 1fr;
     }
 }

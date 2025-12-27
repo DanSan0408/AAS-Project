@@ -1,373 +1,280 @@
-/* ==========================================================
-   STUDENT COMMENTS PAGE STYLES - UPDATED WITH REQUESTED COLOR PALETTE
-   ========================================================== */
+/* =======================================================
+   STUDENT COMMENTS - IRON BURGUNDY & GOLD THEME
+   Primary: #7A1E2D | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
 
-/* Color Variables - Using Your Requested Palette */
 :root {
-    /* Your Requested Color Palette */
-    --bg-darkest: #152238;     /* Darkest */
-    --bg-darker: #192841;      /* Darker */
-    --bg-mid-tone: #1c2e4a;    /* Mid-tone */
-    --bg-light: #203354;       /* Light */
-    --bg-lightest: #23395d;    /* Lightest */
+    --student-primary: #7A1E2D;    /* Iron Burgundy */
+    --student-secondary: #3F3F46;  /* Graphite Grey */
+    --student-accent: #F8A617;     /* Gold */
+    --student-background: #F4F2EE; /* Light Sand Grey */
+    --student-alert: #8B1E1E;      /* Dark Red */
+    --student-text: #FAFAFA;       /* Off White (For dark backgrounds) */
     
-    /* Accent Colors */
-    --color-primary: #3498db;      /* Blue */
-    --color-success: #2ecc71;      /* Green */
-    --color-warning: #f39c12;      /* Yellow/Orange */
-    --color-danger: #e74c3c;       /* Red */
-    --color-purple: #9b59b6;       /* Purple */
-    --color-teal: #1abc9c;         /* Teal */
-
-    /* Text */
-    --text-primary: #ecf0f1;       /* Light Text */
-    --text-secondary: #bdc3c7;     /* Secondary Text */
-    --text-mute: #7f8c8d;          /* Muted Text */
-    
-    /* Font Sizing */
-    --font-size-h2: 2.2em; 
-    --font-size-h3: 1.8em;
-    --font-size-p: 1.1em; 
+    /* Functional Colors */
+    --student-text-dark: #2B2B2B;  /* Dark text for Light Sand background */
+    --student-surface: #FFFFFF;    /* White Cards */
+    --student-border: #D4D1CC;     /* Muted border to match Sand */
+    --student-hover: #EDEAE6;      /* Slightly darker sand for hovers */
+    --student-success: #4CAF7D;    /* Green (Standard Success) */
+    --student-purple: #9B59B6;     /* Rubric Specific Indicator */
 }
 
-/* ==========================================================
-   LAYOUT & CONTAINERS
-   ========================================================== */
+* { box-sizing: border-box; }
 
-.content-container {
-    padding: 40px; 
-    max-width: 1400px; 
-    margin: 0 auto;
-    width: 100%;
-}
-
-.comments-container {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    width: 100%;
-}
-
-/* ==========================================================
-   STATISTICS SUMMARY
-   ========================================================== */
-
-.stats-summary {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: stretch;
-    width: 100%;
-    gap: 20px;
-    background-color: var(--bg-darker);
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--bg-lightest);
-}
-
-.stat-card {
-    flex: 1;
-    background-color: var(--bg-mid-tone);
-    border-radius: 10px;
-    border: 1px solid var(--bg-lightest);
-    padding: 25px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-}
-
-.stat-number {
-    font-size: 3.0em; 
-    font-weight: bold;
-    color: var(--color-primary);
-}
-
-.stat-label {
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    font-size: 1.0em; 
-    margin-top: 8px;
-}
-
-/* ==========================================================
-   ASSESSMENT COMMENTS BLOCK
-   ========================================================== */
-
-.assessment-comments-block {
-    max-width: 1400px;
-    margin: 0 auto 40px auto;
-    background-color: var(--bg-darker);
-    border-radius: 12px;
-    padding: 30px; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--bg-lightest);
-}
-
-.assessment-title-header {
-    color: var(--color-primary);
-    border-bottom: 3px solid var(--color-primary);
-    padding-bottom: 15px;
-    margin-bottom: 30px;
-    font-size: var(--font-size-h2);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-/* ==========================================================
-   THREE-COLUMN COMMENT GRID
-   ========================================================== */
-
-.comments-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 25px;
-    margin-top: 20px;
-}
-
-.comment-column {
-    background-color: var(--bg-mid-tone);
-    padding: 20px;
-    border-radius: 10px;
-    border: 2px solid var(--bg-lightest);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.comment-column h3 {
-    margin-top: 0;
-    padding-bottom: 12px;
-    border-bottom: 2px solid var(--bg-lightest);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.5em;
-    color: var(--text-primary);
-}
-
-/* Column-Specific Styling */
-.column-student {
-    border-color: var(--color-primary);
-}
-.column-student h3 {
-    color: var(--color-primary);
-    border-bottom-color: var(--color-primary);
-}
-
-.column-lecturer {
-    border-color: var(--color-purple);
-}
-.column-lecturer h3 {
-    color: var(--color-purple);
-    border-bottom-color: var(--color-purple);
-}
-
-.column-supervisor {
-    border-color: var(--color-teal);
-}
-.column-supervisor h3 {
-    color: var(--color-teal);
-    border-bottom-color: var(--color-teal);
-}
-
-/* ==========================================================
-   INDIVIDUAL COMMENT CARDS
-   ========================================================== */
-
-.comment-card {
-    background-color: var(--bg-light);
-    padding: 18px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--bg-lightest);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.comment-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.comment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--bg-lightest);
-}
-
-.evaluator-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 0.9em;
-    font-weight: 600;
-}
-
-/* Badge Colors - Enhanced with your palette */
-.badge-self {
-    background-color: #fce3a2;
-    color: #8f5700;
-}
-
-.badge-peer {
-    background-color: #aed6f1;
-    color: var(--bg-darkest);
-}
-
-.badge-lecturer {
-    background-color: #e3c4f2;
-    color: #512e69;
-}
-
-.badge-supervisor {
-    background-color: #a3e4d7;
-    color: #117864;
-}
-
-.comment-date {
-    font-size: 0.85em;
-    color: var(--text-mute);
-}
-
-.comment-label {
-    font-weight: 600;
-    color: var(--color-warning);
-    margin-bottom: 8px;
-    display: block;
-    font-size: 0.95em;
-}
-
-.comment-text {
-    color: var(--text-primary);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    padding: 15px;
-    background-color: var(--bg-darkest);
-    border-radius: 6px;
-    margin-top: 10px;
-    border: 1px solid var(--bg-lightest);
-    font-size: 1.0em;
-}
-
-/* ==========================================================
-   EMPTY STATE (No Comments in Column)
-   ========================================================== */
-
-.no-comments-in-column {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-mute);
-    font-style: italic;
-    background-color: var(--bg-light);
-    border-radius: 8px;
-    margin-top: 15px;
-    border: 1px solid var(--bg-lightest);
-}
-
-.no-comments-in-column i {
-    font-size: 2.5em;
-    margin-bottom: 15px;
-    opacity: 0.5;
-}
-
-.no-comments-in-column p {
+body.student-comments-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--student-background);
     margin: 0;
-    font-size: 1.0em;
+    padding: 0;
+    color: var(--student-text-dark);
+    display: flex;
 }
 
-/* ==========================================================
-   GLOBAL NO COMMENTS MESSAGE
-   ========================================================== */
-
-.no-comments {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-mute);
-    background-color: var(--bg-darker);
-    border-radius: 12px;
-    margin-top: 30px;
-    border: 1px solid var(--bg-lightest);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+/* ==================== LAYOUT ==================== */
+body.student-comments-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--student-background) !important;
+    min-height: 100vh;
 }
 
-.no-comments i {
-    font-size: 5em;
-    margin-bottom: 25px;
-    opacity: 0.4;
-    color: var(--color-primary);
+body.student-comments-page .content-container {
+    padding: 0 !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
 }
 
-.no-comments h2 {
-    color: var(--text-primary);
-    font-size: var(--font-size-h2);
-    margin-bottom: 15px;
+/* ==================== HEADER ==================== */
+body.student-comments-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
 }
 
-.no-comments p {
-    font-size: 1.1em;
-    line-height: 1.6;
-    margin: 10px 0;
+body.student-comments-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.student-comments-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--student-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
 }
 
-/* ==========================================================
-   RESPONSIVE DESIGN
-   ========================================================== */
+/* ==================== STATS SUMMARY ==================== */
+body.student-comments-page .stats-summary {
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 20px !important;
+    background-color: var(--student-surface) !important;
+    border-radius: 12px !important;
+    padding: 25px !important;
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.1) !important;
+    border: 1px solid var(--student-border) !important;
+    margin-bottom: 40px !important;
+}
 
-/* Stack columns on medium screens */
+body.student-comments-page .stat-card {
+    flex: 1 !important;
+    background-color: var(--student-hover) !important;
+    border-radius: 10px !important;
+    border: 1px solid var(--student-border) !important;
+    padding: 20px !important;
+    text-align: center !important;
+}
+
+body.student-comments-page .stat-number {
+    font-size: 2.5em !important;
+    font-weight: 700 !important;
+    color: var(--student-primary) !important;
+}
+
+body.student-comments-page .stat-label {
+    color: var(--student-secondary) !important; /* Changed to Graphite */
+    font-size: 0.9em !important;
+    font-weight: 600 !important;
+}
+
+/* ==================== ASSESSMENT BLOCKS ==================== */
+body.student-comments-page .assessment-comments-block {
+    margin-bottom: 40px !important;
+    background-color: var(--student-surface) !important;
+    border-radius: 12px !important;
+    padding: 30px !important;
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.05) !important;
+    border: 1px solid var(--student-border) !important;
+}
+
+body.student-comments-page .assessment-title-header {
+    color: var(--student-primary) !important;
+    border-bottom: 2px solid var(--student-accent) !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 25px !important;
+    font-size: 1.6em !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-weight: 700 !important;
+}
+
+/* ==================== HORIZONTAL GRID LAYOUT ==================== */
+body.student-comments-page .comments-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 20px !important;
+    align-items: start !important;
+}
+
+/* ==================== INDIVIDUAL COMMENT CARDS ==================== */
+body.student-comments-page .comment-card {
+    background-color: var(--student-surface) !important;
+    padding: 18px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(122, 30, 45, 0.08) !important;
+    border: 1px solid var(--student-border) !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+body.student-comments-page .comment-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 16px rgba(122, 30, 45, 0.15) !important;
+}
+
+/* Rubric Comment Highlight */
+body.student-comments-page .comment-card.rubric-comment {
+    border-left: 4px solid var(--student-purple) !important;
+    background-color: #FDFBFE !important;
+}
+
+body.student-comments-page .rubric-comment-indicator {
+    display: inline-block !important;
+    font-size: 0.75em !important;
+    color: var(--student-purple) !important;
+    background: rgba(155, 89, 182, 0.1) !important;
+    padding: 4px 8px !important;
+    border-radius: 4px !important;
+    margin-bottom: 10px !important;
+    font-weight: 600 !important;
+}
+
+/* Comment Header */
+body.student-comments-page .comment-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 12px !important;
+    font-size: 0.85em !important;
+    color: var(--student-secondary) !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+body.student-comments-page .evaluator-badge {
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    font-weight: 700 !important;
+    font-size: 0.9em !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+
+body.student-comments-page .badge-self {
+    background-color: var(--student-accent) !important; /* Gold */
+    color: var(--student-secondary) !important; /* Dark text on Gold */
+}
+
+body.student-comments-page .badge-peer {
+    background-color: var(--student-secondary) !important; /* Graphite */
+    color: var(--student-text) !important; /* Off White */
+}
+
+body.student-comments-page .badge-lecturer {
+    background-color: var(--student-primary) !important; /* Iron Burgundy */
+    color: var(--student-text) !important; /* Off White */
+}
+
+body.student-comments-page .badge-supervisor {
+    background-color: var(--student-success) !important; /* Green */
+    color: var(--student-text) !important; /* Off White */
+}
+
+body.student-comments-page .comment-date {
+    font-size: 0.85em !important;
+    color: #888 !important;
+}
+
+/* Anonymous Badge */
+body.student-comments-page .anonymous-badge {
+    background: #95a5a6 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.8em !important;
+    margin-left: 5px !important;
+}
+
+/* Content */
+body.student-comments-page .comment-label {
+    display: block !important;
+    font-weight: 600 !important;
+    color: var(--student-primary) !important;
+    margin-bottom: 8px !important;
+    font-size: 0.95em !important;
+}
+
+body.student-comments-page .comment-text {
+    color: var(--student-text-dark) !important;
+    line-height: 1.6 !important;
+    background-color: var(--student-hover) !important;
+    padding: 12px !important;
+    border-radius: 6px !important;
+    font-size: 0.95em !important;
+    flex-grow: 1 !important;
+}
+
+/* Empty State */
+body.student-comments-page .no-comments {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    color: #999 !important;
+    border: 2px dashed var(--student-border) !important;
+    border-radius: 12px !important;
+    background-color: var(--student-surface) !important;
+}
+
+body.student-comments-page .no-comments i {
+    font-size: 3em !important;
+    margin-bottom: 15px !important;
+    color: var(--student-secondary) !important;
+}
+
+body.student-comments-page .no-comments h2 {
+    color: var(--student-primary) !important;
+    margin-bottom: 10px !important;
+}
+
+/* Responsive Grid */
 @media (max-width: 1200px) {
-    .comments-grid {
-        grid-template-columns: 1fr;
-        gap: 25px;
-    }
-
-    .comment-column {
-        padding: 25px;
+    body.student-comments-page .comments-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-/* Stack stats on medium screens */
-@media (max-width: 900px) {
-    .stats-summary {
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .stat-card {
-        flex: 1 1 45%;
-        margin-bottom: 15px;
-    }
-}
-
-/* Stack comment header on small screens */
 @media (max-width: 768px) {
-    .comment-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+    body.student-comments-page .comments-grid {
+        grid-template-columns: 1fr !important;
     }
-}
-
-/* Full stack on mobile */
-@media (max-width: 600px) {
-    .stat-card {
-        flex: 1 1 100%;
-    }
-
-    .content-container {
-        padding: 20px;
-    }
-
-    .assessment-comments-block {
-        padding: 20px;
+    
+    body.student-comments-page .stats-summary {
+        flex-direction: column !important;
     }
 }

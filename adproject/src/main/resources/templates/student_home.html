@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Home</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/student.css}">
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/student_home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="student-home-page">
     <div th:replace="fragments/student_sidebar :: sidebar"></div> 
 
     <div class="main-content">
@@ -41,19 +41,12 @@
                             </div>
                         </div>
 
-                        <!-- Updated Rubric Display - Grouped by Assessment Type Only -->
                         <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">
-                        
-                            <!-- Outer loop - dummy key (we don't display the key itself) -->
                             <div th:each="evalTypeEntry : ${groupedComponents}">
-                                
-                                <!-- Inner loop - Assessment Type -->
                                 <div th:each="assessTypeEntry : ${evalTypeEntry.value}" class="assess-type-group">
                                     <h5 th:text="${'Assessment Type: ' + assessTypeEntry.key}">Assessment Type: Individual Assessment</h5>
                                     
-                                    <!-- Component loop - only Rubrics -->
                                     <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
-                                        
                                         <h6 th:text="${component.name}">Market Survey</h6> 
                                         <div class="rubric-details">
                                             <p>Type: <span>Likert Scale</span></p>
@@ -65,18 +58,15 @@
                                 </div>
                             </div>
                         </th:block>
-                        
                     </div>
-                    
                 </div>
             </div>
             
-            <!-- Deadlines Section - Show ALL deadlines with assessor type badges -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
                     <div th:if="${allDeadlines == null or #lists.isEmpty(allDeadlines)}" 
-                         style="text-align: center; padding: 20px; color: #95a5a6;">
+                         style="text-align: center; padding: 20px; color: #6B6B6B;">
                         <i class="fas fa-calendar-times" style="font-size: 2em; margin-bottom: 10px;"></i>
                         <p>No deadlines available</p>
                     </div>
@@ -90,9 +80,7 @@
                             <p>
                                 <strong>Title:</strong> 
                                 <span th:text="${deadline.title}">Assessment Title</span>
-                                
-                                <!-- Assessor Type Badge - Shows WHO needs to assess -->
-                                 <br><br>
+                                <br><br>
                                 <span class="deadline-badge"
                                       th:classappend="${deadline.assessorType == 'STUDENT' ? 'badge-student' : 
                                                        (deadline.assessorType == 'LECTURER' ? 'badge-lecturer' : 
@@ -111,7 +99,6 @@
                                 <span th:text="${#dates.format(deadline.date, 'dd MMMM yyyy, HH:mm')}">30 November 2025, 00:00</span>
                             </p>
                             
-                            <!-- Open Date (if available) -->
                             <p th:if="${deadline.openDate != null}">
                                 <strong>
                                     <i class="fas fa-door-open"></i> Opens:
@@ -124,6 +111,5 @@
             </div>
         </div>
     </div>
-    
 </body>
 </html>
