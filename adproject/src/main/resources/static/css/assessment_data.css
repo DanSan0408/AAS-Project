@@ -81,6 +81,12 @@ body.data-view-page .assessment-meta {
 
 body.data-view-page .meta-separator { margin: 0 10px !important; color: #ccc !important; }
 
+/* Action Buttons */
+body.data-view-page .action-buttons {
+    display: flex !important;
+    gap: 10px !important;
+}
+
 /* Filter Card */
 body.data-view-page .filter-card {
     background-color: var(--color-surface) !important;
@@ -119,6 +125,17 @@ body.data-view-page .evaluators-card {
     border: 1px solid var(--color-border) !important;
 }
 
+body.data-view-page .evaluators-card h3 {
+    margin: 0 0 15px 0 !important;
+    font-size: 1.1rem !important;
+    color: var(--color-secondary) !important;
+}
+
+body.data-view-page .evaluators-card .highlight {
+    color: var(--color-primary) !important;
+    font-weight: 600 !important;
+}
+
 body.data-view-page .evaluator-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
@@ -133,8 +150,23 @@ body.data-view-page .evaluator-item {
     box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
 }
 
-body.data-view-page .evaluator-name { font-weight: 600 !important; color: var(--color-primary) !important; }
-body.data-view-page .evaluator-email { font-size: 0.85rem !important; color: #666 !important; }
+body.data-view-page .evaluator-name { 
+    font-weight: 600 !important; 
+    color: var(--color-primary) !important; 
+    margin-bottom: 4px !important;
+}
+
+body.data-view-page .evaluator-email { 
+    font-size: 0.85rem !important; 
+    color: #666 !important; 
+}
+
+body.data-view-page .empty-message {
+    text-align: center !important;
+    padding: 20px !important;
+    color: #999 !important;
+    font-style: italic !important;
+}
 
 /* Student Card */
 body.data-view-page .student-card {
@@ -155,17 +187,35 @@ body.data-view-page .student-header {
     align-items: center !important;
 }
 
-body.data-view-page .student-header h3 { margin: 0 !important; font-size: 1.2rem !important; }
+body.data-view-page .student-header h3 { 
+    margin: 0 !important; 
+    font-size: 1.2rem !important; 
+}
+
+body.data-view-page .student-details {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 0.9rem !important;
+}
 
 body.data-view-page .detail-badge {
     background-color: rgba(255,255,255,0.2) !important;
     padding: 4px 10px !important;
     border-radius: 4px !important;
     font-size: 0.9rem !important;
-    margin-left: 10px !important;
 }
 
-body.data-view-page .detail-badge.warning { background-color: var(--color-warning) !important; color: #fff !important; }
+body.data-view-page .detail-badge.warning { 
+    background-color: var(--color-warning) !important; 
+    color: #fff !important; 
+}
+
+/* Table Responsive */
+body.data-view-page .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
 
 /* Data Table */
 body.data-view-page .data-table {
@@ -173,7 +223,7 @@ body.data-view-page .data-table {
     border-collapse: collapse !important;
 }
 
-body.data-view-page th {
+body.data-view-page .data-table th {
     background-color: #f1f5f9 !important;
     color: var(--color-secondary) !important;
     font-weight: 600 !important;
@@ -183,11 +233,19 @@ body.data-view-page th {
     font-size: 0.9rem !important;
 }
 
-body.data-view-page td {
+body.data-view-page .data-table td {
     padding: 12px !important;
     border-bottom: 1px solid var(--color-border) !important;
     vertical-align: top !important;
     font-size: 0.95rem !important;
+}
+
+body.data-view-page .text-center {
+    text-align: center !important;
+}
+
+body.data-view-page .vertical-middle {
+    vertical-align: middle !important;
 }
 
 body.data-view-page .section-header-row td {
@@ -197,16 +255,41 @@ body.data-view-page .section-header-row td {
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     padding-top: 20px !important;
+    padding-bottom: 12px !important;
+}
+
+body.data-view-page .rubric-row {
+    background-color: #fafafa !important;
 }
 
 body.data-view-page .rubric-title {
     font-weight: 600 !important;
     color: var(--color-primary) !important;
     background-color: #fff !important;
+    font-size: 1rem !important;
 }
 
-body.data-view-page .sub-name { font-weight: 500 !important; }
-body.data-view-page .sub-desc { font-size: 0.85rem !important; color: #999 !important; font-style: italic !important; }
+body.data-view-page .rubric-title small {
+    color: #999 !important;
+    font-weight: 400 !important;
+    margin-left: 8px !important;
+}
+
+body.data-view-page .sub-rubric-row {
+    background-color: white !important;
+}
+
+body.data-view-page .sub-name { 
+    font-weight: 500 !important; 
+    color: var(--color-secondary) !important;
+    margin-bottom: 4px !important;
+}
+
+body.data-view-page .sub-desc { 
+    font-size: 0.85rem !important; 
+    color: #999 !important; 
+    font-style: italic !important; 
+}
 
 body.data-view-page .badge-clo {
     background-color: var(--color-secondary) !important;
@@ -214,13 +297,40 @@ body.data-view-page .badge-clo {
     padding: 2px 6px !important;
     border-radius: 4px !important;
     font-size: 0.8rem !important;
+    display: inline-block !important;
 }
 
-body.data-view-page .big-score { font-size: 1.2rem !important; font-weight: 700 !important; color: var(--color-secondary) !important; }
-body.data-view-page .final-score { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--color-success) !important; }
+body.data-view-page .rating-list,
+body.data-view-page .calc-list,
+body.data-view-page .comments-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
 
-body.data-view-page .bg-highlight { background-color: #f0fdf4 !important; }
-body.data-view-page .border-left { border-left: 1px solid var(--color-border) !important; }
+body.data-view-page .rating-item {
+    font-size: 0.9rem !important;
+}
+
+body.data-view-page .big-score { 
+    font-size: 1.2rem !important; 
+    font-weight: 700 !important; 
+    color: var(--color-secondary) !important; 
+}
+
+body.data-view-page .final-score { 
+    font-size: 1.3rem !important; 
+    font-weight: 700 !important; 
+    color: var(--color-success) !important; 
+}
+
+body.data-view-page .bg-highlight { 
+    background-color: #f0fdf4 !important; 
+}
+
+body.data-view-page .border-left { 
+    border-left: 1px solid var(--color-border) !important; 
+}
 
 body.data-view-page .summary-section {
     padding: 15px 25px !important;
@@ -229,10 +339,41 @@ body.data-view-page .summary-section {
     text-align: right !important;
 }
 
+body.data-view-page .summary-row {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 20px !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+}
+
 body.data-view-page .summary-row.total {
     font-size: 1.4rem !important;
     color: var(--color-primary) !important;
     font-weight: 700 !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
+    border-top: 2px solid var(--color-border) !important;
+}
+
+/* Empty State */
+body.data-view-page .empty-state {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .empty-state i {
+    font-size: 4rem !important;
+    color: #ccc !important;
+    margin-bottom: 20px !important;
+}
+
+body.data-view-page .empty-state p {
+    color: #999 !important;
+    font-size: 1.1rem !important;
 }
 
 /* Buttons */
@@ -246,9 +387,26 @@ body.data-view-page .btn {
     display: inline-flex !important;
     align-items: center !important;
     gap: 8px !important;
+    transition: all 0.2s ease !important;
 }
-body.data-view-page .btn-primary { background-color: var(--color-primary) !important; color: white !important; }
-body.data-view-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
+
+body.data-view-page .btn-primary { 
+    background-color: var(--color-primary) !important; 
+    color: white !important; 
+}
+
+body.data-view-page .btn-primary:hover {
+    background-color: #6B0021 !important;
+}
+
+body.data-view-page .btn-secondary { 
+    background-color: var(--color-secondary) !important; 
+    color: white !important; 
+}
+
+body.data-view-page .btn-secondary:hover {
+    background-color: #52525B !important;
+}
 
 /* Print Styles */
 @media print {
@@ -257,8 +415,18 @@ body.data-view-page .btn-secondary { background-color: var(--color-secondary) !i
     body.data-view-page .filter-card {
         display: none !important;
     }
+    
     body.data-view-page .main-content {
         margin: 0 !important;
-        padding: 0 !important;
+        padding: 20px !important;
+    }
+    
+    body.data-view-page .student-card {
+        page-break-inside: avoid !important;
+        margin-bottom: 20px !important;
+    }
+    
+    body.data-view-page .data-table {
+        font-size: 0.85rem !important;
     }
 }
