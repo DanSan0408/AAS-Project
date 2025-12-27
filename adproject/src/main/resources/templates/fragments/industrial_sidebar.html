@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-    <head>
-        <link rel="stylesheet" th:href="@{/css/style.css}">
-        <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
-    </head>
+<head>
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
 <body>
     <div class="sidebar" th:fragment="sidebar">
         <div class="logo">
             <h2>UTM CAS</h2>
         </div>
+        
         <div class="user-profile">
             <span sec:authentication="name"></span>
         </div>
+        
         <ul class="menu-list">
-            <li><a href="/admin/home">Dashboard</a></li>
-            <li><a href="/admin/manage-users">Manage Users</a></li>
-            <li><a href="/rubrics/manage">Manage Rubrics</a></li>
-            <li><a href="/admin/data-views">Data Views</a></li>
             <li>
+                <a th:href="@{/supervisor/home}">
+                    Dashboard
+                </a>
+            </li>
+            
+            <li>
+                <a th:href="@{/supervisor/evaluate}">
+                    Evaluate Groups
+                </a>
+            </li>
+            
+            <li class="logout-item">
                 <form th:action="@{/logout}" method="post">
-                    <button type="submit">Logout</button>
-                    <input type="hidden" th:name="_csrf" th:value="${_csrf.token}" />
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                 </form>
             </li>
         </ul>

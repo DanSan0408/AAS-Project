@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Evaluate - [[${assessment.title}]]</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
 </head>
-<body>
+<body class="lecturer-page">
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
                 <h1>UTM CAS</h1>
             </div>
         </div>
@@ -34,12 +34,6 @@
                             <li th:each="student : ${groupStudents}" th:text="${student.username}">Student</li>
                         </ul>
                     </div>
-                </div>
-
-                <div class="save-info">
-                    <p><strong>💾 Auto-Save Enabled</strong></p>
-                    <p>You can save your progress at any time by clicking "Save Progress" at the bottom.</p>
-                    <p>Your evaluation will be marked as <strong>"Completed"</strong> only when all rubrics are rated and all required comments are filled.</p>
                 </div>
 
                 <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
@@ -139,7 +133,7 @@
                             
                             <div th:if="${hasComments}" class="comments-section">
                                 <div class="comments-header">
-                                    <h3>💬 Group Assessment Comments</h3>
+                                    <h3>Group Assessment Comments</h3>
                                     <p style="font-size: 0.9em; color: #95a5a6;">
                                         Optional: You can save and continue later
                                     </p>
@@ -264,7 +258,7 @@
                                 
                                 <div th:if="${hasComments}" class="comments-section">
                                     <div class="comments-header">
-                                        <h3>💬 Individual Assessment Comments</h3>
+                                        <h3>Individual Assessment Comments</h3>
                                         <p style="font-size: 0.9em; color: #95a5a6;">
                                             Optional: You can save and continue later
                                         </p>

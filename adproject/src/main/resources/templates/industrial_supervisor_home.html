@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Industrial Supervisor Home</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/supervisor.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="supervisor-page">
     <div th:replace="fragments/industrial_sidebar :: sidebar"></div> 
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS - Industrial Supervisor</h1>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         

@@ -1,187 +1,212 @@
-/* =========================================
-   LOCAL VARIABLES (Specific to this page's cards)
-   ========================================= */
+/* =======================================================
+   LECTURER GROUP SELECTION - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
 :root {
-    /* Specific Palette for Cards */
-    --card-bg-lightest: #23395d;
-    --card-bg-light:    #203354;
-    --card-bg-mid:      #1c2e4a;
-    --card-bg-dark:     #192841;
-    --card-bg-darkest:  #152238;
-
-    /* Functional Colors */
-    --text-white:       #ffffff;
-    --text-muted:       #a0aab5;
-    --accent-blue:      #4a90e2; 
-    
-    /* Status Colors */
-    --status-success-bg: #2ecc71;
-    --status-success-text: #ffffff;
-    --status-warn-bg:    #f1c40f;
-    --status-warn-text:  #152238;
-    --status-gray-bg:    #95a5a6;
-    --status-gray-text:  #ffffff;
-
-    /* Spacing & Borders */
-    --border-radius: 10px;
-    --shadow-soft: 0 4px 6px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.4);
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-hover: #F9FAFB;
+    --lecturer-success: #059669;
+    --lecturer-warning: #F59E0B;
+    --lecturer-muted: #6B7280;
 }
 
-/* =========================================
-   CONTENT LAYOUT
-   ========================================= */
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    color: var(--lecturer-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-/* Adjusting container to fit inside style.css .main-content */
-.content-flex-container {
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+}
+
+/* ==================== HEADER ==================== */
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+}
+
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+/* ==================== SELECTION CONTAINER ==================== */
+body.lecturer-page .selection-container {
+    background-color: var(--lecturer-surface);
     width: 100%;
-    display: flex;
-    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--lecturer-border);
 }
 
-.selection-container {
-    background-color: var(--card-bg-mid); /* #1c2e4a */
-    width: 100%;
-    /* max-width is optional depending on preference, removing specific width constraint helps responsiveness */
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid var(--card-bg-lightest);
+body.lecturer-page .dashboard-header {
+    margin-bottom: 30px;
+    border-bottom: 3px solid var(--lecturer-primary);
+    padding-bottom: 15px;
 }
 
-.dashboard-header {
-    margin-bottom: 2rem;
-    border-bottom: 2px solid var(--card-bg-light);
-    padding-bottom: 1rem;
-}
-
-.dashboard-header h2 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+body.lecturer-page .dashboard-header h2 {
+    font-size: 2em;
+    margin-bottom: 8px;
     margin-top: 0;
-    color: var(--text-white);
+    color: var(--lecturer-primary);
+    font-weight: 800;
 }
 
-.subtitle {
-    color: var(--text-muted);
+body.lecturer-page .subtitle {
+    color: var(--lecturer-muted);
     margin: 0;
-}
-
-/* =========================================
-   ALERTS
-   ========================================= */
-.alert-container {
-    margin-bottom: 1.5rem;
-}
-
-.alert {
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 1.1em;
     font-weight: 500;
 }
 
-.alert-error {
-    background-color: rgba(231, 76, 60, 0.2);
-    border: 1px solid #e74c3c;
-    color: #ffcece;
+/* ==================== ALERTS ==================== */
+body.lecturer-page .alert-container {
+    margin-bottom: 25px;
 }
 
-.alert-success {
-    background-color: rgba(46, 204, 113, 0.2);
-    border: 1px solid #2ecc71;
-    color: #d4efdf;
+body.lecturer-page .alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    border-left: 4px solid;
 }
 
-/* =========================================
-   GROUPS GRID SYSTEM
-   ========================================= */
-.groups-grid {
+body.lecturer-page .alert-error {
+    background-color: #FEE2E2;
+    border-color: #DC2626;
+    color: #7F1D1D;
+}
+
+body.lecturer-page .alert-success {
+    background-color: #D1FAE5;
+    border-color: var(--lecturer-success);
+    color: #065F46;
+}
+
+body.lecturer-page .alert .icon {
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+/* ==================== GROUPS GRID ==================== */
+body.lecturer-page .groups-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
+    gap: 25px;
 }
 
-/* =========================================
-   GROUP CARD DESIGN
-   ========================================= */
-.group-card {
-    background-color: var(--card-bg-light); /* #203354 */
-    border: 1px solid var(--card-bg-lightest);
-    border-radius: var(--border-radius);
+/* ==================== GROUP CARDS ==================== */
+body.lecturer-page .group-card {
+    background-color: var(--lecturer-surface);
+    border: 1px solid var(--lecturer-border);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s ease;
     overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.group-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
-    border-color: var(--accent-blue);
+body.lecturer-page .group-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(4, 120, 87, 0.15);
+    border-color: var(--lecturer-primary);
 }
 
 /* Card Top */
-.card-top {
-    padding: 1.2rem;
-    background-color: var(--card-bg-lightest); /* #23395d */
+body.lecturer-page .card-top {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--card-bg-mid);
+    border-bottom: none;
 }
 
-.card-top h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
+body.lecturer-page .card-top h3 {
+    font-size: 1.3em;
+    font-weight: 700;
     margin: 0;
-    color: var(--text-white);
+    color: var(--lecturer-text);
 }
 
-/* Badges */
-.badge {
-    padding: 4px 10px;
+/* Status Badges */
+body.lecturer-page .badge {
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: bold;
+    font-size: 0.8em;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.badge-completed {
-    background-color: var(--status-success-bg);
-    color: var(--status-success-text);
+body.lecturer-page .badge-completed {
+    background-color: var(--lecturer-success);
+    color: white;
+    border: none;
 }
 
-.badge-progress {
-    background-color: var(--status-warn-bg);
-    color: var(--status-warn-text);
+body.lecturer-page .badge-progress {
+    background-color: var(--lecturer-warning);
+    color: white;
+    border: none;
 }
 
-.badge-pending {
-    background-color: var(--status-gray-bg);
-    color: var(--status-gray-text);
+body.lecturer-page .badge-pending {
+    background-color: var(--lecturer-secondary);
+    color: white;
+    border: none;
 }
 
 /* Card Body */
-.card-body {
-    padding: 1.2rem;
+body.lecturer-page .card-body {
+    padding: 20px;
     flex-grow: 1;
+    background-color: var(--lecturer-surface);
 }
 
-.members-section label {
+body.lecturer-page .members-section label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 0.85em;
     text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 0.8rem;
+    color: var(--lecturer-muted);
+    margin-bottom: 12px;
     font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
-.member-list {
+body.lecturer-page .member-list {
     list-style: none;
     max-height: 150px;
     overflow-y: auto;
@@ -189,83 +214,84 @@
     margin: 0;
 }
 
-.member-list::-webkit-scrollbar {
-    width: 6px;
-}
-.member-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-.member-list::-webkit-scrollbar-thumb {
-    background-color: var(--card-bg-mid);
-    border-radius: 3px;
-}
-
-.member-list li {
+body.lecturer-page .member-list li {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 8px;
-    padding: 5px;
-    border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.05);
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    background-color: var(--lecturer-hover);
 }
 
-.avatar-circle {
-    width: 28px;
-    height: 28px;
-    background-color: var(--card-bg-mid);
-    color: var(--text-white);
+body.lecturer-page .avatar-circle {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
+    color: var(--lecturer-text);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 0.8rem;
-    font-weight: bold;
+    font-size: 0.85em;
+    font-weight: 700;
 }
 
-.member-name {
-    font-size: 0.95rem;
-    color: var(--text-white);
+body.lecturer-page .member-name {
+    font-size: 0.95em;
+    color: var(--lecturer-text-dark);
+    font-weight: 500;
 }
 
-.no-members {
-    color: var(--text-muted);
+body.lecturer-page .no-members {
+    color: var(--lecturer-muted);
     font-style: italic;
     text-align: center;
-    padding: 10px;
+    padding: 20px;
 }
 
-/* Card Footer & Button */
-.card-footer {
-    padding: 1.2rem;
-    background-color: rgba(0, 0, 0, 0.1);
-    border-top: 1px solid var(--card-bg-mid);
+/* Card Footer */
+body.lecturer-page .card-footer {
+    padding: 20px;
+    background-color: var(--lecturer-surface);
+    border-top: 1px solid var(--lecturer-border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.btn-action {
-    display: block;
-    width: 100%;
+body.lecturer-page .btn-action {
+    display: inline-block;
     text-align: center;
-    background-color: var(--accent-blue);
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
     color: white;
     text-decoration: none;
-    padding: 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: background 0.2s;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
+    min-width: 200px;
 }
 
-.btn-action:hover {
-    background-color: #357abd;
+body.lecturer-page .btn-action:hover {
+    background: linear-gradient(135deg, var(--lecturer-primary-light), var(--lecturer-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
 }
 
-/* Responsive */
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    .groups-grid {
+    body.lecturer-page .groups-grid {
         grid-template-columns: 1fr;
     }
     
-    .selection-container {
-        padding: 1rem;
+    body.lecturer-page .selection-container {
+        padding: 20px;
+    }
+    
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px;
     }
 }

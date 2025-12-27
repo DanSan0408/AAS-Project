@@ -51,7 +51,7 @@ body.assign-lecturer-page .header-container {
     width: 100% !important;
 }
 
-body.assign-lecturer-page .header-container img { max-width: 150px !important; height: auto !important; }
+body.assign-lecturer-page .header-container img { max-width: 200px !important; height: auto !important; }
 body.assign-lecturer-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
 body.assign-lecturer-page .page-header {

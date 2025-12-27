@@ -1,182 +1,210 @@
 /* =======================================================
-    LECTURER ASSESSMENT DASHBOARD - DEDICATED CSS
-    Color Palette: #23395d, #203354, #1c2e4a, #192841, #152238
-    
-    NOTE: This file inherits core styles from lecturer_evaluation.css
-    but redefines variables and key elements for clarity.
-    ======================================================= */
+   LECTURER ASSESSMENTS - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
 
-/* ==================== ROOT VARIABLES ==================== */
 :root {
-    /* Primary Palette - Dark Blue Theme */
-    --primary-dark: #23395d;
-    --primary-darker: #203354;
-    --primary-darkest: #1c2e4a;
-    --primary-night: #192841;
-    --primary-midnight: #152238;
-    
-    /* Accent Colors (Consistent with standard web UI) */
-    --accent-blue: #3498db;
-    --accent-green: #27ae60;
-    --accent-red: #e74c3c;
-    
-    /* General UI Colors */
-    --bg-white: #ffffff;
-    --border-color: #e0e0e0;
-    --text-dark: #2c3e50;
-    --text-medium: #555555;
-    
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-hover: #F9FAFB;
+    --lecturer-success: #059669;
+    --lecturer-alert: #DC2626;
 }
 
-/* ==================== LAYOUT & HEADINGS ==================== */
-/* Assuming .main-content and .header are defined in style.css */
-
-.content-flex-container {
-    padding: 20px;
-    display: flex;
-    justify-content: center;
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    color: var(--lecturer-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.rubric-section {
-    max-width: 900px;
-    width: 100%;
-    margin: 0 auto;
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
 }
 
-.rubric-section h2 {
-    color: var(--bg-white);
-    margin-bottom: 25px;
-    font-size: 28px;
-    font-weight: 600;
-    border-bottom: 3px solid var(--primary-darker);
-    padding-bottom: 10px;
+/* ==================== CONTENT SECTION ==================== */
+body.lecturer-page .rubric-section h2 {
+    color: var(--lecturer-primary) !important;
+    font-size: 1.8em !important;
+    font-weight: 800 !important;
+    margin-bottom: 30px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 3px solid var(--lecturer-primary) !important;
 }
 
-/* ==================== ALERTS & MESSAGES ==================== */
-.alert {
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 6px;
-    font-size: 15px;
+/* ==================== HEADER ==================== */
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
 }
 
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
 }
 
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
 }
 
 /* ==================== ASSESSMENT CARDS ==================== */
-.assessment-card {
-    background: var(--primary-dark);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+body.lecturer-page .assessment-card {
+    background-color: var(--lecturer-surface);
+    border: 1px solid var(--lecturer-border);
+    border-left: 5px solid var(--lecturer-primary);
+    border-radius: 12px;
     padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
 }
 
-.assessment-card:hover {
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-darker);
+body.lecturer-page .assessment-card:hover {
+    box-shadow: 0 8px 20px rgba(4, 120, 87, 0.12);
     transform: translateY(-2px);
 }
 
-.assessment-card h3 {
-    color: var(--bg-white);
+body.lecturer-page .assessment-card h3 {
+    color: var(--lecturer-primary);
     margin-bottom: 15px;
-    font-size: 22px;
-    padding-bottom: 5px;
-    border-bottom: 1px dashed var(--border-color);
+    font-size: 1.5em;
+    font-weight: 700;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--lecturer-border);
 }
 
-.assessment-details {
+/* ==================== STATUS BADGES ==================== */
+body.lecturer-page .status-container {
+    margin: 12px 0;
+}
+
+body.lecturer-page .status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+body.lecturer-page .status-open {
+    background-color: var(--lecturer-success);
+    color: white;
+}
+
+body.lecturer-page .status-closed {
+    background-color: var(--lecturer-alert);
+    color: white;
+}
+
+/* ==================== ASSESSMENT DETAILS ==================== */
+body.lecturer-page .assessment-details {
     margin-bottom: 20px;
-    font-size: 15px;
-    color: var(--bg-white);
+    font-size: 0.95em;
+    color: var(--lecturer-text-dark);
 }
 
-.assessment-details p {
+body.lecturer-page .assessment-details p {
     margin: 8px 0;
-    color: var(--bg-white);
 }
 
-.assessment-details strong {
-    color: var(--bg-white);
+body.lecturer-page .assessment-details strong {
+    color: var(--lecturer-primary);
+    font-weight: 700;
 }
 
-.assessment-details ul {
+body.lecturer-page .assessment-details ul {
     margin: 10px 0 0 20px;
     padding-left: 0;
     list-style-type: disc;
-    color: var(--bg-white);
 }
 
-.assessment-details li {
+body.lecturer-page .assessment-details li {
     margin: 5px 0;
-    font-size: 14px;
+    font-size: 0.95em;
 }
 
 /* ==================== BUTTONS ==================== */
-.btn-evaluate {
-    background-color: var(--accent-green);
+body.lecturer-page .btn-evaluate {
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
     color: white;
     padding: 12px 25px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
     font-size: 15px;
-    font-weight: bold;
-    transition: background 0.3s ease;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
 }
 
-.btn-evaluate:hover {
-    background-color: #229954; /* Darker green for hover */
+body.lecturer-page .btn-evaluate:hover {
+    background: linear-gradient(135deg, var(--lecturer-primary-light), var(--lecturer-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
+}
+
+body.lecturer-page .btn-disabled {
+    background-color: #9CA3AF !important;
+    color: #E5E7EB !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    box-shadow: none !important;
+}
+
+body.lecturer-page .btn-disabled:hover {
+    background-color: #9CA3AF !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 /* ==================== EMPTY STATE ==================== */
-.no-assessments {
+body.lecturer-page .no-assessments {
     text-align: center;
-    padding: 50px;
-    color: var(--text-medium);
-    background: #f0f4f8;
-    border: 1px dashed var(--border-color);
-    border-radius: 10px;
+    padding: 60px 40px;
+    color: var(--lecturer-secondary);
+    background-color: var(--lecturer-surface);
+    border: 2px dashed var(--lecturer-border);
+    border-radius: 12px;
     margin-top: 30px;
 }
 
-.no-assessments p {
-    font-size: 18px;
-    font-style: italic;
+body.lecturer-page .no-assessments p {
+    font-size: 1.1em;
+    font-weight: 500;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
+/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    .rubric-section {
-        padding: 0 10px;
-    }
-    
-    .rubric-section h2 {
-        font-size: 24px;
-    }
-
-    .assessment-card {
+    body.lecturer-page .main-content {
+        margin-left: 0;
         padding: 20px;
     }
 
-    .btn-evaluate {
+    body.lecturer-page .assessment-card {
+        padding: 20px;
+    }
+
+    body.lecturer-page .btn-evaluate {
         width: 100%;
         text-align: center;
     }

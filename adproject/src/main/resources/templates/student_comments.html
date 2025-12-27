@@ -4,47 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Assessment Comments</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/student_comments.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Rubric comment styling */
-        .rubric-comment-indicator {
-            display: inline-block;
-            padding: 4px 10px;
-            background: rgba(155, 89, 182, 0.15);
-            border: 1px solid #9b59b6;
-            border-radius: 4px;
-            font-size: 0.8em;
-            color: #9b59b6;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .comment-card.rubric-comment {
-            border-left: 4px solid #9b59b6;
-            background: linear-gradient(to right, rgba(155, 89, 182, 0.05), transparent);
-        }
-        
-        .anonymous-badge {
-            background: #95a5a6;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.75em;
-            margin-left: 6px;
-            font-weight: 600;
-        }
-    </style>
 </head>
-<body>
+<body class="student-comments-page">
     <div th:replace="fragments/student_sidebar :: sidebar"></div>
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>📝 My Assessment Comments</h1>
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         
@@ -79,192 +50,161 @@
                         <span th:text="${assessmentEntry.key}">Assessment Name</span>
                     </h2>
                     
-                    <!-- Dynamic Column Layout - Only show columns with comments -->
-                    <div class="comments-grid" th:with="
-                        hasStudentComments=${(assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()) or 
-                                           (assessmentEntry.value['team'] != null and !assessmentEntry.value['team'].isEmpty()) or 
-                                           (assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty())},
-                        hasLecturerComments=${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()},
-                        hasSupervisorComments=${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}">
+                    <!-- Horizontal Grid Layout: All Comments -->
+                    <div class="comments-grid">
                         
-                        <!-- COLUMN 1: Student Comments (Self + Peer + Team) -->
-                        <div th:if="${hasStudentComments}" class="comment-column column-student">
-                            <h3>
-                                <i class="fas fa-users"></i>
-                                Student Comments
-                            </h3>
-                            
-                            <!-- Self Comment -->
-                            <div th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}">
-                                <div th:each="comment : ${assessmentEntry.value['self']}" 
-                                     th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
-                                    
-                                    <!-- Rubric indicator -->
-                                    <div th:if="${comment.rubricId != null}">
-                                        <span class="rubric-comment-indicator">
-                                            <i class="fas fa-layer-group"></i> Rubric-Specific Comment
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="comment-header">
-                                        <span class="evaluator-badge badge-self">
-                                            <i class="fas fa-user-circle"></i>
-                                            You (Self)
-                                        </span>
-                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-                                    </div>
-                                    
-                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
-                                    <div class="comment-text" th:text="${comment.commentText}">
-                                        Self reflection comment text here...
-                                    </div>
+                        <!-- Self Comments -->
+                        <th:block th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}">
+                            <div th:each="comment : ${assessmentEntry.value['self']}" 
+                                 th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
+                                
+                                <div th:if="${comment.rubricId != null}">
+                                    <span class="rubric-comment-indicator">
+                                        <i class="fas fa-layer-group"></i> Rubric-Specific
+                                    </span>
+                                </div>
+                                
+                                <div class="comment-header">
+                                    <span class="evaluator-badge badge-self">
+                                        <i class="fas fa-user-circle"></i>
+                                        You (Self)
+                                    </span>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                </div>
+                                
+                                <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                <div class="comment-text" th:text="${comment.commentText}">
+                                    Self reflection comment text here...
                                 </div>
                             </div>
-                            
-                            <!-- Team Comments -->
-                            <div th:if="${assessmentEntry.value['team'] != null and !assessmentEntry.value['team'].isEmpty()}">
-                                <div th:each="comment : ${assessmentEntry.value['team']}" 
-                                     th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
-                                    
-                                    <!-- Rubric indicator -->
-                                    <div th:if="${comment.rubricId != null}">
-                                        <span class="rubric-comment-indicator">
-                                            <i class="fas fa-layer-group"></i> Rubric-Specific Comment
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="comment-header">
-                                        <span class="evaluator-badge badge-self" style="background: #9b59b6;">
-                                            <i class="fas fa-users"></i>
-                                            You (Team Evaluation)
-                                        </span>
-                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-                                    </div>
-                                    
-                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
-                                    <div class="comment-text" th:text="${comment.commentText}">
-                                        Team evaluation comment text here...
-                                    </div>
+                        </th:block>
+                        
+                        <!-- Team Comments -->
+                        <th:block th:if="${assessmentEntry.value['team'] != null and !assessmentEntry.value['team'].isEmpty()}">
+                            <div th:each="comment : ${assessmentEntry.value['team']}" 
+                                 th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
+                                
+                                <div th:if="${comment.rubricId != null}">
+                                    <span class="rubric-comment-indicator">
+                                        <i class="fas fa-layer-group"></i> Rubric-Specific
+                                    </span>
+                                </div>
+                                
+                                <div class="comment-header">
+                                    <span class="evaluator-badge badge-self" style="background-color: #9B59B6;">
+                                        <i class="fas fa-users"></i>
+                                        You (Team)
+                                    </span>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                </div>
+                                
+                                <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                <div class="comment-text" th:text="${comment.commentText}">
+                                    Team evaluation comment text here...
                                 </div>
                             </div>
-                            
-                            <!-- Peer Comments -->
-                            <div th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}">
-                                <div th:each="comment : ${assessmentEntry.value['peer']}" 
-                                     th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
-                                    
-                                    <!-- Rubric indicator -->
-                                    <div th:if="${comment.rubricId != null}">
-                                        <span class="rubric-comment-indicator">
-                                            <i class="fas fa-layer-group"></i> Rubric-Specific Comment
+                        </th:block>
+                        
+                        <!-- Peer Comments -->
+                        <th:block th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}">
+                            <div th:each="comment : ${assessmentEntry.value['peer']}" 
+                                 th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
+                                
+                                <div th:if="${comment.rubricId != null}">
+                                    <span class="rubric-comment-indicator">
+                                        <i class="fas fa-layer-group"></i> Rubric-Specific
+                                    </span>
+                                </div>
+                                
+                                <div class="comment-header">
+                                    <span class="evaluator-badge badge-peer">
+                                        <i class="fas fa-user-friends"></i>
+                                        <span th:text="${comment.displayName}">Teammate 1</span>
+                                        <span th:if="${comment.anonymousIdentifier != null and !comment.anonymousIdentifier.isEmpty() and comment.displayName == comment.anonymousIdentifier}" 
+                                              class="anonymous-badge">
+                                            <i class="fas fa-user-secret"></i> Anonymous
                                         </span>
-                                    </div>
-                                    
-                                    <div class="comment-header">
-                                        <span class="evaluator-badge badge-peer">
-                                            <i class="fas fa-user-friends"></i>
-                                            <span th:text="${comment.displayName}">Teammate 1</span>
-                                            <!-- Show anonymous badge if anonymous -->
-                                            <span th:if="${comment.anonymousIdentifier != null and !comment.anonymousIdentifier.isEmpty() and comment.displayName == comment.anonymousIdentifier}" 
-                                                  class="anonymous-badge">
-                                                <i class="fas fa-user-secret"></i> Anonymous
-                                            </span>
-                                        </span>
-                                        <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-                                    </div>
-                                    
-                                    <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
-                                    <div class="comment-text" th:text="${comment.commentText}">
-                                        Peer comment text here...
-                                    </div>
+                                    </span>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                </div>
+                                
+                                <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                <div class="comment-text" th:text="${comment.commentText}">
+                                    Peer comment text here...
                                 </div>
                             </div>
-                        </div>
+                        </th:block>
                         
-                        <!-- COLUMN 2: Lecturer Comments -->
-<div th:if="${hasLecturerComments}" class="comment-column column-lecturer">
-    <h3>
-        <i class="fas fa-chalkboard-teacher"></i>
-        Lecturer Comments
-    </h3>
-    
-    <div th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}">
-        <div th:each="comment : ${assessmentEntry.value['lecturer']}" 
-             th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
-            
-            <!-- Rubric indicator -->
-            <div th:if="${comment.rubricId != null}">
-                <span class="rubric-comment-indicator">
-                    <i class="fas fa-layer-group"></i> Rubric-Specific Comment
-                </span>
-            </div>
-            
-            <div class="comment-header">
-                <span class="evaluator-badge badge-lecturer">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span th:text="${comment.displayName}">Dr. Hakim</span>
-                    <!-- Show anonymous badge if anonymous -->
-                    <span th:if="${comment.displayName == 'Lecturer'}" 
-                          class="anonymous-badge">
-                        <i class="fas fa-user-secret"></i> Anonymous
-                    </span>
-                </span>
-                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-            </div>
-            
-            <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
-            <div class="comment-text" th:text="${comment.commentText}">
-                Lecturer comment text here...
-            </div>
-        </div>
-    </div>
-</div>
+                        <!-- Lecturer Comments -->
+                        <th:block th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}">
+                            <div th:each="comment : ${assessmentEntry.value['lecturer']}" 
+                                 th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
+                                
+                                <div th:if="${comment.rubricId != null}">
+                                    <span class="rubric-comment-indicator">
+                                        <i class="fas fa-layer-group"></i> Rubric-Specific
+                                    </span>
+                                </div>
+                                
+                                <div class="comment-header">
+                                    <span class="evaluator-badge badge-lecturer">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <span th:text="${comment.displayName}">Dr. Hakim</span>
+                                        <span th:if="${comment.displayName == 'Lecturer'}" 
+                                              class="anonymous-badge">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </span>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                </div>
+                                
+                                <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                <div class="comment-text" th:text="${comment.commentText}">
+                                    Lecturer comment text here...
+                                </div>
+                            </div>
+                        </th:block>
                         
-                        <!-- COLUMN 3: Supervisor Comments -->
-<div th:if="${hasSupervisorComments}" class="comment-column column-supervisor">
-    <h3>
-        <i class="fas fa-user-tie"></i>
-        Supervisor Comments
-    </h3>
-    
-    <div th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}">
-        <div th:each="comment : ${assessmentEntry.value['supervisor']}" 
-             th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
-            
-            <!-- Rubric indicator -->
-            <div th:if="${comment.rubricId != null}">
-                <span class="rubric-comment-indicator">
-                    <i class="fas fa-layer-group"></i> Rubric-Specific Comment
-                </span>
+                        <!-- Supervisor Comments -->
+                        <th:block th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}">
+                            <div th:each="comment : ${assessmentEntry.value['supervisor']}" 
+                                 th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
+                                
+                                <div th:if="${comment.rubricId != null}">
+                                    <span class="rubric-comment-indicator">
+                                        <i class="fas fa-layer-group"></i> Rubric-Specific
+                                    </span>
+                                </div>
+                                
+                                <div class="comment-header">
+                                    <span class="evaluator-badge badge-supervisor">
+                                        <i class="fas fa-briefcase"></i>
+                                        <span th:text="${comment.displayName}">Mr. Ahmad</span>
+                                        <span th:if="${comment.displayName == 'Supervisor'}" 
+                                              class="anonymous-badge">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </span>
+                                    <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
+                                </div>
+                                
+                                <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
+                                <div class="comment-text" th:text="${comment.commentText}">
+                                    Supervisor comment text here...
+                                </div>
+                            </div>
+                        </th:block>
+                        
+                    </div>
+                </div>
             </div>
-            
-            <div class="comment-header">
-                <span class="evaluator-badge badge-supervisor">
-                    <i class="fas fa-briefcase"></i>
-                    <span th:text="${comment.displayName}">Mr. Ahmad</span>
-                    <!-- Show anonymous badge if anonymous -->
-                    <span th:if="${comment.displayName == 'Supervisor'}" 
-                          class="anonymous-badge">
-                        <i class="fas fa-user-secret"></i> Anonymous
-                    </span>
-                </span>
-                <span class="comment-date" th:text="${#temporals.format(comment.submittedAt, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</span>
-            </div>
-            
-            <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
-            <div class="comment-text" th:text="${comment.commentText}">
-                Supervisor comment text here...
-            </div>
-        </div>
-    </div>
-</div>
             
             <!-- No Comments Message -->
             <div th:if="${commentsByAssessment == null or commentsByAssessment.isEmpty()}" class="no-comments">
                 <i class="fas fa-comments"></i>
                 <h2>No Comments Yet</h2>
                 <p>You haven't received any assessment comments yet.</p>
-                <p style="color: #7f8c8d;">Comments from peers, lecturers, and supervisors will appear here once evaluations are submitted.</p>
+                <p style="color: #6B6B6B;">Comments from peers, lecturers, and supervisors will appear here once evaluations are submitted.</p>
             </div>
             
         </div>

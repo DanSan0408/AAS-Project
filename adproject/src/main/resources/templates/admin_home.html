@@ -107,7 +107,7 @@
                                 <div class="assessment-comments-section" style="margin-top: 15px;" 
                                      th:if="${assessment.groupCommentLabels != null && !assessment.groupCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
-                                        <h3><i class="fas fa-comments"></i> Group Assessment Feedback</h3>
+                                        <h3><i class="fas fa-comments"></i> Group Assessment Comments</h3>
                                     </div>
                                     
                                     <div class="comments-summary">
@@ -193,7 +193,7 @@
                                 <div class="assessment-comments-section" style="margin-top: 15px;"
                                      th:if="${assessment.individualCommentLabels != null && !assessment.individualCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
-                                        <h3><i class="fas fa-comments"></i> Individual Assessment Feedback</h3>
+                                        <h3><i class="fas fa-comments"></i> Individual Assessment Comments</h3>
                                     </div>
                                     
                                     <div class="comments-summary">
@@ -323,13 +323,6 @@
                                     GENERAL
                                 </span>
                             </p>
-                            
-                            <!-- Assessment ID (if applicable) -->
-                            <p th:if="${deadline.assessmentId != null}">
-                                <strong>Assessment ID:</strong> 
-                                <span th:text="${deadline.assessmentId}">1</span>
-                            </p>
-                            
                             <!-- Open Date -->
                             <p>
                                 <strong>Opens:</strong> 

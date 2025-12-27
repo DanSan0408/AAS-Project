@@ -6,25 +6,24 @@
     <title>Continuous Evaluation - Industrial Supervisor</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/supervisor_form.css}">
 </head>
-<body>
+<body class="supervisor-page">
     
     <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS - Industrial Supervisor</h1>
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM CAS</h1>
             </div>
         </div>
         
         <div class="evaluation-container">
             <div class="page-header-wrapper">
                 <h2 class="page-title">
-                    <i class="fas fa-clipboard-check"></i>
                     Continuous Evaluation Form
                 </h2>
                 <p class="page-subtitle">Complete evaluation for group and all students in one form</p>
@@ -57,15 +56,7 @@
                 </div>
             </div>
             
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                <div>
-                    <strong>Instructions:</strong> This form contains the group evaluation followed by individual 
-                    student evaluations. You can save your progress at any time and return later to complete it.
-                </div>
-            </div>
-            
-            <div class="progress-section">
+            <!--<div class="progress-section">
                 <div class="progress-header">
                     <span class="progress-title">
                         <i class="fas fa-tasks"></i> Overall Progress
@@ -88,7 +79,7 @@
                         Students: <strong th:text="${progress.studentsEvaluated + ' / ' + progress.totalStudents}">0 / 0</strong>
                     </span>
                 </div>
-            </div>
+            </div>-->
             
             <form th:action="@{/supervisor/evaluate/group/{groupId}/save(groupId=${group.id})}" 
                   method="post" 
@@ -112,11 +103,9 @@
                                 <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
                                 <div class="rubric-details">
                                     <span>
-                                        <i class="fas fa-star"></i>
                                         <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
                                     </span>
                                     <span th:if="${rubric.clo != null}">
-                                        <i class="fas fa-graduation-cap"></i>
                                         CLO <strong th:text="${rubric.clo}">1</strong>
                                     </span>
                                 </div>
@@ -246,11 +235,9 @@
                                     <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
                                     <div class="rubric-details">
                                         <span>
-                                            <i class="fas fa-star"></i>
                                             <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
                                         </span>
                                         <span th:if="${rubric.clo != null}">
-                                            <i class="fas fa-graduation-cap"></i>
                                             CLO <strong th:text="${rubric.clo}">1</strong>
                                         </span>
                                     </div>

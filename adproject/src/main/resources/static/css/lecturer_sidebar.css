@@ -1,98 +1,91 @@
 /* =======================================================
-    LECTURER SIDEBAR - SPECIFIC STYLES
-    Primary: Maroon #5C001F
-    Secondary: Slate Blue #475569
-    Accent: Soft Gold #F6C453
-    Background: Moccasin #FFE6BF
-    Info/Links: Deep Teal #0F766E
-    Text: Near Black #1F2933
+   LECTURER SIDEBAR - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
    ======================================================= */
 
 :root {
-    /* Lecturer Color Palette */
-    --lecturer-primary: #5C001F;
-    --lecturer-secondary: #475569;
-    --lecturer-accent: #F6C453;
-    --lecturer-background: #FFE6BF;
-    --lecturer-info: #0F766E;
-    --lecturer-text: #1F2933;
-    
-    /* Shades */
-    --lecturer-primary-light: #7D0029;
-    --lecturer-primary-dark: #3D0014;
-    --lecturer-secondary-light: #64748B;
-    --lecturer-secondary-dark: #334155;
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #2B2B2B;
+    --lecturer-text-light: #FAFAFA;
+    --lecturer-hover: #EDEAE6;
+    --lecturer-border: #D4D1CC;
+    --lecturer-alert: #8B1E1E;
 }
 
 /* ==================== SIDEBAR CONTAINER ==================== */
 .sidebar {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 260px;
-    height: 100vh;
-    background: linear-gradient(180deg, var(--lecturer-primary-dark) 0%, var(--lecturer-primary) 100%);
-    color: white;
-    padding: 20px 0;
-    box-shadow: 4px 0 20px rgba(92, 0, 31, 0.4);
+    top: 15px;
+    left: 15px;
+    width: 240px;
+    height: calc(100vh - 30px);
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAFAFA 100%);
+    color: var(--lecturer-secondary);
+    padding: 0;
+    box-shadow: 0 4px 20px rgba(4, 120, 87, 0.12);
+    border-radius: 16px;
+    border: 1px solid rgba(4, 120, 87, 0.1);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 .sidebar::-webkit-scrollbar-track {
-    background: var(--lecturer-primary);
+    background: transparent;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background: var(--lecturer-primary-light);
-    border-radius: 3px;
+    background: var(--lecturer-primary);
+    border-radius: 10px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--lecturer-accent);
+    background: var(--lecturer-primary-light);
 }
 
 /* ==================== LOGO SECTION ==================== */
 .sidebar .logo {
     text-align: center;
-    padding: 20px 15px;
-    margin-bottom: 25px;
-    border-bottom: 2px solid var(--lecturer-primary-light);
+    padding: 30px 20px 25px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
+    border-radius: 16px 16px 0 0;
 }
 
 .sidebar .logo h2 {
     margin: 0;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--lecturer-accent);
-    letter-spacing: 3px;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--lecturer-text-light);
+    letter-spacing: 4px;
     text-transform: uppercase;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ==================== USER PROFILE SECTION ==================== */
 .sidebar .user-profile {
     text-align: center;
-    padding: 15px 20px;
-    margin: 0 15px 25px;
-    background: linear-gradient(135deg, rgba(246, 196, 83, 0.15) 0%, rgba(125, 0, 41, 0.15) 100%);
+    padding: 16px 20px;
+    margin: 0 15px 20px;
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
     border-radius: 12px;
-    border: 1px solid rgba(246, 196, 83, 0.3);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
 }
 
 .sidebar .user-profile span,
 .sidebar .user-profile p {
-    color: white;
-    font-size: 15px;
+    color: var(--lecturer-text-light);
+    font-size: 14px;
     font-weight: 600;
     margin: 0;
     word-break: break-word;
@@ -101,14 +94,14 @@
 /* ==================== MENU LIST ==================== */
 .sidebar .menu-list {
     list-style: none;
-    padding: 0;
+    padding: 0 15px;
     margin: 0;
     flex-grow: 1;
+    overflow-y: auto;
 }
 
 .sidebar .menu-list li {
-    margin-bottom: 5px;
-    position: relative;
+    margin-bottom: 8px;
 }
 
 /* Menu Links */
@@ -116,53 +109,44 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 15px 20px;
-    color: rgba(255, 255, 255, 0.9);
+    padding: 14px 16px;
+    color: var(--lecturer-secondary);
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 10px;
     position: relative;
-    overflow: hidden;
 }
 
-/* Hover Effect - Left Border */
-.sidebar .menu-list li a::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: var(--lecturer-accent);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-}
-
-.sidebar .menu-list li a:hover::before {
-    transform: scaleY(1);
-}
-
-/* Hover Background */
+/* Hover Effect */
 .sidebar .menu-list li a:hover {
-    background: rgba(246, 196, 83, 0.15);
-    color: var(--lecturer-accent);
-    padding-left: 28px;
+    background: linear-gradient(90deg, rgba(4, 120, 87, 0.05) 0%, transparent 100%);
+    color: var(--lecturer-primary);
+    transform: translateX(4px);
+    padding-left: 20px;
 }
 
 /* Active Link */
 .sidebar .menu-list li a.active {
-    background: linear-gradient(90deg, rgba(246, 196, 83, 0.25) 0%, rgba(246, 196, 83, 0.1) 100%);
-    color: var(--lecturer-accent);
-    border-left: 4px solid var(--lecturer-accent);
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
+    color: var(--lecturer-text-light);
     font-weight: 700;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+}
+
+.sidebar .menu-list li a.active:hover {
+    transform: translateX(0);
+    padding-left: 16px;
 }
 
 /* ==================== LOGOUT SECTION ==================== */
+.sidebar .menu-list li:last-child,
 .sidebar .menu-list li.logout-item {
     margin-top: auto;
-    border-top: 2px solid var(--lecturer-primary-light);
+    margin-bottom: 20px;
     padding-top: 15px;
+    border-top: 1px solid rgba(4, 120, 87, 0.1);
 }
 
 .sidebar .menu-list li form {
@@ -178,53 +162,39 @@
     justify-content: flex-start;
     gap: 12px;
     width: 100%;
-    padding: 15px 20px;
+    padding: 14px 16px;
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--lecturer-alert);
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     text-align: left;
     cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.sidebar .menu-list li form button::before,
-.sidebar .menu-list li form .logout-btn::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 4px;
-    background: #e74c3c;
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
+    border-radius: 10px;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
 .sidebar .menu-list li form button:hover,
 .sidebar .menu-list li form .logout-btn:hover {
-    background: rgba(231, 76, 60, 0.2);
-    color: #ff6b6b;
-    padding-left: 28px;
-}
-
-.sidebar .menu-list li form button:hover::before,
-.sidebar .menu-list li form .logout-btn:hover::before {
-    transform: scaleY(1);
+    background: linear-gradient(90deg, rgba(139, 30, 30, 0.08) 0%, transparent 100%);
+    transform: translateX(4px);
+    padding-left: 20px;
 }
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
     .sidebar {
-        width: 100%;
+        top: 10px;
+        left: 10px;
+        width: calc(100% - 20px);
         height: auto;
-        position: relative;
+        max-height: 90vh;
+        border-radius: 12px;
     }
 
     .sidebar .logo h2 {
-        font-size: 22px;
+        font-size: 24px;
+        letter-spacing: 3px;
     }
 }
