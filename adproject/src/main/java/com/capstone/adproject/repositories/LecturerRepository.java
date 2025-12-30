@@ -16,21 +16,24 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
 
     Optional<Lecturer> findByEmail(String email);
 
-    // **New Method for Forgot Password - Find by Token**
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
 
-    // 1. Unassign as Academic Supervisor from Groups (Set to NULL, don't delete Group)
+    // --- CLEANUP METHODS FOR SAFE DELETION ---
+    
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")
     void unlinkFromGroups(@Param("lecturerId") Long lecturerId);
 
-    // 2. Delete assignments to assess groups
     @Modifying
     @Query("DELETE FROM LecturerGroupAssignment lga WHERE lga.lecturer.id = :lecturerId")
     void deleteGroupAssignments(@Param("lecturerId") Long lecturerId);
 
-    // 3. Delete marks given by this lecturer
     @Modifying
     @Query("DELETE FROM Mark m WHERE m.lecturer.id = :lecturerId")
     void deleteMarksGiven(@Param("lecturerId") Long lecturerId);
+
+    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :lecturerId AND ac.evaluatorType = 'LECTURER'")
+    void deleteCommentsByLecturer(@Param("lecturerId") Long lecturerId);
 }

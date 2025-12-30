@@ -6,6 +6,17 @@
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Smooth scrolling when navigating to anchors */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Offset for better visibility when scrolling to anchor */
+        .assessment-block {
+            scroll-margin-top: 20px;
+        }
+    </style>
 </head>
 <body class="view-rubric-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -100,7 +111,7 @@
         
         <!-- ==================== GROUP ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="group-block(groupRubrics)">
-        <div class="assessment-block">
+        <div class="assessment-block" id="group-block">
             <div class="block-header group-header">
                 <h2 class="block-title"><i class="fas fa-users"></i> Group Assessment</h2>
                 <div class="block-reorder-controls">
@@ -136,11 +147,17 @@
                                 <div class="rubric-reorder-controls">
                                     <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
                                         <input type="hidden" name="direction" value="up"/>
-                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.first}"><i class="fas fa-chevron-up"></i></button>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == 0}">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
                                     </form>
                                     <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
                                         <input type="hidden" name="direction" value="down"/>
-                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.last}"><i class="fas fa-chevron-down"></i></button>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == #lists.size(groupRubrics) - 1}">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
                                     </form>
                                 </div>
                                 <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>
@@ -300,7 +317,7 @@
 
         <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="individual-block(individualRubrics)">
-        <div class="assessment-block">
+        <div class="assessment-block" id="individual-block">
             <div class="block-header individual-header">
                 <h2 class="block-title"><i class="fas fa-user"></i> Individual Assessment</h2>
                 <div class="block-reorder-controls">
@@ -335,11 +352,17 @@
                                 <div class="rubric-reorder-controls">
                                     <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
                                         <input type="hidden" name="direction" value="up"/>
-                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.first}"><i class="fas fa-chevron-up"></i></button>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == 0}">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
                                     </form>
                                     <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
                                         <input type="hidden" name="direction" value="down"/>
-                                        <button type="submit" class="rubric-reorder-btn" th:disabled="${iterStat.last}"><i class="fas fa-chevron-down"></i></button>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == #lists.size(individualRubrics) - 1}">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
                                     </form>
                                 </div>
                                 <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>

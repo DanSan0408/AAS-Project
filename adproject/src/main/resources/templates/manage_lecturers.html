@@ -8,7 +8,6 @@
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/manage_lecturers.css}">
-    
 </head>
 <body class="manage-users-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -55,12 +54,20 @@
                             <input type="text" id="username" th:field="*{username}" required>
                             
                             <label for="password">Password</label>
-                            <input type="password" id="password" th:field="*{password}">
+                            <!-- ✅ FIXED: Make password not required for updates -->
+                            <input type="password" id="password" th:field="*{password}" 
+                                   th:placeholder="${lecturer.id != null ? 'Leave blank to keep current password' : ''}">
 
                             <label for="email">Email</label>
                             <input type="email" id="email" th:field="*{email}" required>
                             
                             <button type="submit" id="submitButton" th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}">Add Lecturer</button>
+                            
+                            <!-- ✅ NEW: Add Cancel button for updates -->
+                            <a th:if="${lecturer.id != null}" th:href="@{/admin/manage-lecturers}" 
+                               class="btn-cancel" style="display: inline-block; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                               Cancel
+                            </a>
                         </form>
                     </div>
 
@@ -98,7 +105,11 @@
                                     <td>
                                         <div class="table-actions">
                                             <a th:href="@{/admin/edit-lecturer/{id}(id=${lecturer.id})}" class="action-button">Update</a>
-                                            <a th:href="@{/admin/delete-lecturer/{id}(id=${lecturer.id})}" class="action-button delete">Delete</a>
+                                            <a th:href="@{/admin/delete-lecturer/{id}(id=${lecturer.id})}" 
+                                            class="action-button delete"
+                                            onclick="return confirm('Are you sure you want to delete this lecturer? This action cannot be undone.');">
+                                            Delete
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -141,6 +152,10 @@
                     if (confirmed) {
                         confirmInput.value = 'true';
                         form.submit();
+                    } else {
+                        // ✅ NEW: Reset button if user cancels
+                        submitButton.textContent = /*[[${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}]]*/ 'Add Lecturer';
+                        submitButton.classList.remove('btn-confirm', 'glow-effect');
                     }
                 });
             }

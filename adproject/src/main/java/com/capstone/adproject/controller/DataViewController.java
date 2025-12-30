@@ -152,89 +152,89 @@ public String showOverallData(Model model) {
 }
 
     // --- ASSESSMENT DATA VIEW ---
-    @GetMapping("/assessment/{assessmentId}")
-    public String showAssessmentData(
-            @PathVariable Long assessmentId,
-            @RequestParam(required = false) Long groupId,
-            Model model) {
+@GetMapping("/assessment/{assessmentId}")
+public String showAssessmentData(
+        @PathVariable Long assessmentId,
+        @RequestParam(required = false) Long groupId,
+        Model model) {
+    
+    Assessment assessment = assessmentService.getAssessmentById(assessmentId)
+        .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    List<Group> allGroups = groupRepository.findAll();
+    model.addAttribute("allGroups", allGroups);
+    model.addAttribute("assessment", assessment);
+    
+    // Default to first group if none selected
+    Group selectedGroup = null;
+    if (groupId != null) {
+        selectedGroup = groupRepository.findById(groupId).orElse(null);
+    } else if (!allGroups.isEmpty()) {
+        selectedGroup = allGroups.get(0);
+    }
+    
+    model.addAttribute("selectedGroup", selectedGroup);
+    
+    if (selectedGroup != null) {
+        List<Student> students = new ArrayList<>(selectedGroup.getStudents());
+        students.sort((s1, s2) -> s1.getUsername().compareToIgnoreCase(s2.getUsername()));
         
-        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        AssessmentDataDto assessmentData = calculateService.calculateAssessmentData(assessment, students);
+        model.addAttribute("assessmentData", assessmentData);
         
-        List<Group> allGroups = groupRepository.findAll();
-        model.addAttribute("allGroups", allGroups);
-        model.addAttribute("assessment", assessment);
-        
-        // Default to first group if none selected
-        Group selectedGroup = null;
-        if (groupId != null) {
-            selectedGroup = groupRepository.findById(groupId).orElse(null);
-        } else if (!allGroups.isEmpty()) {
-            selectedGroup = allGroups.get(0);
+        // Build rubrics by type map
+        Map<String, List<Rubric>> rubricsByType = new HashMap<>();
+        if (assessment.getRubrics() != null) {
+            for (Rubric rubric : assessment.getRubrics()) {
+                String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
+                rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
+            }
         }
+        model.addAttribute("rubricsByType", rubricsByType);
         
-        model.addAttribute("selectedGroup", selectedGroup);
+        // Build detailed rubric data for each student
+        Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
+        for (Student student : students) {
+            Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();
+            for (Rubric rubric : assessment.getRubrics()) {
+                Map<String, Object> details = new HashMap<>();
+                details.put("subRubricRatingsByEvaluator", calculateService.getSubRubricRatingsByEvaluator(student, assessment, rubric));
+                details.put("muSrmlnByEvaluator", calculateService.calculateMuSrmln(student, assessment, rubric));
+                details.put("muLn", calculateService.calculateMuLn(student, assessment, rubric));
+                details.put("evaluatorComments", calculateService.getEvaluatorCommentsForRubric(student, assessment, rubric));
+                details.put("directRatingsByEvaluator", calculateService.getDirectRatingsByEvaluator(student, assessment, rubric));
+                details.put("rfByEvaluator", calculateService.calculateRfByEvaluator(student, assessment, rubric));
+                details.put("muRf", calculateService.calculateMuRf(student, assessment, rubric));
+                details.put("drmax", calculateService.getDrmax(rubric));
+                rubricDetails.put(rubric.getId(), details);
+            }
+            studentRubricDetails.put(student.getId(), rubricDetails);
+        }
+        model.addAttribute("studentRubricDetails", studentRubricDetails);
         
-        if (selectedGroup != null) {
-            List<Student> students = new ArrayList<>(selectedGroup.getStudents());
-            students.sort((s1, s2) -> s1.getUsername().compareToIgnoreCase(s2.getUsername()));
-            
-            AssessmentDataDto assessmentData = calculateService.calculateAssessmentData(assessment, students);
-            model.addAttribute("assessmentData", assessmentData);
-            
-            // Build rubrics by type map
-            Map<String, List<Rubric>> rubricsByType = new HashMap<>();
-            if (assessment.getRubrics() != null) {
-                for (Rubric rubric : assessment.getRubrics()) {
-                    String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
-                    rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
-                }
-            }
-            model.addAttribute("rubricsByType", rubricsByType);
-            
-            // Build detailed rubric data for each student
-            Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
-            for (Student student : students) {
-                Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();
-                for (Rubric rubric : assessment.getRubrics()) {
-                    Map<String, Object> details = new HashMap<>();
-                    details.put("subRubricRatingsByEvaluator", calculateService.getSubRubricRatingsByEvaluator(student, assessment, rubric));
-                    details.put("muSrmlnByEvaluator", calculateService.calculateMuSrmln(student, assessment, rubric));
-                    details.put("muLn", calculateService.calculateMuLn(student, assessment, rubric));
-                    details.put("evaluatorComments", calculateService.getEvaluatorCommentsForRubric(student, assessment, rubric));
-                    details.put("directRatingsByEvaluator", calculateService.getDirectRatingsByEvaluator(student, assessment, rubric));
-                    details.put("rfByEvaluator", calculateService.calculateRfByEvaluator(student, assessment, rubric));
-                    details.put("muRf", calculateService.calculateMuRf(student, assessment, rubric));
-                    details.put("drmax", calculateService.getDrmax(rubric));
-                    rubricDetails.put(rubric.getId(), details);
-                }
-                studentRubricDetails.put(student.getId(), rubricDetails);
-            }
-            model.addAttribute("studentRubricDetails", studentRubricDetails);
-            
-            // Get unique evaluators
-            Map<String, String> uniqueEvaluators = new HashMap<>();
-            for (Student student : students) {
-                for (Rubric rubric : assessment.getRubrics()) {
-                    StudentAssessmentDataDto studentData = calculateService.calculateStudentAssessmentData(student, assessment);
-                    RubricCalculationDto rubricCalc = studentData.getRubricCalculations().get(rubric.getId());
-                    if (rubricCalc != null && rubricCalc.getEvaluatorDetails() != null) {
-                        for (Map<String, Object> evalDetail : rubricCalc.getEvaluatorDetails()) {
-                            String evalType = (String) evalDetail.get("evaluatorType");
-                            String evalName = (String) evalDetail.get("evaluatorName");
-                            if (evalName != null) {
-                                uniqueEvaluators.put(evalName, evalType);
-                            }
+        // ✅ Get unique evaluators with proper supervisor names
+        Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
+        for (Student student : students) {
+            for (Rubric rubric : assessment.getRubrics()) {
+                StudentAssessmentDataDto studentData = calculateService.calculateStudentAssessmentData(student, assessment);
+                RubricCalculationDto rubricCalc = studentData.getRubricCalculations().get(rubric.getId());
+                if (rubricCalc != null && rubricCalc.getEvaluatorDetails() != null) {
+                    for (Map<String, Object> evalDetail : rubricCalc.getEvaluatorDetails()) {
+                        String evalType = (String) evalDetail.get("evaluatorType");
+                        String evalName = (String) evalDetail.get("evaluatorName");
+                        if (evalName != null) {
+                            uniqueEvaluators.put(evalName, evalType);
                         }
                     }
                 }
             }
-            model.addAttribute("uniqueEvaluators", uniqueEvaluators);
         }
-        
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        return "assessment_data_view";
+        model.addAttribute("uniqueEvaluators", uniqueEvaluators);
     }
+    
+    model.addAttribute("adminUsername", getLoggedInUsername());
+    return "assessment_data_view";
+}
 
     // --- EDIT OVERRIDES PAGE ---
     @GetMapping("/edit-overrides")

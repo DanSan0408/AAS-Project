@@ -16,21 +16,24 @@ public interface IndustrialSupervisorRepository extends JpaRepository<Industrial
 
     Optional<IndustrialSupervisor> findByEmail(String email);
 
-    // **New Method for Forgot Password - Find by Token**
     Optional<IndustrialSupervisor> findByResetPasswordToken(String resetPasswordToken);
     
     boolean existsByUsername(String username);
     
     boolean existsByEmail(String email);
 
-    // 1. Unassign as Industrial Supervisor from Groups
+    // --- CLEANUP METHODS FOR SAFE DELETION ---
+    
     @Modifying
     @Query("UPDATE Group g SET g.industrialSupervisor = null WHERE g.industrialSupervisor.id = :supervisorId")
     void unlinkFromGroups(@Param("supervisorId") Long supervisorId);
 
-    // 2. Delete marks given by this supervisor
-    // Note: Assuming Mark table uses 'supervisorId' column based on your CalculateService
     @Modifying
     @Query("DELETE FROM Mark m WHERE m.supervisorId = :supervisorId")
     void deleteMarksGiven(@Param("supervisorId") Long supervisorId);
+
+    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :supervisorId AND ac.evaluatorType = 'SUPERVISOR'")
+    void deleteCommentsBySupervisor(@Param("supervisorId") Long supervisorId);
 }

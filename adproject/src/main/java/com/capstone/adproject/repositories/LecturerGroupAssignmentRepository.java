@@ -76,4 +76,7 @@ public interface LecturerGroupAssignmentRepository extends JpaRepository<Lecture
         @Param("assessment") Assessment assessment
     );
     
+    @Modifying
+    @Query("DELETE FROM LecturerGroupAssignment lga WHERE lga.group = :group")
+    void deleteByGroup(@Param("group") Group group);
 }

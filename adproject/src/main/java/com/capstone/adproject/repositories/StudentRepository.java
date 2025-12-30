@@ -36,23 +36,30 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // **New Method for Forgot Password - Find by Token**
     Optional<Student> findByResetPasswordToken(String resetPasswordToken);
 
-    // --- 1. THE CRITICAL FIX FOR YOUR ERROR ---
-    // This deletes the "ghost" data causing the error
+    // --- CLEANUP METHODS FOR SAFE DELETION ---
+    
+    // 1. Delete calculated results (ghost table)
     @Modifying
     @Query(value = "DELETE FROM calculated_results WHERE student_id = :studentId", nativeQuery = true)
     void deleteCalculatedResultsByStudentId(@Param("studentId") Long studentId);
 
-    // --- 2. CLEANUP OTHER DEPENDENCIES ---
+    // 2. ✅ NEW: Delete assessment comments where student is evaluated
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatedStudent.id = :studentId")
+    void deleteCommentsByStudentId(@Param("studentId") Long studentId);
+
+    // 3. Delete marks received by student
     @Modifying
     @Query("DELETE FROM Mark m WHERE m.evaluatedStudent.id = :studentId")
     void deleteMarksReceivedByStudent(@Param("studentId") Long studentId);
 
+    // 4. Delete marks given by student (peer evaluations)
     @Modifying
     @Query("DELETE FROM Mark m WHERE m.evaluatorStudent.id = :studentId")
     void deleteMarksGivenByStudent(@Param("studentId") Long studentId);
     
+    // 5. Delete overrides for student
     @Modifying
     @Query("DELETE FROM StudentResultOverride o WHERE o.student.id = :studentId")
     void deleteOverridesByStudent(@Param("studentId") Long studentId);
-
 }

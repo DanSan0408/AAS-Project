@@ -476,80 +476,136 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
         assessmentRepository.save(assessment);
     }
     
-    /**
-     * Move individual rubric up or down within its assessment type
-     */
-    @Transactional
-    public void moveRubric(Long rubricId, String direction) {
-        Rubric rubric = rubricRepository.findById(rubricId)
-            .orElseThrow(() -> new EntityNotFoundException("Rubric not found"));
-        
-        Assessment assessment = rubric.getAssessment();
-        String assessmentType = rubric.getAssessmentTypes();
-        
-        // Get all rubrics of the same assessment type, sorted by display_order
-        List<Rubric> sameTypeRubrics = assessment.getRubrics().stream()
-            .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
-            .sorted((r1, r2) -> {
-                Integer order1 = r1.getDisplayOrder() != null ? r1.getDisplayOrder() : 0;
-                Integer order2 = r2.getDisplayOrder() != null ? r2.getDisplayOrder() : 0;
-                return Integer.compare(order1, order2);
-            })
-            .collect(Collectors.toList());
-        
-        int currentIndex = sameTypeRubrics.indexOf(rubric);
-        
-        if (currentIndex == -1) {
-            throw new IllegalStateException("Rubric not found in its assessment type list");
-        }
-        
-        if ("up".equalsIgnoreCase(direction) && currentIndex > 0) {
-            // Swap with previous rubric
-            Rubric previousRubric = sameTypeRubrics.get(currentIndex - 1);
-            Integer tempOrder = rubric.getDisplayOrder();
-            rubric.setDisplayOrder(previousRubric.getDisplayOrder());
-            previousRubric.setDisplayOrder(tempOrder);
-            
-            rubricRepository.save(rubric);
-            rubricRepository.save(previousRubric);
-            
-        } else if ("down".equalsIgnoreCase(direction) && currentIndex < sameTypeRubrics.size() - 1) {
-            // Swap with next rubric
-            Rubric nextRubric = sameTypeRubrics.get(currentIndex + 1);
-            Integer tempOrder = rubric.getDisplayOrder();
-            rubric.setDisplayOrder(nextRubric.getDisplayOrder());
-            nextRubric.setDisplayOrder(tempOrder);
-            
-            rubricRepository.save(rubric);
-            rubricRepository.save(nextRubric);
+   /**
+ * Move individual rubric up or down within its assessment type
+ */
+@Transactional
+public void moveRubric(Long rubricId, String direction) {
+    Rubric rubric = rubricRepository.findById(rubricId)
+        .orElseThrow(() -> new EntityNotFoundException("Rubric not found"));
+    
+    Assessment assessment = rubric.getAssessment();
+    String assessmentType = rubric.getAssessmentTypes();
+    
+    // Get all rubrics of the same assessment type, sorted by display_order
+    List<Rubric> sameTypeRubrics = assessment.getRubrics().stream()
+        .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
+        .sorted((r1, r2) -> {
+            Integer order1 = r1.getDisplayOrder() != null ? r1.getDisplayOrder() : 0;
+            Integer order2 = r2.getDisplayOrder() != null ? r2.getDisplayOrder() : 0;
+            return Integer.compare(order1, order2);
+        })
+        .collect(Collectors.toList());
+    
+    int currentIndex = -1;
+    for (int i = 0; i < sameTypeRubrics.size(); i++) {
+        if (sameTypeRubrics.get(i).getId().equals(rubricId)) {
+            currentIndex = i;
+            break;
         }
     }
     
+    if (currentIndex == -1) {
+        throw new IllegalStateException("Rubric not found in its assessment type list");
+    }
+    
+    System.out.println("DEBUG: Moving rubric " + rubric.getName() + " (ID: " + rubricId + ")");
+    System.out.println("DEBUG: Current index: " + currentIndex + ", Direction: " + direction);
+    System.out.println("DEBUG: List size: " + sameTypeRubrics.size());
+    
+    if ("up".equalsIgnoreCase(direction) && currentIndex > 0) {
+        // Swap with previous rubric
+        Rubric previousRubric = sameTypeRubrics.get(currentIndex - 1);
+        Integer tempOrder = rubric.getDisplayOrder();
+        
+        System.out.println("DEBUG: Swapping " + rubric.getName() + " (order " + rubric.getDisplayOrder() + ") with " + previousRubric.getName() + " (order " + previousRubric.getDisplayOrder() + ")");
+        
+        rubric.setDisplayOrder(previousRubric.getDisplayOrder());
+        previousRubric.setDisplayOrder(tempOrder);
+        
+        rubricRepository.save(rubric);
+        rubricRepository.save(previousRubric);
+        
+        System.out.println("DEBUG: After swap - " + rubric.getName() + " order: " + rubric.getDisplayOrder() + ", " + previousRubric.getName() + " order: " + previousRubric.getDisplayOrder());
+        
+    } else if ("down".equalsIgnoreCase(direction) && currentIndex < sameTypeRubrics.size() - 1) {
+        // Swap with next rubric
+        Rubric nextRubric = sameTypeRubrics.get(currentIndex + 1);
+        Integer tempOrder = rubric.getDisplayOrder();
+        
+        System.out.println("DEBUG: Swapping " + rubric.getName() + " (order " + rubric.getDisplayOrder() + ") with " + nextRubric.getName() + " (order " + nextRubric.getDisplayOrder() + ")");
+        
+        rubric.setDisplayOrder(nextRubric.getDisplayOrder());
+        nextRubric.setDisplayOrder(tempOrder);
+        
+        rubricRepository.save(rubric);
+        rubricRepository.save(nextRubric);
+        
+        System.out.println("DEBUG: After swap - " + rubric.getName() + " order: " + rubric.getDisplayOrder() + ", " + nextRubric.getName() + " order: " + nextRubric.getDisplayOrder());
+    } else {
+        System.out.println("DEBUG: No swap performed - at boundary or invalid direction");
+    }
+}
+    
     /**
-     * Initialize display orders for rubrics if not set
-     * Call this when needed to ensure all rubrics have proper ordering
-     */
-    @Transactional
-    public void initializeRubricOrders(Long assessmentId) {
-        Assessment assessment = assessmentRepository.findById(assessmentId)
-            .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
-        
-        Map<String, List<Rubric>> rubricsByType = new HashMap<>();
-        
-        for (Rubric rubric : assessment.getRubrics()) {
-            String type = rubric.getAssessmentTypes();
-            rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
+ * Initialize display orders for rubrics if not set
+ * Call this when needed to ensure all rubrics have proper ordering
+ */
+@Transactional
+public void initializeRubricOrders(Long assessmentId) {
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+        .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
+    
+    // Group rubrics by assessment type
+    Map<String, List<Rubric>> rubricsByType = new HashMap<>();
+    
+    for (Rubric rubric : assessment.getRubrics()) {
+        String type = rubric.getAssessmentTypes();
+        if (type == null || type.trim().isEmpty()) {
+            type = "Uncategorized";
         }
+        rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
+    }
+    
+    // ✅ FIX: Assign sequential display orders for each type
+    for (Map.Entry<String, List<Rubric>> entry : rubricsByType.entrySet()) {
+        List<Rubric> rubrics = entry.getValue();
         
-        for (Map.Entry<String, List<Rubric>> entry : rubricsByType.entrySet()) {
-            List<Rubric> rubrics = entry.getValue();
-            for (int i = 0; i < rubrics.size(); i++) {
-                Rubric rubric = rubrics.get(i);
-                if (rubric.getDisplayOrder() == null) {
-                    rubric.setDisplayOrder(i);
-                    rubricRepository.save(rubric);
-                }
+        System.out.println("DEBUG - Initializing orders for type: " + entry.getKey());
+        
+        // Sort by existing order (or by ID if order is null) to maintain some consistency
+        rubrics.sort((r1, r2) -> {
+            Integer o1 = r1.getDisplayOrder();
+            Integer o2 = r2.getDisplayOrder();
+            
+            if (o1 == null && o2 == null) {
+                return r1.getId().compareTo(r2.getId()); // Use ID as fallback
+            }
+            if (o1 == null) return 1;
+            if (o2 == null) return -1;
+            
+            // If orders are the same, use ID to break tie
+            int orderCompare = Integer.compare(o1, o2);
+            if (orderCompare == 0) {
+                return r1.getId().compareTo(r2.getId());
+            }
+            return orderCompare;
+        });
+        
+        // ✅ Assign sequential orders: 0, 1, 2, 3...
+        for (int i = 0; i < rubrics.size(); i++) {
+            Rubric rubric = rubrics.get(i);
+            Integer currentOrder = rubric.getDisplayOrder();
+            
+            // Only update if order is null or doesn't match expected sequence
+            if (currentOrder == null || currentOrder != i) {
+                System.out.println("DEBUG - Setting " + rubric.getName() + " order from " + currentOrder + " to " + i);
+                rubric.setDisplayOrder(i);
+                rubricRepository.saveAndFlush(rubric);
+            } else {
+                System.out.println("DEBUG - " + rubric.getName() + " already has correct order: " + i);
             }
         }
     }
+}
 }
