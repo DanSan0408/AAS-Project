@@ -166,15 +166,29 @@ public class IndustrialSupervisorService {
         
         boolean groupComplete = (totalGroupItems > 0 && completedGroupItems >= totalGroupItems);
         
-        // Check group comments
-        int groupCommentCount = assessment.getGroupCommentCount();
-        long existingGroupComments = commentRepository
-            .findSupervisorCommentsForStudent(supervisorId, firstStudent.getId(), assessment.getId())
-            .stream()
-            .filter(c -> "Group Assessment".equals(c.getRubricAssessmentType()))
-            .count();
+        // ✅ FIXED: Check group comments only if configured
+        List<String> groupCommentLabels = assessment.getGroupCommentLabels();
+        boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
         
-        boolean groupCommentsComplete = (groupCommentCount == 0 || existingGroupComments >= groupCommentCount);
+        boolean groupCommentsComplete = true; // Default to true
+        
+        if (hasGroupComments) {
+            int groupCommentCount = assessment.getGroupCommentCount();
+            int groupCommentMinLength = assessment.getGroupCommentMinLength() != null ? 
+                assessment.getGroupCommentMinLength() : 0;
+            
+            if (groupCommentCount > 0 && groupCommentMinLength > 0) {
+                long existingGroupComments = commentRepository
+                    .findSupervisorCommentsForStudent(supervisorId, firstStudent.getId(), assessment.getId())
+                    .stream()
+                    .filter(c -> "Group Assessment".equals(c.getRubricAssessmentType()))
+                    .filter(c -> c.getRubricId() == null) // Only general comments
+                    .filter(c -> c.getCommentText() != null && c.getCommentText().length() >= groupCommentMinLength)
+                    .count();
+                
+                groupCommentsComplete = (existingGroupComments >= groupCommentCount);
+            }
+        }
         
         // Count students evaluated
         int studentsEvaluated = 0;
@@ -182,14 +196,29 @@ public class IndustrialSupervisorService {
             int completedItems = countCompletedItems(
                 supervisorId, student.getId(), assessment.getId(), individualRubrics);
             
-            long existingComments = commentRepository
-                .findSupervisorCommentsForStudent(supervisorId, student.getId(), assessment.getId())
-                .stream()
-                .filter(c -> "Individual Assessment".equals(c.getRubricAssessmentType()))
-                .count();
+            // ✅ FIXED: Check individual comments only if configured
+            List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
+            boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
             
-            int individualCommentCount = assessment.getIndividualCommentCount();
-            boolean commentsComplete = (individualCommentCount == 0 || existingComments >= individualCommentCount);
+            boolean commentsComplete = true; // Default to true
+            
+            if (hasIndividualComments) {
+                int individualCommentCount = assessment.getIndividualCommentCount();
+                int individualCommentMinLength = assessment.getIndividualCommentMinLength() != null ? 
+                    assessment.getIndividualCommentMinLength() : 0;
+                
+                if (individualCommentCount > 0 && individualCommentMinLength > 0) {
+                    long existingComments = commentRepository
+                        .findSupervisorCommentsForStudent(supervisorId, student.getId(), assessment.getId())
+                        .stream()
+                        .filter(c -> "Individual Assessment".equals(c.getRubricAssessmentType()))
+                        .filter(c -> c.getRubricId() == null) // Only general comments
+                        .filter(c -> c.getCommentText() != null && c.getCommentText().length() >= individualCommentMinLength)
+                        .count();
+                    
+                    commentsComplete = (existingComments >= individualCommentCount);
+                }
+            }
             
             if (totalIndividualItems > 0 && completedItems >= totalIndividualItems && commentsComplete) {
                 studentsEvaluated++;
@@ -197,8 +226,8 @@ public class IndustrialSupervisorService {
         }
         
         // Calculate overall completion
-        boolean groupEvaluationComplete = groupComplete && groupCommentsComplete;
-        boolean allStudentsComplete = (studentsEvaluated >= students.size());
+        boolean groupEvaluationComplete = (totalGroupItems == 0 || (groupComplete && groupCommentsComplete));
+        boolean allStudentsComplete = (students.isEmpty() || studentsEvaluated >= students.size());
         
         // Calculate percentage
         int totalParts = (totalGroupItems > 0 ? 1 : 0) + students.size();
@@ -225,7 +254,7 @@ public class IndustrialSupervisorService {
         
         return progress;
     }
-    
+
     /**
      * Count total evaluation items (rubrics + sub-rubrics) that need ratings
      */
@@ -528,127 +557,29 @@ public class IndustrialSupervisorService {
     }
     
     @Transactional
-private void saveCommentsForStudent(
-        IndustrialSupervisor supervisor,
-        Student student,
-        Assessment assessment,
-        List<String> comments,
-        String rubricAssessmentType) {
-    
-    // ✅ FIXED: Check if comments are configured before processing
-    List<String> commentLabels = "Group Assessment".equals(rubricAssessmentType) ?
-        assessment.getGroupCommentLabels() :
-        assessment.getIndividualCommentLabels();
-    
-    if (commentLabels == null || commentLabels.isEmpty()) {
-        // No comments configured for this assessment type - skip entirely
-        return;
-    }
-    
-    // Build list of non-empty comments first
-    List<AssessmentComment> newComments = new ArrayList<>();
-    
-    for (int i = 0; i < comments.size(); i++) {
-        String commentText = comments.get(i);
-        if (commentText == null || commentText.trim().isEmpty()) continue;
+    private void saveCommentsForStudent(
+            IndustrialSupervisor supervisor,
+            Student student,
+            Assessment assessment,
+            List<String> comments,
+            String rubricAssessmentType) {
         
-        AssessmentComment comment = new AssessmentComment();
-        comment.setEvaluatedStudent(student);
-        comment.setEvaluatorId(supervisor.getId());
-        comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
-        comment.setEvaluatorName(supervisor.getUsername());
-        comment.setAssessment(assessment);
-        comment.setCommentText(commentText);
-        comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
-        comment.setCommentIndex(i);
-        comment.setRubricAssessmentType(rubricAssessmentType);
-        comment.setRubricId(null);
+        // ✅ FIXED: Check if comments are configured before processing
+        List<String> commentLabels = "Group Assessment".equals(rubricAssessmentType) ?
+            assessment.getGroupCommentLabels() :
+            assessment.getIndividualCommentLabels();
         
-        // Set label and anonymity
-        if ("Group Assessment".equals(rubricAssessmentType)) {
-            comment.setCommentLabel(assessment.getGroupCommentLabel(i));
-            
-            Boolean isAnonymous = assessment.isGroupCommentAnonymous(i);
-            if (isAnonymous != null && isAnonymous) {
-                comment.setAnonymousIdentifier("Supervisor");
-            } else {
-                comment.setAnonymousIdentifier(supervisor.getUsername());
-            }
-        } else {
-            comment.setCommentLabel(assessment.getIndividualCommentLabel(i));
-            
-            Boolean isAnonymous = assessment.isIndividualCommentAnonymous(i);
-            if (isAnonymous != null && isAnonymous) {
-                comment.setAnonymousIdentifier("Supervisor");
-            } else {
-                comment.setAnonymousIdentifier(supervisor.getUsername());
-            }
+        if (commentLabels == null || commentLabels.isEmpty()) {
+            // No comments configured for this assessment type - skip entirely
+            return;
         }
         
-        newComments.add(comment);
-    }
-    
-    // Only delete and save if we have actual comments to save
-    if (!newComments.isEmpty()) {
-        // Delete existing comments for this specific assessment type (general comments only)
-        List<AssessmentComment> existingComments = commentRepository
-            .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
-            .stream()
-            .filter(c -> rubricAssessmentType.equals(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() == null)
-            .collect(Collectors.toList());
-        
-        if (!existingComments.isEmpty()) {
-            commentRepository.deleteAll(existingComments);
-        }
-        
-        commentRepository.saveAll(newComments);
-    }
-}
-    
-    @Transactional
-private void saveRubricCommentsForStudent(
-        IndustrialSupervisor supervisor,
-        Student student,
-        Assessment assessment,
-        Map<Long, Map<Integer, String>> rubricComments,
-        String rubricAssessmentType) {
-    
-    for (Map.Entry<Long, Map<Integer, String>> entry : rubricComments.entrySet()) {
-        Long rubricId = entry.getKey();
-        Map<Integer, String> commentsForRubric = entry.getValue();
-        
-        // Delete existing rubric-specific comments for this rubric
-        List<AssessmentComment> existingComments = commentRepository
-            .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
-            .stream()
-            .filter(c -> rubricId.equals(c.getRubricId()))
-            .collect(Collectors.toList());
-        
-        if (!existingComments.isEmpty()) {
-            commentRepository.deleteAll(existingComments);
-        }
-        
-        // Get the rubric for labels and anonymity settings
-        Rubric rubric = assessment.getRubrics().stream()
-            .filter(r -> r.getId().equals(rubricId))
-            .findFirst()
-            .orElse(null);
-        
-        if (rubric == null) {
-            continue;
-        }
-        
-        // Save new rubric-specific comments
+        // Build list of non-empty comments first
         List<AssessmentComment> newComments = new ArrayList<>();
         
-        for (Map.Entry<Integer, String> commentEntry : commentsForRubric.entrySet()) {
-            Integer commentIndex = commentEntry.getKey();
-            String commentText = commentEntry.getValue();
-            
-            if (commentText == null || commentText.trim().isEmpty()) {
-                continue;
-            }
+        for (int i = 0; i < comments.size(); i++) {
+            String commentText = comments.get(i);
+            if (commentText == null || commentText.trim().isEmpty()) continue;
             
             AssessmentComment comment = new AssessmentComment();
             comment.setEvaluatedStudent(student);
@@ -656,29 +587,127 @@ private void saveRubricCommentsForStudent(
             comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
             comment.setEvaluatorName(supervisor.getUsername());
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText.trim());
+            comment.setCommentText(commentText);
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
-            comment.setCommentIndex(commentIndex);
+            comment.setCommentIndex(i);
             comment.setRubricAssessmentType(rubricAssessmentType);
-            comment.setRubricId(rubricId);
-            comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+            comment.setRubricId(null);
             
-            // Check rubric's anonymity setting for this specific comment
-            Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
-            if (isAnonymous != null && isAnonymous) {
-                comment.setAnonymousIdentifier("Supervisor");
+            // Set label and anonymity
+            if ("Group Assessment".equals(rubricAssessmentType)) {
+                comment.setCommentLabel(assessment.getGroupCommentLabel(i));
+                
+                Boolean isAnonymous = assessment.isGroupCommentAnonymous(i);
+                if (isAnonymous != null && isAnonymous) {
+                    comment.setAnonymousIdentifier("Supervisor");
+                } else {
+                    comment.setAnonymousIdentifier(supervisor.getUsername());
+                }
             } else {
-                comment.setAnonymousIdentifier(supervisor.getUsername());
+                comment.setCommentLabel(assessment.getIndividualCommentLabel(i));
+                
+                Boolean isAnonymous = assessment.isIndividualCommentAnonymous(i);
+                if (isAnonymous != null && isAnonymous) {
+                    comment.setAnonymousIdentifier("Supervisor");
+                } else {
+                    comment.setAnonymousIdentifier(supervisor.getUsername());
+                }
             }
             
             newComments.add(comment);
         }
         
+        // Only delete and save if we have actual comments to save
         if (!newComments.isEmpty()) {
+            // Delete existing comments for this specific assessment type (general comments only)
+            List<AssessmentComment> existingComments = commentRepository
+                .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
+                .stream()
+                .filter(c -> rubricAssessmentType.equals(c.getRubricAssessmentType()))
+                .filter(c -> c.getRubricId() == null)
+                .collect(Collectors.toList());
+            
+            if (!existingComments.isEmpty()) {
+                commentRepository.deleteAll(existingComments);
+            }
+            
             commentRepository.saveAll(newComments);
         }
     }
-}
+    
+    @Transactional
+    private void saveRubricCommentsForStudent(
+            IndustrialSupervisor supervisor,
+            Student student,
+            Assessment assessment,
+            Map<Long, Map<Integer, String>> rubricComments,
+            String rubricAssessmentType) {
+        
+        for (Map.Entry<Long, Map<Integer, String>> entry : rubricComments.entrySet()) {
+            Long rubricId = entry.getKey();
+            Map<Integer, String> commentsForRubric = entry.getValue();
+            
+            // Delete existing rubric-specific comments for this rubric
+            List<AssessmentComment> existingComments = commentRepository
+                .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
+                .stream()
+                .filter(c -> rubricId.equals(c.getRubricId()))
+                .collect(Collectors.toList());
+            
+            if (!existingComments.isEmpty()) {
+                commentRepository.deleteAll(existingComments);
+            }
+            
+            // Get the rubric for labels and anonymity settings
+            Rubric rubric = assessment.getRubrics().stream()
+                .filter(r -> r.getId().equals(rubricId))
+                .findFirst()
+                .orElse(null);
+            
+            if (rubric == null) {
+                continue;
+            }
+            
+            // Save new rubric-specific comments
+            List<AssessmentComment> newComments = new ArrayList<>();
+            
+            for (Map.Entry<Integer, String> commentEntry : commentsForRubric.entrySet()) {
+                Integer commentIndex = commentEntry.getKey();
+                String commentText = commentEntry.getValue();
+                
+                if (commentText == null || commentText.trim().isEmpty()) {
+                    continue;
+                }
+                
+                AssessmentComment comment = new AssessmentComment();
+                comment.setEvaluatedStudent(student);
+                comment.setEvaluatorId(supervisor.getId());
+                comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
+                comment.setEvaluatorName(supervisor.getUsername());
+                comment.setAssessment(assessment);
+                comment.setCommentText(commentText.trim());
+                comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
+                comment.setCommentIndex(commentIndex);
+                comment.setRubricAssessmentType(rubricAssessmentType);
+                comment.setRubricId(rubricId);
+                comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                
+                // Check rubric's anonymity setting for this specific comment
+                Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                if (isAnonymous != null && isAnonymous) {
+                    comment.setAnonymousIdentifier("Supervisor");
+                } else {
+                    comment.setAnonymousIdentifier(supervisor.getUsername());
+                }
+                
+                newComments.add(comment);
+            }
+            
+            if (!newComments.isEmpty()) {
+                commentRepository.saveAll(newComments);
+            }
+        }
+    }
     
     /**
      * Load existing evaluation data

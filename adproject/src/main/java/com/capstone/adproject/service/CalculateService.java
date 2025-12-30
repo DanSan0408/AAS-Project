@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.Set;
-import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -23,6 +23,7 @@ import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentResultOverride;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
@@ -34,16 +35,19 @@ public class CalculateService {
     private final LecturerGroupAssignmentRepository lecturerAssignmentRepository;
     private final AssessmentCommentRepository commentRepository;
     private final StudentResultOverrideRepository overrideRepository;
+    private final IndustrialSupervisorRepository supervisorRepository;
 
     public CalculateService(
             MarkRepository markRepository,
             LecturerGroupAssignmentRepository lecturerAssignmentRepository,
             AssessmentCommentRepository commentRepository,
-            StudentResultOverrideRepository overrideRepository) {
+            StudentResultOverrideRepository overrideRepository,
+            IndustrialSupervisorRepository supervisorRepository) {
         this.markRepository = markRepository;
         this.lecturerAssignmentRepository = lecturerAssignmentRepository;
         this.commentRepository = commentRepository;
         this.overrideRepository = overrideRepository;
+        this.supervisorRepository = supervisorRepository;
     }
 
     public AssessmentDataDto calculateAssessmentData(Assessment assessment, List<Student> students) {
@@ -62,9 +66,6 @@ public class CalculateService {
         return dto;
     }
 
-    /**
-     * NEW: Get set of CLOs that have Group Assessment rubrics
-     */
     public Set<Integer> getCLOsWithGroupRubrics(Assessment assessment) {
         Set<Integer> clos = new HashSet<>();
         if (assessment.getRubrics() != null) {
@@ -77,9 +78,6 @@ public class CalculateService {
         return clos;
     }
 
-    /**
-     * Calculates all marks, factors, and overrides for a single student in one assessment.
-     */
     public StudentAssessmentDataDto calculateStudentAssessmentData(Student student, Assessment assessment) {
         StudentAssessmentDataDto dto = new StudentAssessmentDataDto();
         dto.setStudent(student);
@@ -87,7 +85,6 @@ public class CalculateService {
         
         List<Mark> marks = markRepository.findByEvaluatedStudentAndAssessment(student, assessment);
         
-        // --- 1. FACTOR CALCULATION ---
         Double factor = 0.0;
         
         Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
@@ -105,7 +102,6 @@ public class CalculateService {
         
         dto.setFactor(factor);
         
-        // --- 2. RUBRIC PROCESSING ---
         Map<Long, RubricCalculationDto> rubricCalculations = new HashMap<>();
         
         if (assessment.getRubrics() != null) {
@@ -128,34 +124,24 @@ public class CalculateService {
         }
         
         dto.setRubricCalculations(rubricCalculations);
-        
-        // Calculate all CLO sums (combined)
         dto.setCloSums(calculateCloSums(rubricCalculations));
         dto.setCloWeightedSums(calculateCloWeightedSums(rubricCalculations));
-        
-        // NEW: Calculate separated sums for display
         dto.setCloWeightedSumsGroupOnly(calculateCloWeightedSumsGroupOnly(rubricCalculations));
         dto.setCloSumsIndividualOnly(calculateCloSumsIndividualOnly(rubricCalculations));
         
-        // --- 3. TOTALS CALCULATION ---
         Double totalUnweighted = round(calculateTotalMarks(dto.getCloSums()));
         dto.setTotalUnweightedMarks(totalUnweighted);
 
         Double totalWeighted = round(calculateTotalMarks(dto.getCloWeightedSums()));
         dto.setTotalWeightedMarks(totalWeighted);
-
         dto.setTotalMarks(totalWeighted);
         
-        // --- 4. COMMENTS ---
         dto.setGroupComments(getCommentsForStudent(student, assessment, "Group Assessment"));
         dto.setIndividualComments(getCommentsForStudent(student, assessment, "Individual Assessment"));
         
         return dto;
     }
 
-    /**
-     * Calculates Grand Total across ALL assessments, checking for overrides.
-     */
     public Double calculateGrandTotal(Student student, List<Assessment> assessments) {
         Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
         if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenGrandTotal() != null) {
@@ -172,8 +158,6 @@ public class CalculateService {
         return round(grandTotal);
     }
 
-    // --- PEER FACTOR LOGIC ---
-    
     public Double calculatePeerAssessmentFactorForStudent(Student student) {
         List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
         List<Mark> peerMarks = allMarks.stream()
@@ -223,8 +207,6 @@ public class CalculateService {
         double cappedFactor = Math.min(factor, 1.05);
         return Math.round(cappedFactor * 1000.0) / 1000.0;
     }
-
-    // --- RUBRIC & MARK HELPERS ---
 
     private RubricCalculationDto calculateRubricData(Student student, Assessment assessment, Rubric rubric, List<Mark> allMarks) {
         RubricCalculationDto dto = new RubricCalculationDto();
@@ -303,8 +285,6 @@ public class CalculateService {
         return rubricFactors.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
     }
 
-    // --- AGGREGATION HELPERS ---
-
     private Map<Integer, Double> calculateCloSums(Map<Long, RubricCalculationDto> rubricCalculations) {
         Map<Integer, Double> cloSums = new HashMap<>();
         for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
@@ -331,7 +311,6 @@ public class CalculateService {
         return cloWeightedSums;
     }
 
-    // NEW: Calculate weighted sums only from Group Assessment rubrics
     private Map<Integer, Double> calculateCloWeightedSumsGroupOnly(Map<Long, RubricCalculationDto> rubricCalculations) {
         Map<Integer, Double> cloWeightedSums = new HashMap<>();
         for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
@@ -348,7 +327,6 @@ public class CalculateService {
         return cloWeightedSums;
     }
 
-    // NEW: Calculate raw sums only from Individual Assessment rubrics
     private Map<Integer, Double> calculateCloSumsIndividualOnly(Map<Long, RubricCalculationDto> rubricCalculations) {
         Map<Integer, Double> cloSums = new HashMap<>();
         for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
@@ -370,7 +348,6 @@ public class CalculateService {
         return round(total);
     }
     
-    // --- HELPER: STRICT 2-DECIMAL ROUNDING ---
     private Double round(Double value) {
         if (value == null) return 0.0;
         BigDecimal bd = BigDecimal.valueOf(value);
@@ -378,7 +355,13 @@ public class CalculateService {
         return bd.doubleValue();
     }
 
-    // --- DISPLAY HELPERS ---
+    // ✅ ADD THIS METHOD - Helper method to round to 3 decimal places (for factors/ratios)
+    private Double round3(Double value) {
+        if (value == null) return 0.0;
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(3, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
 
     private List<Map<String, Object>> getEvaluatorDetails(Student student, Assessment assessment, Rubric rubric, List<Mark> marks) {
         List<Map<String, Object>> details = new ArrayList<>();
@@ -389,25 +372,45 @@ public class CalculateService {
             Map<String, Object> detail = new HashMap<>();
             
             if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-                detail.put("evaluatorType", "Supervisor");
-                detail.put("supervisorId", mark.getSupervisorId());
-                evaluatorKey = "supervisor_" + mark.getSupervisorId();
+                System.out.println("DEBUG [getEvaluatorDetails]: Found supervisor mark with ID: " + mark.getSupervisorId());
+                
+                Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
+                    supervisorRepository.findById(mark.getSupervisorId());
+                
+                if (supervisorOpt.isPresent()) {
+                    String supervisorName = supervisorOpt.get().getUsername();
+                    System.out.println("DEBUG [getEvaluatorDetails]: Found supervisor: " + supervisorName);
+                    detail.put("evaluatorName", supervisorName);
+                    detail.put("evaluatorType", "Supervisor");
+                    evaluatorKey = "supervisor_" + mark.getSupervisorId();
+                } else {
+                    System.out.println("DEBUG [getEvaluatorDetails]: Supervisor not found for ID: " + mark.getSupervisorId());
+                    detail.put("evaluatorName", "Supervisor " + mark.getSupervisorId());
+                    detail.put("evaluatorType", "Supervisor");
+                    evaluatorKey = "supervisor_" + mark.getSupervisorId();
+                }
+                
             } else if (mark.getLecturer() != null) {
                 evaluatorKey = "lecturer_" + mark.getLecturer().getId();
                 detail.put("evaluatorName", mark.getLecturer().getUsername());
                 detail.put("evaluatorType", "Lecturer");
+                
             } else if (mark.getEvaluatorStudent() != null) {
                 evaluatorKey = "student_" + mark.getEvaluatorStudent().getId();
-                detail.put("evaluatorName", mark.getEvaluatorStudent().getUsername() + " (Student)");
+                detail.put("evaluatorName", mark.getEvaluatorStudent().getUsername());
                 detail.put("evaluatorType", "Student");
+                
             } else {
                 evaluatorKey = "unknown_" + mark.getId();
+                detail.put("evaluatorName", "Unknown Evaluator");
+                detail.put("evaluatorType", "Unknown");
             }
             
-            if (!uniqueEvaluators.containsKey(evaluatorKey)) {
+            if (evaluatorKey != null && !uniqueEvaluators.containsKey(evaluatorKey)) {
                 uniqueEvaluators.put(evaluatorKey, detail);
             }
         }
+        
         details.addAll(uniqueEvaluators.values());
         return details;
     }
@@ -419,8 +422,6 @@ public class CalculateService {
             .collect(Collectors.toList());
     }
     
-    // --- GRADE CALCULATION ---
-
     public String calculateGrade(Double totalMarks) {
         if (totalMarks == null) return "N/A";
         if (totalMarks >= 90) return "A+";
@@ -437,8 +438,6 @@ public class CalculateService {
         else if (totalMarks >= 30) return "D-";
         else return "E";
     }
-
-    // --- DETAIL VIEW HELPERS (FULL IMPLEMENTATION) ---
 
     public Map<String, Map<Long, Double>> getSubRubricRatingsByEvaluator(Student student, Assessment assessment, Rubric rubric) {
         Map<String, Map<Long, Double>> result = new java.util.LinkedHashMap<>();
@@ -505,7 +504,7 @@ public class CalculateService {
                 .mapToDouble(m -> m.getRating().getMarks().doubleValue())
                 .sum();
             
-            double average = entry.getValue().size() > 0 ? sum / entry.getValue().size() : 0.0;
+            double average = !entry.getValue().isEmpty() ? sum / entry.getValue().size() : 0.0;
             result.put(entry.getKey(), round3(average));
         }
         
@@ -639,11 +638,21 @@ public class CalculateService {
             .orElse(1.0);
     }
 
-    // --- HELPER METHOD FOR EVALUATOR IDENTIFICATION ---
-
     private String getEvaluatorKey(Mark mark) {
         if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-            return "Supervisor " + mark.getSupervisorId();
+            System.out.println("DEBUG: Found supervisor mark with ID: " + mark.getSupervisorId());
+            
+            Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
+                supervisorRepository.findById(mark.getSupervisorId());
+            
+            if (supervisorOpt.isPresent()) {
+                String supervisorName = supervisorOpt.get().getUsername();
+                System.out.println("DEBUG: Found supervisor: " + supervisorName);
+                return supervisorName;
+            } else {
+                System.out.println("DEBUG: Supervisor not found in database for ID: " + mark.getSupervisorId());
+                return "Supervisor " + mark.getSupervisorId();
+            }
         } else if (mark.getLecturer() != null) {
             return mark.getLecturer().getUsername();
         } else if (mark.getEvaluatorStudent() != null) {
@@ -651,13 +660,5 @@ public class CalculateService {
         } else {
             return "Unknown Evaluator";
         }
-    }
-
-    // Helper method to round to 3 decimal places (for factors/ratios)
-    private Double round3(Double value) {
-        if (value == null) return 0.0;
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(3, RoundingMode.HALF_UP);
-        return bd.doubleValue();
     }
 }

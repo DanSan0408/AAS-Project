@@ -156,9 +156,31 @@ body.data-view-page .evaluator-name {
     margin-bottom: 4px !important;
 }
 
-body.data-view-page .evaluator-email { 
-    font-size: 0.85rem !important; 
-    color: #666 !important; 
+body.data-view-page .evaluator-role {
+    margin-top: 5px !important;
+}
+
+body.data-view-page .role-badge {
+    display: inline-block !important;
+    padding: 3px 8px !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+
+body.data-view-page .badge-lecturer {
+    background-color: #3498db !important;
+    color: white !important;
+}
+
+body.data-view-page .badge-supervisor {
+    background-color: #e67e22 !important;
+    color: white !important;
+}
+
+body.data-view-page .badge-student {
+    background-color: #2ecc71 !important;
+    color: white !important;
 }
 
 body.data-view-page .empty-message {
@@ -324,6 +346,47 @@ body.data-view-page .final-score {
     color: var(--color-success) !important; 
 }
 
+/* ✅ NEW: Mark Display Styles for Raw/Weighted Marks */
+body.data-view-page .mark-display {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 5px 0 !important;
+}
+
+body.data-view-page .raw-mark,
+body.data-view-page .weighted-mark {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+body.data-view-page .mark-label {
+    font-size: 0.75rem !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 600 !important;
+}
+
+body.data-view-page .mark-value {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: var(--color-secondary) !important;
+}
+
+body.data-view-page .mark-value-final {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    color: var(--color-success) !important;
+}
+
+body.data-view-page .raw-mark {
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
 body.data-view-page .bg-highlight { 
     background-color: #f0fdf4 !important; 
 }
@@ -428,5 +491,18 @@ body.data-view-page .btn-secondary:hover {
     
     body.data-view-page .data-table {
         font-size: 0.85rem !important;
+    }
+    
+    body.data-view-page .mark-display {
+        gap: 4px !important;
+    }
+    
+    body.data-view-page .mark-label {
+        font-size: 0.65rem !important;
+    }
+    
+    body.data-view-page .mark-value,
+    body.data-view-page .mark-value-final {
+        font-size: 0.9rem !important;
     }
 }

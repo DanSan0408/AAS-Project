@@ -141,6 +141,7 @@ public class LecturerAssessmentService {
         
         Student sampleStudent = groupMembers.get(0);
         
+        // ✅ FIXED: Check group rubrics completion
         if (!groupRubrics.isEmpty()) {
             boolean groupComplete = checkRubricsComplete(
                 assessment, lecturer, sampleStudent, groupRubrics, "Group Assessment");
@@ -149,21 +150,29 @@ public class LecturerAssessmentService {
                 return false;
             }
             
-            int requiredGroupComments = assessment.getGroupCommentCount() != null ? 
-                assessment.getGroupCommentCount() : 0;
-            int groupCommentMinLength = assessment.getGroupCommentMinLength() != null ? 
-                assessment.getGroupCommentMinLength() : 0;
+            // ✅ FIXED: Only check comments if they are actually configured
+            List<String> groupCommentLabels = assessment.getGroupCommentLabels();
+            boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
             
-            if (requiredGroupComments > 0 && groupCommentMinLength > 0) {
-                boolean groupCommentsComplete = checkCommentsComplete(
-                    assessment, lecturer, sampleStudent, "Group Assessment", requiredGroupComments, groupCommentMinLength);
+            if (hasGroupComments) {
+                int requiredGroupComments = assessment.getGroupCommentCount() != null ? 
+                    assessment.getGroupCommentCount() : 0;
+                int groupCommentMinLength = assessment.getGroupCommentMinLength() != null ? 
+                    assessment.getGroupCommentMinLength() : 0;
                 
-                if (!groupCommentsComplete) {
-                    return false;
+                if (requiredGroupComments > 0 && groupCommentMinLength > 0) {
+                    boolean groupCommentsComplete = checkCommentsComplete(
+                        assessment, lecturer, sampleStudent, "Group Assessment", 
+                        requiredGroupComments, groupCommentMinLength);
+                    
+                    if (!groupCommentsComplete) {
+                        return false;
+                    }
                 }
             }
         }
         
+        // ✅ FIXED: Check individual rubrics completion
         if (!individualRubrics.isEmpty()) {
             for (Student student : groupMembers) {
                 boolean individualComplete = checkRubricsComplete(
@@ -173,18 +182,24 @@ public class LecturerAssessmentService {
                     return false;
                 }
                 
-                int requiredIndividualComments = assessment.getIndividualCommentCount() != null ? 
-                    assessment.getIndividualCommentCount() : 0;
-                int individualCommentMinLength = assessment.getIndividualCommentMinLength() != null ? 
-                    assessment.getIndividualCommentMinLength() : 0;
+                // ✅ FIXED: Only check comments if they are actually configured
+                List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
+                boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
                 
-                if (requiredIndividualComments > 0 && individualCommentMinLength > 0) {
-                    boolean individualCommentsComplete = checkCommentsComplete(
-                        assessment, lecturer, student, "Individual Assessment", 
-                        requiredIndividualComments, individualCommentMinLength);
+                if (hasIndividualComments) {
+                    int requiredIndividualComments = assessment.getIndividualCommentCount() != null ? 
+                        assessment.getIndividualCommentCount() : 0;
+                    int individualCommentMinLength = assessment.getIndividualCommentMinLength() != null ? 
+                        assessment.getIndividualCommentMinLength() : 0;
                     
-                    if (!individualCommentsComplete) {
-                        return false;
+                    if (requiredIndividualComments > 0 && individualCommentMinLength > 0) {
+                        boolean individualCommentsComplete = checkCommentsComplete(
+                            assessment, lecturer, student, "Individual Assessment", 
+                            requiredIndividualComments, individualCommentMinLength);
+                        
+                        if (!individualCommentsComplete) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -225,6 +240,7 @@ public class LecturerAssessmentService {
                 student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
             .stream()
             .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+            .filter(c -> c.getRubricId() == null) // Only general assessment-level comments
             .collect(Collectors.toList());
         
         if (comments.size() < requiredCount) {
@@ -297,218 +313,218 @@ public class LecturerAssessmentService {
     }
 
     @Transactional
-public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lecturerName,
-                               Long targetId, boolean isGroupTarget, String rubricType,
-                               Map<String, String> scores, Map<Integer, String> comments,
-                               Map<Long, Map<Integer, String>> rubricComments) {
+    public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lecturerName,
+                                   Long targetId, boolean isGroupTarget, String rubricType,
+                                   Map<String, String> scores, Map<Integer, String> comments,
+                                   Map<Long, Map<Integer, String>> rubricComments) {
 
-    Assessment assessment = assessmentRepository.findById(assessmentId)
-        .orElseThrow(() -> new RuntimeException("Assessment not found"));
-    
-    Lecturer lecturer = lecturerRepository.findById(lecturerId)
-        .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-    
-    List<Student> targetStudents;
-    if (isGroupTarget) {
-        Group group = groupRepository.findById(targetId)
-            .orElseThrow(() -> new RuntimeException("Group not found"));
-        targetStudents = studentRepository.findByGroup(group);
-    } else {
-        Student student = studentRepository.findById(targetId)
-            .orElseThrow(() -> new RuntimeException("Student not found"));
-        targetStudents = List.of(student);
-    }
-    
-    for (Student student : targetStudents) {
-        // Delete existing marks for this rubric type
-        List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
-                student, student, assessment).stream()
-            .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
-            .filter(m -> rubricType.equalsIgnoreCase(m.getAssessmentType()))
-            .collect(Collectors.toList());
+        Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
         
-        if (!existingMarks.isEmpty()) {
-            markRepository.deleteAll(existingMarks);
+        Lecturer lecturer = lecturerRepository.findById(lecturerId)
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+        
+        List<Student> targetStudents;
+        if (isGroupTarget) {
+            Group group = groupRepository.findById(targetId)
+                .orElseThrow(() -> new RuntimeException("Group not found"));
+            targetStudents = studentRepository.findByGroup(group);
+        } else {
+            Student student = studentRepository.findById(targetId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+            targetStudents = List.of(student);
         }
         
-        // Delete existing assessment-level comments
-        List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
-                lecturerId,
-                AssessmentComment.EvaluatorType.LECTURER,
-                student,
-                assessment).stream()
-            .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() == null)
-            .collect(Collectors.toList());
-        
-        if (!existingComments.isEmpty()) {
-            assessmentCommentRepository.deleteAll(existingComments);
-        }
-        
-        // Save new marks
-        List<Mark> newMarks = new ArrayList<>();
-        for (Map.Entry<String, String> entry : scores.entrySet()) {
-            String key = entry.getKey();
-            Long ratingId = Long.parseLong(entry.getValue());
+        for (Student student : targetStudents) {
+            // Delete existing marks for this rubric type
+            List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+                    student, student, assessment).stream()
+                .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
+                .filter(m -> rubricType.equalsIgnoreCase(m.getAssessmentType()))
+                .collect(Collectors.toList());
             
-            Rating rating = ratingRepository.findById(ratingId)
-                .orElseThrow(() -> new RuntimeException("Rating not found"));
+            if (!existingMarks.isEmpty()) {
+                markRepository.deleteAll(existingMarks);
+            }
             
-            Mark mark = new Mark();
-            mark.setEvaluatorStudent(student);
-            mark.setEvaluatedStudent(student);
-            mark.setAssessment(assessment);
-            mark.setRating(rating);
-            mark.setComments("LECTURER:" + lecturerId);
-            mark.setLecturer(lecturer);  // ✅ CRITICAL FIX: Set the lecturer field!
-            mark.setAssessmentType(rubricType);
-            mark.setStatus(Mark.SubmissionStatus.FINAL);
+            // Delete existing assessment-level comments
+            List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
+                    lecturerId,
+                    AssessmentComment.EvaluatorType.LECTURER,
+                    student,
+                    assessment).stream()
+                .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                .filter(c -> c.getRubricId() == null)
+                .collect(Collectors.toList());
             
-            if (key.startsWith("subRubric_")) {
-                Long subRubricId = Long.parseLong(key.substring(10));
-                SubRubric subRubric = subRubricRepository.findById(subRubricId)
-                    .orElseThrow(() -> new RuntimeException("SubRubric not found"));
+            if (!existingComments.isEmpty()) {
+                assessmentCommentRepository.deleteAll(existingComments);
+            }
+            
+            // Save new marks
+            List<Mark> newMarks = new ArrayList<>();
+            for (Map.Entry<String, String> entry : scores.entrySet()) {
+                String key = entry.getKey();
+                Long ratingId = Long.parseLong(entry.getValue());
                 
-                mark.setSubRubric(subRubric);
-                mark.setRubric(subRubric.getRubric());
-                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
-                mark.setClo(subRubric.getRubric().getClo());
+                Rating rating = ratingRepository.findById(ratingId)
+                    .orElseThrow(() -> new RuntimeException("Rating not found"));
                 
-                if (subRubric.getRubric().getMarks() != null && 
-                    subRubric.getRubric().getMarks().compareTo(BigDecimal.ZERO) > 0 &&
-                    subRubric.getMarks() != null && 
-                    subRubric.getMarks().compareTo(BigDecimal.ZERO) > 0 &&
-                    subRubric.getRubric().getCloMarks() != null) {
+                Mark mark = new Mark();
+                mark.setEvaluatorStudent(student);
+                mark.setEvaluatedStudent(student);
+                mark.setAssessment(assessment);
+                mark.setRating(rating);
+                mark.setComments("LECTURER:" + lecturerId);
+                mark.setLecturer(lecturer);
+                mark.setAssessmentType(rubricType);
+                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                
+                if (key.startsWith("subRubric_")) {
+                    Long subRubricId = Long.parseLong(key.substring(10));
+                    SubRubric subRubric = subRubricRepository.findById(subRubricId)
+                        .orElseThrow(() -> new RuntimeException("SubRubric not found"));
                     
-                    double subRubricProportion = subRubric.getMarks()
-                        .divide(subRubric.getRubric().getMarks(), 4, RoundingMode.HALF_UP)
-                        .doubleValue();
-                    double cloMarksForSubRubric = subRubric.getRubric().getCloMarks() * subRubricProportion;
-                    double achievementProportion = rating.getMarks()
-                        .divide(subRubric.getMarks(), 4, RoundingMode.HALF_UP)
-                        .doubleValue();
-                    mark.setCloMarks(cloMarksForSubRubric * achievementProportion);
-                } else {
+                    mark.setSubRubric(subRubric);
+                    mark.setRubric(subRubric.getRubric());
+                    mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    mark.setClo(subRubric.getRubric().getClo());
+                    
+                    if (subRubric.getRubric().getMarks() != null && 
+                        subRubric.getRubric().getMarks().compareTo(BigDecimal.ZERO) > 0 &&
+                        subRubric.getMarks() != null && 
+                        subRubric.getMarks().compareTo(BigDecimal.ZERO) > 0 &&
+                        subRubric.getRubric().getCloMarks() != null) {
+                        
+                        double subRubricProportion = subRubric.getMarks()
+                            .divide(subRubric.getRubric().getMarks(), 4, RoundingMode.HALF_UP)
+                            .doubleValue();
+                        double cloMarksForSubRubric = subRubric.getRubric().getCloMarks() * subRubricProportion;
+                        double achievementProportion = rating.getMarks()
+                            .divide(subRubric.getMarks(), 4, RoundingMode.HALF_UP)
+                            .doubleValue();
+                        mark.setCloMarks(cloMarksForSubRubric * achievementProportion);
+                    } else {
+                        mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    }
+                } else if (key.startsWith("rubric_")) {
+                    Long rubricId = Long.parseLong(key.substring(7));
+                    Rubric rubric = rubricRepository.findById(rubricId)
+                        .orElseThrow(() -> new RuntimeException("Rubric not found"));
+                    
+                    mark.setRubric(rubric);
+                    mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    mark.setClo(rubric.getClo());
                     mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
                 }
-            } else if (key.startsWith("rubric_")) {
-                Long rubricId = Long.parseLong(key.substring(7));
-                Rubric rubric = rubricRepository.findById(rubricId)
-                    .orElseThrow(() -> new RuntimeException("Rubric not found"));
                 
-                mark.setRubric(rubric);
-                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
-                mark.setClo(rubric.getClo());
-                mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                newMarks.add(mark);
             }
             
-            newMarks.add(mark);
-        }
-        
-        if (!newMarks.isEmpty()) {
-            markRepository.saveAll(newMarks);
-        }
-        
-        // Save assessment-level comments (rest of the code remains the same)
-        if (comments != null && !comments.isEmpty()) {
-            List<String> commentLabels = rubricType.equalsIgnoreCase("Group Assessment") ?
-                assessment.getGroupCommentLabels() :
-                assessment.getIndividualCommentLabels();
+            if (!newMarks.isEmpty()) {
+                markRepository.saveAll(newMarks);
+            }
             
-            if (commentLabels != null && !commentLabels.isEmpty()) {
-                for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
-                    if (commentEntry.getValue() == null || commentEntry.getValue().trim().isEmpty()) {
-                        continue;
+            // Save assessment-level comments
+            if (comments != null && !comments.isEmpty()) {
+                List<String> commentLabels = rubricType.equalsIgnoreCase("Group Assessment") ?
+                    assessment.getGroupCommentLabels() :
+                    assessment.getIndividualCommentLabels();
+                
+                if (commentLabels != null && !commentLabels.isEmpty()) {
+                    for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                        if (commentEntry.getValue() == null || commentEntry.getValue().trim().isEmpty()) {
+                            continue;
+                        }
+                        
+                        AssessmentComment comment = new AssessmentComment();
+                        comment.setEvaluatorId(lecturerId);
+                        comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+                        comment.setEvaluatorName(lecturerName);
+                        comment.setEvaluatedStudent(student);
+                        comment.setAssessment(assessment);
+                        comment.setCommentText(commentEntry.getValue().trim());
+                        comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+                        comment.setCommentIndex(commentEntry.getKey());
+                        comment.setRubricAssessmentType(rubricType);
+                        comment.setRubricId(null);
+                        
+                        String label = rubricType.equalsIgnoreCase("Group Assessment") ?
+                            assessment.getGroupCommentLabel(commentEntry.getKey()) :
+                            assessment.getIndividualCommentLabel(commentEntry.getKey());
+                        comment.setCommentLabel(label);
+                        
+                        Integer commentIndex = commentEntry.getKey();
+                        Boolean isAnonymous = rubricType.equalsIgnoreCase("Group Assessment") ?
+                            assessment.isGroupCommentAnonymous(commentIndex) :
+                            assessment.isIndividualCommentAnonymous(commentIndex);
+                        
+                        if (isAnonymous != null && isAnonymous) {
+                            comment.setAnonymousIdentifier("Lecturer");
+                        } else {
+                            comment.setAnonymousIdentifier(lecturerName);
+                        }
+                        
+                        assessmentCommentRepository.save(comment);
                     }
-                    
-                    AssessmentComment comment = new AssessmentComment();
-                    comment.setEvaluatorId(lecturerId);
-                    comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
-                    comment.setEvaluatorName(lecturerName);
-                    comment.setEvaluatedStudent(student);
-                    comment.setAssessment(assessment);
-                    comment.setCommentText(commentEntry.getValue().trim());
-                    comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
-                    comment.setCommentIndex(commentEntry.getKey());
-                    comment.setRubricAssessmentType(rubricType);
-                    comment.setRubricId(null);
-                    
-                    String label = rubricType.equalsIgnoreCase("Group Assessment") ?
-                        assessment.getGroupCommentLabel(commentEntry.getKey()) :
-                        assessment.getIndividualCommentLabel(commentEntry.getKey());
-                    comment.setCommentLabel(label);
-                    
-                    Integer commentIndex = commentEntry.getKey();
-                    Boolean isAnonymous = rubricType.equalsIgnoreCase("Group Assessment") ?
-                        assessment.isGroupCommentAnonymous(commentIndex) :
-                        assessment.isIndividualCommentAnonymous(commentIndex);
-                    
-                    if (isAnonymous != null && isAnonymous) {
-                        comment.setAnonymousIdentifier("Lecturer");
-                    } else {
-                        comment.setAnonymousIdentifier(lecturerName);
-                    }
-                    
-                    assessmentCommentRepository.save(comment);
                 }
             }
-        }
-        
-        // Save rubric-specific comments (rest remains the same)
-        if (rubricComments != null && !rubricComments.isEmpty()) {
-            for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
-                Long rubricId = rubricEntry.getKey();
-                Map<Integer, String> rubricCommentMap = rubricEntry.getValue();
-                
-                Rubric rubric = rubricRepository.findById(rubricId)
-                    .orElseThrow(() -> new RuntimeException("Rubric not found"));
-                
-                List<AssessmentComment> existingRubricComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
-                        lecturerId,
-                        AssessmentComment.EvaluatorType.LECTURER,
-                        student,
-                        assessment).stream()
-                    .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubricId))
-                    .collect(Collectors.toList());
-                
-                if (!existingRubricComments.isEmpty()) {
-                    assessmentCommentRepository.deleteAll(existingRubricComments);
-                }
-                
-                for (Map.Entry<Integer, String> commentEntry : rubricCommentMap.entrySet()) {
-                    Integer commentIndex = commentEntry.getKey();
-                    String commentText = commentEntry.getValue();
+            
+            // Save rubric-specific comments
+            if (rubricComments != null && !rubricComments.isEmpty()) {
+                for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
+                    Long rubricId = rubricEntry.getKey();
+                    Map<Integer, String> rubricCommentMap = rubricEntry.getValue();
                     
-                    if (commentText == null || commentText.trim().isEmpty()) {
-                        continue;
+                    Rubric rubric = rubricRepository.findById(rubricId)
+                        .orElseThrow(() -> new RuntimeException("Rubric not found"));
+                    
+                    List<AssessmentComment> existingRubricComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
+                            lecturerId,
+                            AssessmentComment.EvaluatorType.LECTURER,
+                            student,
+                            assessment).stream()
+                        .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubricId))
+                        .collect(Collectors.toList());
+                    
+                    if (!existingRubricComments.isEmpty()) {
+                        assessmentCommentRepository.deleteAll(existingRubricComments);
                     }
                     
-                    AssessmentComment comment = new AssessmentComment();
-                    comment.setEvaluatorId(lecturerId);
-                    comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
-                    comment.setEvaluatorName(lecturerName);
-                    comment.setEvaluatedStudent(student);
-                    comment.setAssessment(assessment);
-                    comment.setCommentText(commentText.trim());
-                    comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
-                    comment.setCommentIndex(commentIndex);
-                    comment.setRubricAssessmentType(rubricType);
-                    comment.setRubricId(rubricId);
-                    comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
-                    
-                    Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
-                    if (isAnonymous != null && isAnonymous) {
-                        comment.setAnonymousIdentifier("Lecturer");
-                    } else {
-                        comment.setAnonymousIdentifier(lecturerName);
+                    for (Map.Entry<Integer, String> commentEntry : rubricCommentMap.entrySet()) {
+                        Integer commentIndex = commentEntry.getKey();
+                        String commentText = commentEntry.getValue();
+                        
+                        if (commentText == null || commentText.trim().isEmpty()) {
+                            continue;
+                        }
+                        
+                        AssessmentComment comment = new AssessmentComment();
+                        comment.setEvaluatorId(lecturerId);
+                        comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+                        comment.setEvaluatorName(lecturerName);
+                        comment.setEvaluatedStudent(student);
+                        comment.setAssessment(assessment);
+                        comment.setCommentText(commentText.trim());
+                        comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+                        comment.setCommentIndex(commentIndex);
+                        comment.setRubricAssessmentType(rubricType);
+                        comment.setRubricId(rubricId);
+                        comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                        
+                        Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                        if (isAnonymous != null && isAnonymous) {
+                            comment.setAnonymousIdentifier("Lecturer");
+                        } else {
+                            comment.setAnonymousIdentifier(lecturerName);
+                        }
+                        
+                        assessmentCommentRepository.save(comment);
                     }
-                    
-                    assessmentCommentRepository.save(comment);
                 }
             }
         }
     }
-}
     
     public Map<String, Long> getExistingMarks(Assessment assessment, Lecturer lecturer, 
                                                Student student, String rubricType) {

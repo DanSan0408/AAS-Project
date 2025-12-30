@@ -11,7 +11,7 @@
 <body class="data-view-page">
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
-    <div class="main-content">
+    <div class="main-content"> 
         <div class="header-container">
             <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
             <h1>UTM CAS</h1>
@@ -63,10 +63,14 @@
                 <div th:if="${uniqueEvaluators != null and !uniqueEvaluators.isEmpty()}" class="evaluator-grid">
                     <div th:each="evaluator : ${uniqueEvaluators}" class="evaluator-item">
                         <div class="evaluator-name">
-                            <i class="fas fa-user"></i> <span th:text="${evaluator.value}">Name</span>
+                            <i class="fas" 
+                               th:classappend="${evaluator.value == 'Lecturer' ? 'fa-chalkboard-teacher' : (evaluator.value == 'Supervisor' ? 'fa-user-tie' : 'fa-user-graduate')}"></i>
+                            <span th:text="${evaluator.key}">Name</span>
                         </div>
-                        <div class="evaluator-email">
-                            <span th:text="${evaluator.key}">email@example.com</span>
+                        <div class="evaluator-role">
+                            <span class="role-badge" 
+                                  th:classappend="${evaluator.value == 'Lecturer' ? 'badge-lecturer' : (evaluator.value == 'Supervisor' ? 'badge-supervisor' : 'badge-student')}"
+                                  th:text="${evaluator.value}">Role</span>
                         </div>
                     </div>
                 </div>
@@ -123,7 +127,7 @@
                                                 <div class="sub-desc" th:if="${subRubric.description}" th:text="${subRubric.description}"></div>
                                             </td>
                                             
-                                            <td class="text-center"><span class="badge badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
+                                            <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
                                             
                                             <td>
                                                 <div th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null}" class="rating-list">
@@ -146,8 +150,18 @@
                                                 <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
                                             </td>
                                             
+                                            <!-- ✅ UPDATED: Show both raw and weighted marks -->
                                             <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
-                                                <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
+                                                <div class="mark-display">
+                                                    <div class="raw-mark">
+                                                        <span class="mark-label">Raw Mark:</span>
+                                                        <span class="mark-value" th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
+                                                    </div>
+                                                    <div class="weighted-mark">
+                                                        <span class="mark-label">Weighted Mark:</span>
+                                                        <span class="mark-value-final" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</span>
+                                                    </div>
+                                                </div>
                                             </td>
                                             
                                             <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
@@ -187,7 +201,7 @@
                                                     <div class="sub-desc" th:if="${subRubric.description}" th:text="${subRubric.description}"></div>
                                                 </td>
                                                 
-                                                <td class="text-center"><span class="badge badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
+                                                <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
                                                 
                                                 <td>
                                                     <div th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null}" class="rating-list">
@@ -210,7 +224,9 @@
                                                     <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
                                                 </td>
                                                 
+                                                <!-- ✅ UPDATED: Individual assessment shows only one mark (no factor applied) -->
                                                 <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
+                                                    <span class="mark-label">Individual Mark:</span>
                                                     <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
                                                 </td>
                                                 
@@ -232,7 +248,7 @@
                                                     <div class="sub-name">Direct Rating</div>
                                                 </td>
                                                 
-                                                <td class="text-center"><span class="badge badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
+                                                <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
                                                 
                                                 <td>
                                                     <div th:if="${rubricDetails != null and rubricDetails.directRatingsByEvaluator != null}" class="rating-list">
@@ -255,6 +271,7 @@
                                                     <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muRf, 1, 3) : '-'}">0.000</div>
                                                 </td>
                                                 
+                                                <!-- ✅ UPDATED: Individual assessment shows only one mark -->
                                                 <td class="text-center vertical-middle border-left bg-highlight">
                                                     <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
                                                 </td>

@@ -308,40 +308,42 @@ public class RubricController {
         return "manage-assessments";
     }
     
-    // ==================== REORDERING ENDPOINTS ====================
-    
-    /**
-     * Move entire assessment type block (Individual/Group) up or down
-     */
-    @PostMapping("/assessment/{assessmentId}/move-block")
-    public String moveAssessmentBlock(@PathVariable Long assessmentId,
-                                       @RequestParam String blockType,
-                                       @RequestParam String direction,
-                                       RedirectAttributes redirectAttributes) {
-        try {
-            rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
-        } catch (Exception e) {
-            // Silent fail
-        }
-        return "redirect:/rubrics/view/" + assessmentId;
+@PostMapping("/assessment/{assessmentId}/move-block")
+public String moveAssessmentBlock(@PathVariable Long assessmentId,
+                                   @RequestParam String blockType,
+                                   @RequestParam String direction,
+                                   RedirectAttributes redirectAttributes) {
+    try {
+        rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
+    } catch (Exception e) {
+        // Silent fail
     }
     
-    /**
-     * Move individual rubric up or down within its assessment type
-     */
-    @PostMapping("/rubric/{rubricId}/move")
-    public String moveRubric(@PathVariable Long rubricId,
-                              @RequestParam String direction,
-                              RedirectAttributes redirectAttributes) {
-        try {
-            Rubric rubric = rubricService.findRubricById(rubricId);
-            Long assessmentId = rubric.getAssessment().getId();
-            
-            rubricService.moveRubric(rubricId, direction);
-            
-            return "redirect:/rubrics/view/" + assessmentId;
-        } catch (Exception e) {
-            return "redirect:/rubrics/manage";
-        }
+    // ✅ Return to the block that was moved with anchor
+    String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
+    return "redirect:/rubrics/view/" + assessmentId + "#" + anchor;
+}
+
+/**
+ * Move individual rubric up or down within its assessment type
+ */
+@PostMapping("/rubric/{rubricId}/move")
+public String moveRubric(@PathVariable Long rubricId,
+                          @RequestParam String direction,
+                          RedirectAttributes redirectAttributes) {
+    try {
+        Rubric rubric = rubricService.findRubricById(rubricId);
+        Long assessmentId = rubric.getAssessment().getId();
+        String assessmentType = rubric.getAssessmentTypes();
+        
+        rubricService.moveRubric(rubricId, direction);
+        
+        // ✅ Return to the specific rubric's block with anchor
+        String anchor = assessmentType.equals("Group Assessment") ? "group-block" : "individual-block";
+        return "redirect:/rubrics/view/" + assessmentId + "#" + anchor;
+        
+    } catch (Exception e) {
+        return "redirect:/rubrics/manage";
     }
+}
 }

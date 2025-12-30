@@ -16,8 +16,10 @@ import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+
 
 @Service
 public class AdminService {
@@ -25,19 +27,25 @@ public class AdminService {
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final IndustrialSupervisorRepository industrialSupervisorRepository;
+    private final LecturerGroupAssignmentRepository assignmentRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminService(StudentRepository studentRepository, LecturerRepository lecturerRepository, 
-                        IndustrialSupervisorRepository industrialSupervisorRepository, 
-                        GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
-        this.studentRepository = studentRepository;
-        this.lecturerRepository = lecturerRepository;
-        this.industrialSupervisorRepository = industrialSupervisorRepository;
-        this.groupRepository = groupRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+public AdminService(
+        StudentRepository studentRepository, 
+        LecturerRepository lecturerRepository, 
+        IndustrialSupervisorRepository industrialSupervisorRepository, 
+        GroupRepository groupRepository, 
+        PasswordEncoder passwordEncoder,
+        LecturerGroupAssignmentRepository assignmentRepository) {
+    this.studentRepository = studentRepository;
+    this.lecturerRepository = lecturerRepository;
+    this.industrialSupervisorRepository = industrialSupervisorRepository;
+    this.groupRepository = groupRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.assignmentRepository = assignmentRepository;
+}
 
     // ========== WHITESPACE-INSENSITIVE DUPLICATE CHECKERS ==========
     
@@ -231,19 +239,24 @@ public class AdminService {
     }
     
     @Transactional
-    public void deleteGroupById(Long groupId) {
-        Group groupToDelete = groupRepository.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
-        
-        List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
-        
-        for (Student student : studentsToUnlink) {
-            student.setGroup(null);
-        }
-        studentRepository.saveAll(studentsToUnlink);
-        
-        groupRepository.delete(groupToDelete);
+public void deleteGroupById(Long groupId) {
+    Group groupToDelete = groupRepository.findById(groupId)
+        .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+    
+    // 1. Unlink students from this group
+    List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
+    for (Student student : studentsToUnlink) {
+        student.setGroup(null);
     }
+    studentRepository.saveAll(studentsToUnlink);
+    
+    // 2. Delete LecturerGroupAssignments for this group
+    assignmentRepository.deleteByGroup(groupToDelete);
+    assignmentRepository.flush(); // Ensure deletion is committed before proceeding
+    
+    // 3. Delete the group
+    groupRepository.delete(groupToDelete);
+}
     
     public List<Student> getAllStudents() {
         return studentRepository.findAllWithGroupEagerly();
@@ -311,62 +324,65 @@ public class AdminService {
         industrialSupervisorRepository.save(industrialSupervisor);
     }
 
-    // ==========================================
-    // ⭐ SAFE DELETE METHODS START HERE
-    // ==========================================
-
     @Transactional
-    public void deleteStudentById(Long id) {
-        Student student = studentRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Student not found"));
-        
-        // 1. Remove from Group 
-        if (student.getGroup() != null) {
-            removeStudentFromGroup(id);
-        }
-
-        // 2. Cleanup dependencies
-        studentRepository.deleteCalculatedResultsByStudentId(id); // Ghost Table
-        studentRepository.deleteMarksReceivedByStudent(id);       // Marks Received
-        studentRepository.deleteMarksGivenByStudent(id);          // Marks Given
-        studentRepository.deleteOverridesByStudent(id);           // Overrides
-
-        // 3. Delete Student
-        studentRepository.delete(student);
+public void deleteStudentById(Long id) {
+    Student student = studentRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    // 1. Remove from Group 
+    if (student.getGroup() != null) {
+        removeStudentFromGroup(id);
     }
 
-    @Transactional
-    public void deleteLecturerById(Long id) {
-        Lecturer lecturer = lecturerRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+    // 2. Cleanup dependencies
+    studentRepository.deleteCalculatedResultsByStudentId(id);  // Ghost Table
+    studentRepository.deleteCommentsByStudentId(id);           // ✅ NEW: Assessment Comments
+    studentRepository.deleteMarksReceivedByStudent(id);        // Marks Received
+    studentRepository.deleteMarksGivenByStudent(id);           // Marks Given
+    studentRepository.deleteOverridesByStudent(id);            // Overrides
 
-        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
-        lecturerRepository.unlinkFromGroups(id);
+    // 3. Delete Student
+    studentRepository.delete(student);
+}
 
-        // 2. Delete assignments (LecturerGroupAssignment)
-        lecturerRepository.deleteGroupAssignments(id);
+@Transactional
+public void deleteLecturerById(Long id) {
+    Lecturer lecturer = lecturerRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-        // 3. Delete Marks given by this lecturer
-        lecturerRepository.deleteMarksGiven(id);
+    // 1. Unlink from Groups (set academic_supervisor_id = NULL)
+    lecturerRepository.unlinkFromGroups(id);
 
-        // 4. Delete Lecturer
-        lecturerRepository.delete(lecturer);
-    }
+    // 2. Delete assignments (LecturerGroupAssignment)
+    lecturerRepository.deleteGroupAssignments(id);
 
-    @Transactional
-    public void deleteIndustrialSupervisorById(Long id) {
-        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+    // 3. Delete Marks given by this lecturer
+    lecturerRepository.deleteMarksGiven(id);
+    
+    // 4. ✅ NEW: Delete comments given by this lecturer
+    lecturerRepository.deleteCommentsByLecturer(id);
 
-        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
-        industrialSupervisorRepository.unlinkFromGroups(id);
+    // 5. Delete Lecturer
+    lecturerRepository.delete(lecturer);
+}
 
-        // 2. Delete Marks given by this supervisor
-        industrialSupervisorRepository.deleteMarksGiven(id);
+@Transactional
+public void deleteIndustrialSupervisorById(Long id) {
+    IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Supervisor not found"));
 
-        // 3. Delete Supervisor
-        industrialSupervisorRepository.delete(supervisor);
-    }
+    // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
+    industrialSupervisorRepository.unlinkFromGroups(id);
+
+    // 2. Delete Marks given by this supervisor
+    industrialSupervisorRepository.deleteMarksGiven(id);
+    
+    // 3. ✅ NEW: Delete comments given by this supervisor
+    industrialSupervisorRepository.deleteCommentsBySupervisor(id);
+
+    // 4. Delete Supervisor
+    industrialSupervisorRepository.delete(supervisor);
+}
 
     // ==========================================
     // ⭐ SAFE BULK DELETE METHODS

@@ -376,142 +376,199 @@ public class AdminController {
     }
 
     @GetMapping("/manage-students")
-    public String manageStudents(Model model) {
-        model.addAttribute("students", adminService.getAllStudents());
+public String manageStudents(Model model, @ModelAttribute("student") Student student) {
+    model.addAttribute("students", adminService.getAllStudents());
+    
+    // If student is not provided via flash attributes, create a new one
+    if (student == null || student.getId() == null && 
+        (student.getUsername() == null || student.getUsername().isEmpty())) {
         model.addAttribute("student", new Student());
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        if (model.containsAttribute("errorMessage")) {
-            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
-        }
-        return "manage_students";
+    } else {
+        model.addAttribute("student", student);
     }
+    
+    model.addAttribute("adminUsername", getLoggedInUsername());
+    return "manage_students";
+}
 
     @PostMapping("/manage-students")
-    public String saveStudent(
-            @ModelAttribute Student student, 
-            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-            RedirectAttributes redirectAttributes) {
-        try {
-            if (!confirmDuplicate) {
-                String duplicateMessage = adminService.checkStudentDuplicate(
-                    student.getUsername(), 
-                    student.getEmail(), 
-                    student.getId()
-                );
-                
-                if (duplicateMessage != null) {
-                    redirectAttributes.addFlashAttribute("student", student);
-                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                    redirectAttributes.addFlashAttribute("isDuplicate", true);
-                    return "redirect:/admin/manage-students";
-                }
-            }
+public String saveStudent(
+        @ModelAttribute Student student, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Determine if this is an update or create operation
+        boolean isUpdate = (student.getId() != null);
+        
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkStudentDuplicate(
+                student.getUsername(), 
+                student.getEmail(), 
+                student.getId()
+            );
             
-            adminService.saveStudent(student);
-            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("student", student);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-students";
+            }
         }
-        return "redirect:/admin/manage-students";
+        
+        adminService.saveStudent(student);
+        
+        // ✅ FIXED: Different messages for update vs create
+        if (isUpdate) {
+            redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
+        }
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-students";
+}
 
     @GetMapping("/manage-lecturers")
-    public String manageLecturers(Model model) {
-        model.addAttribute("lecturers", adminService.getAllLecturers());
+public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer lecturer) {
+    model.addAttribute("lecturers", adminService.getAllLecturers());
+    
+    // If lecturer is not provided via flash attributes, create a new one
+    if (lecturer == null || lecturer.getId() == null && 
+        (lecturer.getUsername() == null || lecturer.getUsername().isEmpty())) {
         model.addAttribute("lecturer", new Lecturer());
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        if (model.containsAttribute("errorMessage")) {
-            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
-        }
-        return "manage_lecturers";
+    } else {
+        model.addAttribute("lecturer", lecturer);
     }
+    
+    model.addAttribute("adminUsername", getLoggedInUsername());
+    return "manage_lecturers";
+}
 
     @PostMapping("/manage-lecturers")
-    public String saveLecturer(
-            @ModelAttribute Lecturer lecturer, 
-            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-            RedirectAttributes redirectAttributes) {
-        try {
-            if (!confirmDuplicate) {
-                String duplicateMessage = adminService.checkLecturerDuplicate(
-                    lecturer.getUsername(), 
-                    lecturer.getEmail(), 
-                    lecturer.getId()
-                );
-                
-                if (duplicateMessage != null) {
-                    redirectAttributes.addFlashAttribute("lecturer", lecturer);
-                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                    redirectAttributes.addFlashAttribute("isDuplicate", true);
-                    return "redirect:/admin/manage-lecturers";
-                }
-            }
+public String saveLecturer(
+        @ModelAttribute Lecturer lecturer, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Determine if this is an update or create operation
+        boolean isUpdate = (lecturer.getId() != null);
+        
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkLecturerDuplicate(
+                lecturer.getUsername(), 
+                lecturer.getEmail(), 
+                lecturer.getId()
+            );
             
-            adminService.saveLecturer(lecturer);
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("lecturer", lecturer);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-lecturers";
+            }
+        }
+        
+        adminService.saveLecturer(lecturer);
+        
+        // ✅ FIXED: Different messages for update vs create
+        if (isUpdate) {
+            redirectAttributes.addFlashAttribute("successMessage", "Lecturer updated successfully!");
+        } else {
             redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
         }
-        return "redirect:/admin/manage-lecturers";
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-lecturers";
+}
 
-    @GetMapping("/manage-supervisors")
-    public String manageSupervisors(Model model) {
-        model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
+
+   @GetMapping("/manage-supervisors")
+public String manageSupervisors(Model model, @ModelAttribute("industrialSupervisor") IndustrialSupervisor industrialSupervisor) {
+    model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
+    
+    // If supervisor is not provided via flash attributes, create a new one
+    if (industrialSupervisor == null || industrialSupervisor.getId() == null && 
+        (industrialSupervisor.getUsername() == null || industrialSupervisor.getUsername().isEmpty())) {
         model.addAttribute("industrialSupervisor", new IndustrialSupervisor());
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        if (model.containsAttribute("errorMessage")) {
-            model.addAttribute("errorMessage", model.asMap().get("errorMessage"));
-        }
-        return "manage_supervisors";
+    } else {
+        model.addAttribute("industrialSupervisor", industrialSupervisor);
     }
-
+    
+    model.addAttribute("adminUsername", getLoggedInUsername());
+    return "manage_supervisors";
+}
     @PostMapping("/manage-supervisors")
-    public String saveIndustrialSupervisor(
-            @ModelAttribute IndustrialSupervisor industrialSupervisor, 
-            @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-            RedirectAttributes redirectAttributes) {
-        try {
-            if (!confirmDuplicate) {
-                String duplicateMessage = adminService.checkSupervisorDuplicate(
-                    industrialSupervisor.getUsername(), 
-                    industrialSupervisor.getEmail(), 
-                    industrialSupervisor.getId()
-                );
-                
-                if (duplicateMessage != null) {
-                    redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
-                    redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                    redirectAttributes.addFlashAttribute("isDuplicate", true);
-                    return "redirect:/admin/manage-supervisors";
-                }
-            }
+public String saveIndustrialSupervisor(
+        @ModelAttribute IndustrialSupervisor industrialSupervisor, 
+        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
+        RedirectAttributes redirectAttributes) {
+    try {
+        // Determine if this is an update or create operation
+        boolean isUpdate = (industrialSupervisor.getId() != null);
+        
+        if (!confirmDuplicate) {
+            String duplicateMessage = adminService.checkSupervisorDuplicate(
+                industrialSupervisor.getUsername(), 
+                industrialSupervisor.getEmail(), 
+                industrialSupervisor.getId()
+            );
             
-            adminService.saveIndustrialSupervisor(industrialSupervisor);
-            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
-        } catch (DataIntegrityViolationException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
+            if (duplicateMessage != null) {
+                redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
+                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
+                redirectAttributes.addFlashAttribute("isDuplicate", true);
+                return "redirect:/admin/manage-supervisors";
+            }
         }
-        return "redirect:/admin/manage-supervisors";
+        
+        adminService.saveIndustrialSupervisor(industrialSupervisor);
+        
+        // ✅ FIXED: Different messages for update vs create
+        if (isUpdate) {
+            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor updated successfully!");
+        } else {
+            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
+        }
+    } catch (DataIntegrityViolationException e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
     }
+    return "redirect:/admin/manage-supervisors";
+}
 
     @GetMapping("/delete-student/{id}")
-    public String deleteStudent(@PathVariable Long id) {
+public String deleteStudent(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    try {
         adminService.deleteStudentById(id);
-        return "redirect:/admin/manage-students";
+        redirectAttributes.addFlashAttribute("successMessage", "Student deleted successfully!");
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error deleting student: " + e.getMessage());
     }
+    return "redirect:/admin/manage-students";
+}
 
-    @GetMapping("/delete-lecturer/{id}")
-    public String deleteLecturer(@PathVariable Long id) {
+@GetMapping("/delete-lecturer/{id}")
+public String deleteLecturer(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    try {
         adminService.deleteLecturerById(id);
-        return "redirect:/admin/manage-lecturers";
+        redirectAttributes.addFlashAttribute("successMessage", "Lecturer deleted successfully!");
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error deleting lecturer: " + e.getMessage());
     }
+    return "redirect:/admin/manage-lecturers";
+}
 
-    @GetMapping("/delete-supervisor/{id}")
-    public String deleteIndustrialSupervisor(@PathVariable Long id) {
+@GetMapping("/delete-supervisor/{id}")
+public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    try {
         adminService.deleteIndustrialSupervisorById(id);
-        return "redirect:/admin/manage-supervisors";
+        redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor deleted successfully!");
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error deleting supervisor: " + e.getMessage());
     }
+    return "redirect:/admin/manage-supervisors";
+}
 
     @GetMapping("/edit-student/{id}")
     public String editStudent(@PathVariable Long id, Model model) {
@@ -647,46 +704,65 @@ public class AdminController {
     }
 
     @PostMapping("/assessment/assign")
-    public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
-        
-        if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
-             redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
-             return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
-        }
-
-        Deadline deadline = new Deadline();
-        if (dto.getDeadlineId() != null) {
-            deadline = deadlineService.getDeadlineById(dto.getDeadlineId()).orElse(deadline);
-        }
-        
-        deadline.setAssessmentId(dto.getAssessmentId());
-        deadline.setAssessorType(dto.getAssessorType());
-        deadline.setTitle(dto.getTitle());
-        deadline.setDate(dto.getEndDate());
-
-        if ("INSTANT".equalsIgnoreCase(dto.getOpenType())) {
-            deadline.setOpenDate(new Date()); 
-        } else if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null) {
-            deadline.setOpenDate(dto.getOpenDate());
-        } else {
-            deadline.setOpenDate(new Date()); 
-        }
-
-        try {
-            deadlineService.save(deadline); 
-            
-            String openDateStr = new SimpleDateFormat("yyyy-MM-dd").format(deadline.getOpenDate());
-
-            redirectAttributes.addFlashAttribute("successMessage", 
-                "Assessment **" + dto.getTitle() + "** assigned successfully for **" + dto.getAssessorType() + "s**. Open Date: " + openDateStr);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error assigning assessment: " + e.getMessage());
-            return "redirect:/admin/assessment/assign/" + dto.getAssessmentId(); 
-        }
-        
-        return "redirect:/admin/home"; 
+public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
+    
+    if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
+         redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
+         return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
     }
 
+    // ⭐ CHECK IF DEADLINE ALREADY EXISTS FOR THIS ASSESSMENT + ASSESSOR TYPE
+    List<Deadline> existingDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
+        dto.getAssessmentId(), 
+        dto.getAssessorType()
+    );
+    
+    Deadline deadline;
+    
+    if (!existingDeadlines.isEmpty()) {
+        // ⭐ UPDATE EXISTING DEADLINE (take the first one if multiple exist)
+        deadline = existingDeadlines.get(0);
+        
+        // Optional: Delete any duplicate deadlines if more than one exists
+        if (existingDeadlines.size() > 1) {
+            for (int i = 1; i < existingDeadlines.size(); i++) {
+                deadlineService.deleteDeadline(existingDeadlines.get(i).getId());
+            }
+        }
+    } else {
+        // ⭐ CREATE NEW DEADLINE
+        deadline = new Deadline();
+        deadline.setAssessmentId(dto.getAssessmentId());
+        deadline.setAssessorType(dto.getAssessorType());
+    }
+    
+    // Update/Set all fields
+    deadline.setTitle(dto.getTitle());
+    deadline.setDate(dto.getEndDate());
+
+    if ("INSTANT".equalsIgnoreCase(dto.getOpenType())) {
+        deadline.setOpenDate(new Date()); 
+    } else if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null) {
+        deadline.setOpenDate(dto.getOpenDate());
+    } else {
+        deadline.setOpenDate(new Date()); 
+    }
+
+    try {
+        deadlineService.save(deadline); 
+        
+        String openDateStr = new SimpleDateFormat("yyyy-MM-dd").format(deadline.getOpenDate());
+        String action = existingDeadlines.isEmpty() ? "assigned" : "updated";
+
+        redirectAttributes.addFlashAttribute("successMessage", 
+            "Assessment " + dto.getTitle() + " " + action + " successfully for " + dto.getAssessorType() + "s. Open Date: " + openDateStr);
+    } catch (Exception e) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Error assigning assessment: " + e.getMessage());
+        return "redirect:/admin/assessment/assign/" + dto.getAssessmentId(); 
+    }
+    
+    return "redirect:/admin/home"; 
+}
     // Inside AdminController.class
 
     // 1. Bulk Delete Students
