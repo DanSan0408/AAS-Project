@@ -112,35 +112,73 @@ body.edit-overrides-page .inp-number:focus {
     background-color: #fff5f5 !important;
 }
 
-/* Footer */
+/* ==================== FLOATING ACTION BUTTONS ==================== */
 body.edit-overrides-page .sticky-footer {
     position: fixed !important;
-    bottom: 0 !important;
-    left: 270px !important;
-    right: 0 !important;
-    background-color: white !important;
-    padding: 15px 40px !important;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+    bottom: 20px !important;       /* Distance from bottom */
+    
+    /* STRETCH LOGIC */
+    left: 290px !important;        /* 270px (Sidebar) + 20px (Gap) */
+    right: 20px !important;        /* 20px Gap from right wall */
+    width: auto !important;        /* Let left/right determine width */
+    
+    /* Styling */
+    background-color: var(--color-surface) !important;
+    padding: 15px 30px !important;
+    border-radius: 12px !important; /* Rounded rectangle */
+    
+    /* 3D Floating Effect */
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid var(--color-border) !important;
+    
+    /* CENTER BUTTONS */
     display: flex !important;
-    justify-content: flex-end !important;
-    z-index: 100 !important;
-    border-top: 1px solid var(--color-border) !important;
+    align-items: center !important;
+    justify-content: center !important; /* Centers the buttons */
+    gap: 20px !important;
+    z-index: 1000 !important;
+    
+    /* Reset margins */
+    margin: 0 !important; 
 }
 
 body.edit-overrides-page .btn {
-    padding: 10px 25px !important;
-    border-radius: 6px !important;
+    padding: 12px 30px !important;
+    border-radius: 8px !important;
     font-weight: 600 !important;
+    font-size: 1rem !important;
     text-decoration: none !important;
     border: none !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
 }
 
-body.edit-overrides-page .btn-primary { background-color: var(--color-primary) !important; color: white !important; }
-body.edit-overrides-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
+body.edit-overrides-page .btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.edit-overrides-page .btn-primary { 
+    background-color: var(--color-primary) !important; 
+    color: white !important; 
+}
+
+body.edit-overrides-page .btn-primary:hover {
+    background-color: #5A0020 !important;
+}
+
+body.edit-overrides-page .btn-secondary { 
+    background-color: var(--color-secondary) !important; 
+    color: white !important; 
+}
+
+body.edit-overrides-page .btn-secondary:hover {
+    background-color: #52525B !important;
+}
 
 /* Empty State */
 body.edit-overrides-page .empty-state {
@@ -150,4 +188,15 @@ body.edit-overrides-page .empty-state {
     border: 2px dashed var(--color-border) !important;
     border-radius: 12px !important;
 }
-body.edit-overrides-page .empty-state i { font-size: 3rem !important; margin-bottom: 15px !important; opacity: 0.5 !important; }
+
+body.edit-overrides-page .empty-state i { 
+    font-size: 3rem !important; 
+    margin-bottom: 15px !important; 
+    opacity: 0.5 !important; 
+}
+
+body.edit-overrides-page .empty-state h3 {
+    margin: 0 !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
