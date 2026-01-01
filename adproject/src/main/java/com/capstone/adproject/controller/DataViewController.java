@@ -151,8 +151,7 @@ public String showOverallData(Model model) {
     return "overall_data_view";
 }
 
-    // --- ASSESSMENT DATA VIEW ---
-@GetMapping("/assessment/{assessmentId}")
+   @GetMapping("/assessment/{assessmentId}")
 public String showAssessmentData(
         @PathVariable Long assessmentId,
         @RequestParam(required = false) Long groupId,
@@ -175,25 +174,30 @@ public String showAssessmentData(
     
     model.addAttribute("selectedGroup", selectedGroup);
     
-    if (selectedGroup != null) {
+    // ✅ Initialize empty assessment data (studentDataList is auto-initialized in DTO)
+    AssessmentDataDto assessmentData = new AssessmentDataDto();
+    assessmentData.setAssessment(assessment);
+    
+    // ✅ Initialize empty maps
+    Map<String, List<Rubric>> rubricsByType = new HashMap<>();
+    Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
+    Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
+    
+    if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
         List<Student> students = new ArrayList<>(selectedGroup.getStudents());
         students.sort((s1, s2) -> s1.getUsername().compareToIgnoreCase(s2.getUsername()));
         
-        AssessmentDataDto assessmentData = calculateService.calculateAssessmentData(assessment, students);
-        model.addAttribute("assessmentData", assessmentData);
+        assessmentData = calculateService.calculateAssessmentData(assessment, students);
         
         // Build rubrics by type map
-        Map<String, List<Rubric>> rubricsByType = new HashMap<>();
         if (assessment.getRubrics() != null) {
             for (Rubric rubric : assessment.getRubrics()) {
                 String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
                 rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
             }
         }
-        model.addAttribute("rubricsByType", rubricsByType);
         
         // Build detailed rubric data for each student
-        Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
         for (Student student : students) {
             Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();
             for (Rubric rubric : assessment.getRubrics()) {
@@ -210,10 +214,8 @@ public String showAssessmentData(
             }
             studentRubricDetails.put(student.getId(), rubricDetails);
         }
-        model.addAttribute("studentRubricDetails", studentRubricDetails);
         
-        // ✅ Get unique evaluators with proper supervisor names
-        Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
+        // Get unique evaluators with proper supervisor names
         for (Student student : students) {
             for (Rubric rubric : assessment.getRubrics()) {
                 StudentAssessmentDataDto studentData = calculateService.calculateStudentAssessmentData(student, assessment);
@@ -229,10 +231,15 @@ public String showAssessmentData(
                 }
             }
         }
-        model.addAttribute("uniqueEvaluators", uniqueEvaluators);
     }
     
+    // ✅ Always add these to model (even if empty)
+    model.addAttribute("assessmentData", assessmentData);
+    model.addAttribute("rubricsByType", rubricsByType);
+    model.addAttribute("studentRubricDetails", studentRubricDetails);
+    model.addAttribute("uniqueEvaluators", uniqueEvaluators);
     model.addAttribute("adminUsername", getLoggedInUsername());
+    
     return "assessment_data_view";
 }
 
