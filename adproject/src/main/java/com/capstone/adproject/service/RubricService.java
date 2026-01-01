@@ -103,20 +103,74 @@ public class RubricService {
     }
     
     @Transactional
-    public void deleteAssessment(Long id){
-        if (!assessmentRepository.existsById(id)) {
-            throw new EntityNotFoundException("Cannot delete. Assessment not found with id: " + id);
-        }
+public void deleteAssessment(Long id){
+    if (!assessmentRepository.existsById(id)) {
+        throw new EntityNotFoundException("Cannot delete. Assessment not found with id: " + id);
+    }
+    
+    Assessment assessment = assessmentRepository.findById(id).orElse(null);
+    if (assessment == null) {
+        throw new EntityNotFoundException("Assessment not found with id: " + id);
+    }
+    
+    System.out.println("=== DELETING ASSESSMENT: " + assessment.getTitle() + " (ID: " + id + ") ===");
+    
+    try {
+        // ✅ STEP 1: Delete calculated results for this assessment
+        System.out.println("Step 1: Deleting calculated results...");
+        assessmentRepository.deleteCalculatedResultsByAssessmentId(id);
+        assessmentRepository.flush();
         
-        Assessment assessment = assessmentRepository.findById(id).orElse(null);
-        if (assessment != null && assessment.getRubrics() != null) {
-            for (Rubric rubric : assessment.getRubrics()) {
+        // ✅ STEP 2: Delete all assessment comments for this assessment
+        System.out.println("Step 2: Deleting assessment comments...");
+        assessmentRepository.deleteCommentsByAssessmentId(id);
+        assessmentRepository.flush();
+        
+        // ✅ STEP 3: Delete all marks associated with rubrics
+        System.out.println("Step 3: Deleting marks for rubrics...");
+        if (assessment.getRubrics() != null && !assessment.getRubrics().isEmpty()) {
+            List<Rubric> rubricsCopy = new ArrayList<>(assessment.getRubrics());
+            for (Rubric rubric : rubricsCopy) {
                 deleteMarksForRubric(rubric);
             }
         }
         
+        // ✅ STEP 4: Delete lecturer group assignments for this assessment
+        System.out.println("Step 4: Deleting lecturer assignments...");
+        assessmentRepository.deleteLecturerAssignmentsByAssessmentId(id);
+        assessmentRepository.flush();
+        
+        // ✅ STEP 5: Delete deadlines for this assessment
+        System.out.println("Step 5: Deleting deadlines...");
+        assessmentRepository.deleteDeadlinesByAssessmentId(id);
+        assessmentRepository.flush();
+        
+        // ✅ STEP 6: Clear @ElementCollection fields
+        System.out.println("Step 6: Clearing element collections...");
+        if (assessment.getGroupCommentLabels() != null) {
+            assessment.getGroupCommentLabels().clear();
+        }
+        if (assessment.getIndividualCommentLabels() != null) {
+            assessment.getIndividualCommentLabels().clear();
+        }
+        
+        // ✅ STEP 7: Flush the changes
+        System.out.println("Step 7: Flushing changes...");
+        assessmentRepository.saveAndFlush(assessment);
+        
+        // ✅ STEP 8: Now safe to delete the assessment
+        System.out.println("Step 8: Deleting assessment...");
         assessmentRepository.deleteById(id);
+        assessmentRepository.flush();
+        
+        System.out.println("=== ASSESSMENT DELETED SUCCESSFULLY ===");
+        
+    } catch (Exception e) {
+        System.err.println("ERROR during assessment deletion: " + e.getMessage());
+        e.printStackTrace();
+        throw new RuntimeException("Failed to delete assessment: " + e.getMessage(), e);
     }
+}
     
     @Transactional
     public Rubric findRubricById(Long id) {
