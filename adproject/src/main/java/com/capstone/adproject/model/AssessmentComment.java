@@ -59,7 +59,8 @@ public class AssessmentComment {
     @Column(name = "comment_index")
     private Integer commentIndex = 0;
     
-    @Column(name = "comment_label", length = 500)
+    // ✅ FIXED: Changed from VARCHAR(500) to TEXT to support longer labels
+    @Column(name = "comment_label", columnDefinition = "TEXT")
     private String commentLabel;
     
     @Column(name = "rubric_assessment_type", length = 50)
@@ -148,35 +149,35 @@ public class AssessmentComment {
     public void setRubricId(Long rubricId) { this.rubricId = rubricId; }
 
     public String getDisplayName() {
-    // If already processed by controller, use cached value
-    if (cachedDisplayName != null) {
-        return cachedDisplayName;
-    }
-    
-    // Fallback logic (shouldn't normally be used if controller sets cachedDisplayName)
-    if (evaluatorType == EvaluatorType.STUDENT) {
-        if (assessment != null) {
-            Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
-            if (isAnonymous != null && !isAnonymous) {
-                return evaluatorName != null ? evaluatorName : "Student";
+        // If already processed by controller, use cached value
+        if (cachedDisplayName != null) {
+            return cachedDisplayName;
+        }
+        
+        // Fallback logic (shouldn't normally be used if controller sets cachedDisplayName)
+        if (evaluatorType == EvaluatorType.STUDENT) {
+            if (assessment != null) {
+                Boolean isAnonymous = assessment.getCommentsAnonymousForType(rubricAssessmentType);
+                if (isAnonymous != null && !isAnonymous) {
+                    return evaluatorName != null ? evaluatorName : "Student";
+                }
             }
+            return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
+        } else if (evaluatorType == EvaluatorType.LECTURER || evaluatorType == EvaluatorType.SUPERVISOR) {
+            // For lecturers and supervisors, check if anonymousIdentifier was set
+            // (this happens for rubric-specific comments with anonymity enabled)
+            if (anonymousIdentifier != null && !anonymousIdentifier.equals(evaluatorName)) {
+                return anonymousIdentifier; // Return "Lecturer" or "Supervisor" if anonymous
+            }
+            return evaluatorName != null ? evaluatorName : "Evaluator";
+        } else {
+            return evaluatorName != null ? evaluatorName : "Evaluator";
         }
-        return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
-    } else if (evaluatorType == EvaluatorType.LECTURER || evaluatorType == EvaluatorType.SUPERVISOR) {
-        // For lecturers and supervisors, check if anonymousIdentifier was set
-        // (this happens for rubric-specific comments with anonymity enabled)
-        if (anonymousIdentifier != null && !anonymousIdentifier.equals(evaluatorName)) {
-            return anonymousIdentifier; // Return "Lecturer" or "Supervisor" if anonymous
-        }
-        return evaluatorName != null ? evaluatorName : "Evaluator";
-    } else {
-        return evaluatorName != null ? evaluatorName : "Evaluator";
     }
-}
 
-public void setDisplayName(String displayName) {
-    this.cachedDisplayName = displayName;
-}
+    public void setDisplayName(String displayName) {
+        this.cachedDisplayName = displayName;
+    }
     
     public String getDisplayLabel() {
         if (commentLabel != null && !commentLabel.trim().isEmpty()) {

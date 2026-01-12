@@ -20,7 +20,6 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
-
 @Service
 public class AdminService {
 
@@ -32,22 +31,24 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-public AdminService(
-        StudentRepository studentRepository, 
-        LecturerRepository lecturerRepository, 
-        IndustrialSupervisorRepository industrialSupervisorRepository, 
-        GroupRepository groupRepository, 
-        PasswordEncoder passwordEncoder,
-        LecturerGroupAssignmentRepository assignmentRepository) {
-    this.studentRepository = studentRepository;
-    this.lecturerRepository = lecturerRepository;
-    this.industrialSupervisorRepository = industrialSupervisorRepository;
-    this.groupRepository = groupRepository;
-    this.passwordEncoder = passwordEncoder;
-    this.assignmentRepository = assignmentRepository;
-}
+    public AdminService(
+            StudentRepository studentRepository, 
+            LecturerRepository lecturerRepository, 
+            IndustrialSupervisorRepository industrialSupervisorRepository, 
+            GroupRepository groupRepository, 
+            PasswordEncoder passwordEncoder,
+            LecturerGroupAssignmentRepository assignmentRepository) {
+        this.studentRepository = studentRepository;
+        this.lecturerRepository = lecturerRepository;
+        this.industrialSupervisorRepository = industrialSupervisorRepository;
+        this.groupRepository = groupRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.assignmentRepository = assignmentRepository;
+    }
 
-    // ========== WHITESPACE-INSENSITIVE DUPLICATE CHECKERS ==========
+    // ==========================================
+    // 🔍 DUPLICATE CHECKERS (Whitespace Insensitive)
+    // ==========================================
     
     public String checkStudentDuplicate(String username, String email, Long studentIdToExclude) {
         if (username != null) {
@@ -138,8 +139,206 @@ public AdminService(
         }
         return null;
     }
-    
-    // ========== END DUPLICATE CHECKERS ==========
+
+    // ==========================================
+    // 💾 SAVE METHODS (With Validation Fixes)
+    // ==========================================
+
+    public void saveStudent(Student student) {
+        // 1. Validate Required Fields
+        if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (student.getId() != null) {
+            // UPDATE Logic
+            Student existingStudent = studentRepository.findById(student.getId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+            
+            // If password field is empty, keep the old password
+            if (student.getPassword() == null || student.getPassword().trim().isEmpty()) {
+                student.setPassword(existingStudent.getPassword());
+            } else {
+                student.setPassword(passwordEncoder.encode(student.getPassword()));
+            }
+            
+            // Fallback for email if empty (though validation above catches it mostly)
+            if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
+                student.setEmail(existingStudent.getEmail());
+            }
+        } else {
+            // CREATE Logic
+            if (student.getPassword() == null || student.getPassword().trim().isEmpty()) {
+                throw new RuntimeException("Password is required for new students");
+            }
+            student.setPassword(passwordEncoder.encode(student.getPassword()));
+        }
+        
+        studentRepository.save(student);
+    }
+
+    public void saveLecturer(Lecturer lecturer) {
+        // 1. Validate Required Fields
+        if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (lecturer.getId() != null) {
+            // UPDATE Logic
+            Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
+                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+            
+            if (lecturer.getPassword() == null || lecturer.getPassword().trim().isEmpty()) {
+                lecturer.setPassword(existingLecturer.getPassword());
+            } else {
+                lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
+            }
+            
+            if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
+                lecturer.setEmail(existingLecturer.getEmail());
+            }
+        } else {
+            // CREATE Logic
+            if (lecturer.getPassword() == null || lecturer.getPassword().trim().isEmpty()) {
+                throw new RuntimeException("Password is required for new lecturers");
+            }
+            lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
+        }
+        
+        lecturerRepository.save(lecturer);
+    }
+
+    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
+        // 1. Validate Required Fields
+        if (industrialSupervisor.getUsername() == null || industrialSupervisor.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (industrialSupervisor.getId() != null) {
+            // UPDATE Logic
+            IndustrialSupervisor existingSupervisor = industrialSupervisorRepository.findById(industrialSupervisor.getId())
+                .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+            
+            if (industrialSupervisor.getPassword() == null || industrialSupervisor.getPassword().trim().isEmpty()) {
+                industrialSupervisor.setPassword(existingSupervisor.getPassword());
+            } else {
+                industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
+            }
+            
+            if (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().trim().isEmpty()) {
+                industrialSupervisor.setEmail(existingSupervisor.getEmail());
+            }
+        } else {
+            // CREATE Logic
+            if (industrialSupervisor.getPassword() == null || industrialSupervisor.getPassword().trim().isEmpty()) {
+                throw new RuntimeException("Password is required for new supervisors");
+            }
+            industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
+        }
+        
+        industrialSupervisorRepository.save(industrialSupervisor);
+    }
+
+    // ==========================================
+    // 🗑️ DELETE METHODS (Safe & Transactional)
+    // ==========================================
+
+    @Transactional
+    public void deleteStudentById(Long id) {
+        Student student = studentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // 1. Remove from Group 
+        if (student.getGroup() != null) {
+            removeStudentFromGroup(id);
+        }
+
+        // 2. Cleanup dependencies
+        studentRepository.deleteCalculatedResultsByStudentId(id);
+        studentRepository.deleteCommentsByStudentId(id);
+        studentRepository.deleteMarksReceivedByStudent(id);
+        studentRepository.deleteMarksGivenByStudent(id);
+        studentRepository.deleteOverridesByStudent(id);
+
+        // 3. Delete Student
+        studentRepository.delete(student);
+    }
+
+    @Transactional
+    public void deleteLecturerById(Long id) {
+        Lecturer lecturer = lecturerRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+
+        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
+        lecturerRepository.unlinkFromGroups(id);
+
+        // 2. Delete assignments (LecturerGroupAssignment)
+        lecturerRepository.deleteGroupAssignments(id);
+
+        // 3. Delete Marks given by this lecturer
+        lecturerRepository.deleteMarksGiven(id);
+        
+        // 4. Delete comments given by this lecturer
+        lecturerRepository.deleteCommentsByLecturer(id);
+
+        // 5. Delete Lecturer
+        lecturerRepository.delete(lecturer);
+    }
+
+    @Transactional
+    public void deleteIndustrialSupervisorById(Long id) {
+        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+
+        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
+        industrialSupervisorRepository.unlinkFromGroups(id);
+
+        // 2. Delete Marks given by this supervisor
+        industrialSupervisorRepository.deleteMarksGiven(id);
+        
+        // 3. Delete comments given by this supervisor
+        industrialSupervisorRepository.deleteCommentsBySupervisor(id);
+
+        // 4. Delete Supervisor
+        industrialSupervisorRepository.delete(supervisor);
+    }
+
+    @Transactional
+    public void deleteStudentsByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteStudentById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteLecturersByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteLecturerById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteIndustrialSupervisorById(id);
+        }
+    }
+
+    // ==========================================
+    // 👥 GROUP MANAGEMENT
+    // ==========================================
 
     public List<Student> getStudentsWithoutGroup() {
         return studentRepository.findByGroupIsNull();
@@ -190,7 +389,6 @@ public AdminService(
 
         existingGroup.setGroupName(dto.getGroupName());
         
-        // Handle Supervisor Updates (Null safe)
         if (dto.getAcademicSupervisorId() != null) {
             lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
         } else {
@@ -239,25 +437,26 @@ public AdminService(
     }
     
     @Transactional
-public void deleteGroupById(Long groupId) {
-    Group groupToDelete = groupRepository.findById(groupId)
-        .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
-    
-    // 1. Unlink students from this group
-    List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
-    for (Student student : studentsToUnlink) {
-        student.setGroup(null);
+    public void deleteGroupById(Long groupId) {
+        Group groupToDelete = groupRepository.findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+        
+        List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
+        for (Student student : studentsToUnlink) {
+            student.setGroup(null);
+        }
+        studentRepository.saveAll(studentsToUnlink);
+        
+        assignmentRepository.deleteByGroup(groupToDelete);
+        assignmentRepository.flush(); 
+        
+        groupRepository.delete(groupToDelete);
     }
-    studentRepository.saveAll(studentsToUnlink);
-    
-    // 2. Delete LecturerGroupAssignments for this group
-    assignmentRepository.deleteByGroup(groupToDelete);
-    assignmentRepository.flush(); // Ensure deletion is committed before proceeding
-    
-    // 3. Delete the group
-    groupRepository.delete(groupToDelete);
-}
-    
+
+    // ==========================================
+    // 🔍 SEARCH & HELPERS
+    // ==========================================
+
     public List<Student> getAllStudents() {
         return studentRepository.findAllWithGroupEagerly();
     }
@@ -281,141 +480,6 @@ public void deleteGroupById(Long groupId) {
     public Optional<IndustrialSupervisor> findIndustrialSupervisorById(Long id) {
         return industrialSupervisorRepository.findById(id);
     }
-
-    public void saveStudent(Student student) {
-        if (student.getPassword() != null && !student.getPassword().isEmpty()) {
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
-        } else {
-            studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setPassword(existingStudent.getPassword()));
-        }
-        
-        if (student.getId() != null && (student.getEmail() == null || student.getEmail().isEmpty())) {
-            studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setEmail(existingStudent.getEmail()));
-        }
-        
-        studentRepository.save(student);
-    }
-
-    public void saveLecturer(Lecturer lecturer) {
-        if (lecturer.getPassword() != null && !lecturer.getPassword().isEmpty()) {
-            lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
-        } else {
-            lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setPassword(existingLecturer.getPassword()));
-        }
-        
-        if (lecturer.getId() != null && (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
-            lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setEmail(existingLecturer.getEmail()));
-        }
-        
-        lecturerRepository.save(lecturer);
-    }
-
-    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
-        if (industrialSupervisor.getPassword() != null && !industrialSupervisor.getPassword().isEmpty()) {
-            industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
-        } else {
-            industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setPassword(existingSupervisor.getPassword()));
-        }
-
-        if (industrialSupervisor.getId() != null && (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) {
-            industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setEmail(existingSupervisor.getEmail()));
-        }
-        
-        industrialSupervisorRepository.save(industrialSupervisor);
-    }
-
-    @Transactional
-public void deleteStudentById(Long id) {
-    Student student = studentRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Student not found"));
-    
-    // 1. Remove from Group 
-    if (student.getGroup() != null) {
-        removeStudentFromGroup(id);
-    }
-
-    // 2. Cleanup dependencies
-    studentRepository.deleteCalculatedResultsByStudentId(id);  // Ghost Table
-    studentRepository.deleteCommentsByStudentId(id);           // ✅ NEW: Assessment Comments
-    studentRepository.deleteMarksReceivedByStudent(id);        // Marks Received
-    studentRepository.deleteMarksGivenByStudent(id);           // Marks Given
-    studentRepository.deleteOverridesByStudent(id);            // Overrides
-
-    // 3. Delete Student
-    studentRepository.delete(student);
-}
-
-@Transactional
-public void deleteLecturerById(Long id) {
-    Lecturer lecturer = lecturerRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-
-    // 1. Unlink from Groups (set academic_supervisor_id = NULL)
-    lecturerRepository.unlinkFromGroups(id);
-
-    // 2. Delete assignments (LecturerGroupAssignment)
-    lecturerRepository.deleteGroupAssignments(id);
-
-    // 3. Delete Marks given by this lecturer
-    lecturerRepository.deleteMarksGiven(id);
-    
-    // 4. ✅ NEW: Delete comments given by this lecturer
-    lecturerRepository.deleteCommentsByLecturer(id);
-
-    // 5. Delete Lecturer
-    lecturerRepository.delete(lecturer);
-}
-
-@Transactional
-public void deleteIndustrialSupervisorById(Long id) {
-    IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-
-    // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
-    industrialSupervisorRepository.unlinkFromGroups(id);
-
-    // 2. Delete Marks given by this supervisor
-    industrialSupervisorRepository.deleteMarksGiven(id);
-    
-    // 3. ✅ NEW: Delete comments given by this supervisor
-    industrialSupervisorRepository.deleteCommentsBySupervisor(id);
-
-    // 4. Delete Supervisor
-    industrialSupervisorRepository.delete(supervisor);
-}
-
-    // ==========================================
-    // ⭐ SAFE BULK DELETE METHODS
-    // ==========================================
-
-    @Transactional
-    public void deleteStudentsByIds(List<Long> ids) {
-        if (ids == null) return;
-        // Loop ensures cleanup logic runs for every ID
-        for (Long id : ids) {
-            deleteStudentById(id);
-        }
-    }
-
-    @Transactional
-    public void deleteLecturersByIds(List<Long> ids) {
-        if (ids == null) return;
-        for (Long id : ids) {
-            deleteLecturerById(id);
-        }
-    }
-
-    @Transactional
-    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
-        if (ids == null) return;
-        for (Long id : ids) {
-            deleteIndustrialSupervisorById(id);
-        }
-    }
-
-    // ==========================================
-    // END SAFE DELETE METHODS
-    // ==========================================
 
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {

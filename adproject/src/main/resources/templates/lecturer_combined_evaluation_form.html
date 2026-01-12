@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Evaluate - [[${assessment.title}]]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
 </head>
@@ -100,7 +101,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ FIXED: Rubric-Specific Comments with data attribute for min length -->
+                            <!-- ✅ Rubric-Specific Comments with Validation -->
                             <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                 class="rubric-comments-section">
                                 <h4 class="rubric-comments-header">
@@ -128,7 +129,7 @@
 
                         <!-- Group Assessment-Level Comments -->
                         <div th:with="commentLabels=${assessment.groupCommentLabels},
-                                    minLength=${assessment.groupCommentMinLength},
+                                    minLengths=${assessment.groupCommentMinLengths},
                                     hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                             
                             <div th:if="${hasComments}" class="comments-section">
@@ -139,10 +140,12 @@
                                     </p>
                                 </div>
 
-                                <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
+                                <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" 
+                                     class="comment-field"
+                                     th:attr="data-min-length=${assessment.getGroupCommentMinLength(i)}">
                                     <label class="comment-label" th:for="'group_comment_' + ${i}">
                                         <span th:text="${commentLabels[i]}">Comment</span>
-                                        <span class="optional-indicator" style="color: #95a5a6; font-weight: normal;"> (Optional - save anytime)</span>
+                                        <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
                                     </label>
                                     <textarea 
                                         class="comment-textarea"
@@ -150,8 +153,8 @@
                                         th:name="'group_comment_' + ${i}"
                                         th:text="${existingGroupComments != null and i < #lists.size(existingGroupComments) ? existingGroupComments.get(i) : ''}"
                                         placeholder="Enter your feedback here..."></textarea>
-                                    <div class="comment-hint" th:if="${minLength > 0}" style="color: #95a5a6;">
-                                        Suggested minimum: <span th:text="${minLength}">20</span> characters (required for completion)
+                                    <div class="comment-hint">
+                                        Suggested minimum: <span th:text="${assessment.getGroupCommentMinLength(i)}">20</span> characters
                                     </div>
                                 </div>
                             </div>
@@ -225,7 +228,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- ✅ FIXED: Rubric-Specific Comments with data attribute for min length -->
+                                <!-- ✅ Rubric-Specific Comments with Validation -->
                                 <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                     class="rubric-comments-section">
                                     <h4 class="rubric-comments-header">
@@ -253,7 +256,7 @@
 
                             <!-- Individual Assessment-Level Comments -->
                             <div th:with="commentLabels=${assessment.individualCommentLabels},
-                                        minLength=${assessment.individualCommentMinLength},
+                                        minLengths=${assessment.individualCommentMinLengths},
                                         hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                                 
                                 <div th:if="${hasComments}" class="comments-section">
@@ -264,10 +267,12 @@
                                         </p>
                                     </div>
 
-                                    <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
+                                    <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" 
+                                         class="comment-field"
+                                         th:attr="data-min-length=${assessment.getIndividualCommentMinLength(i)}">
                                         <label class="comment-label" th:for="'student_' + ${student.id} + '_comment_' + ${i}">
                                             <span th:text="${commentLabels[i]}">Comment</span>
-                                            <span class="optional-indicator" style="color: #95a5a6; font-weight: normal;"> (Optional - save anytime)</span>
+                                            <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
                                         </label>
                                         <textarea 
                                             class="comment-textarea"
@@ -275,8 +280,8 @@
                                             th:name="'student_' + ${student.id} + '_comment_' + ${i}"
                                             th:text="${existingIndividualComments.get(student.id) != null and i < #lists.size(existingIndividualComments.get(student.id)) ? existingIndividualComments.get(student.id).get(i) : ''}"
                                             placeholder="Enter your feedback here..."></textarea>
-                                        <div class="comment-hint" th:if="${minLength > 0}" style="color: #95a5a6;">
-                                            Suggested minimum: <span th:text="${minLength}">20</span> characters (required for completion)
+                                        <div class="comment-hint">
+                                            Suggested minimum: <span th:text="${assessment.getIndividualCommentMinLength(i)}">20</span> characters
                                         </div>
                                     </div>
                                 </div>
@@ -296,66 +301,77 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('form');
+    console.log('🎯 Comment validation initialized');
     
-    form.addEventListener('submit', function(e) {
-        let hasValidationErrors = false;
-        const errors = [];
+    // ✅ Function to validate a single textarea
+    function validateTextarea(textarea) {
+        const field = textarea.closest('.rubric-comment-field') || textarea.closest('.comment-field');
+        if (!field) return;
         
-        // ✅ FIXED: Validate all rubric-specific comment fields using data attribute
-        document.querySelectorAll('.rubric-comment-field').forEach(function(field) {
-            const textarea = field.querySelector('textarea');
-            const minLength = parseInt(field.getAttribute('data-min-length')) || 0;
-            const label = field.querySelector('label');
-            
-            if (textarea && minLength > 0) {
-                const currentLength = textarea.value.trim().length;
-                
-                if (currentLength > 0 && currentLength < minLength) {
-                    hasValidationErrors = true;
-                    textarea.style.borderColor = '#e74c3c';
-                    
-                    const labelText = label ? label.textContent.trim() : 'Comment';
-                    errors.push(`${labelText}: minimum ${minLength} characters required (current: ${currentLength})`);
-                } else {
-                    textarea.style.borderColor = '#9b59b6';
-                }
-            }
-        });
+        const minLength = parseInt(field.getAttribute('data-min-length')) || 0;
+        const hint = field.querySelector('.rubric-comment-hint') || field.querySelector('.comment-hint');
         
-        if (hasValidationErrors) {
-            e.preventDefault();
-            alert('Please fix the following issues:\n\n' + errors.join('\n'));
-            return false;
+        if (minLength === 0) return; // No validation needed
+        
+        const currentLength = textarea.value.trim().length;
+        
+        // Remove all classes first
+        textarea.classList.remove('insufficient', 'sufficient');
+        if (hint) {
+            hint.classList.remove('insufficient', 'sufficient');
         }
-    });
-    
-    // ✅ FIXED: Real-time validation feedback using data attribute
-    document.querySelectorAll('.rubric-comment-field textarea').forEach(function(textarea) {
-        textarea.addEventListener('input', function() {
-            const field = this.closest('.rubric-comment-field');
-            const hint = field.querySelector('.rubric-comment-hint');
-            const minLength = parseInt(field.getAttribute('data-min-length')) || 0;
-            
-            if (hint && minLength > 0) {
-                const currentLength = this.value.trim().length;
-                
-                if (currentLength > 0 && currentLength < minLength) {
-                    this.style.borderColor = '#e74c3c';
-                    hint.style.color = '#e74c3c';
-                    hint.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Minimum ${minLength} characters required (current: ${currentLength})`;
-                } else if (currentLength >= minLength) {
-                    this.style.borderColor = '#27ae60';
-                    hint.style.color = '#27ae60';
-                    hint.innerHTML = `<i class="fas fa-check"></i> Minimum met (${currentLength} characters)`;
-                } else {
-                    this.style.borderColor = '#9b59b6';
-                    hint.style.color = '#95a5a6';
-                    hint.innerHTML = `Suggested minimum: ${minLength} characters`;
-                }
+        
+        if (currentLength === 0) {
+            // Empty - neutral state
+            if (hint) {
+                hint.style.color = '#95a5a6';
+                hint.innerHTML = `Suggested minimum: ${minLength} characters`;
             }
+        } else if (currentLength < minLength) {
+            // Insufficient - RED border
+            textarea.classList.add('insufficient');
+            if (hint) {
+                hint.classList.add('insufficient');
+                hint.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Minimum ${minLength} characters required (current: ${currentLength})`;
+            }
+        } else {
+            // Sufficient - GREEN border
+            textarea.classList.add('sufficient');
+            if (hint) {
+                hint.classList.add('sufficient');
+                hint.innerHTML = `<i class="fas fa-check"></i> Minimum met (${currentLength} characters)`;
+            }
+        }
+    }
+    
+    // ✅ Initialize validation for all comment textareas
+    const allTextareas = document.querySelectorAll('.rubric-comment-field textarea, .comment-textarea');
+    
+    console.log(`📝 Found ${allTextareas.length} comment textareas`);
+    
+    allTextareas.forEach(function(textarea) {
+        // Initial validation on page load
+        validateTextarea(textarea);
+        
+        // Real-time validation on input
+        textarea.addEventListener('input', function() {
+            validateTextarea(this);
+        });
+        
+        // Validation on blur (when user leaves the field)
+        textarea.addEventListener('blur', function() {
+            validateTextarea(this);
         });
     });
+    
+    // ✅ Form submission - ALLOW submission (red borders are visual only)
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('📤 Form submitted - validation is visual only, allowing save');
+            // Don't prevent submission - let user save even with insufficient comments
+        });
+    }
 });
 </script>
 </body>

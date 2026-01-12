@@ -10,6 +10,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 import com.capstone.adproject.service.CustomUserDetailsService;
 
@@ -19,13 +24,13 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
-    //constructor - utk bagi kita guna CustomAuthenticationSuccessHandler utk determine role nnt
+    // ✅ FIXED: Use a constant key that won't change on restart
+    private static final String REMEMBER_ME_KEY = "utm-cas-remember-me-secret-key-2025-DO-NOT-CHANGE";
+
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
-    // utk encrypt/decrypt password user (hashing and verification)
-    // even if ada 2 user password sama dia akan letak random salt so hashes will look different
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -34,13 +39,41 @@ public class SecurityConfig {
     @Autowired
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
-    //give permission to the website to access this files.
+    /**
+     * ✅ RequestCache bean to save and restore user's last visited page
+     */
+    @Bean
+    public RequestCache requestCache() {
+        return new HttpSessionRequestCache();
+    }
+
+    /**
+     * ✅ CRITICAL: Create RememberMeServices bean with FIXED key
+     */
+    @Bean
+    public RememberMeServices rememberMeServices() {
+        TokenBasedRememberMeServices rememberMeServices = 
+            new TokenBasedRememberMeServices(
+                REMEMBER_ME_KEY, 
+                userDetailsService, 
+                RememberMeTokenAlgorithm.SHA256
+            );
+        
+        rememberMeServices.setParameter("remember-me");
+        rememberMeServices.setCookieName("utm-cas-remember-me");
+        rememberMeServices.setTokenValiditySeconds(604800); // 7 days
+        rememberMeServices.setAlwaysRemember(false);
+        
+        return rememberMeServices;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", "/forgot_password", "/reset_password/**").permitAll()
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", 
+                    "/forgot_password", "/reset_password/**", "/debug/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/rubrics/**").hasRole("ADMIN")
                 .requestMatchers("/student/**", "/student/assessment/**").hasRole("STUDENT")
@@ -54,32 +87,33 @@ public class SecurityConfig {
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
-
-            // --- START: REMEMBER ME CONFIGURATION ---
-            // The illegal characters (non-breaking spaces) causing the compile errors have been removed.
+            
+            // ✅ Use the RememberMeServices bean
             .rememberMe(rememberMe -> rememberMe
-                .key("aUniqueAndSecureKeyForRememberMe") // IMPORTANT: Change this to a unique, secret key
-                .tokenValiditySeconds(604800) // 7 days (7 * 24 * 60 * 60 = 604800 seconds)
-                .userDetailsService(userDetailsService) // Essential for loading the user from the remember-me token
+                .rememberMeServices(rememberMeServices())
             )
-            // --- END: REMEMBER ME CONFIGURATION ---
-
+            
+            // ✅ Configure request cache to save last visited page
+            .requestCache(cache -> cache
+                .requestCache(requestCache())
+            )
+            
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
+                .logoutSuccessUrl("/login?logout")
+                .deleteCookies("JSESSIONID", "utm-cas-remember-me")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
                 .permitAll()
             );
 
         return http.build();
     }
 
-    //DAO = Data Access Object (built in authentication provider that uses database to authenticate user)
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        //check raw password user enter sama tak dengan hash password dalam database
         provider.setPasswordEncoder(passwordEncoder());
-        //bagi spring security guna custom UserDetailsService utk loads user details. 
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }

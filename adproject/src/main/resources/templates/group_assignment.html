@@ -145,6 +145,12 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        
+                                        <!-- ✅ ADDED: Selected students counter -->
+                                        <div th:unless="${availableStudents.isEmpty()}" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 4px; text-align: center;">
+                                            <strong><span id="selectedCount">0</span> student(s) selected for this group</strong>
+                                        </div>
+                                        
                                         <hr/>
 
                                         <h3>2. Assign Academic Supervisor (Lecturer)</h3>
@@ -310,13 +316,36 @@
         }
     }
 
+    /**
+     * ✅ ADDED: Updates the selected students counter
+     */
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('input[name="selectedStudentIds"]:checked');
+        const count = checkboxes.length;
+        const counterElement = document.getElementById('selectedCount');
+        
+        if (counterElement) {
+            counterElement.textContent = count;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', (event) => {
         initializePagination();
+        
         // Initial setup for the search input listener
         const searchInput = document.getElementById('studentSearch');
         if(searchInput) {
              searchInput.addEventListener('keyup', filterStudents);
         }
+        
+        // ✅ ADDED: Add event listeners to all student checkboxes
+        const checkboxes = document.querySelectorAll('input[name="selectedStudentIds"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // ✅ ADDED: Initialize counter on page load
+        updateSelectedCount();
     });
 
     /**

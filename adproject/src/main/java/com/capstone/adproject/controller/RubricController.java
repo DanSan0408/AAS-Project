@@ -248,8 +248,6 @@ public class RubricController {
             }
         }
 
-        // ✅ REMOVED: validateIndividualRatingMarks() call - no more marks validation
-
         // Set CLO Marks equal to Total Marks
         if (rubric.getMarks() != null) {
             rubric.setCloMarks(rubric.getMarks().doubleValue());
@@ -285,8 +283,6 @@ public class RubricController {
         
         return "redirect:/rubrics/view/" + savedRubric.getAssessment().getId();
     }
-
-    // ✅ REMOVED: validateIndividualRatingMarks() method entirely
     
     @PostMapping("/delete/{rubricId}")
     public String deleteRubric(@PathVariable Long rubricId, RedirectAttributes redirectAttributes) {
@@ -308,42 +304,44 @@ public class RubricController {
         return "manage-assessments";
     }
     
-@PostMapping("/assessment/{assessmentId}/move-block")
-public String moveAssessmentBlock(@PathVariable Long assessmentId,
-                                   @RequestParam String blockType,
-                                   @RequestParam String direction,
-                                   RedirectAttributes redirectAttributes) {
-    try {
-        rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
-    } catch (Exception e) {
-        // Silent fail
+    @PostMapping("/assessment/{assessmentId}/move-block")
+    public String moveAssessmentBlock(@PathVariable Long assessmentId,
+                                       @RequestParam String blockType,
+                                       @RequestParam String direction,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
+        } catch (Exception e) {
+            // Silent fail
+        }
+        
+        // ✅ CHANGED: Stay at the block that was moved
+        String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
+        redirectAttributes.addFlashAttribute("focusBlock", anchor);
+        
+        return "redirect:/rubrics/view/" + assessmentId;
     }
-    
-    // ✅ Return to the block that was moved with anchor
-    String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
-    return "redirect:/rubrics/view/" + assessmentId + "#" + anchor;
-}
 
-/**
- * Move individual rubric up or down within its assessment type
- */
-@PostMapping("/rubric/{rubricId}/move")
-public String moveRubric(@PathVariable Long rubricId,
-                          @RequestParam String direction,
-                          RedirectAttributes redirectAttributes) {
-    try {
-        Rubric rubric = rubricService.findRubricById(rubricId);
-        Long assessmentId = rubric.getAssessment().getId();
-        String assessmentType = rubric.getAssessmentTypes();
-        
-        rubricService.moveRubric(rubricId, direction);
-        
-        // ✅ Return to the specific rubric's block with anchor
-        String anchor = assessmentType.equals("Group Assessment") ? "group-block" : "individual-block";
-        return "redirect:/rubrics/view/" + assessmentId + "#" + anchor;
-        
-    } catch (Exception e) {
-        return "redirect:/rubrics/manage";
+    /**
+     * ✅ CHANGED: Move rubric and keep focus on it
+     */
+    @PostMapping("/rubric/{rubricId}/move")
+    public String moveRubric(@PathVariable Long rubricId,
+                              @RequestParam String direction,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            Rubric rubric = rubricService.findRubricById(rubricId);
+            Long assessmentId = rubric.getAssessment().getId();
+            
+            rubricService.moveRubric(rubricId, direction);
+            
+            // ✅ Pass the rubric ID to focus on after page reload
+            redirectAttributes.addFlashAttribute("focusRubricId", rubricId);
+            
+            return "redirect:/rubrics/view/" + assessmentId;
+            
+        } catch (Exception e) {
+            return "redirect:/rubrics/manage";
+        }
     }
-}
 }

@@ -29,8 +29,12 @@
         <div th:if="${param.error}" class="alert" role="alert">
             Invalid username or password.
         </div>
+
+        <div th:if="${param.logout}" class="success-message" role="alert">
+            You have been logged out successfully.
+        </div>
         
-        <form th:action="@{/login}" method="post">
+        <form th:action="@{/login}" method="post" id="loginForm">
             <input type="hidden" name="userRole" th:value="${param.userRole}"/>
             
             <div class="form-group">
@@ -43,9 +47,16 @@
                 <input type="password" class="form-control" id="password" name="password" required>
             </div>
             
-            <div class="form-group">
-                <label for="remember-me" class="inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="remember-me" name="remember-me"> Remember Me
+            <!-- ✅ Enhanced Remember Me Checkbox -->
+            <div class="form-group" style="margin: 15px 0;">
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input 
+                        type="checkbox" 
+                        id="remember-me" 
+                        name="remember-me" 
+                        value="true"
+                        style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
+                    <span>Remember Me</span>
                 </label>
             </div>
             
@@ -56,5 +67,87 @@
     </div>
 
     <script src="/js/loading.js"></script>
+    
+    <!-- ✅ Remember Username and Remember-Me Checkbox State -->
+    <script>
+        // Cookie utility functions
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + '=';
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+        }
+
+        // On page load: Restore username and remember-me state
+        window.addEventListener('DOMContentLoaded', function() {
+            const usernameField = document.getElementById('username');
+            const rememberMeCheckbox = document.getElementById('remember-me');
+            
+            // Check if user was remembered
+            const savedUsername = getCookie('remembered_username');
+            const wasRemembered = getCookie('was_remembered') === 'true';
+            
+            if (savedUsername) {
+                usernameField.value = savedUsername;
+                console.log('✓ Restored username:', savedUsername);
+            }
+            
+            if (wasRemembered) {
+                rememberMeCheckbox.checked = true;
+                console.log('✓ Remember-me checkbox checked');
+            }
+            
+            // Focus on password field if username is already filled
+            if (savedUsername) {
+                document.getElementById('password').focus();
+            } else {
+                usernameField.focus();
+            }
+        });
+
+        // On form submit: Save username and remember-me state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const username = document.getElementById('username').value;
+            const rememberMeChecked = document.getElementById('remember-me').checked;
+            
+            console.log('🔒 Login form submitted');
+            console.log('✓ Username:', username);
+            console.log('✓ Remember Me checked:', rememberMeChecked);
+            
+            if (rememberMeChecked) {
+                // Save username for 7 days
+                setCookie('remembered_username', username, 7);
+                setCookie('was_remembered', 'true', 7);
+                console.log('✓ Saved username to cookie');
+            } else {
+                // Clear saved username if unchecked
+                deleteCookie('remembered_username');
+                deleteCookie('was_remembered');
+                console.log('✓ Cleared username from cookie');
+            }
+        });
+
+        // Clear username on logout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('logout')) {
+            deleteCookie('remembered_username');
+            deleteCookie('was_remembered');
+            console.log('✓ Cleared saved credentials after logout');
+        }
+    </script>
 </body>
 </html>

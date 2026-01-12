@@ -30,9 +30,10 @@
                 <input type="hidden" th:field="*{assessment}" />
                 <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
 
+                <!-- ✅ CHANGED: Removed required and asterisk from Rubric Name -->
                 <div class="form-group">
-                    <label>Rubric Name *</label>
-                    <input type="text" th:field="*{name}" required placeholder="e.g. Presentation Skills">
+                    <label>Rubric Name</label>
+                    <input type="text" th:field="*{name}" placeholder="e.g. Presentation Skills">
                 </div>
                 
                 <div class="form-group">
@@ -82,9 +83,10 @@
                             <button type="button" class="remove-btn remove-sub-rubric-btn">Remove Sub-Rubric</button>
                             <input type="hidden" th:field="*{subRubrics[__${subIterStat.index}__].id}" />
                             
+                            <!-- ✅ CHANGED: Removed required and asterisk from Sub-Rubric Name -->
                             <div class="form-group">
-                                <label>Sub-Rubric Name *</label>
-                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].name}" required class="sub-rubric-name">
+                                <label>Sub-Rubric Name</label>
+                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].name}" class="sub-rubric-name">
                             </div>
                             
                             <div class="form-group">
@@ -97,10 +99,10 @@
                                 <input type="number" step="0.01" th:field="*{subRubrics[__${subIterStat.index}__].marks}" readonly class="sub-rubric-marks-auto" th:attr="data-subindex=${subIterStat.index}">
                             </div>
                             
+                            <!-- ✅ CHANGED: Moved "Add Rating" button below ratings container -->
                             <div class="ratings-section">
                                 <div class="ratings-header">
                                     <h4>Ratings</h4>
-                                    <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" th:attr="data-subindex=${subIterStat.index}">+ Add Rating</button>
                                 </div>
                                 <div class="sub-ratings-container" th:attr="data-subindex=${subIterStat.index}">
                                     <div th:each="rating, ratingIterStat : ${subRubric.ratings}" class="rating-card">
@@ -123,15 +125,17 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- ✅ Button moved here (below container) -->
+                                <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" th:attr="data-subindex=${subIterStat.index}" style="margin-top: 10px; width: 100%;">+ Add Rating</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- ✅ CHANGED: Moved "Add Direct Rating" button below container -->
                 <div class="section-container section-green">
                     <div class="section-header">
                         <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
-                        <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important;">+ Add Direct Rating</button>
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
                     
@@ -157,12 +161,15 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- ✅ Button moved here (below container) -->
+                    <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important; margin-top: 15px; width: 100%;">+ Add Direct Rating</button>
                 </div>
                 
+                <!-- ✅ CHANGED: Moved "Add Comment Question" button below containers -->
                 <div class="section-container section-purple">
                     <div class="section-header">
                         <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
-                        <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important;">+ Add Comment Question</button>
                     </div>
                     <p class="info-text">Add optional comment questions specific to this rubric only.</p>
                     
@@ -193,6 +200,9 @@
                     <div id="rubric-comments-empty" th:if="${rubric.rubricCommentLabels == null or #lists.isEmpty(rubric.rubricCommentLabels)}" style="text-align: center; padding: 20px; color: #95a5a6;">
                         <p>No rubric-specific comments configured yet.</p>
                     </div>
+                    
+                    <!-- ✅ Button moved here (below containers) -->
+                    <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;">+ Add Comment Question</button>
                 </div>
                 
                 <div class="button-container">
@@ -221,12 +231,10 @@
         let rubricCommentIndex = /*[[${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}]]*/ 0;
         
         // 2. Initialize Rating Indices by scanning the DOM instead of using Thymeleaf loops
-        // This prevents the parsing error and achieves the exact same result
         let subRubricRatingIndices = {};
         
         const existingSubRubrics = document.querySelectorAll('.sub-rubric-card');
         existingSubRubrics.forEach((card, index) => {
-            // Count how many ratings are currently inside this sub-rubric
             const ratingsCount = card.querySelectorAll('.rating-card').length;
             subRubricRatingIndices[index] = ratingsCount;
         });
@@ -244,7 +252,7 @@
             addSubBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
                 card.className = 'sub-rubric-card';
-                // Note: using template literals is safe because of CDATA
+                // ✅ CHANGED: Removed required and "required" asterisk from name field
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-sub-rubric-btn"><i class="fas fa-times"></i></button>
                     <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
@@ -254,8 +262,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Name <span class="required">*</span></label>
-                        <input type="text" name="subRubrics[${subRubricIndex}].name" required class="sub-rubric-name" placeholder="Sub-component name">
+                        <label>Name</label>
+                        <input type="text" name="subRubrics[${subRubricIndex}].name" class="sub-rubric-name" placeholder="Sub-component name">
                     </div>
                     
                     <div class="form-group">
@@ -272,9 +280,9 @@
                     <div class="ratings-section">
                         <div class="ratings-header">
                             <h4>Ratings</h4>
-                            <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}">+ Add Rating</button>
                         </div>
                         <div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
+                        <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}" style="margin-top: 10px; width: 100%;">+ Add Rating</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -325,6 +333,7 @@
             addDirectBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
                 card.className = 'rating-card direct-rating-card';
+                // ✅ CHANGED: Removed "required" asterisk from Rating Name
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-direct-rating-btn"><i class="fas fa-times"></i></button>
                     <input type="hidden" name="ratings[${directRatingIndex}].id" value="" />
