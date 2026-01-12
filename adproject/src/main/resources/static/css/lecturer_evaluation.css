@@ -18,6 +18,7 @@
     --lecturer-warning: #F59E0B;
     --lecturer-info: #3B82F6;
     --lecturer-purple: #9B59B6;
+    --lecturer-danger: #DC2626;
 }
 
 /* ==================== LAYOUT ==================== */
@@ -198,6 +199,37 @@ body.lecturer-page .alert-error {
     background-color: #FEE2E2;
     color: #7F1D1D;
     border-color: #DC2626;
+}
+
+/* ==================== SAVE WARNING (Comment Validation) ==================== */
+body.lecturer-page .save-warning {
+    display: none;
+    padding: 16px 20px;
+    background-color: #FFF3CD;
+    border: 2px solid var(--lecturer-warning);
+    border-left: 4px solid var(--lecturer-warning);
+    border-radius: 10px;
+    margin-bottom: 25px;
+    color: #856404;
+    font-size: 0.95em;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+body.lecturer-page .save-warning.show {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+body.lecturer-page .save-warning i {
+    color: var(--lecturer-warning);
+    font-size: 1.2em;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+body.lecturer-page .save-warning strong {
+    color: #B45309;
 }
 
 /* ==================== RUBRIC SECTION ==================== */
@@ -381,10 +413,44 @@ body.lecturer-page .rubric-comment-field textarea:focus {
     box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.15);
 }
 
+/* ✅ NEW: Validation states for rubric comments */
+body.lecturer-page .rubric-comment-field textarea.insufficient {
+    border-color: var(--lecturer-danger) !important;
+    background-color: #FEE2E2;
+}
+
+body.lecturer-page .rubric-comment-field textarea.insufficient:focus {
+    border-color: var(--lecturer-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+body.lecturer-page .rubric-comment-field textarea.sufficient {
+    border-color: var(--lecturer-success) !important;
+    background-color: #ECFDF5;
+}
+
+body.lecturer-page .rubric-comment-field textarea.sufficient:focus {
+    border-color: var(--lecturer-success) !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
 body.lecturer-page .rubric-comment-hint {
     font-size: 0.85em;
     color: var(--lecturer-secondary);
     margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.lecturer-page .rubric-comment-hint.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .rubric-comment-hint.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
 }
 
 /* ==================== GENERAL COMMENTS SECTION ==================== */
@@ -403,11 +469,15 @@ body.lecturer-page .comments-header {
     margin-bottom: 20px;
 }
 
-body.lecturer-page .comments-header h3 {
+body.lecturer-page .comments-header h3,
+body.lecturer-page .comments-title {
     color: var(--lecturer-primary);
     font-size: 1.3em;
     font-weight: 700;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 body.lecturer-page .comment-field {
@@ -418,10 +488,15 @@ body.lecturer-page .comment-label {
     font-weight: 700;
     color: var(--lecturer-primary);
     margin-bottom: 8px;
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 1em;
 }
 
+/* ==================== COMMENT VALIDATION STYLES ==================== */
+
+/* Comment textarea base styles */
 body.lecturer-page .comment-textarea {
     width: 100%;
     min-height: 100px;
@@ -434,12 +509,89 @@ body.lecturer-page .comment-textarea {
     resize: vertical;
     box-sizing: border-box;
     transition: all 0.3s ease;
+    background-color: var(--lecturer-surface);
 }
 
 body.lecturer-page .comment-textarea:focus {
     outline: none;
     border-color: var(--lecturer-primary);
     box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+}
+
+/* Insufficient length - Red state */
+body.lecturer-page .comment-textarea.insufficient {
+    border-color: var(--lecturer-danger) !important;
+    background-color: #FEE2E2;
+}
+
+body.lecturer-page .comment-textarea.insufficient:focus {
+    border-color: var(--lecturer-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Sufficient length - Green state */
+body.lecturer-page .comment-textarea.sufficient {
+    border-color: var(--lecturer-success) !important;
+    background-color: #ECFDF5;
+}
+
+body.lecturer-page .comment-textarea.sufficient:focus {
+    border-color: var(--lecturer-success) !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+body.lecturer-page .comment-hint {
+    font-size: 0.85em;
+    color: var(--lecturer-secondary);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.lecturer-page .comment-hint.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .comment-hint.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
+}
+
+/* Character counter (if you want to add it later) */
+body.lecturer-page .char-counter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--lecturer-secondary);
+    font-weight: 500;
+}
+
+body.lecturer-page .char-counter.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .char-counter.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
+}
+
+/* Optional indicator badge */
+body.lecturer-page .optional-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background-color: var(--lecturer-info);
+    color: white;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* ==================== STUDENT INDIVIDUAL SECTION ==================== */
@@ -493,31 +645,46 @@ body.lecturer-page .btn {
     font-weight: 700;
     cursor: pointer;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
 }
 
-body.lecturer-page .btn-submit {
+body.lecturer-page .btn-submit,
+body.lecturer-page .btn-save {
     background: linear-gradient(135deg, var(--lecturer-success) 0%, #059669 100%);
     color: white;
     box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
 }
 
-body.lecturer-page .btn-submit:hover {
+body.lecturer-page .btn-submit:hover,
+body.lecturer-page .btn-save:hover {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4);
 }
 
-body.lecturer-page .btn-cancel {
+body.lecturer-page .btn-cancel,
+body.lecturer-page .btn-back {
     background: var(--lecturer-secondary);
     color: white;
 }
 
-body.lecturer-page .btn-cancel:hover {
+body.lecturer-page .btn-cancel:hover,
+body.lecturer-page .btn-back:hover {
     background: #52525B;
     transform: translateY(-2px);
+}
+
+/* ==================== ICON STYLES (for Font Awesome) ==================== */
+body.lecturer-page .fa-exclamation-triangle {
+    margin-right: 4px;
+}
+
+body.lecturer-page .fa-check {
+    margin-right: 4px;
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -539,5 +706,17 @@ body.lecturer-page .btn-cancel:hover {
     body.lecturer-page .btn {
         width: 100%;
         text-align: center;
+        justify-content: center;
+    }
+    
+    body.lecturer-page .save-warning {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    body.lecturer-page .char-counter {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
     }
 }

@@ -56,36 +56,12 @@
                 </div>
             </div>
             
-            <!--<div class="progress-section">
-                <div class="progress-header">
-                    <span class="progress-title">
-                        <i class="fas fa-tasks"></i> Overall Progress
-                    </span>
-                    <span class="progress-percentage" th:text="${#numbers.formatDecimal(progress.percentage, 1, 0)} + '%'">0%</span>
-                </div>
-                <div class="progress-bar-wrapper">
-                    <div class="progress-bar-fill" 
-                         th:style="${'width: ' + progress.percentage + '%'}"
-                         th:text="${progress.percentage >= 10 ? (#numbers.formatDecimal(progress.percentage, 1, 0) + '%') : ''}">
-                    </div>
-                </div>
-                <div class="progress-details">
-                    <span>
-                        <i class="fas fa-users"></i>
-                        Group: <strong th:text="${progress.groupComplete ? 'Complete' : 'Pending'}">Pending</strong>
-                    </span>
-                    <span>
-                        <i class="fas fa-user-check"></i>
-                        Students: <strong th:text="${progress.studentsEvaluated + ' / ' + progress.totalStudents}">0 / 0</strong>
-                    </span>
-                </div>
-            </div>-->
-            
             <form th:action="@{/supervisor/evaluate/group/{groupId}/save(groupId=${group.id})}" 
                   method="post" 
                   class="evaluation-form"
                   id="evaluationForm">
                 
+                <!-- GROUP ASSESSMENT SECTION -->
                 <div th:if="${!#lists.isEmpty(groupRubrics)}">
                     <div class="section-header group-section-header">
                         <h3 class="section-title">
@@ -111,6 +87,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Direct Rubric Ratings -->
                             <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
                                 <div class="rating-options">
                                     <div th:each="rating : ${rubric.ratings}" class="rating-option">
@@ -127,6 +104,7 @@
                                 </div>
                             </div>
                             
+                            <!-- Sub-Rubrics -->
                             <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
                                 <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
                                     <div class="sub-rubric-header">
@@ -157,6 +135,7 @@
                                 </div>
                             </div>
                             
+                            <!-- FIXED: Rubric-specific Comments -->
                             <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                  class="rubric-comments-section">
                                 <h5 class="rubric-comments-header">
@@ -166,14 +145,14 @@
                                 <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
                                      class="rubric-comment-field">
                                     <label th:for="${'group_rubric_' + rubric.id + '_comment_' + i}">
-                                        <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                        <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
                                         <span class="optional-tag">(Optional)</span>
                                     </label>
                                     <textarea 
                                         th:id="${'group_rubric_' + rubric.id + '_comment_' + i}"
                                         th:name="${'group_rubric_' + rubric.id + '_comment_' + i}"
                                         th:text="${existingData.groupRubricComments != null and existingData.groupRubricComments[rubric.id] != null ? existingData.groupRubricComments[rubric.id][i] : ''}"
-                                        placeholder="Enter your feedback for this rubric..."></textarea>
+                                        th:placeholder="${'Enter your feedback (min ' + rubric.getRubricCommentMinLength(i) + ' characters)...'}"></textarea>
                                     <div class="rubric-comment-hint">
                                         Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
                                     </div>
@@ -181,6 +160,7 @@
                             </div>
                         </div>
                         
+                        <!-- General Group Comments -->
                         <div th:with="commentLabels=${assessment.groupCommentLabels},
                                     hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                             
@@ -195,7 +175,7 @@
                                 <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                     <label class="comment-label" th:for="${'group_comment_' + i}">
                                         <i class="fas fa-comment-dots"></i>
-                                        <span th:text="${commentLabels[i]}">Comment</span>
+                                        <span th:utext="${commentLabels[i]}">Comment</span>
                                     </label>
                                     <textarea 
                                         th:id="${'group_comment_' + i}"
@@ -216,6 +196,7 @@
                 
                 <div class="student-separator"></div>
                 
+                <!-- INDIVIDUAL STUDENT ASSESSMENTS -->
                 <div th:if="${!#lists.isEmpty(individualRubrics)}" th:each="student, iterStat : ${students}">
                     <div class="section-header student-section-header">
                         <h3 class="section-title">
@@ -243,6 +224,7 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Direct Rubric Ratings -->
                                 <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
                                     <div class="rating-options">
                                         <div th:each="rating : ${rubric.ratings}" class="rating-option">
@@ -259,6 +241,7 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Sub-Rubrics -->
                                 <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
                                     <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
                                         <div class="sub-rubric-header">
@@ -289,6 +272,7 @@
                                     </div>
                                 </div>
                                 
+                                <!-- FIXED: Rubric-specific Comments for Individual Students -->
                                 <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                      class="rubric-comments-section">
                                     <h5 class="rubric-comments-header">
@@ -298,14 +282,14 @@
                                     <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
                                          class="rubric-comment-field">
                                         <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}">
-                                            <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                            <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
                                             <span class="optional-tag">(Optional)</span>
                                         </label>
                                         <textarea 
                                             th:id="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
                                             th:name="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
                                             th:text="${studentData != null and studentData.rubricComments != null and studentData.rubricComments[rubric.id] != null ? studentData.rubricComments[rubric.id][i] : ''}"
-                                            placeholder="Enter your feedback for this rubric..."></textarea>
+                                            th:placeholder="${'Enter your feedback (min ' + rubric.getRubricCommentMinLength(i) + ' characters)...'}"></textarea>
                                         <div class="rubric-comment-hint">
                                             Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
                                         </div>
@@ -313,6 +297,7 @@
                                 </div>
                             </div>
                             
+                            <!-- General Individual Comments -->
                             <div th:with="commentLabels=${assessment.individualCommentLabels},
                                         hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                                 
@@ -327,7 +312,7 @@
                                     <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                         <label class="comment-label" th:for="${'student_' + student.id + '_comment_' + i}">
                                             <i class="fas fa-comment-dots"></i>
-                                            <span th:text="${commentLabels[i]}">Comment</span>
+                                            <span th:utext="${commentLabels[i]}">Comment</span>
                                         </label>
                                         <textarea 
                                             th:id="${'student_' + student.id + '_comment_' + i}"
@@ -349,6 +334,7 @@
                     <div th:if="${!iterStat.last}" class="student-separator"></div>
                 </div>
                 
+                <!-- Form Actions -->
                 <div class="form-actions">
                     <a th:href="@{/supervisor/evaluate}" class="btn btn-back">
                         <i class="fas fa-arrow-left"></i>
@@ -358,7 +344,7 @@
                         <i class="fas fa-save"></i>
                         Save Progress
                     </button>
-                    </div>
+                </div>
             </form>
         </div>
     </div>

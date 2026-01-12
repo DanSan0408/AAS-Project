@@ -2,6 +2,7 @@ package com.capstone.adproject.model;
 
 import java.math.BigDecimal;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -20,7 +21,9 @@ public class Rating {
     private Long id;
 
     private String name; // Admin-defined rating name
-    private String description; // Admin-defined description
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
     private BigDecimal marks; // Marks for this rating level
 
     // Rating can belong to a SubRubric

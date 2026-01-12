@@ -6,17 +6,6 @@
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Smooth scrolling when navigating to anchors */
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        /* Offset for better visibility when scrolling to anchor */
-        .assessment-block {
-            scroll-margin-top: 20px;
-        }
-    </style>
 </head>
 <body class="view-rubric-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -132,7 +121,8 @@
                 <!-- RUBRICS SECTION -->
                 <div th:if="${groupRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card">
+                    <!-- ✅ CHANGED: Added data-rubric-id attribute -->
+                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
                                 <h3 th:text="${rubric.name}">Rubric Name</h3>
@@ -338,7 +328,8 @@
                 <!-- RUBRICS SECTION -->
                 <div th:if="${individualRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card">
+                    <!-- ✅ CHANGED: Added data-rubric-id attribute -->
+                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
                                 <h3 th:text="${rubric.name}">Name</h3>
@@ -346,6 +337,7 @@
                                 <div class="rubric-meta">
                                     <span class="meta-badge"><i class="fas fa-star"></i> Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</strong></span>
                                     <span class="meta-badge"><i class="fas fa-bullseye"></i> CLO: <strong th:text="${rubric.clo}">1</strong></span>
+                                    <span class="meta-badge"><i class="fas fa-award"></i> CLO Marks: <strong th:text="${#numbers.formatDecimal(rubric.cloMarks, 1, 2)}">0</strong></span>
                                 </div>
                             </div>
                             <div class="rubric-actions">
@@ -372,8 +364,30 @@
                             </div>
                         </div>
                         
-                        <!-- Direct Ratings -->
+                        <!-- Sub-Rubrics Section -->
+                        <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
+                                <div class="sub-rubric-header">
+                                    <h4 th:text="${subRubric.name}">Sub Name</h4>
+                                    <span class="sub-marks">Marks: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
+                                </div>
+                                <p th:if="${subRubric.description}" th:text="${subRubric.description}" class="text-muted">Desc</p>
+                                
+                                <div th:if="${subRubric.ratings != null}" class="ratings-grid">
+                                    <div th:each="rating : ${subRubric.ratings}" class="rating-card">
+                                        <div class="rating-header">
+                                            <span class="rating-name" th:text="${rating.name}">Name</span>
+                                            <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                        </div>
+                                        <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Direct Ratings (for rubrics WITHOUT sub-rubrics) -->
                         <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
+                            <h5>Rating Levels</h5>
                             <div class="ratings-grid">
                                 <div th:each="rating : ${rubric.ratings}" class="rating-card">
                                     <div class="rating-header">
@@ -381,6 +395,21 @@
                                         <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
                                     </div>
                                     <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rubric Comments Section -->
+                        <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
+                            <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
+                            <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
+                                <span class="q-badge" th:text="${'Q' + (i + 1)}">Q1</span>
+                                <div class="q-content">
+                                    <div class="q-text" th:text="${rubric.getRubricCommentLabel(i)}">Label</div>
+                                    <div class="q-meta">
+                                        <span>Min: <b th:text="${rubric.getRubricCommentMinLength(i)}">0</b></span>
+                                        <span th:text="${rubric.isRubricCommentAnonymous(i) ? 'Anonymous' : 'Named'}">Type</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -468,7 +497,7 @@
             </div>
             
             <!-- Empty Block State -->
-            <div th:if="${individualRubrics == null && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="block-empty">
+            <div th:if="${(individualRubrics == null || #lists.isEmpty(individualRubrics)) && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="block-empty">
                 <i class="fas fa-user"></i>
                 <p>No content in Individual Assessment yet.</p>
                 <div class="empty-actions">
@@ -484,5 +513,61 @@
         </th:block>
         
     </div>
+
+    <!-- ✅ ADDED: Instant scroll-to-rubric script -->
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the rubric ID or block to focus on (passed from controller via flash attributes)
+        const focusRubricId = /*[[${focusRubricId}]]*/ null;
+        const focusBlock = /*[[${focusBlock}]]*/ null;
+        
+        if (focusRubricId) {
+            // Find the rubric card by ID
+            const rubricCard = document.querySelector(`[data-rubric-id="${focusRubricId}"]`);
+            
+            if (rubricCard) {
+                // Use requestAnimationFrame to ensure DOM is fully rendered
+                requestAnimationFrame(() => {
+                    // Scroll to the rubric instantly (no smooth animation)
+                    const rect = rubricCard.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetPosition = rect.top + scrollTop - 20; // 20px offset from top
+                    
+                    // Instant scroll (no animation)
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'auto' // 'auto' = instant, no animation
+                    });
+                    
+                    // Optional: Add a subtle highlight effect to show which rubric was moved
+                    rubricCard.style.transition = 'background-color 0.3s ease';
+                    rubricCard.style.backgroundColor = '#fff3cd'; // Light yellow highlight
+                    
+                    setTimeout(() => {
+                        rubricCard.style.backgroundColor = ''; // Remove highlight after 1 second
+                    }, 1000);
+                });
+            }
+        } else if (focusBlock) {
+            // Focus on a block (Individual or Group)
+            const block = document.getElementById(focusBlock);
+            
+            if (block) {
+                requestAnimationFrame(() => {
+                    const rect = block.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetPosition = rect.top + scrollTop - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'auto'
+                    });
+                });
+            }
+        }
+    });
+    /*]]>*/
+    </script>
 </body>
 </html>
