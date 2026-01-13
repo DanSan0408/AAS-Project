@@ -6,6 +6,7 @@
     <title th:text="'Data View - ' + ${assessment.title}">Assessment Data View</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/assessment_data.css}">
+    <link rel="stylesheet" th:href="@{/css/print_assessment_data.css}" media="print">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="data-view-page">
@@ -83,9 +84,9 @@
             <div th:if="${assessmentData.studentDataList != null and !assessmentData.studentDataList.isEmpty()}">
                 <div th:each="studentData : ${assessmentData.studentDataList}" class="student-card">
                     <div class="student-header">
-                        <h3 th:text="${studentData.student.username}">Student Name</h3>
+                        <!-- ✅ CHANGED: Display email instead of username -->
+                        <h3 th:text="${studentData.student.email}">Student Email</h3>
                         <div class="student-details">
-                            <span th:text="${studentData.student.email}">Email</span>
                             <span th:if="${studentData.student.group != null}" class="detail-badge">Team: <span th:text="${studentData.student.group.groupName}">Team</span></span>
                             <span th:if="${studentData.factor != 1.0}" class="detail-badge warning">Factor: <span th:text="${#numbers.formatDecimal(studentData.factor, 1, 3)}">1.0</span></span>
                         </div>
@@ -150,7 +151,6 @@
                                                 <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
                                             </td>
                                             
-                                            <!-- ✅ UPDATED: Show both raw and weighted marks -->
                                             <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
                                                 <div class="mark-display">
                                                     <div class="raw-mark">
@@ -224,7 +224,6 @@
                                                     <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
                                                 </td>
                                                 
-                                                <!-- ✅ UPDATED: Individual assessment shows only one mark (no factor applied) -->
                                                 <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
                                                     <span class="mark-label">Individual Mark:</span>
                                                     <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
@@ -271,7 +270,6 @@
                                                     <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muRf, 1, 3) : '-'}">0.000</div>
                                                 </td>
                                                 
-                                                <!-- ✅ UPDATED: Individual assessment shows only one mark -->
                                                 <td class="text-center vertical-middle border-left bg-highlight">
                                                     <div class="final-score" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</div>
                                                 </td>

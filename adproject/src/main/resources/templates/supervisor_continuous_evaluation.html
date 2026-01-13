@@ -201,7 +201,7 @@
                     <div class="section-header student-section-header">
                         <h3 class="section-title">
                             <i class="fas fa-user"></i>
-                            <span th:text="${'Student ' + (iterStat.index + 1) + ': ' + student.username}">Student Name</span>
+                            <span th:text="${'Student ' + (iterStat.index + 1) + ': ' + student.email}">Student Email</span>
                         </h3>
                         <p class="section-subtitle">
                             Individual evaluation for this student
@@ -305,7 +305,7 @@
                                     <div class="comments-header">
                                         <h4 class="comments-title">
                                             <i class="fas fa-comments"></i>
-                                            <span th:text="${'Feedback for ' + student.username}">Student Feedback</span>
+                                            <span th:text="${'Feedback for ' + student.email}">Student Feedback</span>
                                         </h4>
                                     </div>
                                     

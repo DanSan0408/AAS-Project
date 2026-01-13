@@ -63,7 +63,7 @@
                         </div>
                         <div class="info-item" th:if="${group.academicSupervisor != null}">
                             <span class="info-label"><i class="fas fa-chalkboard-teacher"></i> Supervisor:</span>
-                            <span th:text="${group.academicSupervisor.username}">N/A</span>
+                            <span th:text="${group.academicSupervisor.email}">N/A</span>
                         </div>
                         <div th:with="progress=${groupProgress.get(group.id)}" class="info-item">
                             <span class="info-label"><i class="fas fa-check-double"></i> Evaluated:</span>
@@ -75,8 +75,8 @@
                         <h4 class="students-title">Group Members:</h4>
                         <ul class="student-list">
                             <li th:each="student : ${group.students}" class="student-item">
-                                <span class="student-avatar" th:text="${#strings.substring(student.username,0,1)}">S</span>
-                                <span th:text="${student.username}">Student Name</span>
+                                <span class="student-avatar" th:text="${#strings.substring(student.email,0,1)}">S</span>
+                                <span th:text="${student.email}">Student Email</span>
                             </li>
                         </ul>
                     </div>

@@ -26,13 +26,13 @@
                 <div class="evaluation-info">
                     <div class="evaluator-info">
                         <span class="label">Evaluator:</span>
-                        <strong th:text="${evaluator.username}">Your Name</strong>
+                        <strong th:text="${evaluator.email}">Your Email</strong>
                     </div>
                     <div class="evaluated-info">
                         <span class="label">Evaluating:</span>
                         <strong th:if="${isTeamEvaluation != null and isTeamEvaluation}">Your Team</strong>
                         <strong th:unless="${isTeamEvaluation != null and isTeamEvaluation}" 
-                                th:text="${evaluatedStudent.username}">Student Name</strong>
+                            th:text="${evaluatedStudent.email}">Student Email</strong>
                         <span th:if="${isSelfAssessment}" class="self-badge">(Yourself)</span>
                         <span th:if="${isTeamEvaluation != null and isTeamEvaluation}" 
                               class="self-badge" 
@@ -48,7 +48,7 @@
                         <h4>⚠️ Re-evaluation Notice</h4>
                         <p th:if="${isTeamEvaluation == null or !isTeamEvaluation}">
                             You have already submitted an evaluation for 
-                            <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.username}">this student</strong>.
+                            <strong th:text="${isSelfAssessment ? 'yourself' : evaluatedStudent.email}">this student</strong>
                             Your previous responses have been loaded below. If you submit again, 
                             <strong>your new evaluation will replace the existing one.</strong>
                         </p>

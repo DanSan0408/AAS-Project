@@ -21,14 +21,20 @@ public class IndustrialSupervisor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    // ✅ CHANGED: Username is now NULLABLE (kept for backward compatibility)
+    @Column(unique = true, nullable = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false) // Added unique constraint for email
+    // ✅ CHANGED: Email is now the primary identifier for login
+    @Column(unique = true, nullable = false)
     private String email;
     
     private String resetPasswordToken;
+
+    // ✅ NEW: Flag to track if password is temporary
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isTempPassword = false;
 }

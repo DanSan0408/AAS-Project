@@ -46,24 +46,29 @@
 
                     <div class="add-form-container">
                         <h3 th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add New Lecturer'}">Add New Lecturer</h3>
+                        
+                        <!-- ✅ NEW: Info box for new users -->
+                        <div th:if="${lecturer.id == null}" class="info-box" style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                            <p style="margin: 0; color: #2c3e50;">
+                                <strong>📧 Email-Based Account Creation</strong><br/>
+                                Simply enter the lecturer's email address. A secure temporary password will be automatically generated and sent to them via email with instructions to set their own password.
+                            </p>
+                        </div>
+                        
                         <form id="lecturerForm" th:action="@{/admin/manage-lecturers}" th:object="${lecturer}" method="post">
                             <input type="hidden" th:field="*{id}" />
                             <input type="hidden" name="confirmDuplicate" id="confirmDuplicate" value="false" />
 
-                            <label for="username">Username</label>
-                            <input type="text" id="username" th:field="*{username}" required>
-                            
-                            <label for="password">Password</label>
-                            <!-- ✅ FIXED: Make password not required for updates -->
-                            <input type="password" id="password" th:field="*{password}" 
-                                   th:placeholder="${lecturer.id != null ? 'Leave blank to keep current password' : ''}">
+                            <!-- ✅ REMOVED: Username field -->
+                            <!-- ✅ REMOVED: Password field -->
 
-                            <label for="email">Email</label>
-                            <input type="email" id="email" th:field="*{email}" required>
+                            <!-- ✅ KEPT: Email field (ONLY field) -->
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" th:field="*{email}" required
+                                   placeholder="lecturer@example.com">
                             
                             <button type="submit" id="submitButton" th:text="${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}">Add Lecturer</button>
                             
-                            <!-- ✅ NEW: Add Cancel button for updates -->
                             <a th:if="${lecturer.id != null}" th:href="@{/admin/manage-lecturers}" 
                                class="btn-cancel" style="display: inline-block; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
                                Cancel
@@ -89,7 +94,7 @@
                                         <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
                                     </th>
                                     <th>ID</th>
-                                    <th>Username</th>
+                                    <!-- ✅ REMOVED: Username column -->
                                     <th>Email</th>
                                     <th>Actions</th>
                                 </tr>
@@ -100,7 +105,6 @@
                                         <input type="checkbox" name="ids" th:value="${lecturer.id}" class="user-checkbox">
                                     </td>
                                     <td th:text="${lecturer.id}"></td>
-                                    <td th:text="${lecturer.username}"></td>
                                     <td th:text="${lecturer.email}"></td>
                                     <td>
                                         <div class="table-actions">
@@ -122,7 +126,6 @@
     </div>
 
     <script th:inline="javascript">
-        // Select All Script
         function toggleSelectAll(source) {
             checkboxes = document.getElementsByClassName('user-checkbox');
             for(var i=0, n=checkboxes.length;i<n;i++) {
@@ -139,11 +142,9 @@
                 const confirmInput = document.getElementById('confirmDuplicate');
                 const duplicateWarning = /*[[${duplicateWarning}]]*/ '';
                 
-                // Change button appearance
                 submitButton.textContent = 'Confirm and Save Anyway';
                 submitButton.classList.add('btn-confirm', 'glow-effect');
                 
-                // Handle form submission
                 form.addEventListener('submit', function(event) {
                     event.preventDefault();
                     
@@ -153,7 +154,6 @@
                         confirmInput.value = 'true';
                         form.submit();
                     } else {
-                        // ✅ NEW: Reset button if user cancels
                         submitButton.textContent = /*[[${lecturer.id != null ? 'Update Lecturer' : 'Add Lecturer'}]]*/ 'Add Lecturer';
                         submitButton.classList.remove('btn-confirm', 'glow-effect');
                     }

@@ -165,8 +165,11 @@ public class StudentController {
             return finalGroup;
         };
         
-        Student currentStudent = studentRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        // ✅ CHANGED: Look up by email first, then username fallback
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
         
         List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
         List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
@@ -214,8 +217,11 @@ public class StudentController {
     @GetMapping("/assessments")
     public String listAssessments(Model model, Principal principal) {
         
-        Student currentStudent = studentRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        // ✅ CHANGED: Look up by email first, then username fallback
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
         
         if (currentStudent.getGroup() == null) {
             model.addAttribute("error", "You are not assigned to any group yet.");
@@ -262,8 +268,11 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
                                      Principal principal,
                                      RedirectAttributes redirectAttributes) {
     
-    Student evaluator = studentRepository.findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+    // ✅ CHANGED: Look up by email first, then username fallback
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -359,8 +368,11 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                                    Principal principal,
                                    RedirectAttributes redirectAttributes) {
     
-    Student evaluator = studentRepository.findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+    // ✅ CHANGED: Look up by email first, then username fallback
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -576,7 +588,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 AssessmentComment comment = new AssessmentComment();
                 comment.setEvaluatorId(evaluator.getId());
                 comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                comment.setEvaluatorName(evaluator.getUsername());
+                // ✅ CHANGED: Store email instead of username
+                comment.setEvaluatorName(evaluator.getEmail());
                 comment.setEvaluatedStudent(evaluatedStudent);
                 comment.setAssessment(assessment);
                 comment.setCommentText(commentText.trim());
@@ -596,7 +609,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                     anonymousIdentifier = commentService.getRubricAnonymousIdentifier(
                         evaluatedStudent, evaluator.getId(), assessment, rubricId, commentIndex);
                 } else {
-                    anonymousIdentifier = evaluator.getUsername();
+                    // ✅ CHANGED: Use email instead of username for non-anonymous
+                    anonymousIdentifier = evaluator.getEmail();
                 }
                 
                 comment.setAnonymousIdentifier(anonymousIdentifier);
@@ -622,8 +636,11 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
                                       Principal principal,
                                       RedirectAttributes redirectAttributes) {
     
-    Student evaluator = studentRepository.findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+    // ✅ CHANGED: Look up by email first, then username fallback
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -718,8 +735,11 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                                     Principal principal,
                                     RedirectAttributes redirectAttributes) {
     
-    Student evaluator = studentRepository.findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+    // ✅ CHANGED: Look up by email first, then username fallback
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -934,7 +954,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     AssessmentComment comment = new AssessmentComment();
                     comment.setEvaluatorId(member.getId());
                     comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                    comment.setEvaluatorName(member.getUsername());
+                    // ✅ CHANGED: Store email instead of username
+                    comment.setEvaluatorName(member.getEmail());
                     comment.setEvaluatedStudent(member);
                     comment.setAssessment(assessment);
                     comment.setCommentText(commentText.trim());
@@ -949,7 +970,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     if (isAnonymous) {
                         comment.setAnonymousIdentifier("You (Team Evaluation)");
                     } else {
-                        comment.setAnonymousIdentifier(member.getUsername());
+                        // ✅ CHANGED: Use email instead of username
+                        comment.setAnonymousIdentifier(member.getEmail());
                     }
                     
                     commentService.saveComment(comment);
@@ -966,8 +988,11 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
    @GetMapping("/comments")
 public String viewMyComments(Model model, Principal principal) {
     
-    Student currentStudent = studentRepository.findByUsername(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+    // ✅ CHANGED: Look up by email first, then username fallback
+    String emailOrUsername = principal.getName();
+    Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
     
     Map<String, Object> commentsData = commentService.getCompiledCommentsForStudent(currentStudent);
     
@@ -1015,8 +1040,11 @@ public String viewMyComments(Model model, Principal principal) {
                                              Model model,
                                              Principal principal) {
         
-        Student currentStudent = studentRepository.findByUsername(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        // ✅ CHANGED: Look up by email first, then username fallback
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
         
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -1077,7 +1105,8 @@ private void setRealName(AssessmentComment comment) {
         // Try to get student's actual name
         Student evaluatorStudent = studentRepository.findById(comment.getEvaluatorId()).orElse(null);
         if (evaluatorStudent != null) {
-            comment.setDisplayName(evaluatorStudent.getUsername());
+            // ✅ CHANGED: Display email instead of username
+            comment.setDisplayName(evaluatorStudent.getEmail());
         } else {
             comment.setDisplayName("Unknown Student");
         }

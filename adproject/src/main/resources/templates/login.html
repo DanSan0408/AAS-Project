@@ -1,153 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - UTM CAS</title>
-    <link rel="stylesheet" href="/css/critical.css"> 
     <link rel="stylesheet" href="/css/login.css">
-    <link rel="stylesheet" href="/css/loading.css">
 </head>
 <body>
-
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-container">
-            <img src="/images/utmbulat.png" alt="UTM CAS Logo" class="loading-logo"/>
-        </div>
-    </div>
-
     <div class="auth-container">
-        <!-- Logo Image -->
         <img th:src="@{/images/logoUTM.png}" alt="UTM Logo" class="logo" />
-        
-        <h3 class="card-title text-center mb-4">Login</h3>
+        <h3>Login</h3>
 
-        <div th:if="${message}" class="success-message" role="alert">
+        <div th:if="${param.error}" class="alert">
+            <p>Invalid email or password. Please try again.</p>
+        </div>
+
+        <div th:if="${param.logout}" class="alert" style="background-color: var(--secondary-gold); color: var(--text-charcoal); border-left-color: #E69610;">
+            <p>You have been logged out successfully.</p>
+        </div>
+
+        <div th:if="${message}" class="success-message">
             <p th:text="${message}"></p>
         </div>
 
-        <div th:if="${param.error}" class="alert" role="alert">
-            Invalid username or password.
-        </div>
-
-        <div th:if="${param.logout}" class="success-message" role="alert">
-            You have been logged out successfully.
-        </div>
-        
-        <form th:action="@{/login}" method="post" id="loginForm">
-            <input type="hidden" name="userRole" th:value="${param.userRole}"/>
-            
+        <form th:action="@{/login}" method="post">
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username" required>
+                <label for="username">Email Address</label>
+                <input 
+                    type="email" 
+                    id="username" 
+                    name="username" 
+                    class="form-control"
+                    placeholder="your.email@example.com" 
+                    required 
+                    autocomplete="email"
+                />
             </div>
-            
+
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-control"
+                    placeholder="Enter your password" 
+                    required 
+                    autocomplete="current-password"
+                />
             </div>
-            
-            <!-- ✅ Enhanced Remember Me Checkbox -->
-            <div class="form-group" style="margin: 15px 0;">
-                <label style="display: flex; align-items: center; cursor: pointer;">
-                    <input 
-                        type="checkbox" 
-                        id="remember-me" 
-                        name="remember-me" 
-                        value="true"
-                        style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
-                    <span>Remember Me</span>
+
+            <div class="form-group">
+                <label class="inline-flex">
+                    <input type="checkbox" name="remember-me" id="remember-me">
+                    <span>Remember me</span>
                 </label>
             </div>
-            
-            <a th:href="@{/forgot_password}" class="forgot-password-link">Forgot Password?</a>
-            
+
             <button type="submit" class="auth-btn btn-primary-custom">Login</button>
         </form>
+
+        <a th:href="@{/forgot_password}" class="forgot-password-link">Forgot Password?</a>
     </div>
-
-    <script src="/js/loading.js"></script>
-    
-    <!-- ✅ Remember Username and Remember-Me Checkbox State -->
-    <script>
-        // Cookie utility functions
-        function setCookie(name, value, days) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-            document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
-        }
-
-        function getCookie(name) {
-            const nameEQ = name + '=';
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
-
-        function deleteCookie(name) {
-            document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
-        }
-
-        // On page load: Restore username and remember-me state
-        window.addEventListener('DOMContentLoaded', function() {
-            const usernameField = document.getElementById('username');
-            const rememberMeCheckbox = document.getElementById('remember-me');
-            
-            // Check if user was remembered
-            const savedUsername = getCookie('remembered_username');
-            const wasRemembered = getCookie('was_remembered') === 'true';
-            
-            if (savedUsername) {
-                usernameField.value = savedUsername;
-                console.log('✓ Restored username:', savedUsername);
-            }
-            
-            if (wasRemembered) {
-                rememberMeCheckbox.checked = true;
-                console.log('✓ Remember-me checkbox checked');
-            }
-            
-            // Focus on password field if username is already filled
-            if (savedUsername) {
-                document.getElementById('password').focus();
-            } else {
-                usernameField.focus();
-            }
-        });
-
-        // On form submit: Save username and remember-me state
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const username = document.getElementById('username').value;
-            const rememberMeChecked = document.getElementById('remember-me').checked;
-            
-            console.log('🔒 Login form submitted');
-            console.log('✓ Username:', username);
-            console.log('✓ Remember Me checked:', rememberMeChecked);
-            
-            if (rememberMeChecked) {
-                // Save username for 7 days
-                setCookie('remembered_username', username, 7);
-                setCookie('was_remembered', 'true', 7);
-                console.log('✓ Saved username to cookie');
-            } else {
-                // Clear saved username if unchecked
-                deleteCookie('remembered_username');
-                deleteCookie('was_remembered');
-                console.log('✓ Cleared username from cookie');
-            }
-        });
-
-        // Clear username on logout
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('logout')) {
-            deleteCookie('remembered_username');
-            deleteCookie('was_remembered');
-            console.log('✓ Cleared saved credentials after logout');
-        }
-    </script>
 </body>
 </html>

@@ -32,7 +32,7 @@
                     <div class="students-list">
                         <strong>📋 Group Members:</strong>
                         <ul>
-                            <li th:each="student : ${groupStudents}" th:text="${student.username}">Student</li>
+                            <li th:each="student : ${groupStudents}" th:text="${student.email}">Student</li>
                         </ul>
                     </div>
                 </div>
@@ -172,7 +172,7 @@
                             <div class="student-header">
                                 <h3>
                                     Student <span th:text="${studentStat.index + 1}">1</span>: 
-                                    <span th:text="${student.username}">Student Name</span>
+                                    <span th:text="${student.email}">Student Email</span>
                                 </h3>
                             </div>
 

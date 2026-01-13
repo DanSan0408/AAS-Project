@@ -64,18 +64,20 @@
                                     <td>
                                         <select name="academicSupervisorId" required>
                                             <option value="">-- Select Lecturer --</option>
+                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="lecturer : ${availableLecturers}"
                                                     th:value="${lecturer.id}"
-                                                    th:text="${lecturer.username}"></option>
+                                                    th:text="${lecturer.email}"></option>
                                         </select>
                                     </td>
                                     
                                     <td>
                                         <select name="industrialSupervisorId" required>
                                             <option value="">-- Select Supervisor --</option>
+                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="supervisor : ${availableSupervisors}"
                                                     th:value="${supervisor.id}"
-                                                    th:text="${supervisor.username}"></option>
+                                                    th:text="${supervisor.email}"></option>
                                         </select>
                                     </td>
                                 </tr>
@@ -91,9 +93,10 @@
                             <label for="addStudentSelect">Add Student (Unassigned):</label>
                             <select id="addStudentSelect">
                                 <option value="">-- Select Student to Add --</option>
+                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <option th:each="student : ${availableStudentsForAdd}"
                                         th:value="${student.id}"
-                                        th:text="${student.username}">
+                                        th:text="${student.email}">
                                 </option>
                             </select>
                             <button type="button" id="addStudentButton" class="btn btn-secondary">Add</button>
@@ -130,7 +133,7 @@
         
         console.log("Parsed student IDs:", currentStudentIds);
         
-        // Build student lookup map from the dropdown options
+        // ✅ CHANGED: Build student lookup map with email instead of username
         var studentLookupMap = {};
         var addStudentSelect = document.getElementById('addStudentSelect');
         Array.from(addStudentSelect.options).forEach(function(option) {
@@ -138,7 +141,7 @@
                 var id = parseInt(option.value);
                 studentLookupMap[id] = {
                     id: id,
-                    username: option.text
+                    email: option.text  // ✅ CHANGED: Store email instead of username
                 };
             }
         });
@@ -190,7 +193,8 @@
 
             currentStudentIds.forEach(function(studentId) {
                 var student = studentLookupMap[studentId];
-                var name = student ? student.username : 'Student ID: ' + studentId + ' (Not Found)';
+                // ✅ CHANGED: Display email instead of username
+                var name = student ? student.email : 'Student ID: ' + studentId + ' (Not Found)';
                 
                 console.log("Rendering student:", studentId, name);
                 

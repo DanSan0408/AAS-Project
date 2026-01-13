@@ -19,6 +19,12 @@ import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.util.PasswordGenerator;
+import com.capstone.adproject.util.PasswordGenerator;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.UUID;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AdminService {
@@ -46,207 +52,255 @@ public class AdminService {
         this.assignmentRepository = assignmentRepository;
     }
 
-    // ==========================================
-    // 🔍 DUPLICATE CHECKERS (Whitespace Insensitive)
-    // ==========================================
-    
-    public String checkStudentDuplicate(String username, String email, Long studentIdToExclude) {
-        if (username != null) {
-            String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            List<Student> allStudents = studentRepository.findAll();
-            for (Student student : allStudents) {
-                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
-                if (student.getUsername() != null) {
-                    String existingNormalized = student.getUsername().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedUsername)) {
-                        return "Username '" + username + "' is similar to existing username '" + student.getUsername() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        if (email != null) {
-            String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            List<Student> allStudents = studentRepository.findAll();
-            for (Student student : allStudents) {
-                if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
-                if (student.getEmail() != null) {
-                    String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedEmail)) {
-                        return "Email '" + email + "' is similar to existing email '" + student.getEmail() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    
-    public String checkLecturerDuplicate(String username, String email, Long lecturerIdToExclude) {
-        if (username != null) {
-            String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            List<Lecturer> allLecturers = lecturerRepository.findAll();
-            for (Lecturer lecturer : allLecturers) {
-                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
-                if (lecturer.getUsername() != null) {
-                    String existingNormalized = lecturer.getUsername().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedUsername)) {
-                        return "Username '" + username + "' is similar to existing username '" + lecturer.getUsername() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        if (email != null) {
-            String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            List<Lecturer> allLecturers = lecturerRepository.findAll();
-            for (Lecturer lecturer : allLecturers) {
-                if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
-                if (lecturer.getEmail() != null) {
-                    String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedEmail)) {
-                        return "Email '" + email + "' is similar to existing email '" + lecturer.getEmail() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        return null;
-    }
-    
-    public String checkSupervisorDuplicate(String username, String email, Long supervisorIdToExclude) {
-        if (username != null) {
-            String normalizedUsername = username.replaceAll("\\s+", "").toLowerCase();
-            List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
-            for (IndustrialSupervisor supervisor : allSupervisors) {
-                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
-                if (supervisor.getUsername() != null) {
-                    String existingNormalized = supervisor.getUsername().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedUsername)) {
-                        return "Username '" + username + "' is similar to existing username '" + supervisor.getUsername() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        if (email != null) {
-            String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-            List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
-            for (IndustrialSupervisor supervisor : allSupervisors) {
-                if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
-                if (supervisor.getEmail() != null) {
-                    String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
-                    if (existingNormalized.equals(normalizedEmail)) {
-                        return "Email '" + email + "' is similar to existing email '" + supervisor.getEmail() + "' (ignoring spaces)";
-                    }
-                }
-            }
-        }
-        return null;
+    @Autowired
+private EmailService emailService;
+
+    public void saveStudent(Student student, HttpServletRequest request) {
+    // Validate email is provided
+    if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
     }
 
-    // ==========================================
-    // 💾 SAVE METHODS (With Validation Fixes)
-    // ==========================================
-
-    public void saveStudent(Student student) {
-        // 1. Validate Required Fields
-        if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
-            throw new RuntimeException("Username is required");
-        }
-        if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email is required");
-        }
-
-        if (student.getId() != null) {
-            // UPDATE Logic
-            Student existingStudent = studentRepository.findById(student.getId())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
-            
-            // If password field is empty, keep the old password
-            if (student.getPassword() == null || student.getPassword().trim().isEmpty()) {
-                student.setPassword(existingStudent.getPassword());
-            } else {
-                student.setPassword(passwordEncoder.encode(student.getPassword()));
-            }
-            
-            // Fallback for email if empty (though validation above catches it mostly)
-            if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
-                student.setEmail(existingStudent.getEmail());
-            }
-        } else {
-            // CREATE Logic
-            if (student.getPassword() == null || student.getPassword().trim().isEmpty()) {
-                throw new RuntimeException("Password is required for new students");
-            }
-            student.setPassword(passwordEncoder.encode(student.getPassword()));
+    if (student.getId() != null) {
+        // ========== UPDATE EXISTING USER ==========
+        Student existingStudent = studentRepository.findById(student.getId())
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // Keep existing password and flags
+        student.setPassword(existingStudent.getPassword());
+        student.setIsTempPassword(existingStudent.getIsTempPassword());
+        student.setUsername(existingStudent.getUsername()); // Preserve old username
+        student.setResetPasswordToken(existingStudent.getResetPasswordToken());
+        
+        // Update email if changed
+        if (!existingStudent.getEmail().equals(student.getEmail())) {
+            // Email changed - you could optionally send notification here
+            student.setEmail(student.getEmail());
         }
         
-        studentRepository.save(student);
-    }
-
-    public void saveLecturer(Lecturer lecturer) {
-        // 1. Validate Required Fields
-        if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
-            throw new RuntimeException("Username is required");
+    } else {
+        // ========== CREATE NEW USER ==========
+        // Generate secure random password
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        student.setPassword(passwordEncoder.encode(tempPassword));
+        student.setIsTempPassword(true);
+        student.setUsername(null); // No username for new users
+        
+        // Generate reset token for password change
+        String resetToken = UUID.randomUUID().toString();
+        student.setResetPasswordToken(resetToken);
+        
+        // Save first to ensure it persists
+        Student savedStudent = studentRepository.save(student);
+        
+        // Build password reset link
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
         }
-        if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email is required");
-        }
-
-        if (lecturer.getId() != null) {
-            // UPDATE Logic
-            Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
-                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-            
-            if (lecturer.getPassword() == null || lecturer.getPassword().trim().isEmpty()) {
-                lecturer.setPassword(existingLecturer.getPassword());
-            } else {
-                lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
-            }
-            
-            if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
-                lecturer.setEmail(existingLecturer.getEmail());
-            }
-        } else {
-            // CREATE Logic
-            if (lecturer.getPassword() == null || lecturer.getPassword().trim().isEmpty()) {
-                throw new RuntimeException("Password is required for new lecturers");
-            }
-            lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        // Send welcome email with temporary password
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                student.getEmail(),
+                tempPassword,
+                "Student",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + student.getEmail());
+            e.printStackTrace();
+            // Continue anyway - user created, just email failed
         }
         
-        lecturerRepository.save(lecturer);
+        return; // Exit early, already saved
+    }
+    
+    // Save updated user
+    studentRepository.save(student);
+}
+
+/**
+ * ✅ UPDATED: Save lecturer - EMAIL ONLY, auto-generate password for new users
+ */
+public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
+    if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
     }
 
-    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
-        // 1. Validate Required Fields
-        if (industrialSupervisor.getUsername() == null || industrialSupervisor.getUsername().trim().isEmpty()) {
-            throw new RuntimeException("Username is required");
+    if (lecturer.getId() != null) {
+        // UPDATE
+        Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+        
+        lecturer.setPassword(existingLecturer.getPassword());
+        lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
+        lecturer.setUsername(existingLecturer.getUsername());
+        lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
+        
+    } else {
+        // CREATE
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        lecturer.setPassword(passwordEncoder.encode(tempPassword));
+        lecturer.setIsTempPassword(true);
+        lecturer.setUsername(null);
+        
+        String resetToken = UUID.randomUUID().toString();
+        lecturer.setResetPasswordToken(resetToken);
+        
+        Lecturer savedLecturer = lecturerRepository.save(lecturer);
+        
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
         }
-        if (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().trim().isEmpty()) {
-            throw new RuntimeException("Email is required");
-        }
-
-        if (industrialSupervisor.getId() != null) {
-            // UPDATE Logic
-            IndustrialSupervisor existingSupervisor = industrialSupervisorRepository.findById(industrialSupervisor.getId())
-                .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-            
-            if (industrialSupervisor.getPassword() == null || industrialSupervisor.getPassword().trim().isEmpty()) {
-                industrialSupervisor.setPassword(existingSupervisor.getPassword());
-            } else {
-                industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
-            }
-            
-            if (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().trim().isEmpty()) {
-                industrialSupervisor.setEmail(existingSupervisor.getEmail());
-            }
-        } else {
-            // CREATE Logic
-            if (industrialSupervisor.getPassword() == null || industrialSupervisor.getPassword().trim().isEmpty()) {
-                throw new RuntimeException("Password is required for new supervisors");
-            }
-            industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                lecturer.getEmail(),
+                tempPassword,
+                "Lecturer",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + lecturer.getEmail());
+            e.printStackTrace();
         }
         
-        industrialSupervisorRepository.save(industrialSupervisor);
+        return;
     }
+    
+    lecturerRepository.save(lecturer);
+}
+
+/**
+ * ✅ UPDATED: Save industrial supervisor - EMAIL ONLY, auto-generate password
+ */
+public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
+    if (supervisor.getEmail() == null || supervisor.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
+    }
+
+    if (supervisor.getId() != null) {
+        // UPDATE
+        IndustrialSupervisor existing = industrialSupervisorRepository.findById(supervisor.getId())
+            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+        
+        supervisor.setPassword(existing.getPassword());
+        supervisor.setIsTempPassword(existing.getIsTempPassword());
+        supervisor.setUsername(existing.getUsername());
+        supervisor.setResetPasswordToken(existing.getResetPasswordToken());
+        
+    } else {
+        // CREATE
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        supervisor.setPassword(passwordEncoder.encode(tempPassword));
+        supervisor.setIsTempPassword(true);
+        supervisor.setUsername(null);
+        
+        String resetToken = UUID.randomUUID().toString();
+        supervisor.setResetPasswordToken(resetToken);
+        
+        IndustrialSupervisor saved = industrialSupervisorRepository.save(supervisor);
+        
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
+        }
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                supervisor.getEmail(),
+                tempPassword,
+                "Industrial Supervisor",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + supervisor.getEmail());
+            e.printStackTrace();
+        }
+        
+        return;
+    }
+    
+    industrialSupervisorRepository.save(supervisor);
+}
+
+// ==========================================
+// 🔍 UPDATED DUPLICATE CHECKERS - EMAIL ONLY
+// ==========================================
+
+/**
+ * ✅ UPDATED: Check student email duplicate (removed username checking)
+ */
+public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<Student> allStudents = studentRepository.findAll();
+    
+    for (Student student : allStudents) {
+        if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
+        if (student.getEmail() != null) {
+            String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * ✅ UPDATED: Check lecturer email duplicate
+ */
+public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<Lecturer> allLecturers = lecturerRepository.findAll();
+    
+    for (Lecturer lecturer : allLecturers) {
+        if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
+        if (lecturer.getEmail() != null) {
+            String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * ✅ UPDATED: Check supervisor email duplicate
+ */
+public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
+    
+    for (IndustrialSupervisor supervisor : allSupervisors) {
+        if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
+        if (supervisor.getEmail() != null) {
+            String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
 
     // ==========================================
     // 🗑️ DELETE METHODS (Safe & Transactional)
