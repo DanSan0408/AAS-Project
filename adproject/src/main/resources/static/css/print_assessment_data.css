@@ -1,0 +1,391 @@
+/* ========================================
+   PRINT STYLESHEET FOR ASSESSMENT DATA VIEW
+   ======================================== */
+
+/* Hide non-essential elements */
+.admin-sidebar,
+.action-buttons,
+.btn,
+button,
+.filter-card,
+form {
+    display: none !important;
+}
+
+/* Page setup */
+@page {
+    size: A4 portrait;
+    margin: 1cm;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    font-size: 10pt;
+}
+
+.main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+/* Print header */
+.header-container {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 2px solid #7A1E2D;
+    margin-bottom: 10px;
+}
+
+.header-container img {
+    height: 35px !important;
+    margin-right: 10px;
+}
+
+.header-container h1 {
+    font-size: 18px !important;
+    color: #7A1E2D !important;
+    margin: 0;
+}
+
+/* Page header */
+.page-header {
+    margin-bottom: 15px;
+    page-break-after: avoid;
+}
+
+.page-header h2 {
+    font-size: 16px !important;
+    color: #3F3F46;
+    margin: 5px 0;
+}
+
+.assessment-meta {
+    font-size: 10px !important;
+    color: #7F8C8D;
+}
+
+/* Evaluators card */
+.evaluators-card {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #D4D1CC;
+    border-radius: 4px;
+    page-break-inside: avoid;
+    background-color: #F9F9F9 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.evaluators-card h3 {
+    font-size: 12px !important;
+    margin: 0 0 8px 0;
+    color: #3F3F46;
+}
+
+.evaluator-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+}
+
+.evaluator-item {
+    padding: 5px !important;
+    border: 1px solid #E0E0E0;
+    border-radius: 3px;
+    font-size: 9px !important;
+}
+
+.evaluator-name {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.role-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8px !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.badge-lecturer {
+    background-color: #2ECC71 !important;
+}
+
+.badge-supervisor {
+    background-color: #3498DB !important;
+}
+
+.badge-student {
+    background-color: #95A5A6 !important;
+}
+
+/* Student cards */
+.student-card {
+    page-break-inside: avoid;
+    margin-bottom: 20px;
+    border: 2px solid #7A1E2D;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.student-header {
+    background-color: #7A1E2D !important;
+    color: white !important;
+    padding: 8px 10px;
+    margin: -10px -10px 10px -10px;
+    border-radius: 2px 2px 0 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.student-header h3 {
+    font-size: 14px !important;
+    margin: 0 0 5px 0;
+    color: white !important;
+}
+
+.student-details {
+    display: flex;
+    gap: 10px;
+    font-size: 9px !important;
+}
+
+.detail-badge {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    padding: 2px 6px;
+    border-radius: 3px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Tables */
+.table-responsive {
+    overflow: visible !important;
+}
+
+.data-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 9px !important;
+    margin-bottom: 10px;
+}
+
+.data-table thead {
+    background-color: #5A6C7D !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.data-table th {
+    padding: 6px 4px !important;
+    border: 1px solid #333 !important;
+    font-size: 9px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+}
+
+.data-table td {
+    padding: 5px 4px !important;
+    border: 1px solid #ccc !important;
+    font-size: 8px !important;
+    vertical-align: top !important;
+}
+
+/* Section headers */
+.section-header-row td {
+    background-color: #F8A617 !important;
+    color: #3F3F46 !important;
+    font-weight: bold !important;
+    padding: 6px !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Rubric rows */
+.rubric-row td {
+    background-color: #4CAF7D !important;
+    color: white !important;
+    font-weight: bold !important;
+    padding: 5px !important;
+    font-size: 9px !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.rubric-title {
+    font-weight: bold;
+}
+
+.rubric-title small {
+    font-weight: normal;
+    opacity: 0.9;
+}
+
+/* Sub-rubric rows */
+.sub-rubric-row {
+    background-color: #FFFFFF !important;
+}
+
+.sub-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.sub-desc {
+    font-size: 7px !important;
+    color: #7F8C8D;
+    font-style: italic;
+}
+
+/* CLO badges */
+.badge-clo {
+    background-color: #3498DB !important;
+    color: white !important;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 8px !important;
+    font-weight: bold;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+/* Rating and calculation lists */
+.rating-list,
+.calc-list,
+.comments-list {
+    font-size: 8px !important;
+    line-height: 1.4;
+}
+
+.rating-item,
+.rating-list > div,
+.calc-list > div,
+.comments-list > div {
+    margin-bottom: 3px;
+    padding: 2px 0;
+    border-bottom: 1px dotted #E0E0E0;
+}
+
+.rating-item:last-child,
+.rating-list > div:last-child,
+.calc-list > div:last-child,
+.comments-list > div:last-child {
+    border-bottom: none;
+}
+
+/* Highlighted cells */
+.bg-highlight {
+    background-color: #FFF9E6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.border-left {
+    border-left: 2px solid #7A1E2D !important;
+}
+
+.vertical-middle {
+    vertical-align: middle !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+/* Score displays */
+.big-score {
+    font-size: 11px !important;
+    font-weight: bold;
+    color: #2C3E50;
+}
+
+.mark-display {
+    text-align: center;
+}
+
+.raw-mark,
+.weighted-mark {
+    margin: 3px 0;
+}
+
+.mark-label {
+    font-size: 7px !important;
+    color: #7F8C8D;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.mark-value {
+    font-size: 10px !important;
+    font-weight: bold;
+    color: #2C3E50;
+}
+
+.mark-value-final {
+    font-size: 11px !important;
+    font-weight: bold;
+    color: #8B1E1E;
+}
+
+.final-score {
+    font-size: 12px !important;
+    font-weight: bold;
+    color: #8B1E1E;
+}
+
+/* Summary section */
+.summary-section {
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #F4F2EE !important;
+    border-radius: 4px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 10px !important;
+}
+
+.summary-row.total {
+    font-weight: bold;
+    font-size: 11px !important;
+    border-top: 2px solid #7A1E2D;
+    padding-top: 8px;
+}
+
+/* Empty states */
+.empty-state,
+.empty-message {
+    display: none !important;
+}
+
+/* Force color printing */
+* {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+/* Prevent orphans and widows */
+.student-card,
+.evaluators-card,
+tr {
+    page-break-inside: avoid;
+}
+
+h3, h4 {
+    page-break-after: avoid;
+}

@@ -54,61 +54,61 @@ public class IndustrialSupervisorController {
     }
 
     /**
- * Helper to load the specific assessment assigned to a group.
- * Logic: Looks for a LecturerGroupAssignment for this group with assessor type SUPERVISOR.
- */
-@Transactional(readOnly = true)
-private Optional<Assessment> getAssessmentForGroup(Group group) {
-    Assessment assessment = null;
+     * Helper to load the specific assessment assigned to a group.
+     * Logic: Looks for a LecturerGroupAssignment for this group with assessor type SUPERVISOR.
+     */
+    @Transactional(readOnly = true)
+    private Optional<Assessment> getAssessmentForGroup(Group group) {
+        Assessment assessment = null;
 
-    // 1. Try to find the SUPERVISOR assessment assigned to this specific group
-    List<LecturerGroupAssignment> assignments = lecturerGroupAssignmentRepository.findByGroup(group);
-    
-    if (!assignments.isEmpty()) {
-        // Filter for SUPERVISOR assessor type
-        Optional<LecturerGroupAssignment> supervisorAssignment = assignments.stream()
-            .filter(a -> a.getAssessment() != null)
-            .filter(a -> {
-                // Check if this assessment has SUPERVISOR deadlines or is configured for supervisors
-                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-                    a.getAssessment().getId(), "SUPERVISOR");
-                return !deadlines.isEmpty();
-            })
-            .findFirst();
+        // 1. Try to find the SUPERVISOR assessment assigned to this specific group
+        List<LecturerGroupAssignment> assignments = lecturerGroupAssignmentRepository.findByGroup(group);
         
-        if (supervisorAssignment.isPresent()) {
-            assessment = supervisorAssignment.get().getAssessment();
-        }
-    } 
-    
-    // 2. Fallback: Search for assessments with "supervisor" in the title
-    if (assessment == null) {
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
-        Optional<Assessment> fallbackOpt = allAssessments.stream()
-            .filter(a -> a.getTitle() != null && 
-                        a.getTitle().toLowerCase().contains("supervisor"))
-            .filter(a -> {
-                // Verify it has SUPERVISOR deadlines
-                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-                    a.getId(), "SUPERVISOR");
-                return !deadlines.isEmpty();
-            })
-            .findFirst();
+        if (!assignments.isEmpty()) {
+            // Filter for SUPERVISOR assessor type
+            Optional<LecturerGroupAssignment> supervisorAssignment = assignments.stream()
+                .filter(a -> a.getAssessment() != null)
+                .filter(a -> {
+                    // Check if this assessment has SUPERVISOR deadlines or is configured for supervisors
+                    List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
+                        a.getAssessment().getId(), "SUPERVISOR");
+                    return !deadlines.isEmpty();
+                })
+                .findFirst();
+            
+            if (supervisorAssignment.isPresent()) {
+                assessment = supervisorAssignment.get().getAssessment();
+            }
+        } 
         
-        if (fallbackOpt.isPresent()) {
-            assessment = fallbackOpt.get();
+        // 2. Fallback: Search for assessments with "supervisor" in the title
+        if (assessment == null) {
+            List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
+            Optional<Assessment> fallbackOpt = allAssessments.stream()
+                .filter(a -> a.getTitle() != null && 
+                            a.getTitle().toLowerCase().contains("supervisor"))
+                .filter(a -> {
+                    // Verify it has SUPERVISOR deadlines
+                    List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
+                        a.getId(), "SUPERVISOR");
+                    return !deadlines.isEmpty();
+                })
+                .findFirst();
+            
+            if (fallbackOpt.isPresent()) {
+                assessment = fallbackOpt.get();
+            }
         }
+
+        if (assessment == null) {
+            return Optional.empty();
+        }
+
+        // 3. Aggressively initialize collections
+        initializeAssessmentCollections(assessment);
+
+        return Optional.of(assessment);
     }
-
-    if (assessment == null) {
-        return Optional.empty();
-    }
-
-    // 3. Aggressively initialize collections
-    initializeAssessmentCollections(assessment);
-
-    return Optional.of(assessment);
-}
     
     // Extracted initialization logic to avoid code duplication
     private void initializeAssessmentCollections(Assessment assessment) {
@@ -151,10 +151,11 @@ private Optional<Assessment> getAssessmentForGroup(Group group) {
 
     @GetMapping("/home")
     public String industrialSupervisorHome(Model model, Principal principal) {
-        // ... (Keep existing home logic as is) ...
         // Get current supervisor
-        String username = principal.getName();
-        Optional<IndustrialSupervisor> supervisorOpt = industrialSupervisorService.findByUsername(username);
+        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        Optional<IndustrialSupervisor> supervisorOpt = 
+            industrialSupervisorService.findByEmail(emailOrUsername)
+                .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
 
         if (supervisorOpt.isEmpty()) {
             model.addAttribute("error", "Industrial supervisor not found");
@@ -212,8 +213,10 @@ private Optional<Assessment> getAssessmentForGroup(Group group) {
      */
     @GetMapping("/evaluate")
     public String showEvaluateGroups(Model model, Principal principal) {
-        String username = principal.getName();
-        Optional<IndustrialSupervisor> supervisorOpt = industrialSupervisorService.findByUsername(username);
+        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        Optional<IndustrialSupervisor> supervisorOpt = 
+            industrialSupervisorService.findByEmail(emailOrUsername)
+                .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
 
         if (supervisorOpt.isEmpty()) {
             model.addAttribute("error", "Industrial supervisor not found");
@@ -265,8 +268,10 @@ private Optional<Assessment> getAssessmentForGroup(Group group) {
             Model model,
             Principal principal) {
 
-        String username = principal.getName();
-        Optional<IndustrialSupervisor> supervisorOpt = industrialSupervisorService.findByUsername(username);
+        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        Optional<IndustrialSupervisor> supervisorOpt = 
+            industrialSupervisorService.findByEmail(emailOrUsername)
+                .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
 
         if (supervisorOpt.isEmpty()) {
             model.addAttribute("error", "Industrial supervisor not found");
@@ -369,8 +374,10 @@ private Optional<Assessment> getAssessmentForGroup(Group group) {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        String username = principal.getName();
-        Optional<IndustrialSupervisor> supervisorOpt = industrialSupervisorService.findByUsername(username);
+        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        Optional<IndustrialSupervisor> supervisorOpt = 
+            industrialSupervisorService.findByEmail(emailOrUsername)
+                .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
 
         if (supervisorOpt.isEmpty()) {
             model.addAttribute("error", "Industrial supervisor not found");

@@ -48,6 +48,8 @@ import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.RubricService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -87,7 +89,8 @@ public class AdminController {
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            return ((Admin) authentication.getPrincipal()).getUsername();
+            // ✅ CHANGED: Use email instead of username
+            return ((Admin) authentication.getPrincipal()).getEmail();
         }
         return "Admin";
     }
@@ -381,7 +384,7 @@ public String manageStudents(Model model, @ModelAttribute("student") Student stu
     
     // If student is not provided via flash attributes, create a new one
     if (student == null || student.getId() == null && 
-        (student.getUsername() == null || student.getUsername().isEmpty())) {
+        (student.getEmail() == null || student.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
         model.addAttribute("student", new Student());
     } else {
         model.addAttribute("student", student);
@@ -393,16 +396,15 @@ public String manageStudents(Model model, @ModelAttribute("student") Student stu
 
     @PostMapping("/manage-students")
 public String saveStudent(
-        @ModelAttribute Student student, 
+        @ModelAttribute Student student,
         @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes,
+        HttpServletRequest request) {
     try {
-        // Determine if this is an update or create operation
         boolean isUpdate = (student.getId() != null);
         
         if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkStudentDuplicate(
-                student.getUsername(), 
+            String duplicateMessage = adminService.checkStudentEmailDuplicate(
                 student.getEmail(), 
                 student.getId()
             );
@@ -415,16 +417,15 @@ public String saveStudent(
             }
         }
         
-        adminService.saveStudent(student);
+        adminService.saveStudent(student, request);
         
-        // ✅ FIXED: Different messages for update vs create
         if (isUpdate) {
             redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
         } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Student created successfully! Welcome email sent.");
         }
     } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: A student with that **Username** or **Email** already exists. Please use a unique one.");
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
     }
     return "redirect:/admin/manage-students";
 }
@@ -435,7 +436,7 @@ public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer 
     
     // If lecturer is not provided via flash attributes, create a new one
     if (lecturer == null || lecturer.getId() == null && 
-        (lecturer.getUsername() == null || lecturer.getUsername().isEmpty())) {
+        (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
         model.addAttribute("lecturer", new Lecturer());
     } else {
         model.addAttribute("lecturer", lecturer);
@@ -447,17 +448,16 @@ public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer 
 
     @PostMapping("/manage-lecturers")
 public String saveLecturer(
-        @ModelAttribute Lecturer lecturer, 
+        @ModelAttribute Lecturer lecturer,
         @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes,
+        HttpServletRequest request) {
     try {
-        // Determine if this is an update or create operation
         boolean isUpdate = (lecturer.getId() != null);
         
         if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkLecturerDuplicate(
-                lecturer.getUsername(), 
-                lecturer.getEmail(), 
+            String duplicateMessage = adminService.checkLecturerEmailDuplicate(
+                lecturer.getEmail(),
                 lecturer.getId()
             );
             
@@ -469,16 +469,15 @@ public String saveLecturer(
             }
         }
         
-        adminService.saveLecturer(lecturer);
+        adminService.saveLecturer(lecturer, request);
         
-        // ✅ FIXED: Different messages for update vs create
         if (isUpdate) {
             redirectAttributes.addFlashAttribute("successMessage", "Lecturer updated successfully!");
         } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Lecturer created successfully! Welcome email sent.");
         }
     } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: A lecturer with that **Username** or **Email** already exists. Please use a unique one.");
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
     }
     return "redirect:/admin/manage-lecturers";
 }
@@ -490,7 +489,7 @@ public String manageSupervisors(Model model, @ModelAttribute("industrialSupervis
     
     // If supervisor is not provided via flash attributes, create a new one
     if (industrialSupervisor == null || industrialSupervisor.getId() == null && 
-        (industrialSupervisor.getUsername() == null || industrialSupervisor.getUsername().isEmpty())) {
+        (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
         model.addAttribute("industrialSupervisor", new IndustrialSupervisor());
     } else {
         model.addAttribute("industrialSupervisor", industrialSupervisor);
@@ -501,17 +500,16 @@ public String manageSupervisors(Model model, @ModelAttribute("industrialSupervis
 }
     @PostMapping("/manage-supervisors")
 public String saveIndustrialSupervisor(
-        @ModelAttribute IndustrialSupervisor industrialSupervisor, 
+        @ModelAttribute IndustrialSupervisor industrialSupervisor,
         @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes) {
+        RedirectAttributes redirectAttributes,
+        HttpServletRequest request) {
     try {
-        // Determine if this is an update or create operation
         boolean isUpdate = (industrialSupervisor.getId() != null);
         
         if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkSupervisorDuplicate(
-                industrialSupervisor.getUsername(), 
-                industrialSupervisor.getEmail(), 
+            String duplicateMessage = adminService.checkSupervisorEmailDuplicate(
+                industrialSupervisor.getEmail(),
                 industrialSupervisor.getId()
             );
             
@@ -523,16 +521,15 @@ public String saveIndustrialSupervisor(
             }
         }
         
-        adminService.saveIndustrialSupervisor(industrialSupervisor);
+        adminService.saveIndustrialSupervisor(industrialSupervisor, request);
         
-        // ✅ FIXED: Different messages for update vs create
         if (isUpdate) {
             redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor updated successfully!");
         } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully! Welcome email sent.");
         }
     } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: An industrial supervisor with that **Username** or **Email** already exists. Please use a unique one.");
+        redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
     }
     return "redirect:/admin/manage-supervisors";
 }

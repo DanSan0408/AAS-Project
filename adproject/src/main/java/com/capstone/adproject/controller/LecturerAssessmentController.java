@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -65,10 +66,22 @@ public class LecturerAssessmentController {
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
-        String username = authentication.getName();
-        return lecturerRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("Lecturer not found: " + username));
+    String emailOrUsername = authentication.getName(); // This is now EMAIL after email-based login
+    
+    // ✅ Try EMAIL first (new email-based login)
+    Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
+    if (lecturer.isPresent()) {
+        return lecturer.get();
     }
+    
+    // ✅ Fallback to USERNAME (for existing username-based logins)
+    lecturer = lecturerRepository.findByUsername(emailOrUsername);
+    if (lecturer.isPresent()) {
+        return lecturer.get();
+    }
+    
+    throw new RuntimeException("Lecturer not found: " + emailOrUsername);
+}
 
     @GetMapping
     public String showAssessments(Model model, Authentication authentication) {
@@ -331,7 +344,7 @@ public class LecturerAssessmentController {
                 lecturerAssessmentService.saveEvaluationScores(
                     assessmentId,
                     lecturer.getId(),
-                    lecturer.getUsername(),
+                    lecturer.getEmail(),
                     groupId,
                     true,
                     "Group Assessment",
@@ -390,7 +403,7 @@ public class LecturerAssessmentController {
                     lecturerAssessmentService.saveEvaluationScores(
                         assessmentId,
                         lecturer.getId(),
-                        lecturer.getUsername(),
+                        lecturer.getEmail(),
                         student.getId(),
                         false,
                         "Individual Assessment",

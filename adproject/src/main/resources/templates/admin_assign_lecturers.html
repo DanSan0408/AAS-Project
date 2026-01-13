@@ -42,7 +42,8 @@
                         <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
                             <strong>Members:</strong>
                             <span th:each="student, iterStat : ${group.students}">
-                                <span th:text="${student.username}">Student Name</span><span th:if="${!iterStat.last}">, </span>
+                                <!-- ✅ CHANGED: Display email instead of username -->
+                                <span th:text="${student.email}">Student Email</span><span th:if="${!iterStat.last}">, </span>
                             </span>
                         </div>
                         
@@ -53,11 +54,12 @@
                                     <div th:each="lecturer, iterStat : ${groupLecturerMap.get(group.id)}" class="lecturer-row">
                                         <select th:name="'group_' + ${group.id} + '_lecturer_' + ${iterStat.index}" class="form-select">
                                             <option value="none">-- Select Lecturer --</option>
+                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="lec : ${allLecturers}" 
                                                     th:value="${lec.id}" 
-                                                    th:text="${lec.username}"
+                                                    th:text="${lec.email}"
                                                     th:selected="${lec.id == lecturer.id}">
-                                                Lecturer Name
+                                                Lecturer Email
                                             </option>
                                         </select>
                                         <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
@@ -69,10 +71,11 @@
                                 <div th:if="${groupLecturerMap.get(group.id) == null or groupLecturerMap.get(group.id).isEmpty()}" class="lecturer-row">
                                     <select th:name="'group_' + ${group.id} + '_lecturer_0'" class="form-select">
                                         <option value="none">-- Select Lecturer --</option>
+                                        <!-- ✅ CHANGED: Display email instead of username -->
                                         <option th:each="lec : ${allLecturers}" 
                                                 th:value="${lec.id}" 
-                                                th:text="${lec.username}">
-                                            Lecturer Name
+                                                th:text="${lec.email}">
+                                            Lecturer Email
                                         </option>
                                     </select>
                                     <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
@@ -107,10 +110,11 @@
             
             const newField = document.createElement('div');
             newField.className = 'lecturer-row';
+            // ✅ CHANGED: Use email in JavaScript template literal
             newField.innerHTML = `
                 <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
                     <option value="none">-- Select Lecturer --</option>
-                    ${allLecturers.map(lec => `<option value="${lec.id}">${lec.username}</option>`).join('')}
+                    ${allLecturers.map(lec => `<option value="${lec.id}">${lec.email}</option>`).join('')}
                 </select>
                 <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
                     <i class="fas fa-times"></i>

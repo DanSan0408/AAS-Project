@@ -62,12 +62,14 @@
                                         <tr th:each="group : ${allGroups}">
                                             <td th:text="${group.groupName}">Group Alpha</td>
                                             <td th:text="${group.groupSize}">0</td>
-                                            <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.username : 'N/A'}">Lecturer A</td>
-                                            <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.username : 'N/A'}">Supervisor B</td>
+                                            <!-- ✅ CHANGED: Display email instead of username -->
+                                            <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.email : 'N/A'}">Lecturer Email</td>
+                                            <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.email : 'N/A'}">Supervisor Email</td>
                                             <td>
                                                 <ul th:if="${group.groupSize > 0}" class="student-list">
                                                     <th:block th:each="student : ${allStudents}">
-                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${student.username}">Student Username</li>
+                                                        <!-- ✅ CHANGED: Display email instead of username -->
+                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${student.email}">Student Email</li>
                                                     </th:block>
                                                 </ul>
                                                 <span th:unless="${group.groupSize > 0}" style="font-style: italic; color: #95a5a6;">None</span>
@@ -112,8 +114,9 @@
                                         </div>
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" class="form-group">
-                                            <label for="studentSearch">Search Student Name:</label>
-                                            <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by username..." style="width: 100%;">
+                                            <!-- ✅ CHANGED: Search placeholder text -->
+                                            <label for="studentSearch">Search Student Email:</label>
+                                            <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by email..." style="width: 100%;">
                                         </div>
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" id="studentCarouselContainer">
@@ -130,7 +133,8 @@
                                                         <thead>
                                                             <tr>
                                                                 <th style="width: 10%;">Select</th>
-                                                                <th>Student Username</th>
+                                                                <!-- ✅ CHANGED: Column header -->
+                                                                <th>Student Email</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -138,7 +142,8 @@
                                                                 <td>
                                                                     <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
                                                                 </td>
-                                                                <td th:text="${student.username}" class="student-username">Student Name</td>
+                                                                <!-- ✅ CHANGED: Display email instead of username, and update class name -->
+                                                                <td th:text="${student.email}" class="student-email">Student Email</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -158,9 +163,10 @@
                                             <label for="academicSupervisorId">Lecturer:</label>
                                             <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
                                                 <option value="">-- Select Lecturer --</option>
+                                                <!-- ✅ CHANGED: Display email instead of username -->
                                                 <option th:each="lecturer : ${availableLecturers}"
                                                         th:value="${lecturer.id}"
-                                                        th:text="${lecturer.username}">Lecturer Name</option>
+                                                        th:text="${lecturer.email}">Lecturer Email</option>
                                             </select>
                                         </div>
 
@@ -171,9 +177,10 @@
                                             <label for="industrialSupervisorId">Industrial Supervisor:</label>
                                             <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
                                                 <option value="">-- Select Supervisor --</option>
+                                                <!-- ✅ CHANGED: Display email instead of username -->
                                                 <option th:each="supervisor : ${availableSupervisors}"
                                                         th:value="${supervisor.id}"
-                                                        th:text="${supervisor.username}">Supervisor Name</option>
+                                                        th:text="${supervisor.email}">Supervisor Email</option>
                                             </select>
                                         </div>
 
@@ -404,13 +411,13 @@
 
 
     /**
-     * Filters the student list table based on the search input value.
+     * ✅ CHANGED: Filters using student-email class instead of student-username
      */
     function filterStudents() {
         const filter = document.getElementById("studentSearch").value.toUpperCase();
         
         studentRows.forEach(row => {
-            const td = row.querySelector(".student-username"); 
+            const td = row.querySelector(".student-email");  // ✅ CHANGED: class name
             let txtValue = td ? td.textContent || td.innerText : '';
             
             if (txtValue.toUpperCase().indexOf(filter) > -1) {

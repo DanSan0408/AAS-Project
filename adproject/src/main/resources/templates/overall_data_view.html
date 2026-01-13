@@ -5,6 +5,7 @@
     <title>Overall Assessment Data</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/overall_data.css}">
+    <link rel="stylesheet" th:href="@{/css/print_overall_data.css}" media="print">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="overall-data-page">
@@ -33,7 +34,8 @@
                     <thead>
                         <tr>
                             <th rowspan="2" class="sticky-col first-col">Team Name</th>
-                            <th rowspan="2" class="sticky-col second-col">Student Name</th>
+                            <!-- ✅ CHANGED: Column header from "Student Name" to "Student Email" -->
+                            <th rowspan="2" class="sticky-col second-col">Student Email</th>
                             <th rowspan="2" class="sticky-col third-col">Factor</th>
                             <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
                             
@@ -68,7 +70,8 @@
                         <tr th:each="student : ${students}">
                             <th:block th:with="data=${studentOverallData[student.id]}">
                                 <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
-                                <td class="sticky-col second-col" th:text="${student.username}"></td>
+                                <!-- ✅ CHANGED: Display email instead of username -->
+                                <td class="sticky-col second-col" th:text="${student.email}"></td>
                                 
                                 <td class="sticky-col third-col">
                                     <span class="factor-badge" 
@@ -119,5 +122,7 @@
             </div>
         </div>
     </div>
+    
 </body>
+
 </html>
