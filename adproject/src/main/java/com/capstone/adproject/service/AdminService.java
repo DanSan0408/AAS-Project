@@ -16,8 +16,15 @@ import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.util.PasswordGenerator;
+import com.capstone.adproject.util.PasswordGenerator;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.UUID;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AdminService {
@@ -25,17 +32,367 @@ public class AdminService {
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final IndustrialSupervisorRepository industrialSupervisorRepository;
+    private final LecturerGroupAssignmentRepository assignmentRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AdminService(StudentRepository studentRepository, LecturerRepository lecturerRepository, IndustrialSupervisorRepository industrialSupervisorRepository, GroupRepository groupRepository, PasswordEncoder passwordEncoder) {
+    public AdminService(
+            StudentRepository studentRepository, 
+            LecturerRepository lecturerRepository, 
+            IndustrialSupervisorRepository industrialSupervisorRepository, 
+            GroupRepository groupRepository, 
+            PasswordEncoder passwordEncoder,
+            LecturerGroupAssignmentRepository assignmentRepository) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.industrialSupervisorRepository = industrialSupervisorRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
+        this.assignmentRepository = assignmentRepository;
     }
+
+    @Autowired
+private EmailService emailService;
+
+    public void saveStudent(Student student, HttpServletRequest request) {
+    // Validate email is provided
+    if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
+    }
+
+    if (student.getId() != null) {
+        // ========== UPDATE EXISTING USER ==========
+        Student existingStudent = studentRepository.findById(student.getId())
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // Keep existing password and flags
+        student.setPassword(existingStudent.getPassword());
+        student.setIsTempPassword(existingStudent.getIsTempPassword());
+        student.setUsername(existingStudent.getUsername()); // Preserve old username
+        student.setResetPasswordToken(existingStudent.getResetPasswordToken());
+        
+        // Update email if changed
+        if (!existingStudent.getEmail().equals(student.getEmail())) {
+            // Email changed - you could optionally send notification here
+            student.setEmail(student.getEmail());
+        }
+        
+    } else {
+        // ========== CREATE NEW USER ==========
+        // Generate secure random password
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        student.setPassword(passwordEncoder.encode(tempPassword));
+        student.setIsTempPassword(true);
+        student.setUsername(null); // No username for new users
+        
+        // Generate reset token for password change
+        String resetToken = UUID.randomUUID().toString();
+        student.setResetPasswordToken(resetToken);
+        
+        // Save first to ensure it persists
+        Student savedStudent = studentRepository.save(student);
+        
+        // Build password reset link
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
+        }
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        // Send welcome email with temporary password
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                student.getEmail(),
+                tempPassword,
+                "Student",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + student.getEmail());
+            e.printStackTrace();
+            // Continue anyway - user created, just email failed
+        }
+        
+        return; // Exit early, already saved
+    }
+    
+    // Save updated user
+    studentRepository.save(student);
+}
+
+/**
+ * ✅ UPDATED: Save lecturer - EMAIL ONLY, auto-generate password for new users
+ */
+public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
+    if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
+    }
+
+    if (lecturer.getId() != null) {
+        // UPDATE
+        Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+        
+        lecturer.setPassword(existingLecturer.getPassword());
+        lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
+        lecturer.setUsername(existingLecturer.getUsername());
+        lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
+        
+    } else {
+        // CREATE
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        lecturer.setPassword(passwordEncoder.encode(tempPassword));
+        lecturer.setIsTempPassword(true);
+        lecturer.setUsername(null);
+        
+        String resetToken = UUID.randomUUID().toString();
+        lecturer.setResetPasswordToken(resetToken);
+        
+        Lecturer savedLecturer = lecturerRepository.save(lecturer);
+        
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
+        }
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                lecturer.getEmail(),
+                tempPassword,
+                "Lecturer",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + lecturer.getEmail());
+            e.printStackTrace();
+        }
+        
+        return;
+    }
+    
+    lecturerRepository.save(lecturer);
+}
+
+/**
+ * ✅ UPDATED: Save industrial supervisor - EMAIL ONLY, auto-generate password
+ */
+public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
+    if (supervisor.getEmail() == null || supervisor.getEmail().trim().isEmpty()) {
+        throw new RuntimeException("Email is required");
+    }
+
+    if (supervisor.getId() != null) {
+        // UPDATE
+        IndustrialSupervisor existing = industrialSupervisorRepository.findById(supervisor.getId())
+            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+        
+        supervisor.setPassword(existing.getPassword());
+        supervisor.setIsTempPassword(existing.getIsTempPassword());
+        supervisor.setUsername(existing.getUsername());
+        supervisor.setResetPasswordToken(existing.getResetPasswordToken());
+        
+    } else {
+        // CREATE
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        supervisor.setPassword(passwordEncoder.encode(tempPassword));
+        supervisor.setIsTempPassword(true);
+        supervisor.setUsername(null);
+        
+        String resetToken = UUID.randomUUID().toString();
+        supervisor.setResetPasswordToken(resetToken);
+        
+        IndustrialSupervisor saved = industrialSupervisorRepository.save(supervisor);
+        
+        String applicationUrl = request.getScheme() + "://" + request.getServerName();
+        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+            applicationUrl += ":" + request.getServerPort();
+        }
+        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+        
+        try {
+            emailService.sendWelcomeEmailWithPassword(
+                supervisor.getEmail(),
+                tempPassword,
+                "Industrial Supervisor",
+                resetLink
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email to: " + supervisor.getEmail());
+            e.printStackTrace();
+        }
+        
+        return;
+    }
+    
+    industrialSupervisorRepository.save(supervisor);
+}
+
+// ==========================================
+// 🔍 UPDATED DUPLICATE CHECKERS - EMAIL ONLY
+// ==========================================
+
+/**
+ * ✅ UPDATED: Check student email duplicate (removed username checking)
+ */
+public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<Student> allStudents = studentRepository.findAll();
+    
+    for (Student student : allStudents) {
+        if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
+        if (student.getEmail() != null) {
+            String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * ✅ UPDATED: Check lecturer email duplicate
+ */
+public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<Lecturer> allLecturers = lecturerRepository.findAll();
+    
+    for (Lecturer lecturer : allLecturers) {
+        if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
+        if (lecturer.getEmail() != null) {
+            String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * ✅ UPDATED: Check supervisor email duplicate
+ */
+public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
+        return "Email is required";
+    }
+    
+    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
+    List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
+    
+    for (IndustrialSupervisor supervisor : allSupervisors) {
+        if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
+        if (supervisor.getEmail() != null) {
+            String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
+            if (existingNormalized.equals(normalizedEmail)) {
+                return "Email '" + email + "' is already registered";
+            }
+        }
+    }
+    return null;
+}
+
+    // ==========================================
+    // 🗑️ DELETE METHODS (Safe & Transactional)
+    // ==========================================
+
+    @Transactional
+    public void deleteStudentById(Long id) {
+        Student student = studentRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // 1. Remove from Group 
+        if (student.getGroup() != null) {
+            removeStudentFromGroup(id);
+        }
+
+        // 2. Cleanup dependencies
+        studentRepository.deleteCalculatedResultsByStudentId(id);
+        studentRepository.deleteCommentsByStudentId(id);
+        studentRepository.deleteMarksReceivedByStudent(id);
+        studentRepository.deleteMarksGivenByStudent(id);
+        studentRepository.deleteOverridesByStudent(id);
+
+        // 3. Delete Student
+        studentRepository.delete(student);
+    }
+
+    @Transactional
+    public void deleteLecturerById(Long id) {
+        Lecturer lecturer = lecturerRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+
+        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
+        lecturerRepository.unlinkFromGroups(id);
+
+        // 2. Delete assignments (LecturerGroupAssignment)
+        lecturerRepository.deleteGroupAssignments(id);
+
+        // 3. Delete Marks given by this lecturer
+        lecturerRepository.deleteMarksGiven(id);
+        
+        // 4. Delete comments given by this lecturer
+        lecturerRepository.deleteCommentsByLecturer(id);
+
+        // 5. Delete Lecturer
+        lecturerRepository.delete(lecturer);
+    }
+
+    @Transactional
+    public void deleteIndustrialSupervisorById(Long id) {
+        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
+
+        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
+        industrialSupervisorRepository.unlinkFromGroups(id);
+
+        // 2. Delete Marks given by this supervisor
+        industrialSupervisorRepository.deleteMarksGiven(id);
+        
+        // 3. Delete comments given by this supervisor
+        industrialSupervisorRepository.deleteCommentsBySupervisor(id);
+
+        // 4. Delete Supervisor
+        industrialSupervisorRepository.delete(supervisor);
+    }
+
+    @Transactional
+    public void deleteStudentsByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteStudentById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteLecturersByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteLecturerById(id);
+        }
+    }
+
+    @Transactional
+    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
+        if (ids == null) return;
+        for (Long id : ids) {
+            deleteIndustrialSupervisorById(id);
+        }
+    }
+
+    // ==========================================
+    // 👥 GROUP MANAGEMENT
+    // ==========================================
 
     public List<Student> getStudentsWithoutGroup() {
         return studentRepository.findByGroupIsNull();
@@ -55,33 +412,25 @@ public class AdminService {
 
     @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
-        // 1. Create the new Group entity
         Group newGroup = new Group();
         newGroup.setGroupName(dto.getGroupName());
 
-        // 2. Assign Supervisors/Lecturer
         lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
         industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
 
-        // Save the group first to generate its ID
         Group savedGroup = groupRepository.save(newGroup);
 
-        // 3. Assign the Group to the selected Students
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
 
             for (Student student : studentsToAssign) {
-                // Set the group FK on the student
                 student.setGroup(savedGroup);
             }
-            // Save all modified students
             studentRepository.saveAll(studentsToAssign);
 
-            // 4. Update the actual group size
             savedGroup.setGroupSize(studentsToAssign.size());
-            groupRepository.save(savedGroup); // Save again to update the size
+            groupRepository.save(savedGroup);
         } else {
-            // If no students are selected, set size to 0 and save
             savedGroup.setGroupSize(0);
             groupRepository.save(savedGroup);
         }
@@ -92,19 +441,25 @@ public class AdminService {
         Group existingGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
-        // 1. Update Group Name and Supervisors
         existingGroup.setGroupName(dto.getGroupName());
-        lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
-        industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
         
-        // Save the group changes
+        if (dto.getAcademicSupervisorId() != null) {
+            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
+        } else {
+            existingGroup.setAcademicSupervisor(null);
+        }
+        
+        if (dto.getIndustrialSupervisorId() != null) {
+            industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+        } else {
+            existingGroup.setIndustrialSupervisor(null);
+        }
+        
         groupRepository.save(existingGroup);
 
-        // 2. Add NEW Students to the existing group
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> newStudentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
             
-            // Only students without a group will be added (prevent duplicates)
             List<Student> studentsToSave = newStudentsToAssign.stream()
                 .filter(student -> student.getGroup() == null)
                 .peek(student -> student.setGroup(existingGroup))
@@ -113,12 +468,7 @@ public class AdminService {
             studentRepository.saveAll(studentsToSave);
         }
         
-        // 3. Recalculate and update the group size
-        // This is necessary because students may have been added or removed in this or prior actions.
-        // NOTE: This logic seems to be for *adding* students to an existing group, not for full edit/replacement. 
-        // For randomization, we generally replace.
-        // Keeping it for consistency with your existing updateGroup.
-        long currentGroupSize = studentRepository.countByGroup(existingGroup); // Assuming you add countByGroup to StudentRepository
+        long currentGroupSize = studentRepository.countByGroup(existingGroup);
         existingGroup.setGroupSize((int) currentGroupSize);
         groupRepository.save(existingGroup);
     }
@@ -131,10 +481,9 @@ public class AdminService {
         Group group = student.getGroup();
         
         if (group != null) {
-            student.setGroup(null); // Remove the student from the group
+            student.setGroup(null);
             studentRepository.save(student);
             
-            // Recalculate and update group size
             long currentGroupSize = studentRepository.countByGroup(group);
             group.setGroupSize((int) currentGroupSize);
             groupRepository.save(group);
@@ -143,24 +492,25 @@ public class AdminService {
     
     @Transactional
     public void deleteGroupById(Long groupId) {
-        // 1. Find the group or throw an exception if not found
         Group groupToDelete = groupRepository.findById(groupId)
             .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
         
-        // 2. Find all students currently assigned to this group (using the helper method or a direct repository call)
         List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
-        
-        // 3. Unlink students from the group (set group FK to null)
         for (Student student : studentsToUnlink) {
             student.setGroup(null);
         }
-        // Save all modified students
         studentRepository.saveAll(studentsToUnlink);
         
-        // 4. Delete the group itself.
+        assignmentRepository.deleteByGroup(groupToDelete);
+        assignmentRepository.flush(); 
+        
         groupRepository.delete(groupToDelete);
     }
-    
+
+    // ==========================================
+    // 🔍 SEARCH & HELPERS
+    // ==========================================
+
     public List<Student> getAllStudents() {
         return studentRepository.findAllWithGroupEagerly();
     }
@@ -185,65 +535,6 @@ public class AdminService {
         return industrialSupervisorRepository.findById(id);
     }
 
-    public void saveStudent(Student student) {
-    if (student.getPassword() != null && !student.getPassword().isEmpty()) {
-        student.setPassword(passwordEncoder.encode(student.getPassword()));
-    } else {
-        studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setPassword(existingStudent.getPassword()));
-    }
-    
-    // START: Added logic to retain existing email if the submitted one is blank/null
-    if (student.getId() != null && (student.getEmail() == null || student.getEmail().isEmpty())) {
-        studentRepository.findById(student.getId()).ifPresent(existingStudent -> student.setEmail(existingStudent.getEmail()));
-    }
-    // END: Added logic
-    
-    studentRepository.save(student);
-}
-
-    public void saveLecturer(Lecturer lecturer) {
-    if (lecturer.getPassword() != null && !lecturer.getPassword().isEmpty()) {
-        lecturer.setPassword(passwordEncoder.encode(lecturer.getPassword()));
-    } else {
-        lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setPassword(existingLecturer.getPassword()));
-    }
-    
-    // START: Added logic to retain existing email if the submitted one is blank/null
-    if (lecturer.getId() != null && (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
-        lecturerRepository.findById(lecturer.getId()).ifPresent(existingLecturer -> lecturer.setEmail(existingLecturer.getEmail()));
-    }
-    // END: Added logic
-    
-    lecturerRepository.save(lecturer);
-}
-    public void saveIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
-    if (industrialSupervisor.getPassword() != null && !industrialSupervisor.getPassword().isEmpty()) {
-        industrialSupervisor.setPassword(passwordEncoder.encode(industrialSupervisor.getPassword()));
-    } else {
-        industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setPassword(existingSupervisor.getPassword()));
-    }
-
-    // START: Added logic to retain existing email if the submitted one is blank/null
-    if (industrialSupervisor.getId() != null && (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) {
-        industrialSupervisorRepository.findById(industrialSupervisor.getId()).ifPresent(existingSupervisor -> industrialSupervisor.setEmail(existingSupervisor.getEmail()));
-    }
-    // END: Added logic
-    
-    industrialSupervisorRepository.save(industrialSupervisor);
-}
-
-    public void deleteStudentById(Long id) {
-        studentRepository.deleteById(id);
-    }
-
-    public void deleteLecturerById(Long id) {
-        lecturerRepository.deleteById(id);
-    }
-
-    public void deleteIndustrialSupervisorById(Long id) {
-        industrialSupervisorRepository.deleteById(id);
-    }
-
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
             return studentRepository.findByGroupIsNullAndUsernameContainingIgnoreCase(searchTerm);
@@ -251,50 +542,30 @@ public class AdminService {
         return studentRepository.findByGroupIsNull(); 
     }
 
-    // REMOVED: public List<GroupAssignmentDto> generateRandomGroups(int numberOfGroups) {...}
-    
-    /**
-     * NEW: Gathers all unassigned students into a single DTO for preview and editing.
-     * The students are NOT shuffled, as shuffling is unnecessary if all are in one group.
-     * @return A single GroupAssignmentDto with all unassigned student IDs.
-     */
     public GroupAssignmentDto generateSingleRandomGroup() {
         List<Student> availableStudents = studentRepository.findByGroupIsNull();
         
         GroupAssignmentDto dto = new GroupAssignmentDto();
-        dto.setGroupName("Random Group (Ready to Edit)"); // Default name
+        dto.setGroupName("Random Group (Ready to Edit)");
         
         List<Long> studentIds = availableStudents.stream()
-                                         .map(Student::getId)
-                                         .collect(Collectors.toList());
+                                                 .map(Student::getId)
+                                                 .collect(Collectors.toList());
 
         dto.setSelectedStudentIds(studentIds);
         return dto;
     }
 
-    // REMOVED: public void createGroupsFromDtoList(List<GroupAssignmentDto> groups) {...}
-
-    /**
-     * NEW: Persists a single GroupAssignmentDto object to the database.
-     * @param group The single DTO representing the group to be created.
-     * @return The number of groups created (1 or 0).
-     */
     @Transactional
     public int createSingleGroupFromRandomization(GroupAssignmentDto group) {
         if (group == null) {
             return 0;
         }
-        // Re-use the existing logic for creating and assigning a single group
         assignStudentsToNewGroup(group);
         return 1;
     }
 
     public long getAvailableStudentsCount() {
-        // Assuming this method exists in StudentRepository (e.g., long countByGroupIsNull();)
         return studentRepository.countByGroupIsNull(); 
     }
-    
-    // REMOVED: public int createGroupsFromRandomization(List<GroupAssignmentDto> groups) {...}
-
-    
 }

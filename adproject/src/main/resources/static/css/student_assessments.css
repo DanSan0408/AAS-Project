@@ -1,0 +1,308 @@
+/* =======================================================
+   STUDENT ASSESSMENTS - IRON BURGUNDY & GOLD THEME
+   Matches student_comments.css style guide
+   ======================================================= */
+
+:root {
+    --student-primary: #7A1E2D;    /* Iron Burgundy */
+    --student-secondary: #3F3F46;  /* Graphite Grey */
+    --student-accent: #F8A617;     /* Gold */
+    --student-background: #F4F2EE; /* Light Sand Grey */
+    --student-success: #4CAF7D;    /* Green */
+    --student-text: #FAFAFA;       /* Off White */
+    --student-text-dark: #2B2B2B;  /* Dark Text */
+    --student-surface: #FFFFFF;    /* White */
+    --student-border: #D4D1CC;     /* Muted Sand */
+    --student-hover: #EDEAE6;      /* Darker Sand for hovers */
+    --student-alert: #8B1E1E;      /* Dark Red */
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: var(--student-background);
+    margin: 0;
+    padding: 0;
+    color: var(--student-text-dark);
+}
+
+/* ==================== LAYOUT ==================== */
+.main-content {
+    margin-left: 270px; /* Matches Sidebar width */
+    padding: 40px;
+    min-height: 100vh;
+    background-color: var(--student-background);
+}
+
+.content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* ==================== HEADER ==================== */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    width:100%;
+}
+
+.header-container img { 
+    max-width: 200px; 
+    height: auto; 
+}
+
+.header-container h1 { 
+    margin: 0; 
+    color: var(--student-primary); 
+    font-size: 2.2rem; 
+    font-weight: 700; 
+}
+
+/* ==================== SECTIONS (CARDS) ==================== */
+.group-section, .assessments-section {
+    background-color: var(--student-surface);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.1); /* Burgundy Tint Shadow */
+    border: 1px solid var(--student-border);
+}
+
+.group-section h2, .assessments-section h2 {
+    color: var(--student-primary);
+    border-bottom: 2px solid var(--student-accent);
+    padding-bottom: 15px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.6em;
+    font-weight: 700;
+}
+
+/* ==================== MEMBER CARDS ==================== */
+.members-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+.member-card {
+    background-color: var(--student-hover);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid var(--student-border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.member-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(122, 30, 45, 0.1);
+    border-color: var(--student-accent);
+}
+
+.member-icon {
+    font-size: 24px;
+    color: var(--student-secondary);
+}
+
+.member-name {
+    font-weight: 600;
+    color: var(--student-text-dark);
+}
+
+.you-badge {
+    background-color: var(--student-accent);
+    color: var(--student-text-dark);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* ==================== ASSESSMENT BLOCKS ==================== */
+.assessment-block {
+    background-color: var(--student-surface);
+    border: 1px solid var(--student-border);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.assessment-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.assessment-title h3 {
+    margin: 0;
+    color: var(--student-primary);
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.marks-badge {
+    background-color: var(--student-hover);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    color: var(--student-secondary);
+    border: 1px solid var(--student-border);
+}
+
+.marks-badge strong { color: var(--student-primary); }
+
+/* Deadline Info */
+.deadline-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: #FFFDF9; /* Very light gold tint */
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid var(--student-border);
+}
+
+.deadline-info i {
+    font-size: 1.5em;
+    color: var(--student-accent);
+}
+
+.deadline-details p { margin: 2px 0; font-size: 0.95em; }
+.deadline-status.status-open {
+    background-color: var(--student-success);
+    color: var(--student-text);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: 700;
+    font-size: 0.8em;
+    margin-left: auto;
+}
+
+/* ==================== EVALUATION CARDS ==================== */
+.evaluation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.evaluation-grid h4 {
+    grid-column: 1 / -1;
+    margin: 0 0 10px 0;
+    color: var(--student-secondary);
+}
+
+.evaluation-card {
+    background-color: var(--student-surface);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--student-border);
+    box-shadow: 0 2px 8px rgba(122, 30, 45, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Specific Card Styling */
+.evaluation-card.self-assessment { border-top: 4px solid var(--student-accent); }
+.evaluation-card.peer-assessment { border-top: 4px solid var(--student-secondary); }
+.evaluation-card.team-assessment { border-top: 4px solid var(--student-primary); }
+
+.evaluation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--student-hover);
+}
+
+.evaluation-header h5 {
+    margin: 0;
+    font-size: 1.1em;
+    color: var(--student-text-dark);
+}
+
+/* Badges */
+.assessment-type-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+.assessment-type-badge.self { background-color: var(--student-accent); color: var(--student-text-dark); }
+.assessment-type-badge.peer { background-color: var(--student-secondary); color: var(--student-text); }
+.assessment-type-badge.team { background-color: var(--student-primary); color: var(--student-text); }
+
+/* Member Rows inside Cards */
+.member-eval {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--student-hover);
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.btn-evaluate {
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-weight: 600;
+    font-size: 0.85em;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+}
+
+.btn-self { background-color: var(--student-accent); color: var(--student-text-dark); }
+.btn-self:hover { background-color: #E0920D; }
+
+.btn-peer { background-color: var(--student-secondary); color: var(--student-text); }
+.btn-peer:hover { background-color: #2B2B2B; }
+
+/* Team Button */
+.evaluation-card.team-assessment .btn-evaluate {
+    width: 100%;
+    justify-content: center;
+    background-color: var(--student-primary);
+    color: var(--student-text);
+    padding: 10px;
+    margin-top: auto;
+}
+.evaluation-card.team-assessment .btn-evaluate:hover { background-color: #5C1621; }
+
+/* Alerts */
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.alert-danger { background-color: #FDEDED; color: var(--student-alert); border: 1px solid #FABDBD; }
+.alert-success { background-color: #EDF7ED; color: var(--student-success); border: 1px solid #C3E6CB; }
+
+@media (max-width: 900px) {
+    .main-content { margin-left: 0; padding: 20px; }
+    .evaluation-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,603 @@
+/* =======================================================
+   ASSESSMENT DATA VIEW - Professional Maroon Theme
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-background: #F4F2EE;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-success: #059669;
+    --color-info: #3498db;
+    --color-warning: #f39c12;
+    --color-group: #3498db;
+    --color-individual: #27ae60;
+}
+
+* { box-sizing: border-box; }
+
+body.data-view-page {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+body.data-view-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* Header */
+body.data-view-page .header-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.data-view-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.data-view-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
+
+/* Data Container */
+body.data-view-page .data-container {
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+/* Page Header Card */
+body.data-view-page .page-header {
+    background-color: var(--color-surface) !important;
+    padding: 20px 30px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+    margin-bottom: 25px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .page-header h2 {
+    color: var(--color-primary) !important;
+    margin: 0 0 5px 0 !important;
+    font-size: 1.5rem !important;
+}
+
+body.data-view-page .assessment-meta {
+    color: #666 !important;
+    font-size: 0.95rem !important;
+}
+
+body.data-view-page .meta-separator { margin: 0 10px !important; color: #ccc !important; }
+
+/* Action Buttons */
+body.data-view-page .action-buttons {
+    display: flex !important;
+    gap: 10px !important;
+}
+
+/* Filter Card */
+body.data-view-page .filter-card {
+    background-color: var(--color-surface) !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+    margin-bottom: 25px !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .filter-card h3 {
+    margin: 0 0 15px 0 !important;
+    font-size: 1.1rem !important;
+    color: var(--color-secondary) !important;
+}
+
+body.data-view-page .group-selector {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+body.data-view-page select {
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--color-border) !important;
+    min-width: 250px !important;
+    font-size: 1rem !important;
+}
+
+/* Evaluators Card */
+body.data-view-page .evaluators-card {
+    background-color: #f8fafc !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+    margin-bottom: 30px !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .evaluators-card h3 {
+    margin: 0 0 15px 0 !important;
+    font-size: 1.1rem !important;
+    color: var(--color-secondary) !important;
+}
+
+body.data-view-page .evaluators-card .highlight {
+    color: var(--color-primary) !important;
+    font-weight: 600 !important;
+}
+
+body.data-view-page .evaluator-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    gap: 15px !important;
+}
+
+body.data-view-page .evaluator-item {
+    background-color: white !important;
+    padding: 10px 15px !important;
+    border-radius: 6px !important;
+    border-left: 4px solid var(--color-info) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+}
+
+body.data-view-page .evaluator-name { 
+    font-weight: 600 !important; 
+    color: var(--color-primary) !important; 
+    margin-bottom: 4px !important;
+}
+
+body.data-view-page .evaluator-role {
+    margin-top: 5px !important;
+}
+
+body.data-view-page .role-badge {
+    display: inline-block !important;
+    padding: 3px 8px !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+
+body.data-view-page .badge-lecturer {
+    background-color: #3498db !important;
+    color: white !important;
+}
+
+body.data-view-page .badge-supervisor {
+    background-color: #e67e22 !important;
+    color: white !important;
+}
+
+body.data-view-page .badge-student {
+    background-color: #2ecc71 !important;
+    color: white !important;
+}
+
+body.data-view-page .empty-message {
+    text-align: center !important;
+    padding: 20px !important;
+    color: #999 !important;
+    font-style: italic !important;
+}
+
+/* Student Card */
+body.data-view-page .student-card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    margin-bottom: 30px !important;
+    border: 1px solid var(--color-border) !important;
+    overflow: hidden !important;
+}
+
+body.data-view-page .student-header {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    padding: 15px 25px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+body.data-view-page .student-header h3 { 
+    margin: 0 !important; 
+    font-size: 1.2rem !important; 
+}
+
+body.data-view-page .student-details {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    font-size: 0.9rem !important;
+}
+
+body.data-view-page .detail-badge {
+    background-color: rgba(255,255,255,0.2) !important;
+    padding: 4px 10px !important;
+    border-radius: 4px !important;
+    font-size: 0.9rem !important;
+}
+
+body.data-view-page .detail-badge.warning { 
+    background-color: var(--color-warning) !important; 
+    color: #fff !important; 
+}
+
+/* Table Responsive */
+body.data-view-page .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Data Table */
+body.data-view-page .data-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+body.data-view-page .data-table th {
+    background-color: #f1f5f9 !important;
+    color: var(--color-secondary) !important;
+    font-weight: 600 !important;
+    padding: 12px !important;
+    text-align: left !important;
+    border-bottom: 2px solid var(--color-border) !important;
+    font-size: 0.9rem !important;
+}
+
+body.data-view-page .data-table td {
+    padding: 12px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    vertical-align: top !important;
+    font-size: 0.95rem !important;
+}
+
+body.data-view-page .text-center {
+    text-align: center !important;
+}
+
+body.data-view-page .vertical-middle {
+    vertical-align: middle !important;
+}
+
+body.data-view-page .section-header-row td {
+    background-color: #f8fafc !important;
+    font-weight: 700 !important;
+    color: var(--color-info) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    padding-top: 20px !important;
+    padding-bottom: 12px !important;
+}
+
+body.data-view-page .rubric-row {
+    background-color: #fafafa !important;
+}
+
+body.data-view-page .rubric-title {
+    font-weight: 600 !important;
+    color: var(--color-primary) !important;
+    background-color: #fff !important;
+    font-size: 1rem !important;
+}
+
+body.data-view-page .rubric-title small {
+    color: #999 !important;
+    font-weight: 400 !important;
+    margin-left: 8px !important;
+}
+
+body.data-view-page .sub-rubric-row {
+    background-color: white !important;
+}
+
+body.data-view-page .sub-name { 
+    font-weight: 500 !important; 
+    color: var(--color-secondary) !important;
+    margin-bottom: 4px !important;
+}
+
+body.data-view-page .sub-desc { 
+    font-size: 0.85rem !important; 
+    color: #999 !important; 
+    font-style: italic !important; 
+}
+
+body.data-view-page .badge-clo {
+    background-color: var(--color-secondary) !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    display: inline-block !important;
+}
+
+body.data-view-page .rating-list,
+body.data-view-page .calc-list,
+body.data-view-page .comments-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+body.data-view-page .rating-item {
+    font-size: 0.9rem !important;
+}
+
+body.data-view-page .big-score { 
+    font-size: 1.2rem !important; 
+    font-weight: 700 !important; 
+    color: var(--color-secondary) !important; 
+}
+
+body.data-view-page .final-score { 
+    font-size: 1.3rem !important; 
+    font-weight: 700 !important; 
+    color: var(--color-success) !important; 
+}
+
+/* Mark Display Styles for Raw/Weighted Marks */
+body.data-view-page .mark-display {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 5px 0 !important;
+}
+
+body.data-view-page .raw-mark,
+body.data-view-page .weighted-mark {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+body.data-view-page .mark-label {
+    font-size: 0.75rem !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 600 !important;
+}
+
+body.data-view-page .mark-value {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: var(--color-secondary) !important;
+}
+
+body.data-view-page .mark-value-final {
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    color: var(--color-success) !important;
+}
+
+body.data-view-page .raw-mark {
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+body.data-view-page .bg-highlight { 
+    background-color: #f0fdf4 !important; 
+}
+
+body.data-view-page .border-left { 
+    border-left: 1px solid var(--color-border) !important; 
+}
+
+body.data-view-page .summary-section {
+    padding: 15px 25px !important;
+    background-color: #f8fafc !important;
+    border-top: 2px solid var(--color-border) !important;
+    text-align: right !important;
+}
+
+body.data-view-page .summary-row {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 20px !important;
+    align-items: center !important;
+    margin-bottom: 8px !important;
+}
+
+body.data-view-page .summary-row.total {
+    font-size: 1.4rem !important;
+    color: var(--color-primary) !important;
+    font-weight: 700 !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
+    border-top: 2px solid var(--color-border) !important;
+}
+
+/* ✅ NEW: Overall Assessment Comments Styles */
+body.data-view-page .overall-comments-section {
+    padding: 25px !important;
+    background-color: #f8fafc !important;
+    border-top: 3px solid var(--color-border) !important;
+}
+
+body.data-view-page .comments-block {
+    background-color: white !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .comments-block:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.data-view-page .group-comments {
+    border-left: 4px solid var(--color-group) !important;
+}
+
+body.data-view-page .individual-comments {
+    border-left: 4px solid var(--color-individual) !important;
+}
+
+body.data-view-page .comments-block h4 {
+    margin: 0 0 15px 0 !important;
+    color: var(--color-secondary) !important;
+    font-size: 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body.data-view-page .group-comments h4 {
+    color: var(--color-group) !important;
+}
+
+body.data-view-page .individual-comments h4 {
+    color: var(--color-individual) !important;
+}
+
+body.data-view-page .comment-group {
+    margin-bottom: 15px !important;
+    padding: 12px !important;
+    background-color: #f9fafb !important;
+    border-radius: 6px !important;
+}
+
+body.data-view-page .comment-group:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.data-view-page .comment-group .evaluator-name {
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
+    margin-bottom: 8px !important;
+    font-size: 0.95rem !important;
+}
+
+body.data-view-page .comment-group .comment-item {
+    margin-bottom: 8px !important;
+}
+
+body.data-view-page .comment-group .comment-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.data-view-page .comment-group .comment-item p {
+    margin: 0 !important;
+    padding: 8px 12px !important;
+    background-color: white !important;
+    border-radius: 4px !important;
+    border-left: 3px solid var(--color-info) !important;
+    color: var(--color-secondary) !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+}
+
+body.data-view-page .comment-text {
+    margin-top: 4px !important;
+}
+
+/* Empty State */
+body.data-view-page .empty-state {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.data-view-page .empty-state i {
+    font-size: 4rem !important;
+    color: #ccc !important;
+    margin-bottom: 20px !important;
+}
+
+body.data-view-page .empty-state p {
+    color: #999 !important;
+    font-size: 1.1rem !important;
+}
+
+/* Buttons */
+body.data-view-page .btn {
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+body.data-view-page .btn-primary { 
+    background-color: var(--color-primary) !important; 
+    color: white !important; 
+}
+
+body.data-view-page .btn-primary:hover {
+    background-color: #6B0021 !important;
+}
+
+body.data-view-page .btn-secondary { 
+    background-color: var(--color-secondary) !important; 
+    color: white !important; 
+}
+
+body.data-view-page .btn-secondary:hover {
+    background-color: #52525B !important;
+}
+
+/* Print Styles */
+@media print {
+    body.data-view-page .sidebar, 
+    body.data-view-page .action-buttons, 
+    body.data-view-page .filter-card {
+        display: none !important;
+    }
+    
+    body.data-view-page .main-content {
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+    
+    body.data-view-page .student-card {
+        page-break-inside: avoid !important;
+        margin-bottom: 20px !important;
+    }
+    
+    body.data-view-page .data-table {
+        font-size: 0.85rem !important;
+    }
+    
+    body.data-view-page .mark-display {
+        gap: 4px !important;
+    }
+    
+    body.data-view-page .mark-label {
+        font-size: 0.65rem !important;
+    }
+    
+    body.data-view-page .mark-value,
+    body.data-view-page .mark-value-final {
+        font-size: 0.9rem !important;
+    }
+    
+    body.data-view-page .overall-comments-section {
+        page-break-inside: avoid !important;
+    }
+    
+    body.data-view-page .comments-block {
+        page-break-inside: avoid !important;
+    }
+}

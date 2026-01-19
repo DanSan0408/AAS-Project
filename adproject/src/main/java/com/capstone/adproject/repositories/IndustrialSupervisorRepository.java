@@ -1,10 +1,14 @@
 package com.capstone.adproject.repositories;
 
-import com.capstone.adproject.model.IndustrialSupervisor;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.capstone.adproject.model.IndustrialSupervisor;
 
 @Repository
 public interface IndustrialSupervisorRepository extends JpaRepository<IndustrialSupervisor, Long> {
@@ -12,6 +16,24 @@ public interface IndustrialSupervisorRepository extends JpaRepository<Industrial
 
     Optional<IndustrialSupervisor> findByEmail(String email);
 
-    // **New Method for Forgot Password - Find by Token**
     Optional<IndustrialSupervisor> findByResetPasswordToken(String resetPasswordToken);
+    
+    boolean existsByUsername(String username);
+    
+    boolean existsByEmail(String email);
+
+    // --- CLEANUP METHODS FOR SAFE DELETION ---
+    
+    @Modifying
+    @Query("UPDATE Group g SET g.industrialSupervisor = null WHERE g.industrialSupervisor.id = :supervisorId")
+    void unlinkFromGroups(@Param("supervisorId") Long supervisorId);
+
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.supervisorId = :supervisorId")
+    void deleteMarksGiven(@Param("supervisorId") Long supervisorId);
+
+    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :supervisorId AND ac.evaluatorType = 'SUPERVISOR'")
+    void deleteCommentsBySupervisor(@Param("supervisorId") Long supervisorId);
 }

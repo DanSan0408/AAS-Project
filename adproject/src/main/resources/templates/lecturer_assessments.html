@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assess Students</title>
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_assessments.css}">
+</head>
+<body class="lecturer-page">
+    <div th:replace="fragments/lecturer_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="rubric-section">
+                <h2>ASSESS STUDENTS</h2>
+
+                <div th:if="${successMessage}" class="alert alert-success">
+                    <span th:text="${successMessage}"></span>
+                </div>
+
+                <div th:if="${errorMessage}" class="alert alert-error">
+                    <span th:text="${errorMessage}"></span>
+                </div>
+
+                <div th:if="${assessments.isEmpty()}" class="no-assessments">
+                    <p>No assessments available for evaluation at this time.</p>
+                </div>
+
+                <div th:each="assessment : ${assessments}" class="assessment-card">
+                    <h3 th:text="${assessment.title}">Assessment Title</h3>
+                    
+                    <!-- ✅ Show status badge -->
+                    <div class="status-container">
+                        <span th:if="${openAssessmentIds.contains(assessment.id)}" 
+                              class="status-badge status-open">
+                            ● OPEN
+                        </span>
+                        <span th:unless="${openAssessmentIds.contains(assessment.id)}" 
+                              class="status-badge status-closed">
+                            ● CLOSED
+                        </span>
+                    </div>
+                    
+                    <div class="assessment-details">
+                        <p><strong>Total Marks:</strong> 
+                            <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
+                        </p>
+                        
+                        <div th:if="${!assessment.cloMarks.isEmpty()}">
+                            <p><strong>CLO Distribution:</strong></p>
+                            <ul>
+                                <li th:each="clo : ${assessment.cloMarks}">
+                                    CLO <span th:text="${clo.key}">1</span>: 
+                                    <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span> marks
+                                </li>
+                            </ul>
+                        </div>
+
+                        <p><strong>Components:</strong></p>
+                        <ul>
+                            <li th:if="${!assessment.rubrics.isEmpty()}">
+                                <span th:text="${assessment.rubrics.size()}">0</span> Rubric(s)
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ✅ FIXED: Changed from select-rubric-type to select-group -->
+                    <a th:if="${openAssessmentIds.contains(assessment.id)}"
+                       th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
+                       class="btn-evaluate">
+                        Start Assessment
+                    </a>
+                    
+                    <!-- ✅ Show disabled button if closed -->
+                    <button th:unless="${openAssessmentIds.contains(assessment.id)}"
+                            class="btn-evaluate btn-disabled" 
+                            disabled>
+                        Assessment Closed
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .status-container {
+            margin: 10px 0;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-open {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .status-closed {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-disabled {
+            background-color: #7f8c8d !important;
+            color: #bdc3c7 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        
+        .btn-disabled:hover {
+            background-color: #7f8c8d !important;
+            transform: none !important;
+        }
+    </style>
+</body>
+</html>

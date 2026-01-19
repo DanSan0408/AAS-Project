@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluate Groups - Industrial Supervisor</title>
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/supervisor_group.css}">
+</head>
+<body class="supervisor-page">
+    
+    <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+        
+        <div class="groups-container">
+            
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
+            
+            <div class="page-header-wrapper">
+                <h2 class="page-title">Evaluate Assigned Groups</h2>
+                <p class="page-subtitle">Select a group to begin or continue your evaluation.</p>
+            </div>
+            
+            <div th:if="${assignedGroups == null or #lists.isEmpty(assignedGroups)}" class="no-groups">
+                <div class="no-groups-icon">📋</div>
+                <p class="no-groups-text">You have no groups assigned yet. Please contact the administrator.</p>
+            </div>
+            
+            <div th:if="${assignedGroups != null and !#lists.isEmpty(assignedGroups)}" class="groups-grid">
+                
+                <div th:each="group : ${assignedGroups}" class="group-card">
+                    <div class="group-card-header">
+                        <h3 class="group-name" th:text="${group.groupName}">Group Name</h3>
+                        
+                        <span th:with="progress=${groupProgress.get(group.id)}"
+                              th:class="${'progress-badge badge-' + 
+                                  (progress.status == 'COMPLETED' ? 'completed' : 
+                                   progress.status == 'IN_PROGRESS' ? 'in-progress' : 'not-started')}"
+                              th:text="${progress.status == 'COMPLETED' ? '✓ Completed' : 
+                                         progress.status == 'IN_PROGRESS' ? '⏳ In Progress' : '○ Not Started'}">
+                            Not Started
+                        </span>
+                    </div>
+                    
+                    <div class="group-info">
+                        <div class="info-item">
+                            <span class="info-label"><i class="fas fa-users"></i> Group Size:</span>
+                            <span th:text="${#lists.size(group.students)}">0</span>
+                        </div>
+                        <div class="info-item" th:if="${group.academicSupervisor != null}">
+                            <span class="info-label"><i class="fas fa-chalkboard-teacher"></i> Supervisor:</span>
+                            <span th:text="${group.academicSupervisor.email}">N/A</span>
+                        </div>
+                        <div th:with="progress=${groupProgress.get(group.id)}" class="info-item">
+                            <span class="info-label"><i class="fas fa-check-double"></i> Evaluated:</span>
+                            <span th:text="${progress.studentsEvaluated + ' / ' + progress.totalStudents}">0 / 0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="students-section" th:if="${group.students != null and !#lists.isEmpty(group.students)}">
+                        <h4 class="students-title">Group Members:</h4>
+                        <ul class="student-list">
+                            <li th:each="student : ${group.students}" class="student-item">
+                                <span class="student-avatar" th:text="${#strings.substring(student.email,0,1)}">S</span>
+                                <span th:text="${student.email}">Student Email</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <a th:href="@{/supervisor/evaluate/group/{groupId}(groupId=${group.id})}" 
+                           th:with="progress=${groupProgress.get(group.id)}"
+                           th:class="${'evaluate-btn ' + 
+                               (progress.status == 'COMPLETED' ? 'btn-completed' : 
+                                progress.status == 'IN_PROGRESS' ? 'btn-in-progress' : 'btn-start')}"
+                           th:text="${progress.status == 'COMPLETED' ? 'Review / Re-evaluate' : 
+                                      progress.status == 'IN_PROGRESS' ? 'Continue Evaluation' : 'Start Evaluation'}">
+                            Start Evaluation
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>

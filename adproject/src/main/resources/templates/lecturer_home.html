@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lecturer Home</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <div th:replace="fragments/common_sidebar :: sidebar"></div> 
+<body class="lecturer-page">
+    <div th:replace="fragments/lecturer_sidebar :: sidebar"></div> 
 
     <div class="main-content">
         <div class="header">
             <div class="header-container">
                 <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM CAS</h1>
+                <h1>UTM AAS</h1>
             </div>
         </div>
         
@@ -39,54 +41,89 @@
                             </div>
                         </div>
 
+                        <!-- Updated Rubric Display - Grouped by Assessment Type Only -->
                         <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">
                         
-                            <div th:each="evalTypeEntry : ${groupedComponents}" class="eval-type-group">
-                                <h4 th:text="${'Evaluation Type: ' + evalTypeEntry.key}">Evaluation Type: Group Evaluation</h4>
+                            <!-- Outer loop - dummy key (we don't display the key itself) -->
+                            <div th:each="evalTypeEntry : ${groupedComponents}">
                                 
+                                <!-- Inner loop - Assessment Type -->
                                 <div th:each="assessTypeEntry : ${evalTypeEntry.value}" class="assess-type-group">
                                     <h5 th:text="${'Assessment Type: ' + assessTypeEntry.key}">Assessment Type: Individual Assessment</h5>
                                     
+                                    <!-- Component loop - only Rubrics -->
                                     <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
                                         
-                                        <th:block th:with="isRubric=${isRubricType.apply(component)}">
-                                        <th:block th:with="componentType=${isRubric ? 'Likert Scale' : 'Criteria Based'}">
-
-
-                                            
-                                            <h6 th:text="${component.name}">Market Survey / Criteria 1</h6> 
-                                            <div class="rubric-details">
-                                                <p>Type: <span th:text="${componentType}">Criteria Based</span></p>
-                                                <p>Evaluation Type: <span th:text="${component.evaluationType}">Group</span></p>
-                                                <p>Assessment Type: <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
-                                                <p>CLO: <span th:text="${component.clo}">2</span></p>
-                                                <p>CLO Marks: <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
-                                            </div>
-                                            </th:block>
-                                        </th:block>
+                                        <h6 th:text="${component.name}">Market Survey</h6> 
+                                        <div class="rubric-details">
+                                            <p>Type: <span>Likert Scale</span></p>
+                                            <p>Assessment Type: <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
+                                            <p>CLO: <span th:text="${component.clo}">2</span></p>
+                                            <p>CLO Marks: <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </th:block>
                         
-                        </div>
+                    </div>
                     
                 </div>
             </div>
+
+            <!-- Deadlines Section - Show ALL deadlines with assessor type badges -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
-                    <div th:each="deadline : ${deadlines}" class="deadline-item">
+                    <div th:if="${allDeadlines == null or #lists.isEmpty(allDeadlines)}" 
+                         style="text-align: center; padding: 20px; color: #95a5a6;">
+                        <i class="fas fa-calendar-times" style="font-size: 2em; margin-bottom: 10px;"></i>
+                        <p>No deadlines available</p>
+                    </div>
+                    
+                    <div th:each="deadline : ${allDeadlines}" 
+                         class="deadline-item"
+                         th:classappend="${deadline.assessorType == 'STUDENT' ? 'student-deadline' : 
+                                         (deadline.assessorType == 'LECTURER' ? 'lecturer-deadline' : 
+                                         (deadline.assessorType == 'SUPERVISOR' ? 'supervisor-deadline' : 'general-deadline'))}">
                         <div class="deadline-display">
-                            <p>Title: <span th:text="${deadline.title}"></span></p>
-                            <p>Date: <span th:text="${#dates.format(deadline.date, 'yyyy-MM-dd')}"></span></p>
-                            </div>
+                            <p>
+                                <strong>Title:</strong> 
+                                <span th:text="${deadline.title}">Assessment Title</span>
+                                
+                                <!-- Assessor Type Badge - Shows WHO needs to assess -->
+                                <br><br>
+                                <span class="deadline-badge"
+                                      th:classappend="${deadline.assessorType == 'STUDENT' ? 'badge-student' : 
+                                                       (deadline.assessorType == 'LECTURER' ? 'badge-lecturer' : 
+                                                       (deadline.assessorType == 'SUPERVISOR' ? 'badge-supervisor' : 'badge-general'))}"
+                                      th:text="${deadline.assessorType == 'STUDENT' ? 'Students' : 
+                                               (deadline.assessorType == 'LECTURER' ? 'Lecturers' : 
+                                               (deadline.assessorType == 'SUPERVISOR' ? 'Industrial Supervisors' : 'General'))}">
+                                    Lecturers
+                                </span>
+                            </p>
+                            
+                            <p>
+                                <strong>
+                                    <i class="fas fa-calendar-alt"></i> Deadline:
+                                </strong> 
+                                <span th:text="${#dates.format(deadline.date, 'dd MMMM yyyy, HH:mm')}">30 November 2025, 00:00</span>
+                            </p>
+                            
+                            <!-- Open Date (if available) -->
+                            <p th:if="${deadline.openDate != null}">
+                                <strong>
+                                    <i class="fas fa-door-open"></i> Opens:
+                                </strong> 
+                                <span th:text="${#dates.format(deadline.openDate, 'dd MMMM yyyy, HH:mm')}">20 November 2025, 00:00</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
-                
-                </div>
+            </div>
         </div>
-        </div>
+    </div>
     
-    </body>
+</body>
 </html>

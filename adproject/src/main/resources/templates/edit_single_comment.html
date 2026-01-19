@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Comment Question - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/edit_comment.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="edit-comment-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+        
+        <div class="page-header">
+            <h1 th:text="${'Edit ' + (type == 'group' ? 'Group' : 'Individual') + ' Question #' + (index + 1)}">Edit Question</h1>
+            <p th:text="${assessment.title}">Assessment Title</p>
+            
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <form th:action="@{/admin/comment-config/{id}/{type}/edit/{idx}/save(id=${assessment.id}, type=${type}, idx=${index})}" method="post">
+                
+                <div class="comment-edit-box" th:classappend="${type == 'group' ? 'group-border' : 'individual-border'}">
+                    <div class="form-group">
+                        <label>Question / Prompt <span class="required">*</span></label>
+                        <textarea name="label" 
+                                  required 
+                                  placeholder="e.g., How well did this group/individual perform?"
+                                  th:text="${label}"></textarea>
+                        <p class="help-text">This question will appear to students during evaluation.</p>
+                    </div>
+                    
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label>Minimum Characters <span class="required">*</span></label>
+                            <input type="number" name="minLength" th:value="${minLength}" min="10" max="500" required>
+                        </div>
+                        
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="isAnonymous" value="true" th:checked="${isAnonymous}">
+                                <span><i class="fas fa-user-secret"></i> Make Anonymous</span>
+                            </label>
+                            <p class="help-text" id="anonymityHelp">
+                                <span th:if="${isAnonymous}">Currently: Comments appear as "Teammate X"</span>
+                                <span th:unless="${isAnonymous}">Currently: Shows evaluator's real name</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-container">
+                    <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.querySelector('input[name="isAnonymous"]');
+            const help = document.getElementById('anonymityHelp');
+            
+            if (toggle && help) {
+                toggle.addEventListener('change', function() {
+                    help.textContent = this.checked ? 
+                        'Currently: Comments appear as "Teammate X"' : 
+                        'Currently: Shows evaluator\'s real name';
+                });
+            }
+        });
+    </script>
+</body>
+</html>

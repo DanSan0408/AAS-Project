@@ -1,0 +1,322 @@
+/* =======================================================
+   LECTURER RE-EVALUATION WARNING - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
+:root {
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-warning-red: #DC2626;
+    --lecturer-warning-red-dark: #B91C1C;
+    --lecturer-warning-orange: #F59E0B;
+}
+
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--lecturer-text-dark);
+    margin: 0;
+    padding: 0;
+}
+
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================== HEADER ==================== */
+body.lecturer-page .header {
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+}
+
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+/* ==================== CONTENT CONTAINER ==================== */
+body.lecturer-page .content-flex-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+/* ==================== WARNING CONTAINER ==================== */
+body.lecturer-page .warning-container {
+    max-width: 650px;
+    width: 90%;
+    padding: 40px;
+    background: var(--lecturer-surface);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    border-top: 6px solid var(--lecturer-warning-orange);
+    animation: slideIn 0.4s ease-out;
+    position: relative;
+    margin: 0 auto;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== WARNING ICON ==================== */
+body.lecturer-page .warning-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: var(--lecturer-warning-orange);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* ==================== WARNING TITLE ==================== */
+body.lecturer-page .warning-title {
+    color: var(--lecturer-warning-red);
+    font-size: 2em;
+    font-weight: 700;
+    margin: 0 0 20px 0;
+    padding-bottom: 15px;
+    border-bottom: 2px dashed var(--lecturer-warning-orange);
+}
+
+/* ==================== WARNING MESSAGE ==================== */
+body.lecturer-page .warning-message {
+    font-size: 1em;
+    color: var(--lecturer-text-dark);
+    line-height: 1.7;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border: 2px solid var(--lecturer-warning-orange);
+    border-radius: 10px;
+}
+
+body.lecturer-page .warning-message p {
+    margin: 10px 0;
+}
+
+body.lecturer-page .warning-message strong {
+    color: var(--lecturer-warning-red);
+    font-weight: 700;
+}
+
+body.lecturer-page .warning-emphasis {
+    font-size: 1.1em;
+    margin-top: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    border: 2px solid var(--lecturer-warning-red);
+    border-radius: 8px;
+}
+
+/* ==================== TARGET INFO ==================== */
+body.lecturer-page .target-info {
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.08) 0%, rgba(5, 150, 105, 0.05) 100%);
+    border: 2px solid var(--lecturer-primary);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+body.lecturer-page .target-info p {
+    margin: 0;
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--lecturer-primary);
+}
+
+body.lecturer-page .target-info span {
+    color: var(--lecturer-primary);
+    font-weight: 700;
+}
+
+/* ==================== BUTTON GROUP ==================== */
+body.lecturer-page .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+body.lecturer-page .button-group form {
+    flex: 1 1 250px;
+    max-width: 100%;
+}
+
+body.lecturer-page .button-group a {
+    flex: 1 1 250px;
+    max-width: 100%;
+}
+
+/* ==================== PROCEED BUTTON ==================== */
+body.lecturer-page .btn-proceed {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--lecturer-warning-red) 0%, var(--lecturer-warning-red-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+body.lecturer-page .btn-proceed:hover {
+    background: linear-gradient(135deg, var(--lecturer-warning-red-dark) 0%, #991B1B 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.4);
+}
+
+body.lecturer-page .btn-proceed:active {
+    transform: translateY(0);
+}
+
+/* ==================== BACK BUTTON ==================== */
+body.lecturer-page .btn-back {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
+}
+
+body.lecturer-page .btn-back:hover {
+    background: linear-gradient(135deg, var(--lecturer-primary-light) 0%, var(--lecturer-primary) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(4, 120, 87, 0.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    body.lecturer-page .warning-container {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+
+    body.lecturer-page .warning-title {
+        font-size: 1.6em;
+    }
+
+    body.lecturer-page .warning-icon {
+        font-size: 50px;
+    }
+
+    body.lecturer-page .warning-message {
+        font-size: 0.95em;
+        padding: 15px;
+    }
+
+    body.lecturer-page .warning-emphasis {
+        font-size: 1em;
+    }
+
+    body.lecturer-page .button-group {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    body.lecturer-page .button-group form,
+    body.lecturer-page .button-group a {
+        flex: 1 1 auto;
+    }
+    
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.lecturer-page .warning-container {
+        padding: 25px 15px;
+        width: 95%;
+    }
+
+    body.lecturer-page .warning-title {
+        font-size: 1.4em;
+    }
+
+    body.lecturer-page .warning-icon {
+        font-size: 48px;
+    }
+
+    body.lecturer-page .warning-message {
+        font-size: 0.9em;
+    }
+
+    body.lecturer-page .target-info p {
+        font-size: 0.9em;
+    }
+
+    body.lecturer-page .btn-proceed,
+    body.lecturer-page .btn-back {
+        font-size: 0.95em;
+        padding: 14px;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+body.lecturer-page .btn-proceed:focus,
+body.lecturer-page .btn-back:focus {
+    outline: 3px solid var(--lecturer-warning-orange);
+    outline-offset: 2px;
+}

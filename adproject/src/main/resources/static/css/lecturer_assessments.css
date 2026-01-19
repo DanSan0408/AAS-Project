@@ -1,0 +1,211 @@
+/* =======================================================
+   LECTURER ASSESSMENTS - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
+:root {
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-hover: #F9FAFB;
+    --lecturer-success: #059669;
+    --lecturer-alert: #DC2626;
+}
+
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    color: var(--lecturer-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+}
+
+/* ==================== CONTENT SECTION ==================== */
+body.lecturer-page .rubric-section h2 {
+    color: var(--lecturer-primary) !important;
+    font-size: 1.8em !important;
+    font-weight: 800 !important;
+    margin-bottom: 30px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 3px solid var(--lecturer-primary) !important;
+}
+
+/* ==================== HEADER ==================== */
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+/* ==================== ASSESSMENT CARDS ==================== */
+body.lecturer-page .assessment-card {
+    background-color: var(--lecturer-surface);
+    border: 1px solid var(--lecturer-border);
+    border-left: 5px solid var(--lecturer-primary);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+body.lecturer-page .assessment-card:hover {
+    box-shadow: 0 8px 20px rgba(4, 120, 87, 0.12);
+    transform: translateY(-2px);
+}
+
+body.lecturer-page .assessment-card h3 {
+    color: var(--lecturer-primary);
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    font-weight: 700;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--lecturer-border);
+}
+
+/* ==================== STATUS BADGES ==================== */
+body.lecturer-page .status-container {
+    margin: 12px 0;
+}
+
+body.lecturer-page .status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+body.lecturer-page .status-open {
+    background-color: var(--lecturer-success);
+    color: white;
+}
+
+body.lecturer-page .status-closed {
+    background-color: var(--lecturer-alert);
+    color: white;
+}
+
+/* ==================== ASSESSMENT DETAILS ==================== */
+body.lecturer-page .assessment-details {
+    margin-bottom: 20px;
+    font-size: 0.95em;
+    color: var(--lecturer-text-dark);
+}
+
+body.lecturer-page .assessment-details p {
+    margin: 8px 0;
+}
+
+body.lecturer-page .assessment-details strong {
+    color: var(--lecturer-primary);
+    font-weight: 700;
+}
+
+body.lecturer-page .assessment-details ul {
+    margin: 10px 0 0 20px;
+    padding-left: 0;
+    list-style-type: disc;
+}
+
+body.lecturer-page .assessment-details li {
+    margin: 5px 0;
+    font-size: 0.95em;
+}
+
+/* ==================== BUTTONS ==================== */
+body.lecturer-page .btn-evaluate {
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
+}
+
+body.lecturer-page .btn-evaluate:hover {
+    background: linear-gradient(135deg, var(--lecturer-primary-light), var(--lecturer-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
+}
+
+body.lecturer-page .btn-disabled {
+    background-color: #9CA3AF !important;
+    color: #E5E7EB !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    box-shadow: none !important;
+}
+
+body.lecturer-page .btn-disabled:hover {
+    background-color: #9CA3AF !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ==================== EMPTY STATE ==================== */
+body.lecturer-page .no-assessments {
+    text-align: center;
+    padding: 60px 40px;
+    color: var(--lecturer-secondary);
+    background-color: var(--lecturer-surface);
+    border: 2px dashed var(--lecturer-border);
+    border-radius: 12px;
+    margin-top: 30px;
+}
+
+body.lecturer-page .no-assessments p {
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    body.lecturer-page .assessment-card {
+        padding: 20px;
+    }
+
+    body.lecturer-page .btn-evaluate {
+        width: 100%;
+        text-align: center;
+    }
+}

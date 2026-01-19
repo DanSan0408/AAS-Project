@@ -1,24 +1,59 @@
-/* New Palette: #23395d, #203354, #1c2e4a, #192841, #152238 */
+/* UTM CAS Login Page Styles */
+/* Color Palette:
+   Primary (Maroon): #5C001F
+   Secondary (Gold): #F8A617
+   Background (Moccasin): #FFE6BF
+   Card Background (Ivory): #FFFDF9
+   Borders/Muted (Grey): #9CA3AF
+   Primary Text (Charcoal): #1F2937
+   Success (Green): #4CAF7D
+   Error (Red): #8B1E1E
+*/
+
+:root {
+    --primary-maroon: #5C001F;
+    --secondary-gold: #F8A617;
+    --bg-moccasin: #FFE6BF;
+    --card-ivory: #FFFDF9;
+    --border-grey: #9CA3AF;
+    --text-charcoal: #1F2937;
+    --success-green: #4CAF7D;
+    --error-red: #8B1E1E;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
-    /* Use a subtle vertical gradient for the background */
-    background: linear-gradient(180deg, #152238 0%, #192841 100%);
+    background: url('/images/utmbg.png') center center / cover no-repeat fixed;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    color: #ecf0f1; /* Light text for high contrast */
-    font-family: 'Inter', sans-serif; /* Using Inter font for a modern look */
+    color: var(--text-charcoal);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .auth-container {
-    background-color: #203354; /* Medium-dark background from palette */
+    background-color: rgba(255, 253, 249, 0.95);
     padding: 40px;
-    border-radius: 16px; /* Slightly more rounded corners */
-    /* Enhanced, deeper shadow with a slight border for definition */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    width: 400px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(92, 0, 31, 0.25), 0 0 0 1px rgba(92, 0, 31, 0.1);
+    width: 420px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.auth-container {
+    background-color: var(--card-ivory);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(92, 0, 31, 0.15), 0 0 0 1px rgba(92, 0, 31, 0.08);
+    width: 420px;
     max-width: 90%;
     text-align: center;
 }
@@ -26,43 +61,65 @@ body {
 .auth-container h3 {
     margin-bottom: 25px;
     font-size: 1.8em;
-    /* Subtle text shadow for pop */
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    color: var(--primary-maroon);
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .form-group {
     margin-bottom: 20px;
+    text-align: left;
 }
 
 .form-group label {
     display: block;
-    text-align: left;
     margin-bottom: 8px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-charcoal);
+    font-size: 0.95em;
 }
 
 .form-control {
     width: 100%;
-    padding: 14px; /* Slightly more padding */
-    border: 1px solid #1c2e4a;
+    padding: 14px 16px;
+    border: 2px solid var(--border-grey);
     border-radius: 10px;
-    background-color: #192841; /* Input background slightly darker than container */
-    color: #ecf0f1;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    background-color: #FFFFFF;
+    color: var(--text-charcoal);
+    font-size: 1em;
+    transition: all 0.3s ease;
 }
 
 .form-control:focus {
     outline: none;
-    /* Use a brighter, complementary blue for functional accent */
-    border-color: #61a5fa; 
-    box-shadow: 0 0 0 4px rgba(97, 165, 250, 0.4); /* Stronger focus ring */
-    background-color: #1c2e4a; /* Slight color shift on focus */
+    border-color: var(--primary-maroon);
+    box-shadow: 0 0 0 4px rgba(92, 0, 31, 0.1);
+    background-color: #FFFFFF;
+}
+
+.form-control::placeholder {
+    color: var(--border-grey);
+}
+
+/* Checkbox styling */
+.form-group label.inline-flex {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-maroon);
 }
 
 .auth-btn {
     display: inline-block;
-    padding: 14px 25px;
+    padding: 14px 28px;
     border: none;
     border-radius: 10px;
     cursor: pointer;
@@ -71,90 +128,137 @@ body {
     transition: all 0.3s ease;
     width: 100%;
     box-sizing: border-box;
-    color: #ffffff; /* Pure white text for best contrast */
-    margin-bottom: 15px;
+    color: #FFFFFF;
+    font-size: 1em;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary-custom {
-    /* Use the lightest palette color as base, with a gradient for depth */
-    background: linear-gradient(145deg, #23395d, #1c2e4a);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, var(--primary-maroon) 0%, #4A0018 100%);
 }
 
 .btn-primary-custom:hover {
-    /* Reverse gradient direction and slightly darken */
-    background: linear-gradient(145deg, #1c2e4a, #23395d);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
-    transform: translateY(-1px);
+    background: linear-gradient(135deg, #4A0018 0%, var(--primary-maroon) 100%);
+    box-shadow: 0 6px 18px rgba(92, 0, 31, 0.3);
+    transform: translateY(-2px);
 }
 
-/* Keeping other custom buttons for structure (though only primary is used) */
+.btn-primary-custom:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(92, 0, 31, 0.3);
+}
+
 .btn-success-custom {
-    background-color: #2ecc71; 
+    background: linear-gradient(135deg, var(--success-green) 0%, #3D9465 100%);
 }
 
 .btn-success-custom:hover {
-    background-color: #27ae60;
+    background: linear-gradient(135deg, #3D9465 0%, var(--success-green) 100%);
+    box-shadow: 0 6px 18px rgba(76, 175, 125, 0.3);
+    transform: translateY(-2px);
 }
 
 .btn-info-custom {
-    background-color: #9b59b6;
+    background: linear-gradient(135deg, var(--secondary-gold) 0%, #E69610 100%);
 }
 
 .btn-info-custom:hover {
-    background-color: #8e44ad;
+    background: linear-gradient(135deg, #E69610 0%, var(--secondary-gold) 100%);
+    box-shadow: 0 6px 18px rgba(248, 166, 23, 0.3);
+    transform: translateY(-2px);
 }
 
 .btn-warning-custom {
-    background-color: #f1c40f;
-    color: #152238; 
+    background: linear-gradient(135deg, var(--secondary-gold) 0%, #E69610 100%);
+    color: var(--text-charcoal);
 }
 
 .btn-warning-custom:hover {
-    background-color: #f39c12;
+    background: linear-gradient(135deg, #E69610 0%, var(--secondary-gold) 100%);
+    box-shadow: 0 6px 18px rgba(248, 166, 23, 0.3);
+    transform: translateY(-2px);
 }
 
 .alert {
-    padding: 15px;
+    padding: 15px 18px;
     margin-bottom: 20px;
     border-radius: 10px;
-    background-color: #c0392b; /* Deep red for error */
+    background-color: var(--error-red);
     color: white;
     font-weight: 500;
+    border-left: 4px solid #6B1515;
 }
 
 .success-message {
-    color: #2ecc71; /* Standard success green */
-    font-weight: bold;
-    margin-bottom: 15px;
-    text-align: center;
+    background-color: var(--success-green);
+    color: white;
+    padding: 15px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    border-left: 4px solid #3D9465;
+}
+
+.success-message p {
+    margin: 0;
 }
 
 .forgot-password-link {
     display: block;
     text-align: right;
     margin-top: 10px;
-    margin-bottom: 15px; /* Add margin to separate from button */
+    margin-bottom: 15px;
     font-size: 0.9em;
-    color: #61a5fa; /* Accent color for links */
+    color: var(--primary-maroon);
     text-decoration: none;
     transition: color 0.3s ease;
+    font-weight: 500;
 }
 
 .forgot-password-link:hover {
-    color: #a3c4f3;
+    color: var(--secondary-gold);
     text-decoration: underline;
 }
 
 .logo {
-    /* INCREASED SIZE HERE */
-    max-width: 180px; 
+    max-width: 120px;
     height: auto;
     margin: 0 auto 20px;
-    /* Subtle glow/shadow for logo */
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.1));
+    filter: drop-shadow(0 2px 8px rgba(92, 0, 31, 0.15));
 }
 
+/* Additional utility classes */
+.text-center {
+    text-align: center;
+}
 
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.text-sm {
+    font-size: 0.95em;
+    color: var(--text-charcoal);
+    line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 30px 25px;
+    }
+    
+    .auth-container h3 {
+        font-size: 1.5em;
+    }
+    
+    .logo {
+        max-width: 140px;
+    }
+}

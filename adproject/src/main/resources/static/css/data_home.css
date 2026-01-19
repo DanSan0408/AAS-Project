@@ -1,0 +1,206 @@
+/* =======================================================
+   DATA HOME - Professional Maroon Theme
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-background: #F4F2EE;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-info: #3498db;
+    --color-accent: #F8A617;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==================== LAYOUT ==================== */
+.main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* ==================== HEADER ==================== */
+.header-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+.header-container img { max-width: 200px !important; height: auto !important; }
+.header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
+
+/* ==================== DATA VIEW CONTAINER ==================== */
+.data-view-container {
+    width: 100% !important;
+    max-width: 1000px !important;
+}
+
+/* Overall Card */
+.overall-card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    border: 1px solid var(--color-border) !important;
+    padding: 25px !important;
+    margin-bottom: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-left: 5px solid var(--color-primary) !important;
+}
+
+.card-content h2 {
+    color: var(--color-primary) !important;
+    margin: 0 0 5px 0 !important;
+    font-size: 1.5rem !important;
+}
+
+.card-content p {
+    color: #666 !important;
+    margin: 0 !important;
+}
+
+/* Section Header */
+.section-header {
+    text-align: center !important;
+    margin-bottom: 30px !important;
+}
+
+.section-header h2 {
+    color: var(--color-primary) !important;
+    margin-bottom: 5px !important;
+    font-size: 1.8rem !important;
+}
+
+.section-header p {
+    color: #666 !important;
+    font-size: 1rem !important;
+}
+
+/* Assessment Grid */
+.assessment-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 25px !important;
+}
+
+.assessment-card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    overflow: hidden !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.assessment-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    border-color: var(--color-primary) !important;
+}
+
+.card-header {
+    background-color: var(--color-primary) !important;
+    padding: 15px 20px !important;
+    color: white !important;
+}
+
+.card-header h3 {
+    margin: 0 !important;
+    font-size: 1.2rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.card-body {
+    padding: 20px !important;
+    flex-grow: 1 !important;
+}
+
+.info-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 10px !important;
+    font-size: 0.95rem !important;
+    border-bottom: 1px dashed var(--color-border) !important;
+    padding-bottom: 5px !important;
+}
+
+.info-row:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.info-row .label { color: #666 !important; }
+.info-row .value { font-weight: 700 !important; color: var(--color-secondary) !important; }
+.info-row i { color: var(--color-primary) !important; margin-right: 5px !important; width: 20px !important; text-align: center !important; }
+
+.card-footer {
+    padding: 15px 20px !important;
+    background-color: #f8fafc !important;
+    border-top: 1px solid var(--color-border) !important;
+    text-align: center !important;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    display: inline-block !important;
+    transition: all 0.2s !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.btn-primary { background-color: var(--color-primary) !important; color: white !important; }
+.btn-primary:hover { background-color: var(--color-primary-light) !important; transform: translateY(-2px) !important; }
+
+.btn-secondary { background-color: var(--color-secondary) !important; color: white !important; width: 100% !important; }
+.btn-secondary:hover { background-color: #27272A !important; }
+
+/* Empty State */
+.empty-state {
+    text-align: center !important;
+    padding: 50px !important;
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 2px dashed var(--color-border) !important;
+    color: #999 !important;
+}
+
+.empty-state i { font-size: 3rem !important; margin-bottom: 15px !important; opacity: 0.5 !important; }
+.empty-state h3 { margin-bottom: 10px !important; color: var(--color-primary) !important; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .main-content { margin-left: 0 !important; padding: 20px !important; }
+    .overall-card { flex-direction: column !important; text-align: center !important; gap: 20px !important; }
+    .assessment-grid { grid-template-columns: 1fr !important; }
+}

@@ -1,0 +1,405 @@
+/* =======================================================
+   SUPERVISOR GROUP SELECTION - NAVY & GOLD THEME
+   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
+:root {
+    --supervisor-primary: #002B5B;
+    --supervisor-primary-light: #004080;
+    --supervisor-secondary: #3F3F46;
+    --supervisor-accent: #F8A617;
+    --supervisor-background: #F4F2EE;
+    --supervisor-text: #FAFAFA;
+    --supervisor-text-dark: #2B2B2B;
+    --supervisor-surface: #FFFFFF;
+    --supervisor-border: #E5E7EB;
+    --supervisor-hover: #F9FAFB;
+    --supervisor-success: #059669;
+    --supervisor-warning: #F59E0B;
+    --supervisor-info: #3B82F6;
+}
+
+/* ==================== LAYOUT ==================== */
+body.supervisor-page {
+    background-color: var(--supervisor-background);
+    color: var(--supervisor-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.supervisor-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+}
+
+/* ==================== HEADER ==================== */
+body.supervisor-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.supervisor-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.supervisor-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--supervisor-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+body.supervisor-page .groups-container {
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* ==================== PAGE HEADER ==================== */
+body.supervisor-page .page-header-wrapper {
+    margin-bottom: 35px;
+    border-bottom: 3px solid var(--supervisor-primary);
+    padding-bottom: 15px;
+}
+
+body.supervisor-page .page-title {
+    color: var(--supervisor-primary);
+    font-size: 2em;
+    margin: 0 0 10px 0;
+    font-weight: 800;
+}
+
+body.supervisor-page .page-subtitle {
+    color: var(--supervisor-secondary);
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ==================== ALERTS ==================== */
+body.supervisor-page .alert {
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    border-left: 4px solid;
+}
+
+body.supervisor-page .alert-success {
+    background-color: #D1FAE5;
+    border-color: var(--supervisor-success);
+    color: #065F46;
+}
+
+body.supervisor-page .alert-danger {
+    background-color: #FEE2E2;
+    border-color: #DC2626;
+    color: #7F1D1D;
+}
+
+body.supervisor-page .alert i {
+    font-size: 1.2em;
+}
+
+/* ==================== GRID SYSTEM ==================== */
+body.supervisor-page .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    gap: 30px;
+}
+
+/* ==================== CARD STYLING ==================== */
+body.supervisor-page .group-card {
+    background-color: var(--supervisor-surface);
+    border: 1px solid var(--supervisor-border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.supervisor-page .group-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 43, 91, 0.15);
+    border-color: var(--supervisor-primary);
+}
+
+/* Card Header */
+body.supervisor-page .group-card-header {
+    background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
+    padding: 22px 25px;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+body.supervisor-page .group-name {
+    margin: 0;
+    color: var(--supervisor-text);
+    font-size: 1.4em;
+    font-weight: 700;
+}
+
+/* Progress Badges */
+body.supervisor-page .progress-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+body.supervisor-page .badge-not-started {
+    background-color: var(--supervisor-hover);
+    color: var(--supervisor-secondary);
+    border: 2px solid var(--supervisor-border);
+}
+
+body.supervisor-page .badge-in-progress {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--supervisor-warning);
+    border: 2px solid var(--supervisor-warning);
+}
+
+body.supervisor-page .badge-completed {
+    background-color: rgba(5, 150, 105, 0.15);
+    color: var(--supervisor-success);
+    border: 2px solid var(--supervisor-success);
+}
+
+/* Progress Section */
+body.supervisor-page .progress-section {
+    padding: 22px 25px 18px 25px;
+    background-color: var(--supervisor-surface);
+}
+
+body.supervisor-page .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: var(--supervisor-secondary);
+    font-weight: 600;
+}
+
+body.supervisor-page .progress-bar-wrapper {
+    width: 100%;
+    height: 12px;
+    background-color: var(--supervisor-hover);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--supervisor-border);
+}
+
+body.supervisor-page .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--supervisor-primary), var(--supervisor-primary-light));
+    border-radius: 6px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    color: var(--supervisor-text);
+    font-weight: 700;
+}
+
+body.supervisor-page .progress-bar-fill.in-progress {
+    background: linear-gradient(90deg, var(--supervisor-warning), #F59E0B);
+}
+
+body.supervisor-page .progress-bar-fill.completed {
+    background: linear-gradient(90deg, var(--supervisor-success), #059669);
+}
+
+/* Group Info */
+body.supervisor-page .group-info {
+    padding: 18px 25px;
+    background-color: var(--supervisor-hover);
+    border-top: 1px solid var(--supervisor-border);
+    border-bottom: 1px solid var(--supervisor-border);
+}
+
+body.supervisor-page .info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    color: var(--supervisor-text-dark);
+}
+
+body.supervisor-page .info-item:last-child {
+    margin-bottom: 0;
+}
+
+body.supervisor-page .info-label {
+    font-weight: 600;
+    color: var(--supervisor-secondary);
+}
+
+body.supervisor-page .info-label i {
+    color: var(--supervisor-primary);
+    width: 20px;
+    text-align: center;
+    margin-right: 6px;
+}
+
+/* Students Section */
+body.supervisor-page .students-section {
+    background-color: var(--supervisor-surface);
+    padding: 20px 25px;
+    flex-grow: 1;
+}
+
+body.supervisor-page .students-title {
+    margin: 0 0 15px 0;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: var(--supervisor-secondary);
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+body.supervisor-page .student-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+body.supervisor-page .student-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9em;
+    color: var(--supervisor-text-dark);
+    font-weight: 500;
+}
+
+body.supervisor-page .student-avatar {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--supervisor-primary), var(--supervisor-primary-light));
+    color: var(--supervisor-text);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+/* Card Footer & Buttons */
+body.supervisor-page .card-footer {
+    padding: 22px 25px;
+    background-color: var(--supervisor-surface);
+    border-top: 1px solid var(--supervisor-border);
+    display: flex;
+    justify-content: center;
+}
+
+body.supervisor-page .evaluate-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 28px;
+    text-align: center;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    color: var(--supervisor-text);
+    font-size: 1em;
+    min-width: 220px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.supervisor-page .btn-start {
+    background: linear-gradient(135deg, var(--supervisor-primary), var(--supervisor-primary-light));
+}
+
+body.supervisor-page .btn-start:hover {
+    background: linear-gradient(135deg, var(--supervisor-primary-light), var(--supervisor-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 43, 91, 0.25);
+}
+
+body.supervisor-page .btn-in-progress {
+    background: linear-gradient(135deg, var(--supervisor-warning), #F59E0B);
+}
+
+body.supervisor-page .btn-in-progress:hover {
+    background: linear-gradient(135deg, #F59E0B, var(--supervisor-warning));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+body.supervisor-page .btn-completed {
+    background: linear-gradient(135deg, var(--supervisor-success), #059669);
+}
+
+body.supervisor-page .btn-completed:hover {
+    background: linear-gradient(135deg, #059669, var(--supervisor-success));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+/* ==================== EMPTY STATE ==================== */
+body.supervisor-page .no-groups {
+    text-align: center;
+    padding: 80px 40px;
+    background-color: var(--supervisor-surface);
+    border-radius: 16px;
+    border: 2px dashed var(--supervisor-border);
+}
+
+body.supervisor-page .no-groups-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+body.supervisor-page .no-groups-text {
+    color: var(--supervisor-secondary);
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1200px) {
+    body.supervisor-page .groups-grid {
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    body.supervisor-page .groups-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    body.supervisor-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    body.supervisor-page .group-card-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+}

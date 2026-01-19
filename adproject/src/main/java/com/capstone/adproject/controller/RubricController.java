@@ -1,12 +1,9 @@
 package com.capstone.adproject.controller;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Controller; 
@@ -21,10 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Assessment;
-import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
-import com.capstone.adproject.model.RubricCriteriaWrapper;
 import com.capstone.adproject.model.SubRubric;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.RubricService;
@@ -104,72 +99,57 @@ public class RubricController {
     public String viewAssessmentRubrics(@PathVariable Long assessmentId, Model model) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId); 
 
-        List<RubricCriteriaWrapper> allRubricsAndCriteriaWrappers = new ArrayList<>();
-    
-        if (assessment.getCriteria() != null) {
-            Hibernate.initialize(assessment.getCriteria()); 
-            for (Criteria criteria : assessment.getCriteria()) {
-                if (criteria.getCriteriaRatings() != null) {
-                    Hibernate.initialize(criteria.getCriteriaRatings());
-                } else {
-                    criteria.setCriteriaRatings(new ArrayList<>());
-                }
-                allRubricsAndCriteriaWrappers.add(new RubricCriteriaWrapper(criteria)); 
-            }
-        }
+        // ✅ Initialize display orders for existing rubrics if they don't have them
+        rubricService.initializeRubricOrders(assessmentId);
+        
+        // Reload to get updated display orders
+        assessment = rubricService.findAssessmentById(assessmentId);
 
+        Map<String, Map<String, List<Object>>> groupedRubrics = new LinkedHashMap<>();
+        final String DUMMY_KEY = "ASSESSMENT_GROUPING";
+        Map<String, List<Object>> innerGroup = new LinkedHashMap<>();
+    
         if (assessment.getRubrics() != null) {
             Hibernate.initialize(assessment.getRubrics());
             for (Rubric rubric : assessment.getRubrics()) {
                 if (rubric.getSubRubrics() != null) {
                     Hibernate.initialize(rubric.getSubRubrics()); 
-                    
                     rubric.getSubRubrics().forEach(subRubric -> {
                         if (subRubric.getRatings() != null) {
                             Hibernate.initialize(subRubric.getRatings());
-                        } else {
-                            subRubric.setRatings(new ArrayList<>()); 
                         }
                     });
-                } else {
-                    rubric.setSubRubrics(new ArrayList<>()); 
                 }
-                allRubricsAndCriteriaWrappers.add(new RubricCriteriaWrapper(rubric));
+                if (rubric.getRatings() != null) {
+                    Hibernate.initialize(rubric.getRatings());
+                }
+
+                String assessmentType = rubric.getAssessmentTypes();
+                if (assessmentType == null || assessmentType.trim().isEmpty()) {
+                    assessmentType = "Uncategorized";
+                }
+                innerGroup.computeIfAbsent(assessmentType, k -> new ArrayList<>()).add(rubric);
             }
         }
-
-        Map<String, Map<String, List<RubricCriteriaWrapper>>> finalGroupedRubrics = new HashMap<>();
         
-        Set<String> allAssessmentTypes = Set.of("Individual Assessment", "Group Assessment");
-
-        for (RubricCriteriaWrapper wrapper : allRubricsAndCriteriaWrappers) {
-            String evaluationType = wrapper.getEvaluationType();
-            String assessmentTypesString = wrapper.getAssessmentTypes();
-
-            if (evaluationType == null || evaluationType.trim().isEmpty() || 
-                assessmentTypesString == null || assessmentTypesString.trim().isEmpty()) {
-                continue;
-            }
-
-            Map<String, List<RubricCriteriaWrapper>> assessmentTypeMap = finalGroupedRubrics
-                .computeIfAbsent(evaluationType, k -> new HashMap<>());
-            
-            List<String> types = Arrays.stream(assessmentTypesString.split(","))
-                                         .map(String::trim)
-                                         .filter(s -> !s.isEmpty())
-                                         .collect(Collectors.toList());
-            
-            for (String type : types) {
-                if (allAssessmentTypes.contains(type)) {
-                    assessmentTypeMap
-                        .computeIfAbsent(type, k -> new ArrayList<>())
-                        .add(wrapper);
+        // Sort rubrics within each assessment type by display_order
+        for (List<Object> rubrics : innerGroup.values()) {
+            rubrics.sort((o1, o2) -> {
+                if (o1 instanceof Rubric && o2 instanceof Rubric) {
+                    Integer order1 = ((Rubric) o1).getDisplayOrder();
+                    Integer order2 = ((Rubric) o2).getDisplayOrder();
+                    if (order1 == null) order1 = 0;
+                    if (order2 == null) order2 = 0;
+                    return Integer.compare(order1, order2);
                 }
-            }
+                return 0;
+            });
         }
+        
+        groupedRubrics.put(DUMMY_KEY, innerGroup);
 
         model.addAttribute("assessment", assessment);
-        model.addAttribute("groupedRubrics", finalGroupedRubrics); 
+        model.addAttribute("groupedRubrics", groupedRubrics); 
         
         return "view-assessment-rubrics";
     }
@@ -180,28 +160,13 @@ public class RubricController {
         Rubric rubric = new Rubric();
         rubric.setAssessment(assessment);
         
-        SubRubric initialSubRubric = new SubRubric();
-        initialSubRubric.setRubric(rubric);
-        
-        List<Rating> ratings = new ArrayList<>();
-        for (int i = 0; i <= 4; i++) {
-            Rating rating = new Rating();
-            rating.setLevel(i);
-            rating.setSubRubric(initialSubRubric);
-            ratings.add(rating);
-        }
-        initialSubRubric.setRatings(ratings);
-        
-        List<SubRubric> subRubrics = new ArrayList<>(); 
-        subRubrics.add(initialSubRubric);
-        rubric.setSubRubrics(subRubrics);
+        rubric.setSubRubrics(new ArrayList<>());
+        rubric.setRatings(new ArrayList<>());
         
         model.addAttribute("rubric", rubric);
-        model.addAttribute("pageTitle", "Add New Likert Rubric"); 
+        model.addAttribute("pageTitle", "Add New Rubric"); 
         model.addAttribute("formAction", "/rubrics/save");
-        model.addAttribute("targetFormUrl", "/criteria/add/" + assessmentId); 
         
-        model.addAttribute("evaluationTypes", new String[]{"Group", "Individual"});
         model.addAttribute("assessmentTypesOptions", new String[]{"Individual Assessment", "Group Assessment"});
         
         return "rubric-form"; 
@@ -210,64 +175,29 @@ public class RubricController {
     @GetMapping("/edit/{rubricId}")
     @Transactional
     public String showEditRubricForm(@PathVariable Long rubricId, Model model) {
-        // CRITICAL FIX: Check if rubric data exists in flash attributes (from duplicate check redirect)
         if (!model.containsAttribute("rubric")) {
             Rubric rubric = rubricService.findRubricById(rubricId);
             
             if (rubric.getSubRubrics() == null) {
                 rubric.setSubRubrics(new ArrayList<>());
-            }
-
-            if (!rubric.getSubRubrics().isEmpty()) {
+            } else {
                 for (SubRubric subRubric : rubric.getSubRubrics()) {
-                    if (subRubric.getRatings() == null || subRubric.getRatings().isEmpty()) {
-                        List<Rating> ratings = new ArrayList<>();
-                        for (int i = 0; i <= 4; i++) {
-                            Rating rating = new Rating();
-                            rating.setLevel(i);
-                            rating.setSubRubric(subRubric);
-                            ratings.add(rating);
-                        }
-                        subRubric.setRatings(ratings);
-                    } else {
-                        List<Rating> sortedRatings = new ArrayList<>(subRubric.getRatings());
-                        sortedRatings.sort((r1, r2) -> Integer.compare(r1.getLevel(), r2.getLevel()));
-                        subRubric.getRatings().clear();
-for (Rating rating : sortedRatings) {
-    rating.setSubRubric(subRubric);
-    subRubric.getRatings().add(rating);
-}
-
+                    if (subRubric.getRatings() == null) {
+                        subRubric.setRatings(new ArrayList<>());
                     }
                 }
-            } else {
-                SubRubric initialSubRubric = new SubRubric();
-                initialSubRubric.setRubric(rubric);
-                
-                List<Rating> ratings = new ArrayList<>();
-                for (int i = 0; i <= 4; i++) {
-                    Rating rating = new Rating();
-                    rating.setLevel(i);
-                    rating.setSubRubric(initialSubRubric);
-                    ratings.add(rating);
-                }
-                initialSubRubric.setRatings(ratings);
-                
-                List<SubRubric> subRubrics = new ArrayList<>();
-                subRubrics.add(initialSubRubric);
-                rubric.setSubRubrics(subRubrics);
+            }
+            
+            if (rubric.getRatings() == null) {
+                rubric.setRatings(new ArrayList<>());
             }
             
             model.addAttribute("rubric", rubric);
         }
         
-        Long assessmentId = ((Rubric) model.getAttribute("rubric")).getAssessment().getId();
-        
-        model.addAttribute("pageTitle", "Edit Likert Rubric");
+        model.addAttribute("pageTitle", "Edit Rubric");
         model.addAttribute("formAction", "/rubrics/save"); 
-        model.addAttribute("targetFormUrl", "/criteria/add/" + assessmentId); 
         
-        model.addAttribute("evaluationTypes", new String[]{"Group", "Individual"});
         model.addAttribute("assessmentTypesOptions", new String[]{"Individual Assessment", "Group Assessment"});
         
         return "rubric-form";
@@ -276,14 +206,29 @@ for (Rating rating : sortedRatings) {
     @PostMapping("/save")
     @Transactional
     public String saveOrUpdateRubric(@ModelAttribute Rubric rubric, 
-                                     @RequestParam(value = "assessmentTypes", required = false) String[] assessmentTypes,
                                      @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
+                                     @RequestParam Map<String, String> allParams,
                                      RedirectAttributes redirectAttributes,
                                      Model model) {
         
         Long assessmentId = rubric.getAssessment().getId();
         Long rubricId = rubric.getId();
 
+        // ✅ CRITICAL FIX: Manually process checkbox values from raw parameters
+        List<String> commentLabels = rubric.getRubricCommentLabels();
+        if (commentLabels != null && !commentLabels.isEmpty()) {
+            List<Boolean> anonymousFlags = new ArrayList<>();
+            
+            for (int i = 0; i < commentLabels.size(); i++) {
+                String paramKey = "rubricCommentAnonymousFlags[" + i + "]";
+                boolean isChecked = allParams.containsKey(paramKey) && "true".equals(allParams.get(paramKey));
+                anonymousFlags.add(isChecked);
+            }
+            
+            rubric.setRubricCommentAnonymousFlags(anonymousFlags);
+        }
+
+        // Duplicate check
         if (!duplicateConfirmed) {
             boolean isDuplicate = rubricService.isRubricNameDuplicate(
                 rubric.getName(), 
@@ -303,36 +248,32 @@ for (Rating rating : sortedRatings) {
             }
         }
 
+        // Set CLO Marks equal to Total Marks
         if (rubric.getMarks() != null) {
             rubric.setCloMarks(rubric.getMarks().doubleValue());
         } else {
             rubric.setCloMarks(null);
         }
         
-        if (assessmentTypes != null) {
-            String cleanAssessmentTypes = Arrays.stream(assessmentTypes)
-                                                 .distinct()
-                                                 .collect(Collectors.joining(", "));
-            rubric.setAssessmentTypes(cleanAssessmentTypes);
-        } else {
-            rubric.setAssessmentTypes(null);
-        }
-        
+        // Set bidirectional relationships for sub-rubrics
         if (rubric.getSubRubrics() != null) {
             for (SubRubric subRubric : rubric.getSubRubrics()) {
                 subRubric.setRubric(rubric);
                 
                 if (subRubric.getRatings() != null) {
-                    List<Rating> ratings = subRubric.getRatings();
-                    for (int i = 0; i < ratings.size(); i++) {
-                        Rating rating = ratings.get(i);
+                    for (Rating rating : subRubric.getRatings()) {
                         rating.setSubRubric(subRubric);
-                        
-                        if (rating.getLevel() == null) {
-                            rating.setLevel(i);
-                        }
+                        rating.setRubric(null);
                     }
                 }
+            }
+        }
+        
+        // Set bidirectional relationships for direct ratings
+        if (rubric.getRatings() != null) {
+            for (Rating rating : rubric.getRatings()) {
+                rating.setRubric(rubric);
+                rating.setSubRubric(null);
             }
         }
         
@@ -348,9 +289,9 @@ for (Rating rating : sortedRatings) {
         Long assessmentId = rubricService.findRubricById(rubricId).getAssessment().getId();
         try {
             rubricService.deleteRubric(rubricId);
-            redirectAttributes.addFlashAttribute("successMessage", "Likert Rubric deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", "Rubric deleted successfully.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting Likert rubric.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting rubric.");
         }
         return "redirect:/rubrics/view/" + assessmentId;
     }
@@ -361,5 +302,46 @@ for (Rating rating : sortedRatings) {
         model.addAttribute("newAssessment", assessment);
         model.addAttribute("assessments", rubricService.findAllAssessments());
         return "manage-assessments";
+    }
+    
+    @PostMapping("/assessment/{assessmentId}/move-block")
+    public String moveAssessmentBlock(@PathVariable Long assessmentId,
+                                       @RequestParam String blockType,
+                                       @RequestParam String direction,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
+        } catch (Exception e) {
+            // Silent fail
+        }
+        
+        // ✅ CHANGED: Stay at the block that was moved
+        String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
+        redirectAttributes.addFlashAttribute("focusBlock", anchor);
+        
+        return "redirect:/rubrics/view/" + assessmentId;
+    }
+
+    /**
+     * ✅ CHANGED: Move rubric and keep focus on it
+     */
+    @PostMapping("/rubric/{rubricId}/move")
+    public String moveRubric(@PathVariable Long rubricId,
+                              @RequestParam String direction,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            Rubric rubric = rubricService.findRubricById(rubricId);
+            Long assessmentId = rubric.getAssessment().getId();
+            
+            rubricService.moveRubric(rubricId, direction);
+            
+            // ✅ Pass the rubric ID to focus on after page reload
+            redirectAttributes.addFlashAttribute("focusRubricId", rubricId);
+            
+            return "redirect:/rubrics/view/" + assessmentId;
+            
+        } catch (Exception e) {
+            return "redirect:/rubrics/manage";
+        }
     }
 }

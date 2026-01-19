@@ -1,0 +1,297 @@
+/* =======================================================
+   LECTURER GROUP SELECTION - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
+:root {
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-hover: #F9FAFB;
+    --lecturer-success: #059669;
+    --lecturer-warning: #F59E0B;
+    --lecturer-muted: #6B7280;
+}
+
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    color: var(--lecturer-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+}
+
+/* ==================== HEADER ==================== */
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+}
+
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+/* ==================== SELECTION CONTAINER ==================== */
+body.lecturer-page .selection-container {
+    background-color: var(--lecturer-surface);
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--lecturer-border);
+}
+
+body.lecturer-page .dashboard-header {
+    margin-bottom: 30px;
+    border-bottom: 3px solid var(--lecturer-primary);
+    padding-bottom: 15px;
+}
+
+body.lecturer-page .dashboard-header h2 {
+    font-size: 2em;
+    margin-bottom: 8px;
+    margin-top: 0;
+    color: var(--lecturer-primary);
+    font-weight: 800;
+}
+
+body.lecturer-page .subtitle {
+    color: var(--lecturer-muted);
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ==================== ALERTS ==================== */
+body.lecturer-page .alert-container {
+    margin-bottom: 25px;
+}
+
+body.lecturer-page .alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+    border-left: 4px solid;
+}
+
+body.lecturer-page .alert-error {
+    background-color: #FEE2E2;
+    border-color: #DC2626;
+    color: #7F1D1D;
+}
+
+body.lecturer-page .alert-success {
+    background-color: #D1FAE5;
+    border-color: var(--lecturer-success);
+    color: #065F46;
+}
+
+body.lecturer-page .alert .icon {
+    font-weight: 700;
+    font-size: 1.2em;
+}
+
+/* ==================== GROUPS GRID ==================== */
+body.lecturer-page .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+/* ==================== GROUP CARDS ==================== */
+body.lecturer-page .group-card {
+    background-color: var(--lecturer-surface);
+    border: 1px solid var(--lecturer-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.lecturer-page .group-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(4, 120, 87, 0.15);
+    border-color: var(--lecturer-primary);
+}
+
+/* Card Top */
+body.lecturer-page .card-top {
+    padding: 20px;
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+}
+
+body.lecturer-page .card-top h3 {
+    font-size: 1.3em;
+    font-weight: 700;
+    margin: 0;
+    color: var(--lecturer-text);
+}
+
+/* Status Badges */
+body.lecturer-page .badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+body.lecturer-page .badge-completed {
+    background-color: var(--lecturer-success);
+    color: white;
+    border: none;
+}
+
+body.lecturer-page .badge-progress {
+    background-color: var(--lecturer-warning);
+    color: white;
+    border: none;
+}
+
+body.lecturer-page .badge-pending {
+    background-color: var(--lecturer-secondary);
+    color: white;
+    border: none;
+}
+
+/* Card Body */
+body.lecturer-page .card-body {
+    padding: 20px;
+    flex-grow: 1;
+    background-color: var(--lecturer-surface);
+}
+
+body.lecturer-page .members-section label {
+    display: block;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    color: var(--lecturer-muted);
+    margin-bottom: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+body.lecturer-page .member-list {
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+}
+
+body.lecturer-page .member-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    background-color: var(--lecturer-hover);
+}
+
+body.lecturer-page .avatar-circle {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
+    color: var(--lecturer-text);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.85em;
+    font-weight: 700;
+}
+
+body.lecturer-page .member-name {
+    font-size: 0.95em;
+    color: var(--lecturer-text-dark);
+    font-weight: 500;
+}
+
+body.lecturer-page .no-members {
+    color: var(--lecturer-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Card Footer */
+body.lecturer-page .card-footer {
+    padding: 20px;
+    background-color: var(--lecturer-surface);
+    border-top: 1px solid var(--lecturer-border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body.lecturer-page .btn-action {
+    display: inline-block;
+    text-align: center;
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
+    color: white;
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.2);
+    min-width: 200px;
+}
+
+body.lecturer-page .btn-action:hover {
+    background: linear-gradient(135deg, var(--lecturer-primary-light), var(--lecturer-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    body.lecturer-page .groups-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    body.lecturer-page .selection-container {
+        padding: 20px;
+    }
+    
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+}

@@ -1,0 +1,529 @@
+/* =======================================================
+   PEER ASSESSMENT FORM - IRON BURGUNDY & GOLD THEME
+   Refined Layout & Fixed Sidebar Text Color
+   ======================================================= */
+
+:root {
+    /* Primary Colors */
+    --student-primary: #7A1E2D;    /* Iron Burgundy */
+    --student-secondary: #3F3F46;  /* Graphite Grey */
+    --student-accent: #F8A617;     /* Gold */
+    --student-background: #F4F2EE; /* Light Sand Grey */
+    
+    /* Functional Colors - ALIGNED WITH student_comments.css */
+    --student-text: #FAFAFA;       /* Off White (Used for Sidebar/Dark Backgrounds) */
+    --student-text-dark: #2B2B2B;  /* Dark Text (Used for Main Content) */
+    
+    --student-surface: #FFFFFF;    /* White */
+    --student-border: #D4D1CC;     /* Muted Sand */
+    --student-hover: #EDEAE6;      /* Slightly darker sand */
+    --student-alert: #8B1E1E;      /* Dark Red */
+    --student-success: #4CAF7D;    /* Green */
+}
+
+/* Global Reset */
+* { box-sizing: border-box; }
+
+/* ==================== BODY & LAYOUT ==================== */
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--student-background);
+    
+    /* CRITICAL: Use dark text variable for the main page body */
+    color: var(--student-text-dark); 
+    
+    margin: 0;
+    padding: 0;
+    
+    /* Flex layout to support the fixed sidebar correctly */
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    margin-left: 270px;
+    padding: 40px;
+    flex-grow: 1;
+    background-color: var(--student-background);
+    min-height: 100vh;
+}
+
+/* Centered Form Container */
+.content-container {
+    max-width: 1200px; 
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* ==================== HEADER ==================== */
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    width: 100%;
+}
+
+.header-container img {
+    max-width: 200px;
+    height: auto;
+}
+
+.header-container h1 {
+    margin: 0;
+    color: var(--student-primary);
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+/* ==================== INFO CARDS ==================== */
+.assessment-info {
+    background-color: var(--student-surface);
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid var(--student-border);
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.05);
+    border-top: 5px solid var(--student-primary);
+    text-align: center;
+}
+
+.assessment-info h2 {
+    color: var(--student-primary);
+    margin: 0 0 20px 0;
+    font-size: 1.8em;
+    border-bottom: 2px solid var(--student-accent);
+    padding-bottom: 15px;
+}
+
+.evaluation-info {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-size: 1.1em;
+    color: var(--student-secondary);
+}
+
+.evaluation-info strong {
+    color: var(--student-primary);
+    font-weight: 700;
+}
+
+.self-badge {
+    background-color: var(--student-accent);
+    color: var(--student-text-dark); /* Dark text on Gold background */
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 700;
+    margin-left: 8px;
+}
+
+/* ==================== NOTICES ==================== */
+.notices-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.re-evaluation-notice, .deadline-warning {
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 1em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.re-evaluation-notice {
+    background-color: #FFF8E1; /* Light Gold */
+    border: 1px solid var(--student-accent);
+    color: #92400E;
+}
+
+.re-evaluation-notice i {
+    font-size: 1.8em;
+    color: var(--student-accent);
+}
+
+.deadline-warning {
+    background-color: #FDEDED; /* Light Red */
+    border: 1px solid #FABDBD;
+    color: var(--student-alert);
+}
+
+.deadline-warning i {
+    font-size: 1.8em;
+    color: var(--student-alert);
+}
+
+.re-evaluation-notice h4, .deadline-warning h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+}
+
+.re-evaluation-notice p, .deadline-warning p {
+    margin: 0;
+}
+
+/* ==================== RUBRIC SECTIONS ==================== */
+.rubric-section {
+    background-color: var(--student-surface);
+    border-radius: 12px;
+    padding: 35px;
+    margin-bottom: 35px;
+    border: 1px solid var(--student-border);
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.05);
+}
+
+.rubric-header {
+    border-bottom: 2px solid var(--student-hover);
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+}
+
+.rubric-header h3 {
+    color: var(--student-primary);
+    margin: 0 0 15px 0;
+    font-size: 1.5em;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.assessment-type-badge {
+    font-size: 0.6em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.rubric-description {
+    background-color: var(--student-hover);
+    padding: 15px;
+    border-radius: 8px;
+    color: var(--student-secondary);
+    font-style: italic;
+    border-left: 4px solid var(--student-accent);
+    margin-bottom: 15px;
+}
+
+.rubric-meta {
+    display: flex;
+    gap: 15px;
+}
+
+.clo-badge {
+    background-color: var(--student-secondary);
+    color: white; /* White text on dark grey */
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 700;
+}
+
+.marks-badge {
+    background-color: var(--student-accent);
+    color: var(--student-text-dark); /* Dark text on Gold */
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 700;
+}
+
+/* ==================== SUB RUBRICS & RATINGS ==================== */
+.sub-rubric-item {
+    background-color: #FAFAFA;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    border: 1px solid var(--student-border);
+}
+
+.sub-rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    border-bottom: 1px dashed var(--student-border);
+    padding-bottom: 15px;
+}
+
+.sub-rubric-header h4 {
+    color: var(--student-primary);
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.rating-options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+}
+
+.rating-option { position: relative; }
+.rating-option input[type="radio"] { position: absolute; opacity: 0; }
+
+.rating-label {
+    display: block;
+    background-color: var(--student-surface);
+    border: 2px solid var(--student-border);
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.rating-label:hover {
+    border-color: var(--student-accent);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(122, 30, 45, 0.1);
+}
+
+/* Selected State */
+.rating-option input[type="radio"]:checked + .rating-label,
+.rating-option.selected .rating-label {
+    background-color: var(--student-primary);
+    border-color: var(--student-primary);
+    color: white; /* White text on Burgundy */
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.3);
+}
+
+.rating-level {
+    font-weight: 700;
+    font-size: 1.1em;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.rating-marks {
+    display: inline-block;
+    font-size: 0.9em;
+    background: rgba(0,0,0,0.05);
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.rating-description {
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Text color fixes for selected state */
+.rating-option.selected .rating-marks { 
+    background: var(--student-accent); 
+    color: var(--student-text-dark); /* Dark text on Gold badge */
+}
+.rating-option.selected .rating-description { color: #FAFAFA; }
+
+/* ==================== COMMENTS SECTION ==================== */
+.comments-container {
+    background-color: var(--student-surface);
+    padding: 35px;
+    border-radius: 12px;
+    border: 1px solid var(--student-border);
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.05);
+    margin-top: 40px;
+}
+
+.comments-container h3 {
+    color: var(--student-primary);
+    border-bottom: 3px solid var(--student-accent);
+    padding-bottom: 15px;
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+}
+
+.comment-field-container {
+    margin-bottom: 30px;
+}
+
+.comment-textarea {
+    width: 100%;
+    padding: 20px;
+    border: 2px solid var(--student-border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1em;
+    min-height: 150px;
+    resize: vertical;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: var(--student-hover);
+    color: var(--student-text-dark); /* Ensure text is dark */
+}
+
+.comment-textarea:focus {
+    outline: none;
+    border-color: var(--student-primary);
+    background-color: var(--student-surface);
+    box-shadow: 0 0 0 4px rgba(122, 30, 45, 0.1);
+}
+
+/* Rubric Comments */
+.rubric-comment-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--student-border);
+    border-radius: 8px;
+    font-family: inherit;
+    min-height: 100px;
+    background-color: var(--student-hover);
+    color: var(--student-text-dark); /* Ensure text is dark */
+    resize: vertical;
+}
+
+.rubric-comment-textarea:focus {
+    outline: none;
+    border-color: var(--student-primary);
+    background-color: var(--student-surface);
+}
+
+/* ==================== BUTTONS ==================== */
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 1px solid var(--student-border);
+}
+
+.btn {
+    padding: 15px 40px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background-color: #E4E4E7;
+    color: var(--student-secondary);
+}
+.btn-secondary:hover { background-color: #D4D4D8; }
+
+.btn-primary {
+    background-color: var(--student-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.2);
+}
+.btn-primary:hover {
+    background-color: #5C1621;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(122, 30, 45, 0.3);
+}
+
+/* ==================== MODAL ==================== */
+.modal-overlay {
+    background-color: rgba(63, 63, 70, 0.85);
+    backdrop-filter: blur(4px);
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-content {
+    background-color: #FFFFFF;
+    width: 100%;
+    max-width: 550px;
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    border-top: 6px solid var(--student-accent);
+    animation: modalPop 0.3s ease-out;
+}
+
+@keyframes modalPop {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.modal-header { margin-bottom: 20px; }
+
+.modal-icon {
+    font-size: 3.5rem;
+    color: var(--student-accent);
+    margin-bottom: 15px;
+    display: block;
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    color: var(--student-primary);
+    margin: 0;
+    font-weight: 700;
+}
+
+.modal-body {
+    font-size: 1.1rem;
+    color: var(--student-secondary);
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* Modal Buttons */
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.modal-btn {
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.modal-btn-cancel {
+    background-color: #E4E4E7;
+    color: var(--student-secondary);
+}
+.modal-btn-cancel:hover { background-color: #D4D4D8; }
+
+.modal-btn-confirm {
+    background-color: var(--student-primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(122, 30, 45, 0.2);
+}
+.modal-btn-confirm:hover {
+    background-color: #5C1621;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(122, 30, 45, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .main-content { margin-left: 0; padding: 20px; }
+    .content-container { padding: 0 10px; }
+    .evaluation-info { flex-direction: column; gap: 10px; }
+    .rating-options-grid { grid-template-columns: 1fr; }
+}

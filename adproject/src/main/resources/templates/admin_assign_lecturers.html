@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assign Lecturers - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_lecturers.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="assign-lecturer-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+        
+        <div class="page-header">
+            <h1>Assign Lecturers to Groups</h1>
+            <h2 th:text="${assessment.title}">Assessment Title</h2>
+            <p>Assign one or more lecturers to evaluate each group. Lecturers will evaluate both group and individual rubrics.</p>
+            
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+
+        <form th:action="@{/admin/lecturer-assignments/{id}/save(id=${assessment.id})}" method="post">
+            
+            <div class="groups-container">
+                <div th:each="group : ${allGroups}" class="group-assignment-card">
+                    <div class="group-header">
+                        <h3><i class="fas fa-users"></i> <span th:text="${group.groupName}">Group Name</span></h3>
+                        <span class="student-count-badge" th:if="${group.students != null}" th:text="${group.students.size() + ' Students'}">0 Students</span>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
+                            <strong>Members:</strong>
+                            <span th:each="student, iterStat : ${group.students}">
+                                <!-- ✅ CHANGED: Display email instead of username -->
+                                <span th:text="${student.email}">Student Email</span><span th:if="${!iterStat.last}">, </span>
+                            </span>
+                        </div>
+                        
+                        <div class="lecturer-section">
+                            <label>Assigned Lecturers:</label>
+                            <div class="lecturer-assignments-container" th:data-group-id="${group.id}">
+                                <div th:if="${groupLecturerMap.get(group.id) != null and !groupLecturerMap.get(group.id).isEmpty()}">
+                                    <div th:each="lecturer, iterStat : ${groupLecturerMap.get(group.id)}" class="lecturer-row">
+                                        <select th:name="'group_' + ${group.id} + '_lecturer_' + ${iterStat.index}" class="form-select">
+                                            <option value="none">-- Select Lecturer --</option>
+                                            <!-- ✅ CHANGED: Display email instead of username -->
+                                            <option th:each="lec : ${allLecturers}" 
+                                                    th:value="${lec.id}" 
+                                                    th:text="${lec.email}"
+                                                    th:selected="${lec.id == lecturer.id}">
+                                                Lecturer Email
+                                            </option>
+                                        </select>
+                                        <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div th:if="${groupLecturerMap.get(group.id) == null or groupLecturerMap.get(group.id).isEmpty()}" class="lecturer-row">
+                                    <select th:name="'group_' + ${group.id} + '_lecturer_0'" class="form-select">
+                                        <option value="none">-- Select Lecturer --</option>
+                                        <!-- ✅ CHANGED: Display email instead of username -->
+                                        <option th:each="lec : ${allLecturers}" 
+                                                th:value="${lec.id}" 
+                                                th:text="${lec.email}">
+                                            Lecturer Email
+                                        </option>
+                                    </select>
+                                    <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn-link-add" th:onclick="'addLecturerField(' + ${group.id} + ')'">
+                                <i class="fas fa-plus-circle"></i> Add Another Lecturer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Assignments</button>
+            </div>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        // Store lecturer options for dynamic addition
+        const allLecturers = /*[[${allLecturers}]]*/ [];
+        
+        function addLecturerField(groupId) {
+            const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
+            const existingFields = container.querySelectorAll('.lecturer-row');
+            const newIndex = existingFields.length;
+            
+            const newField = document.createElement('div');
+            newField.className = 'lecturer-row';
+            // ✅ CHANGED: Use email in JavaScript template literal
+            newField.innerHTML = `
+                <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
+                    <option value="none">-- Select Lecturer --</option>
+                    ${allLecturers.map(lec => `<option value="${lec.id}">${lec.email}</option>`).join('')}
+                </select>
+                <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(newField);
+        }
+        
+        function removeLecturerField(button) {
+            const field = button.closest('.lecturer-row');
+            const container = field.parentElement;
+            
+            // Don't remove if it's the last field
+            if (container.querySelectorAll('.lecturer-row').length > 1) {
+                field.remove();
+            } else {
+                // Reset the select instead of removing
+                const select = field.querySelector('select');
+                if(select) select.value = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
