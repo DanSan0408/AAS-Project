@@ -17,6 +17,7 @@ import com.capstone.adproject.dto.AssessmentDataDto;
 import com.capstone.adproject.dto.RubricCalculationDto;
 import com.capstone.adproject.dto.StudentAssessmentDataDto;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rubric;
@@ -355,7 +356,6 @@ public class CalculateService {
         return bd.doubleValue();
     }
 
-    // ✅ ADD THIS METHOD - Helper method to round to 3 decimal places (for factors/ratios)
     private Double round3(Double value) {
         if (value == null) return 0.0;
         BigDecimal bd = BigDecimal.valueOf(value);
@@ -372,19 +372,15 @@ public class CalculateService {
             Map<String, Object> detail = new HashMap<>();
             
             if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-                System.out.println("DEBUG [getEvaluatorDetails]: Found supervisor mark with ID: " + mark.getSupervisorId());
-                
                 Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
                     supervisorRepository.findById(mark.getSupervisorId());
                 
                 if (supervisorOpt.isPresent()) {
                     String supervisorName = supervisorOpt.get().getUsername();
-                    System.out.println("DEBUG [getEvaluatorDetails]: Found supervisor: " + supervisorName);
                     detail.put("evaluatorName", supervisorName);
                     detail.put("evaluatorType", "Supervisor");
                     evaluatorKey = "supervisor_" + mark.getSupervisorId();
                 } else {
-                    System.out.println("DEBUG [getEvaluatorDetails]: Supervisor not found for ID: " + mark.getSupervisorId());
                     detail.put("evaluatorName", "Supervisor " + mark.getSupervisorId());
                     detail.put("evaluatorType", "Supervisor");
                     evaluatorKey = "supervisor_" + mark.getSupervisorId();
@@ -532,7 +528,7 @@ public class CalculateService {
     public Map<String, List<String>> getEvaluatorCommentsForRubric(Student student, Assessment assessment, Rubric rubric) {
         Map<String, List<String>> result = new java.util.LinkedHashMap<>();
         
-        List<com.capstone.adproject.model.AssessmentComment> rubricComments = 
+        List<AssessmentComment> rubricComments = 
             commentRepository.findByEvaluatedStudentAndAssessmentAndRubricId(student, assessment, rubric.getId());
         
         if (rubricComments.isEmpty()) {
@@ -547,13 +543,7 @@ public class CalculateService {
                 .collect(Collectors.toList());
         }
         
-        if (rubricComments.isEmpty() && rubric.getAssessmentTypes() != null) {
-            rubricComments = commentRepository.findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(
-                student, assessment, rubric.getAssessmentTypes()
-            );
-        }
-        
-        for (com.capstone.adproject.model.AssessmentComment comment : rubricComments) {
+        for (AssessmentComment comment : rubricComments) {
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
@@ -638,19 +628,67 @@ public class CalculateService {
             .orElse(1.0);
     }
 
+    // ✅ NEW METHOD: Get Group Assessment Comments
+    public Map<String, List<String>> getGroupAssessmentComments(Student student, Assessment assessment) {
+        Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+        
+        // Get all comments for this student and assessment that are for "Group Assessment"
+        List<AssessmentComment> groupComments = commentRepository
+            .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Group Assessment");
+        
+        // Filter to only get OVERALL assessment comments (rubricId is null)
+        groupComments = groupComments.stream()
+            .filter(c -> c.getRubricId() == null)
+            .collect(Collectors.toList());
+        
+        // Group by evaluator name
+        for (AssessmentComment comment : groupComments) {
+            String evaluatorName = comment.getDisplayName();
+            String commentText = comment.getCommentText();
+            
+            if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
+                result.computeIfAbsent(evaluatorName, k -> new ArrayList<>()).add(commentText);
+            }
+        }
+        
+        return result;
+    }
+
+    // ✅ NEW METHOD: Get Individual Assessment Comments
+    public Map<String, List<String>> getIndividualAssessmentComments(Student student, Assessment assessment) {
+        Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+        
+        // Get all comments for this student and assessment that are for "Individual Assessment"
+        List<AssessmentComment> individualComments = commentRepository
+            .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Individual Assessment");
+        
+        // Filter to only get OVERALL assessment comments (rubricId is null)
+        individualComments = individualComments.stream()
+            .filter(c -> c.getRubricId() == null)
+            .collect(Collectors.toList());
+        
+        // Group by evaluator name
+        for (AssessmentComment comment : individualComments) {
+            String evaluatorName = comment.getDisplayName();
+            String commentText = comment.getCommentText();
+            
+            if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
+                result.computeIfAbsent(evaluatorName, k -> new ArrayList<>()).add(commentText);
+            }
+        }
+        
+        return result;
+    }
+
     private String getEvaluatorKey(Mark mark) {
         if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-            System.out.println("DEBUG: Found supervisor mark with ID: " + mark.getSupervisorId());
-            
             Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
                 supervisorRepository.findById(mark.getSupervisorId());
             
             if (supervisorOpt.isPresent()) {
                 String supervisorName = supervisorOpt.get().getUsername();
-                System.out.println("DEBUG: Found supervisor: " + supervisorName);
                 return supervisorName;
             } else {
-                System.out.println("DEBUG: Supervisor not found in database for ID: " + mark.getSupervisorId());
                 return "Supervisor " + mark.getSupervisorId();
             }
         } else if (mark.getLecturer() != null) {

@@ -45,7 +45,6 @@ class StudentResultUpdate {
     private Double factor;
     private Double grandTotal;
     
-    // Default constructor needed for binding
     public StudentResultUpdate() {}
     
     public StudentResultUpdate(Long studentId, Double factor, Double grandTotal) {
@@ -88,7 +87,6 @@ public class DataViewController {
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            // ✅ CHANGED: Return email instead of username
             return ((Admin) authentication.getPrincipal()).getEmail();
         }
         return "Admin";
@@ -106,7 +104,6 @@ public class DataViewController {
         List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
         List<Student> students = studentService.getAllStudents();
         
-        // ✅ FIXED: Sort by email with null check
         students.sort((s1, s2) -> {
             String email1 = s1.getEmail() != null ? s1.getEmail() : "";
             String email2 = s2.getEmail() != null ? s2.getEmail() : "";
@@ -115,7 +112,6 @@ public class DataViewController {
         
         Map<Long, Map<String, Object>> studentOverallData = new HashMap<>();
         
-        // NEW: Build map of assessment -> CLOs with group rubrics
         Map<Long, Set<Integer>> assessmentCLOsWithGroupRubrics = new HashMap<>();
         for (Assessment assessment : assessments) {
             assessmentCLOsWithGroupRubrics.put(assessment.getId(), calculateService.getCLOsWithGroupRubrics(assessment));
@@ -171,7 +167,6 @@ public class DataViewController {
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("assessment", assessment);
         
-        // Default to first group if none selected
         Group selectedGroup = null;
         if (groupId != null) {
             selectedGroup = groupRepository.findById(groupId).orElse(null);
@@ -181,19 +176,20 @@ public class DataViewController {
         
         model.addAttribute("selectedGroup", selectedGroup);
         
-        // ✅ Initialize empty assessment data (studentDataList is auto-initialized in DTO)
         AssessmentDataDto assessmentData = new AssessmentDataDto();
         assessmentData.setAssessment(assessment);
         
-        // ✅ Initialize empty maps
         Map<String, List<Rubric>> rubricsByType = new HashMap<>();
         Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
         Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
         
+        // ✅ NEW: Maps to store overall assessment comments
+        Map<Long, Map<String, List<String>>> studentGroupComments = new HashMap<>();
+        Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
+        
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
             List<Student> students = new ArrayList<>(selectedGroup.getStudents());
             
-            // ✅ FIXED: Sort by email with null check
             students.sort((s1, s2) -> {
                 String email1 = s1.getEmail() != null ? s1.getEmail() : "";
                 String email2 = s2.getEmail() != null ? s2.getEmail() : "";
@@ -202,7 +198,6 @@ public class DataViewController {
             
             assessmentData = calculateService.calculateAssessmentData(assessment, students);
             
-            // Build rubrics by type map
             if (assessment.getRubrics() != null) {
                 for (Rubric rubric : assessment.getRubrics()) {
                     String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
@@ -210,7 +205,6 @@ public class DataViewController {
                 }
             }
             
-            // Build detailed rubric data for each student
             for (Student student : students) {
                 Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();
                 for (Rubric rubric : assessment.getRubrics()) {
@@ -226,9 +220,12 @@ public class DataViewController {
                     rubricDetails.put(rubric.getId(), details);
                 }
                 studentRubricDetails.put(student.getId(), rubricDetails);
+                
+                // ✅ NEW: Get overall assessment comments
+                studentGroupComments.put(student.getId(), calculateService.getGroupAssessmentComments(student, assessment));
+                studentIndividualComments.put(student.getId(), calculateService.getIndividualAssessmentComments(student, assessment));
             }
             
-            // Get unique evaluators with proper supervisor names
             for (Student student : students) {
                 for (Rubric rubric : assessment.getRubrics()) {
                     StudentAssessmentDataDto studentData = calculateService.calculateStudentAssessmentData(student, assessment);
@@ -246,17 +243,17 @@ public class DataViewController {
             }
         }
         
-        // ✅ Always add these to model (even if empty)
         model.addAttribute("assessmentData", assessmentData);
         model.addAttribute("rubricsByType", rubricsByType);
         model.addAttribute("studentRubricDetails", studentRubricDetails);
         model.addAttribute("uniqueEvaluators", uniqueEvaluators);
+        model.addAttribute("studentGroupComments", studentGroupComments);
+        model.addAttribute("studentIndividualComments", studentIndividualComments);
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "assessment_data_view";
     }
 
-    // --- EDIT OVERRIDES PAGE ---
     @GetMapping("/edit-overrides")
     public String showEditOverridesPage(
             @RequestParam(required = false) Long groupId, 
@@ -275,7 +272,6 @@ public class DataViewController {
             if (group != null) {
                 students = new ArrayList<>(group.getStudents());
                 
-                // ✅ FIXED: Sort by email with null check
                 students.sort((s1, s2) -> {
                     String email1 = s1.getEmail() != null ? s1.getEmail() : "";
                     String email2 = s2.getEmail() != null ? s2.getEmail() : "";
@@ -285,20 +281,18 @@ public class DataViewController {
                 List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
                 
                 for (Student student : students) {
-                    // 1. Get current values (may be calculated or already overridden)
                     Double currentFactor = 0.0;
                     if(!assessments.isEmpty()) {
                          currentFactor = calculateService.calculateStudentAssessmentData(student, assessments.get(0)).getFactor();
                     }
                     Double currentTotal = calculateService.calculateGrandTotal(student, assessments);
                     
-                    // 2. Pre-fill form
                     form.getUpdates().add(new StudentResultUpdate(student.getId(), currentFactor, currentTotal));
                 }
             }
         }
         
-        model.addAttribute("students", students); // To display names in table
+        model.addAttribute("students", students);
         model.addAttribute("form", form);
         
         return "edit_overrides";

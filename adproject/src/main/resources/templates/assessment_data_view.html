@@ -15,7 +15,7 @@
     <div class="main-content"> 
         <div class="header-container">
             <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
-            <h1>UTM CAS</h1>
+            <h1>UTM AAS</h1>
         </div>
         
         <div class="data-container">
@@ -84,7 +84,6 @@
             <div th:if="${assessmentData.studentDataList != null and !assessmentData.studentDataList.isEmpty()}">
                 <div th:each="studentData : ${assessmentData.studentDataList}" class="student-card">
                     <div class="student-header">
-                        <!-- ✅ CHANGED: Display email instead of username -->
                         <h3 th:text="${studentData.student.email}">Student Email</h3>
                         <div class="student-details">
                             <span th:if="${studentData.student.group != null}" class="detail-badge">Team: <span th:text="${studentData.student.group.groupName}">Team</span></span>
@@ -99,10 +98,10 @@
                                     <th style="width: 25%;">Rubric / Sub-Rubric</th>
                                     <th style="width: 8%; text-align: center;">CLO</th>
                                     <th style="width: 20%;">Ratings</th>
-                                    <th style="width: 12%; text-align: center;">Avg (Evaluator)</th>
-                                    <th style="width: 12%; text-align: center;">Avg (Overall)</th>
-                                    <th style="width: 12%; text-align: center;">Calc. Mark</th>
-                                    <th>Comments</th>
+                                    <th style="width: 12%; text-align: center;">Avg Rating (Evaluator)</th>
+                                    <th style="width: 12%; text-align: center;">Avg Rating (Overall)</th>
+                                    <th style="width: 12%; text-align: center;">Marks</th>
+                                    <th>Rubric Comments</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -122,57 +121,120 @@
                                             </td>
                                         </tr>
                                         
-                                        <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
-                                            <td>
-                                                <div class="sub-name" th:text="${subRubric.name}">Sub-Rubric</div>
-                                                <div class="sub-desc" th:if="${subRubric.description}" th:text="${subRubric.description}"></div>
-                                            </td>
-                                            
-                                            <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
-                                            
-                                            <td>
-                                                <div th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null}" class="rating-list">
-                                                    <div th:each="evaluatorEntry : ${rubricDetails.subRubricRatingsByEvaluator}" class="rating-item">
-                                                        <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
-                                                        <span th:text="${evaluatorEntry.value[subRubric.id] != null ? #numbers.formatDecimal(evaluatorEntry.value[subRubric.id], 1, 2) : '-'}">0.00</span>
+                                        <!-- ✅ FIXED: Check if rubric HAS sub-rubrics -->
+                                        <th:block th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}">
+                                            <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
+                                                <td>
+                                                    <div class="sub-name" th:text="${subRubric.name}">Sub-Rubric</div>
+                                                    <div class="sub-desc" th:if="${subRubric.description}" th:text="${subRubric.description}"></div>
+                                                </td>
+                                                
+                                                <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
+                                                
+                                                <td>
+                                                    <div th:if="${rubricDetails != null and rubricDetails.subRubricRatingsByEvaluator != null}" class="rating-list">
+                                                        <div th:each="evaluatorEntry : ${rubricDetails.subRubricRatingsByEvaluator}" class="rating-item">
+                                                            <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                            <span th:text="${evaluatorEntry.value[subRubric.id] != null ? #numbers.formatDecimal(evaluatorEntry.value[subRubric.id], 1, 2) : '-'}">0.00</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            
-                                            <td class="text-center">
-                                                <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null}" class="calc-list">
-                                                    <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}">
-                                                        <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 2)}">0.00</span>
+                                                </td>
+                                                
+                                                <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null}" class="calc-list">
+                                                        <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}">
+                                                            <strong th:text="${muEntry.key}">Eval</strong>: <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 2)}">0.00</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            
-                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left">
-                                                <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
-                                            </td>
-                                            
-                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
-                                                <div class="mark-display">
-                                                    <div class="raw-mark">
-                                                        <span class="mark-label">Raw Mark:</span>
-                                                        <span class="mark-value" th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
+                                                </td>
+                                                
+                                                <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left">
+                                                    <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muLn, 1, 2) : '-'}">0.00</div>
+                                                </td>
+                                                
+                                                <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle border-left bg-highlight">
+                                                    <div class="mark-display">
+                                                        <div class="raw-mark">
+                                                            <span class="mark-label">Raw Mark:</span>
+                                                            <span class="mark-value" th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
+                                                        </div>
+                                                        <div class="weighted-mark">
+                                                            <span class="mark-label">Weighted Mark:</span>
+                                                            <span class="mark-value-final" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="weighted-mark">
-                                                        <span class="mark-label">Weighted Mark:</span>
-                                                        <span class="mark-value-final" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</span>
+                                                </td>
+                                                
+                                                <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
+                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
+                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
+                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            
-                                            <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
-                                                <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}" class="comments-list">
-                                                    <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
-                                                        <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                        <span th:each="c : ${commentEntry.value}" th:text="${c}">Comment</span>
+                                                    <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
+                                                        <em>No rubric comments</em>
                                                     </div>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                </td>
+                                            </tr>
+                                        </th:block>
+                                        
+                                        <!-- ✅ FIXED: For rubrics WITHOUT sub-rubrics (direct rating) -->
+                                        <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
+                                            <tr class="sub-rubric-row">
+                                                <td>
+                                                    <div class="sub-name">Direct Rating</div>
+                                                </td>
+                                                
+                                                <td class="text-center"><span class="badge-clo" th:text="'CLO ' + ${rubric.clo}">CLO 1</span></td>
+                                                
+                                                <td>
+                                                    <div th:if="${rubricDetails != null and rubricDetails.directRatingsByEvaluator != null}" class="rating-list">
+                                                        <div th:each="ratingEntry : ${rubricDetails.directRatingsByEvaluator}" class="rating-item">
+                                                            <strong th:text="${ratingEntry.key}">Eval</strong>: 
+                                                            <span th:text="${#numbers.formatDecimal(ratingEntry.value, 1, 2)}">0.00</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                
+                                                <td class="text-center">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null}" class="calc-list">
+                                                        <div th:each="rfEntry : ${rubricDetails.rfByEvaluator}">
+                                                            <strong th:text="${rfEntry.key}">Eval</strong>: <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                
+                                                <td class="text-center vertical-middle border-left">
+                                                    <div class="big-score" th:text="${rubricDetails != null ? #numbers.formatDecimal(rubricDetails.muRf, 1, 3) : '-'}">0.000</div>
+                                                </td>
+                                                
+                                                <td class="text-center vertical-middle border-left bg-highlight">
+                                                    <div class="mark-display">
+                                                        <div class="raw-mark">
+                                                            <span class="mark-label">Raw Mark:</span>
+                                                            <span class="mark-value" th:text="${#numbers.formatDecimal(rubricCalc.evaluatedRubricMark, 1, 2)}">0.00</span>
+                                                        </div>
+                                                        <div class="weighted-mark">
+                                                            <span class="mark-label">Weighted Mark:</span>
+                                                            <span class="mark-value-final" th:text="${#numbers.formatDecimal(rubricCalc.weightedRubricMark, 1, 2)}">0.00</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                
+                                                <td class="border-left">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
+                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
+                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
+                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        </div>
+                                                    </div>
+                                                    <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
+                                                        <em>No rubric comments</em>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </th:block>
                                         
                                     </th:block>
                                 </th:block>
@@ -212,10 +274,10 @@
                                                     </div>
                                                 </td>
                                                 
-                                                <td class="text-center">
+                                                <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="text-center vertical-middle">
                                                     <div th:if="${rubricDetails != null and rubricDetails.muSrmlnByEvaluator != null}" class="calc-list">
                                                         <div th:each="muEntry : ${rubricDetails.muSrmlnByEvaluator}">
-                                                            <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 2)}">0.00</span>
+                                                            <strong th:text="${muEntry.key}">Eval</strong>: <span th:text="${#numbers.formatDecimal(muEntry.value, 1, 2)}">0.00</span>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -230,11 +292,14 @@
                                                 </td>
                                                 
                                                 <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
-                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}" class="comments-list">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
                                                         <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
                                                             <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <span th:each="c : ${commentEntry.value}" th:text="${c}">Comment</span>
+                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
                                                         </div>
+                                                    </div>
+                                                    <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
+                                                        <em>No rubric comments</em>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -261,7 +326,7 @@
                                                 <td class="text-center">
                                                     <div th:if="${rubricDetails != null and rubricDetails.rfByEvaluator != null}" class="calc-list">
                                                         <div th:each="rfEntry : ${rubricDetails.rfByEvaluator}">
-                                                            <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
+                                                            <strong th:text="${rfEntry.key}">Eval</strong>: <span th:text="${#numbers.formatDecimal(rfEntry.value, 1, 3)}">0.000</span>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -275,11 +340,14 @@
                                                 </td>
                                                 
                                                 <td class="border-left">
-                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null}" class="comments-list">
+                                                    <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
                                                         <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
                                                             <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <span th:each="c : ${commentEntry.value}" th:text="${c}">Comment</span>
+                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
                                                         </div>
+                                                    </div>
+                                                    <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
+                                                        <em>No rubric comments</em>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -294,6 +362,33 @@
                             <div class="summary-row total">
                                 <span>Total Assessment Marks:</span>
                                 <span th:text="${#numbers.formatDecimal(studentData.totalMarks, 1, 2)}">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ✅ MOVED: Overall Assessment Comments Section (BELOW Total Assessment Marks) -->
+                    <div class="overall-comments-section">
+                        <!-- Group Assessment Comments -->
+                        <div th:if="${studentGroupComments.containsKey(studentData.student.id) and !studentGroupComments.get(studentData.student.id).isEmpty()}" 
+                             class="comments-block group-comments">
+                            <h4><i class="fas fa-users"></i> Group Assessment Comments</h4>
+                            <div th:each="commentEntry : ${studentGroupComments.get(studentData.student.id)}" class="comment-group">
+                                <div class="evaluator-name" th:text="${commentEntry.key}">Evaluator</div>
+                                <div th:each="comment : ${commentEntry.value}" class="comment-item">
+                                    <p th:text="${comment}">Comment text</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Individual Assessment Comments -->
+                        <div th:if="${studentIndividualComments.containsKey(studentData.student.id) and !studentIndividualComments.get(studentData.student.id).isEmpty()}" 
+                             class="comments-block individual-comments">
+                            <h4><i class="fas fa-user"></i> Individual Assessment Comments</h4>
+                            <div th:each="commentEntry : ${studentIndividualComments.get(studentData.student.id)}" class="comment-group">
+                                <div class="evaluator-name" th:text="${commentEntry.key}">Evaluator</div>
+                                <div th:each="comment : ${commentEntry.value}" class="comment-item">
+                                    <p th:text="${comment}">Comment text</p>
+                                </div>
                             </div>
                         </div>
                     </div>
