@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure [[${configType == 'group' ? 'Group' : 'Individual'}]] Comments - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/comment.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="comment-config-page">
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+        
+        <div class="page-header">
+            <h1 th:text="${'Configure ' + (configType == 'group' ? 'Group' : 'Individual') + ' Comments'}">Configure Comments</h1>
+            <p th:text="${assessment.title}">Assessment Title</p>
+        </div>
+        
+        <div class="config-container">
+            <form th:action="@{/admin/comment-config/{id}/{type}/save(id=${assessment.id}, type=${configType})}" method="post" id="commentConfigForm">
+                
+                <div class="section-header" th:classappend="${configType == 'group' ? 'group-type' : 'individual-type'}">
+                    <h2 th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Feedback Questions'}">Questions</h2>
+                    <p>Add questions students must answer when evaluating this component.</p>
+                </div>
+
+                <div id="commentsContainer" class="comments-list">
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <p>No comment questions defined yet.</p>
+                    </div>
+                </div>
+                
+                <div class="add-action">
+                    <button type="button" id="addCommentBtn" class="btn btn-add">
+                        <i class="fas fa-plus-circle"></i> Add Question
+                    </button>
+                </div>
+                
+                <div class="sticky-footer">
+                    <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        // Load existing configuration
+        const configType = /*[[${configType}]]*/ 'group';
+        const existingLabels = /*[[${configType == 'group' ? assessment.groupCommentLabels : assessment.individualCommentLabels}]]*/ [];
+        const existingMinLengths = /*[[${configType == 'group' ? assessment.groupCommentMinLengths : assessment.individualCommentMinLengths}]]*/ [];
+        const existingAnonymousFlags = /*[[${configType == 'group' ? assessment.groupCommentAnonymousFlags : assessment.individualCommentAnonymousFlags}]]*/ [];
+        
+        let commentCounter = 0;
+        
+        function createCommentItem(label = '', minLength = 20, anonymous = true) {
+            commentCounter++;
+            const div = document.createElement('div');
+            div.className = 'comment-card';
+            div.setAttribute('data-id', commentCounter);
+            
+            div.innerHTML = `
+                <div class="comment-header">
+                    <span class="badge">Q<span class="comment-num">${commentCounter}</span></span>
+                    <button type="button" class="btn-icon-remove" onclick="removeComment(this)"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Question Prompt</label>
+                    <textarea name="commentLabels" required placeholder="e.g. What were the strengths?">${label}</textarea>
+                </div>
+                
+                <div class="settings-row">
+                    <div class="form-group setting-input">
+                        <label>Min Characters</label>
+                        <input type="number" name="commentMinLengths" value="${minLength}" min="10" max="500">
+                    </div>
+                    
+                    <div class="form-group setting-check">
+                        <label class="toggle-label">
+                            <input type="checkbox" name="commentAnonymous" value="true" ${anonymous ? 'checked' : ''}>
+                            <span class="toggle-text">
+                                <i class="fas fa-user-secret"></i> Anonymous
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+        
+        function addComment(label, min, anon) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('commentsContainer').appendChild(createCommentItem(label, min, anon));
+            renumber();
+        }
+        
+        function removeComment(btn) {
+            btn.closest('.comment-card').remove();
+            renumber();
+            if(document.querySelectorAll('.comment-card').length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+            }
+        }
+        
+        function renumber() {
+            let i = 1;
+            document.querySelectorAll('.comment-num').forEach(span => span.textContent = i++);
+            commentCounter = i - 1;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (existingLabels && existingLabels.length > 0) {
+                existingLabels.forEach((label, index) => {
+                    const min = existingMinLengths[index] || 20;
+                    const anon = existingAnonymousFlags[index] !== false;
+                    addComment(label, min, anon);
+                });
+            } else {
+                document.getElementById('emptyState').style.display = 'block';
+            }
+            
+            document.getElementById('addCommentBtn').addEventListener('click', () => addComment('', 20, true));
+        });
+    </script>
+</body>
+</html>

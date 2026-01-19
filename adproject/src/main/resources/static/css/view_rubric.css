@@ -1,0 +1,833 @@
+/* =======================================================
+   VIEW RUBRIC - Professional Maroon Theme
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-alert: #8B1E1E;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+    --color-purple: #9B59B6;
+    --color-purple-light: #f3e5f5;
+}
+
+/* ==================== RESET & BASE ==================== */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body.view-rubric-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==================== LAYOUT ==================== */
+body.view-rubric-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* ==================== HEADER ==================== */
+body.view-rubric-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 35px !important;
+    width: 100% !important;
+    flex-direction: row !important;
+}
+
+body.view-rubric-page .header-container img {
+    max-width: 200px !important;
+    height: auto !important;
+}
+
+body.view-rubric-page .header-container h1 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+}
+
+body.view-rubric-page .page-header {
+    text-align: center !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+body.view-rubric-page .page-header h1 {
+    color: var(--color-primary) !important;
+    font-size: 2.2rem !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+    padding-bottom: 15px !important;
+    display: inline-block !important;
+    margin-bottom: 10px !important;
+}
+
+body.view-rubric-page .header-actions {
+    margin-top: 20px !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 10px !important;
+}
+
+/* ==================== ASSESSMENT SUMMARY ==================== */
+body.view-rubric-page .assessment-summary {
+    background-color: var(--color-surface) !important;
+    padding: 30px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(74, 0, 24, 0.1) !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin-bottom: 40px !important;
+    border: 1px solid var(--color-border) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+}
+
+body.view-rubric-page .summary-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 2px solid var(--color-border) !important;
+    padding-bottom: 15px !important;
+}
+
+body.view-rubric-page .summary-header h3 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 1.5rem !important;
+}
+
+body.view-rubric-page .total-marks {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+}
+
+body.view-rubric-page .total-marks span {
+    font-size: 0.9rem !important;
+    color: var(--color-secondary) !important;
+    text-transform: uppercase !important;
+}
+
+body.view-rubric-page .total-marks strong {
+    font-size: 2rem !important;
+    color: var(--color-success) !important;
+    line-height: 1 !important;
+}
+
+body.view-rubric-page .clo-distribution h4 {
+    margin: 0 0 15px 0 !important;
+    color: var(--color-secondary) !important;
+    font-size: 1.1rem !important;
+}
+
+body.view-rubric-page .clo-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+    gap: 15px !important;
+}
+
+body.view-rubric-page .clo-item {
+    background-color: var(--color-background) !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.view-rubric-page .clo-label { font-weight: 600 !important; color: var(--color-primary) !important; }
+body.view-rubric-page .clo-value { font-weight: 700 !important; }
+
+body.view-rubric-page .text-muted { color: var(--color-secondary) !important; opacity: 0.7 !important; }
+
+/* ==================== BLOCKS ==================== */
+body.view-rubric-page .assessment-block {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin-bottom: 30px !important;
+    border: 1px solid var(--color-border) !important;
+    scroll-margin-top: 20px;
+}
+
+body.view-rubric-page .block-header {
+    padding: 20px 30px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    color: var(--color-text) !important;
+}
+
+body.view-rubric-page .group-header { background: linear-gradient(135deg, var(--color-info) 0%, #2980b9 100%) !important; }
+body.view-rubric-page .individual-header { background: linear-gradient(135deg, var(--color-success) 0%, #27ae60 100%) !important; }
+
+body.view-rubric-page .block-title {
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+body.view-rubric-page .block-content {
+    padding: 30px !important;
+}
+
+body.view-rubric-page .block-empty {
+    padding: 60px 30px !important;
+    text-align: center !important;
+    color: var(--color-secondary) !important;
+}
+
+body.view-rubric-page .block-empty i {
+    font-size: 3rem !important;
+    margin-bottom: 20px !important;
+    opacity: 0.3 !important;
+}
+
+body.view-rubric-page .block-empty p {
+    margin: 10px 0 20px 0 !important;
+    opacity: 0.7 !important;
+}
+
+body.view-rubric-page .empty-actions {
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    margin-top: 20px !important;
+}
+
+/* ==================== CONTENT SECTIONS ==================== */
+body.view-rubric-page .content-section {
+    margin-bottom: 40px !important;
+}
+
+body.view-rubric-page .content-section:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.view-rubric-page .section-label {
+    font-size: 1.2rem !important;
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
+    border-left: 5px solid var(--color-primary) !important;
+    padding-left: 15px !important;
+    margin-bottom: 20px !important;
+}
+
+/* ==================== RUBRIC CARDS ==================== */
+body.view-rubric-page .rubric-card {
+    border: 1px solid var(--color-border) !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+    background-color: var(--color-surface) !important;
+}
+
+body.view-rubric-page .rubric-card-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    margin-bottom: 15px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    padding-bottom: 15px !important;
+}
+
+body.view-rubric-page .rubric-info h3 { 
+    margin: 0 0 5px 0 !important; 
+    color: var(--color-secondary) !important; 
+}
+
+body.view-rubric-page .rubric-info p { 
+    margin: 0 0 10px 0 !important; 
+    color: #666 !important; 
+    font-size: 0.95rem !important; 
+}
+
+body.view-rubric-page .rubric-meta {
+    display: flex !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+body.view-rubric-page .meta-badge {
+    background-color: var(--color-background) !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    font-size: 0.85rem !important;
+    color: var(--color-secondary) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+/* ==================== SUB-RUBRICS ==================== */
+body.view-rubric-page .sub-rubric-section {
+    margin-top: 20px !important;
+    padding: 15px !important;
+    background-color: var(--color-background) !important;
+    border-radius: 8px !important;
+    border-left: 4px solid var(--color-warning) !important;
+}
+
+body.view-rubric-page .sub-rubric-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 10px !important;
+}
+
+body.view-rubric-page .sub-rubric-header h4 {
+    color: var(--color-primary) !important;
+    margin: 0 !important;
+    font-size: 1.1em !important;
+}
+
+body.view-rubric-page .sub-marks {
+    background-color: var(--color-warning) !important;
+    color: white !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+}
+
+/* ==================== RATINGS ==================== */
+body.view-rubric-page .direct-ratings {
+    margin-top: 20px !important;
+}
+
+body.view-rubric-page .direct-ratings h5 {
+    color: var(--color-primary) !important;
+    margin: 0 0 15px 0 !important;
+    font-size: 1.1rem !important;
+}
+
+body.view-rubric-page .ratings-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 15px !important;
+    margin-top: 15px !important;
+}
+
+body.view-rubric-page .rating-card {
+    background-color: var(--color-background) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+}
+
+body.view-rubric-page .rating-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-weight: 700 !important;
+    margin-bottom: 5px !important;
+    color: var(--color-primary) !important;
+}
+
+body.view-rubric-page .rating-name {
+    font-size: 0.95rem !important;
+}
+
+body.view-rubric-page .rating-value {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+}
+
+body.view-rubric-page .rating-desc {
+    font-size: 0.85rem !important;
+    color: #555 !important;
+    line-height: 1.4 !important;
+}
+
+/* ==================== COMMENTS SECTIONS ==================== */
+body.view-rubric-page .rubric-comments-box,
+body.view-rubric-page .assessment-comments-section {
+    background-color: var(--color-purple-light) !important;
+    border-left: 4px solid var(--color-purple) !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin-top: 20px !important;
+}
+
+body.view-rubric-page .rubric-comments-box h4,
+body.view-rubric-page .comments-header h3 {
+    color: var(--color-purple) !important;
+    margin: 0 0 15px 0 !important;
+    font-size: 1.1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+body.view-rubric-page .comments-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 15px !important;
+}
+
+body.view-rubric-page .comments-summary {
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    padding: 15px !important;
+    border-radius: 6px !important;
+    margin-bottom: 15px !important;
+}
+
+body.view-rubric-page .summary-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed rgba(155, 89, 182, 0.2) !important;
+}
+
+body.view-rubric-page .summary-row:last-child {
+    border-bottom: none !important;
+}
+
+body.view-rubric-page .summary-label {
+    color: var(--color-secondary) !important;
+    font-weight: 600 !important;
+}
+
+body.view-rubric-page .summary-value {
+    color: var(--color-purple) !important;
+    font-weight: 700 !important;
+}
+
+/* ==================== COMMENT ITEMS ==================== */
+body.view-rubric-page .comment-item,
+body.view-rubric-page .comment-row {
+    background-color: white !important;
+    padding: 15px !important;
+    border-radius: 6px !important;
+    margin-bottom: 10px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 15px !important;
+    border: 1px solid var(--color-border) !important;
+    transition: box-shadow 0.2s ease !important;
+}
+
+body.view-rubric-page .comment-item:hover {
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.15) !important;
+}
+
+body.view-rubric-page .comment-content {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    flex-grow: 1 !important;
+}
+
+body.view-rubric-page .comment-number,
+body.view-rubric-page .q-badge {
+    background-color: var(--color-purple) !important;
+    color: white !important;
+    padding: 4px 10px !important;
+    border-radius: 5px !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important;
+}
+
+body.view-rubric-page .comment-text-wrapper {
+    flex-grow: 1 !important;
+}
+
+body.view-rubric-page .comment-text,
+body.view-rubric-page .q-text {
+    color: var(--color-secondary) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 8px !important;
+}
+
+body.view-rubric-page .question-meta,
+body.view-rubric-page .q-meta {
+    font-size: 0.8rem !important;
+    color: #777 !important;
+    display: flex !important;
+    gap: 15px !important;
+}
+
+body.view-rubric-page .question-meta i {
+    margin-right: 3px !important;
+}
+
+body.view-rubric-page .comment-item-actions {
+    display: flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+body.view-rubric-page .q-content {
+    flex-grow: 1 !important;
+}
+
+/* ==================== EMPTY STATES ==================== */
+body.view-rubric-page .empty-comments {
+    text-align: center !important;
+    padding: 40px 20px !important;
+    border: 2px dashed var(--color-border) !important;
+    border-radius: 8px !important;
+    background-color: white !important;
+}
+
+body.view-rubric-page .empty-comments i {
+    font-size: 2.5rem !important;
+    color: var(--color-purple) !important;
+    opacity: 0.3 !important;
+    margin-bottom: 15px !important;
+}
+
+body.view-rubric-page .empty-comments p {
+    color: var(--color-secondary) !important;
+    margin: 5px 0 !important;
+}
+
+body.view-rubric-page .text-hint {
+    font-size: 0.9rem !important;
+    opacity: 0.7 !important;
+}
+
+/* ==================== CONFIGURE BUTTON CONTAINER ==================== */
+body.view-rubric-page .configure-btn-container {
+    text-align: center !important;
+    margin-top: 20px !important;
+    padding-top: 20px !important;
+    border-top: 2px dashed var(--color-border) !important;
+}
+
+/* ==================== BUTTONS ==================== */
+body.view-rubric-page .btn {
+    padding: 10px 20px !important;
+    border-radius: 6px !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
+    font-size: 0.95rem !important;
+}
+
+body.view-rubric-page .btn:hover { 
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.view-rubric-page .btn-primary { 
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .btn-secondary { 
+    background-color: var(--color-secondary) !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .btn-lecturer { 
+    background-color: #e67e22 !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .btn-purple { 
+    background-color: var(--color-purple) !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .btn-sm { 
+    padding: 6px 12px !important; 
+    font-size: 0.85rem !important; 
+}
+
+body.view-rubric-page .btn-edit { 
+    background-color: var(--color-warning) !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .btn-delete { 
+    background-color: var(--color-alert) !important; 
+    color: white !important; 
+}
+
+body.view-rubric-page .add-btn-container { 
+    text-align: center !important; 
+    margin-top: 20px !important; 
+}
+
+/* ==================== REORDER BUTTONS ==================== */
+body.view-rubric-page .rubric-actions,
+body.view-rubric-page .block-reorder-controls {
+    display: flex !important;
+    gap: 5px !important;
+    align-items: center !important;
+}
+
+body.view-rubric-page .rubric-reorder-controls {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    margin-right: 10px !important;
+}
+
+body.view-rubric-page .block-reorder-btn {
+    background: rgba(255,255,255,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    color: white !important;
+    width: 30px !important;
+    height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+}
+
+body.view-rubric-page .block-reorder-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+body.view-rubric-page .block-reorder-btn:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+body.view-rubric-page .rubric-reorder-btn {
+    background: transparent !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-secondary) !important;
+    width: 24px !important;
+    height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
+    font-size: 0.7rem !important;
+    transition: all 0.2s !important;
+}
+
+body.view-rubric-page .rubric-reorder-btn:hover:not(:disabled) { 
+    background-color: var(--color-hover) !important;
+    border-color: var(--color-primary) !important;
+}
+
+body.view-rubric-page .rubric-reorder-btn:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+/* ==================== ALERTS ==================== */
+body.view-rubric-page .alert {
+    padding: 15px 20px !important;
+    border-radius: 8px !important;
+    margin-top: 15px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    border-left: 4px solid !important;
+}
+
+body.view-rubric-page .alert-success { 
+    background-color: #d1fae5 !important; 
+    color: #065f46 !important;
+    border-color: var(--color-success) !important;
+}
+
+body.view-rubric-page .alert-danger { 
+    background-color: #fee2e2 !important; 
+    color: #991b1b !important;
+    border-color: var(--color-alert) !important;
+}
+
+/* ==================== EMPTY STATE STYLES ==================== */
+body.view-rubric-page .empty-state-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3rem !important;
+    padding: 2rem !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+body.view-rubric-page .empty-section {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    padding: 2rem !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.view-rubric-page .empty-section h2 {
+    font-size: 1.5rem !important;
+    font-weight: 600 !important;
+    margin: 0 0 1.5rem 0 !important;
+    color: #2c3e50 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding-bottom: 0.75rem !important;
+    border-bottom: 2px solid #e9ecef !important;
+}
+
+body.view-rubric-page .group-section h2 {
+    color: var(--color-info) !important;
+}
+
+body.view-rubric-page .group-section h2 i {
+    color: var(--color-info) !important;
+}
+
+body.view-rubric-page .individual-section h2 {
+    color: var(--color-success) !important;
+}
+
+body.view-rubric-page .individual-section h2 i {
+    color: var(--color-success) !important;
+}
+
+body.view-rubric-page .empty-subsection {
+    background: #f8f9fa !important;
+    border-radius: 8px !important;
+    padding: 2rem !important;
+    margin-bottom: 1.5rem !important;
+    text-align: center !important;
+    border: 2px dashed #dee2e6 !important;
+}
+
+body.view-rubric-page .empty-subsection:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.view-rubric-page .empty-subsection h3 {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+    margin: 0 0 0.75rem 0 !important;
+}
+
+body.view-rubric-page .empty-text {
+    color: #6c757d !important;
+    font-size: 0.95rem !important;
+    margin: 0 0 1.25rem 0 !important;
+    font-style: italic !important;
+}
+
+body.view-rubric-page .empty-subsection .btn {
+    margin-top: 0.5rem !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 0.95rem !important;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 900px) {
+    body.view-rubric-page .main-content { 
+        margin-left: 0 !important; 
+        padding: 20px !important; 
+    }
+    
+    body.view-rubric-page .rubric-card-header { 
+        flex-direction: column !important; 
+        gap: 15px !important; 
+    }
+    
+    body.view-rubric-page .rubric-actions { 
+        width: 100% !important; 
+        justify-content: flex-start !important; 
+    }
+    
+    body.view-rubric-page .comment-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    body.view-rubric-page .comment-item-actions {
+        justify-content: flex-end !important;
+        margin-top: 10px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.view-rubric-page .block-header {
+        flex-direction: column !important;
+        gap: 15px !important;
+        text-align: center !important;
+    }
+    
+    body.view-rubric-page .ratings-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    body.view-rubric-page .header-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    body.view-rubric-page .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    body.view-rubric-page .empty-state-container {
+        gap: 2rem !important;
+        padding: 1rem !important;
+    }
+    
+    body.view-rubric-page .empty-section {
+        padding: 1.5rem !important;
+    }
+    
+    body.view-rubric-page .empty-subsection {
+        padding: 1.5rem !important;
+    }
+    
+    body.view-rubric-page .empty-section h2 {
+        font-size: 1.25rem !important;
+    }
+    
+    body.view-rubric-page .empty-subsection h3 {
+        font-size: 1rem !important;
+    }
+}

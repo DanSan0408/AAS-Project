@@ -1,0 +1,4 @@
+/* Student-specific enhancements only */
+body.manage-users-page #studentTable tbody tr:hover {
+    background-color: rgba(74, 0, 24, 0.08) !important;
+}

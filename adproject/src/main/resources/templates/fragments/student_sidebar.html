@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      <head>
+        <link rel="stylesheet" th:href="@{/css/style.css}">
+        <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
+    </head>
+<body>
+<div class="sidebar" th:fragment="sidebar">
+    <div class="logo">
+        <h2>UTM AAS</h2>
+    </div>
+
+    <div class="user-profile">
+        <p><span sec:authentication="name"></span></p>
+    </div>
+
+    <ul class="menu-list">
+        <li>
+            <a th:href="@{/student/home}">
+                 Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/assessments}">
+                Peer & Self Assessments
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/comments}">
+                My Comments
+            </a>
+        </li>
+        
+        <li class="logout-item">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="logout-btn">
+                    Logout
+                </button>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            </form>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

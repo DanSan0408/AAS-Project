@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Assign Assessment</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_assessment.css}">
+</head>
+<body class="assign-assessment-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Assign Deadlines</h1>
+            </div>
+            
+            <div class="card-body">
+                <h2 class="assessment-title">
+                    <span class="label">Assessment:</span>
+                    <span class="value" th:text="${assessment.title}">Assessment Title</span>
+                </h2>
+
+                <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                    <span th:text="${errorMessage}">Error Message</span>
+                </div>
+
+                <form th:action="@{/admin/assessment/assign}" th:object="${assignmentDto}" method="post">
+                    <input type="hidden" th:field="*{assessmentId}" />
+                    <input type="hidden" th:field="*{deadlineId}" /> 
+
+                    <div class="form-group">
+                        <label for="title">Assignment Title (for Deadlines List) <span class="required">*</span></label>
+                        <input type="text" id="title" th:field="*{title}" required placeholder="e.g., Final Submission"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="assessorType">Who will be the Assessor? <span class="required">*</span></label>
+                        <select th:field="*{assessorType}" id="assessorType" required>
+                            <option value="">-- Select Assessor Role --</option>
+                            <option th:each="type : ${assessorTypes}" th:value="${type}" th:text="${type}"></option>
+                        </select>
+                    </div>
+
+                    <hr/>
+                    
+                    <div class="form-group">
+                        <label>Assessment Opening Time</label>
+                        <div class="radio-options">
+                            <label class="radio-card">
+                                <input type="radio" th:field="*{openType}" value="INSTANT" id="openInstant" checked/>
+                                <div class="radio-content">
+                                    <strong>Open Instantly</strong>
+                                    <span>Students can access immediately after saving.</span>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-card">
+                                <input type="radio" th:field="*{openType}" value="SCHEDULED" id="openScheduled"/>
+                                <div class="radio-content">
+                                    <strong>Scheduled Date</strong>
+                                    <span>Set a specific future date to open.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group date-input-group" id="scheduledOpenDateGroup">
+                        <label for="openDate">Scheduled Open Date</label>
+                        <input type="date" th:field="*{openDate}" id="openDate" />
+                    </div>
+                    
+                    <div class="form-group date-input-group">
+                        <label for="endDate">Deadline (Closing Date) <span class="required">*</span></label>
+                        <input type="date" th:field="*{endDate}" id="endDate" required/>
+                    </div>
+
+                    <div class="form-actions">
+                        <a th:href="@{/admin/home}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Assignment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const scheduledGroup = document.getElementById('scheduledOpenDateGroup');
+            const openScheduled = document.getElementById('openScheduled');
+            const openInstant = document.getElementById('openInstant');
+
+            function toggleDateInput() {
+                if (openScheduled.checked) {
+                    scheduledGroup.classList.add('visible');
+                } else {
+                    scheduledGroup.classList.remove('visible');
+                    const openDateInput = document.getElementById('openDate');
+                    if (openDateInput) openDateInput.value = '';
+                }
+            }
+
+            toggleDateInput(); 
+            openScheduled.addEventListener('change', toggleDateInput);
+            openInstant.addEventListener('change', toggleDateInput);
+        });
+    </script>
+</body>
+</html>

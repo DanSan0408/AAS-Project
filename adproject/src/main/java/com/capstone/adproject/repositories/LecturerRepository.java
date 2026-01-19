@@ -1,10 +1,14 @@
 package com.capstone.adproject.repositories;
 
-import com.capstone.adproject.model.Lecturer;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.capstone.adproject.model.Lecturer;
 
 @Repository
 public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
@@ -12,6 +16,24 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
 
     Optional<Lecturer> findByEmail(String email);
 
-    // **New Method for Forgot Password - Find by Token**
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
+
+    // --- CLEANUP METHODS FOR SAFE DELETION ---
+    
+    @Modifying
+    @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")
+    void unlinkFromGroups(@Param("lecturerId") Long lecturerId);
+
+    @Modifying
+    @Query("DELETE FROM LecturerGroupAssignment lga WHERE lga.lecturer.id = :lecturerId")
+    void deleteGroupAssignments(@Param("lecturerId") Long lecturerId);
+
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.lecturer.id = :lecturerId")
+    void deleteMarksGiven(@Param("lecturerId") Long lecturerId);
+
+    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :lecturerId AND ac.evaluatorType = 'LECTURER'")
+    void deleteCommentsByLecturer(@Param("lecturerId") Long lecturerId);
 }

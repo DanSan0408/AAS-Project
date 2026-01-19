@@ -1,395 +1,339 @@
-body {
-    font-family: 'Arial', sans-serif;
-    /* BACKGROUND: #2c3e50 -> #152238 (Darkest) */
-    background-color: #152238;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    color: #ecf0f1;
+/* =======================================================
+   RUBRIC MANAGEMENT - Professional Maroon Theme
+   Matched with group.css and manageUser.css
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-alert: #8B1E1E;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+    --color-purple: #9B59B6;
+    --color-secondary-dark: #27272A;
 }
 
-.sidebar {
-    width: 280px;
-    /* SIDEBAR BG: #34495e -> #192841 (Darker) */
-    background-color: #192841;
-    padding: 20px;
-    height: 100vh;
-    position: fixed;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-}
-
-.logo {
-    text-align: center;
-    padding-bottom: 20px;
-    /* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border-bottom: 1px solid #1c2e4a;
-    margin-bottom: 20px;
-}
-
-.logo h2 {
-    margin: 0;
-    color: #ecf0f1;
-}
-
-.user-profile {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.user-profile img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: 2px solid #ecf0f1;
-    margin-right: 15px;
-}
-
-.user-profile span {
-    font-weight: 700;
-}
-
-.menu-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.menu-list a {
-    display: block;
-    padding: 15px 20px;
-    color: #ecf0f1;
-    text-decoration: none;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-}
-
-.menu-list a:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
-    background-color: #1c2e4a;
-}
-
-.logout-link {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #e74c3c;
-    text-decoration: none;
-    font-weight: 700;
-}
-
-.main-content {
-    flex-grow: 1;
-    margin-left: 150px;
-    padding: 40px;
-    /* MAIN BG: #2c3e50 -> #152238 (Darkest) */
-    background-color: #152238;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.card {
-    /* CARD BG: #34495e -> #192841 (Darker) */
-    background-color: #192841;
-    padding: 100px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 1200px;
-    margin-bottom: 20px;
-}
-
-.card h1 {
-    border-bottom: 2px solid #ecf0f1;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 700;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 15px;
-    border-radius: 5px;
-    /* INPUT BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border: 1px solid #1c2e4a;
-    /* INPUT BG: #2c3e50 -> #203354 (Mid-tone dark) */
-    background-color: #203354;
-    color: #ecf0f1;
+/* ==================== RESET & BASE ==================== */
+* {
     box-sizing: border-box;
-    font-size: 20px;
 }
 
-.sub-rubric-card {
-    /* SUB-CARD BG: #2c3e50 -> #203354 (Mid-tone dark) */
-    background-color: #203354;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    /* SUB-CARD BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border: 1px solid #1c2e4a;
-    position: relative;
-}
-
-.rating-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 15px;
-}
-
-/* Button variants (No color changes as they are accent colors) */
-.btn {
-    padding: 12px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    color: #fff;
-    cursor: pointer;
-    border: none;
-    font-weight: 700;
-    transition: background-color 0.3s;
-    display: inline-block;
-    margin: 2px;
-    font-size: 16px;
-}
-
-.btn-primary {
-    background-color: #3498db;
-}
-
-.btn-primary:hover {
-    background-color: #2980b9;
-}
-
-.btn-secondary {
-    background-color: #27ae60;
-}
-
-.btn-secondary:hover {
-    background-color: #2ecc71;
-}
-
-.btn-danger {
-    background-color: #e74c3c;
-}
-
-.btn-danger:hover {
-    background-color: #c0392b;
-}
-
-.btn-add {
-    background-color: #16a085;
-}
-
-.btn-add:hover {
-    background-color: #1abc9c;
-}
-
-.btn-edit {
-    background-color: #538b99;
-}
-
-.btn-delete {
-    background-color: #f34312;
-}
-
-.btn-edit:hover {
-    background-color: #f1c40f;
-}
-
-.btn-view {
-    background-color: #3498db;
-}
-
-.btn-view:hover {
-    background-color: #2980b9;
-}
-
-
-/* Specific styles for `rubric-form.html` */
-.btn-danger.absolute-top-right {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-}
-
-/* Table styles for `manage-assessment.html` and `view-assessment-rubrics.html` */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-th,
-td {
-    padding: 12px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border-bottom: 1px solid #1c2e4a;
-    text-align: left;
-}
-
-th {
-    /* HEADER BG: #4a6681 -> #23395d (Deepest Mid-tone) */
-    background-color: #23395d;
-}
-
-tr:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
-    background-color: #1c2e4a;
-}
-
-/* Other shared styles */
-.header-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-    margin-left: 150px;
-}
-
-.header-container img {
-    max-width: 200px;
-    height: auto;
-}
-
-.header-container h1 {
+body.rubric-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-secondary);
     margin: 0;
-    color: #ecf0f1;
-}
-
-/* Styles for `view-assessment-rubrics.html` */
-.page-header {
-    width: 100%;
-    max-width: 1200px;
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 20px;
-    /* PAGE HEADER BG: #34495e -> #192841 (Darker) */
-    background-color: #192841;
-    border-radius: 12px;
-}
-
-.rubric-container {
-    width: 100%;
-    max-width: 1200px;
-    margin-bottom: 25px;
-    padding: 25px;
-    /* RUBRIC CONTAINER BG: #34495e -> #192841 (Darker) */
-    background-color: #192841;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.rubric-header {
+    padding: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    /* DIVIDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border-bottom: 2px solid #1c2e4a;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    min-height: 100vh;
 }
 
-.rubric-header h2 {
-    margin: 0;
+/* ==================== LAYOUT ==================== */
+body.rubric-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background-color: var(--color-background) !important;
+    flex-grow: 1 !important;
 }
 
-.sub-rubric {
-    margin-top: 20px;
-    padding-left: 20px;
-    border-left: 3px solid #16a085;
+/* ==================== HEADER ==================== */
+body.rubric-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 35px !important;
+    width: 100% !important;
+    flex-direction: row !important;
 }
 
-.sub-rubric h4 {
-    margin-top: 0;
+body.rubric-page .header-container img {
+    max-width: 200px !important;
+    height: auto !important;
 }
 
-.ratings-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+body.rubric-page .header-container h1 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
 }
 
-.ratings-table th,
-.ratings-table td {
-    text-align: left;
-    padding: 8px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border: 1px solid #1c2e4a;
+/* ==================== CARD STYLES ==================== */
+body.rubric-page .card {
+    background-color: var(--color-surface) !important;
+    padding: 0 !important; /* Reset padding for header/body split */
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(74, 0, 24, 0.12) !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto 30px !important;
+    border: 1px solid var(--color-border) !important;
+    overflow: hidden !important;
 }
 
-.ratings-table th {
-    /* HEADER BG: #2c3e50 -> #23395d (Deepest Mid-tone) */
-    background-color: #23395d;
+body.rubric-page .card-header {
+    background-color: var(--color-surface) !important;
+    padding: 20px 30px !important;
+    border-bottom: 2px solid var(--color-border) !important;
 }
 
-form.inline {
-    display: inline;
+body.rubric-page .card-header h2 {
+    color: var(--color-primary) !important;
+    margin: 0 !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
 }
 
-/* Styles for `manage-assessment.html` */
-#assessment-form {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
+body.rubric-page .creation-card #assessment-form {
+    padding: 30px !important;
 }
 
-#assessment-form input {
-    flex-grow: 1;
-    padding: 10px;
-    border-radius: 5px;
-    /* BORDER: #4a6681 -> #1c2e4a (Mid-tone) */
-    border: 1px solid #1c2e4a;
-    /* INPUT BG: #2c3e50 -> #203354 (Mid-tone dark) */
-    background-color: #203354;
-    color: #ecf0f1;
+/* ==================== FORM STYLES ==================== */
+body.rubric-page .input-group {
+    display: flex !important;
+    gap: 15px !important;
+    align-items: center !important;
+    width: 100% !important;
 }
 
-#assessment-form button {
-    padding: 10px 15px;
+body.rubric-page input[type="text"] {
+    flex-grow: 1 !important;
+    padding: 12px 18px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    border: 2px solid var(--color-border) !important;
+    background-color: var(--color-surface) !important;
+    color: var(--color-secondary) !important;
+    transition: all 0.3s ease !important;
 }
 
-.menu-list form button {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 15px 20px;
-    color: #ecf0f1;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    transition: background-color 0.3s ease;
-    font-size: 17px;
+body.rubric-page input[type="text"]:focus {
+    outline: none !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
 }
 
-.menu-list form button:hover {
-    /* HOVER BG: #4a6681 -> #1c2e4a (Mid-tone) */
-    background-color: #1c2e4a;
+/* ==================== TABLE STYLES ==================== */
+body.rubric-page .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 5px;
-    align-items: center;
+body.rubric-page table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+body.rubric-page thead {
+    background-color: var(--color-primary) !important;
+    color: var(--color-text) !important;
+}
+
+body.rubric-page th,
+body.rubric-page td {
+    padding: 16px 20px !important;
+    text-align: left !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+body.rubric-page th {
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 0.85rem !important;
+    letter-spacing: 0.5px !important;
+    white-space: nowrap !important;
+}
+
+body.rubric-page tbody tr {
+    background-color: var(--color-surface) !important;
+    transition: background-color 0.2s ease !important;
+}
+
+body.rubric-page tbody tr:hover {
+    background-color: var(--color-hover) !important;
+}
+
+body.rubric-page tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* ==================== BUTTONS ==================== */
+body.rubric-page .btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    color: var(--color-text) !important;
+    cursor: pointer !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    font-size: 1rem !important;
+    white-space: nowrap !important;
+}
+
+body.rubric-page .btn-sm {
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+}
+
+/* Primary / Save */
+body.rubric-page .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.2) !important;
+}
+
+body.rubric-page .btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(74, 0, 24, 0.3) !important;
+}
+
+/* Secondary / Cancel */
+body.rubric-page .btn-secondary {
+    background-color: var(--color-secondary) !important;
+    color: var(--color-text) !important;
+}
+
+body.rubric-page .btn-secondary:hover {
+    background-color: var(--color-secondary-dark) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Action Button Colors */
+body.rubric-page .btn-view { background-color: var(--color-info) !important; }
+body.rubric-page .btn-add-sub { background-color: var(--color-success) !important; }
+body.rubric-page .btn-configure { background-color: var(--color-purple) !important; }
+body.rubric-page .btn-lecturer { background-color: #E67E22 !important; }
+body.rubric-page .btn-assign { background-color: var(--color-accent) !important; }
+body.rubric-page .btn-edit { background-color: var(--color-warning) !important; }
+body.rubric-page .btn-delete { background-color: var(--color-alert) !important; }
+
+body.rubric-page .btn-view:hover,
+body.rubric-page .btn-add-sub:hover,
+body.rubric-page .btn-configure:hover,
+body.rubric-page .btn-lecturer:hover,
+body.rubric-page .btn-assign:hover,
+body.rubric-page .btn-edit:hover,
+body.rubric-page .btn-delete:hover {
+    filter: brightness(1.1) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ==================== ACTION CONTAINER ==================== */
+body.rubric-page .action-buttons {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+}
+
+/* ==================== DROPDOWN ==================== */
+body.rubric-page .dropdown {
+    position: relative !important;
+}
+
+body.rubric-page .dropdown-menu {
+    display: none !important;
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    z-index: 1000 !important;
+    min-width: 200px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-top: 5px !important;
+}
+
+body.rubric-page .dropdown-menu.show {
+    display: block !important;
+}
+
+body.rubric-page .dropdown-item {
+    display: block !important;
+    padding: 10px 16px !important;
+    color: var(--color-secondary) !important;
+    text-decoration: none !important;
+    transition: background-color 0.2s !important;
+    font-size: 14px !important;
+}
+
+body.rubric-page .dropdown-item:hover {
+    background-color: var(--color-background) !important;
+    color: var(--color-primary) !important;
+}
+
+body.rubric-page .dropdown-divider {
+    height: 1px !important;
+    background-color: var(--color-border) !important;
+    margin: 4px 0 !important;
+}
+
+/* ==================== ALERTS ==================== */
+body.rubric-page .message-container {
+    width: 100% !important;
+    max-width: 1200px !important;
+}
+
+body.rubric-page .alert {
+    padding: 16px 20px !important;
+    border-radius: 8px !important;
+    margin-bottom: 20px !important;
+    font-weight: 600 !important;
+    font-size: 15px !important;
+    border-left: 5px solid !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+body.rubric-page .alert-success {
+    background-color: #D1FAE5 !important;
+    color: #065F46 !important;
+    border-color: var(--color-success) !important;
+}
+
+body.rubric-page .alert-error {
+    background-color: #FEE2E2 !important;
+    color: #7F1D1D !important;
+    border-color: var(--color-alert) !important;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1000px) {
+    body.rubric-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+    }
+    
+    body.rubric-page .input-group {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    body.rubric-page .btn {
+        width: 100% !important;
+    }
 }

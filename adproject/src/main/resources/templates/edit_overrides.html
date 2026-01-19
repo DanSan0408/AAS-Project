@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Student Grades</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/edit_overrides.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="edit-overrides-page">
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+        
+        <div class="edit-container">
+            <div class="page-header">
+                <h1>Edit Assessment Results</h1>
+                <div class="header-actions">
+                    <a th:href="@{/admin/data-views/overall}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Overall Report
+                    </a>
+                </div>
+            </div>
+
+            <div class="card filter-section">
+                <form action="" method="get" class="filter-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-users"></i> Select Group to Edit:</label>
+                        <select name="groupId" onchange="this.form.submit()">
+                            <option value="">-- Choose a Group --</option>
+                            <option th:each="g : ${groups}" 
+                                    th:value="${g.id}" 
+                                    th:text="${g.groupName}" 
+                                    th:selected="${g.id == selectedGroupId}"></option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <form th:if="${selectedGroupId != null}" th:action="@{/admin/data-views/edit-overrides/save}" method="post" th:object="${form}">
+                <input type="hidden" name="groupId" th:value="${selectedGroupId}" />
+                
+                <div class="card table-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th style="width: 150px;">Factor <small>(0-5)</small></th>
+                                <th style="width: 150px;">Grand Total <small>(0-100)</small></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student, stat : ${students}">
+                                <td th:text="${student.username}" class="student-name">Name</td>
+                                <td th:text="${student.email}" class="student-email">Email</td> 
+                                
+                                <input type="hidden" th:field="*{updates[__${stat.index}__].studentId}" />
+                                
+                                <td>
+                                    <input type="number" step="0.001" min="0" max="5" class="inp-number"
+                                           th:field="*{updates[__${stat.index}__].factor}" />
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" max="100" class="inp-number"
+                                           th:field="*{updates[__${stat.index}__].grandTotal}" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="sticky-footer">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Changes</button>
+                </div>
+            </form>
+            
+            <div th:if="${selectedGroupId == null}" class="empty-state">
+                <i class="fas fa-mouse-pointer"></i>
+                <h3>Select a group above to begin editing grades.</h3>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

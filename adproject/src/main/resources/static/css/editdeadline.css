@@ -1,0 +1,204 @@
+/* =======================================================
+    EDIT DEADLINE - Professional Maroon Theme
+    Consistent with admin_home.css
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-alert: #8B1E1E;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-primary-dark: #2D000E;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+}
+
+/* ==================== RESET & BASE ==================== */
+* {
+    box-sizing: border-box;
+}
+
+body.edit-deadline-page .header-container h1 {
+    color: var(--color-primary)
+}
+body.edit-deadline-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-secondary);
+    margin: 0;
+    padding: 0;
+}
+
+/* Header Container */
+body.edit-deadline-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 15px !important;
+    padding: 20px 0 !important;
+    margin-bottom: 20px !important;
+    width: 100% !important;
+}
+
+body.edit-deadline-page .header-container img {
+    max-width: 200px !important;
+    height: auto !important;
+}
+
+body.edit-deadline-page .header-container h1 {
+    font-size: 2em !important;
+    color: var(--color-primary) !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+body.edit-deadline-page .main-content {
+    padding: 20px !important;
+    margin-left: 270px !important;
+}
+
+body.edit-deadline-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px !important;
+    min-height: 100vh !important;
+    background-color: var(--color-background) !important;
+}
+
+body.edit-deadline-page .deadline-form-container {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    background-color: var(--color-surface) !important;
+    border-radius: 16px !important;
+    padding: 40px !important;
+    box-shadow: 0 4px 20px rgba(74, 0, 24, 0.12) !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.edit-deadline-page .deadline-form-container h2 {
+    font-size: 2em !important;
+    color: var(--color-primary) !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 30px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    margin-top: 0 !important;
+}
+
+body.edit-deadline-page .form-section {
+    margin-bottom: 28px !important;
+}
+
+body.edit-deadline-page .form-section label {
+    display: block !important;
+    color: var(--color-secondary) !important;
+    font-size: 1em !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+
+body.edit-deadline-page .form-section input,
+body.edit-deadline-page .form-section select {
+    width: 100% !important;
+    padding: 12px 14px !important;
+    border: 2px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    background-color: var(--color-surface) !important;
+    color: var(--color-secondary) !important;
+    font-size: 1em !important;
+    box-sizing: border-box !important;
+    transition: all 0.3s ease !important;
+}
+
+body.edit-deadline-page .form-section input:focus,
+body.edit-deadline-page .form-section select:focus {
+    outline: none !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
+}
+
+body.edit-deadline-page .form-section small {
+    display: block !important;
+    color: var(--color-secondary) !important;
+    margin-top: 6px !important;
+    font-size: 0.9em !important;
+    opacity: 0.8 !important;
+}
+
+body.edit-deadline-page .readonly-field {
+    background-color: var(--color-background) !important;
+    cursor: not-allowed !important;
+    border: 2px dashed var(--color-border) !important;
+    color: var(--color-secondary) !important;
+    opacity: 0.7 !important;
+}
+
+body.edit-deadline-page .button-group {
+    display: flex !important;
+    gap: 15px !important;
+    margin-top: 40px !important;
+}
+
+body.edit-deadline-page .btn-primary {
+    flex: 1 !important;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    color: var(--color-text) !important;
+    padding: 14px 24px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 1.1em !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.2) !important;
+}
+
+body.edit-deadline-page .btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(74, 0, 24, 0.3) !important;
+}
+
+body.edit-deadline-page .btn-secondary {
+    flex: 1 !important;
+    background-color: var(--color-secondary) !important;
+    color: var(--color-text) !important;
+    padding: 14px 24px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 1.1em !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    font-weight: 600 !important;
+}
+
+body.edit-deadline-page .btn-secondary:hover {
+    background-color: var(--color-secondary-dark) !important;
+    transform: translateY(-2px) !important;
+}
+
+body.edit-deadline-page .info-badge {
+    display: inline-block !important;
+    padding: 6px 12px !important;
+    border-radius: 12px !important;
+    font-size: 0.85em !important;
+    font-weight: 700 !important;
+    margin-left: 10px !important;
+}
+
+body.edit-deadline-page .badge-assessment {
+    background-color: var(--color-primary) !important;
+    color: var(--color-text) !important;
+}
+
+body.edit-deadline-page .badge-general {
+    background-color: var(--color-secondary) !important;
+    color: var(--color-text) !important;
+}

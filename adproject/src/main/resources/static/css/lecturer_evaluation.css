@@ -1,0 +1,722 @@
+/* =======================================================
+   LECTURER EVALUATION FORM - EMERALD GREEN & GOLD THEME
+   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
+   ======================================================= */
+
+:root {
+    --lecturer-primary: #047857;
+    --lecturer-primary-light: #059669;
+    --lecturer-secondary: #3F3F46;
+    --lecturer-accent: #F8A617;
+    --lecturer-background: #F4F2EE;
+    --lecturer-text: #FAFAFA;
+    --lecturer-text-dark: #2B2B2B;
+    --lecturer-surface: #FFFFFF;
+    --lecturer-border: #E5E7EB;
+    --lecturer-hover: #F9FAFB;
+    --lecturer-success: #059669;
+    --lecturer-warning: #F59E0B;
+    --lecturer-info: #3B82F6;
+    --lecturer-purple: #9B59B6;
+    --lecturer-danger: #DC2626;
+}
+
+/* ==================== LAYOUT ==================== */
+body.lecturer-page {
+    background-color: var(--lecturer-background);
+    color: var(--lecturer-text-dark);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body.lecturer-page .main-content {
+    margin-left: 270px;
+    padding: 30px 40px;
+    min-height: 100vh;
+}
+
+body.lecturer-page .content-flex-container {
+    padding: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* ==================== HEADER ==================== */
+body.lecturer-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+}
+
+body.lecturer-page .header-container img { 
+    max-width: 200px !important; 
+    height: auto !important; 
+}
+
+body.lecturer-page .header-container h1 { 
+    margin: 0 !important; 
+    color: var(--lecturer-primary) !important; 
+    font-size: 2.2rem !important; 
+    font-weight: 700 !important; 
+}
+
+/* ==================== EVALUATION CONTAINER ==================== */
+body.lecturer-page .evaluation-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 0 80px 0;
+}
+
+/* ==================== EVALUATION HEADER ==================== */
+body.lecturer-page .evaluation-header {
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.15);
+}
+
+body.lecturer-page .evaluation-header h2 {
+    color: white;
+    margin: 0 0 12px 0;
+    font-size: 1.8em;
+    font-weight: 700;
+}
+
+body.lecturer-page .target-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+body.lecturer-page .evaluating-target {
+    color: white;
+    margin: 8px 0 0 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+body.lecturer-page .evaluating-target span {
+    color: var(--lecturer-accent);
+    font-weight: 700;
+}
+
+/* ==================== SAVE INFO BOX ==================== */
+body.lecturer-page .save-info {
+    background-color: var(--lecturer-surface);
+    border-left: 4px solid var(--lecturer-warning);
+    padding: 18px 20px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+body.lecturer-page .save-info p {
+    margin: 6px 0;
+    color: var(--lecturer-text-dark);
+    font-size: 0.95em;
+}
+
+body.lecturer-page .save-info strong {
+    color: var(--lecturer-warning);
+    font-weight: 700;
+}
+
+/* ==================== STUDENTS LIST ==================== */
+body.lecturer-page .students-list {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+body.lecturer-page .students-list strong {
+    color: white;
+    font-size: 1em;
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+body.lecturer-page .students-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+body.lecturer-page .students-list li {
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--lecturer-text-dark);
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* ==================== SECTION DIVIDERS ==================== */
+body.lecturer-page .section-divider {
+    margin: 40px 0;
+    padding: 22px 25px;
+    background: linear-gradient(135deg, var(--lecturer-primary), var(--lecturer-primary-light));
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(4, 120, 87, 0.15);
+}
+
+body.lecturer-page .section-divider h2 {
+    margin: 0;
+    color: white;
+    font-size: 1.7em;
+    font-weight: 700;
+}
+
+body.lecturer-page .section-divider p {
+    margin: 8px 0 0 0;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* ==================== ALERTS ==================== */
+body.lecturer-page .alert {
+    padding: 16px 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    border-left: 4px solid;
+}
+
+body.lecturer-page .alert-error {
+    background-color: #FEE2E2;
+    color: #7F1D1D;
+    border-color: #DC2626;
+}
+
+/* ==================== SAVE WARNING (Comment Validation) ==================== */
+body.lecturer-page .save-warning {
+    display: none;
+    padding: 16px 20px;
+    background-color: #FFF3CD;
+    border: 2px solid var(--lecturer-warning);
+    border-left: 4px solid var(--lecturer-warning);
+    border-radius: 10px;
+    margin-bottom: 25px;
+    color: #856404;
+    font-size: 0.95em;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+body.lecturer-page .save-warning.show {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+body.lecturer-page .save-warning i {
+    color: var(--lecturer-warning);
+    font-size: 1.2em;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+body.lecturer-page .save-warning strong {
+    color: #B45309;
+}
+
+/* ==================== RUBRIC SECTION ==================== */
+body.lecturer-page .rubric-section {
+    background: var(--lecturer-surface);
+    border: 1px solid var(--lecturer-border);
+    border-left: 5px solid var(--lecturer-primary);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.lecturer-page .rubric-header {
+    border-bottom: 3px solid var(--lecturer-primary);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+body.lecturer-page .rubric-title {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--lecturer-primary);
+    margin-bottom: 8px;
+}
+
+body.lecturer-page .rubric-marks {
+    color: var(--lecturer-text-dark);
+    font-size: 0.95em;
+    margin-top: 5px;
+}
+
+body.lecturer-page .rubric-marks strong {
+    color: var(--lecturer-success);
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+/* ==================== SUB-RUBRIC CARD ==================== */
+body.lecturer-page .sub-rubric-card {
+    background: var(--lecturer-hover);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    border-left: 4px solid var(--lecturer-accent);
+    border: 1px solid var(--lecturer-border);
+    border-left: 4px solid var(--lecturer-accent);
+}
+
+body.lecturer-page .sub-rubric-title {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--lecturer-primary);
+    margin-bottom: 10px;
+}
+
+body.lecturer-page .sub-rubric-marks {
+    color: var(--lecturer-secondary);
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+body.lecturer-page .sub-rubric-description {
+    color: var(--lecturer-secondary);
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    line-height: 1.6;
+    font-style: italic;
+}
+
+/* ==================== RATING OPTIONS ==================== */
+body.lecturer-page .rating-options {
+    display: grid;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+body.lecturer-page .rating-option {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    background: white;
+    border: 2px solid var(--lecturer-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+body.lecturer-page .rating-option:hover {
+    border-color: var(--lecturer-primary);
+    background: rgba(4, 120, 87, 0.03);
+}
+
+body.lecturer-page .rating-option:has(input[type="radio"]:checked) {
+    border-color: var(--lecturer-primary);
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.08) 0%, rgba(5, 150, 105, 0.05) 100%);
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.15);
+}
+
+body.lecturer-page .rating-option input[type="radio"] {
+    margin-right: 15px;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--lecturer-primary);
+    flex-shrink: 0;
+}
+
+body.lecturer-page .rating-option label {
+    flex: 1;
+    cursor: pointer;
+    margin: 0;
+    line-height: 1.5;
+}
+
+body.lecturer-page .rating-option strong {
+    color: var(--lecturer-primary);
+    font-size: 1em;
+    font-weight: 700;
+}
+
+body.lecturer-page .rating-marks {
+    font-weight: 700;
+    color: var(--lecturer-success);
+    margin-left: 15px;
+    font-size: 1em;
+    flex-shrink: 0;
+}
+
+/* ==================== RUBRIC-SPECIFIC COMMENTS ==================== */
+body.lecturer-page .rubric-comments-section {
+    margin-top: 20px;
+    padding: 18px;
+    background: rgba(155, 89, 182, 0.08);
+    border-left: 4px solid var(--lecturer-purple);
+    border-radius: 8px;
+    border: 1px solid rgba(155, 89, 182, 0.2);
+    border-left: 4px solid var(--lecturer-purple);
+}
+
+body.lecturer-page .rubric-comments-header {
+    color: var(--lecturer-purple);
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.lecturer-page .rubric-comment-field {
+    margin-bottom: 18px;
+}
+
+body.lecturer-page .rubric-comment-field label {
+    display: block;
+    color: var(--lecturer-purple);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+body.lecturer-page .rubric-comment-field textarea {
+    width: 100%;
+    min-height: 90px;
+    padding: 12px;
+    background: var(--lecturer-surface);
+    border: 2px solid var(--lecturer-purple);
+    border-radius: 8px;
+    color: var(--lecturer-text-dark);
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+body.lecturer-page .rubric-comment-field textarea:focus {
+    outline: none;
+    border-color: #8E44AD;
+    box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.15);
+}
+
+/* ✅ NEW: Validation states for rubric comments */
+body.lecturer-page .rubric-comment-field textarea.insufficient {
+    border-color: var(--lecturer-danger) !important;
+    background-color: #FEE2E2;
+}
+
+body.lecturer-page .rubric-comment-field textarea.insufficient:focus {
+    border-color: var(--lecturer-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+body.lecturer-page .rubric-comment-field textarea.sufficient {
+    border-color: var(--lecturer-success) !important;
+    background-color: #ECFDF5;
+}
+
+body.lecturer-page .rubric-comment-field textarea.sufficient:focus {
+    border-color: var(--lecturer-success) !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+}
+
+body.lecturer-page .rubric-comment-hint {
+    font-size: 0.85em;
+    color: var(--lecturer-secondary);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.lecturer-page .rubric-comment-hint.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .rubric-comment-hint.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
+}
+
+/* ==================== GENERAL COMMENTS SECTION ==================== */
+body.lecturer-page .comments-section {
+    background: var(--lecturer-surface);
+    border: 2px solid var(--lecturer-accent);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.lecturer-page .comments-header {
+    border-bottom: 3px solid var(--lecturer-accent);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+body.lecturer-page .comments-header h3,
+body.lecturer-page .comments-title {
+    color: var(--lecturer-primary);
+    font-size: 1.3em;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.lecturer-page .comment-field {
+    margin-bottom: 20px;
+}
+
+body.lecturer-page .comment-label {
+    font-weight: 700;
+    color: var(--lecturer-primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+}
+
+/* ==================== COMMENT VALIDATION STYLES ==================== */
+
+/* Comment textarea base styles */
+body.lecturer-page .comment-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 2px solid var(--lecturer-border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95em;
+    line-height: 1.6;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    background-color: var(--lecturer-surface);
+}
+
+body.lecturer-page .comment-textarea:focus {
+    outline: none;
+    border-color: var(--lecturer-primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+}
+
+/* Insufficient length - Red state */
+body.lecturer-page .comment-textarea.insufficient {
+    border-color: var(--lecturer-danger) !important;
+    background-color: #FEE2E2;
+}
+
+body.lecturer-page .comment-textarea.insufficient:focus {
+    border-color: var(--lecturer-danger) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Sufficient length - Green state */
+body.lecturer-page .comment-textarea.sufficient {
+    border-color: var(--lecturer-success) !important;
+    background-color: #ECFDF5;
+}
+
+body.lecturer-page .comment-textarea.sufficient:focus {
+    border-color: var(--lecturer-success) !important;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+body.lecturer-page .comment-hint {
+    font-size: 0.85em;
+    color: var(--lecturer-secondary);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.lecturer-page .comment-hint.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .comment-hint.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
+}
+
+/* Character counter (if you want to add it later) */
+body.lecturer-page .char-counter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--lecturer-secondary);
+    font-weight: 500;
+}
+
+body.lecturer-page .char-counter.insufficient {
+    color: var(--lecturer-danger);
+    font-weight: 600;
+}
+
+body.lecturer-page .char-counter.sufficient {
+    color: var(--lecturer-success);
+    font-weight: 600;
+}
+
+/* Optional indicator badge */
+body.lecturer-page .optional-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background-color: var(--lecturer-info);
+    color: white;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==================== STUDENT INDIVIDUAL SECTION ==================== */
+body.lecturer-page .student-section {
+    margin-top: 35px;
+    padding: 25px;
+    background-color: var(--lecturer-surface);
+    border: 2px solid var(--lecturer-border);
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+body.lecturer-page .student-header {
+    background: linear-gradient(135deg, var(--lecturer-info), #3B82F6);
+    padding: 18px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+body.lecturer-page .student-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 1.4em;
+    font-weight: 700;
+}
+
+/* ==================== FORM ACTIONS (STICKY FOOTER) ==================== */
+body.lecturer-page .form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    align-items: center;
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background-color: var(--lecturer-surface);
+    border-top: 2px solid var(--lecturer-border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 0;
+    padding: 20px 30px;
+    border-radius: 12px 12px 0 0;
+}
+
+body.lecturer-page .btn {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+}
+
+body.lecturer-page .btn-submit,
+body.lecturer-page .btn-save {
+    background: linear-gradient(135deg, var(--lecturer-success) 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(5, 150, 105, 0.3);
+}
+
+body.lecturer-page .btn-submit:hover,
+body.lecturer-page .btn-save:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4);
+}
+
+body.lecturer-page .btn-cancel,
+body.lecturer-page .btn-back {
+    background: var(--lecturer-secondary);
+    color: white;
+}
+
+body.lecturer-page .btn-cancel:hover,
+body.lecturer-page .btn-back:hover {
+    background: #52525B;
+    transform: translateY(-2px);
+}
+
+/* ==================== ICON STYLES (for Font Awesome) ==================== */
+body.lecturer-page .fa-exclamation-triangle {
+    margin-right: 4px;
+}
+
+body.lecturer-page .fa-check {
+    margin-right: 4px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    body.lecturer-page .evaluation-container {
+        padding: 0 0 80px 0;
+    }
+    
+    body.lecturer-page .form-actions {
+        flex-direction: column-reverse;
+        padding: 15px;
+    }
+    
+    body.lecturer-page .btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+    
+    body.lecturer-page .save-warning {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    body.lecturer-page .char-counter {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}

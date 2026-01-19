@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Re-evaluation Warning</title>
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_warning.css}">
+</head>
+<body class="lecturer-page">
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="warning-container">
+                <div class="warning-icon">⚠️</div>
+                
+                <h2 class="warning-title">Re-evaluation Warning</h2>
+                
+                <div class="warning-message">
+                    <p>You have already evaluated this group for <strong th:text="${assessment.title}">this assessment</strong>.</p>
+                    
+                    <div class="target-info">
+                        <p>
+                            Target: Group "<span th:text="${selectedGroup.groupName}">Group Name</span>"
+                        </p>
+                    </div>
+                    
+                    <p class="warning-emphasis"><strong>If you proceed, your previous evaluation (both group and individual assessments) will be replaced.</strong></p>
+                    <p>Are you sure you want to re-evaluate?</p>
+                </div>
+
+                <div class="button-group">
+                    <form th:action="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id})}" method="get">
+                        <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
+                        <input type="hidden" name="confirmReevaluation" value="true"/>
+                        <button type="submit" class="btn-proceed">Yes, Proceed with Re-evaluation</button>
+                    </form>
+                    
+                    <a th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
+                       class="btn-back">
+                        No, Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

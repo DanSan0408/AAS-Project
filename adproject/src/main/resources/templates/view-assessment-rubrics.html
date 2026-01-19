@@ -1,220 +1,603 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${assessment.title} + ' Rubrics'">View Rubrics</title>
-    <link rel="stylesheet" th:href="@{/css/rubric.css}">
-    <style>
-        .main-content { font-size: 1.1em; }
-        .page-header h1 { font-size: 2.2em; }
-        .rubric-container h2, .criteria-header h2 { font-size: 1.8em; }
-        h2 { font-size: 1.5em !important; }
-        /* Adjusted table and element font sizes for consistency */
-        table th, table td, .rubric-header strong, .rubric-header p, .sub-rubric h4, .sub-rubric p, .likert-level-grid strong, .likert-level-grid span { font-size: 1.1em; }
-        .btn { padding: 15px 25px !important; font-size: 17px !important; }
-        .rubric-container { padding: 30px; margin-bottom: 35px; background-color: #34495e; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-        .criteria-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px solid #4a6681; padding-bottom: 10px; }
-        .criteria-header h2 { margin-top: 0; color: #ecf0f1; }
-        .criteria-rating-card { 
-            background-color: #2c3e50; 
-            border-radius: 6px; 
-            padding: 10px; /* Reduced padding */
-            margin-top: 5px; /* Reduced margin */
-            border: 1px solid #4a6681;
-        }
-        
-        /* Removed .rating-grid styles as they are no longer needed for the new compact display */
-
-        .assessment-summary { margin-top: 20px; margin-bottom: 40px; padding: 30px; background-color: #2c3e50; border-radius: 12px; max-width: 1200px; color: #ecf0f1; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4); border: 2px solid #3498db; text-align: left; }
-        
-        /* NEW STYLES for Likert Ratings Display */
-        .likert-ratings-section { margin-top: 15px; border: 1px solid #4a6681; border-radius: 6px; padding: 15px; background-color: #2c3e50; }
-        .likert-ratings-section h5 { color: #3498db; font-size: 1.2em; margin-top: 0; margin-bottom: 10px; border-bottom: 1px dotted #3498db; padding-bottom: 5px; }
-        /* CORRECTED BLOCK: Added colons and semicolons for proper CSS syntax */
-        .likert-level-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 4fr; /* Level Label/Value | Description */
-            gap: 15px; 
-            align-items: flex-start; 
-            padding: 8px 0; 
-            border-bottom: 1px dashed #4a6681; 
-        }
-        .likert-level-grid:last-child { border-bottom: none; }
-        .likert-level-grid strong { color: #f39c12; }
-        
-        /* Style for the new compact criteria rating display */
-        .compact-criteria-rating {
-            padding: 3px 0;
-            font-size: 1.05em;
-            color: #ecf0f1;
-        }
-        .compact-criteria-rating strong {
-            color: #f39c12;
-            margin-right: 5px;
-        }
-    </style>
+    <title th:text="${assessment.title} + ' - Rubrics & Comments'">View Rubrics</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
+<body class="view-rubric-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
+        
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+        
         <div class="page-header">
             <h1 th:text="${assessment.title}">Assessment Title</h1>
-            <p>Below are all the rubrics associated with this assessment.</p>
+            <p>Manage rubrics and comment configurations for this assessment.</p>
+            
+            <div class="header-actions">
+                <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-lecturer">
+                    <i class="fas fa-user-tie"></i> Lecturer Assignments
+                </a>
+                <a th:href="@{/rubrics/manage}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMessage}"></span>
+            </div>
         </div>
 
         <div class="assessment-summary">
-            <h3 style="color: #3498db; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.6em;">Assessment Summary</h3>
-            
-            <p style="margin-bottom: 15px;">
-                <strong>Total Assessment Marks (Likert + Criteria): </strong>
-                <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}" style="color: #f39c12; font-weight: bold;">0.00</span>
-            </p>
-            
-            <h4 style="color: #ecf0f1; margin-top: 20px; border-bottom: 1px dotted #4a6681; padding-bottom: 5px; font-size: 1.3em;">CLO Marks Distribution:</h4>
-            
-            <div th:each="clo : ${assessment.cloMarks}" style="margin-left: 20px;">
-                <p style="margin: 8px 0;">
-                    <strong th:text="${'CLO ' + clo.key + ' Total Marks:'}">Total CLO X Marks:</strong>
-                    <span th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span>
-                </p>
+            <div class="summary-header">
+                <h3><i class="fas fa-chart-pie"></i> Assessment Summary</h3>
+                <div class="total-marks">
+                    <span>Total Marks</span>
+                    <strong th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</strong>
+                </div>
             </div>
-            <div th:if="${#maps.isEmpty(assessment.cloMarks)}">
-                <p style="margin-left: 20px; color: #7f8c8d;">No CLO marks are currently assigned.</p>
+            
+            <div class="clo-distribution">
+                <h4>CLO Distribution</h4>
+                <div class="clo-grid" th:if="${!#maps.isEmpty(assessment.cloMarks)}">
+                    <div th:each="clo : ${assessment.cloMarks}" class="clo-item">
+                        <span class="clo-label" th:text="${'CLO ' + clo.key}">CLO X</span>
+                        <span class="clo-value" th:text="${#numbers.formatDecimal(clo.value, 1, 2)}">0.00</span>
+                    </div>
+                </div>
+                <p th:if="${#maps.isEmpty(assessment.cloMarks)}" class="text-muted">No CLO marks assigned yet.</p>
             </div>
         </div>
         
-        <div style="width:100%; max-width:1200px; text-align:center; margin-bottom:40px; display:flex; justify-content:center; gap: 30px;">
-            <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-add" style="background-color: #0789d4;">
-                Add Likert Rubric
-            </a>
-            <a th:href="@{/criteria/add/{id}(id=${assessment.id})}" class="btn btn-add">
-                Add Criteria Rubric
-            </a>
-        </div>
-        
-        <div th:each="evaluationEntry : ${groupedRubrics}" style="margin-top: 40px; width: 100%; max-width: 1200px;">
-            <h2 style="color: #ecf0f1; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 20px;">
-                <span th:text="${evaluationEntry.key} + ' Evaluation'">Evaluation Type</span>
-            </h2>
+        <th:block th:with="
+            individualOrder=${assessment.individualOrder != null ? assessment.individualOrder : 0},
+            groupOrder=${assessment.groupOrder != null ? assessment.groupOrder : 1},
+            showIndividualFirst=${individualOrder < groupOrder},
+            groupRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Group Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Group Assessment') : null},
+            individualRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Individual Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Individual Assessment') : null},
+            hasGroupContent=${groupRubrics != null || (assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels))},
+            hasIndividualContent=${individualRubrics != null || (assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels))}">
             
-            <div th:each="assessmentEntry : ${evaluationEntry.value}" style="margin-top: 30px; margin-left: 20px; border-left: 5px solid #2ecc71; padding-left: 15px;">
-                <h3 style="color: #3498db; border-bottom: 1px solid #3498db; padding-bottom: 5px; font-size: 1.6em;">
-                    <span th:text="${assessmentEntry.key}">Assessment Type</span>
-                </h3>
+            <th:block th:if="${showIndividualFirst}">
+                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+            </th:block>
+            
+            <th:block th:unless="${showIndividualFirst}">
+                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+            </th:block>
+            
+        </th:block>
+        
+        <!-- ==================== EMPTY STATE - NO CONTENT CONFIGURED ==================== -->
+        <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
+                      (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
+                      (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
+             class="empty-state-container">
+            
+            <!-- Group Assessment Section -->
+            <div class="empty-section group-section">
+                <h2><i class="fas fa-users"></i> Group Assessment</h2>
                 
-                <div th:each="item : ${assessmentEntry.value}" style="margin-top: 20px;">
+                <!-- Group Rubrics -->
+                <div class="empty-subsection">
+                    <h3>Group Assessment Rubrics</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Group Assessment Rubrics
+                    </a>
+                </div>
                 
-                    <div class="rubric-container" th:if="${item.isRubric()}"> 
-                        <div th:with="rubric=${item.item}">
-                            <div class="rubric-header">
-                                <div>
-                                    <h2 th:text="${rubric.name}">Likert Rubric Name</h2>
-                                    <p th:text="${rubric.description}" style="margin:8px 0;">Rubric Description</p>
-                                    
-                                    <strong>Type: <span style="color: #f39c12;">Likert Scale (5-Point)</span></strong>
-                                    <br>
-                                    
-                                    <strong>Evaluation Type: <span th:text="${rubric.evaluationType}">Individual</span></strong>
-                                    <br>
-                                    <strong>Assessment Type: <span th:text="${rubric.assessmentTypes}">Individual Assessment</span></strong>
-                                    <br>
-
-                                    <strong>Total Marks: <span th:text="${rubric.marks}">100</span></strong>
-                                    <br>
-                                    <strong>CLO: <span th:text="${rubric.clo}">1</span></strong><br>
-                                    <strong>CLO Marks: <span th:text="${rubric.cloMarks}">50</span></strong>
-                                </div>
-                                <div class="action-buttons">
-                                    <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn btn-edit">Edit</a>
-                                    <form class="inline" th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this rubric?');">
-                                        <button type="submit" class="btn btn-delete">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div class="sub-rubric" th:each="subRubric : ${rubric.subRubrics}">
-                                <h4 th:text="${subRubric.name}" style="font-size: 1.25em; margin-top: 20px;">Sub-Rubric Name</h4>
-                                <p th:text="${subRubric.description}" style="margin:5px 0;">Sub-Rubric Description</p>
-                                <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
-                                    *Student mark is calculated based on the average of selected rating levels (0-4).
-                                </p>
-                                
-                                <div class="likert-ratings-section" th:if="${subRubric.ratings != null and not #lists.isEmpty(subRubric.ratings)}">
-                                    <h5>Rating Levels (Level 0 to Level 4)</h5>
-                                    <div th:each="rating : ${subRubric.ratings}" class="likert-level-grid">
-                                        <div>
-                                            <strong th:text="${rating.levelLabel}">Level Label</strong>
-                                            <br>
-                                            <span style="font-weight: normal; color: #ecf0f1;" th:text="${'Level ' + rating.level}">Level Value</span>
-                                        </div>
-                                        <div style="grid-column: 2 / 3;">
-                                            <span th:text="${rating.description ?: 'No specific description provided.'}">Rating Description</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div th:if="${subRubric.ratings == null or #lists.isEmpty(subRubric.ratings)}">
-                                    <p style="color: #f39c12; margin-top: 10px;">No rating levels found for this sub-rubric.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="rubric-container" th:if="${item.isCriteria()}">
-                            <div th:with="criteria=${item.item}">
-                            
-                            <div class="criteria-header">
-                                <div>
-                                    <h2 th:text="${criteria.name}">Criteria Rubric Name</h2>
-                                    
-                                    <strong>Type: <span style="color: #2ecc71;">Criteria Based (Rating Levels 0-4)</span></strong>
-                                    <br>
-
-                                    <strong>Evaluation Type: <span th:text="${criteria.evaluationType}">Individual</span></strong>
-                                    <br>
-                                    <strong>Assessment Type: <span th:text="${criteria.assessmentTypes}">Individual Assessment</span></strong>
-                                    <br>
-                                    
-                                    <strong>Total Marks: <span th:text="${criteria.marks}">100</span></strong>
-                                    <br>
-                                    <strong>CLO: <span th:text="${criteria.clo}">1</span></strong><br>
-                                    <strong>CLO Marks: <span th:text="${criteria.cloMarks}">50</span></strong>
-                                </div>
-                                <div class="action-buttons">
-                                    <a th:href="@{/criteria/edit/{id}(id=${criteria.id})}" class="btn btn-edit">Edit</a> 
-                                    <form class="inline" th:action="@{/criteria/delete/{id}(id=${criteria.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this Criteria rubric?');">
-                                        <button type="submit" class="btn btn-delete">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div style="margin-top: 15px;">
-                                <h4 style="color: #3498db; border-bottom: 1px dotted #3498db; padding-bottom: 5px; font-size: 1.25em;">Rating Levels (0 to 4)</h4>
-                                <p style="font-size: 0.9em; color: #95a5a6; margin-top: 5px;">
-                                    *Student mark is calculated based on the average of selected rating levels (0-4).
-                                </p>
-                                
-                                <div th:if="${criteria.criteriaRatings != null and not #lists.isEmpty(criteria.criteriaRatings)}">
-                                    <div class="criteria-rating-card compact-criteria-rating" th:each="rating : ${criteria.criteriaRatings}">
-                                        <span th:text="${rating.level} + ':'">0:</span>
-                                        <strong th:text="${rating.name}">Never</strong>
-                                        <span th:text="${'' + rating.description + ''}">(0% of the time)</span> 
-                                    </div>
-                                </div>
-                                
-                                <div th:if="${criteria.criteriaRatings == null or #lists.isEmpty(criteria.criteriaRatings)}">
-                                    <p style="color: #f39c12; margin-top: 10px; padding: 10px; border: 1px dashed #f39c12; border-radius: 4px;">No rating levels found for this Criteria. Check your data or CriteriaRating entity property names.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
+                <!-- Group Comments -->
+                <div class="empty-subsection">
+                    <h3>Group Assessment Comments</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                        <i class="fas fa-cog"></i> Add Group Assessment Comments
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Individual Assessment Section -->
+            <div class="empty-section individual-section">
+                <h2><i class="fas fa-user"></i> Individual Assessment</h2>
+                
+                <!-- Individual Rubrics -->
+                <div class="empty-subsection">
+                    <h3>Individual Assessment Rubrics</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Individual Assessment Rubrics
+                    </a>
+                </div>
+                
+                <!-- Individual Comments -->
+                <div class="empty-subsection">
+                    <h3>Individual Assessment Comments</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                        <i class="fas fa-cog"></i> Add Individual Assessment Comments
+                    </a>
                 </div>
             </div>
         </div>
-        <div th:if="${#maps.isEmpty(groupedRubrics)}" style="padding: 25px; background-color: #4a6681; border-radius: 8px; text-align: center; max-width: 1200px; margin-top: 40px;">
-            <p style="font-size: 1.1em;">No Rubrics or Criteria have been added to this assessment yet.</p>
-        </div>
     </div>
+    
+    <!-- ==================== FRAGMENT DEFINITIONS ==================== -->
+    <div style="display: none;">
+        
+        <!-- ==================== GROUP ASSESSMENT BLOCK ==================== -->
+        <th:block th:fragment="group-block(groupRubrics)">
+        <div class="assessment-block" id="group-block">
+            <div class="block-header group-header">
+                <h2 class="block-title"><i class="fas fa-users"></i> Group Assessment</h2>
+                <div class="block-reorder-controls">
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post">
+                        <input type="hidden" name="blockType" value="Group"/>
+                        <input type="hidden" name="direction" value="up"/>
+                        <button type="submit" class="block-reorder-btn"><i class="fas fa-chevron-up"></i></button>
+                    </form>
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post">
+                        <input type="hidden" name="blockType" value="Group"/>
+                        <input type="hidden" name="direction" value="down"/>
+                        <button type="submit" class="block-reorder-btn"><i class="fas fa-chevron-down"></i></button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="block-content">
+                <!-- RUBRICS SECTION -->
+                <div th:if="${groupRubrics != null}" class="content-section">
+                    <div class="section-label">Rubrics</div>
+                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
+                        <div class="rubric-card-header">
+                            <div class="rubric-info">
+                                <h3 th:text="${rubric.name}">Rubric Name</h3>
+                                <p th:if="${rubric.description}" th:text="${rubric.description}">Description</p>
+                                <div class="rubric-meta">
+                                    <span class="meta-badge"><i class="fas fa-star"></i> Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</strong></span>
+                                    <span class="meta-badge"><i class="fas fa-bullseye"></i> CLO: <strong th:text="${rubric.clo}">1</strong></span>
+                                </div>
+                            </div>
+                            <div class="rubric-actions">
+                                <div class="rubric-reorder-controls">
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
+                                        <input type="hidden" name="direction" value="up"/>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == 0}">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
+                                        <input type="hidden" name="direction" value="down"/>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == #lists.size(groupRubrics) - 1}">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Delete this rubric?');">
+                                    <button type="submit" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Sub-Rubrics -->
+                        <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
+                                <div class="sub-rubric-header">
+                                    <h4 th:text="${subRubric.name}">Sub Name</h4>
+                                    <span class="sub-marks">Maximum Rating: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
+                                </div>
+                                <p th:if="${subRubric.description}" th:text="${subRubric.description}" class="text-muted">Desc</p>
+                                
+                                <div th:if="${subRubric.ratings != null}" class="ratings-grid">
+                                    <div th:each="rating : ${subRubric.ratings}" class="rating-card">
+                                        <div class="rating-header">
+                                            <span class="rating-name" th:text="${rating.name}">Name</span>
+                                            <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                        </div>
+                                        <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Direct Ratings -->
+                        <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
+                            <h5>Rating Levels</h5>
+                            <div class="ratings-grid">
+                                <div th:each="rating : ${rubric.ratings}" class="rating-card">
+                                    <div class="rating-header">
+                                        <span class="rating-name" th:text="${rating.name}">Name</span>
+                                        <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                    </div>
+                                    <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rubric Comments -->
+                        <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
+                            <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
+                            <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
+                                <span class="q-badge" th:text="${'Q' + (i + 1)}">Q1</span>
+                                <div class="q-content">
+                                    <div class="q-text" th:text="${rubric.getRubricCommentLabel(i)}">Label</div>
+                                    <div class="q-meta">
+                                        <span>Min: <b th:text="${rubric.getRubricCommentMinLength(i)}">0</b></span>
+                                        <span th:text="${rubric.isRubricCommentAnonymous(i) ? 'Anonymous' : 'Named'}">Type</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-btn-container">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Group Rubric</a>
+                    </div>
+                </div>
+
+                <!-- OVERALL COMMENTS SECTION -->
+                <div class="content-section">
+                    <div class="section-label">Overall Assessment Comments</div>
+                    
+                    <!-- When comments exist -->
+                    <div th:if="${assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels)}" class="assessment-comments-section">
+                        <div class="comments-header">
+                            <h3><i class="fas fa-comments"></i> Group Feedback Questions</h3>
+                        </div>
+                        
+                        <div class="comments-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">Total Questions:</span>
+                                <span class="summary-value" th:text="${#lists.size(assessment.groupCommentLabels)}">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Minimum Length:</span>
+                                <span class="summary-value" th:text="${assessment.getGroupCommentMinLength(0) + ' characters'}">20 chars</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Anonymity:</span>
+                                <span class="summary-value" th:text="${assessment.isGroupCommentAnonymous(0) ? 'Anonymous' : 'Named'}">Named</span>
+                            </div>
+                        </div>
+                        
+                        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-item">
+                            <div class="comment-content">
+                                <span class="comment-number">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                                <div class="comment-text-wrapper">
+                                    <div class="comment-text" th:text="${label}">Question text</div>
+                                    <div class="question-meta">
+                                        <span>
+                                            <i class="fas fa-text-width"></i> 
+                                            Min: <strong th:text="${assessment.getGroupCommentMinLength(iterStat.index)}">20</strong> chars
+                                        </span>
+                                        <span>
+                                            <i th:class="${assessment.isGroupCommentAnonymous(iterStat.index) ? 'fas fa-user-secret' : 'fas fa-user'}"></i>
+                                            <strong th:text="${assessment.isGroupCommentAnonymous(iterStat.index) ? 'Anonymous' : 'Named'}">Named</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-item-actions">
+                                <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                                   class="btn-sm btn-edit" title="Edit this question">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Delete this question?');">
+                                    <input type="hidden" name="type" value="group"/>
+                                    <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                                    <button type="submit" class="btn-sm btn-delete" title="Delete this question">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- When no comments configured -->
+                    <div th:if="${assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)}" class="empty-comments">
+                        <i class="fas fa-comments"></i>
+                        <p>No group comments configured yet.</p>
+                        <p class="text-hint">Set up comment questions for group assessment feedback.</p>
+                    </div>
+                    
+                    <!-- Configure Button - ALWAYS SHOW -->
+                    <div class="configure-btn-container">
+                        <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                            <i class="fas fa-cog"></i> Configure Group Comments
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty Block State -->
+            <div th:if="${groupRubrics == null && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="block-empty">
+                <i class="fas fa-users"></i>
+                <p>No content in Group Assessment yet.</p>
+                <div class="empty-actions">
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Rubric
+                    </a>
+                    <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-sm btn-purple">
+                        <i class="fas fa-cog"></i> Configure Comments
+                    </a>
+                </div>
+            </div>
+        </div>
+        </th:block>
+
+        <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK ==================== -->
+        <th:block th:fragment="individual-block(individualRubrics)">
+        <div class="assessment-block" id="individual-block">
+            <div class="block-header individual-header">
+                <h2 class="block-title"><i class="fas fa-user"></i> Individual Assessment</h2>
+                <div class="block-reorder-controls">
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post">
+                        <input type="hidden" name="blockType" value="Individual"/>
+                        <input type="hidden" name="direction" value="up"/>
+                        <button type="submit" class="block-reorder-btn"><i class="fas fa-chevron-up"></i></button>
+                    </form>
+                    <form th:action="@{/rubrics/assessment/{id}/move-block(id=${assessment.id})}" method="post">
+                        <input type="hidden" name="blockType" value="Individual"/>
+                        <input type="hidden" name="direction" value="down"/>
+                        <button type="submit" class="block-reorder-btn"><i class="fas fa-chevron-down"></i></button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="block-content">
+                <!-- RUBRICS SECTION -->
+                <div th:if="${individualRubrics != null}" class="content-section">
+                    <div class="section-label">Rubrics</div>
+                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
+                        <div class="rubric-card-header">
+                            <div class="rubric-info">
+                                <h3 th:text="${rubric.name}">Name</h3>
+                                <p th:if="${rubric.description}" th:text="${rubric.description}">Desc</p>
+                                <div class="rubric-meta">
+                                    <span class="meta-badge"><i class="fas fa-star"></i> Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</strong></span>
+                                    <span class="meta-badge"><i class="fas fa-bullseye"></i> CLO: <strong th:text="${rubric.clo}">1</strong></span>
+                                </div>
+                            </div>
+                            <div class="rubric-actions">
+                                <div class="rubric-reorder-controls">
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
+                                        <input type="hidden" name="direction" value="up"/>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == 0}">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/rubrics/rubric/{id}/move(id=${rubric.id})}" method="post">
+                                        <input type="hidden" name="direction" value="down"/>
+                                        <button type="submit" class="rubric-reorder-btn" 
+                                                th:disabled="${iterStat.index == #lists.size(individualRubrics) - 1}">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Delete this rubric?');">
+                                    <button type="submit" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- Sub-Rubrics Section -->
+                        <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
+                            <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
+                                <div class="sub-rubric-header">
+                                    <h4 th:text="${subRubric.name}">Sub Name</h4>
+                                    <span class="sub-marks">Maximum Rating: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
+                                </div>
+                                <p th:if="${subRubric.description}" th:text="${subRubric.description}" class="text-muted">Desc</p>
+                                
+                                <div th:if="${subRubric.ratings != null}" class="ratings-grid">
+                                    <div th:each="rating : ${subRubric.ratings}" class="rating-card">
+                                        <div class="rating-header">
+                                            <span class="rating-name" th:text="${rating.name}">Name</span>
+                                            <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                        </div>
+                                        <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Direct Ratings (for rubrics WITHOUT sub-rubrics) -->
+                        <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
+                            <h5>Rating Levels</h5>
+                            <div class="ratings-grid">
+                                <div th:each="rating : ${rubric.ratings}" class="rating-card">
+                                    <div class="rating-header">
+                                        <span class="rating-name" th:text="${rating.name}">Name</span>
+                                        <span class="rating-value" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">0</span>
+                                    </div>
+                                    <div class="rating-desc" th:text="${rating.description}">Desc</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rubric Comments Section -->
+                        <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
+                            <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
+                            <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
+                                <span class="q-badge" th:text="${'Q' + (i + 1)}">Q1</span>
+                                <div class="q-content">
+                                    <div class="q-text" th:text="${rubric.getRubricCommentLabel(i)}">Label</div>
+                                    <div class="q-meta">
+                                        <span>Min: <b th:text="${rubric.getRubricCommentMinLength(i)}">0</b></span>
+                                        <span th:text="${rubric.isRubricCommentAnonymous(i) ? 'Anonymous' : 'Named'}">Type</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-btn-container">
+                        <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Individual Rubric</a>
+                    </div>
+                </div>
+
+                <!-- OVERALL COMMENTS SECTION -->
+                <div class="content-section">
+                    <div class="section-label">Overall Assessment Comments</div>
+                    
+                    <!-- When comments exist -->
+                    <div th:if="${assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels)}" class="assessment-comments-section">
+                        <div class="comments-header">
+                            <h3><i class="fas fa-comments"></i> Individual Feedback Questions</h3>
+                        </div>
+                        
+                        <div class="comments-summary">
+                            <div class="summary-row">
+                                <span class="summary-label">Total Questions:</span>
+                                <span class="summary-value" th:text="${#lists.size(assessment.individualCommentLabels)}">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Minimum Length:</span>
+                                <span class="summary-value" th:text="${assessment.getIndividualCommentMinLength(0) + ' characters'}">20 chars</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Anonymity:</span>
+                                <span class="summary-value" th:text="${assessment.isIndividualCommentAnonymous(0) ? 'Anonymous' : 'Named'}">Named</span>
+                            </div>
+                        </div>
+                        
+                        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-item">
+                            <div class="comment-content">
+                                <span class="comment-number">Q<span th:text="${iterStat.index + 1}">1</span></span>
+                                <div class="comment-text-wrapper">
+                                    <div class="comment-text" th:text="${label}">Question text</div>
+                                    <div class="question-meta">
+                                        <span>
+                                            <i class="fas fa-text-width"></i> 
+                                            Min: <strong th:text="${assessment.getIndividualCommentMinLength(iterStat.index)}">20</strong> chars
+                                        </span>
+                                        <span>
+                                            <i th:class="${assessment.isIndividualCommentAnonymous(iterStat.index) ? 'fas fa-user-secret' : 'fas fa-user'}"></i>
+                                            <strong th:text="${assessment.isIndividualCommentAnonymous(iterStat.index) ? 'Anonymous' : 'Named'}">Named</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-item-actions">
+                                <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
+                                   class="btn-sm btn-edit" title="Edit this question">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
+                                      method="post" style="display: inline;"
+                                      onsubmit="return confirm('Delete this question?');">
+                                    <input type="hidden" name="type" value="individual"/>
+                                    <input type="hidden" name="index" th:value="${iterStat.index}"/>
+                                    <button type="submit" class="btn-sm btn-delete" title="Delete this question">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- When no comments configured -->
+                    <div th:if="${assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels)}" class="empty-comments">
+                        <i class="fas fa-comments"></i>
+                        <p>No individual comments configured yet.</p>
+                        <p class="text-hint">Set up comment questions for individual assessment feedback.</p>
+                    </div>
+                    
+                    <!-- Configure Button - ALWAYS SHOW -->
+                    <div class="configure-btn-container">
+                        <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                            <i class="fas fa-cog"></i> Configure Individual Comments
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty Block State -->
+            <div th:if="${(individualRubrics == null || #lists.isEmpty(individualRubrics)) && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="block-empty">
+                <i class="fas fa-user"></i>
+                <p>No content in Individual Assessment yet.</p>
+                <div class="empty-actions">
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus"></i> Add Rubric
+                    </a>
+                    <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-sm btn-purple">
+                        <i class="fas fa-cog"></i> Configure Comments
+                    </a>
+                </div>
+            </div>
+        </div>
+        </th:block>
+        
+    </div>
+
+    <!-- ✅ Instant scroll-to-rubric script -->
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const focusRubricId = /*[[${focusRubricId}]]*/ null;
+        const focusBlock = /*[[${focusBlock}]]*/ null;
+        
+        if (focusRubricId) {
+            const rubricCard = document.querySelector(`[data-rubric-id="${focusRubricId}"]`);
+            
+            if (rubricCard) {
+                requestAnimationFrame(() => {
+                    const rect = rubricCard.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetPosition = rect.top + scrollTop - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'auto'
+                    });
+                    
+                    rubricCard.style.transition = 'background-color 0.3s ease';
+                    rubricCard.style.backgroundColor = '#fff3cd';
+                    
+                    setTimeout(() => {
+                        rubricCard.style.backgroundColor = '';
+                    }, 1000);
+                });
+            }
+        } else if (focusBlock) {
+            const block = document.getElementById(focusBlock);
+            
+            if (block) {
+                requestAnimationFrame(() => {
+                    const rect = block.getBoundingClientRect();
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const targetPosition = rect.top + scrollTop - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'auto'
+                    });
+                });
+            }
+        }
+    });
+    /*]]>*/
+    </script>
 </body>
 </html>

@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <head>
+    </head>
 <body>
     <div class="sidebar" th:fragment="sidebar">
         <div class="logo">
-            <h2>UTM CAS</h2>
+            <h2>UTM AAS</h2>
         </div>
         <div class="user-profile">
             <span sec:authentication="name"></span>
@@ -12,6 +14,7 @@
             <li><a href="/admin/home">Dashboard</a></li>
             <li><a href="/admin/manage-users">Manage Users</a></li>
             <li><a href="/rubrics/manage">Manage Rubrics</a></li>
+            <li><a href="/admin/data-views">Data Views</a></li>
             <li>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit">Logout</button>

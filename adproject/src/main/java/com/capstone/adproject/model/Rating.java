@@ -1,5 +1,8 @@
 package com.capstone.adproject.model;
 
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -17,35 +20,48 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer level;
-    private String description;
+    private String name; // Admin-defined rating name
 
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+    private BigDecimal marks; // Marks for this rating level
+
+    // Rating can belong to a SubRubric
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sub_rubric_id", nullable = false)
+    @JoinColumn(name = "sub_rubric_id")
     private SubRubric subRubric;
+
+    // OR Rating can belong directly to a Rubric (when no sub-rubrics exist)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rubric_id")
+    private Rubric rubric;
 
     // === Getters and Setters ===
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Integer getLevel() { return level; }
-    public void setLevel(Integer level) { this.level = level; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public BigDecimal getMarks() { return marks; }
+    public void setMarks(BigDecimal marks) { this.marks = marks; }
+
     public SubRubric getSubRubric() { return subRubric; }
     public void setSubRubric(SubRubric subRubric) { this.subRubric = subRubric; }
 
-    public String getLevelLabel() {
-        if (level == null) return "";
-        switch (level) {
-            case 0: return "0 - Unsatisfactory";
-            case 1: return "1 - Needs Improvement";
-            case 2: return "2 - Satisfactory";
-            case 3: return "3 - Good";
-            case 4: return "4 - Excellent";
-            default: return "";
-        }
+    public Rubric getRubric() { return rubric; }
+    public void setRubric(Rubric rubric) { this.rubric = rubric; }
+
+    // Helper to check if rating belongs to a sub-rubric
+    public boolean belongsToSubRubric() {
+        return subRubric != null;
+    }
+
+    // Helper to check if rating belongs directly to a rubric
+    public boolean belongsToRubric() {
+        return rubric != null && subRubric == null;
     }
 }

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Evaluation - Industrial Supervisor</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/supervisor_form.css}">
+</head>
+<body class="supervisor-page">
+    
+    <div th:replace="~{fragments/industrial_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+        
+        <div class="evaluation-container">
+            <div class="page-header-wrapper">
+                <h2 class="page-title">
+                    Continuous Evaluation Form
+                </h2>
+                <p class="page-subtitle">Complete evaluation for group and all students in one form</p>
+            </div>
+            
+            <div class="context-info">
+                <div class="context-item">
+                    <span class="context-label">Group</span>
+                    <span class="context-value" th:text="${group.groupName}">Group Name</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Assessment</span>
+                    <span class="context-value">Industrial Supervisor Assessment</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Total Students</span>
+                    <span class="context-value" th:text="${#lists.size(students)}">0</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-label">Status</span>
+                    <span class="context-value" th:text="${progress.status}">NOT_STARTED</span>
+                </div>
+            </div>
+            
+            <div th:if="${isReEvaluation}" class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Re-evaluation Notice:</strong> You have already started or completed this evaluation. 
+                    Submitting this form will update your previous evaluation.
+                </div>
+            </div>
+            
+            <form th:action="@{/supervisor/evaluate/group/{groupId}/save(groupId=${group.id})}" 
+                  method="post" 
+                  class="evaluation-form"
+                  id="evaluationForm">
+                
+                <!-- GROUP ASSESSMENT SECTION -->
+                <div th:if="${!#lists.isEmpty(groupRubrics)}">
+                    <div class="section-header group-section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-users"></i>
+                            Group Assessment
+                        </h3>
+                        <p class="section-subtitle">
+                            These evaluations apply to all students in the group
+                        </p>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div th:each="rubric : ${groupRubrics}" class="rubric-card">
+                            <div class="rubric-header">
+                                <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                <div class="rubric-details">
+                                    <span>
+                                        <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
+                                    </span>
+                                    <span th:if="${rubric.clo != null}">
+                                        CLO <strong th:text="${rubric.clo}">1</strong>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Direct Rubric Ratings -->
+                            <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                <div class="rating-options">
+                                    <div th:each="rating : ${rubric.ratings}" class="rating-option">
+                                        <input type="radio" 
+                                               th:id="${'group_rubric_' + rubric.id + '_rating_' + rating.id}"
+                                               th:name="${'group_rubric[' + rubric.id + ']'}"
+                                               th:value="${rating.id}"
+                                               th:checked="${existingData.groupRubricRatings != null and existingData.groupRubricRatings[rubric.id] == rating.id}"/>
+                                        <label th:for="${'group_rubric_' + rubric.id + '_rating_' + rating.id}">
+                                            <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                            <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sub-Rubrics -->
+                            <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
+                                <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
+                                    <div class="sub-rubric-header">
+                                        <h5 class="sub-rubric-name">
+                                            <span th:text="${subRubric.name}">Sub-Rubric Name</span>
+                                            <span class="sub-rubric-marks" th:if="${subRubric.marks != null}">
+                                                (<span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks)
+                                            </span>
+                                        </h5>
+                                        <p th:if="${subRubric.description != null and !#strings.isEmpty(subRubric.description)}" 
+                                           class="sub-rubric-description"
+                                           th:text="${subRubric.description}">Description</p>
+                                    </div>
+                                    
+                                    <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}" class="rating-options">
+                                        <div th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                            <input type="radio" 
+                                                   th:id="${'group_subrubric_' + subRubric.id + '_rating_' + rating.id}"
+                                                   th:name="${'group_subrubric[' + subRubric.id + ']'}"
+                                                   th:value="${rating.id}"
+                                                   th:checked="${existingData.groupSubRubricRatings != null and existingData.groupSubRubricRatings[subRubric.id] == rating.id}"/>
+                                            <label th:for="${'group_subrubric_' + subRubric.id + '_rating_' + rating.id}">
+                                                <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- FIXED: Rubric-specific Comments -->
+                            <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
+                                 class="rubric-comments-section">
+                                <h5 class="rubric-comments-header">
+                                    <i class="fas fa-comment-dots"></i> Comments for this Rubric
+                                </h5>
+                                
+                                <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
+                                     class="rubric-comment-field">
+                                    <label th:for="${'group_rubric_' + rubric.id + '_comment_' + i}">
+                                        <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                        <span class="optional-tag">(Optional)</span>
+                                    </label>
+                                    <textarea 
+                                        th:id="${'group_rubric_' + rubric.id + '_comment_' + i}"
+                                        th:name="${'group_rubric_' + rubric.id + '_comment_' + i}"
+                                        th:text="${existingData.groupRubricComments != null and existingData.groupRubricComments[rubric.id] != null ? existingData.groupRubricComments[rubric.id][i] : ''}"
+                                        th:placeholder="${'Enter your feedback (min ' + rubric.getRubricCommentMinLength(i) + ' characters)...'}"></textarea>
+                                    <div class="rubric-comment-hint">
+                                        Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- General Group Comments -->
+                        <div th:with="commentLabels=${assessment.groupCommentLabels},
+                                    hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
+                            
+                            <div th:if="${hasComments}" class="comments-section">
+                                <div class="comments-header">
+                                    <h4 class="comments-title">
+                                        <i class="fas fa-comments"></i>
+                                        Group Feedback Comments
+                                    </h4>
+                                </div>
+                                
+                                <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
+                                    <label class="comment-label" th:for="${'group_comment_' + i}">
+                                        <i class="fas fa-comment-dots"></i>
+                                        <span th:utext="${commentLabels[i]}">Comment</span>
+                                    </label>
+                                    <textarea 
+                                        th:id="${'group_comment_' + i}"
+                                        th:name="${'group_comment[' + i + ']'}"
+                                        class="comment-textarea"
+                                        th:attr="data-min-length=${assessment.getGroupCommentMinLength(i)}"
+                                        th:placeholder="${'Enter your feedback (min ' + assessment.getGroupCommentMinLength(i) + ' characters)...'}"
+                                        th:text="${existingData.groupComments != null and i < #lists.size(existingData.groupComments) ? existingData.groupComments[i] : ''}"></textarea>
+                                    <div class="char-counter">
+                                        <span th:id="${'group_comment_' + i + '_counter'}">0</span> / 
+                                        <span th:text="${assessment.getGroupCommentMinLength(i)}">20</span> characters minimum
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="student-separator"></div>
+                
+                <!-- INDIVIDUAL STUDENT ASSESSMENTS -->
+                <div th:if="${!#lists.isEmpty(individualRubrics)}" th:each="student, iterStat : ${students}">
+                    <div class="section-header student-section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-user"></i>
+                            <span th:text="${'Student ' + (iterStat.index + 1) + ': ' + student.email}">Student Email</span>
+                        </h3>
+                        <p class="section-subtitle">
+                            Individual evaluation for this student
+                        </p>
+                    </div>
+                    
+                    <div class="section-content">
+                        <th:block th:with="studentData=${existingData.studentData != null ? existingData.studentData[student.id] : null}">
+                            
+                            <div th:each="rubric : ${individualRubrics}" class="rubric-card">
+                                <div class="rubric-header">
+                                    <h4 class="rubric-name" th:text="${rubric.name}">Rubric Name</h4>
+                                    <div class="rubric-details">
+                                        <span>
+                                            <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">5.00</strong> marks
+                                        </span>
+                                        <span th:if="${rubric.clo != null}">
+                                            CLO <strong th:text="${rubric.clo}">1</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Direct Rubric Ratings -->
+                                <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
+                                    <div class="rating-options">
+                                        <div th:each="rating : ${rubric.ratings}" class="rating-option">
+                                            <input type="radio" 
+                                                   th:id="${'student_' + student.id + '_rubric_' + rubric.id + '_rating_' + rating.id}"
+                                                   th:name="${'student_' + student.id + '_rubric[' + rubric.id + ']'}"
+                                                   th:value="${rating.id}"
+                                                   th:checked="${studentData != null and studentData.rubricRatings != null and studentData.rubricRatings[rubric.id] == rating.id}"/>
+                                            <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_rating_' + rating.id}">
+                                                <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sub-Rubrics -->
+                                <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
+                                    <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
+                                        <div class="sub-rubric-header">
+                                            <h5 class="sub-rubric-name">
+                                                <span th:text="${subRubric.name}">Sub-Rubric Name</span>
+                                                <span class="sub-rubric-marks" th:if="${subRubric.marks != null}">
+                                                    (<span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0.00</span> marks)
+                                                </span>
+                                            </h5>
+                                            <p th:if="${subRubric.description != null and !#strings.isEmpty(subRubric.description)}" 
+                                               class="sub-rubric-description"
+                                               th:text="${subRubric.description}">Description</p>
+                                        </div>
+                                        
+                                        <div th:if="${subRubric.ratings != null and !#lists.isEmpty(subRubric.ratings)}" class="rating-options">
+                                            <div th:each="rating : ${subRubric.ratings}" class="rating-option">
+                                                <input type="radio" 
+                                                       th:id="${'student_' + student.id + '_subrubric_' + subRubric.id + '_rating_' + rating.id}"
+                                                       th:name="${'student_' + student.id + '_subrubric[' + subRubric.id + ']'}"
+                                                       th:value="${rating.id}"
+                                                       th:checked="${studentData != null and studentData.subRubricRatings != null and studentData.subRubricRatings[subRubric.id] == rating.id}"/>
+                                                <label th:for="${'student_' + student.id + '_subrubric_' + subRubric.id + '_rating_' + rating.id}">
+                                                    <span class="rating-label" th:text="${rating.name}">Rating Level</span>
+                                                    <span class="rating-marks" th:text="${#numbers.formatDecimal(rating.marks, 1, 2)}">5.00</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- FIXED: Rubric-specific Comments for Individual Students -->
+                                <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
+                                     class="rubric-comments-section">
+                                    <h5 class="rubric-comments-header">
+                                        <i class="fas fa-comment-dots"></i> Comments for this Rubric
+                                    </h5>
+                                    
+                                    <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
+                                         class="rubric-comment-field">
+                                        <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}">
+                                            <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                            <span class="optional-tag">(Optional)</span>
+                                        </label>
+                                        <textarea 
+                                            th:id="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
+                                            th:name="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}"
+                                            th:text="${studentData != null and studentData.rubricComments != null and studentData.rubricComments[rubric.id] != null ? studentData.rubricComments[rubric.id][i] : ''}"
+                                            th:placeholder="${'Enter your feedback (min ' + rubric.getRubricCommentMinLength(i) + ' characters)...'}"></textarea>
+                                        <div class="rubric-comment-hint">
+                                            Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- General Individual Comments -->
+                            <div th:with="commentLabels=${assessment.individualCommentLabels},
+                                        hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
+                                
+                                <div th:if="${hasComments}" class="comments-section">
+                                    <div class="comments-header">
+                                        <h4 class="comments-title">
+                                            <i class="fas fa-comments"></i>
+                                            <span th:text="${'Feedback for ' + student.email}">Student Feedback</span>
+                                        </h4>
+                                    </div>
+                                    
+                                    <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
+                                        <label class="comment-label" th:for="${'student_' + student.id + '_comment_' + i}">
+                                            <i class="fas fa-comment-dots"></i>
+                                            <span th:utext="${commentLabels[i]}">Comment</span>
+                                        </label>
+                                        <textarea 
+                                            th:id="${'student_' + student.id + '_comment_' + i}"
+                                            th:name="${'student_' + student.id + '_comment[' + i + ']'}"
+                                            class="comment-textarea"
+                                            th:attr="data-min-length=${assessment.getIndividualCommentMinLength(i)}"
+                                            th:placeholder="${'Enter your feedback (min ' + assessment.getIndividualCommentMinLength(i) + ' characters)...'}"
+                                            th:text="${studentData != null and studentData.comments != null and i < #lists.size(studentData.comments) ? studentData.comments[i] : ''}"></textarea>
+                                        <div class="char-counter">
+                                            <span th:id="${'student_' + student.id + '_comment_' + i + '_counter'}">0</span> / 
+                                            <span th:text="${assessment.getIndividualCommentMinLength(i)}">20</span> characters minimum
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+                    
+                    <div th:if="${!iterStat.last}" class="student-separator"></div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a th:href="@{/supervisor/evaluate}" class="btn btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Groups
+                    </a>
+                    <button type="submit" name="action" value="save" class="btn btn-save">
+                        <i class="fas fa-save"></i>
+                        Save Progress
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Character counter logic
+            const textareas = document.querySelectorAll('.comment-textarea');
+            textareas.forEach(function(textarea) {
+                const counterId = textarea.id + '_counter';
+                const counter = document.getElementById(counterId);
+                if (counter) {
+                    textarea.addEventListener('input', function() {
+                        counter.textContent = this.value.length;
+                    });
+                    counter.textContent = textarea.value.length;
+                }
+            });
+            
+            // Smooth scroll for headers
+            const sectionHeaders = document.querySelectorAll('.section-header');
+            sectionHeaders.forEach(header => {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', function() {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
