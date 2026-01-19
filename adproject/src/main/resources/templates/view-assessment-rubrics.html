@@ -14,7 +14,7 @@
         
         <div class="header-container">
             <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
-            <h1>UTM CAS</h1>
+            <h1>UTM AAS</h1>
         </div>
         
         <div class="page-header">
@@ -82,16 +82,57 @@
             
         </th:block>
         
+        <!-- ==================== EMPTY STATE - NO CONTENT CONFIGURED ==================== -->
         <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
                       (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
                       (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
-             class="empty-state-global">
-            <i class="fas fa-folder-open"></i>
-            <h3>No Content Yet</h3>
-            <p>Start building your assessment by adding rubrics and configuring comments.</p>
-            <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Rubric
-            </a>
+             class="empty-state-container">
+            
+            <!-- Group Assessment Section -->
+            <div class="empty-section group-section">
+                <h2><i class="fas fa-users"></i> Group Assessment</h2>
+                
+                <!-- Group Rubrics -->
+                <div class="empty-subsection">
+                    <h3>Group Assessment Rubrics</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Group Assessment Rubrics
+                    </a>
+                </div>
+                
+                <!-- Group Comments -->
+                <div class="empty-subsection">
+                    <h3>Group Assessment Comments</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                        <i class="fas fa-cog"></i> Add Group Assessment Comments
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Individual Assessment Section -->
+            <div class="empty-section individual-section">
+                <h2><i class="fas fa-user"></i> Individual Assessment</h2>
+                
+                <!-- Individual Rubrics -->
+                <div class="empty-subsection">
+                    <h3>Individual Assessment Rubrics</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Individual Assessment Rubrics
+                    </a>
+                </div>
+                
+                <!-- Individual Comments -->
+                <div class="empty-subsection">
+                    <h3>Individual Assessment Comments</h3>
+                    <p class="empty-text">Nothing Configured</p>
+                    <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary btn-purple">
+                        <i class="fas fa-cog"></i> Add Individual Assessment Comments
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -121,7 +162,6 @@
                 <!-- RUBRICS SECTION -->
                 <div th:if="${groupRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <!-- ✅ CHANGED: Added data-rubric-id attribute -->
                     <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
@@ -130,7 +170,6 @@
                                 <div class="rubric-meta">
                                     <span class="meta-badge"><i class="fas fa-star"></i> Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</strong></span>
                                     <span class="meta-badge"><i class="fas fa-bullseye"></i> CLO: <strong th:text="${rubric.clo}">1</strong></span>
-                                    <span class="meta-badge"><i class="fas fa-award"></i> CLO Marks: <strong th:text="${#numbers.formatDecimal(rubric.cloMarks, 1, 2)}">0</strong></span>
                                 </div>
                             </div>
                             <div class="rubric-actions">
@@ -162,7 +201,7 @@
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
                                     <h4 th:text="${subRubric.name}">Sub Name</h4>
-                                    <span class="sub-marks">Marks: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
+                                    <span class="sub-marks">Maximum Rating: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
                                 </div>
                                 <p th:if="${subRubric.description}" th:text="${subRubric.description}" class="text-muted">Desc</p>
                                 
@@ -328,7 +367,6 @@
                 <!-- RUBRICS SECTION -->
                 <div th:if="${individualRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <!-- ✅ CHANGED: Added data-rubric-id attribute -->
                     <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
@@ -337,7 +375,6 @@
                                 <div class="rubric-meta">
                                     <span class="meta-badge"><i class="fas fa-star"></i> Marks: <strong th:text="${#numbers.formatDecimal(rubric.marks, 1, 2)}">0</strong></span>
                                     <span class="meta-badge"><i class="fas fa-bullseye"></i> CLO: <strong th:text="${rubric.clo}">1</strong></span>
-                                    <span class="meta-badge"><i class="fas fa-award"></i> CLO Marks: <strong th:text="${#numbers.formatDecimal(rubric.cloMarks, 1, 2)}">0</strong></span>
                                 </div>
                             </div>
                             <div class="rubric-actions">
@@ -369,7 +406,7 @@
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
                                     <h4 th:text="${subRubric.name}">Sub Name</h4>
-                                    <span class="sub-marks">Marks: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
+                                    <span class="sub-marks">Maximum Rating: <span th:text="${#numbers.formatDecimal(subRubric.marks, 1, 2)}">0</span></span>
                                 </div>
                                 <p th:if="${subRubric.description}" th:text="${subRubric.description}" class="text-muted">Desc</p>
                                 
@@ -514,43 +551,36 @@
         
     </div>
 
-    <!-- ✅ ADDED: Instant scroll-to-rubric script -->
+    <!-- ✅ Instant scroll-to-rubric script -->
     <script th:inline="javascript">
     /*<![CDATA[*/
     document.addEventListener('DOMContentLoaded', function() {
-        // Get the rubric ID or block to focus on (passed from controller via flash attributes)
         const focusRubricId = /*[[${focusRubricId}]]*/ null;
         const focusBlock = /*[[${focusBlock}]]*/ null;
         
         if (focusRubricId) {
-            // Find the rubric card by ID
             const rubricCard = document.querySelector(`[data-rubric-id="${focusRubricId}"]`);
             
             if (rubricCard) {
-                // Use requestAnimationFrame to ensure DOM is fully rendered
                 requestAnimationFrame(() => {
-                    // Scroll to the rubric instantly (no smooth animation)
                     const rect = rubricCard.getBoundingClientRect();
                     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const targetPosition = rect.top + scrollTop - 20; // 20px offset from top
+                    const targetPosition = rect.top + scrollTop - 20;
                     
-                    // Instant scroll (no animation)
                     window.scrollTo({
                         top: targetPosition,
-                        behavior: 'auto' // 'auto' = instant, no animation
+                        behavior: 'auto'
                     });
                     
-                    // Optional: Add a subtle highlight effect to show which rubric was moved
                     rubricCard.style.transition = 'background-color 0.3s ease';
-                    rubricCard.style.backgroundColor = '#fff3cd'; // Light yellow highlight
+                    rubricCard.style.backgroundColor = '#fff3cd';
                     
                     setTimeout(() => {
-                        rubricCard.style.backgroundColor = ''; // Remove highlight after 1 second
+                        rubricCard.style.backgroundColor = '';
                     }, 1000);
                 });
             }
         } else if (focusBlock) {
-            // Focus on a block (Individual or Group)
             const block = document.getElementById(focusBlock);
             
             if (block) {
