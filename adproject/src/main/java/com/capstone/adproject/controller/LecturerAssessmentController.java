@@ -66,15 +66,13 @@ public class LecturerAssessmentController {
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
-    String emailOrUsername = authentication.getName(); // This is now EMAIL after email-based login
+    String emailOrUsername = authentication.getName(); 
     
-    // ✅ Try EMAIL first (new email-based login)
     Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
     if (lecturer.isPresent()) {
         return lecturer.get();
     }
     
-    // ✅ Fallback to USERNAME (for existing username-based logins)
     lecturer = lecturerRepository.findByUsername(emailOrUsername);
     if (lecturer.isPresent()) {
         return lecturer.get();
@@ -225,7 +223,6 @@ public class LecturerAssessmentController {
         Map<Long, Map<String, Long>> existingIndividualMarks = new HashMap<>();
         Map<Long, Map<Integer, String>> existingIndividualComments = new HashMap<>();
         
-        // Rubric-specific comment maps
         Map<Long, Map<Integer, String>> existingGroupRubricComments = new HashMap<>();
         Map<Long, Map<Long, Map<Integer, String>>> existingIndividualRubricComments = new HashMap<>();
         
@@ -237,7 +234,6 @@ public class LecturerAssessmentController {
             existingGroupComments = lecturerAssessmentService.getExistingComments(
                 assessment, lecturer, sampleStudent, "Group Assessment");
             
-            // Get rubric-specific comments for group rubrics
             for (Rubric rubric : groupRubrics) {
                 if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
                     Map<Integer, String> rubricComments = lecturerAssessmentService.getExistingRubricComments(
@@ -255,7 +251,6 @@ public class LecturerAssessmentController {
                 existingIndividualMarks.put(student.getId(), studentMarks);
                 existingIndividualComments.put(student.getId(), studentComments);
                 
-                // Get rubric-specific comments for individual rubrics per student
                 Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
                 for (Rubric rubric : individualRubrics) {
                     if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
@@ -297,16 +292,14 @@ public class LecturerAssessmentController {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
             List<Student> groupStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
             
-            // Extract group rubric scores
             Map<String, String> groupScores = allParams.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith("group_subRubric_") || 
                                 entry.getKey().startsWith("group_rubric_"))
-                .filter(entry -> !entry.getKey().contains("_comment_")) // ✅ Exclude rubric comments
+                .filter(entry -> !entry.getKey().contains("_comment_")) 
                 .collect(Collectors.toMap(
                     e -> e.getKey().substring(6),
                     Map.Entry::getValue));
             
-            // Extract group comments
             Map<Integer, String> groupComments = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("group_comment_")) {
@@ -314,17 +307,16 @@ public class LecturerAssessmentController {
                         int index = Integer.parseInt(entry.getKey().substring(14));
                         groupComments.put(index, entry.getValue());
                     } catch (NumberFormatException e) {
-                        // Skip invalid keys
+                       
                     }
                 }
             }
             
-            // ✅ NEW: Extract group rubric-specific comments
             Map<Long, Map<Integer, String>> groupRubricComments = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("group_rubric_") && entry.getKey().contains("_comment_")) {
                     try {
-                        String key = entry.getKey().substring(13); // Remove "group_rubric_"
+                        String key = entry.getKey().substring(13); 
                         String[] parts = key.split("_comment_");
                         if (parts.length == 2) {
                             Long rubricId = Long.parseLong(parts[0]);
@@ -334,12 +326,11 @@ public class LecturerAssessmentController {
                                 .put(commentIndex, entry.getValue());
                         }
                     } catch (NumberFormatException e) {
-                        // Skip invalid keys
+                      
                     }
                 }
             }
             
-            // Save group evaluation
             if (!groupScores.isEmpty() || !groupComments.isEmpty() || !groupRubricComments.isEmpty()) {
                 lecturerAssessmentService.saveEvaluationScores(
                     assessmentId,
@@ -354,14 +345,13 @@ public class LecturerAssessmentController {
                 );
             }
             
-            // Extract and save individual evaluations
             for (Student student : groupStudents) {
                 String studentPrefix = "student_" + student.getId() + "_";
                 
                 Map<String, String> studentScores = allParams.entrySet().stream()
                     .filter(entry -> entry.getKey().startsWith(studentPrefix + "subRubric_") || 
                                     entry.getKey().startsWith(studentPrefix + "rubric_"))
-                    .filter(entry -> !entry.getKey().contains("_comment_")) // ✅ Exclude rubric comments
+                    .filter(entry -> !entry.getKey().contains("_comment_")) 
                     .collect(Collectors.toMap(
                         e -> e.getKey().substring(studentPrefix.length()),
                         Map.Entry::getValue));
@@ -373,18 +363,17 @@ public class LecturerAssessmentController {
                             int index = Integer.parseInt(entry.getKey().substring((studentPrefix + "comment_").length()));
                             studentComments.put(index, entry.getValue());
                         } catch (NumberFormatException e) {
-                            // Skip invalid keys
+                           
                         }
                     }
                 }
                 
-                // ✅ NEW: Extract individual rubric-specific comments
                 Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
                 for (Map.Entry<String, String> entry : allParams.entrySet()) {
                     if (entry.getKey().startsWith(studentPrefix + "rubric_") && 
                         entry.getKey().contains("_comment_")) {
                         try {
-                            String key = entry.getKey().substring(studentPrefix.length() + 7); // Remove prefix + "rubric_"
+                            String key = entry.getKey().substring(studentPrefix.length() + 7); 
                             String[] parts = key.split("_comment_");
                             if (parts.length == 2) {
                                 Long rubricId = Long.parseLong(parts[0]);
@@ -394,7 +383,7 @@ public class LecturerAssessmentController {
                                     .put(commentIndex, entry.getValue());
                             }
                         } catch (NumberFormatException e) {
-                            // Skip invalid keys
+                           
                         }
                     }
                 }

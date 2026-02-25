@@ -38,14 +38,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.adminRepository = adminRepository;
     }
 
-    /**
-     * ✅ FIXED: Load user by EMAIL (primary) or USERNAME (fallback) for ALL user types including Admin
-     */
     @Override
     public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
         
-        // ==================== STUDENT ====================
-        // Try EMAIL first (new users)
         Optional<Student> student = studentRepository.findByEmail(emailOrUsername);
         if (student.isPresent()) {
             return new User(
@@ -55,7 +50,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
         
-        // Fallback to USERNAME (existing users)
         student = studentRepository.findByUsername(emailOrUsername);
         if (student.isPresent()) {
             return new User(
@@ -65,8 +59,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        // ==================== LECTURER ====================
-        // Try EMAIL first
         Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
         if (lecturer.isPresent()) {
             return new User(
@@ -76,7 +68,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
         
-        // Fallback to USERNAME
         lecturer = lecturerRepository.findByUsername(emailOrUsername);
         if (lecturer.isPresent()) {
             return new User(
@@ -86,8 +77,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        // ==================== INDUSTRIAL SUPERVISOR ====================
-        // Try EMAIL first
         Optional<IndustrialSupervisor> supervisor = industrialSupervisorRepository.findByEmail(emailOrUsername);
         if (supervisor.isPresent()) {
             return new User(
@@ -97,7 +86,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
         
-        // Fallback to USERNAME
         supervisor = industrialSupervisorRepository.findByUsername(emailOrUsername);
         if (supervisor.isPresent()) {
             return new User(
@@ -107,18 +95,15 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        // ==================== ADMIN ====================
-        // ✅ FIXED: Try EMAIL first (just like other user types)
         Optional<Admin> admin = adminRepository.findByEmail(emailOrUsername);
         if (admin.isPresent()) {
             return new User(
-                admin.get().getEmail(),  // Use email as identifier
+                admin.get().getEmail(),  
                 admin.get().getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
             );
         }
         
-        // Fallback to USERNAME (existing admins who login with username)
         admin = adminRepository.findByUsername(emailOrUsername);
         if (admin.isPresent()) {
             return new User(
@@ -128,7 +113,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             );
         }
 
-        // If no user found with email or username
         throw new UsernameNotFoundException("User not found with email/username: " + emailOrUsername);
     }
 }

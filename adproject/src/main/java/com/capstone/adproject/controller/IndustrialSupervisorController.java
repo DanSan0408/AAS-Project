@@ -53,23 +53,16 @@ public class IndustrialSupervisorController {
         this.lecturerGroupAssignmentRepository = lecturerGroupAssignmentRepository;
     }
 
-    /**
-     * Helper to load the specific assessment assigned to a group.
-     * Logic: Looks for a LecturerGroupAssignment for this group with assessor type SUPERVISOR.
-     */
     @Transactional(readOnly = true)
     private Optional<Assessment> getAssessmentForGroup(Group group) {
         Assessment assessment = null;
 
-        // 1. Try to find the SUPERVISOR assessment assigned to this specific group
         List<LecturerGroupAssignment> assignments = lecturerGroupAssignmentRepository.findByGroup(group);
         
         if (!assignments.isEmpty()) {
-            // Filter for SUPERVISOR assessor type
             Optional<LecturerGroupAssignment> supervisorAssignment = assignments.stream()
                 .filter(a -> a.getAssessment() != null)
                 .filter(a -> {
-                    // Check if this assessment has SUPERVISOR deadlines or is configured for supervisors
                     List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
                         a.getAssessment().getId(), "SUPERVISOR");
                     return !deadlines.isEmpty();
@@ -80,15 +73,13 @@ public class IndustrialSupervisorController {
                 assessment = supervisorAssignment.get().getAssessment();
             }
         } 
-        
-        // 2. Fallback: Search for assessments with "supervisor" in the title
+
         if (assessment == null) {
             List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
             Optional<Assessment> fallbackOpt = allAssessments.stream()
                 .filter(a -> a.getTitle() != null && 
                             a.getTitle().toLowerCase().contains("supervisor"))
                 .filter(a -> {
-                    // Verify it has SUPERVISOR deadlines
                     List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
                         a.getId(), "SUPERVISOR");
                     return !deadlines.isEmpty();
@@ -104,13 +95,11 @@ public class IndustrialSupervisorController {
             return Optional.empty();
         }
 
-        // 3. Aggressively initialize collections
         initializeAssessmentCollections(assessment);
 
         return Optional.of(assessment);
     }
-    
-    // Extracted initialization logic to avoid code duplication
+
     private void initializeAssessmentCollections(Assessment assessment) {
         if (assessment.getRubrics() != null) {
             for (Rubric rubric : assessment.getRubrics()) {
@@ -151,8 +140,7 @@ public class IndustrialSupervisorController {
 
     @GetMapping("/home")
     public String industrialSupervisorHome(Model model, Principal principal) {
-        // Get current supervisor
-        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        String emailOrUsername = principal.getName(); 
         Optional<IndustrialSupervisor> supervisorOpt = 
             industrialSupervisorService.findByEmail(emailOrUsername)
                 .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
@@ -164,12 +152,10 @@ public class IndustrialSupervisorController {
 
         IndustrialSupervisor supervisor = supervisorOpt.get();
 
-        // Get assigned groups
         List<Group> assignedGroups = industrialSupervisorService.getAssignedGroups(supervisor.getId());
         model.addAttribute("assignedGroups", assignedGroups);
         model.addAttribute("supervisor", supervisor);
 
-        // Define utility functions
         Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
 
         Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
@@ -208,9 +194,6 @@ public class IndustrialSupervisorController {
         return "industrial_supervisor_home";
     }
 
-    /**
-     * Show list of assigned groups for evaluation with progress indicators
-     */
     @GetMapping("/evaluate")
     public String showEvaluateGroups(Model model, Principal principal) {
         String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
@@ -227,7 +210,6 @@ public class IndustrialSupervisorController {
         List<Group> assignedGroups = industrialSupervisorService.getAssignedGroups(supervisor.getId());
         Map<Long, Map<String, Object>> groupProgress = new LinkedHashMap<>();
 
-        // Loop through groups and get the assessment SPECIFIC to that group
         for (Group group : assignedGroups) {
             Optional<Assessment> assessmentOpt = getAssessmentForGroup(group);
             
@@ -236,11 +218,8 @@ public class IndustrialSupervisorController {
                 Map<String, Object> progress = industrialSupervisorService.getEvaluationProgress(
                         supervisor.getId(), group, assessment);
                 groupProgress.put(group.getId(), progress);
-                
-                // Note: We are checking deadlines for the FIRST group found to set the global isOpen flag.
-                // ideally, deadline should be checked per group in the UI.
+
             } else {
-                 // Handle case where no assessment is assigned to group
                  Map<String, Object> errorProgress = new LinkedHashMap<>();
                  errorProgress.put("status", "NO_ASSESSMENT");
                  errorProgress.put("percentage", 0.0);
@@ -251,16 +230,12 @@ public class IndustrialSupervisorController {
         model.addAttribute("assignedGroups", assignedGroups);
         model.addAttribute("supervisor", supervisor);
         model.addAttribute("groupProgress", groupProgress);
-        
-        // Pass a general open flag (simplified logic, assumes consistent deadlines)
+
         model.addAttribute("assessmentOpen", true); 
 
         return "supervisor_evaluate_groups";
     }
 
-    /**
-     * Show continuous evaluation form (group + all students)
-     */
     @Transactional(readOnly = true)
     @GetMapping("/evaluate/group/{groupId}")
     public String showContinuousEvaluation(
@@ -268,7 +243,7 @@ public class IndustrialSupervisorController {
             Model model,
             Principal principal) {
 
-        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        String emailOrUsername = principal.getName();
         Optional<IndustrialSupervisor> supervisorOpt = 
             industrialSupervisorService.findByEmail(emailOrUsername)
                 .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
@@ -280,7 +255,6 @@ public class IndustrialSupervisorController {
 
         IndustrialSupervisor supervisor = supervisorOpt.get();
 
-        // Verify group assignment
         List<Group> assignedGroups = industrialSupervisorService.getAssignedGroups(supervisor.getId());
         Optional<Group> groupOpt = assignedGroups.stream()
                 .filter(g -> g.getId().equals(groupId))
@@ -293,7 +267,6 @@ public class IndustrialSupervisorController {
 
         Group group = groupOpt.get();
 
-        // ✅ FIXED: Get assessment specific to this group via LecturerGroupAssignment logic
         Optional<Assessment> assessmentOpt = getAssessmentForGroup(group);
         if (assessmentOpt.isEmpty()) {
             model.addAttribute("error", "No assessment found assigned to this group.");
@@ -302,7 +275,6 @@ public class IndustrialSupervisorController {
 
         Assessment assessment = assessmentOpt.get();
 
-        // Check deadline
         List<Deadline> supervisorDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
                 assessment.getId(), "SUPERVISOR");
 
@@ -329,11 +301,9 @@ public class IndustrialSupervisorController {
             return "error";
         }
 
-        // Get progress
         Map<String, Object> progress = industrialSupervisorService.getEvaluationProgress(
             supervisor.getId(), group, assessment);
 
-        // Separate rubrics
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
                 .filter(r -> "Group Assessment".equals(r.getAssessmentTypes()))
                 .collect(Collectors.toList());
@@ -342,11 +312,9 @@ public class IndustrialSupervisorController {
                 .filter(r -> "Individual Assessment".equals(r.getAssessmentTypes()))
                 .collect(Collectors.toList());
 
-        // Load existing data if any
         Map<String, Object> existingData = 
             industrialSupervisorService.loadExistingEvaluation(supervisor, group, assessment);
 
-        // Add to model
         model.addAttribute("group", group);
         model.addAttribute("assessment", assessment);
         model.addAttribute("supervisor", supervisor);
@@ -362,9 +330,6 @@ public class IndustrialSupervisorController {
         return "supervisor_continuous_evaluation";
     }
 
-    /**
-     * Save continuous evaluation (save progress or complete)
-     */
     @PostMapping("/evaluate/group/{groupId}/save")
     public String saveContinuousEvaluation(
             @PathVariable Long groupId,
@@ -374,7 +339,7 @@ public class IndustrialSupervisorController {
             Model model,
             RedirectAttributes redirectAttributes) {
 
-        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        String emailOrUsername = principal.getName();
         Optional<IndustrialSupervisor> supervisorOpt = 
             industrialSupervisorService.findByEmail(emailOrUsername)
                 .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));
@@ -386,7 +351,6 @@ public class IndustrialSupervisorController {
 
         IndustrialSupervisor supervisor = supervisorOpt.get();
 
-        // Verify group
         List<Group> assignedGroups = industrialSupervisorService.getAssignedGroups(supervisor.getId());
         Optional<Group> groupOpt = assignedGroups.stream()
                 .filter(g -> g.getId().equals(groupId))
@@ -399,7 +363,6 @@ public class IndustrialSupervisorController {
 
         Group group = groupOpt.get();
 
-        // ✅ FIXED: Get correct assessment for saving
         Optional<Assessment> assessmentOpt = getAssessmentForGroup(group);
         if (assessmentOpt.isEmpty()) {
             model.addAttribute("error", "Assessment not found");
@@ -409,11 +372,9 @@ public class IndustrialSupervisorController {
         Assessment assessment = assessmentOpt.get();
 
         try {
-            // Save evaluation
             industrialSupervisorService.saveContinuousEvaluation(
                 supervisor, group, assessment, allParams);
 
-            // Check completion status
             Map<String, Object> progress = industrialSupervisorService.getEvaluationProgress(
                 supervisor.getId(), group, assessment);
 

@@ -1,6 +1,7 @@
 package com.capstone.adproject.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.List;
-import java.util.ArrayList;
 
 @Entity
 @Table(name = "project_group")
@@ -22,7 +21,7 @@ public class Group {
     private Long id;
 
     private String groupName;
-    private int groupSize; // Optional, to store the desired size if needed, but the actual size is determined by students.size()
+    private int groupSize;
 
     @ManyToOne
     @JoinColumn(name = "academic_supervisor_id")
@@ -32,16 +31,9 @@ public class Group {
     @JoinColumn(name = "industrial_supervisor_id")
     private IndustrialSupervisor industrialSupervisor;
 
-    // You can define the relationship to students here, or just use the mappedBy attribute in Student
-    // @OneToMany(mappedBy = "group")
-    // private List<Student> students; 
-
     @OneToMany(mappedBy = "group")
-    private List<Student> students = new ArrayList<>(); // Initialize the list
+    private List<Student> students = new ArrayList<>(); 
 
-    // ... (existing constructors)
-
-    // NEW: Getter/Setter for students
     public List<Student> getStudents() {
         return students;
     }
@@ -50,14 +42,12 @@ public class Group {
         this.students = students;
 
     }
-    // Constructors
+
     public Group() {}
 
     public Group(String groupName) {
         this.groupName = groupName;
     }
-
-    // Getters and Setters
 
     public Long getId() {
         return id;

@@ -61,7 +61,6 @@
                   class="evaluation-form"
                   id="evaluationForm">
                 
-                <!-- GROUP ASSESSMENT SECTION -->
                 <div th:if="${!#lists.isEmpty(groupRubrics)}">
                     <div class="section-header group-section-header">
                         <h3 class="section-title">
@@ -87,7 +86,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Direct Rubric Ratings -->
                             <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
                                 <div class="rating-options">
                                     <div th:each="rating : ${rubric.ratings}" class="rating-option">
@@ -104,7 +102,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Sub-Rubrics -->
                             <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
                                 <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
                                     <div class="sub-rubric-header">
@@ -135,7 +132,6 @@
                                 </div>
                             </div>
                             
-                            <!-- FIXED: Rubric-specific Comments -->
                             <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                  class="rubric-comments-section">
                                 <h5 class="rubric-comments-header">
@@ -160,7 +156,6 @@
                             </div>
                         </div>
                         
-                        <!-- General Group Comments -->
                         <div th:with="commentLabels=${assessment.groupCommentLabels},
                                     hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                             
@@ -196,7 +191,6 @@
                 
                 <div class="student-separator"></div>
                 
-                <!-- INDIVIDUAL STUDENT ASSESSMENTS -->
                 <div th:if="${!#lists.isEmpty(individualRubrics)}" th:each="student, iterStat : ${students}">
                     <div class="section-header student-section-header">
                         <h3 class="section-title">
@@ -224,7 +218,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Direct Rubric Ratings -->
                                 <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}">
                                     <div class="rating-options">
                                         <div th:each="rating : ${rubric.ratings}" class="rating-option">
@@ -241,7 +234,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Sub-Rubrics -->
                                 <div th:if="${rubric.subRubrics != null and !#lists.isEmpty(rubric.subRubrics)}">
                                     <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-container">
                                         <div class="sub-rubric-header">
@@ -272,7 +264,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- FIXED: Rubric-specific Comments for Individual Students -->
                                 <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                      class="rubric-comments-section">
                                     <h5 class="rubric-comments-header">
@@ -297,7 +288,6 @@
                                 </div>
                             </div>
                             
-                            <!-- General Individual Comments -->
                             <div th:with="commentLabels=${assessment.individualCommentLabels},
                                         hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                                 
@@ -334,7 +324,6 @@
                     <div th:if="${!iterStat.last}" class="student-separator"></div>
                 </div>
                 
-                <!-- Form Actions -->
                 <div class="form-actions">
                     <a th:href="@{/supervisor/evaluate}" class="btn btn-back">
                         <i class="fas fa-arrow-left"></i>
@@ -351,7 +340,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Character counter logic
+            
             const textareas = document.querySelectorAll('.comment-textarea');
             textareas.forEach(function(textarea) {
                 const counterId = textarea.id + '_counter';
@@ -364,7 +353,6 @@
                 }
             });
             
-            // Smooth scroll for headers
             const sectionHeaders = document.querySelectorAll('.section-header');
             sectionHeaders.forEach(header => {
                 header.style.cursor = 'pointer';

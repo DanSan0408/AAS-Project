@@ -105,7 +105,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- GROUP ASSESSMENT SECTION -->
                                 <tr th:if="${rubricsByType['Group Assessment'] != null and !rubricsByType['Group Assessment'].isEmpty()}" class="section-header-row">
                                     <td colspan="7"><i class="fas fa-users"></i> GROUP ASSESSMENT</td>
                                 </tr>
@@ -121,7 +120,6 @@
                                             </td>
                                         </tr>
                                         
-                                        <!-- ✅ FIXED: Check if rubric HAS sub-rubrics -->
                                         <th:block th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}">
                                             <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
                                                 <td>
@@ -179,7 +177,6 @@
                                             </tr>
                                         </th:block>
                                         
-                                        <!-- ✅ FIXED: For rubrics WITHOUT sub-rubrics (direct rating) -->
                                         <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
                                             <tr class="sub-rubric-row">
                                                 <td>
@@ -239,7 +236,6 @@
                                     </th:block>
                                 </th:block>
                                 
-                                <!-- INDIVIDUAL ASSESSMENT SECTION -->
                                 <tr th:if="${rubricsByType['Individual Assessment'] != null and !rubricsByType['Individual Assessment'].isEmpty()}" class="section-header-row">
                                     <td colspan="7"><i class="fas fa-user"></i> INDIVIDUAL ASSESSMENT</td>
                                 </tr>
@@ -255,7 +251,6 @@
                                             </td>
                                         </tr>
                                         
-                                        <!-- For rubrics WITH sub-rubrics -->
                                         <th:block th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}">
                                             <tr th:each="subRubric, subRubricStat : ${rubric.subRubrics}" class="sub-rubric-row">
                                                 <td>
@@ -305,7 +300,6 @@
                                             </tr>
                                         </th:block>
                                         
-                                        <!-- For rubrics WITHOUT sub-rubrics (direct rating) -->
                                         <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
                                             <tr class="sub-rubric-row">
                                                 <td>
@@ -366,9 +360,7 @@
                         </div>
                     </div>
                     
-                    <!-- ✅ MOVED: Overall Assessment Comments Section (BELOW Total Assessment Marks) -->
                     <div class="overall-comments-section">
-                        <!-- Group Assessment Comments -->
                         <div th:if="${studentGroupComments.containsKey(studentData.student.id) and !studentGroupComments.get(studentData.student.id).isEmpty()}" 
                              class="comments-block group-comments">
                             <h4><i class="fas fa-users"></i> Group Assessment Comments</h4>
@@ -380,7 +372,6 @@
                             </div>
                         </div>
                         
-                        <!-- Individual Assessment Comments -->
                         <div th:if="${studentIndividualComments.containsKey(studentData.student.id) and !studentIndividualComments.get(studentData.student.id).isEmpty()}" 
                              class="comments-block individual-comments">
                             <h4><i class="fas fa-user"></i> Individual Assessment Comments</h4>

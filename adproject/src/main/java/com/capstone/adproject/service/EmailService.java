@@ -16,9 +16,6 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    /**
-     * ✅ EXISTING: Sends password reset email with link
-     */
     public void sendResetPasswordEmail(String userEmail, String link) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -28,7 +25,6 @@ public class EmailService {
             helper.setTo(userEmail);
             helper.setSubject("Password Reset Request");
             
-            // HTML content uses 'cid:logo' to reference the inline image attachment
             String htmlContent = "<html><body style='font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 20px; text-align: center;'>"
                 + "<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);'>"
                 + "<img src='cid:logo' alt='UTM Logo' style='max-width: 150px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;'>"
@@ -46,7 +42,6 @@ public class EmailService {
             
             helper.setText(htmlContent, true);
 
-            // ✅ CHANGED: Updated filename to logoUTM.png
             ClassPathResource logoResource = new ClassPathResource("static/images/logoUTM.png");
             helper.addInline("logo", logoResource);
 
@@ -57,9 +52,6 @@ public class EmailService {
         }
     }
 
-    /**
-     * ✅ NEW: Sends welcome email with temporary password to new user
-     */
     public void sendWelcomeEmailWithPassword(String userEmail, String temporaryPassword, String userType, String resetLink) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -93,7 +85,6 @@ public class EmailService {
 
             helper.setText(htmlContent, true);
 
-            // ✅ CHANGED: Updated filename to logoUTM.png
             ClassPathResource logoResource = new ClassPathResource("static/images/logoUTM.png");
             helper.addInline("logo", logoResource);
 

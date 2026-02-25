@@ -2,6 +2,7 @@ package com.capstone.adproject.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,6 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.util.PasswordGenerator;
-import com.capstone.adproject.util.PasswordGenerator;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -56,51 +54,41 @@ public class AdminService {
 private EmailService emailService;
 
     public void saveStudent(Student student, HttpServletRequest request) {
-    // Validate email is provided
     if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
     }
 
     if (student.getId() != null) {
-        // ========== UPDATE EXISTING USER ==========
         Student existingStudent = studentRepository.findById(student.getId())
             .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        // Keep existing password and flags
         student.setPassword(existingStudent.getPassword());
         student.setIsTempPassword(existingStudent.getIsTempPassword());
-        student.setUsername(existingStudent.getUsername()); // Preserve old username
+        student.setUsername(existingStudent.getUsername()); 
         student.setResetPasswordToken(existingStudent.getResetPasswordToken());
         
-        // Update email if changed
         if (!existingStudent.getEmail().equals(student.getEmail())) {
-            // Email changed - you could optionally send notification here
             student.setEmail(student.getEmail());
         }
         
     } else {
-        // ========== CREATE NEW USER ==========
-        // Generate secure random password
+
         String tempPassword = PasswordGenerator.generateRandomPassword();
         student.setPassword(passwordEncoder.encode(tempPassword));
         student.setIsTempPassword(true);
-        student.setUsername(null); // No username for new users
+        student.setUsername(null); 
         
-        // Generate reset token for password change
         String resetToken = UUID.randomUUID().toString();
         student.setResetPasswordToken(resetToken);
         
-        // Save first to ensure it persists
         Student savedStudent = studentRepository.save(student);
         
-        // Build password reset link
         String applicationUrl = request.getScheme() + "://" + request.getServerName();
         if (request.getServerPort() != 80 && request.getServerPort() != 443) {
             applicationUrl += ":" + request.getServerPort();
         }
         String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
         
-        // Send welcome email with temporary password
         try {
             emailService.sendWelcomeEmailWithPassword(
                 student.getEmail(),
@@ -111,26 +99,20 @@ private EmailService emailService;
         } catch (Exception e) {
             System.err.println("Failed to send welcome email to: " + student.getEmail());
             e.printStackTrace();
-            // Continue anyway - user created, just email failed
         }
         
-        return; // Exit early, already saved
+        return; 
     }
     
-    // Save updated user
     studentRepository.save(student);
 }
 
-/**
- * ✅ UPDATED: Save lecturer - EMAIL ONLY, auto-generate password for new users
- */
 public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
     if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
     }
 
     if (lecturer.getId() != null) {
-        // UPDATE
         Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
         
@@ -140,7 +122,6 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
         
     } else {
-        // CREATE
         String tempPassword = PasswordGenerator.generateRandomPassword();
         lecturer.setPassword(passwordEncoder.encode(tempPassword));
         lecturer.setIsTempPassword(true);
@@ -175,9 +156,6 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
     lecturerRepository.save(lecturer);
 }
 
-/**
- * ✅ UPDATED: Save industrial supervisor - EMAIL ONLY, auto-generate password
- */
 public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
     if (supervisor.getEmail() == null || supervisor.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
@@ -194,7 +172,6 @@ public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServle
         supervisor.setResetPasswordToken(existing.getResetPasswordToken());
         
     } else {
-        // CREATE
         String tempPassword = PasswordGenerator.generateRandomPassword();
         supervisor.setPassword(passwordEncoder.encode(tempPassword));
         supervisor.setIsTempPassword(true);
@@ -229,13 +206,6 @@ public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServle
     industrialSupervisorRepository.save(supervisor);
 }
 
-// ==========================================
-// 🔍 UPDATED DUPLICATE CHECKERS - EMAIL ONLY
-// ==========================================
-
-/**
- * ✅ UPDATED: Check student email duplicate (removed username checking)
- */
 public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
     if (email == null || email.trim().isEmpty()) {
         return "Email is required";
@@ -256,9 +226,6 @@ public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) 
     return null;
 }
 
-/**
- * ✅ UPDATED: Check lecturer email duplicate
- */
 public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude) {
     if (email == null || email.trim().isEmpty()) {
         return "Email is required";
@@ -279,9 +246,6 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     return null;
 }
 
-/**
- * ✅ UPDATED: Check supervisor email duplicate
- */
 public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExclude) {
     if (email == null || email.trim().isEmpty()) {
         return "Email is required";
@@ -302,28 +266,21 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
     return null;
 }
 
-    // ==========================================
-    // 🗑️ DELETE METHODS (Safe & Transactional)
-    // ==========================================
-
     @Transactional
     public void deleteStudentById(Long id) {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        // 1. Remove from Group 
         if (student.getGroup() != null) {
             removeStudentFromGroup(id);
         }
 
-        // 2. Cleanup dependencies
         studentRepository.deleteCalculatedResultsByStudentId(id);
         studentRepository.deleteCommentsByStudentId(id);
         studentRepository.deleteMarksReceivedByStudent(id);
         studentRepository.deleteMarksGivenByStudent(id);
         studentRepository.deleteOverridesByStudent(id);
 
-        // 3. Delete Student
         studentRepository.delete(student);
     }
 
@@ -332,19 +289,14 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         Lecturer lecturer = lecturerRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
         lecturerRepository.unlinkFromGroups(id);
 
-        // 2. Delete assignments (LecturerGroupAssignment)
         lecturerRepository.deleteGroupAssignments(id);
 
-        // 3. Delete Marks given by this lecturer
         lecturerRepository.deleteMarksGiven(id);
         
-        // 4. Delete comments given by this lecturer
         lecturerRepository.deleteCommentsByLecturer(id);
 
-        // 5. Delete Lecturer
         lecturerRepository.delete(lecturer);
     }
 
@@ -353,16 +305,12 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Supervisor not found"));
 
-        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
         industrialSupervisorRepository.unlinkFromGroups(id);
 
-        // 2. Delete Marks given by this supervisor
         industrialSupervisorRepository.deleteMarksGiven(id);
         
-        // 3. Delete comments given by this supervisor
         industrialSupervisorRepository.deleteCommentsBySupervisor(id);
 
-        // 4. Delete Supervisor
         industrialSupervisorRepository.delete(supervisor);
     }
 
@@ -389,10 +337,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
             deleteIndustrialSupervisorById(id);
         }
     }
-
-    // ==========================================
-    // 👥 GROUP MANAGEMENT
-    // ==========================================
 
     public List<Student> getStudentsWithoutGroup() {
         return studentRepository.findByGroupIsNull();
@@ -506,10 +450,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         
         groupRepository.delete(groupToDelete);
     }
-
-    // ==========================================
-    // 🔍 SEARCH & HELPERS
-    // ==========================================
 
     public List<Student> getAllStudents() {
         return studentRepository.findAllWithGroupEagerly();

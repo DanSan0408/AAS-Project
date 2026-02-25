@@ -5,18 +5,16 @@ import java.util.Date;
 public class AssessmentAssignmentDto {
     
     private Long assessmentId;
-    private Long deadlineId; // For updates
+    private Long deadlineId;
     private String title;
-    private String assessorType; // STUDENT, LECTURER, or SUPERVISOR
-    private String openType; // INSTANT or SCHEDULED
-    private Date openDate; // Nullable - only used if openType is SCHEDULED
-    private Date endDate; // Required - the deadline/closing date
+    private String assessorType;
+    private String openType; 
+    private Date openDate;
+    private Date endDate; 
 
-    // Constructors
     public AssessmentAssignmentDto() {
     }
 
-    // Getters and Setters
     public Long getAssessmentId() {
         return assessmentId;
     }

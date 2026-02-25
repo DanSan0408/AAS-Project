@@ -82,17 +82,14 @@
             
         </th:block>
         
-        <!-- ==================== EMPTY STATE - NO CONTENT CONFIGURED ==================== -->
         <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
                       (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
                       (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
              class="empty-state-container">
             
-            <!-- Group Assessment Section -->
             <div class="empty-section group-section">
                 <h2><i class="fas fa-users"></i> Group Assessment</h2>
                 
-                <!-- Group Rubrics -->
                 <div class="empty-subsection">
                     <h3>Group Assessment Rubrics</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -101,7 +98,6 @@
                     </a>
                 </div>
                 
-                <!-- Group Comments -->
                 <div class="empty-subsection">
                     <h3>Group Assessment Comments</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -111,11 +107,9 @@
                 </div>
             </div>
             
-            <!-- Individual Assessment Section -->
             <div class="empty-section individual-section">
                 <h2><i class="fas fa-user"></i> Individual Assessment</h2>
                 
-                <!-- Individual Rubrics -->
                 <div class="empty-subsection">
                     <h3>Individual Assessment Rubrics</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -124,7 +118,6 @@
                     </a>
                 </div>
                 
-                <!-- Individual Comments -->
                 <div class="empty-subsection">
                     <h3>Individual Assessment Comments</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -136,10 +129,8 @@
         </div>
     </div>
     
-    <!-- ==================== FRAGMENT DEFINITIONS ==================== -->
     <div style="display: none;">
         
-        <!-- ==================== GROUP ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="group-block(groupRubrics)">
         <div class="assessment-block" id="group-block">
             <div class="block-header group-header">
@@ -159,7 +150,7 @@
             </div>
             
             <div class="block-content">
-                <!-- RUBRICS SECTION -->
+                
                 <div th:if="${groupRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
@@ -196,7 +187,6 @@
                             </div>
                         </div>
                         
-                        <!-- Sub-Rubrics -->
                         <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
@@ -217,7 +207,6 @@
                             </div>
                         </div>
 
-                        <!-- Direct Ratings -->
                         <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
                             <h5>Rating Levels</h5>
                             <div class="ratings-grid">
@@ -231,7 +220,6 @@
                             </div>
                         </div>
 
-                        <!-- Rubric Comments -->
                         <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
                             <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
                             <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
@@ -252,11 +240,9 @@
                     </div>
                 </div>
 
-                <!-- OVERALL COMMENTS SECTION -->
                 <div class="content-section">
                     <div class="section-label">Overall Assessment Comments</div>
                     
-                    <!-- When comments exist -->
                     <div th:if="${assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels)}" class="assessment-comments-section">
                         <div class="comments-header">
                             <h3><i class="fas fa-comments"></i> Group Feedback Questions</h3>
@@ -312,14 +298,12 @@
                         </div>
                     </div>
                     
-                    <!-- When no comments configured -->
                     <div th:if="${assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)}" class="empty-comments">
                         <i class="fas fa-comments"></i>
                         <p>No group comments configured yet.</p>
                         <p class="text-hint">Set up comment questions for group assessment feedback.</p>
                     </div>
                     
-                    <!-- Configure Button - ALWAYS SHOW -->
                     <div class="configure-btn-container">
                         <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary btn-purple">
                             <i class="fas fa-cog"></i> Configure Group Comments
@@ -328,7 +312,6 @@
                 </div>
             </div>
             
-            <!-- Empty Block State -->
             <div th:if="${groupRubrics == null && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="block-empty">
                 <i class="fas fa-users"></i>
                 <p>No content in Group Assessment yet.</p>
@@ -344,7 +327,6 @@
         </div>
         </th:block>
 
-        <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="individual-block(individualRubrics)">
         <div class="assessment-block" id="individual-block">
             <div class="block-header individual-header">
@@ -364,7 +346,7 @@
             </div>
             
             <div class="block-content">
-                <!-- RUBRICS SECTION -->
+                
                 <div th:if="${individualRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
@@ -401,7 +383,6 @@
                             </div>
                         </div>
                         
-                        <!-- Sub-Rubrics Section -->
                         <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
@@ -422,7 +403,6 @@
                             </div>
                         </div>
                         
-                        <!-- Direct Ratings (for rubrics WITHOUT sub-rubrics) -->
                         <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
                             <h5>Rating Levels</h5>
                             <div class="ratings-grid">
@@ -436,7 +416,6 @@
                             </div>
                         </div>
 
-                        <!-- Rubric Comments Section -->
                         <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
                             <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
                             <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
@@ -457,11 +436,9 @@
                     </div>
                 </div>
 
-                <!-- OVERALL COMMENTS SECTION -->
                 <div class="content-section">
                     <div class="section-label">Overall Assessment Comments</div>
                     
-                    <!-- When comments exist -->
                     <div th:if="${assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels)}" class="assessment-comments-section">
                         <div class="comments-header">
                             <h3><i class="fas fa-comments"></i> Individual Feedback Questions</h3>
@@ -517,14 +494,12 @@
                         </div>
                     </div>
                     
-                    <!-- When no comments configured -->
                     <div th:if="${assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels)}" class="empty-comments">
                         <i class="fas fa-comments"></i>
                         <p>No individual comments configured yet.</p>
                         <p class="text-hint">Set up comment questions for individual assessment feedback.</p>
                     </div>
                     
-                    <!-- Configure Button - ALWAYS SHOW -->
                     <div class="configure-btn-container">
                         <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary btn-purple">
                             <i class="fas fa-cog"></i> Configure Individual Comments
@@ -533,7 +508,6 @@
                 </div>
             </div>
             
-            <!-- Empty Block State -->
             <div th:if="${(individualRubrics == null || #lists.isEmpty(individualRubrics)) && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="block-empty">
                 <i class="fas fa-user"></i>
                 <p>No content in Individual Assessment yet.</p>
@@ -551,9 +525,8 @@
         
     </div>
 
-    <!-- ✅ Instant scroll-to-rubric script -->
     <script th:inline="javascript">
-    /*<![CDATA[*/
+    
     document.addEventListener('DOMContentLoaded', function() {
         const focusRubricId = /*[[${focusRubricId}]]*/ null;
         const focusBlock = /*[[${focusBlock}]]*/ null;
@@ -597,7 +570,7 @@
             }
         }
     });
-    /*]]>*/
+    
     </script>
 </body>
 </html>

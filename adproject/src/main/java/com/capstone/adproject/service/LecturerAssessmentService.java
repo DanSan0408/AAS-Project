@@ -141,7 +141,6 @@ public class LecturerAssessmentService {
         
         Student sampleStudent = groupMembers.get(0);
         
-        // ✅ FIXED: Check group rubrics completion
         if (!groupRubrics.isEmpty()) {
             boolean groupComplete = checkRubricsComplete(
                 assessment, lecturer, sampleStudent, groupRubrics, "Group Assessment");
@@ -150,7 +149,6 @@ public class LecturerAssessmentService {
                 return false;
             }
             
-            // ✅ FIXED: Only check comments if they are actually configured
             List<String> groupCommentLabels = assessment.getGroupCommentLabels();
             boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
             
@@ -172,7 +170,6 @@ public class LecturerAssessmentService {
             }
         }
         
-        // ✅ FIXED: Check individual rubrics completion
         if (!individualRubrics.isEmpty()) {
             for (Student student : groupMembers) {
                 boolean individualComplete = checkRubricsComplete(
@@ -182,7 +179,6 @@ public class LecturerAssessmentService {
                     return false;
                 }
                 
-                // ✅ FIXED: Only check comments if they are actually configured
                 List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
                 boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
                 
@@ -240,7 +236,7 @@ public class LecturerAssessmentService {
                 student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
             .stream()
             .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() == null) // Only general assessment-level comments
+            .filter(c -> c.getRubricId() == null) 
             .collect(Collectors.toList());
         
         if (comments.size() < requiredCount) {
@@ -336,7 +332,6 @@ public class LecturerAssessmentService {
         }
         
         for (Student student : targetStudents) {
-            // Delete existing marks for this rubric type
             List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
                     student, student, assessment).stream()
                 .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
@@ -347,7 +342,6 @@ public class LecturerAssessmentService {
                 markRepository.deleteAll(existingMarks);
             }
             
-            // Delete existing assessment-level comments
             List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
                     lecturerId,
                     AssessmentComment.EvaluatorType.LECTURER,
@@ -361,7 +355,6 @@ public class LecturerAssessmentService {
                 assessmentCommentRepository.deleteAll(existingComments);
             }
             
-            // Save new marks
             List<Mark> newMarks = new ArrayList<>();
             for (Map.Entry<String, String> entry : scores.entrySet()) {
                 String key = entry.getKey();
@@ -425,7 +418,6 @@ public class LecturerAssessmentService {
                 markRepository.saveAll(newMarks);
             }
             
-            // Save assessment-level comments
             if (comments != null && !comments.isEmpty()) {
                 List<String> commentLabels = rubricType.equalsIgnoreCase("Group Assessment") ?
                     assessment.getGroupCommentLabels() :
@@ -470,7 +462,6 @@ public class LecturerAssessmentService {
                 }
             }
             
-            // Save rubric-specific comments
             if (rubricComments != null && !rubricComments.isEmpty()) {
                 for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                     Long rubricId = rubricEntry.getKey();

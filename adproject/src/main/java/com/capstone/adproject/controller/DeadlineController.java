@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam; // ⭐ Import new annotation
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Deadline;
@@ -54,7 +54,6 @@ public String saveDeadline(
         return "redirect:/admin/home";
     }
 
-    // 1. Check for Duplicate Title (IGNORING WHITESPACE)
     if (!confirmDuplicate) {
         boolean isDuplicate = deadlineService.isTitleDuplicateIgnoringWhitespace(title, deadline.getId());
         
@@ -69,14 +68,12 @@ public String saveDeadline(
         }
     }
 
-    // 2. Save the Deadline
     deadlineService.save(deadline);
     redirectAttributes.addFlashAttribute("successMessage", "Deadline saved successfully!");
     
     return "redirect:/admin/home";
 }
 
-// Helper method to find the existing title for display in the warning
 private String findExistingTitleIgnoringWhitespace(String title, Long excludeId) {
     String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
     List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
@@ -99,17 +96,14 @@ private String findExistingTitleIgnoringWhitespace(String title, Long excludeId)
         Optional<Deadline> deadlineOptional = deadlineService.getDeadlineById(id);
         if (deadlineOptional.isPresent()) {
             model.addAttribute("deadline", deadlineOptional.get());
-            return "edit-deadline"; // Ensure you have this template for editing
+            return "edit-deadline"; 
         } else {
-            // Handle case where deadline is not found
             return "redirect:/admin/home";
         }
     }
 
     @PostMapping("/update")
     public String updateDeadline(@ModelAttribute Deadline deadline, RedirectAttributes redirectAttributes) {
-        // You might want to add duplicate check logic here too, but for simplicity, 
-        // we'll keep the confirmation logic in the /save method for now.
         deadlineService.save(deadline);
         redirectAttributes.addFlashAttribute("successMessage", "Deadline updated successfully!");
         return "redirect:/admin/home";

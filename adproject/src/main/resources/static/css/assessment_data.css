@@ -1,7 +1,3 @@
-/* =======================================================
-   ASSESSMENT DATA VIEW - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -37,7 +33,6 @@ body.data-view-page .main-content {
     align-items: center !important;
 }
 
-/* Header */
 body.data-view-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -51,13 +46,11 @@ body.data-view-page .header-container {
 body.data-view-page .header-container img { max-width: 200px !important; height: auto !important; }
 body.data-view-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
-/* Data Container */
 body.data-view-page .data-container {
     width: 100% !important;
     max-width: 1200px !important;
 }
 
-/* Page Header Card */
 body.data-view-page .page-header {
     background-color: var(--color-surface) !important;
     padding: 20px 30px !important;
@@ -83,13 +76,11 @@ body.data-view-page .assessment-meta {
 
 body.data-view-page .meta-separator { margin: 0 10px !important; color: #ccc !important; }
 
-/* Action Buttons */
 body.data-view-page .action-buttons {
     display: flex !important;
     gap: 10px !important;
 }
 
-/* Filter Card */
 body.data-view-page .filter-card {
     background-color: var(--color-surface) !important;
     padding: 20px !important;
@@ -118,7 +109,6 @@ body.data-view-page select {
     font-size: 1rem !important;
 }
 
-/* Evaluators Card */
 body.data-view-page .evaluators-card {
     background-color: #f8fafc !important;
     padding: 20px !important;
@@ -192,7 +182,6 @@ body.data-view-page .empty-message {
     font-style: italic !important;
 }
 
-/* Student Card */
 body.data-view-page .student-card {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -235,13 +224,11 @@ body.data-view-page .detail-badge.warning {
     color: #fff !important; 
 }
 
-/* Table Responsive */
 body.data-view-page .table-responsive {
     width: 100% !important;
     overflow-x: auto !important;
 }
 
-/* Data Table */
 body.data-view-page .data-table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -348,7 +335,6 @@ body.data-view-page .final-score {
     color: var(--color-success) !important; 
 }
 
-/* Mark Display Styles for Raw/Weighted Marks */
 body.data-view-page .mark-display {
     display: flex !important;
     flex-direction: column !important;
@@ -421,7 +407,6 @@ body.data-view-page .summary-row.total {
     border-top: 2px solid var(--color-border) !important;
 }
 
-/* ✅ NEW: Overall Assessment Comments Styles */
 body.data-view-page .overall-comments-section {
     padding: 25px !important;
     background-color: #f8fafc !important;
@@ -506,7 +491,6 @@ body.data-view-page .comment-text {
     margin-top: 4px !important;
 }
 
-/* Empty State */
 body.data-view-page .empty-state {
     text-align: center !important;
     padding: 60px 20px !important;
@@ -526,7 +510,6 @@ body.data-view-page .empty-state p {
     font-size: 1.1rem !important;
 }
 
-/* Buttons */
 body.data-view-page .btn {
     padding: 8px 16px !important;
     border-radius: 6px !important;
@@ -558,7 +541,6 @@ body.data-view-page .btn-secondary:hover {
     background-color: #52525B !important;
 }
 
-/* Print Styles */
 @media print {
     body.data-view-page .sidebar, 
     body.data-view-page .action-buttons, 

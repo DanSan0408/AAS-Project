@@ -43,40 +43,31 @@ public class DeadlineService {
         return deadlineRepository.findByTitle(title);
     }
     
-    /**
-     * ⭐ NEW: Check if a deadline title is a duplicate (ignoring whitespace)
-     * @param title The title to check
-     * @param deadlineIdToExclude The ID of the deadline being edited (null for new deadlines)
-     * @return true if a duplicate exists, false otherwise
-     */
     public boolean isTitleDuplicateIgnoringWhitespace(String title, Long deadlineIdToExclude) {
         if (title == null || title.trim().isEmpty()) {
             return false;
         }
         
-        // Normalize the input title by removing all whitespace and converting to lowercase
         String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
         
-        // Get all deadlines and check for normalized matches
         List<Deadline> allDeadlines = deadlineRepository.findAll();
         
         for (Deadline deadline : allDeadlines) {
-            // Skip the deadline being edited
+            
             if (deadlineIdToExclude != null && deadline.getId().equals(deadlineIdToExclude)) {
                 continue;
             }
             
-            // Normalize the existing deadline title
             if (deadline.getTitle() != null) {
                 String normalizedExisting = deadline.getTitle().replaceAll("\\s+", "").toLowerCase();
                 
                 if (normalizedExisting.equals(normalizedTitle)) {
-                    return true; // Duplicate found
+                    return true; 
                 }
             }
         }
         
-        return false; // No duplicate found
+        return false; 
     }
     
     public List<Deadline> getDeadlinesByAssessmentId(Long assessmentId) {

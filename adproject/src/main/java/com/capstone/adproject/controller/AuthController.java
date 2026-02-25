@@ -31,34 +31,24 @@ public class AuthController {
         this.emailService = emailService;
     }
 
-    /**
-     * ✅ ENHANCED: Redirect root path - checks if user is already logged in
-     */
     @GetMapping("/")
     public String redirectToLogin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        
-        // Check if user is authenticated and not anonymous
+
         if (auth != null && auth.isAuthenticated() && 
             !auth.getPrincipal().equals("anonymousUser")) {
-            
-            // User is logged in, redirect to appropriate home page based on role
+
             return "redirect:" + getHomePageForUser(auth);
         }
         
-        // User not logged in, go to login page
         return "redirect:/login";
     }
 
-    /**
-     * ✅ ENHANCED: Show login page - redirects if already logged in
-     */
     @GetMapping("/login")
     public String showLoginPage(
             @RequestParam(value = "error", required = false) String error, 
             Model model) {
-        
-        // Check if user is already logged in
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && 
             !auth.getPrincipal().equals("anonymousUser")) {
@@ -73,10 +63,7 @@ public class AuthController {
         
         return "login";
     }
-    
-    /**
-     * ✅ Helper method to determine home page based on user role
-     */
+
     private String getHomePageForUser(Authentication auth) {
         Collection<? extends GrantedAuthority> authorities = auth.getAuthorities();
         
@@ -94,12 +81,10 @@ public class AuthController {
                     return "/supervisor/home";
             }
         }
-        
-        // Default fallback
+
         return "/login";
     }
     
-    // --- FORGOT PASSWORD IMPLEMENTATION ---
 
     @GetMapping("/forgot_password")
     public String showForgotPasswordForm() {

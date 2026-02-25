@@ -17,10 +17,9 @@ public class Deadline {
     private String title;
     private Date date;
     private Long assessmentId; 
-private String assessorType; // To store "STUDENT", "LECTURER", or "SUPERVISOR"
+private String assessorType; 
 private Date openDate;
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

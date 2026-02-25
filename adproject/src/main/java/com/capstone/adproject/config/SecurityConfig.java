@@ -24,13 +24,14 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
-    // ✅ FIXED: Use a constant key that won't change on restart
+    //untuk cookie, generate a token in the browser and di-hash guna secret key ni
     private static final String REMEMBER_ME_KEY = "utm-cas-remember-me-secret-key-2025-DO-NOT-CHANGE";
 
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
+    //encrypt password guna BCrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -39,17 +40,13 @@ public class SecurityConfig {
     @Autowired
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
-    /**
-     * ✅ RequestCache bean to save and restore user's last visited page
-     */
+    //to save and restore user last visited page if dia keluar dari system and still ada cookie
     @Bean
     public RequestCache requestCache() {
         return new HttpSessionRequestCache();
     }
 
-    /**
-     * ✅ CRITICAL: Create RememberMeServices bean with FIXED key
-     */
+    //cookies function
     @Bean
     public RememberMeServices rememberMeServices() {
         TokenBasedRememberMeServices rememberMeServices = 
@@ -67,9 +64,11 @@ public class SecurityConfig {
         return rememberMeServices;
     }
 
+    //role based filter on the users
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+        //authenticate and authorize
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", 
@@ -80,7 +79,7 @@ public class SecurityConfig {
                 .requestMatchers("/lecturer/**").hasRole("LECTURER")
                 .requestMatchers("/supervisor/**").hasRole("SUPERVISOR")
                 .anyRequest().authenticated()
-            )
+            )//login
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler(authenticationSuccessHandler)
@@ -88,16 +87,17 @@ public class SecurityConfig {
                 .permitAll()
             )
             
-            // ✅ Use the RememberMeServices bean
+            //pastikan guna/tarik remember me punya service
             .rememberMe(rememberMe -> rememberMe
                 .rememberMeServices(rememberMeServices())
             )
             
-            // ✅ Configure request cache to save last visited page
+            //cache ke last visited page
             .requestCache(cache -> cache
                 .requestCache(requestCache())
             )
             
+            //logout and clear cookies, cache
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
@@ -110,6 +110,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    //check dengan database the user
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();

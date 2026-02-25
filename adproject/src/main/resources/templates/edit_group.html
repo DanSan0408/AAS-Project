@@ -54,7 +54,6 @@
                                     <label for="academicSupervisorId">Lecturer:</label>
                                     <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
                                         <option value="">-- Select Lecturer --</option>
-                                        <!-- ✅ CHANGED: Use email instead of username -->
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${lecturer.email}"
@@ -69,7 +68,6 @@
                                     <label for="industrialSupervisorId">Industrial Supervisor:</label>
                                     <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
                                         <option value="">-- Select Supervisor --</option>
-                                        <!-- ✅ CHANGED: Use email instead of username -->
                                         <option th:each="supervisor : ${availableSupervisors}"
                                                 th:value="${supervisor.id}"
                                                 th:text="${supervisor.email}"
@@ -87,7 +85,6 @@
                                     <thead>
                                         <tr>
                                             <th style="width: 10%;">Select</th>
-                                            <!-- ✅ CHANGED: Column header from Username to Email -->
                                             <th>Student Email</th>
                                         </tr>
                                     </thead>
@@ -96,7 +93,6 @@
                                             <td>
                                                 <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
                                             </td>
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <td th:text="${student.email}">Student Email</td>
                                         </tr>
                                     </tbody>
@@ -119,7 +115,6 @@
                                 <thead>
                                     <tr>
                                         <th>Student ID</th>
-                                        <!-- ✅ CHANGED: Column header from Username to Email -->
                                         <th>Email</th>
                                         <th>Action</th>
                                     </tr>
@@ -127,7 +122,6 @@
                                 <tbody>
                                     <tr th:each="student : ${studentsInGroup}">
                                         <td th:text="${student.id}">101</td>
-                                        <!-- ✅ CHANGED: Display email instead of username -->
                                         <td th:text="${student.email}">Student Email</td>
                                         <td>
                                             <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"

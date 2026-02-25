@@ -143,25 +143,22 @@
     </div>
     
 <script th:inline="javascript">
-    // Dropdown Toggle Function
+    
     function toggleDropdown(assessmentId) {
         const dropdownId = 'dropdown-' + assessmentId;
         const dropdown = document.getElementById(dropdownId);
         
-        // Close all other dropdowns first
         document.querySelectorAll('.dropdown-menu').forEach(d => {
             if (d.id !== dropdownId) {
                 d.classList.remove('show');
             }
         });
         
-        // Toggle this dropdown
         if(dropdown) {
             dropdown.classList.toggle('show');
         }
     }
 
-    // Close dropdown when clicking outside
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.dropdown')) {
             document.querySelectorAll('.dropdown-menu').forEach(d => {
@@ -170,7 +167,6 @@
         }
     });
 
-    // Duplicate detection logic (UNCHANGED)
     document.addEventListener('DOMContentLoaded', function() {
         const assessmentForm = document.getElementById('assessment-form');
         const saveButton = document.getElementById('saveButton');

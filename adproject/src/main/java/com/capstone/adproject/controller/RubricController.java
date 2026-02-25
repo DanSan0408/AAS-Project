@@ -99,10 +99,8 @@ public class RubricController {
     public String viewAssessmentRubrics(@PathVariable Long assessmentId, Model model) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId); 
 
-        // ✅ Initialize display orders for existing rubrics if they don't have them
         rubricService.initializeRubricOrders(assessmentId);
         
-        // Reload to get updated display orders
         assessment = rubricService.findAssessmentById(assessmentId);
 
         Map<String, Map<String, List<Object>>> groupedRubrics = new LinkedHashMap<>();
@@ -132,7 +130,6 @@ public class RubricController {
             }
         }
         
-        // Sort rubrics within each assessment type by display_order
         for (List<Object> rubrics : innerGroup.values()) {
             rubrics.sort((o1, o2) -> {
                 if (o1 instanceof Rubric && o2 instanceof Rubric) {
@@ -214,7 +211,6 @@ public class RubricController {
         Long assessmentId = rubric.getAssessment().getId();
         Long rubricId = rubric.getId();
 
-        // ✅ CRITICAL FIX: Manually process checkbox values from raw parameters
         List<String> commentLabels = rubric.getRubricCommentLabels();
         if (commentLabels != null && !commentLabels.isEmpty()) {
             List<Boolean> anonymousFlags = new ArrayList<>();
@@ -228,7 +224,6 @@ public class RubricController {
             rubric.setRubricCommentAnonymousFlags(anonymousFlags);
         }
 
-        // Duplicate check
         if (!duplicateConfirmed) {
             boolean isDuplicate = rubricService.isRubricNameDuplicate(
                 rubric.getName(), 
@@ -248,14 +243,12 @@ public class RubricController {
             }
         }
 
-        // Set CLO Marks equal to Total Marks
         if (rubric.getMarks() != null) {
             rubric.setCloMarks(rubric.getMarks().doubleValue());
         } else {
             rubric.setCloMarks(null);
         }
         
-        // Set bidirectional relationships for sub-rubrics
         if (rubric.getSubRubrics() != null) {
             for (SubRubric subRubric : rubric.getSubRubrics()) {
                 subRubric.setRubric(rubric);
@@ -269,7 +262,6 @@ public class RubricController {
             }
         }
         
-        // Set bidirectional relationships for direct ratings
         if (rubric.getRatings() != null) {
             for (Rating rating : rubric.getRatings()) {
                 rating.setRubric(rubric);
@@ -312,19 +304,14 @@ public class RubricController {
         try {
             rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
         } catch (Exception e) {
-            // Silent fail
         }
         
-        // ✅ CHANGED: Stay at the block that was moved
         String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
         redirectAttributes.addFlashAttribute("focusBlock", anchor);
         
         return "redirect:/rubrics/view/" + assessmentId;
     }
 
-    /**
-     * ✅ CHANGED: Move rubric and keep focus on it
-     */
     @PostMapping("/rubric/{rubricId}/move")
     public String moveRubric(@PathVariable Long rubricId,
                               @RequestParam String direction,
@@ -335,7 +322,6 @@ public class RubricController {
             
             rubricService.moveRubric(rubricId, direction);
             
-            // ✅ Pass the rubric ID to focus on after page reload
             redirectAttributes.addFlashAttribute("focusRubricId", rubricId);
             
             return "redirect:/rubrics/view/" + assessmentId;

@@ -1,7 +1,3 @@
-/* =======================================================
-   RUBRIC FORM - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -30,10 +26,9 @@ body.rubric-form-page {
     min-height: 100vh;
 }
 
-/* ==================== LAYOUT ==================== */
 body.rubric-form-page .main-content {
     margin-left: 270px !important;
-    padding: 40px 40px 100px 40px !important; /* Extra bottom padding for footer */
+    padding: 40px 40px 100px 40px !important; 
     flex-grow: 1 !important;
     background-color: var(--color-background) !important;
     display: flex !important;
@@ -41,7 +36,6 @@ body.rubric-form-page .main-content {
     align-items: center !important;
 }
 
-/* ==================== HEADER ==================== */
 body.rubric-form-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -55,7 +49,6 @@ body.rubric-form-page .header-container {
 body.rubric-form-page .header-container img { max-width: 200px !important; height: auto !important; }
 body.rubric-form-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
-/* ==================== CARDS & CONTAINERS ==================== */
 body.rubric-form-page .card {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -76,7 +69,6 @@ body.rubric-form-page .card h1 {
     text-align: center;
 }
 
-/* ==================== FORM ELEMENTS ==================== */
 body.rubric-form-page .form-group { margin-bottom: 20px !important; }
 
 body.rubric-form-page label {
@@ -114,7 +106,6 @@ body.rubric-form-page input[readonly] {
     cursor: not-allowed !important;
 }
 
-/* ==================== SECTIONS (Sub-Rubric / Direct / Comments) ==================== */
 body.rubric-form-page .section-container {
     background-color: #fff !important;
     border-radius: 8px !important;
@@ -124,7 +115,6 @@ body.rubric-form-page .section-container {
     position: relative !important;
 }
 
-/* Specific Border Colors for Sections */
 body.rubric-form-page .section-blue { border-top: 4px solid var(--color-info-blue) !important; }
 body.rubric-form-page .section-green { border-top: 4px solid var(--color-success) !important; }
 body.rubric-form-page .section-purple { border-top: 4px solid var(--color-purple) !important; }
@@ -143,9 +133,8 @@ body.rubric-form-page .section-blue h2 { color: var(--color-info-blue) !importan
 body.rubric-form-page .section-green h2 { color: var(--color-success) !important; }
 body.rubric-form-page .section-purple h2 { color: var(--color-purple) !important; }
 
-/* ==================== SUB-RUBRIC CARD ==================== */
 body.rubric-form-page .sub-rubric-card {
-    background-color: #f8fafc !important; /* Very light blue/grey */
+    background-color: #f8fafc !important; 
     border: 1px solid #e2e8f0 !important;
     border-left: 4px solid var(--color-info-blue) !important;
     border-radius: 6px !important;
@@ -154,7 +143,6 @@ body.rubric-form-page .sub-rubric-card {
     position: relative !important;
 }
 
-/* ==================== RATING CARD ==================== */
 body.rubric-form-page .rating-card {
     background-color: #ffffff !important;
     border: 1px solid var(--color-border) !important;
@@ -165,7 +153,6 @@ body.rubric-form-page .rating-card {
     box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
 }
 
-/* Flex row for Rating Name + Marks to save space */
 body.rubric-form-page .rating-row {
     display: flex !important;
     gap: 15px !important;
@@ -173,9 +160,8 @@ body.rubric-form-page .rating-row {
 body.rubric-form-page .rating-row .col-grow { flex-grow: 1 !important; }
 body.rubric-form-page .rating-row .col-fixed { width: 120px !important; flex-shrink: 0 !important; }
 
-/* ==================== COMMENT CARD ==================== */
 body.rubric-form-page .comment-card {
-    background-color: #faf5ff !important; /* Very light purple */
+    background-color: #faf5ff !important; 
     border: 1px solid #e9d5ff !important;
     border-left: 4px solid var(--color-purple) !important;
     border-radius: 6px !important;
@@ -184,7 +170,6 @@ body.rubric-form-page .comment-card {
     position: relative !important;
 }
 
-/* ==================== BUTTONS ==================== */
 body.rubric-form-page .btn {
     padding: 10px 18px !important;
     border-radius: 6px !important;
@@ -203,7 +188,6 @@ body.rubric-form-page .btn-primary { background-color: var(--color-primary) !imp
 body.rubric-form-page .btn-danger { background-color: var(--color-alert) !important; color: white !important; }
 body.rubric-form-page .btn-sm { padding: 6px 12px !important; font-size: 0.9rem !important; }
 
-/* Remove X Button */
 body.rubric-form-page .remove-btn {
     position: absolute !important;
     top: 10px !important;
@@ -217,47 +201,39 @@ body.rubric-form-page .remove-btn {
 }
 body.rubric-form-page .remove-btn:hover { color: #b91c1c !important; text-decoration: underline !important; }
 
-/* ==================== FLOATING ACTION BUTTONS ==================== */
 body.rubric-form-page .button-container {
     position: fixed !important;
-    bottom: 20px !important;       /* Distance from bottom */
+    bottom: 20px !important;       
     
-    /* STRETCH LOGIC */
-    left: 290px !important;        /* 270px (Sidebar) + 20px (Gap) */
-    right: 20px !important;        /* 20px Gap from right wall */
-    width: auto !important;        /* Let left/right determine width */
+    left: 290px !important;        
+    right: 20px !important;        
+    width: auto !important;        
     
-    /* Styling */
     background-color: var(--color-surface) !important;
     padding: 15px 30px !important;
-    border-radius: 12px !important; /* Rounded rectangle */
+    border-radius: 12px !important; 
     
-    /* 3D Floating Effect */
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid var(--color-border) !important;
     
-    /* CENTER BUTTONS */
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important; /* <--- This centers the buttons */
+    justify-content: center !important; 
     gap: 20px !important;
     z-index: 1000 !important;
     
-    /* Reset margins */
     margin: 0 !important; 
 }
 
-/* Responsive: When sidebar collapses or screen is small */
 @media (max-width: 1000px) {
     body.rubric-form-page .button-container {
-        left: 20px !important; /* Remove sidebar offset */
+        left: 20px !important; 
         right: 20px !important;
     }
 }
 
 body.rubric-form-page .info-text { font-size: 0.9rem !important; color: #6b7280 !important; font-style: italic !important; margin-bottom: 15px !important; }
 
-/* Responsive */
 @media (max-width: 1000px) {
     body.rubric-form-page .main-content { margin-left: 0 !important; padding: 20px !important; }
 }

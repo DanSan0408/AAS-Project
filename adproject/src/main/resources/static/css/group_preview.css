@@ -1,8 +1,3 @@
-/* =======================================================
-   GROUP PREVIEW - Professional Maroon Theme
-   Matched with Manage Users Page Consistency
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -17,7 +12,6 @@
     --color-success: #059669;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -33,7 +27,7 @@ body.group-preview-page {
 }
 
 body.group-preview-page .main-content {
-    padding: 40px !important; /* Matched padding */
+    padding: 40px !important; 
     margin-left: 270px !important;
     flex-grow: 1 !important;
     overflow-y: auto !important;
@@ -41,7 +35,6 @@ body.group-preview-page .main-content {
     background-color: var(--color-background) !important;
 }
 
-/* ==================== HEADER (Matched to manageUser.css) ==================== */
 body.group-preview-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -66,7 +59,6 @@ body.group-preview-page .header-container h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== CARD STYLES ==================== */
 body.group-preview-page .card {
     background-color: var(--color-surface) !important;
     padding: 40px !important;
@@ -94,7 +86,6 @@ body.group-preview-page .card-header h1 {
     display: inline-block !important;
 }
 
-/* ==================== USER EDITING CONTAINER (Matched) ==================== */
 body.group-preview-page .user-editing-container {
     display: flex !important;
     gap: 30px !important;
@@ -103,7 +94,6 @@ body.group-preview-page .user-editing-container {
     min-height: 600px !important;
 }
 
-/* Sidebar - Button Style */
 body.group-preview-page .user-editing-sidebar {
     background-color: var(--color-surface) !important;
     padding: 16px !important;
@@ -143,7 +133,6 @@ body.group-preview-page .user-editing-sidebar a.active {
     box-shadow: 0 2px 8px rgba(74, 0, 24, 0.2) !important;
 }
 
-/* Main Content Area */
 body.group-preview-page .user-editing-main {
     flex-grow: 1 !important;
     background-color: var(--color-surface) !important;
@@ -173,7 +162,6 @@ body.group-preview-page .user-editing-main > p {
     border-radius: 8px !important;
 }
 
-/* ==================== TABLE STYLES (Preview Specific) ==================== */
 body.group-preview-page .group-table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -230,7 +218,6 @@ body.group-preview-page .group-table select:focus {
     box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
 }
 
-/* Student List */
 body.group-preview-page #student-display-list {
     list-style: none !important;
     padding: 0 !important;
@@ -260,7 +247,6 @@ body.group-preview-page .student-item span {
     font-weight: 600 !important;
 }
 
-/* Add Student Container */
 body.group-preview-page .add-student-container {
     margin: 20px 0 !important;
     padding: 16px !important;
@@ -302,7 +288,6 @@ body.group-preview-page #sizeWarning {
     font-size: 0.9em !important;
 }
 
-/* Buttons */
 body.group-preview-page .btn {
     padding: 12px 20px !important;
     border: none !important;
@@ -363,7 +348,6 @@ body.group-preview-page .action-buttons {
     flex-wrap: wrap !important;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
     body.group-preview-page .main-content {
         margin-left: 0 !important;

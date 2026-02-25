@@ -62,6 +62,7 @@ public class AdminController {
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
 
+    //constructor
     public AdminController(
             AdminService adminService, 
             AssessmentService assessmentService, 
@@ -79,6 +80,7 @@ public class AdminController {
         this.assignmentRepository = assignmentRepository;
     }
 
+    //ensure that dates objects are converted as dates
     @InitBinder
     public void initBinder(WebDataBinder binder) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -86,21 +88,16 @@ public class AdminController {
         binder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
 
+    //extract the identitiy of the currently logged in user from spring security
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            // ✅ CHANGED: Use email instead of username
             return ((Admin) authentication.getPrincipal()).getEmail();
         }
         return "Admin";
     }
-
-    /**
-     * Groups assessment components (Rubrics only) by Assessment Type.
-     * Uses a dummy outer map key to maintain template compatibility.
-     * @param assessment The assessment to group components from.
-     * @return A map structure: Map<DummyKey, Map<AssessmentType, List<Object>>>
-     */
+    
+    //transform data (objects) and reorganizes it
     public Map<String, Map<String, List<Object>>> groupAssessmentComponents(Assessment assessment) {
         Map<String, Map<String, List<Object>>> grouped = new LinkedHashMap<>();
         final String DUMMY_KEY = "ASSESSMENT_GROUPING";
@@ -120,10 +117,12 @@ public class AdminController {
         return grouped;
     }
 
+    //check component tu rubric ke tak
     public boolean isRubricType(Object component) {
         return component instanceof Rubric;
     }
 
+    //gathering data from various services and pass it to admin_home
     @GetMapping("/home")
     public String adminHome(Model model) {
 
@@ -145,9 +144,7 @@ public class AdminController {
         return "admin_home";
     }
 
-    /**
-     * ⭐ NEW: Show lecturer assignment page for a specific assessment
-     */
+
     @GetMapping("/lecturer-assignments/{assessmentId}")
     @Transactional
     public String showLecturerAssignmentPage(
@@ -161,15 +158,18 @@ public class AdminController {
             return "redirect:/admin/home";
         }
         
+        //fetch all groups and all lecturers
         List<Group> allGroups = groupRepository.findAllWithStudents();
         List<Lecturer> allLecturers = lecturerRepository.findAll();
         
-        // Get existing assignments
+        //fetch assignments
         List<LecturerGroupAssignment> existingAssignments = 
             assignmentRepository.findByAssessment(assessment);
         
-        // Build map of group -> list of assigned lecturers
+            //create map to track which lecturers are assigned to which group
         Map<Long, List<Lecturer>> groupLecturerMap = new java.util.HashMap<>();
+
+        //loop through every group to findd it assigned lecturer
         for (Group group : allGroups) {
             List<Lecturer> assignedLecturers = existingAssignments.stream()
                 .filter(a -> a.getGroup().getId().equals(group.getId()))
@@ -178,6 +178,7 @@ public class AdminController {
             groupLecturerMap.put(group.getId(), assignedLecturers);
         }
         
+        //gabung all data to the model
         model.addAttribute("assessment", assessment);
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("allLecturers", allLecturers);
@@ -187,9 +188,7 @@ public class AdminController {
         return "admin_assign_lecturers";
     }
 
-    /**
-     * ⭐ NEW: Save lecturer assignments for an assessment
-     */
+    //save lecturer assignments
     @PostMapping("/lecturer-assignments/{assessmentId}/save")
     @Transactional
     public String saveLecturerAssignments(
@@ -204,12 +203,11 @@ public class AdminController {
                 return "redirect:/admin/home";
             }
             
-            // Delete existing assignments for this assessment
+            // Delete old assignment existing untuk assessment
             assignmentRepository.deleteByAssessment(assessment);
             assignmentRepository.flush();
             
-            // Parse and save new assignments
-            // Format: group_<groupId>_lecturer_<index> = lecturerId
+            // Temporary map to figure out which lecturers belong to which groups based on the form data.
             Map<Long, List<Long>> groupLecturerAssignments = new java.util.HashMap<>();
             
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
@@ -221,7 +219,6 @@ public class AdminController {
                         continue; // Skip empty assignments
                     }
                     
-                    // Extract group ID from key (format: group_<groupId>_lecturer_<index>)
                     String[] parts = key.split("_");
                     Long groupId = Long.parseLong(parts[1]);
                     Long lecturerId = Long.parseLong(value);
@@ -231,8 +228,7 @@ public class AdminController {
                         .add(lecturerId);
                 }
             }
-            
-            // Create assignment entities
+
             List<LecturerGroupAssignment> assignments = new ArrayList<>();
             for (Map.Entry<Long, List<Long>> entry : groupLecturerAssignments.entrySet()) {
                 Long groupId = entry.getKey();
@@ -243,7 +239,6 @@ public class AdminController {
                     Lecturer lecturer = lecturerRepository.findById(lecturerId)
                         .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
                     
-                    // Avoid duplicates
                     if (!assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer)) {
                         LecturerGroupAssignment assignment = new LecturerGroupAssignment();
                         assignment.setAssessment(assessment);
@@ -381,10 +376,9 @@ public class AdminController {
     @GetMapping("/manage-students")
 public String manageStudents(Model model, @ModelAttribute("student") Student student) {
     model.addAttribute("students", adminService.getAllStudents());
-    
-    // If student is not provided via flash attributes, create a new one
+
     if (student == null || student.getId() == null && 
-        (student.getEmail() == null || student.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
+        (student.getEmail() == null || student.getEmail().isEmpty())) { 
         model.addAttribute("student", new Student());
     } else {
         model.addAttribute("student", student);
@@ -434,9 +428,8 @@ public String saveStudent(
 public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer lecturer) {
     model.addAttribute("lecturers", adminService.getAllLecturers());
     
-    // If lecturer is not provided via flash attributes, create a new one
     if (lecturer == null || lecturer.getId() == null && 
-        (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
+        (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
         model.addAttribute("lecturer", new Lecturer());
     } else {
         model.addAttribute("lecturer", lecturer);
@@ -486,10 +479,9 @@ public String saveLecturer(
    @GetMapping("/manage-supervisors")
 public String manageSupervisors(Model model, @ModelAttribute("industrialSupervisor") IndustrialSupervisor industrialSupervisor) {
     model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
-    
-    // If supervisor is not provided via flash attributes, create a new one
+
     if (industrialSupervisor == null || industrialSupervisor.getId() == null && 
-        (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) { // ✅ CHANGED: Check email instead of username
+        (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) {
         model.addAttribute("industrialSupervisor", new IndustrialSupervisor());
     } else {
         model.addAttribute("industrialSupervisor", industrialSupervisor);
@@ -708,7 +700,6 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
          return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
     }
 
-    // ⭐ CHECK IF DEADLINE ALREADY EXISTS FOR THIS ASSESSMENT + ASSESSOR TYPE
     List<Deadline> existingDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
         dto.getAssessmentId(), 
         dto.getAssessorType()
@@ -717,23 +708,19 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
     Deadline deadline;
     
     if (!existingDeadlines.isEmpty()) {
-        // ⭐ UPDATE EXISTING DEADLINE (take the first one if multiple exist)
         deadline = existingDeadlines.get(0);
-        
-        // Optional: Delete any duplicate deadlines if more than one exists
+
         if (existingDeadlines.size() > 1) {
             for (int i = 1; i < existingDeadlines.size(); i++) {
                 deadlineService.deleteDeadline(existingDeadlines.get(i).getId());
             }
         }
     } else {
-        // ⭐ CREATE NEW DEADLINE
         deadline = new Deadline();
         deadline.setAssessmentId(dto.getAssessmentId());
         deadline.setAssessorType(dto.getAssessorType());
     }
     
-    // Update/Set all fields
     deadline.setTitle(dto.getTitle());
     deadline.setDate(dto.getEndDate());
 
@@ -760,9 +747,7 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
     
     return "redirect:/admin/home"; 
 }
-    // Inside AdminController.class
 
-    // 1. Bulk Delete Students
     @PostMapping("/bulk-delete-students")
     public String bulkDeleteStudents(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
@@ -779,7 +764,6 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
         return "redirect:/admin/manage-students";
     }
 
-    // 2. Bulk Delete Lecturers
     @PostMapping("/bulk-delete-lecturers")
     public String bulkDeleteLecturers(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {
@@ -796,7 +780,6 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
         return "redirect:/admin/manage-lecturers";
     }
 
-    // 3. Bulk Delete Supervisors
     @PostMapping("/bulk-delete-supervisors")
     public String bulkDeleteSupervisors(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
         if (ids == null || ids.isEmpty()) {

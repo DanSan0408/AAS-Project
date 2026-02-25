@@ -1,8 +1,3 @@
-/* =======================================================
-    EDIT DEADLINE - Professional Maroon Theme
-    Consistent with admin_home.css
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -16,7 +11,6 @@
     --color-border: #E5E7EB;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -32,7 +26,6 @@ body.edit-deadline-page {
     padding: 0;
 }
 
-/* Header Container */
 body.edit-deadline-page .header-container {
     display: flex !important;
     align-items: center !important;

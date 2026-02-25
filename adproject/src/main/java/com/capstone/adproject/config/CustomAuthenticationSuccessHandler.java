@@ -16,13 +16,13 @@ import jakarta.servlet.http.HttpServletResponse;
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     //IOE exception : input/output problem
-    //Servlet exception : servlet operation (server handling like client requests/generate dynamic responses) problem
+    //Servlet exception : servlet operation (server handling like client requests/generate dynamic responses) problem\
+    //onAuthenticationSuccess : to override authenticationsSuccess method in SecurityConfig
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         
-        // AuthorityUtils == helper class in SpringSecurity
-        //authorityListToSet == convert list of GrantedAuthority objects into set of strings
-        Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities()); //getAuthorities -> return a collection of GrantedAuthority objects (roles/authorities to a user)
+        //tukar object(roles) tu ke string
+        Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities()); //getAuthorities : return a collection of GrantedAuthority objects (roles/authorities to a user)
 
         // nak hantar user ke page yang betul
         if (roles.contains("ROLE_ADMIN")) {
@@ -42,7 +42,7 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             response.sendRedirect("/supervisor/home");
 
         } else {
-            // Felse, hantar balik ke page startup.html
+            // False, hantar balik ke page startup.html
             response.sendRedirect("/");
         }
     }

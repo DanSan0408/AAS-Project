@@ -1,16 +1,3 @@
-/* 
- * UTM CAS - Critical Loading Styles
- * 
- * IMPORTANT: This file MUST be loaded FIRST in every HTML page
- * to prevent white flash during page load.
- * 
- * Usage in HTML:
- * <link rel="stylesheet" href="/css/critical.css">
- * 
- * Place this BEFORE any other CSS files.
- */
-
-/* Prevent white flash - Set background immediately */
 html {
     background: url('/images/utmbg.png') center center / cover no-repeat fixed;
     margin: 0;
@@ -18,7 +5,6 @@ html {
     min-height: 100vh;
 }
 
-/* Background overlay */
 html::before {
     content: '';
     position: fixed;
@@ -31,23 +17,20 @@ html::before {
     pointer-events: none;
 }
 
-/* Transparent body to show html background */
 body {
     background: transparent;
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    overflow: hidden !important; /* Prevent scrolling during load */
+    overflow: hidden !important; 
 }
 
-/* CRITICAL: Force hide ALL content except loading screen by default */
 body > *:not(#loading-screen):not(script) {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
 }
 
-/* CRITICAL: Force loading screen to be visible and on top ALWAYS */
 #loading-screen {
     display: flex !important;
     position: fixed !important;
@@ -63,7 +46,6 @@ body > *:not(#loading-screen):not(script) {
     pointer-events: auto !important;
 }
 
-/* Only show content when body has 'loaded' class */
 body.loaded > *:not(#loading-screen):not(script) {
     opacity: 1 !important;
     visibility: visible !important;
@@ -71,19 +53,16 @@ body.loaded > *:not(#loading-screen):not(script) {
     transition: opacity 0.5s ease;
 }
 
-/* Smooth fade out when loading completes */
 body.loaded #loading-screen.fade-out {
     opacity: 0 !important;
     visibility: hidden !important;
     transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 }
 
-/* Allow scrolling when loaded */
 body.loaded {
     overflow: auto !important;
 }
 
-/* Additional safeguard for page-content class */
 .page-content {
     opacity: 0 !important;
     visibility: hidden !important;

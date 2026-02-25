@@ -42,7 +42,6 @@
                         <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
                             <strong>Members:</strong>
                             <span th:each="student, iterStat : ${group.students}">
-                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <span th:text="${student.email}">Student Email</span><span th:if="${!iterStat.last}">, </span>
                             </span>
                         </div>
@@ -54,7 +53,6 @@
                                     <div th:each="lecturer, iterStat : ${groupLecturerMap.get(group.id)}" class="lecturer-row">
                                         <select th:name="'group_' + ${group.id} + '_lecturer_' + ${iterStat.index}" class="form-select">
                                             <option value="none">-- Select Lecturer --</option>
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="lec : ${allLecturers}" 
                                                     th:value="${lec.id}" 
                                                     th:text="${lec.email}"
@@ -71,7 +69,6 @@
                                 <div th:if="${groupLecturerMap.get(group.id) == null or groupLecturerMap.get(group.id).isEmpty()}" class="lecturer-row">
                                     <select th:name="'group_' + ${group.id} + '_lecturer_0'" class="form-select">
                                         <option value="none">-- Select Lecturer --</option>
-                                        <!-- ✅ CHANGED: Display email instead of username -->
                                         <option th:each="lec : ${allLecturers}" 
                                                 th:value="${lec.id}" 
                                                 th:text="${lec.email}">
@@ -100,7 +97,6 @@
     </div>
 
     <script th:inline="javascript">
-        // Store lecturer options for dynamic addition
         const allLecturers = /*[[${allLecturers}]]*/ [];
         
         function addLecturerField(groupId) {
@@ -110,7 +106,6 @@
             
             const newField = document.createElement('div');
             newField.className = 'lecturer-row';
-            // ✅ CHANGED: Use email in JavaScript template literal
             newField.innerHTML = `
                 <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
                     <option value="none">-- Select Lecturer --</option>
@@ -128,11 +123,9 @@
             const field = button.closest('.lecturer-row');
             const container = field.parentElement;
             
-            // Don't remove if it's the last field
             if (container.querySelectorAll('.lecturer-row').length > 1) {
                 field.remove();
             } else {
-                // Reset the select instead of removing
                 const select = field.querySelector('select');
                 if(select) select.value = 'none';
             }

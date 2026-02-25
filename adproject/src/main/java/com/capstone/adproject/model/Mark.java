@@ -24,60 +24,48 @@ public class Mark {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Student being evaluated
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluated_student_id", nullable = false)
     private Student evaluatedStudent;
 
-    // Student doing the evaluation (for lecturer marks, same as evaluated)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluator_student_id", nullable = false)
     private Student evaluatorStudent;
 
-    // Assessment this mark belongs to
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assessment_id", nullable = false)
     private Assessment assessment;
 
-    // Rubric this mark is for
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rubric_id")
     private Rubric rubric;
 
-    // SubRubric if applicable
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_rubric_id")
     private SubRubric subRubric;
 
-    // Rating selected
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rating_id")
     private Rating rating;
 
-    // The actual mark value
     @Column(nullable = false)
     private Double markValue;
 
-    // CLO related fields
     @Column(nullable = false)
     private Integer clo;
 
     @Column(nullable = false)
     private Double cloMarks;
 
-    // Assessment type from rubric (Group Assessment or Individual Assessment)
     @Column(name = "assessment_type", nullable = false)
     private String assessmentType;
 
-    // Timestamp
     @Column(nullable = false)
     private LocalDateTime submittedAt;
 
-    // Comments (optional)
     @Column(columnDefinition = "TEXT")
     private String comments;
 
-    // Status of submission
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SubmissionStatus status = SubmissionStatus.DRAFT;
@@ -88,25 +76,21 @@ public class Mark {
     @Column(name = "is_supervisor_mark")
     private Boolean isSupervisorMark = false;
 
-    // NEW: Lecturer who created this mark
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecturer_id")
     private Lecturer lecturer;
 
-    // Enum
     public enum SubmissionStatus {
         DRAFT,
         SUBMITTED,
         FINAL
     }
 
-    // Constructors
     public Mark() {
         this.status = SubmissionStatus.DRAFT;
         this.submittedAt = LocalDateTime.now();
     }
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -165,7 +149,6 @@ public class Mark {
         this.isSupervisorMark = isSupervisorMark;
     }
 
-    // NEW: Getter and Setter for Lecturer
     public Lecturer getLecturer() {
         return lecturer;
     }
@@ -174,17 +157,15 @@ public class Mark {
         this.lecturer = lecturer;
     }
 
-    // Calculate mark value based on rating marks
     public void calculateMarkValue() {
         if (rating != null && rating.getMarks() != null) {
             this.markValue = rating.getMarks().doubleValue();
         }
     }
 
-    // Calculate CLO marks
     public void calculateCloMarks() {
         if (rubric != null && rubric.getCloMarks() != null && rating != null && rating.getMarks() != null) {
-            // Proportional CLO marks based on rating
+            
             double proportion = rating.getMarks().doubleValue() / 
                 (rubric.getMarks() != null ? rubric.getMarks().doubleValue() : 1.0);
             this.cloMarks = proportion * rubric.getCloMarks();
@@ -201,7 +182,6 @@ public class Mark {
         calculateMarkValue(); 
         calculateCloMarks();
         
-        // Set CLO from rubric
         if (this.clo == null && rubric != null && rubric.getClo() != null) {
             this.clo = rubric.getClo();
         }
@@ -209,7 +189,6 @@ public class Mark {
             this.clo = 0;
         }
         
-        // Set assessment type from rubric
         if (this.assessmentType == null && rubric != null && rubric.getAssessmentTypes() != null) {
             this.assessmentType = rubric.getAssessmentTypes();
         }
@@ -217,7 +196,6 @@ public class Mark {
             this.assessmentType = "Peer Assessment";
         }
         
-        // Ensure mandatory fields are not null
         if (this.markValue == null) {
             this.markValue = 0.0;
         }

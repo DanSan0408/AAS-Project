@@ -19,7 +19,6 @@
             </div>
         </div>
         
-        <!-- Success/Error Messages -->
         <div th:if="${successMessage}" class="alert alert-success" role="alert">
             <span th:text="${successMessage}"></span>
         </div>
@@ -35,19 +34,17 @@
 
                     <div th:each="assessment : ${allAssessments}" class="assessment-box">
                         
-                        <!-- Assessment Header -->
                         <div class="assessment-header">
                             <h3 th:text="${'Assessment: ' + assessment.title}">Assessment: Presentation 1 Assessment</h3>
                             
                             <div class="assessment-header-buttons">
-                                <!-- Assign Lecturers Button -->
+                                
                                 <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" 
                                    class="add-rubric-button" 
                                    style="background-color: #e67e22; display: inline-block;">
                                     <i class="fas fa-user-tie"></i> Assign Lecturers
                                 </a>
                                 
-                                <!-- Assign Assessment Button -->
                                 <a th:href="@{/admin/assessment/assign/{id}(id=${assessment.id})}" 
                                    class="add-rubric-button" 
                                    style="background-color: #f7941d; display: inline-block;">
@@ -66,7 +63,6 @@
                             </div>
                         </div>
 
-                        <!-- ========== RESTRUCTURED: Group and Individual Blocks ========== -->
                         <th:block th:with="
                             groupedComponents=${groupAssessmentComponents.apply(assessment)},
                             groupRubrics=${groupedComponents != null && !groupedComponents.isEmpty() && groupedComponents.values().iterator().next().containsKey('Group Assessment') ? groupedComponents.values().iterator().next().get('Group Assessment') : null},
@@ -74,13 +70,11 @@
                             hasGroupContent=${groupRubrics != null && !groupRubrics.isEmpty() || (assessment.groupCommentCount != null && assessment.groupCommentCount > 0)},
                             hasIndividualContent=${individualRubrics != null && !individualRubrics.isEmpty() || (assessment.individualCommentCount != null && assessment.individualCommentCount > 0)}">
 
-                            <!-- ========== GROUP ASSESSMENT BLOCK ========== -->
                             <div th:if="${hasGroupContent}" class="assess-type-group" style="border-left: 4px solid #3498db;">
                                 <h5 style="color: #3498db; margin-bottom: 15px;">
                                     <i class="fas fa-users"></i> Group Assessment
                                 </h5>
                                 
-                                <!-- Group Rubrics -->
                                 <div th:if="${groupRubrics != null && !groupRubrics.isEmpty()}">
                                     <div th:each="component : ${groupRubrics}" class="rubric-assessment">
                                         <h6 th:text="${component.name}">Rubric Name</h6>
@@ -103,7 +97,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Group Comments Section -->
                                 <div class="assessment-comments-section" style="margin-top: 15px;" 
                                      th:if="${assessment.groupCommentLabels != null && !assessment.groupCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
@@ -150,7 +143,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Configure Group Comments Button - ALWAYS SHOW -->
                                 <div style="margin-top: 15px; text-align: center;">
                                     <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" 
                                        class="add-rubric-button" 
@@ -158,15 +150,13 @@
                                         <i class="fas fa-cog"></i> Configure Group Comments
                                     </a>
                                 </div>
-                            </div> <!-- Close Group Assessment Block -->
+                            </div> 
                             
-                            <!-- ========== INDIVIDUAL ASSESSMENT BLOCK ========== -->
                             <div th:if="${hasIndividualContent}" class="assess-type-group" style="border-left: 4px solid #2ecc71;">
                                 <h5 style="color: #2ecc71; margin-bottom: 15px;">
                                     <i class="fas fa-user"></i> Individual Assessment
                                 </h5>
                                 
-                                <!-- Individual Rubrics -->
                                 <div th:if="${individualRubrics != null && !individualRubrics.isEmpty()}">
                                     <div th:each="component : ${individualRubrics}" class="rubric-assessment">
                                         <h6 th:text="${component.name}">Rubric Name</h6>
@@ -189,7 +179,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Individual Comments Section -->
                                 <div class="assessment-comments-section" style="margin-top: 15px;"
                                      th:if="${assessment.individualCommentLabels != null && !assessment.individualCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
@@ -236,7 +225,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Configure Individual Comments Button - ALWAYS SHOW -->
                                 <div style="margin-top: 15px; text-align: center;">
                                     <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" 
                                        class="add-rubric-button" 
@@ -244,11 +232,10 @@
                                         <i class="fas fa-cog"></i> Configure Individual Comments
                                     </a>
                                 </div>
-                            </div> <!-- Close Individual Assessment Block -->
+                            </div> 
 
                         </th:block>
                         
-                        <!-- Add Rubric Button -->
                         <div style="margin-top: 20px; border-top: 1px solid #4a6681; padding-top: 15px;">
                             <span th:if="${#lists.isEmpty(assessment.rubrics)}" 
                                   style="display: block; margin-bottom: 10px;">
@@ -265,12 +252,9 @@
                 </div>
             </div>
 
-            <!-- Deadline Section with All Features -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 
-
-                <!-- Add New General Deadline Form -->
                 <div class="add-new-deadline">
                     <h3>Add New General Deadline</h3>
                     
@@ -300,16 +284,15 @@
                     </form>
                 </div>
                 
-                <!-- Check if there are any deadlines -->
                 <div th:if="${deadlines != null and !#lists.isEmpty(deadlines)}" class="deadline-list">
                     <div th:each="deadline : ${deadlines}" class="deadline-item">
                         <div class="deadline-display">
-                            <!-- Title with Type Badge -->
+                            
                             <p>
                                 <strong>Title:</strong> 
                                 <span th:text="${deadline.title}">Deadline Title</span>
                                 
-                                <!-- Badge for Assessor Type -->
+                                
                                 <span th:if="${deadline.assessorType != null}" 
                                       th:classappend="${'deadline-type-badge ' + 
                                           (deadline.assessorType == 'STUDENT' ? 'badge-student' : 
@@ -323,7 +306,7 @@
                                     GENERAL
                                 </span>
                             </p>
-                            <!-- Open Date -->
+
                             <p>
                                 <strong>Opens:</strong> 
                                 <span th:if="${deadline.openDate != null}" 
@@ -337,7 +320,7 @@
                                 </span>
                             </p>
                             
-                            <!-- End Date -->
+                            
                             <p>
                                 <strong>Closes:</strong> 
                                 <span class="date-info" 
@@ -346,7 +329,7 @@
                                 </span>
                             </p>
                             
-                            <!-- Action Buttons -->
+                            
                             <div class="deadline-actions">
                                 <a th:href="@{/deadlines/edit/{id}(id=${deadline.id})}" 
                                    class="rubric-action-btn edit-btn">
@@ -365,7 +348,6 @@
                     </div>
                 </div>
                 
-                <!-- No Deadlines Message -->
                 <div th:if="${deadlines == null or #lists.isEmpty(deadlines)}" class="no-deadlines-message">
                     <p>No deadlines have been set yet.</p>
                     <p style="font-size: 0.9em;">Add a general deadline below or assign an assessment to create a deadline.</p>
@@ -374,7 +356,7 @@
             </div>
         </div>
     </div>
-    <!-- Duplicate Detection Script -->
+    
     <script th:inline="javascript">
     const isDuplicate = /*[[${isDuplicate}]]*/ false;
     

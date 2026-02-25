@@ -38,11 +38,6 @@ public class CommentConfigController {
         return "Admin";
     }
 
-    /**
-     * ✅ NEW: Show type-specific comment configuration page
-     * @param assessmentId The assessment ID
-     * @param type "group" or "individual"
-     */
     @GetMapping("/{assessmentId}/{type}")
     public String showTypeSpecificConfig(
             @PathVariable Long assessmentId,
@@ -52,8 +47,7 @@ public class CommentConfigController {
         
         Assessment assessment = assessmentService.getAssessmentById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));
-        
-        // Validate type parameter
+
         if (!"group".equalsIgnoreCase(type) && !"individual".equalsIgnoreCase(type)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Invalid comment type");
             return "redirect:/admin/home";
@@ -75,10 +69,7 @@ public class CommentConfigController {
         
         return "comment_configuration_single_type";
     }
-    
-    /**
-     * ✅ NEW: Show edit form for a single comment question
-     */
+
     @GetMapping("/{assessmentId}/{type}/edit/{index}")
     public String showEditSingleComment(
             @PathVariable Long assessmentId,
@@ -126,10 +117,7 @@ public class CommentConfigController {
         
         return "edit_single_comment";
     }
-    
-    /**
-     * ✅ NEW: Save single comment question edit
-     */
+
     @PostMapping("/{assessmentId}/{type}/edit/{index}/save")
     public String saveSingleCommentEdit(
             @PathVariable Long assessmentId,
@@ -151,8 +139,7 @@ public class CommentConfigController {
                 
                 if (index >= 0 && index < labels.size()) {
                     labels.set(index, label.trim());
-                    
-                    // Ensure lists are same size
+
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
                     
@@ -170,8 +157,7 @@ public class CommentConfigController {
                 
                 if (index >= 0 && index < labels.size()) {
                     labels.set(index, label.trim());
-                    
-                    // Ensure lists are same size
+
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
                     
@@ -194,10 +180,7 @@ public class CommentConfigController {
         
         return "redirect:/admin/home";
     }
-    
-    /**
-     * ✅ UPDATED: Delete a single comment question (now redirects to admin home)
-     */
+
     @PostMapping("/{assessmentId}/delete-comment")
     public String deleteComment(
             @PathVariable Long assessmentId,
@@ -252,9 +235,6 @@ public class CommentConfigController {
         return "redirect:/admin/home";
     }
     
-    /**
-     * ✅ UPDATED: Save type-specific comment configuration
-     */
     @PostMapping("/{assessmentId}/{type}/save")
     public String saveTypeSpecificConfig(
             @PathVariable Long assessmentId,

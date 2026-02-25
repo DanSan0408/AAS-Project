@@ -30,7 +30,6 @@
                 <input type="hidden" th:field="*{assessment}" />
                 <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
 
-                <!-- ✅ CHANGED: Removed required and asterisk from Rubric Name -->
                 <div class="form-group">
                     <label>Rubric Name</label>
                     <input type="text" th:field="*{name}" placeholder="e.g. Presentation Skills">
@@ -83,7 +82,6 @@
                             <button type="button" class="remove-btn remove-sub-rubric-btn">Remove Sub-Rubric</button>
                             <input type="hidden" th:field="*{subRubrics[__${subIterStat.index}__].id}" />
                             
-                            <!-- ✅ CHANGED: Removed required and asterisk from Sub-Rubric Name -->
                             <div class="form-group">
                                 <label>Sub-Rubric Name</label>
                                 <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].name}" class="sub-rubric-name">
@@ -99,7 +97,6 @@
                                 <input type="number" step="0.01" th:field="*{subRubrics[__${subIterStat.index}__].marks}" readonly class="sub-rubric-marks-auto" th:attr="data-subindex=${subIterStat.index}">
                             </div>
                             
-                            <!-- ✅ CHANGED: Moved "Add Rating" button below ratings container -->
                             <div class="ratings-section">
                                 <div class="ratings-header">
                                     <h4>Ratings</h4>
@@ -125,14 +122,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- ✅ Button moved here (below container) -->
                                 <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" th:attr="data-subindex=${subIterStat.index}" style="margin-top: 10px; width: 100%;">+ Add Rating</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ✅ CHANGED: Moved "Add Direct Rating" button below container -->
                 <div class="section-container section-green">
                     <div class="section-header">
                         <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
@@ -162,11 +157,9 @@
                         </div>
                     </div>
                     
-                    <!-- ✅ Button moved here (below container) -->
                     <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important; margin-top: 15px; width: 100%;">+ Add Direct Rating</button>
                 </div>
                 
-                <!-- ✅ CHANGED: Moved "Add Comment Question" button below containers -->
                 <div class="section-container section-purple">
                     <div class="section-header">
                         <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
@@ -201,7 +194,6 @@
                         <p>No rubric-specific comments configured yet.</p>
                     </div>
                     
-                    <!-- ✅ Button moved here (below containers) -->
                     <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;">+ Add Comment Question</button>
                 </div>
                 
@@ -214,7 +206,7 @@
     </div>
 
 <script th:inline="javascript">
-/*<![CDATA[*/
+
     document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('sub-rubrics-container');
         const directRatingsContainer = document.getElementById('direct-ratings-container');
@@ -225,12 +217,10 @@
         const messageBox = document.getElementById('submission-message');
         const rubricForm = document.getElementById('rubricForm');
         
-        // 1. Initialize counters using standard expression inlining (This is safe)
         let subRubricIndex = /*[[${rubric.subRubrics != null ? rubric.subRubrics.size() : 0}]]*/ 0;
         let directRatingIndex = /*[[${rubric.ratings != null ? rubric.ratings.size() : 0}]]*/ 0;
         let rubricCommentIndex = /*[[${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}]]*/ 0;
         
-        // 2. Initialize Rating Indices by scanning the DOM instead of using Thymeleaf loops
         let subRubricRatingIndices = {};
         
         const existingSubRubrics = document.querySelectorAll('.sub-rubric-card');
@@ -239,20 +229,17 @@
             subRubricRatingIndices[index] = ratingsCount;
         });
 
-        // Sync CLO Marks
         if(rubricMarksInput) {
             rubricMarksInput.addEventListener('input', function() {
                 if(cloMarksInput) cloMarksInput.value = this.value;
             });
         }
 
-        // Add Sub-Rubric
         const addSubBtn = document.getElementById('addSubRubricBtn');
         if (addSubBtn) {
             addSubBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
                 card.className = 'sub-rubric-card';
-                // ✅ CHANGED: Removed required and "required" asterisk from name field
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-sub-rubric-btn"><i class="fas fa-times"></i></button>
                     <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
@@ -291,7 +278,6 @@
             });
         }
 
-        // Add Rating to Sub-Rubric
         document.addEventListener('click', function(e) {
             if (e.target.closest('.add-sub-rating-btn')) {
                 const btn = e.target.closest('.add-sub-rating-btn');
@@ -327,13 +313,11 @@
             }
         });
 
-        // Add Direct Rating
         const addDirectBtn = document.getElementById('addDirectRatingBtn');
         if (addDirectBtn) {
             addDirectBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
                 card.className = 'rating-card direct-rating-card';
-                // ✅ CHANGED: Removed "required" asterisk from Rating Name
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-direct-rating-btn"><i class="fas fa-times"></i></button>
                     <input type="hidden" name="ratings[${directRatingIndex}].id" value="" />
@@ -359,7 +343,6 @@
             });
         }
         
-        // Add Rubric Comment
         const addCommentBtn = document.getElementById('addRubricCommentBtn');
         if (addCommentBtn) {
             addCommentBtn.addEventListener('click', function() {
@@ -414,7 +397,6 @@
             });
         }
 
-        // Auto-calc logic
         function updateSubRubricMarks(subIndex) {
             const ratingsContainer = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
             if (!ratingsContainer) return;
@@ -431,7 +413,6 @@
             if (subRubricMarksInput) subRubricMarksInput.value = maxMark.toFixed(2);
         }
 
-        // Event Delegation for remove and input
         document.addEventListener('click', function(e) {
             if (e.target.closest('.remove-sub-rubric-btn')) {
                 e.target.closest('.sub-rubric-card').remove();
@@ -461,7 +442,6 @@
             }
         });
 
-        // Duplicate check handling
         const duplicateFound = /*[[${duplicateFound}]]*/ false;
         if (duplicateFound) {
             const confirmedInput = document.getElementById('duplicateConfirmed');
@@ -486,7 +466,6 @@
             }
         }
     });
-/*]]>*/
 </script>
 </body>
 </html>

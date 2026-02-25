@@ -1,8 +1,3 @@
-/* =======================================================
-   LECTURER GROUP SELECTION - EMERALD GREEN & GOLD THEME
-   Primary: #047857 | Secondary: #3F3F46 | Accent: #F8A617
-   ======================================================= */
-
 :root {
     --lecturer-primary: #047857;
     --lecturer-primary-light: #059669;
@@ -19,7 +14,6 @@
     --lecturer-muted: #6B7280;
 }
 
-/* ==================== LAYOUT ==================== */
 body.lecturer-page {
     background-color: var(--lecturer-background);
     color: var(--lecturer-text-dark);
@@ -32,7 +26,6 @@ body.lecturer-page .main-content {
     min-height: 100vh;
 }
 
-/* ==================== HEADER ==================== */
 body.lecturer-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -53,7 +46,6 @@ body.lecturer-page .header-container h1 {
     font-weight: 700 !important; 
 }
 
-/* ==================== SELECTION CONTAINER ==================== */
 body.lecturer-page .selection-container {
     background-color: var(--lecturer-surface);
     width: 100%;
@@ -86,7 +78,6 @@ body.lecturer-page .subtitle {
     font-weight: 500;
 }
 
-/* ==================== ALERTS ==================== */
 body.lecturer-page .alert-container {
     margin-bottom: 25px;
 }
@@ -119,14 +110,12 @@ body.lecturer-page .alert .icon {
     font-size: 1.2em;
 }
 
-/* ==================== GROUPS GRID ==================== */
 body.lecturer-page .groups-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 25px;
 }
 
-/* ==================== GROUP CARDS ==================== */
 body.lecturer-page .group-card {
     background-color: var(--lecturer-surface);
     border: 1px solid var(--lecturer-border);
@@ -144,7 +133,6 @@ body.lecturer-page .group-card:hover {
     border-color: var(--lecturer-primary);
 }
 
-/* Card Top */
 body.lecturer-page .card-top {
     padding: 20px;
     background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%);
@@ -161,7 +149,6 @@ body.lecturer-page .card-top h3 {
     color: var(--lecturer-text);
 }
 
-/* Status Badges */
 body.lecturer-page .badge {
     padding: 6px 14px;
     border-radius: 20px;
@@ -189,7 +176,6 @@ body.lecturer-page .badge-pending {
     border: none;
 }
 
-/* Card Body */
 body.lecturer-page .card-body {
     padding: 20px;
     flex-grow: 1;
@@ -250,7 +236,6 @@ body.lecturer-page .no-members {
     padding: 20px;
 }
 
-/* Card Footer */
 body.lecturer-page .card-footer {
     padding: 20px;
     background-color: var(--lecturer-surface);
@@ -280,7 +265,6 @@ body.lecturer-page .btn-action:hover {
     box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     body.lecturer-page .groups-grid {
         grid-template-columns: 1fr;
