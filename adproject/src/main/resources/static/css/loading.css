@@ -1,17 +1,9 @@
-/* UTM CAS - Centralized Loading Animation Styles */
-/* Color Palette:
-   Primary (Maroon): #5C001F
-   Secondary (Gold): #F8A617
-   Background (Moccasin): #FFE6BF
-*/
-
 :root {
     --primary-maroon: #5C001F;
     --secondary-gold: #F8A617;
     --bg-moccasin: #FFE6BF;
 }
 
-/* Loading Screen Overlay */
 .loading-screen {
     position: fixed;
     top: 0;
@@ -26,7 +18,6 @@
     transition: opacity 0.5s ease;
 }
 
-/* Moccasin Overlay */
 .loading-screen::before {
     content: '';
     position: absolute;
@@ -38,7 +29,6 @@
     z-index: 1;
 }
 
-/* Logo Container with 3D Perspective */
 .loading-container {
     position: relative;
     z-index: 2;
@@ -49,7 +39,6 @@
     gap: 20px;
 }
 
-/* Rotating Logo */
 .loading-logo {
     width: 350px;
     height: 350px;
@@ -60,7 +49,6 @@
     transform-style: preserve-3d;
 }
 
-/* Optional: Loading Text */
 .loading-text {
     color: var(--primary-maroon);
     font-size: 1.2em;
@@ -70,7 +58,6 @@
     text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
 }
 
-/* Logo Rotation Animation - 3D Flip */
 @keyframes rotate360 {
     0% { 
         transform: rotateY(0deg) scale(1);
@@ -94,13 +81,11 @@
     }
 }
 
-/* Fade Out Animation */
 .loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
 }
 
-/* Main Content - Initially Hidden */
 .page-content {
     opacity: 0;
     transition: opacity 0.5s ease;
@@ -110,7 +95,6 @@
     opacity: 1;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .loading-logo {
         width: 280px;

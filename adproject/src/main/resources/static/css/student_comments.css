@@ -1,23 +1,17 @@
-/* =======================================================
-   STUDENT COMMENTS - IRON BURGUNDY & GOLD THEME
-   Primary: #7A1E2D | Secondary: #3F3F46 | Accent: #F8A617
-   ======================================================= */
-
 :root {
-    --student-primary: #7A1E2D;    /* Iron Burgundy */
-    --student-secondary: #3F3F46;  /* Graphite Grey */
-    --student-accent: #F8A617;     /* Gold */
-    --student-background: #F4F2EE; /* Light Sand Grey */
-    --student-alert: #8B1E1E;      /* Dark Red */
-    --student-text: #FAFAFA;       /* Off White (For dark backgrounds) */
+    --student-primary: #7A1E2D;    
+    --student-secondary: #3F3F46;  
+    --student-accent: #F8A617;     
+    --student-background: #F4F2EE; 
+    --student-alert: #8B1E1E;      
+    --student-text: #FAFAFA;       
     
-    /* Functional Colors */
-    --student-text-dark: #2B2B2B;  /* Dark text for Light Sand background */
-    --student-surface: #FFFFFF;    /* White Cards */
-    --student-border: #D4D1CC;     /* Muted border to match Sand */
-    --student-hover: #EDEAE6;      /* Slightly darker sand for hovers */
-    --student-success: #4CAF7D;    /* Green (Standard Success) */
-    --student-purple: #9B59B6;     /* Rubric Specific Indicator */
+    --student-text-dark: #2B2B2B;  
+    --student-surface: #FFFFFF;    
+    --student-border: #D4D1CC;     
+    --student-hover: #EDEAE6;  
+    --student-success: #4CAF7D; 
+    --student-purple: #9B59B6;   
 }
 
 * { box-sizing: border-box; }
@@ -31,7 +25,6 @@ body.student-comments-page {
     display: flex;
 }
 
-/* ==================== LAYOUT ==================== */
 body.student-comments-page .main-content {
     margin-left: 270px !important;
     padding: 40px !important;
@@ -47,7 +40,6 @@ body.student-comments-page .content-container {
     width: 100% !important;
 }
 
-/* ==================== HEADER ==================== */
 body.student-comments-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -65,7 +57,6 @@ body.student-comments-page .header-container h1 {
     font-weight: 700 !important; 
 }
 
-/* ==================== STATS SUMMARY ==================== */
 body.student-comments-page .stats-summary {
     display: flex !important;
     justify-content: space-between !important;
@@ -95,12 +86,11 @@ body.student-comments-page .stat-number {
 }
 
 body.student-comments-page .stat-label {
-    color: var(--student-secondary) !important; /* Changed to Graphite */
+    color: var(--student-secondary) !important; 
     font-size: 0.9em !important;
     font-weight: 600 !important;
 }
 
-/* ==================== ASSESSMENT BLOCKS ==================== */
 body.student-comments-page .assessment-comments-block {
     margin-bottom: 40px !important;
     background-color: var(--student-surface) !important;
@@ -122,7 +112,6 @@ body.student-comments-page .assessment-title-header {
     font-weight: 700 !important;
 }
 
-/* ==================== HORIZONTAL GRID LAYOUT ==================== */
 body.student-comments-page .comments-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
@@ -130,7 +119,6 @@ body.student-comments-page .comments-grid {
     align-items: start !important;
 }
 
-/* ==================== INDIVIDUAL COMMENT CARDS ==================== */
 body.student-comments-page .comment-card {
     background-color: var(--student-surface) !important;
     padding: 18px !important;
@@ -148,7 +136,6 @@ body.student-comments-page .comment-card:hover {
     box-shadow: 0 6px 16px rgba(122, 30, 45, 0.15) !important;
 }
 
-/* Rubric Comment Highlight */
 body.student-comments-page .comment-card.rubric-comment {
     border-left: 4px solid var(--student-purple) !important;
     background-color: #FDFBFE !important;
@@ -165,7 +152,6 @@ body.student-comments-page .rubric-comment-indicator {
     font-weight: 600 !important;
 }
 
-/* Comment Header */
 body.student-comments-page .comment-header {
     display: flex !important;
     justify-content: space-between !important;
@@ -188,23 +174,23 @@ body.student-comments-page .evaluator-badge {
 }
 
 body.student-comments-page .badge-self {
-    background-color: var(--student-accent) !important; /* Gold */
-    color: var(--student-secondary) !important; /* Dark text on Gold */
+    background-color: var(--student-accent) !important;
+    color: var(--student-secondary) !important; 
 }
 
 body.student-comments-page .badge-peer {
-    background-color: var(--student-secondary) !important; /* Graphite */
-    color: var(--student-text) !important; /* Off White */
+    background-color: var(--student-secondary) !important; 
+    color: var(--student-text) !important; 
 }
 
 body.student-comments-page .badge-lecturer {
-    background-color: var(--student-primary) !important; /* Iron Burgundy */
-    color: var(--student-text) !important; /* Off White */
+    background-color: var(--student-primary) !important;
+    color: var(--student-text) !important; 
 }
 
 body.student-comments-page .badge-supervisor {
-    background-color: var(--student-success) !important; /* Green */
-    color: var(--student-text) !important; /* Off White */
+    background-color: var(--student-success) !important; 
+    color: var(--student-text) !important; 
 }
 
 body.student-comments-page .comment-date {
@@ -212,7 +198,6 @@ body.student-comments-page .comment-date {
     color: #888 !important;
 }
 
-/* Anonymous Badge */
 body.student-comments-page .anonymous-badge {
     background: #95a5a6 !important;
     color: white !important;
@@ -222,7 +207,6 @@ body.student-comments-page .anonymous-badge {
     margin-left: 5px !important;
 }
 
-/* Content */
 body.student-comments-page .comment-label {
     display: block !important;
     font-weight: 600 !important;
@@ -241,7 +225,6 @@ body.student-comments-page .comment-text {
     flex-grow: 1 !important;
 }
 
-/* Empty State */
 body.student-comments-page .no-comments {
     text-align: center !important;
     padding: 60px 20px !important;
@@ -262,7 +245,6 @@ body.student-comments-page .no-comments h2 {
     margin-bottom: 10px !important;
 }
 
-/* Responsive Grid */
 @media (max-width: 1200px) {
     body.student-comments-page .comments-grid {
         grid-template-columns: repeat(2, 1fr) !important;

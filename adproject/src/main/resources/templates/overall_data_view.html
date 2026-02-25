@@ -34,7 +34,6 @@
                     <thead>
                         <tr>
                             <th rowspan="2" class="sticky-col first-col">Team Name</th>
-                            <!-- ✅ CHANGED: Column header from "Student Name" to "Student Email" -->
                             <th rowspan="2" class="sticky-col second-col">Student Email</th>
                             <th rowspan="2" class="sticky-col third-col">Factor</th>
                             <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
@@ -70,7 +69,6 @@
                         <tr th:each="student : ${students}">
                             <th:block th:with="data=${studentOverallData[student.id]}">
                                 <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
-                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <td class="sticky-col second-col" th:text="${student.email}"></td>
                                 
                                 <td class="sticky-col third-col">

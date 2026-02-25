@@ -123,7 +123,6 @@ public class StudentController {
                         .put(commentIndex, entry.getValue());
                 }
             } catch (NumberFormatException e) {
-                // Skip invalid keys
             }
         }
     }
@@ -136,13 +135,11 @@ public class StudentController {
         
         Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
 
-        // Simplified grouping function, removing Criteria and EvaluationType logic
         Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
             
             Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
             final String DUMMY_KEY = "ASSESSMENT_GROUPING"; 
             
-            // Get all Rubric components
             Stream<Object> combinedComponents = Stream.empty();
             if (assessment.getRubrics() != null) {
                 combinedComponents = assessment.getRubrics().stream().map(r -> (Object)r);
@@ -150,7 +147,6 @@ public class StudentController {
             
             List<Object> components = combinedComponents.collect(Collectors.toList());
 
-            // Group components by Assessment Type (inner map)
             Map<String, List<Object>> byAssessType = components.stream()
                 .collect(Collectors.groupingBy(c -> {
                     if (c instanceof Rubric) {
@@ -159,13 +155,11 @@ public class StudentController {
                     return "Unknown";
                 }, LinkedHashMap::new, Collectors.toList()));
 
-            // Wrap in an outer map with a dummy key 
             finalGroup.put(DUMMY_KEY, byAssessType);
 
             return finalGroup;
         };
         
-        // ✅ CHANGED: Look up by email first, then username fallback
         String emailOrUsername = principal.getName();
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -217,7 +211,6 @@ public class StudentController {
     @GetMapping("/assessments")
     public String listAssessments(Model model, Principal principal) {
         
-        // ✅ CHANGED: Look up by email first, then username fallback
         String emailOrUsername = principal.getName();
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -232,7 +225,6 @@ public class StudentController {
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
         for (Assessment assessment : assessments) {
-            // Simplified filtering logic - any assessment with rubrics is available
             List<Rubric> rubrics = assessment.getRubrics();
             
             boolean hasComponents = !rubrics.isEmpty(); 
@@ -268,7 +260,6 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
                                      Principal principal,
                                      RedirectAttributes redirectAttributes) {
     
-    // ✅ CHANGED: Look up by email first, then username fallback
     String emailOrUsername = principal.getName();
     Student evaluator = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -312,11 +303,11 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     ).stream()
     .filter(c -> c.getRubricAssessmentType() == null || 
                  "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
-    .filter(c -> c.getRubricId() == null) // ✅ Only assessment-level comments
+    .filter(c -> c.getRubricId() == null) 
     .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
     .collect(Collectors.toList());
     
-    // ✅ NEW: Get rubric-specific comments
+
     Map<Long, List<AssessmentComment>> existingRubricComments = new HashMap<>();
     for (Rubric rubric : assessmentRubrics) {
         if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
@@ -368,7 +359,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                                    Principal principal,
                                    RedirectAttributes redirectAttributes) {
     
-    // ✅ CHANGED: Look up by email first, then username fallback
     String emailOrUsername = principal.getName();
     Student evaluator = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -386,7 +376,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
     
-    // ✅ FIXED: Extract assessment-level comments ONLY if configured
     List<String> commentTexts = new ArrayList<>();
     List<String> commentLabels = assessment.getIndividualCommentLabels();
     
@@ -413,7 +402,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         }
     }
     
-    // ✅ NEW: Extract rubric-specific comments
     Map<Long, Map<Integer, String>> rubricComments = extractRubricComments(formData, "");
     
     // Delete existing marks
@@ -426,7 +414,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         markRepository.deleteAll(existingMarks);
     }
     
-    // ✅ NEW: Delete existing rubric-specific comments
     List<AssessmentComment> existingRubricComments = commentService.getExistingComments(
         evaluator.getId(),
         AssessmentComment.EvaluatorType.STUDENT,
@@ -440,7 +427,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         commentService.deleteComments(existingRubricComments);
     }
     
-    // Process rubric ratings (existing code)
     List<Mark> marks = new ArrayList<>();
     boolean isSelfAssessment = evaluator.getId().equals(evaluatedStudent.getId());
     String assessmentType = isSelfAssessment ? "Self Assessment" : "Peer Assessment";
@@ -545,7 +531,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 marks.add(mark);
             }
         } catch (NumberFormatException e) {
-            // Skip invalid parameters
         }
     }
     
@@ -557,7 +542,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     
     markService.saveAllMarks(marks);
     
-    // ✅ FIXED: Save assessment-level comments ONLY if configured
     if (!commentTexts.isEmpty()) {
         if (isSelfAssessment) {
             commentService.submitSelfComments(evaluator, assessment, commentTexts);
@@ -566,7 +550,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         }
     }
     
-    // Save rubric-specific comments
     if (!rubricComments.isEmpty()) {
         for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
             Long rubricId = rubricEntry.getKey();
@@ -588,7 +571,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 AssessmentComment comment = new AssessmentComment();
                 comment.setEvaluatorId(evaluator.getId());
                 comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                // ✅ CHANGED: Store email instead of username
                 comment.setEvaluatorName(evaluator.getEmail());
                 comment.setEvaluatedStudent(evaluatedStudent);
                 comment.setAssessment(assessment);
@@ -609,7 +591,6 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                     anonymousIdentifier = commentService.getRubricAnonymousIdentifier(
                         evaluatedStudent, evaluator.getId(), assessment, rubricId, commentIndex);
                 } else {
-                    // ✅ CHANGED: Use email instead of username for non-anonymous
                     anonymousIdentifier = evaluator.getEmail();
                 }
                 
@@ -625,18 +606,12 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     return "redirect:/student/assessments";
 }
     
-    // ========== NEW: TEAM EVALUATION METHODS ==========
-    
-    /**
-     * NEW: Show team evaluation form (evaluates the group as a whole)
-     */
     @GetMapping("/assessment/{assessmentId}/team-evaluate")
 public String showTeamEvaluationForm(@PathVariable Long assessmentId,
                                       Model model,
                                       Principal principal,
                                       RedirectAttributes redirectAttributes) {
     
-    // ✅ CHANGED: Look up by email first, then username fallback
     String emailOrUsername = principal.getName();
     Student evaluator = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -681,11 +656,10 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
         assessment
     ).stream()
     .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
-    .filter(c -> c.getRubricId() == null) // ✅ Only assessment-level comments
+    .filter(c -> c.getRubricId() == null) 
     .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
     .collect(Collectors.toList());
     
-    // ✅ NEW: Get rubric-specific comments for team evaluation
     Map<Long, List<AssessmentComment>> existingRubricComments = new HashMap<>();
     for (Rubric rubric : groupRubrics) {
         if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
@@ -720,7 +694,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     model.addAttribute("existingRubricMarks", existingRubricMarksMap);
     model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
     model.addAttribute("existingComments", existingComments);
-    model.addAttribute("existingRubricComments", existingRubricComments); // ✅ NEW
+    model.addAttribute("existingRubricComments", existingRubricComments); 
     model.addAttribute("hasExistingEvaluation", hasExistingEvaluation);
     model.addAttribute("isTeamEvaluation", true);
     model.addAttribute("isSelfAssessment", false);
@@ -735,7 +709,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                                     Principal principal,
                                     RedirectAttributes redirectAttributes) {
     
-    // ✅ CHANGED: Look up by email first, then username fallback
     String emailOrUsername = principal.getName();
     Student evaluator = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -757,7 +730,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     
     List<Student> groupMembers = studentRepository.findByGroup(evaluator.getGroup());
     
-    // ✅ FIXED: Extract and validate assessment-level comments ONLY if configured
     List<String> commentTexts = new ArrayList<>();
     List<String> commentLabels = assessment.getGroupCommentLabels();
     
@@ -784,10 +756,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
     }
     
-    // ✅ NEW: Extract rubric-specific comments
     Map<Long, Map<Integer, String>> rubricComments = extractRubricComments(formData, "");
     
-    // Delete existing team evaluation marks and comments for all group members
     for (Student member : groupMembers) {
         List<Mark> existingMarks = markRepository
             .findByEvaluatorStudentAndEvaluatedStudentAndAssessment(member, member, assessment).stream()
@@ -798,7 +768,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
             markRepository.deleteAll(existingMarks);
         }
         
-        // ✅ NEW: Delete rubric-specific comments
         List<AssessmentComment> existingRubricComments = commentService.getExistingComments(
             member.getId(),
             AssessmentComment.EvaluatorType.STUDENT,
@@ -813,7 +782,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
     }
     
-    // Process rubric ratings and save for all group members
     for (Student member : groupMembers) {
         List<Mark> marks = new ArrayList<>();
         
@@ -917,7 +885,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     marks.add(mark);
                 }
             } catch (NumberFormatException e) {
-                // Skip invalid parameters
             }
         }
         
@@ -926,14 +893,12 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
     }
     
-    // ✅ FIXED: Save assessment-level comments for all group members ONLY if configured
     if (!commentTexts.isEmpty()) {
         for (Student member : groupMembers) {
             commentService.submitTeamComments(member, assessment, commentTexts);
         }
     }
     
-    // Save rubric-specific comments for all group members
     if (!rubricComments.isEmpty()) {
         for (Student member : groupMembers) {
             for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
@@ -954,7 +919,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     AssessmentComment comment = new AssessmentComment();
                     comment.setEvaluatorId(member.getId());
                     comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                    // ✅ CHANGED: Store email instead of username
                     comment.setEvaluatorName(member.getEmail());
                     comment.setEvaluatedStudent(member);
                     comment.setAssessment(assessment);
@@ -970,7 +934,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     if (isAnonymous) {
                         comment.setAnonymousIdentifier("You (Team Evaluation)");
                     } else {
-                        // ✅ CHANGED: Use email instead of username
                         comment.setAnonymousIdentifier(member.getEmail());
                     }
                     
@@ -988,7 +951,6 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
    @GetMapping("/comments")
 public String viewMyComments(Model model, Principal principal) {
     
-    // ✅ CHANGED: Look up by email first, then username fallback
     String emailOrUsername = principal.getName();
     Student currentStudent = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -1000,7 +962,6 @@ public String viewMyComments(Model model, Principal principal) {
     Map<String, Map<String, List<AssessmentComment>>> commentsByAssessment = 
         (Map<String, Map<String, List<AssessmentComment>>>) commentsData.get("commentsByAssessment");
     
-    // ✅ NEW: Process comments to set display names based on anonymity settings
     if (commentsByAssessment != null) {
         for (Map.Entry<String, Map<String, List<AssessmentComment>>> assessmentEntry : commentsByAssessment.entrySet()) {
             for (Map.Entry<String, List<AssessmentComment>> categoryEntry : assessmentEntry.getValue().entrySet()) {
@@ -1040,7 +1001,6 @@ public String viewMyComments(Model model, Principal principal) {
                                              Model model,
                                              Principal principal) {
         
-        // ✅ CHANGED: Look up by email first, then username fallback
         String emailOrUsername = principal.getName();
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
@@ -1070,52 +1030,42 @@ public String viewMyComments(Model model, Principal principal) {
     }
 
    private void setCommentDisplayName(AssessmentComment comment, Student viewingStudent) {
-    // ✅ FIXED: Check anonymousIdentifier first
     String anonymousId = comment.getAnonymousIdentifier();
     
     // For lecturers and supervisors
     if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER || 
         comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
         
-        // If anonymousIdentifier is "Lecturer" or "Supervisor", it's anonymous
         if ("Lecturer".equals(anonymousId) || "Supervisor".equals(anonymousId)) {
             comment.setDisplayName(anonymousId);
             return;
         }
         
-        // Otherwise show the actual name
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
             comment.getEvaluatorName() : 
             (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER ? "Lecturer" : "Supervisor"));
         return;
     }
     
-    // For student comments: Use the anonymousIdentifier directly
     if (anonymousId != null && !anonymousId.isEmpty()) {
         comment.setDisplayName(anonymousId);
     } else {
         comment.setDisplayName("Anonymous");
     }
 }
-/**
- * ✅ Set real name for comment display
- */
+
 private void setRealName(AssessmentComment comment) {
     if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.STUDENT) {
-        // Try to get student's actual name
         Student evaluatorStudent = studentRepository.findById(comment.getEvaluatorId()).orElse(null);
         if (evaluatorStudent != null) {
-            // ✅ CHANGED: Display email instead of username
             comment.setDisplayName(evaluatorStudent.getEmail());
         } else {
             comment.setDisplayName("Unknown Student");
         }
     } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
-        // Lecturers always show their name
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
             comment.getEvaluatorName() : "Lecturer");
     } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
-        // Supervisors always show their name
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
             comment.getEvaluatorName() : "Supervisor");
     } else {

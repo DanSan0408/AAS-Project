@@ -52,7 +52,6 @@
     </div>
     
     <script th:inline="javascript">
-        // Load existing configuration
         const configType = /*[[${configType}]]*/ 'group';
         const existingLabels = /*[[${configType == 'group' ? assessment.groupCommentLabels : assessment.individualCommentLabels}]]*/ [];
         const existingMinLengths = /*[[${configType == 'group' ? assessment.groupCommentMinLengths : assessment.individualCommentMinLengths}]]*/ [];

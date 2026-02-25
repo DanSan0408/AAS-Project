@@ -25,7 +25,7 @@ public class SubRubric {
 
     private String name;
     private String description;
-    private BigDecimal marks; // Marks allocated to this sub-rubric
+    private BigDecimal marks; 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rubric_id")
@@ -34,7 +34,6 @@ public class SubRubric {
     @OneToMany(mappedBy = "subRubric", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rating> ratings = new ArrayList<>();
 
-    // === Getters and Setters ===
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -69,7 +68,7 @@ public class SubRubric {
     public void addRating(Rating rating) {
         if (rating != null) {
             rating.setSubRubric(this);
-            rating.setRubric(null); // Ensure rating belongs to sub-rubric, not directly to rubric
+            rating.setRubric(null); 
             getRatings().add(rating);
         }
     }
@@ -81,7 +80,6 @@ public class SubRubric {
         }
     }
 
-    // Calculate total marks from ratings
     public BigDecimal calculateRatingsMarks() {
         BigDecimal total = BigDecimal.ZERO;
         if (ratings != null) {

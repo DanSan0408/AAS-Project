@@ -116,17 +116,14 @@ public void deleteAssessment(Long id){
     System.out.println("=== DELETING ASSESSMENT: " + assessment.getTitle() + " (ID: " + id + ") ===");
     
     try {
-        // ✅ STEP 1: Delete calculated results for this assessment
         System.out.println("Step 1: Deleting calculated results...");
         assessmentRepository.deleteCalculatedResultsByAssessmentId(id);
         assessmentRepository.flush();
         
-        // ✅ STEP 2: Delete all assessment comments for this assessment
         System.out.println("Step 2: Deleting assessment comments...");
         assessmentRepository.deleteCommentsByAssessmentId(id);
         assessmentRepository.flush();
         
-        // ✅ STEP 3: Delete all marks associated with rubrics
         System.out.println("Step 3: Deleting marks for rubrics...");
         if (assessment.getRubrics() != null && !assessment.getRubrics().isEmpty()) {
             List<Rubric> rubricsCopy = new ArrayList<>(assessment.getRubrics());
@@ -135,17 +132,14 @@ public void deleteAssessment(Long id){
             }
         }
         
-        // ✅ STEP 4: Delete lecturer group assignments for this assessment
         System.out.println("Step 4: Deleting lecturer assignments...");
         assessmentRepository.deleteLecturerAssignmentsByAssessmentId(id);
         assessmentRepository.flush();
         
-        // ✅ STEP 5: Delete deadlines for this assessment
         System.out.println("Step 5: Deleting deadlines...");
         assessmentRepository.deleteDeadlinesByAssessmentId(id);
         assessmentRepository.flush();
         
-        // ✅ STEP 6: Clear @ElementCollection fields
         System.out.println("Step 6: Clearing element collections...");
         if (assessment.getGroupCommentLabels() != null) {
             assessment.getGroupCommentLabels().clear();
@@ -154,11 +148,9 @@ public void deleteAssessment(Long id){
             assessment.getIndividualCommentLabels().clear();
         }
         
-        // ✅ STEP 7: Flush the changes
         System.out.println("Step 7: Flushing changes...");
         assessmentRepository.saveAndFlush(assessment);
         
-        // ✅ STEP 8: Now safe to delete the assessment
         System.out.println("Step 8: Deleting assessment...");
         assessmentRepository.deleteById(id);
         assessmentRepository.flush();
@@ -196,12 +188,10 @@ public void deleteAssessment(Long id){
 public Rubric saveRubric(Rubric formRubric) { 
     
     if (formRubric.getId() != null) {
-        // ===== UPDATING EXISTING RUBRIC =====
         
         Rubric existingRubric = rubricRepository.findById(formRubric.getId())
             .orElseThrow(() -> new EntityNotFoundException("Rubric not found with id: " + formRubric.getId()));
             
-        // Update scalar fields
         existingRubric.setName(formRubric.getName());
         existingRubric.setDescription(formRubric.getDescription());
         existingRubric.setMarks(formRubric.getMarks());
@@ -217,15 +207,11 @@ public Rubric saveRubric(Rubric formRubric) {
         updateSubRubrics(existingRubric, formRubric.getSubRubrics());
         updateDirectRatings(existingRubric, formRubric.getRatings());
         
-        // ✅ NEW: Auto-calculate sub-rubric marks after updating
         autoCalculateSubRubricMarks(existingRubric);
         
         return rubricRepository.save(existingRubric);
         
     } else {
-        // ===== SAVING NEW RUBRIC =====
-        
-        // Set display order for new rubric
         if (formRubric.getDisplayOrder() == null) {
             Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
@@ -266,16 +252,12 @@ public Rubric saveRubric(Rubric formRubric) {
             formRubric.setAssessment(assessment); 
         }
 
-        // ✅ NEW: Auto-calculate sub-rubric marks before saving
         autoCalculateSubRubricMarks(formRubric);
 
         return rubricRepository.save(formRubric);
     }
 }
 
-/**
- * ✅ NEW: Automatically set sub-rubric marks to highest rating mark
- */
 private void autoCalculateSubRubricMarks(Rubric rubric) {
     if (rubric.getSubRubrics() == null || rubric.getSubRubrics().isEmpty()) {
         return;
@@ -288,14 +270,12 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
             continue;
         }
         
-        // Find the highest rating mark
         BigDecimal maxRatingMark = subRubric.getRatings().stream()
             .map(Rating::getMarks)
             .filter(mark -> mark != null)
             .max(BigDecimal::compareTo)
             .orElse(BigDecimal.ZERO);
         
-        // Set sub-rubric marks to the highest rating mark
         subRubric.setMarks(maxRatingMark);
     }
 }
@@ -491,12 +471,6 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
         return false;
     }
     
-    // ==================== REORDERING METHODS ====================
-    
-    /**
-     * Move entire assessment type block (Individual/Group) up or down
-     * This swaps the order values between Individual and Group assessment blocks
-     */
     @Transactional
     public void moveAssessmentBlock(Long assessmentId, String blockType, String direction) {
         Assessment assessment = assessmentRepository.findById(assessmentId)
@@ -507,21 +481,21 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
         
         if ("Individual".equalsIgnoreCase(blockType)) {
             if ("down".equalsIgnoreCase(direction) && individualOrder < groupOrder) {
-                // Swap: Individual goes down, Group goes up
+                
                 assessment.setIndividualOrder(groupOrder);
                 assessment.setGroupOrder(individualOrder);
             } else if ("up".equalsIgnoreCase(direction) && individualOrder > groupOrder) {
-                // Swap: Individual goes up, Group goes down
+                
                 assessment.setIndividualOrder(groupOrder);
                 assessment.setGroupOrder(individualOrder);
             }
         } else if ("Group".equalsIgnoreCase(blockType)) {
             if ("down".equalsIgnoreCase(direction) && groupOrder < individualOrder) {
-                // Swap: Group goes down, Individual goes up
+                
                 assessment.setGroupOrder(individualOrder);
                 assessment.setIndividualOrder(groupOrder);
             } else if ("up".equalsIgnoreCase(direction) && groupOrder > individualOrder) {
-                // Swap: Group goes up, Individual goes down
+                
                 assessment.setGroupOrder(individualOrder);
                 assessment.setIndividualOrder(groupOrder);
             }
@@ -530,9 +504,6 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
         assessmentRepository.save(assessment);
     }
     
-   /**
- * Move individual rubric up or down within its assessment type
- */
 @Transactional
 public void moveRubric(Long rubricId, String direction) {
     Rubric rubric = rubricRepository.findById(rubricId)
@@ -541,7 +512,6 @@ public void moveRubric(Long rubricId, String direction) {
     Assessment assessment = rubric.getAssessment();
     String assessmentType = rubric.getAssessmentTypes();
     
-    // Get all rubrics of the same assessment type, sorted by display_order
     List<Rubric> sameTypeRubrics = assessment.getRubrics().stream()
         .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
         .sorted((r1, r2) -> {
@@ -568,7 +538,7 @@ public void moveRubric(Long rubricId, String direction) {
     System.out.println("DEBUG: List size: " + sameTypeRubrics.size());
     
     if ("up".equalsIgnoreCase(direction) && currentIndex > 0) {
-        // Swap with previous rubric
+        
         Rubric previousRubric = sameTypeRubrics.get(currentIndex - 1);
         Integer tempOrder = rubric.getDisplayOrder();
         
@@ -583,7 +553,7 @@ public void moveRubric(Long rubricId, String direction) {
         System.out.println("DEBUG: After swap - " + rubric.getName() + " order: " + rubric.getDisplayOrder() + ", " + previousRubric.getName() + " order: " + previousRubric.getDisplayOrder());
         
     } else if ("down".equalsIgnoreCase(direction) && currentIndex < sameTypeRubrics.size() - 1) {
-        // Swap with next rubric
+        
         Rubric nextRubric = sameTypeRubrics.get(currentIndex + 1);
         Integer tempOrder = rubric.getDisplayOrder();
         
@@ -600,17 +570,12 @@ public void moveRubric(Long rubricId, String direction) {
         System.out.println("DEBUG: No swap performed - at boundary or invalid direction");
     }
 }
-    
-    /**
- * Initialize display orders for rubrics if not set
- * Call this when needed to ensure all rubrics have proper ordering
- */
+
 @Transactional
 public void initializeRubricOrders(Long assessmentId) {
     Assessment assessment = assessmentRepository.findById(assessmentId)
         .orElseThrow(() -> new EntityNotFoundException("Assessment not found"));
     
-    // Group rubrics by assessment type
     Map<String, List<Rubric>> rubricsByType = new HashMap<>();
     
     for (Rubric rubric : assessment.getRubrics()) {
@@ -621,24 +586,21 @@ public void initializeRubricOrders(Long assessmentId) {
         rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
     }
     
-    // ✅ FIX: Assign sequential display orders for each type
     for (Map.Entry<String, List<Rubric>> entry : rubricsByType.entrySet()) {
         List<Rubric> rubrics = entry.getValue();
         
         System.out.println("DEBUG - Initializing orders for type: " + entry.getKey());
         
-        // Sort by existing order (or by ID if order is null) to maintain some consistency
         rubrics.sort((r1, r2) -> {
             Integer o1 = r1.getDisplayOrder();
             Integer o2 = r2.getDisplayOrder();
             
             if (o1 == null && o2 == null) {
-                return r1.getId().compareTo(r2.getId()); // Use ID as fallback
+                return r1.getId().compareTo(r2.getId()); 
             }
             if (o1 == null) return 1;
             if (o2 == null) return -1;
             
-            // If orders are the same, use ID to break tie
             int orderCompare = Integer.compare(o1, o2);
             if (orderCompare == 0) {
                 return r1.getId().compareTo(r2.getId());
@@ -646,12 +608,10 @@ public void initializeRubricOrders(Long assessmentId) {
             return orderCompare;
         });
         
-        // ✅ Assign sequential orders: 0, 1, 2, 3...
         for (int i = 0; i < rubrics.size(); i++) {
             Rubric rubric = rubrics.get(i);
             Integer currentOrder = rubric.getDisplayOrder();
             
-            // Only update if order is null or doesn't match expected sequence
             if (currentOrder == null || currentOrder != i) {
                 System.out.println("DEBUG - Setting " + rubric.getName() + " order from " + currentOrder + " to " + i);
                 rubric.setDisplayOrder(i);

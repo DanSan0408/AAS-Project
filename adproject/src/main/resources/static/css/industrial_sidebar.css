@@ -1,15 +1,4 @@
-/* =======================================================
-    INDUSTRIAL SUPERVISOR SIDEBAR - SPECIFIC STYLES
-    Primary: Maroon #5C001F
-    Secondary: Corporate Navy #1F3A5F
-    Accent: Gold #F8A617
-    Background: Cool Sand #F7F5F0
-    Action/CTA: Burnt Orange #D97706
-    Text: Dark Grey #111827
-   ======================================================= */
-
 :root {
-    /* Industrial Supervisor Color Palette */
     --supervisor-primary: #5C001F;
     --supervisor-secondary: #1F3A5F;
     --supervisor-accent: #F8A617;
@@ -17,14 +6,12 @@
     --supervisor-action: #D97706;
     --supervisor-text: #111827;
     
-    /* Shades */
     --supervisor-primary-light: #7D0029;
     --supervisor-primary-dark: #3D0014;
     --supervisor-secondary-light: #2E5280;
     --supervisor-secondary-dark: #152844;
 }
 
-/* ==================== SIDEBAR CONTAINER ==================== */
 .sidebar {
     position: fixed;
     top: 0;
@@ -42,7 +29,6 @@
     overflow-x: hidden;
 }
 
-/* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
     width: 6px;
 }
@@ -60,7 +46,6 @@
     background: var(--supervisor-accent);
 }
 
-/* ==================== LOGO SECTION ==================== */
 .sidebar .logo {
     text-align: center;
     padding: 20px 15px;
@@ -78,7 +63,6 @@
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
-/* ==================== USER PROFILE SECTION ==================== */
 .sidebar .user-profile {
     text-align: center;
     padding: 15px 20px;
@@ -98,7 +82,6 @@
     word-break: break-word;
 }
 
-/* ==================== MENU LIST ==================== */
 .sidebar .menu-list {
     list-style: none;
     padding: 0;
@@ -111,7 +94,6 @@
     position: relative;
 }
 
-/* Menu Links */
 .sidebar .menu-list li a {
     display: flex;
     align-items: center;
@@ -126,7 +108,6 @@
     overflow: hidden;
 }
 
-/* Hover Effect - Left Border */
 .sidebar .menu-list li a::before {
     content: '';
     position: absolute;
@@ -143,14 +124,12 @@
     transform: scaleY(1);
 }
 
-/* Hover Background */
 .sidebar .menu-list li a:hover {
     background: rgba(248, 166, 23, 0.15);
     color: var(--supervisor-accent);
     padding-left: 28px;
 }
 
-/* Active Link */
 .sidebar .menu-list li a.active {
     background: linear-gradient(90deg, rgba(248, 166, 23, 0.25) 0%, rgba(248, 166, 23, 0.1) 100%);
     color: var(--supervisor-accent);
@@ -158,13 +137,11 @@
     font-weight: 700;
 }
 
-/* ==================== LOGOUT SECTION ==================== */
 .sidebar .menu-list li form {
     margin: 0;
     padding: 0;
 }
 
-/* Logout Button */
 .sidebar .menu-list li form button {
     display: flex;
     align-items: center;
@@ -206,7 +183,6 @@
     transform: scaleY(1);
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
     .sidebar {
         width: 100%;

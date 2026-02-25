@@ -1,7 +1,3 @@
-/* =======================================================
-   ASSIGN ASSESSMENT - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -35,7 +31,6 @@ body.assign-assessment-page .main-content {
     align-items: center !important;
 }
 
-/* Header */
 body.assign-assessment-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -49,7 +44,6 @@ body.assign-assessment-page .header-container {
 body.assign-assessment-page .header-container img { max-width: 150px !important; height: auto !important; }
 body.assign-assessment-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
-/* Card */
 body.assign-assessment-page .card {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -93,7 +87,6 @@ body.assign-assessment-page .assessment-title .value {
     font-weight: 700 !important;
 }
 
-/* Form */
 body.assign-assessment-page .form-group {
     margin-bottom: 20px !important;
 }
@@ -125,7 +118,6 @@ body.assign-assessment-page select:focus {
     outline: none !important;
 }
 
-/* Radio Cards */
 body.assign-assessment-page .radio-options {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
@@ -183,7 +175,6 @@ body.assign-assessment-page #scheduledOpenDateGroup.visible {
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Buttons */
 body.assign-assessment-page .form-actions {
     margin-top: 30px !important;
     display: flex !important;
@@ -209,7 +200,6 @@ body.assign-assessment-page .btn-primary:hover { background-color: #6B0025 !impo
 body.assign-assessment-page .btn-secondary { background-color: #94a3b8 !important; color: white !important; }
 body.assign-assessment-page .btn-secondary:hover { background-color: #64748b !important; }
 
-/* Responsive */
 @media (max-width: 800px) {
     body.assign-assessment-page .main-content { margin-left: 0 !important; padding: 20px !important; }
     body.assign-assessment-page .radio-options { grid-template-columns: 1fr !important; }

@@ -33,7 +33,6 @@ import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.StudentService;
 
-// --- DTOs for Form Binding ---
 class OverrideForm {
     private List<StudentResultUpdate> updates = new ArrayList<>();
     public List<StudentResultUpdate> getUpdates() { return updates; }
@@ -182,8 +181,7 @@ public class DataViewController {
         Map<String, List<Rubric>> rubricsByType = new HashMap<>();
         Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
         Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
-        
-        // ✅ NEW: Maps to store overall assessment comments
+
         Map<Long, Map<String, List<String>>> studentGroupComments = new HashMap<>();
         Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
         
@@ -220,8 +218,7 @@ public class DataViewController {
                     rubricDetails.put(rubric.getId(), details);
                 }
                 studentRubricDetails.put(student.getId(), rubricDetails);
-                
-                // ✅ NEW: Get overall assessment comments
+
                 studentGroupComments.put(student.getId(), calculateService.getGroupAssessmentComments(student, assessment));
                 studentIndividualComments.put(student.getId(), calculateService.getIndividualAssessmentComments(student, assessment));
             }

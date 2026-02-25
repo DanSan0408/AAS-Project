@@ -23,7 +23,6 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ CHANGED: Username is now NULLABLE (kept for backward compatibility)
     @Column(unique = true, nullable = true)
     private String username;
 
@@ -34,13 +33,11 @@ public class Student {
     @JoinColumn(name = "group_id")
     private Group group; 
 
-    // ✅ CHANGED: Email is now the primary identifier for login
     @Column(unique = true, nullable = false)
     private String email;
     
     private String resetPasswordToken;
 
-    // ✅ NEW: Flag to track if password is temporary
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
 }

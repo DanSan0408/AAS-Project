@@ -42,7 +42,6 @@
                     
                     <form id="groupForm" th:action="@{/admin/group-assignment/randomize/create}" method="post"> 
                         
-                        <!-- Hidden input with initial comma-separated student IDs -->
                         <input type="hidden" id="selectedStudentIdsInput" name="selectedStudentIds" th:value="${selectedStudentIdsStr}" />
 
                         <table class="group-table">
@@ -64,7 +63,6 @@
                                     <td>
                                         <select name="academicSupervisorId" required>
                                             <option value="">-- Select Lecturer --</option>
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="lecturer : ${availableLecturers}"
                                                     th:value="${lecturer.id}"
                                                     th:text="${lecturer.email}"></option>
@@ -74,7 +72,6 @@
                                     <td>
                                         <select name="industrialSupervisorId" required>
                                             <option value="">-- Select Supervisor --</option>
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <option th:each="supervisor : ${availableSupervisors}"
                                                     th:value="${supervisor.id}"
                                                     th:text="${supervisor.email}"></option>
@@ -93,7 +90,6 @@
                             <label for="addStudentSelect">Add Student (Unassigned):</label>
                             <select id="addStudentSelect">
                                 <option value="">-- Select Student to Add --</option>
-                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <option th:each="student : ${availableStudentsForAdd}"
                                         th:value="${student.id}"
                                         th:text="${student.email}">
@@ -115,13 +111,11 @@
 
 
     <script>
-        // Get initial data from the hidden input
         var hiddenInput = document.getElementById('selectedStudentIdsInput');
         var initialIdsString = hiddenInput.value;
         
         console.log("Initial IDs string from hidden input:", initialIdsString);
         
-        // Parse the comma-separated student IDs
         var currentStudentIds = [];
         if (initialIdsString && initialIdsString.trim() !== '') {
             currentStudentIds = initialIdsString.split(',').map(function(id) {
@@ -133,7 +127,6 @@
         
         console.log("Parsed student IDs:", currentStudentIds);
         
-        // ✅ CHANGED: Build student lookup map with email instead of username
         var studentLookupMap = {};
         var addStudentSelect = document.getElementById('addStudentSelect');
         Array.from(addStudentSelect.options).forEach(function(option) {
@@ -141,14 +134,14 @@
                 var id = parseInt(option.value);
                 studentLookupMap[id] = {
                     id: id,
-                    email: option.text  // ✅ CHANGED: Store email instead of username
+                    email: option.text  
                 };
             }
         });
         
         console.log("Student lookup map:", studentLookupMap);
         
-        // Get max group size from the page
+        
         var maxGroupSize = parseInt(document.querySelector('h2 span:last-of-type').textContent);
         
         // DOM elements
@@ -193,7 +186,6 @@
 
             currentStudentIds.forEach(function(studentId) {
                 var student = studentLookupMap[studentId];
-                // ✅ CHANGED: Display email instead of username
                 var name = student ? student.email : 'Student ID: ' + studentId + ' (Not Found)';
                 
                 console.log("Rendering student:", studentId, name);
@@ -215,14 +207,12 @@
                 listItem.appendChild(removeButton);
                 studentList.appendChild(listItem);
                 
-                // Hide this student from the dropdown
                 var optionToHide = addStudentSelect.querySelector('option[value="' + studentId + '"]');
                 if (optionToHide) {
                     optionToHide.style.display = 'none';
                 }
             });
             
-            // Show students not in the group in the dropdown
             Array.from(addStudentSelect.options).forEach(function(option) {
                 if (option.value) {
                     var id = parseInt(option.value);
@@ -263,7 +253,6 @@
             }
         };
 
-        // Initial render
         window.addEventListener('DOMContentLoaded', function() {
             console.log("=== Page Loaded ===");
             console.log("Current Student IDs:", currentStudentIds);

@@ -1,8 +1,3 @@
-/* =======================================================
-   INDUSTRIAL SUPERVISOR SIDEBAR - NAVY & GOLD THEME
-   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
-   ======================================================= */
-
 :root {
     --supervisor-primary: #002B5B;
     --supervisor-primary-light: #004080;
@@ -16,7 +11,6 @@
     --supervisor-alert: #8B1E1E;
 }
 
-/* ==================== SIDEBAR CONTAINER ==================== */
 .sidebar {
     position: fixed;
     top: 15px;
@@ -35,7 +29,6 @@
     overflow: hidden;
 }
 
-/* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
     width: 5px;
 }
@@ -53,7 +46,6 @@
     background: var(--supervisor-primary-light);
 }
 
-/* ==================== LOGO SECTION ==================== */
 .sidebar .logo {
     text-align: center;
     padding: 30px 20px 25px;
@@ -72,7 +64,6 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* ==================== USER PROFILE SECTION ==================== */
 .sidebar .user-profile {
     text-align: center;
     padding: 16px 20px;
@@ -91,7 +82,6 @@
     word-break: break-word;
 }
 
-/* ==================== MENU LIST ==================== */
 .sidebar .menu-list {
     list-style: none;
     padding: 0 15px;
@@ -104,7 +94,6 @@
     margin-bottom: 8px;
 }
 
-/* Menu Links */
 .sidebar .menu-list li a {
     display: flex;
     align-items: center;
@@ -119,7 +108,6 @@
     position: relative;
 }
 
-/* Hover Effect */
 .sidebar .menu-list li a:hover {
     background: linear-gradient(90deg, rgba(0, 43, 91, 0.05) 0%, transparent 100%);
     color: var(--supervisor-primary);
@@ -127,7 +115,6 @@
     padding-left: 20px;
 }
 
-/* Active Link */
 .sidebar .menu-list li a.active {
     background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
     color: var(--supervisor-text-light);
@@ -140,7 +127,6 @@
     padding-left: 16px;
 }
 
-/* ==================== LOGOUT SECTION ==================== */
 .sidebar .menu-list li:last-child,
 .sidebar .menu-list li.logout-item {
     margin-top: auto;
@@ -154,7 +140,6 @@
     padding: 0;
 }
 
-/* Logout Button */
 .sidebar .menu-list li form button,
 .sidebar .menu-list li form .logout-btn {
     display: flex;
@@ -182,7 +167,6 @@
     padding-left: 20px;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
     .sidebar {
         top: 10px;

@@ -41,17 +41,13 @@
                             </div>
                         </div>
 
-                        <!-- Updated Rubric Display - Grouped by Assessment Type Only -->
                         <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">
                         
-                            <!-- Outer loop - dummy key (we don't display the key itself) -->
                             <div th:each="evalTypeEntry : ${groupedComponents}">
                                 
-                                <!-- Inner loop - Assessment Type -->
                                 <div th:each="assessTypeEntry : ${evalTypeEntry.value}" class="assess-type-group">
                                     <h5 th:text="${'Assessment Type: ' + assessTypeEntry.key}">Assessment Type: Individual Assessment</h5>
                                     
-                                    <!-- Component loop - only Rubrics -->
                                     <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
                                         
                                         <h6 th:text="${component.name}">Market Survey</h6> 
@@ -71,7 +67,6 @@
                 </div>
             </div>
 
-            <!-- Deadlines Section - Show ALL deadlines with assessor type badges -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
@@ -91,7 +86,6 @@
                                 <strong>Title:</strong> 
                                 <span th:text="${deadline.title}">Assessment Title</span>
                                 
-                                <!-- Assessor Type Badge - Shows WHO needs to assess -->
                                 <br><br>
                                 <span class="deadline-badge"
                                       th:classappend="${deadline.assessorType == 'STUDENT' ? 'badge-student' : 
@@ -111,7 +105,6 @@
                                 <span th:text="${#dates.format(deadline.date, 'dd MMMM yyyy, HH:mm')}">30 November 2025, 00:00</span>
                             </p>
                             
-                            <!-- Open Date (if available) -->
                             <p th:if="${deadline.openDate != null}">
                                 <strong>
                                     <i class="fas fa-door-open"></i> Opens:

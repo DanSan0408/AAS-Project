@@ -1,8 +1,3 @@
-/* =======================================================
-   SUPERVISOR EVALUATION FORM - NAVY & GOLD THEME
-   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
-   ======================================================= */
-
 :root {
     --supervisor-primary: #002B5B;
     --supervisor-primary-light: #004080;
@@ -19,7 +14,6 @@
     --supervisor-info: #3B82F6;
 }
 
-/* ==================== LAYOUT ==================== */
 body.supervisor-page {
     background-color: var(--supervisor-background);
     color: var(--supervisor-text-dark);
@@ -32,7 +26,6 @@ body.supervisor-page .main-content {
     min-height: 100vh;
 }
 
-/* ==================== HEADER ==================== */
 body.supervisor-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -60,7 +53,6 @@ body.supervisor-page .evaluation-container {
     margin: 0 auto;
 }
 
-/* ==================== PAGE HEADER ==================== */
 body.supervisor-page .page-header-wrapper {
     margin-bottom: 35px;
     border-bottom: 3px solid var(--supervisor-primary);
@@ -88,7 +80,6 @@ body.supervisor-page .page-subtitle {
     font-weight: 500;
 }
 
-/* ==================== CONTEXT INFO ==================== */
 body.supervisor-page .context-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -127,7 +118,6 @@ body.supervisor-page .context-value {
     color: var(--supervisor-primary);
 }
 
-/* ==================== ALERTS ==================== */
 body.supervisor-page .alert {
     padding: 16px 24px;
     border-radius: 12px;
@@ -163,7 +153,6 @@ body.supervisor-page .alert strong {
     font-weight: 700;
 }
 
-/* ==================== PROGRESS SECTION ==================== */
 body.supervisor-page .progress-section {
     background-color: var(--supervisor-surface);
     padding: 25px;
@@ -240,7 +229,6 @@ body.supervisor-page .progress-details i {
     margin-right: 5px;
 }
 
-/* ==================== SECTION HEADERS ==================== */
 body.supervisor-page .section-header {
     padding: 22px 30px;
     background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
@@ -282,7 +270,6 @@ body.supervisor-page .section-subtitle {
     font-weight: 400;
 }
 
-/* ==================== CONTENT CONTAINER ==================== */
 body.supervisor-page .section-content {
     background-color: var(--supervisor-surface);
     padding: 30px;
@@ -292,7 +279,6 @@ body.supervisor-page .section-content {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-/* ==================== RUBRIC CARD ==================== */
 body.supervisor-page .rubric-card {
     background-color: var(--supervisor-hover);
     padding: 25px;
@@ -346,7 +332,6 @@ body.supervisor-page .rubric-details i {
     margin-right: 5px;
 }
 
-/* Sub-Rubrics */
 body.supervisor-page .sub-rubric-container {
     background-color: var(--supervisor-surface);
     padding: 20px;
@@ -379,7 +364,6 @@ body.supervisor-page .sub-rubric-description {
     font-style: italic;
 }
 
-/* ==================== RATING OPTIONS ==================== */
 body.supervisor-page .rating-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -446,7 +430,6 @@ body.supervisor-page .rating-marks {
     border-radius: 6px;
 }
 
-/* ==================== COMMENTS AREAS ==================== */
 body.supervisor-page .comments-section,
 body.supervisor-page .rubric-comments-section {
     background-color: var(--supervisor-surface);
@@ -503,7 +486,6 @@ body.supervisor-page .optional-tag {
     border-radius: 4px;
 }
 
-/* Textareas */
 body.supervisor-page textarea,
 body.supervisor-page .comment-textarea {
     width: 100%;
@@ -539,14 +521,12 @@ body.supervisor-page .rubric-comment-hint {
     font-weight: 500;
 }
 
-/* ==================== SEPARATORS ==================== */
 body.supervisor-page .student-separator {
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--supervisor-border), transparent);
     margin: 40px 0;
 }
 
-/* ==================== FORM ACTIONS ==================== */
 body.supervisor-page .form-actions {
     position: sticky;
     bottom: 0;
@@ -603,7 +583,6 @@ body.supervisor-page .btn i {
     font-size: 1.1em;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
     body.supervisor-page .main-content {
         margin-left: 0;

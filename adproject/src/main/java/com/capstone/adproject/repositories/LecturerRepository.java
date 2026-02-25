@@ -18,8 +18,6 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
 
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
 
-    // --- CLEANUP METHODS FOR SAFE DELETION ---
-    
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")
     void unlinkFromGroups(@Param("lecturerId") Long lecturerId);
@@ -32,7 +30,6 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     @Query("DELETE FROM Mark m WHERE m.lecturer.id = :lecturerId")
     void deleteMarksGiven(@Param("lecturerId") Long lecturerId);
 
-    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
     @Modifying
     @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :lecturerId AND ac.evaluatorType = 'LECTURER'")
     void deleteCommentsByLecturer(@Param("lecturerId") Long lecturerId);

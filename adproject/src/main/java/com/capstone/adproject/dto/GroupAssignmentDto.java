@@ -9,8 +9,6 @@ public class GroupAssignmentDto {
     private Long industrialSupervisorId;
     private List<Long> selectedStudentIds;
 
-    // Constructors, Getters, and Setters
-
     public GroupAssignmentDto() {}
 
     public String getGroupName() {

@@ -1,8 +1,3 @@
-/* =======================================================
-   GROUP ASSIGNMENT - Professional Maroon Theme
-   Matched with Manage Users Page Consistency
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -19,7 +14,6 @@
     --color-success: #059669;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -36,12 +30,11 @@ body.group-page {
 
 body.group-page .main-content {
     flex-grow: 1 !important;
-    padding: 40px !important; /* Matched padding */
+    padding: 40px !important; 
     margin-left: 270px !important;
     background-color: var(--color-background) !important;
 }
 
-/* ==================== HEADER (Matched to manageUser.css) ==================== */
 body.group-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -65,10 +58,9 @@ body.group-page .header-container h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== CARD STYLES ==================== */
 body.group-page .card {
     background-color: var(--color-surface) !important;
-    padding: 40px !important; /* Increased padding to match manageUser */
+    padding: 40px !important; 
     border-radius: 12px !important;
     box-shadow: 0 4px 20px rgba(74, 0, 24, 0.12) !important;
     overflow: hidden !important;
@@ -80,7 +72,7 @@ body.group-page .card-header {
     text-align: center !important;
     margin-bottom: 24px !important;
     padding: 0 !important;
-    border-bottom: none !important; /* Removing inner border to match manageUser style */
+    border-bottom: none !important; 
     background-color: transparent !important;
 }
 
@@ -94,12 +86,10 @@ body.group-page .card-header h1 {
     display: inline-block !important;
 }
 
-/* Remove old inner header container styles inside card if they exist */
 body.group-page .card-header .header-container {
     display: none !important;
 }
 
-/* ==================== USER EDITING CONTAINER (Matched) ==================== */
 body.group-page .user-editing-container {
     display: flex !important;
     gap: 30px !important;
@@ -108,7 +98,6 @@ body.group-page .user-editing-container {
     min-height: 500px !important;
 }
 
-/* Sidebar - Button Style */
 body.group-page .user-editing-sidebar {
     background-color: var(--color-surface) !important;
     padding: 16px !important;
@@ -148,7 +137,6 @@ body.group-page .user-editing-sidebar a.active {
     box-shadow: 0 2px 8px rgba(74, 0, 24, 0.2) !important;
 }
 
-/* Main Content Area next to Sidebar */
 body.group-page .user-editing-main {
     flex-grow: 1 !important;
     background-color: var(--color-surface) !important;
@@ -170,7 +158,6 @@ body.group-page .user-editing-main h2 {
     margin-top: 0 !important;
 }
 
-/* ==================== ALERT MESSAGES ==================== */
 body.group-page .alert {
     padding: 16px 20px !important;
     border-radius: 8px !important;
@@ -198,7 +185,6 @@ body.group-page .alert-warning {
     border-color: var(--color-accent) !important;
 }
 
-/* ==================== CONTENT LAYOUT (Specific to Group Page) ==================== */
 body.group-page .content-layout {
     display: flex !important;
     flex-direction: column !important;
@@ -264,7 +250,6 @@ body.group-page .randomize-section h3 {
     font-weight: 700 !important;
 }
 
-/* ==================== TABLE STYLES ==================== */
 body.group-page .groups-container {
     flex-grow: 1 !important;
     overflow-y: auto !important;
@@ -319,7 +304,6 @@ body.group-page .group-table tbody tr:hover {
     background-color: var(--color-hover) !important;
 }
 
-/* Table column widths */
 body.group-page .group-table th:nth-child(1), body.group-page .group-table td:nth-child(1) { width: 15% !important; min-width: 120px !important; }
 body.group-page .group-table th:nth-child(2), body.group-page .group-table td:nth-child(2) { width: 8% !important; min-width: 60px !important; text-align: center !important; }
 body.group-page .group-table th:nth-child(3), body.group-page .group-table td:nth-child(3) { width: 15% !important; min-width: 120px !important; }
@@ -349,7 +333,6 @@ body.group-page .student-list li {
     font-size: 0.9em !important;
 }
 
-/* ==================== BUTTONS ==================== */
 body.group-page .btn-edit,
 body.group-page .btn-delete {
     padding: 7px 12px !important;
@@ -420,7 +403,6 @@ body.group-page .btn-delete:hover {
     transform: translateY(-1px) !important;
 }
 
-/* ==================== FORM STYLING ==================== */
 body.group-page .add-form-container {
     padding: 20px !important;
 }
@@ -456,7 +438,6 @@ body.group-page .form-group select:focus {
     box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
 }
 
-/* Student Table in Form */
 body.group-page #studentTable {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -501,7 +482,6 @@ body.group-page #studentTable input[type="checkbox"] {
     accent-color: var(--color-primary) !important;
 }
 
-/* ==================== CAROUSEL STYLES ==================== */
 body.group-page #studentCarouselContainer {
     border: 1px solid var(--color-border) !important;
     margin-top: 10px !important;
@@ -546,7 +526,6 @@ body.group-page .carousel-viewport {
     border-top: 1px solid var(--color-border) !important;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
     body.group-page .creation-wrapper {
         flex-direction: column !important;

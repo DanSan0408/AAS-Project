@@ -628,20 +628,16 @@ public class CalculateService {
             .orElse(1.0);
     }
 
-    // ✅ NEW METHOD: Get Group Assessment Comments
     public Map<String, List<String>> getGroupAssessmentComments(Student student, Assessment assessment) {
         Map<String, List<String>> result = new java.util.LinkedHashMap<>();
         
-        // Get all comments for this student and assessment that are for "Group Assessment"
         List<AssessmentComment> groupComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Group Assessment");
         
-        // Filter to only get OVERALL assessment comments (rubricId is null)
         groupComments = groupComments.stream()
             .filter(c -> c.getRubricId() == null)
             .collect(Collectors.toList());
         
-        // Group by evaluator name
         for (AssessmentComment comment : groupComments) {
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
@@ -654,20 +650,16 @@ public class CalculateService {
         return result;
     }
 
-    // ✅ NEW METHOD: Get Individual Assessment Comments
     public Map<String, List<String>> getIndividualAssessmentComments(Student student, Assessment assessment) {
         Map<String, List<String>> result = new java.util.LinkedHashMap<>();
         
-        // Get all comments for this student and assessment that are for "Individual Assessment"
         List<AssessmentComment> individualComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Individual Assessment");
         
-        // Filter to only get OVERALL assessment comments (rubricId is null)
         individualComments = individualComments.stream()
             .filter(c -> c.getRubricId() == null)
             .collect(Collectors.toList());
         
-        // Group by evaluator name
         for (AssessmentComment comment : individualComments) {
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();

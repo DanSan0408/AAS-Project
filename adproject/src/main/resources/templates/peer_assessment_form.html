@@ -376,7 +376,6 @@
         const modalConfirm = document.getElementById('modalConfirm');
         
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup character counters for assessment-level comments
             const commentTextareas = document.querySelectorAll('.comment-textarea');
             
             commentTextareas.forEach(function(textarea) {
@@ -406,7 +405,6 @@
                 textarea.dispatchEvent(new Event('input'));
             });
             
-            // Setup character counters for rubric-specific comments
             const rubricCommentTextareas = document.querySelectorAll('.rubric-comment-textarea');
             
             rubricCommentTextareas.forEach(function(textarea) {
@@ -446,11 +444,9 @@
                 textarea.dispatchEvent(new Event('input'));
             });
             
-            // Submit button click handler
             submitBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 
-                // Validate all assessment-level comment fields
                 let allValid = true;
                 let firstInvalid = null;
                 
@@ -468,13 +464,11 @@
                     return;
                 }
                 
-                // Validate form
                 if (!form.checkValidity()) {
                     form.reportValidity();
                     return;
                 }
                 
-                // Show confirmation if re-evaluation
                 if (hasExisting) {
                     modal.classList.add('active');
                 } else {
@@ -482,7 +476,6 @@
                 }
             });
             
-            // Modal handlers
             modalCancel.addEventListener('click', function() {
                 modal.classList.remove('active');
             });
@@ -504,7 +497,6 @@
                 }
             });
 
-            // Visual feedback for radio selection
             document.querySelectorAll('.rating-option input[type="radio"]').forEach(radio => {
                 radio.addEventListener('change', function() {
                     const name = this.name;

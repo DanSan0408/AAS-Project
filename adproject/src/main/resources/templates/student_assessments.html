@@ -41,7 +41,6 @@
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <div class="member-info">
-                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <span class="member-name" th:text="${member.email}">Member Email</span>
                                 <span th:if="${member.id == currentStudent.id}" class="you-badge">(You)</span>
                             </div>
@@ -113,7 +112,6 @@
                                     <div class="member-eval">
                                         <span class="member-name">
                                             <i class="fas fa-user"></i> 
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <span th:text="${currentStudent.email}">Your Email</span>
                                         </span>
                                         <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${currentStudent.id})}" 
@@ -135,7 +133,6 @@
                                          class="member-eval">
                                         <span class="member-name">
                                             <i class="fas fa-user"></i> 
-                                            <!-- ✅ CHANGED: Display email instead of username -->
                                             <span th:text="${member.email}">Member Email</span>
                                         </span>
                                         <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${member.id})}" 

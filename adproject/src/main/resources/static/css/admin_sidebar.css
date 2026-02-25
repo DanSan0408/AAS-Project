@@ -1,10 +1,4 @@
-/* =======================================================
-    ADMIN SIDEBAR - REFINED & ELEGANT
-    Primary: Deep Maroon #4A0018
-    Secondary: Graphite Grey #3F3F46
-    Accent: Gold #F8A617 (minimal use)
-    Background: Light Sand Grey #F4F2EE
-   ======================================================= */
+
 
 :root {
     --admin-primary: #4A0018;
@@ -19,7 +13,6 @@
     --admin-secondary-dark: #27272A;
 }
 
-/* ==================== SIDEBAR CONTAINER ==================== */
 .sidebar {
     position: fixed;
     top: 15px;
@@ -38,7 +31,6 @@
     overflow: hidden;
 }
 
-/* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
     width: 5px;
 }
@@ -56,7 +48,6 @@
     background: var(--admin-primary-dark);
 }
 
-/* ==================== LOGO SECTION ==================== */
 .sidebar .logo {
     text-align: center;
     padding: 30px 20px 25px;
@@ -75,7 +66,6 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* ==================== USER PROFILE SECTION ==================== */
 .sidebar .user-profile {
     text-align: center;
     padding: 16px 20px;
@@ -94,7 +84,6 @@
     word-break: break-word;
 }
 
-/* ==================== MENU LIST ==================== */
 .sidebar .menu-list {
     list-style: none;
     padding: 0 15px;
@@ -107,7 +96,6 @@
     margin-bottom: 8px;
 }
 
-/* Menu Links */
 .sidebar .menu-list li a {
     display: flex;
     align-items: center;
@@ -122,7 +110,6 @@
     position: relative;
 }
 
-/* Hover Effect */
 .sidebar .menu-list li a:hover {
     background: linear-gradient(90deg, rgba(74, 0, 24, 0.05) 0%, transparent 100%);
     color: var(--admin-primary);
@@ -130,7 +117,6 @@
     padding-left: 20px;
 }
 
-/* Active Link */
 .sidebar .menu-list li a.active {
     background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-light) 100%);
     color: var(--admin-text);
@@ -143,7 +129,6 @@
     padding-left: 16px;
 }
 
-/* ==================== LOGOUT SECTION ==================== */
 .sidebar .menu-list li:last-child {
     margin-top: auto;
     margin-bottom: 20px;
@@ -156,7 +141,6 @@
     padding: 0;
 }
 
-/* Logout Button */
 .sidebar .menu-list li form button {
     display: flex;
     align-items: center;
@@ -181,7 +165,6 @@
     padding-left: 20px;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 768px) {
     .sidebar {
         top: 10px;

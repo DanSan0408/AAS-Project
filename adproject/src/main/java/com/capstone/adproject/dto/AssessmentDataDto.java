@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.capstone.adproject.model.Assessment;
 
-/**
- * DTO for complete assessment data view
- */
 public class AssessmentDataDto {
     
     private Assessment assessment;

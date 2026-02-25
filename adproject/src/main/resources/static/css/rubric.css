@@ -1,8 +1,3 @@
-/* =======================================================
-   RUBRIC MANAGEMENT - Professional Maroon Theme
-   Matched with group.css and manageUser.css
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -21,7 +16,6 @@
     --color-secondary-dark: #27272A;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -36,7 +30,6 @@ body.rubric-page {
     min-height: 100vh;
 }
 
-/* ==================== LAYOUT ==================== */
 body.rubric-page .main-content {
     margin-left: 270px !important;
     padding: 40px !important;
@@ -48,7 +41,6 @@ body.rubric-page .main-content {
     flex-grow: 1 !important;
 }
 
-/* ==================== HEADER ==================== */
 body.rubric-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -71,10 +63,9 @@ body.rubric-page .header-container h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== CARD STYLES ==================== */
 body.rubric-page .card {
     background-color: var(--color-surface) !important;
-    padding: 0 !important; /* Reset padding for header/body split */
+    padding: 0 !important; 
     border-radius: 12px !important;
     box-shadow: 0 4px 20px rgba(74, 0, 24, 0.12) !important;
     width: 100% !important;
@@ -104,7 +95,6 @@ body.rubric-page .creation-card #assessment-form {
     padding: 30px !important;
 }
 
-/* ==================== FORM STYLES ==================== */
 body.rubric-page .input-group {
     display: flex !important;
     gap: 15px !important;
@@ -129,7 +119,6 @@ body.rubric-page input[type="text"]:focus {
     box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.1) !important;
 }
 
-/* ==================== TABLE STYLES ==================== */
 body.rubric-page .table-responsive {
     width: 100% !important;
     overflow-x: auto !important;
@@ -173,7 +162,6 @@ body.rubric-page tbody tr:last-child td {
     border-bottom: none !important;
 }
 
-/* ==================== BUTTONS ==================== */
 body.rubric-page .btn {
     display: inline-flex !important;
     align-items: center !important;
@@ -197,7 +185,6 @@ body.rubric-page .btn-sm {
     border-radius: 6px !important;
 }
 
-/* Primary / Save */
 body.rubric-page .btn-primary {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
     box-shadow: 0 4px 12px rgba(74, 0, 24, 0.2) !important;
@@ -209,7 +196,6 @@ body.rubric-page .btn-primary:hover {
     box-shadow: 0 6px 16px rgba(74, 0, 24, 0.3) !important;
 }
 
-/* Secondary / Cancel */
 body.rubric-page .btn-secondary {
     background-color: var(--color-secondary) !important;
     color: var(--color-text) !important;
@@ -220,7 +206,6 @@ body.rubric-page .btn-secondary:hover {
     transform: translateY(-2px) !important;
 }
 
-/* Action Button Colors */
 body.rubric-page .btn-view { background-color: var(--color-info) !important; }
 body.rubric-page .btn-add-sub { background-color: var(--color-success) !important; }
 body.rubric-page .btn-configure { background-color: var(--color-purple) !important; }
@@ -240,7 +225,6 @@ body.rubric-page .btn-delete:hover {
     transform: translateY(-2px) !important;
 }
 
-/* ==================== ACTION CONTAINER ==================== */
 body.rubric-page .action-buttons {
     display: flex !important;
     gap: 8px !important;
@@ -248,7 +232,6 @@ body.rubric-page .action-buttons {
     align-items: center !important;
 }
 
-/* ==================== DROPDOWN ==================== */
 body.rubric-page .dropdown {
     position: relative !important;
 }
@@ -291,7 +274,6 @@ body.rubric-page .dropdown-divider {
     margin: 4px 0 !important;
 }
 
-/* ==================== ALERTS ==================== */
 body.rubric-page .message-container {
     width: 100% !important;
     max-width: 1200px !important;
@@ -321,7 +303,6 @@ body.rubric-page .alert-error {
     border-color: var(--color-alert) !important;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1000px) {
     body.rubric-page .main-content {
         margin-left: 0 !important;

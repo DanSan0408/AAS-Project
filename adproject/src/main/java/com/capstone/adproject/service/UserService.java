@@ -1,16 +1,18 @@
 package com.capstone.adproject.service;
 
-import com.capstone.adproject.model.Admin;
-import com.capstone.adproject.model.Student;
-import com.capstone.adproject.model.Lecturer;
-import com.capstone.adproject.model.IndustrialSupervisor;
-import com.capstone.adproject.repositories.AdminRepository;
-import com.capstone.adproject.repositories.StudentRepository;
-import com.capstone.adproject.repositories.LecturerRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
+
+import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.IndustrialSupervisor;
+import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.AdminRepository;
+import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
+import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 
 @Service
 public class UserService {
@@ -30,7 +32,6 @@ public class UserService {
     }
 
    public Object findUserByEmail(String email) {
-    // Use orElse(null) to handle the Optional return type
     return adminRepo.findByEmail(email)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByEmail(email)
@@ -43,7 +44,6 @@ public class UserService {
 }
 
 public Object findUserByResetToken(String token) {
-    // Use orElse(null) to handle the Optional return type
     return adminRepo.findByResetPasswordToken(token)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByResetPasswordToken(token)
@@ -58,7 +58,6 @@ public Object findUserByResetToken(String token) {
     public String generateResetToken(Object user) {
         String token = UUID.randomUUID().toString();
         
-        // Use pattern matching to set the token based on the user type
         if (user instanceof Admin admin) {
             admin.setResetPasswordToken(token);
             adminRepo.save(admin);
@@ -78,7 +77,6 @@ public Object findUserByResetToken(String token) {
     public void updatePassword(Object user, String newPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword);
         
-        // Update password and clear the token
         if (user instanceof Admin admin) {
             admin.setPassword(encodedPassword);
             admin.setResetPasswordToken(null);
