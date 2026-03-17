@@ -342,7 +342,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     model.addAttribute("existingRubricMarks", existingRubricMarksMap);
     model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
     model.addAttribute("existingComments", existingComments);
-    model.addAttribute("existingRubricComments", existingRubricComments); // ✅ NEW
+    model.addAttribute("existingRubricComments", existingRubricComments); 
     model.addAttribute("hasExistingEvaluation", hasExistingEvaluation);
     model.addAttribute("isSelfAssessment", evaluator.getId().equals(evaluatedStudent.getId()));
     model.addAttribute("isTeamEvaluation", false);

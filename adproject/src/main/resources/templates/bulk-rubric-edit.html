@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulk Assessment Setup</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .section-separator { margin: 50px 0 20px 0; padding-bottom: 10px; border-bottom: 3px solid #eee; color: #2c3e50; display: flex; align-items: center; gap: 15px; }
+        .group-header { border-bottom-color: #27ae60; color: #27ae60; }
+        .indiv-header { border-bottom-color: #2980b9; color: #2980b9; }
+    </style>
+</head>
+<body class="rubric-form-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>Setup Assessment Content</h1>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+        <form th:action="@{/rubrics/assessment/{id}/fill/save(id=${assessment.id})}" th:object="${assessment}" method="post">
+            <input type="hidden" th:field="*{id}" />
+
+            <!-- GROUP ASSESSMENT SECTION -->
+            <h2 class="section-separator group-header"><i class="fas fa-users"></i> Group Assessment Rubrics</h2>
+            <div th:each="rubric, rStat : *{rubrics}" th:if="${rubric.assessmentTypes == 'Group Assessment'}">
+                <div class="card" style="border-left: 8px solid #27ae60;">
+                    <h1>Rubric #<span th:text="${rStat.count}"></span></h1>
+                    <input type="hidden" th:field="*{rubrics[__${rStat.index}__].assessmentTypes}" />
+                    
+                    <div class="form-group">
+                        <label>Rubric Name *</label>
+                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Collaboration & Teamwork" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea th:field="*{rubrics[__${rStat.index}__].description}" rows="2"></textarea>
+                    </div>
+
+                    <div class="rating-row">
+                        <div class="form-group col-grow">
+                            <label>Total Marks *</label>
+                            <input type="number" step="0.01" th:field="*{rubrics[__${rStat.index}__].marks}" required>
+                        </div>
+                        <div class="form-group col-grow">
+                            <label>CLO *</label>
+                            <select th:field="*{rubrics[__${rStat.index}__].clo}" required>
+                                <option value="">Select CLO</option>
+                                <option th:each="i : ${#numbers.sequence(1, 9)}" th:value="${i}" th:text="|CLO ${i}|">CLO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Rubrics -->
+                    <div th:if="${not #lists.isEmpty(rubric.subRubrics)}" class="section-container section-blue">
+                        <div class="section-header"><h2>Criteria (Sub-Rubrics)</h2></div>
+                        <div th:each="sub, sStat : ${rubric.subRubrics}" class="sub-rubric-card">
+                            <div class="form-group">
+                                <label>Criterion <span th:text="${sStat.count}"></span> Name</label>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required>
+                            </div>
+                            <div class="ratings-section">
+                                <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
+                                    <div th:each="rat, ratStat : ${sub.ratings}" class="rating-card" style="margin:0; padding:10px; background:#fff9e6;">
+                                        <label style="font-size:0.8em;">Rating <span th:text="${ratStat.count}"></span></label>
+                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                        <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Ratings -->
+                    <div th:if="${not #lists.isEmpty(rubric.ratings)}" class="section-container section-green">
+                        <div class="section-header"><h2>Direct Ratings</h2></div>
+                        <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
+                            <div th:each="rat, ratStat : ${rubric.ratings}" class="rating-card" style="margin:0; padding:10px; background:#e8f5e9;">
+                                <label style="font-size:0.8em;">Level <span th:text="${ratStat.count}"></span></label>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rubric Comments -->
+                    <div th:if="${rubric.rubricCommentCount > 0}" class="section-container section-purple">
+                        <div class="section-header"><h2>Rubric Feedback Fields</h2></div>
+                        <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-card">
+                            <label>Field <span th:text="${i + 1}"></span> Label</label>
+                            <input type="text" th:field="*{rubrics[__${rStat.index}__].rubricCommentLabels[__${i}__]}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INDIVIDUAL ASSESSMENT SECTION -->
+            <h2 class="section-separator indiv-header"><i class="fas fa-user"></i> Individual Assessment Rubrics</h2>
+            <div th:each="rubric, rStat : *{rubrics}" th:if="${rubric.assessmentTypes == 'Individual Assessment'}">
+                <div class="card" style="border-left: 8px solid #2980b9;">
+                    <h1>Rubric #<span th:text="${rStat.count}"></span></h1>
+                    <input type="hidden" th:field="*{rubrics[__${rStat.index}__].assessmentTypes}" />
+                    
+                    <div class="form-group">
+                        <label>Rubric Name *</label>
+                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Critical Thinking" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea th:field="*{rubrics[__${rStat.index}__].description}" rows="2"></textarea>
+                    </div>
+
+                    <div class="rating-row">
+                        <div class="form-group col-grow">
+                            <label>Total Marks *</label>
+                            <input type="number" step="0.01" th:field="*{rubrics[__${rStat.index}__].marks}" required>
+                        </div>
+                        <div class="form-group col-grow">
+                            <label>CLO *</label>
+                            <select th:field="*{rubrics[__${rStat.index}__].clo}" required>
+                                <option value="">Select CLO</option>
+                                <option th:each="i : ${#numbers.sequence(1, 9)}" th:value="${i}" th:text="|CLO ${i}|">CLO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Criteria -->
+                    <div th:if="${not #lists.isEmpty(rubric.subRubrics)}" class="section-container section-blue">
+                        <div class="section-header"><h2>Criteria (Sub-Rubrics)</h2></div>
+                        <div th:each="sub, sStat : ${rubric.subRubrics}" class="sub-rubric-card">
+                            <div class="form-group">
+                                <label>Criterion <span th:text="${sStat.count}"></span> Name</label>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required>
+                            </div>
+                            <div class="ratings-section">
+                                <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
+                                    <div th:each="rat, ratStat : ${sub.ratings}" class="rating-card" style="margin:0; padding:10px; background:#fff9e6;">
+                                        <label style="font-size:0.8em;">Rating <span th:text="${ratStat.count}"></span></label>
+                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                        <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Ratings -->
+                    <div th:if="${not #lists.isEmpty(rubric.ratings)}" class="section-container section-green">
+                        <div class="section-header"><h2>Direct Ratings</h2></div>
+                        <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
+                            <div th:each="rat, ratStat : ${rubric.ratings}" class="rating-card" style="margin:0; padding:10px; background:#e8f5e9;">
+                                <label style="font-size:0.8em;">Level <span th:text="${ratStat.count}"></span></label>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rubric Comments -->
+                    <div th:if="${rubric.rubricCommentCount > 0}" class="section-container section-purple">
+                        <div class="section-header"><h2>Rubric Feedback Fields</h2></div>
+                        <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-card">
+                            <label>Field <span th:text="${i + 1}"></span> Label</label>
+                            <input type="text" th:field="*{rubrics[__${rStat.index}__].rubricCommentLabels[__${i}__]}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-danger">Cancel & Skip</a>
+                <button type="submit" class="btn btn-primary" style="padding: 15px 50px; font-size: 1.1em;">
+                    <i class="fas fa-save"></i> Save All Rubrics
+                </button>
+            </div>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        </form>
+    </div>
+</body>
+</html>

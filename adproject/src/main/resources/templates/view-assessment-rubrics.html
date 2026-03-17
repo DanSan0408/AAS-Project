@@ -60,6 +60,7 @@
                 <p th:if="${#maps.isEmpty(assessment.cloMarks)}" class="text-muted">No CLO marks assigned yet.</p>
             </div>
         </div>
+
         
         <th:block th:with="
             individualOrder=${assessment.individualOrder != null ? assessment.individualOrder : 0},

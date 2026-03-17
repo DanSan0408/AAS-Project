@@ -45,15 +45,20 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CustomUserDetailsService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.RubricService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
 
+    private final CustomUserDetailsService userDetailsService;
     private final AdminService adminService;
     private final AssessmentService assessmentService;
     private final DeadlineService deadlineService;
@@ -70,7 +75,8 @@ public class AdminController {
             RubricService rubricService,
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
-            LecturerGroupAssignmentRepository assignmentRepository) {
+            LecturerGroupAssignmentRepository assignmentRepository,
+            CustomUserDetailsService userDetailsService) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
@@ -78,6 +84,7 @@ public class AdminController {
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     //ensure that dates objects are converted as dates
@@ -91,12 +98,65 @@ public class AdminController {
     //extract the identitiy of the currently logged in user from spring security
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            return ((Admin) authentication.getPrincipal()).getEmail();
+        if (authentication != null) {
+            return authentication.getName();
         }
         return "Admin";
     }
-    
+
+    private Admin getLoggedInAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null) {
+            String email = authentication.getName();
+            return adminService.findAdminByEmail(email).orElse(null);
+        }
+        return null;
+    }
+
+    private void refreshAuthentication(String email) {
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(
+                userDetails, 
+                userDetails.getPassword(), 
+                userDetails.getAuthorities()
+            );
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+            System.out.println("DEBUG: Authentication refreshed for " + email + ". New roles: " + userDetails.getAuthorities());
+        } catch (Exception e) {
+            System.err.println("DEBUG: Failed to refresh authentication: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/assign-role")
+    public String assignRole(
+            @RequestParam String email,
+            @RequestParam String targetRole,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        System.out.println("DEBUG: assignRole called for email: " + email + ", role: " + targetRole);
+        try {
+            adminService.addRole(email, targetRole, request);
+            
+            // Refresh authentication if the user is assigning a role to themselves
+            String loggedInEmail = getLoggedInUsername();
+            if (loggedInEmail.equalsIgnoreCase(email)) {
+                refreshAuthentication(email);
+            }
+            
+            redirectAttributes.addFlashAttribute("successMessage", "User " + email + " successfully assigned " + targetRole + " role!");
+        } catch (Exception e) {
+            System.err.println("DEBUG: Role assignation error: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Role assignation failed: " + e.getMessage());
+        }
+        
+        String referer = request.getHeader("Referer");
+        if (referer != null) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/admin/manage-users";
+    }
+
     //transform data (objects) and reorganizes it
     public Map<String, Map<String, List<Object>>> groupAssessmentComponents(Assessment assessment) {
         Map<String, Map<String, List<Object>>> grouped = new LinkedHashMap<>();
@@ -792,6 +852,39 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
             redirectAttributes.addFlashAttribute("successMessage", "Selected supervisors deleted successfully.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting supervisors: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-supervisors";
+    }
+
+    @PostMapping("/bulk-add-students")
+    public String bulkAddStudents(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            int count = adminService.bulkAddStudents(emailsText, request);
+            redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-students";
+    }
+
+    @PostMapping("/bulk-add-lecturers")
+    public String bulkAddLecturers(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            int count = adminService.bulkAddLecturers(emailsText, request);
+            redirectAttributes.addFlashAttribute("successMessage", count + " lecturers successfully added!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-lecturers";
+    }
+
+    @PostMapping("/bulk-add-supervisors")
+    public String bulkAddSupervisors(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            int count = adminService.bulkAddSupervisors(emailsText, request);
+            redirectAttributes.addFlashAttribute("successMessage", count + " supervisors successfully added!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
         }
         return "redirect:/admin/manage-supervisors";
     }

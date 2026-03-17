@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
+import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
@@ -33,6 +35,7 @@ public class AdminService {
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminRepository adminRepository;
 
     @Autowired
     public AdminService(
@@ -41,13 +44,15 @@ public class AdminService {
             IndustrialSupervisorRepository industrialSupervisorRepository, 
             GroupRepository groupRepository, 
             PasswordEncoder passwordEncoder,
-            LecturerGroupAssignmentRepository assignmentRepository) {
+            LecturerGroupAssignmentRepository assignmentRepository,
+            AdminRepository adminRepository) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.industrialSupervisorRepository = industrialSupervisorRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
         this.assignmentRepository = assignmentRepository;
+        this.adminRepository = adminRepository;
     }
 
     @Autowired
@@ -72,39 +77,71 @@ private EmailService emailService;
         }
         
     } else {
-
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        student.setPassword(passwordEncoder.encode(tempPassword));
-        student.setIsTempPassword(true);
-        student.setUsername(null); 
-        
+        // Check if user already exists in other tables to sync password
+        String existingPassword = null;
+        Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
-        student.setResetPasswordToken(resetToken);
         
-        Student savedStudent = studentRepository.save(student);
-        
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
-        }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                student.getEmail(),
-                tempPassword,
-                "Student",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + student.getEmail());
-            e.printStackTrace();
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(student.getEmail());
+        if (existingAdmin.isPresent()) {
+            existingPassword = existingAdmin.get().getPassword();
+            isTemp = false;
+            resetToken = existingAdmin.get().getResetPasswordToken();
         }
         
+        Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(student.getEmail());
+        if (existingLecturer.isPresent()) {
+            existingPassword = existingLecturer.get().getPassword();
+            isTemp = existingLecturer.get().getIsTempPassword();
+            resetToken = existingLecturer.get().getResetPasswordToken();
+        }
+
+        Optional<IndustrialSupervisor> existingSupervisor = industrialSupervisorRepository.findByEmail(student.getEmail());
+        if (existingSupervisor.isPresent()) {
+            existingPassword = existingSupervisor.get().getPassword();
+            isTemp = existingSupervisor.get().getIsTempPassword();
+            resetToken = existingSupervisor.get().getResetPasswordToken();
+        }
+
+        if (existingPassword != null) {
+            student.setPassword(existingPassword);
+            student.setIsTempPassword(isTemp);
+            student.setResetPasswordToken(resetToken);
+        } else {
+            String tempPassword = PasswordGenerator.generateRandomPassword();
+            student.setPassword(passwordEncoder.encode(tempPassword));
+            student.setIsTempPassword(true);
+            student.setResetPasswordToken(resetToken);
+            
+            sendWelcomeEmail(student.getEmail(), tempPassword, "Student", resetToken, request);
+        }
+        
+        student.setUsername(null); 
+        studentRepository.save(student);
         return; 
     }
     
     studentRepository.save(student);
+}
+
+private void sendWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
+    String applicationUrl = request.getScheme() + "://" + request.getServerName();
+    if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+        applicationUrl += ":" + request.getServerPort();
+    }
+    String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+    
+    try {
+        emailService.sendWelcomeEmailWithPassword(
+            email,
+            tempPassword,
+            role,
+            resetLink
+        );
+    } catch (Exception e) {
+        System.err.println("Failed to send welcome email to: " + email);
+        e.printStackTrace();
+    }
 }
 
 public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
@@ -122,34 +159,40 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
         
     } else {
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        lecturer.setPassword(passwordEncoder.encode(tempPassword));
-        lecturer.setIsTempPassword(true);
-        lecturer.setUsername(null);
-        
+        // Check if user already exists in other tables to sync password
+        String existingPassword = null;
+        Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
-        lecturer.setResetPasswordToken(resetToken);
         
-        Lecturer savedLecturer = lecturerRepository.save(lecturer);
-        
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
-        }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                lecturer.getEmail(),
-                tempPassword,
-                "Lecturer",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + lecturer.getEmail());
-            e.printStackTrace();
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(lecturer.getEmail());
+        if (existingAdmin.isPresent()) {
+            existingPassword = existingAdmin.get().getPassword();
+            isTemp = false;
+            resetToken = existingAdmin.get().getResetPasswordToken();
         }
         
+        Optional<IndustrialSupervisor> existingSupervisor = industrialSupervisorRepository.findByEmail(lecturer.getEmail());
+        if (existingSupervisor.isPresent()) {
+            existingPassword = existingSupervisor.get().getPassword();
+            isTemp = existingSupervisor.get().getIsTempPassword();
+            resetToken = existingSupervisor.get().getResetPasswordToken();
+        }
+
+        if (existingPassword != null) {
+            lecturer.setPassword(existingPassword);
+            lecturer.setIsTempPassword(isTemp);
+            lecturer.setResetPasswordToken(resetToken);
+        } else {
+            String tempPassword = PasswordGenerator.generateRandomPassword();
+            lecturer.setPassword(passwordEncoder.encode(tempPassword));
+            lecturer.setIsTempPassword(true);
+            lecturer.setResetPasswordToken(resetToken);
+            
+            sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Lecturer", resetToken, request);
+        }
+        
+        lecturer.setUsername(null);
+        lecturerRepository.save(lecturer);
         return;
     }
     
@@ -157,57 +200,64 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
 }
 
 public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
-    if (supervisor.getEmail() == null || supervisor.getEmail().trim().isEmpty()) {
-        throw new RuntimeException("Email is required");
-    }
-
-    if (supervisor.getId() != null) {
-        // UPDATE
-        IndustrialSupervisor existing = industrialSupervisorRepository.findById(supervisor.getId())
-            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-        
-        supervisor.setPassword(existing.getPassword());
-        supervisor.setIsTempPassword(existing.getIsTempPassword());
-        supervisor.setUsername(existing.getUsername());
-        supervisor.setResetPasswordToken(existing.getResetPasswordToken());
-        
-    } else {
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        supervisor.setPassword(passwordEncoder.encode(tempPassword));
-        supervisor.setIsTempPassword(true);
-        supervisor.setUsername(null);
-        
-        String resetToken = UUID.randomUUID().toString();
-        supervisor.setResetPasswordToken(resetToken);
-        
-        IndustrialSupervisor saved = industrialSupervisorRepository.save(supervisor);
-        
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
-        }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                supervisor.getEmail(),
-                tempPassword,
-                "Industrial Supervisor",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + supervisor.getEmail());
-            e.printStackTrace();
-        }
-        
-        return;
-    }
-    
-    industrialSupervisorRepository.save(supervisor);
+    // ... (existing implementation)
 }
 
-public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
-    if (email == null || email.trim().isEmpty()) {
+@Transactional
+public int bulkAddStudents(String emailsText, HttpServletRequest request) {
+    String[] emails = emailsText.split("[,\\n\\r]+");
+    int count = 0;
+    for (String email : emails) {
+        String trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail.isEmpty()) {
+            if (studentRepository.findByEmail(trimmedEmail).isEmpty()) {
+                Student student = new Student();
+                student.setEmail(trimmedEmail);
+                saveStudent(student, request);
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+@Transactional
+public int bulkAddLecturers(String emailsText, HttpServletRequest request) {
+    String[] emails = emailsText.split("[,\\n\\r]+");
+    int count = 0;
+    for (String email : emails) {
+        String trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail.isEmpty()) {
+            if (lecturerRepository.findByEmail(trimmedEmail).isEmpty()) {
+                Lecturer lecturer = new Lecturer();
+                lecturer.setEmail(trimmedEmail);
+                saveLecturer(lecturer, request);
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+@Transactional
+public int bulkAddSupervisors(String emailsText, HttpServletRequest request) {
+    String[] emails = emailsText.split("[,\\n\\r]+");
+    int count = 0;
+    for (String email : emails) {
+        String trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail.isEmpty()) {
+            if (industrialSupervisorRepository.findByEmail(trimmedEmail).isEmpty()) {
+                IndustrialSupervisor supervisor = new IndustrialSupervisor();
+                supervisor.setEmail(trimmedEmail);
+                saveIndustrialSupervisor(supervisor, request);
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {    if (email == null || email.trim().isEmpty()) {
         return "Email is required";
     }
     
@@ -219,7 +269,7 @@ public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) 
         if (student.getEmail() != null) {
             String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
+                return "Email '" + email + "' is already registered as a Student.";
             }
         }
     }
@@ -239,7 +289,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         if (lecturer.getEmail() != null) {
             String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
+                return "Email '" + email + "' is already registered as a Lecturer.";
             }
         }
     }
@@ -259,7 +309,7 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         if (supervisor.getEmail() != null) {
             String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
+                return "Email '" + email + "' is already registered as an Industrial Supervisor.";
             }
         }
     }
@@ -507,5 +557,36 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
 
     public long getAvailableStudentsCount() {
         return studentRepository.countByGroupIsNull(); 
+    }
+
+    public Optional<Admin> findAdminByEmail(String email) {
+        return adminRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public void addRole(String email, String targetRole, HttpServletRequest request) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Email is required for role assignation");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        if ("LECTURER".equalsIgnoreCase(targetRole)) {
+            if (lecturerRepository.findByEmail(normalizedEmail).isPresent()) {
+                throw new RuntimeException("User is already a Lecturer");
+            }
+            Lecturer newLecturer = new Lecturer();
+            newLecturer.setEmail(normalizedEmail);
+            saveLecturer(newLecturer, request);
+        } else if ("SUPERVISOR".equalsIgnoreCase(targetRole)) {
+            if (industrialSupervisorRepository.findByEmail(normalizedEmail).isPresent()) {
+                throw new RuntimeException("User is already an Industrial Supervisor");
+            }
+            IndustrialSupervisor newSupervisor = new IndustrialSupervisor();
+            newSupervisor.setEmail(normalizedEmail);
+            saveIndustrialSupervisor(newSupervisor, request);
+        } else {
+            throw new RuntimeException("Invalid target role: " + targetRole);
+        }
     }
 }

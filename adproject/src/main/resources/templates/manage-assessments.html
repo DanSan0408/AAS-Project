@@ -30,28 +30,34 @@
             <div class="card-header">
                 <h2>
                     <i class="fas fa-pen-nib"></i>
-                    <span th:if="${newAssessment.id == null}">Create New Assessment</span>
+                    <span th:if="${newAssessment.id == null}">Create Assessment</span>
                     <span th:if="${newAssessment.id != null}">Edit Assessment</span>
                 </h2>
             </div>
             
-            <form id="assessment-form" th:action="@{/rubrics/assessment/save}" th:object="${newAssessment}" method="post">
-                <input type="hidden" th:field="*{id}" />
-                <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
-                
-                <div class="input-group">
-                    <input type="text" th:field="*{title}" placeholder="Enter assessment title (e.g., Final Year Project)" required>
+            <div class="card-body" style="padding: 20px;">
+                <!-- Regular Create/Edit Form -->
+                <form id="assessment-form" th:action="@{/rubrics/assessment/save}" th:object="${newAssessment}" method="post">
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
                     
-                    <button type="submit" id="saveButton" class="btn btn-primary">
-                        <span th:if="${newAssessment.id == null}"><i class="fas fa-plus"></i> Save Assessment</span>
-                        <span th:if="${newAssessment.id != null}"><i class="fas fa-save"></i> Update Assessment</span>
-                    </button>
-                    
-                    <a th:if="${newAssessment.id != null}" th:href="@{/rubrics/manage}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                </div>
-            </form>
+                    <div class="form-section">
+                        <label th:if="${newAssessment.id == null}">Create Blank Assessment:</label>
+                        <div class="input-group">
+                            <input type="text" th:field="*{title}" placeholder="Enter assessment title (e.g., Final Year Project)" required>
+                            
+                            <button type="submit" id="saveButton" class="btn btn-primary">
+                                <span th:if="${newAssessment.id == null}"><i class="fas fa-plus"></i> Save</span>
+                                <span th:if="${newAssessment.id != null}"><i class="fas fa-save"></i> Update</span>
+                            </button>
+                            
+                            <a th:if="${newAssessment.id != null}" th:href="@{/rubrics/manage}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <div class="card list-card">
@@ -63,18 +69,22 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 10%;">ID</th>
-                            <th style="width: 40%;">Title</th>
+                            <th style="width: 8%;">ID</th>
+                            <th style="width: 35%;">Title</th>
+                            <th style="width: 12%; text-align: center;">Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(assessments)}">
-                            <td colspan="3" style="text-align: center; padding: 20px; font-style: italic;">No assessments created yet.</td>
+                            <td colspan="4" style="text-align: center; padding: 20px; font-style: italic;">No assessments created yet.</td>
                         </tr>
                         <tr th:each="assessment : ${assessments}">
                             <td th:text="${assessment.id}">1</td>
                             <td th:text="${assessment.title}" style="font-weight: 600;">Final Year Project</td>
+                            <td style="text-align: center;">
+                                <span class="badge" style="background-color: #95a5a6; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">REGULAR</span>
+                            </td>
                             <td>
                                 <div class="action-buttons">
                                     <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" 
@@ -85,7 +95,7 @@
                                     
                                     <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" 
                                        class="btn btn-sm btn-add-sub"
-                                       title="Add Rubric">Add Rubric
+                                       title="Add Rubric">
                                         <i class="fas fa-plus"></i>
                                     </a>
 
@@ -93,17 +103,18 @@
                                         <button type="button"
                                                 class="btn btn-sm btn-configure dropdown-toggle"
                                                 th:onclick="'toggleDropdown(' + ${assessment.id} + ')'"
-                                                title="Configure">
-                                            <i class="fas fa-cog"></i> Comments
+                                                title="More Options">
+                                            <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div th:id="'dropdown-' + ${assessment.id}" class="dropdown-menu">
                                             <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="dropdown-item">
                                                 <i class="fas fa-users"></i> Group Comments
                                             </a>
-                                            <div class="dropdown-divider"></div>
                                             <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="dropdown-item">
                                                 <i class="fas fa-user"></i> Individual Comments
                                             </a>
+                                            <div class="dropdown-divider"></div>
+                                            
                                         </div>
                                     </div>
                                     

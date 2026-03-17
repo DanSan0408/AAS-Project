@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Assessment;
@@ -149,6 +150,25 @@ public class RubricController {
         model.addAttribute("groupedRubrics", groupedRubrics); 
         
         return "view-assessment-rubrics";
+    }
+
+    @GetMapping("/assessment/{id}/fill")
+    public String showBulkFillForm(@PathVariable Long id, Model model) {
+        Assessment assessment = rubricService.findAssessmentById(id);
+        model.addAttribute("assessment", assessment);
+        return "bulk-rubric-edit";
+    }
+
+    @PostMapping("/assessment/{id}/fill/save")
+    public String saveBulkFill(@PathVariable Long id, @ModelAttribute Assessment assessment, RedirectAttributes redirectAttributes) {
+        try {
+            rubricService.saveBulkAssessment(assessment);
+            redirectAttributes.addFlashAttribute("successMessage", "Assessment content saved successfully!");
+            return "redirect:/rubrics/view/" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error saving content: " + e.getMessage());
+            return "redirect:/rubrics/assessment/" + id + "/fill";
+        }
     }
 
     @GetMapping("/add/{assessmentId}")
