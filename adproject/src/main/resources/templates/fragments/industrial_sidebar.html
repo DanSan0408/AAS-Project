@@ -26,6 +26,14 @@
                     Evaluate Groups
                 </a>
             </li>
+
+            <li sec:authorize="hasRole('ROLE_ADMIN')">
+                <a th:href="@{/admin/home}" class="switch-role-btn">Switch to Admin</a>
+            </li>
+
+            <li sec:authorize="hasRole('ROLE_LECTURER')">
+                <a th:href="@{/lecturer/home}" class="switch-role-btn">Switch to Lecturer</a>
+            </li>
             
             <li class="logout-item">
                 <form th:action="@{/logout}" method="post">

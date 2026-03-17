@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -32,6 +33,9 @@ public class Rubric {
     private Double cloMarks;
     private String assessmentTypes;
     
+    @Column(name = "assessment_type")
+    private String assessmentType;
+    
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
@@ -46,14 +50,17 @@ public class Rubric {
     private List<Rating> ratings = new ArrayList<>();
 
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_labels", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_label", length = 500)
     private List<String> rubricCommentLabels = new ArrayList<>();
     
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_min_lengths", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_min_length")
     private List<Integer> rubricCommentMinLengths = new ArrayList<>();
     
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_anonymous_flags", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_anonymous")
     private List<Boolean> rubricCommentAnonymousFlags = new ArrayList<>();
 
@@ -125,7 +132,10 @@ public class Rubric {
     
     public String getAssessmentTypes() { return assessmentTypes; }
     public void setAssessmentTypes(String assessmentTypes) { this.assessmentTypes = assessmentTypes; }
-
+    
+    public String getAssessmentType() { return assessmentType; }
+    public void setAssessmentType(String assessmentType) { this.assessmentType = assessmentType; }
+    
     public List<String> getRubricCommentLabels() {
         if (rubricCommentLabels == null) {
             rubricCommentLabels = new ArrayList<>();

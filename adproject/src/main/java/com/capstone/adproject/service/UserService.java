@@ -76,23 +76,40 @@ public Object findUserByResetToken(String token) {
 
     public void updatePassword(Object user, String newPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword);
-        
+        String email = null;
+
         if (user instanceof Admin admin) {
-            admin.setPassword(encodedPassword);
-            admin.setResetPasswordToken(null);
-            adminRepo.save(admin);
+            email = admin.getEmail();
         } else if (user instanceof Student student) {
-            student.setPassword(encodedPassword);
-            student.setResetPasswordToken(null);
-            studentRepo.save(student);
+            email = student.getEmail();
         } else if (user instanceof Lecturer lecturer) {
-            lecturer.setPassword(encodedPassword);
-            lecturer.setResetPasswordToken(null);
-            lecturerRepo.save(lecturer);
+            email = lecturer.getEmail();
         } else if (user instanceof IndustrialSupervisor supervisor) {
-            supervisor.setPassword(encodedPassword);
-            supervisor.setResetPasswordToken(null);
-            supervisorRepo.save(supervisor);
+            email = supervisor.getEmail();
+        }
+
+        if (email != null) {
+            final String finalEmail = email;
+            adminRepo.findByEmail(finalEmail).ifPresent(a -> {
+                a.setPassword(encodedPassword);
+                a.setResetPasswordToken(null);
+                adminRepo.save(a);
+            });
+            studentRepo.findByEmail(finalEmail).ifPresent(s -> {
+                s.setPassword(encodedPassword);
+                s.setResetPasswordToken(null);
+                studentRepo.save(s);
+            });
+            lecturerRepo.findByEmail(finalEmail).ifPresent(l -> {
+                l.setPassword(encodedPassword);
+                l.setResetPasswordToken(null);
+                lecturerRepo.save(l);
+            });
+            supervisorRepo.findByEmail(finalEmail).ifPresent(is -> {
+                is.setPassword(encodedPassword);
+                is.setResetPasswordToken(null);
+                supervisorRepo.save(is);
+            });
         }
     }
 }

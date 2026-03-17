@@ -83,7 +83,7 @@ public class Assessment {
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-    
+
     public List<Rubric> getRubrics() { 
         if (rubrics == null) { 
             rubrics = new ArrayList<>(); 

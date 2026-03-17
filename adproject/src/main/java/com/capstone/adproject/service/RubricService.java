@@ -42,6 +42,61 @@ public class RubricService {
         this.markRepository = markRepository;
     }
 
+    @Transactional
+    public void saveBulkAssessment(Assessment formAssessment) {
+        Assessment existing = findAssessmentById(formAssessment.getId());
+        
+        // Update Overall comments
+        existing.setGroupCommentLabels(formAssessment.getGroupCommentLabels());
+        existing.setIndividualCommentLabels(formAssessment.getIndividualCommentLabels());
+        
+        // Update Rubrics
+        for (int i = 0; i < formAssessment.getRubrics().size(); i++) {
+            Rubric formRubric = formAssessment.getRubrics().get(i);
+            Rubric existingRubric = existing.getRubrics().get(i);
+            
+            existingRubric.setName(formRubric.getName());
+            existingRubric.setDescription(formRubric.getDescription());
+            existingRubric.setMarks(formRubric.getMarks());
+            existingRubric.setClo(formRubric.getClo());
+            existingRubric.setCloMarks(formRubric.getMarks() != null ? formRubric.getMarks().doubleValue() : 0.0);
+            
+            // Update Rubric comments
+            existingRubric.setRubricCommentLabels(formRubric.getRubricCommentLabels());
+            
+            // Update Direct Ratings
+            if (formRubric.getRatings() != null) {
+                for (int j = 0; j < formRubric.getRatings().size(); j++) {
+                    existingRubric.getRatings().get(j).setName(formRubric.getRatings().get(j).getName());
+                    existingRubric.getRatings().get(j).setMarks(formRubric.getRatings().get(j).getMarks());
+                }
+            }
+            
+            // Update Sub-Rubrics
+            if (formRubric.getSubRubrics() != null) {
+                for (int k = 0; k < formRubric.getSubRubrics().size(); k++) {
+                    SubRubric formSub = formRubric.getSubRubrics().get(k);
+                    SubRubric existingSub = existingRubric.getSubRubrics().get(k);
+                    
+                    existingSub.setName(formSub.getName());
+                    existingSub.setDescription(formSub.getDescription());
+                    existingSub.setMarks(formSub.getMarks());
+                    
+                    // Update Sub-Rubric Ratings
+                    if (formSub.getRatings() != null) {
+                        for (int l = 0; l < formSub.getRatings().size(); l++) {
+                            existingSub.getRatings().get(l).setName(formSub.getRatings().get(l).getName());
+                            existingSub.getRatings().get(l).setMarks(formSub.getRatings().get(l).getMarks());
+                        }
+                    }
+                }
+            }
+        }
+        
+        calculateAssessmentMarks(existing);
+        assessmentRepository.save(existing);
+    }
+
     public void calculateAssessmentMarks(Assessment assessment) {
         if (assessment == null) return;
 

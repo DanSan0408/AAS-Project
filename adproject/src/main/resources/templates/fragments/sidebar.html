@@ -13,8 +13,14 @@
         <ul class="menu-list">
             <li><a href="/admin/home">Dashboard</a></li>
             <li><a href="/admin/manage-users">Manage Users</a></li>
-            <li><a href="/rubrics/manage">Manage Rubrics</a></li>
+            <li><a href="/rubrics/manage">Manage Assessments</a></li>
             <li><a href="/admin/data-views">Data Views</a></li>
+            <li sec:authorize="hasRole('ROLE_LECTURER')">
+                <a th:href="@{/lecturer/home}" class="switch-role-btn">Switch to Lecturer</a>
+            </li>
+            <li sec:authorize="hasRole('ROLE_SUPERVISOR')">
+                <a th:href="@{/supervisor/home}" class="switch-role-btn">Switch to Supervisor</a>
+            </li>
             <li>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit">Logout</button>

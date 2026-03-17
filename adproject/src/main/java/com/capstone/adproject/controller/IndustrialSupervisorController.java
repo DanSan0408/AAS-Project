@@ -196,7 +196,7 @@ public class IndustrialSupervisorController {
 
     @GetMapping("/evaluate")
     public String showEvaluateGroups(Model model, Principal principal) {
-        String emailOrUsername = principal.getName(); // ✅ FIXED: Declare variable
+        String emailOrUsername = principal.getName(); 
         Optional<IndustrialSupervisor> supervisorOpt = 
             industrialSupervisorService.findByEmail(emailOrUsername)
                 .or(() -> industrialSupervisorService.findByUsername(emailOrUsername));

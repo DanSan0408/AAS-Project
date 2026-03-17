@@ -1,6 +1,5 @@
 package com.capstone.adproject.service;
 
-import java.util.Collections;
 import java.util.Optional;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -40,79 +39,61 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
-        
+        java.util.List<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
+        String password = null;
+        String email = null;
+
         Optional<Student> student = studentRepository.findByEmail(emailOrUsername);
-        if (student.isPresent()) {
-            return new User(
-                student.get().getEmail(),
-                student.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT"))
-            );
+        if (student.isEmpty()) {
+            student = studentRepository.findByUsername(emailOrUsername);
         }
-        
-        student = studentRepository.findByUsername(emailOrUsername);
         if (student.isPresent()) {
-            return new User(
-                student.get().getEmail() != null ? student.get().getEmail() : student.get().getUsername(),
-                student.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_STUDENT"))
-            );
+            authorities.add(new SimpleGrantedAuthority("ROLE_STUDENT"));
+            password = student.get().getPassword();
+            email = student.get().getEmail() != null ? student.get().getEmail() : student.get().getUsername();
         }
 
         Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
-        if (lecturer.isPresent()) {
-            return new User(
-                lecturer.get().getEmail(),
-                lecturer.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_LECTURER"))
-            );
+        if (lecturer.isEmpty()) {
+            lecturer = lecturerRepository.findByUsername(emailOrUsername);
         }
-        
-        lecturer = lecturerRepository.findByUsername(emailOrUsername);
         if (lecturer.isPresent()) {
-            return new User(
-                lecturer.get().getEmail() != null ? lecturer.get().getEmail() : lecturer.get().getUsername(),
-                lecturer.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_LECTURER"))
-            );
+            authorities.add(new SimpleGrantedAuthority("ROLE_LECTURER"));
+            if (password == null) {
+                password = lecturer.get().getPassword();
+                email = lecturer.get().getEmail() != null ? lecturer.get().getEmail() : lecturer.get().getUsername();
+            }
         }
 
         Optional<IndustrialSupervisor> supervisor = industrialSupervisorRepository.findByEmail(emailOrUsername);
-        if (supervisor.isPresent()) {
-            return new User(
-                supervisor.get().getEmail(),
-                supervisor.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_SUPERVISOR"))
-            );
+        if (supervisor.isEmpty()) {
+            supervisor = industrialSupervisorRepository.findByUsername(emailOrUsername);
         }
-        
-        supervisor = industrialSupervisorRepository.findByUsername(emailOrUsername);
         if (supervisor.isPresent()) {
-            return new User(
-                supervisor.get().getEmail() != null ? supervisor.get().getEmail() : supervisor.get().getUsername(),
-                supervisor.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_SUPERVISOR"))
-            );
+            authorities.add(new SimpleGrantedAuthority("ROLE_SUPERVISOR"));
+            if (password == null) {
+                password = supervisor.get().getPassword();
+                email = supervisor.get().getEmail() != null ? supervisor.get().getEmail() : supervisor.get().getUsername();
+            }
         }
 
         Optional<Admin> admin = adminRepository.findByEmail(emailOrUsername);
-        if (admin.isPresent()) {
-            return new User(
-                admin.get().getEmail(),  
-                admin.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
-            );
+        if (admin.isEmpty()) {
+            admin = adminRepository.findByUsername(emailOrUsername);
         }
-        
-        admin = adminRepository.findByUsername(emailOrUsername);
         if (admin.isPresent()) {
-            return new User(
-                admin.get().getEmail() != null ? admin.get().getEmail() : admin.get().getUsername(),
-                admin.get().getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
-            );
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            if (password == null) {
+                password = admin.get().getPassword();
+                email = admin.get().getEmail() != null ? admin.get().getEmail() : admin.get().getUsername();
+            }
         }
 
-        throw new UsernameNotFoundException("User not found with email/username: " + emailOrUsername);
+        if (password == null) {
+            throw new UsernameNotFoundException("User not found with email/username: " + emailOrUsername);
+        }
+
+        return new User(email, password, authorities);
     }
+
 }

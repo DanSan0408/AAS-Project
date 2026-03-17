@@ -27,6 +27,18 @@
                 </a>
             </li>
             
+            <li sec:authorize="hasRole('ROLE_ADMIN')">
+                <a th:href="@{/admin/home}" class="switch-role-btn">
+                    Switch to Admin
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ROLE_SUPERVISOR')">
+                <a th:href="@{/supervisor/home}" class="switch-role-btn">
+                    Switch to Supervisor
+                </a>
+            </li>
+            
             <li class="logout-item">
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="logout-btn">

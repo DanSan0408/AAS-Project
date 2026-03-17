@@ -137,6 +137,22 @@
     font-weight: 700;
 }
 
+.sidebar .menu-list li a.switch-role-btn {
+    background: linear-gradient(135deg, var(--supervisor-accent) 0%, #E59500 100%);
+    color: var(--supervisor-primary-dark);
+    font-weight: 700;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(248, 166, 23, 0.3);
+}
+
+.sidebar .menu-list li a.switch-role-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(248, 166, 23, 0.4);
+    padding-left: 20px;
+}
+
 .sidebar .menu-list li form {
     margin: 0;
     padding: 0;
