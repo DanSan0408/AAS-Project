@@ -1,4 +1,4 @@
-package com.capstone.adproject.service;
+/*package com.capstone.adproject.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -740,3 +740,5 @@ public class IndustrialSupervisorService {
         return data;
     }
 }
+
+*/

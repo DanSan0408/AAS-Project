@@ -4,13 +4,10 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.capstone.adproject.model.Group;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
-
-    List<Group> findByIndustrialSupervisorId(Long industrialSupervisorId);
     
     List<Group> findByAcademicSupervisorId(Long lecturerId);
     
@@ -20,7 +17,4 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     
     @Query("SELECT DISTINCT g FROM Group g LEFT JOIN FETCH g.students")
     List<Group> findAllWithStudents();
-    
-    @Query("SELECT DISTINCT g FROM Group g LEFT JOIN FETCH g.students WHERE g.industrialSupervisor.id = :supervisorId")
-    List<Group> findByIndustrialSupervisorIdWithStudents(@Param("supervisorId") Long supervisorId);
 }

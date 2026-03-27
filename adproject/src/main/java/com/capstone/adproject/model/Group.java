@@ -29,7 +29,7 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "industrial_supervisor_id")
-    private IndustrialSupervisor industrialSupervisor;
+    private Lecturer industrialSupervisor;
 
     @OneToMany(mappedBy = "group")
     private List<Student> students = new ArrayList<>(); 
@@ -73,11 +73,11 @@ public class Group {
         this.academicSupervisor = academicSupervisor;
     }
 
-    public IndustrialSupervisor getIndustrialSupervisor() {
+    public Lecturer getIndustrialSupervisor() {
         return industrialSupervisor;
     }
 
-    public void setIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
+    public void setIndustrialSupervisor(Lecturer industrialSupervisor) {
         this.industrialSupervisor = industrialSupervisor;
     }
 

@@ -1,5 +1,6 @@
 package com.capstone.adproject.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,8 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     Optional<Lecturer> findByEmail(String email);
 
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
+
+    List<Lecturer> findByEmailContainingIgnoreCase(String email);
 
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")

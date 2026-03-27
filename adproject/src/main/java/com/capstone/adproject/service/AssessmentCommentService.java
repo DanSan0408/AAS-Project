@@ -269,40 +269,8 @@ public class AssessmentCommentService {
         return commentRepository.save(comment);
     }
     
-    @Transactional
-    public AssessmentComment submitSupervisorComment(Long supervisorId, String supervisorName,
-                                                       Student evaluatedStudent, Assessment assessment,
-                                                       String commentText, String rubricType) {
-        
-        List<AssessmentComment> existing = commentRepository.findByEvaluatorAndStudentAndAssessment(
-                supervisorId,
-                AssessmentComment.EvaluatorType.SUPERVISOR,
-                evaluatedStudent,
-                assessment).stream()
-                .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-                .filter(c -> c.getRubricId() == null) 
-                .collect(Collectors.toList());
-        
-        AssessmentComment comment;
-        if (!existing.isEmpty()) {
-            comment = existing.get(0);
-            comment.setCommentText(commentText);
-        } else {
-            comment = new AssessmentComment();
-            comment.setEvaluatorId(supervisorId);
-            comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
-            comment.setEvaluatorName(supervisorName);
-            comment.setEvaluatedStudent(evaluatedStudent);
-            comment.setAssessment(assessment);
-            comment.setCommentText(commentText);
-            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
-            comment.setCommentIndex(0);
-            comment.setRubricAssessmentType(rubricType);
-            comment.setAnonymousIdentifier(supervisorName); 
-        }
-        
-        return commentRepository.save(comment);
-    }
+    // Supervisor comments are now handled as lecturer comments since industrial supervisors are removed
+    // Use submitLecturerComment method instead for supervisor comments
     
     public Map<String, Object> getCompiledCommentsForStudent(Student student) {
     List<AssessmentComment> allComments = commentRepository
@@ -317,7 +285,6 @@ public class AssessmentCommentService {
     
     int studentRubricComments = 0;
     int lecturerRubricComments = 0;
-    int supervisorRubricComments = 0;
     
     for (AssessmentComment c : allComments) {
         if (c.getRubricId() != null) {
@@ -330,8 +297,6 @@ public class AssessmentCommentService {
                 studentRubricComments++;
             } else if (c.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
                 lecturerRubricComments++;
-            } else if (c.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
-                supervisorRubricComments++;
             }
         } else {
             generalComments++;
@@ -342,7 +307,6 @@ public class AssessmentCommentService {
     System.out.println("Rubric-specific comments: " + rubricComments);
     System.out.println("  - Student rubric comments: " + studentRubricComments);
     System.out.println("  - Lecturer rubric comments: " + lecturerRubricComments);
-    System.out.println("  - Supervisor rubric comments: " + supervisorRubricComments);
     System.out.println("=========================================");
     
     for (AssessmentComment comment : allComments) {
@@ -375,8 +339,6 @@ public class AssessmentCommentService {
             }
         } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
             category = "lecturer";
-        } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
-            category = "supervisor";
         } else {
             category = "other";
         }
@@ -418,8 +380,7 @@ private String determineDisplayName(AssessmentComment comment) {
         }
         return comment.getAnonymousIdentifier() != null ? comment.getAnonymousIdentifier() : "Teammate";
         
-    } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER || 
-               comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
+    } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
         
         String anonymousId = comment.getAnonymousIdentifier();
         String evaluatorName = comment.getEvaluatorName();
@@ -427,7 +388,7 @@ private String determineDisplayName(AssessmentComment comment) {
         System.out.println("  -> Checking anonymity: anonymousId='" + anonymousId + 
                          "', evaluatorName='" + evaluatorName + "'");
         
-        if ("Lecturer".equals(anonymousId) || "Supervisor".equals(anonymousId)) {
+        if ("Lecturer".equals(anonymousId)) {
             System.out.println("  -> Anonymous comment detected, using: " + anonymousId);
             return anonymousId;
         }
@@ -448,19 +409,14 @@ private String determineDisplayName(AssessmentComment comment) {
                                      ", commentIndex=" + commentIndex + ", isAnonymous=" + isAnonymous);
                     
                     if (isAnonymous != null && isAnonymous) {
-                        
-                        if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
-                            return "Lecturer";
-                        } else {
-                            return "Supervisor";
-                        }
+                        return "Lecturer";
                     }
                 }
             }
         }
         
         System.out.println("  -> Non-anonymous comment, using: " + evaluatorName);
-        return evaluatorName != null ? evaluatorName : "Evaluator";
+        return evaluatorName != null ? evaluatorName : "Lecturer";
     }
     
     return comment.getEvaluatorName() != null ? comment.getEvaluatorName() : "Evaluator";

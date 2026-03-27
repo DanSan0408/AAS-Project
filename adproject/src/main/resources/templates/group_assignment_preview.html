@@ -26,7 +26,7 @@
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
                     <a href="/admin/manage-lecturers">Lecturers</a>
-                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
                 
@@ -71,10 +71,10 @@
                                     
                                     <td>
                                         <select name="industrialSupervisorId" required>
-                                            <option value="">-- Select Supervisor --</option>
-                                            <option th:each="supervisor : ${availableSupervisors}"
-                                                    th:value="${supervisor.id}"
-                                                    th:text="${supervisor.email}"></option>
+                                            <option value="">-- Select Lecturer --</option>
+                                            <option th:each="lecturer : ${availableLecturers}"
+                                                    th:value="${lecturer.id}"
+                                                    th:text="${lecturer.email}"></option>
                                         </select>
                                     </td>
                                 </tr>

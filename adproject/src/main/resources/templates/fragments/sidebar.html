@@ -15,11 +15,14 @@
             <li><a href="/admin/manage-users">Manage Users</a></li>
             <li><a href="/rubrics/manage">Manage Assessments</a></li>
             <li><a href="/admin/data-views">Data Views</a></li>
+            <li class="nav-item">
+            <a class="nav-link" th:href="@{/admin/comments/view/assessments}">
+                <i class="fas fa-comments"></i>
+                <span>View Comments</span>
+            </a>
+        </li>
             <li sec:authorize="hasRole('ROLE_LECTURER')">
                 <a th:href="@{/lecturer/home}" class="switch-role-btn">Switch to Lecturer</a>
-            </li>
-            <li sec:authorize="hasRole('ROLE_SUPERVISOR')">
-                <a th:href="@{/supervisor/home}" class="switch-role-btn">Switch to Supervisor</a>
             </li>
             <li>
                 <form th:action="@{/logout}" method="post">

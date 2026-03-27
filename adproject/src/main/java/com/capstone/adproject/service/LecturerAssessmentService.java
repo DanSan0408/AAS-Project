@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -23,7 +24,9 @@ import com.capstone.adproject.model.SubRubric;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
 import com.capstone.adproject.repositories.RubricRepository;
@@ -42,6 +45,8 @@ public class LecturerAssessmentService {
     private final AssessmentCommentRepository assessmentCommentRepository;
     private final LecturerRepository lecturerRepository;
     private final RubricRepository rubricRepository;
+    private final LecturerGroupAssignmentRepository groupAssignmentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
 
     public LecturerAssessmentService(
             MarkRepository markRepository,
@@ -52,7 +57,9 @@ public class LecturerAssessmentService {
             RatingRepository ratingRepository,
             AssessmentCommentRepository assessmentCommentRepository,
             LecturerRepository lecturerRepository,
-            RubricRepository rubricRepository) {
+            RubricRepository rubricRepository,
+            LecturerGroupAssignmentRepository groupAssignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository) {
         this.markRepository = markRepository;
         this.assessmentRepository = assessmentRepository;
         this.groupRepository = groupRepository;
@@ -62,6 +69,8 @@ public class LecturerAssessmentService {
         this.assessmentCommentRepository = assessmentCommentRepository;
         this.lecturerRepository = lecturerRepository;
         this.rubricRepository = rubricRepository;
+        this.groupAssignmentRepository = groupAssignmentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
     }
 
     public List<Assessment> getAssessmentsForLecturerEvaluation() {
@@ -129,14 +138,23 @@ public class LecturerAssessmentService {
             return false;
         }
         
+        Group group = groupRepository.findById(groupId).orElse(null);
+        boolean isAssignedToGroup = groupAssignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer);
+        
+        Set<Long> allowedRubricIds = rubricAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment).stream()
+            .map(a -> a.getRubric().getId())
+            .collect(Collectors.toSet());
+        
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
         
         List<Rubric> individualRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
         
         Student sampleStudent = groupMembers.get(0);
