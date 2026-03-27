@@ -27,7 +27,7 @@
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
                     <a href="/admin/manage-lecturers" class="active">Lecturers</a>
-                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment">Group Assignment</a>
                 </div>
                 
@@ -121,10 +121,6 @@
                                     <td>
                                         <div class="table-actions">
                                             <a th:href="@{/admin/edit-lecturer/{id}(id=${lecturer.id})}" class="action-button">Update</a>
-                                            <button type="button" class="action-button promote" 
-                                                    th:onclick="assignRole([[${lecturer.email}]], 'SUPERVISOR')">
-                                                Add Supervisor Role
-                                            </button>
                                             <a th:href="@{/admin/delete-lecturer/{id}(id=${lecturer.id})}" 
                                             class="action-button delete"
                                             onclick="return confirm('Are you sure you want to delete this lecturer? This action cannot be undone.');">

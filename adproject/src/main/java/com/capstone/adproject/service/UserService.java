@@ -6,11 +6,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.model.Admin;
-import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AdminRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
@@ -20,14 +18,12 @@ public class UserService {
     private final AdminRepository adminRepo;
     private final StudentRepository studentRepo;
     private final LecturerRepository lecturerRepo;
-    private final IndustrialSupervisorRepository supervisorRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, IndustrialSupervisorRepository supervisorRepo, PasswordEncoder passwordEncoder) {
+    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, PasswordEncoder passwordEncoder) {
         this.adminRepo = adminRepo;
         this.studentRepo = studentRepo;
         this.lecturerRepo = lecturerRepo;
-        this.supervisorRepo = supervisorRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -38,9 +34,7 @@ public class UserService {
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByEmail(email)
                 .map(u -> (Object)u)
-                .orElseGet(() -> supervisorRepo.findByEmail(email)
-                    .map(u -> (Object)u)
-                    .orElse(null))));
+                .orElse(null)));
 }
 
 public Object findUserByResetToken(String token) {
@@ -50,9 +44,7 @@ public Object findUserByResetToken(String token) {
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByResetPasswordToken(token)
                 .map(u -> (Object)u)
-                .orElseGet(() -> supervisorRepo.findByResetPasswordToken(token)
-                    .map(u -> (Object)u)
-                    .orElse(null))));
+                .orElse(null)));
 }
 
     public String generateResetToken(Object user) {
@@ -67,9 +59,6 @@ public Object findUserByResetToken(String token) {
         } else if (user instanceof Lecturer lecturer) {
             lecturer.setResetPasswordToken(token);
             lecturerRepo.save(lecturer);
-        } else if (user instanceof IndustrialSupervisor supervisor) {
-            supervisor.setResetPasswordToken(token);
-            supervisorRepo.save(supervisor);
         }
         return token;
     }
@@ -84,8 +73,6 @@ public Object findUserByResetToken(String token) {
             email = student.getEmail();
         } else if (user instanceof Lecturer lecturer) {
             email = lecturer.getEmail();
-        } else if (user instanceof IndustrialSupervisor supervisor) {
-            email = supervisor.getEmail();
         }
 
         if (email != null) {
@@ -104,11 +91,6 @@ public Object findUserByResetToken(String token) {
                 l.setPassword(encodedPassword);
                 l.setResetPasswordToken(null);
                 lecturerRepo.save(l);
-            });
-            supervisorRepo.findByEmail(finalEmail).ifPresent(is -> {
-                is.setPassword(encodedPassword);
-                is.setResetPasswordToken(null);
-                supervisorRepo.save(is);
             });
         }
     }

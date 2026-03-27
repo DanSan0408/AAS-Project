@@ -85,7 +85,7 @@ public class RubricController {
     }
 
     @PostMapping("/assessment/delete/{id}")
-    public String deleteAssessment(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    public String deleteAssessment(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             rubricService.deleteAssessment(id);
             redirectAttributes.addFlashAttribute("successMessage", "Assessment deleted successfully.");
@@ -97,7 +97,7 @@ public class RubricController {
 
     @GetMapping("/view/{assessmentId}")
     @Transactional
-    public String viewAssessmentRubrics(@PathVariable Long assessmentId, Model model) {
+    public String viewAssessmentRubrics(@PathVariable("assessmentId") Long assessmentId, Model model) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId); 
 
         rubricService.initializeRubricOrders(assessmentId);
@@ -153,14 +153,14 @@ public class RubricController {
     }
 
     @GetMapping("/assessment/{id}/fill")
-    public String showBulkFillForm(@PathVariable Long id, Model model) {
+    public String showBulkFillForm(@PathVariable("id") Long id, Model model) {
         Assessment assessment = rubricService.findAssessmentById(id);
         model.addAttribute("assessment", assessment);
         return "bulk-rubric-edit";
     }
 
     @PostMapping("/assessment/{id}/fill/save")
-    public String saveBulkFill(@PathVariable Long id, @ModelAttribute Assessment assessment, RedirectAttributes redirectAttributes) {
+    public String saveBulkFill(@PathVariable("id") Long id, @ModelAttribute Assessment assessment, RedirectAttributes redirectAttributes) {
         try {
             rubricService.saveBulkAssessment(assessment);
             redirectAttributes.addFlashAttribute("successMessage", "Assessment content saved successfully!");
@@ -172,7 +172,7 @@ public class RubricController {
     }
 
     @GetMapping("/add/{assessmentId}")
-    public String showAddRubricForm(@PathVariable Long assessmentId, Model model) {
+    public String showAddRubricForm(@PathVariable("assessmentId") Long assessmentId, Model model) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         Rubric rubric = new Rubric();
         rubric.setAssessment(assessment);
@@ -191,7 +191,7 @@ public class RubricController {
 
     @GetMapping("/edit/{rubricId}")
     @Transactional
-    public String showEditRubricForm(@PathVariable Long rubricId, Model model) {
+    public String showEditRubricForm(@PathVariable("rubricId") Long rubricId, Model model) {
         if (!model.containsAttribute("rubric")) {
             Rubric rubric = rubricService.findRubricById(rubricId);
             
@@ -297,7 +297,7 @@ public class RubricController {
     }
     
     @PostMapping("/delete/{rubricId}")
-    public String deleteRubric(@PathVariable Long rubricId, RedirectAttributes redirectAttributes) {
+    public String deleteRubric(@PathVariable("rubricId") Long rubricId, RedirectAttributes redirectAttributes) {
         Long assessmentId = rubricService.findRubricById(rubricId).getAssessment().getId();
         try {
             rubricService.deleteRubric(rubricId);
@@ -309,7 +309,7 @@ public class RubricController {
     }
 
     @GetMapping("/assessment/edit/{id}")
-    public String showEditAssessmentForm(@PathVariable Long id, Model model) {
+    public String showEditAssessmentForm(@PathVariable("id") Long id, Model model) {
         Assessment assessment = rubricService.findAssessmentById(id);
         model.addAttribute("newAssessment", assessment);
         model.addAttribute("assessments", rubricService.findAllAssessments());
@@ -317,9 +317,9 @@ public class RubricController {
     }
     
     @PostMapping("/assessment/{assessmentId}/move-block")
-    public String moveAssessmentBlock(@PathVariable Long assessmentId,
-                                       @RequestParam String blockType,
-                                       @RequestParam String direction,
+    public String moveAssessmentBlock(@PathVariable("assessmentId") Long assessmentId,
+                                       @RequestParam("blockType") String blockType,
+                                       @RequestParam("direction") String direction,
                                        RedirectAttributes redirectAttributes) {
         try {
             rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
@@ -333,8 +333,8 @@ public class RubricController {
     }
 
     @PostMapping("/rubric/{rubricId}/move")
-    public String moveRubric(@PathVariable Long rubricId,
-                              @RequestParam String direction,
+    public String moveRubric(@PathVariable("rubricId") Long rubricId,
+                              @RequestParam("direction") String direction,
                               RedirectAttributes redirectAttributes) {
         try {
             Rubric rubric = rubricService.findRubricById(rubricId);

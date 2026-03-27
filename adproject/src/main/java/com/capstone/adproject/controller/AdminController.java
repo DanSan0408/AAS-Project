@@ -13,8 +13,10 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -26,23 +28,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.dto.AssessmentAssignmentDto;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.dto.RandomizationInputDto;
-import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
-import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.LecturerGroupAssignment;
+import com.capstone.adproject.model.LecturerRubricAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CustomUserDetailsService;
@@ -50,9 +53,6 @@ import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.RubricService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 
 @Controller
 @RequestMapping("/admin")
@@ -66,6 +66,7 @@ public class AdminController {
     private final GroupRepository groupRepository;
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
 
     //constructor
     public AdminController(
@@ -76,6 +77,7 @@ public class AdminController {
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
             CustomUserDetailsService userDetailsService) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
@@ -84,6 +86,7 @@ public class AdminController {
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.userDetailsService = userDetailsService;
     }
 
@@ -104,15 +107,6 @@ public class AdminController {
         return "Admin";
     }
 
-    private Admin getLoggedInAdmin() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            String email = authentication.getName();
-            return adminService.findAdminByEmail(email).orElse(null);
-        }
-        return null;
-    }
-
     private void refreshAuthentication(String email) {
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
@@ -130,8 +124,8 @@ public class AdminController {
 
     @PostMapping("/assign-role")
     public String assignRole(
-            @RequestParam String email,
-            @RequestParam String targetRole,
+            @RequestParam("email") String email,
+            @RequestParam("targetRole") String targetRole,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
         System.out.println("DEBUG: assignRole called for email: " + email + ", role: " + targetRole);
@@ -208,7 +202,7 @@ public class AdminController {
     @GetMapping("/lecturer-assignments/{assessmentId}")
     @Transactional
     public String showLecturerAssignmentPage(
-            @PathVariable Long assessmentId,
+            @PathVariable("assessmentId") Long assessmentId,
             Model model,
             RedirectAttributes redirectAttributes) {
         
@@ -238,11 +232,36 @@ public class AdminController {
             groupLecturerMap.put(group.getId(), assignedLecturers);
         }
         
+        //fetch rubric assignments
+        List<LecturerRubricAssignment> existingRubricAssignments = 
+            rubricAssignmentRepository.findByAssessment(assessment);
+            
+        Map<Long, List<Lecturer>> rubricLecturerMap = new java.util.HashMap<>();
+        if (assessment.getRubrics() != null) {
+            for (Rubric rubric : assessment.getRubrics()) {
+                List<Lecturer> assignedLecturers = existingRubricAssignments.stream()
+                    .filter(a -> a.getRubric().getId().equals(rubric.getId()))
+                    .map(LecturerRubricAssignment::getLecturer)
+                    .collect(Collectors.toList());
+                rubricLecturerMap.put(rubric.getId(), assignedLecturers);
+            }
+        }
+        
+        String assignmentMode = "GROUP";
+        if (!existingRubricAssignments.isEmpty()) {
+            assignmentMode = "RUBRIC";
+            groupLecturerMap.clear(); // Enforce mutual exclusivity in the view
+        } else {
+            rubricLecturerMap.clear(); // Enforce mutual exclusivity in the view
+        }
+        model.addAttribute("assignmentMode", assignmentMode);
+        
         //gabung all data to the model
         model.addAttribute("assessment", assessment);
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("allLecturers", allLecturers);
         model.addAttribute("groupLecturerMap", groupLecturerMap);
+        model.addAttribute("rubricLecturerMap", rubricLecturerMap);
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "admin_assign_lecturers";
@@ -252,7 +271,7 @@ public class AdminController {
     @PostMapping("/lecturer-assignments/{assessmentId}/save")
     @Transactional
     public String saveLecturerAssignments(
-            @PathVariable Long assessmentId,
+            @PathVariable("assessmentId") Long assessmentId,
             @RequestParam Map<String, String> allParams,
             RedirectAttributes redirectAttributes) {
         
@@ -267,49 +286,95 @@ public class AdminController {
             assignmentRepository.deleteByAssessment(assessment);
             assignmentRepository.flush();
             
+            // Delete old rubric assignment existing untuk assessment
+            rubricAssignmentRepository.deleteByAssessment(assessment);
+            rubricAssignmentRepository.flush();
+            
             // Temporary map to figure out which lecturers belong to which groups based on the form data.
             Map<Long, List<Long>> groupLecturerAssignments = new java.util.HashMap<>();
+            Map<Long, List<Long>> rubricLecturerAssignments = new java.util.HashMap<>();
+            
+            String assignmentMode = allParams.getOrDefault("assignmentMode", "GROUP");
             
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
                 
-                if (key.startsWith("group_") && key.contains("_lecturer_")) {
+                if ("GROUP".equals(assignmentMode) && key.startsWith("group_") && key.contains("_lecturer_")) {
                     if (value == null || value.trim().isEmpty() || value.equals("none")) {
                         continue; // Skip empty assignments
                     }
                     
                     String[] parts = key.split("_");
-                    Long groupId = Long.parseLong(parts[1]);
-                    Long lecturerId = Long.parseLong(value);
+                    Long groupId = Long.valueOf(parts[1]);
+                    Long lecturerId = Long.valueOf(value);
                     
                     groupLecturerAssignments
                         .computeIfAbsent(groupId, k -> new ArrayList<>())
                         .add(lecturerId);
                 }
-            }
-
-            List<LecturerGroupAssignment> assignments = new ArrayList<>();
-            for (Map.Entry<Long, List<Long>> entry : groupLecturerAssignments.entrySet()) {
-                Long groupId = entry.getKey();
-                Group group = groupRepository.findById(groupId)
-                    .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
-                
-                for (Long lecturerId : entry.getValue()) {
-                    Lecturer lecturer = lecturerRepository.findById(lecturerId)
-                        .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
-                    
-                    if (!assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer)) {
-                        LecturerGroupAssignment assignment = new LecturerGroupAssignment();
-                        assignment.setAssessment(assessment);
-                        assignment.setGroup(group);
-                        assignment.setLecturer(lecturer);
-                        assignments.add(assignment);
+                else if ("RUBRIC".equals(assignmentMode) && key.startsWith("rubric_") && key.contains("_lecturer_")) {
+                    if (value == null || value.trim().isEmpty() || value.equals("none")) {
+                        continue; // Skip empty assignments
                     }
+                    
+                    String[] parts = key.split("_");
+                    Long rubricId = Long.valueOf(parts[1]);
+                    Long lecturerId = Long.valueOf(value);
+                    
+                    rubricLecturerAssignments
+                        .computeIfAbsent(rubricId, k -> new ArrayList<>())
+                        .add(lecturerId);
                 }
             }
+
+            if ("GROUP".equals(assignmentMode)) {
+                List<LecturerGroupAssignment> assignments = new ArrayList<>();
+                for (Map.Entry<Long, List<Long>> entry : groupLecturerAssignments.entrySet()) {
+                    Long groupId = entry.getKey();
+                    Group group = groupRepository.findById(groupId)
+                        .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+                    
+                    for (Long lecturerId : entry.getValue()) {
+                        Lecturer lecturer = lecturerRepository.findById(lecturerId)
+                            .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                        
+                        if (!assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer)) {
+                            LecturerGroupAssignment assignment = new LecturerGroupAssignment();
+                            assignment.setAssessment(assessment);
+                            assignment.setGroup(group);
+                            assignment.setLecturer(lecturer);
+                            assignments.add(assignment);
+                        }
+                    }
+                }
+                
+                assignmentRepository.saveAll(assignments);
+            }
             
-            assignmentRepository.saveAll(assignments);
+            if ("RUBRIC".equals(assignmentMode)) {
+                List<LecturerRubricAssignment> rubricAssignments = new ArrayList<>();
+                for (Map.Entry<Long, List<Long>> entry : rubricLecturerAssignments.entrySet()) {
+                    Long rubricId = entry.getKey();
+                    Rubric rubric = assessment.getRubrics().stream()
+                        .filter(r -> r.getId().equals(rubricId))
+                        .findFirst()
+                        .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                    
+                    for (Long lecturerId : entry.getValue()) {
+                        Lecturer lecturer = lecturerRepository.findById(lecturerId)
+                            .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                        
+                        LecturerRubricAssignment assignment = new LecturerRubricAssignment();
+                        assignment.setAssessment(assessment);
+                        assignment.setRubric(rubric);
+                        assignment.setLecturer(lecturer);
+                        rubricAssignments.add(assignment);
+                    }
+                }
+                
+                rubricAssignmentRepository.saveAll(rubricAssignments);
+            }
             
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Lecturer assignments saved successfully for " + assessment.getTitle() + "!");
@@ -332,7 +397,6 @@ public class AdminController {
         model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
         model.addAttribute("availableStudents", unassignedStudents); 
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
-        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
         model.addAttribute("allGroups", adminService.getAllGroups());
         model.addAttribute("allStudents", adminService.getAllStudents());
         
@@ -352,7 +416,7 @@ public class AdminController {
     }
     
     @GetMapping("/group/edit/{groupId}")
-    public String editGroupPage(@PathVariable Long groupId, Model model, RedirectAttributes redirectAttributes) {
+    public String editGroupPage(@PathVariable("groupId") Long groupId, Model model, RedirectAttributes redirectAttributes) {
         Optional<Group> groupOpt = adminService.findGroupById(groupId);
         if (groupOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Group not found.");
@@ -376,14 +440,13 @@ public class AdminController {
         model.addAttribute("studentsInGroup", adminService.getStudentsByGroup(group));
         model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup());
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
-        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "edit_group";
     }
 
     @PostMapping("/group/edit/{groupId}")
-    public String updateGroup(@PathVariable Long groupId, 
+    public String updateGroup(@PathVariable("groupId") Long groupId, 
                             @ModelAttribute GroupAssignmentDto dto,
                             RedirectAttributes redirectAttributes) {
         
@@ -398,7 +461,7 @@ public class AdminController {
     }
     
     @GetMapping("/group/remove-student/{studentId}")
-    public String removeStudentFromGroup(@PathVariable Long studentId, RedirectAttributes redirectAttributes) {
+    public String removeStudentFromGroup(@PathVariable("studentId") Long studentId, RedirectAttributes redirectAttributes) {
         
         Long groupId = adminService.findStudentById(studentId)
                                        .map(Student::getGroup)
@@ -417,7 +480,7 @@ public class AdminController {
     }
     
     @PostMapping("/group/delete/{groupId}")
-    public String deleteGroup(@PathVariable Long groupId, RedirectAttributes redirectAttributes) {
+    public String deleteGroup(@PathVariable("groupId") Long groupId, RedirectAttributes redirectAttributes) {
         try {
             adminService.deleteGroupById(groupId); 
             redirectAttributes.addFlashAttribute("success", "Group ID " + groupId + " and all associated student assignments cleared successfully!");
@@ -536,58 +599,9 @@ public String saveLecturer(
 }
 
 
-   @GetMapping("/manage-supervisors")
-public String manageSupervisors(Model model, @ModelAttribute("industrialSupervisor") IndustrialSupervisor industrialSupervisor) {
-    model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
-
-    if (industrialSupervisor == null || industrialSupervisor.getId() == null && 
-        (industrialSupervisor.getEmail() == null || industrialSupervisor.getEmail().isEmpty())) {
-        model.addAttribute("industrialSupervisor", new IndustrialSupervisor());
-    } else {
-        model.addAttribute("industrialSupervisor", industrialSupervisor);
-    }
-    
-    model.addAttribute("adminUsername", getLoggedInUsername());
-    return "manage_supervisors";
-}
-    @PostMapping("/manage-supervisors")
-public String saveIndustrialSupervisor(
-        @ModelAttribute IndustrialSupervisor industrialSupervisor,
-        @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
-        RedirectAttributes redirectAttributes,
-        HttpServletRequest request) {
-    try {
-        boolean isUpdate = (industrialSupervisor.getId() != null);
-        
-        if (!confirmDuplicate) {
-            String duplicateMessage = adminService.checkSupervisorEmailDuplicate(
-                industrialSupervisor.getEmail(),
-                industrialSupervisor.getId()
-            );
-            
-            if (duplicateMessage != null) {
-                redirectAttributes.addFlashAttribute("industrialSupervisor", industrialSupervisor);
-                redirectAttributes.addFlashAttribute("duplicateWarning", duplicateMessage);
-                redirectAttributes.addFlashAttribute("isDuplicate", true);
-                return "redirect:/admin/manage-supervisors";
-            }
-        }
-        
-        adminService.saveIndustrialSupervisor(industrialSupervisor, request);
-        
-        if (isUpdate) {
-            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor updated successfully!");
-        } else {
-            redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor created successfully! Welcome email sent.");
-        }
-    } catch (DataIntegrityViolationException e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
-    }
-    return "redirect:/admin/manage-supervisors";
-}
 
     @GetMapping("/delete-student/{id}")
-public String deleteStudent(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
     try {
         adminService.deleteStudentById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Student deleted successfully!");
@@ -598,7 +612,7 @@ public String deleteStudent(@PathVariable Long id, RedirectAttributes redirectAt
 }
 
 @GetMapping("/delete-lecturer/{id}")
-public String deleteLecturer(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
     try {
         adminService.deleteLecturerById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Lecturer deleted successfully!");
@@ -608,19 +622,9 @@ public String deleteLecturer(@PathVariable Long id, RedirectAttributes redirectA
     return "redirect:/admin/manage-lecturers";
 }
 
-@GetMapping("/delete-supervisor/{id}")
-public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-    try {
-        adminService.deleteIndustrialSupervisorById(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Industrial Supervisor deleted successfully!");
-    } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("errorMessage", "Error deleting supervisor: " + e.getMessage());
-    }
-    return "redirect:/admin/manage-supervisors";
-}
 
     @GetMapping("/edit-student/{id}")
-    public String editStudent(@PathVariable Long id, Model model) {
+    public String editStudent(@PathVariable("id") Long id, Model model) {
         adminService.findStudentById(id).ifPresent(student -> {
             model.addAttribute("student", student);
         });
@@ -630,7 +634,7 @@ public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttribut
     }
 
     @GetMapping("/edit-lecturer/{id}")
-    public String editLecturer(@PathVariable Long id, Model model) {
+    public String editLecturer(@PathVariable("id") Long id, Model model) {
         adminService.findLecturerById(id).ifPresent(lecturer -> {
             model.addAttribute("lecturer", lecturer);
         });
@@ -639,15 +643,6 @@ public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttribut
         return "manage_lecturers";
     }
 
-    @GetMapping("/edit-supervisor/{id}")
-    public String editIndustrialSupervisor(@PathVariable Long id, Model model) {
-        adminService.findIndustrialSupervisorById(id).ifPresent(supervisor -> {
-            model.addAttribute("industrialSupervisor", supervisor);
-        });
-        model.addAttribute("supervisors", adminService.getAllIndustrialSupervisors());
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        return "manage_supervisors";
-    }
 
     @GetMapping("/group-assignment/randomize")
     public String showRandomizeForm(Model model) {
@@ -708,7 +703,6 @@ public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttribut
         model.addAttribute("studentLookupMap", studentLookupMap); 
         model.addAttribute("availableStudentsForAdd", unassignedStudents); 
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
-        model.addAttribute("availableSupervisors", adminService.getAllIndustrialSupervisors());
         
         return "group_assignment_preview"; 
     }
@@ -730,7 +724,7 @@ public String deleteIndustrialSupervisor(@PathVariable Long id, RedirectAttribut
     }
 
     @GetMapping("/assessment/assign/{assessmentId}")
-    public String showAssessmentAssignationForm(@PathVariable Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
+    public String showAssessmentAssignationForm(@PathVariable("assessmentId") Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
         
         Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(assessmentId);
         
@@ -840,32 +834,6 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
         return "redirect:/admin/manage-lecturers";
     }
 
-    @PostMapping("/bulk-delete-supervisors")
-    public String bulkDeleteSupervisors(@RequestParam(name = "ids", required = false) List<Long> ids, RedirectAttributes redirectAttributes) {
-        if (ids == null || ids.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "No supervisors selected for deletion.");
-            return "redirect:/admin/manage-supervisors";
-        }
-
-        try {
-            adminService.deleteIndustrialSupervisorsByIds(ids);
-            redirectAttributes.addFlashAttribute("successMessage", "Selected supervisors deleted successfully.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting supervisors: " + e.getMessage());
-        }
-        return "redirect:/admin/manage-supervisors";
-    }
-
-    @PostMapping("/bulk-add-students")
-    public String bulkAddStudents(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        try {
-            int count = adminService.bulkAddStudents(emailsText, request);
-            redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
-        }
-        return "redirect:/admin/manage-students";
-    }
 
     @PostMapping("/bulk-add-lecturers")
     public String bulkAddLecturers(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
@@ -878,14 +846,10 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
         return "redirect:/admin/manage-lecturers";
     }
 
-    @PostMapping("/bulk-add-supervisors")
-    public String bulkAddSupervisors(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        try {
-            int count = adminService.bulkAddSupervisors(emailsText, request);
-            redirectAttributes.addFlashAttribute("successMessage", count + " supervisors successfully added!");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
-        }
-        return "redirect:/admin/manage-supervisors";
+    @GetMapping("/search-lecturers")
+    @ResponseBody
+    public List<Lecturer> searchLecturers(@RequestParam("query") String query) {
+        return adminService.searchLecturers(query);
     }
+
 }

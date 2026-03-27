@@ -40,8 +40,8 @@ public class CommentConfigController {
 
     @GetMapping("/{assessmentId}/{type}")
     public String showTypeSpecificConfig(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
             Model model,
             RedirectAttributes redirectAttributes) {
         
@@ -72,9 +72,9 @@ public class CommentConfigController {
 
     @GetMapping("/{assessmentId}/{type}/edit/{index}")
     public String showEditSingleComment(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
-            @PathVariable int index,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
+            @PathVariable("index") int index,
             Model model,
             RedirectAttributes redirectAttributes) {
         
@@ -120,11 +120,11 @@ public class CommentConfigController {
 
     @PostMapping("/{assessmentId}/{type}/edit/{index}/save")
     public String saveSingleCommentEdit(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
-            @PathVariable int index,
-            @RequestParam String label,
-            @RequestParam Integer minLength,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
+            @PathVariable("index") int index,
+            @RequestParam("label") String label,
+            @RequestParam("minLength") Integer minLength,
             @RequestParam(value = "isAnonymous", defaultValue = "false") Boolean isAnonymous,
             RedirectAttributes redirectAttributes) {
         
@@ -183,9 +183,9 @@ public class CommentConfigController {
 
     @PostMapping("/{assessmentId}/delete-comment")
     public String deleteComment(
-            @PathVariable Long assessmentId,
-            @RequestParam String type,
-            @RequestParam int index,
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("type") String type,
+            @RequestParam("index") int index,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -237,8 +237,8 @@ public class CommentConfigController {
     
     @PostMapping("/{assessmentId}/{type}/save")
     public String saveTypeSpecificConfig(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
             @RequestParam(value = "commentLabels", required = false) List<String> commentLabels,
             @RequestParam(value = "commentMinLengths", required = false) List<Integer> commentMinLengths,
             @RequestParam(value = "commentAnonymous", required = false) List<String> commentAnonymousFlags,

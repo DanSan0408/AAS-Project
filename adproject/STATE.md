@@ -6,6 +6,75 @@
 **Technology Stack**: Spring Boot 3.5.4, Java 17, MySQL, Thymeleaf  
 **Package Structure**: `com.capstone.adproject`
 
+## Current Status: Industrial Supervisor Subsystem Removal
+**Status**: IN PROGRESS - Entity consolidation completed, cleanup needed
+
+### Changes Made:
+1. **Industrial Supervisor Entity Consolidated into Lecturer Role**
+   - Groups now have `industrialSupervisor` field pointing to `Lecturer` entity (not separate `IndustrialSupervisor` entity)
+   - `Group.java` updated: `industrialSupervisor` field type changed from `IndustrialSupervisor` to `Lecturer`
+   - Database foreign key now references `lecturer` table instead of `industrial_supervisor` table
+
+2. **Repository Cleanup Completed**
+   - `GroupRepository.java`: Removed `findByIndustrialSupervisorId()` and `findByIndustrialSupervisorIdWithStudents()` methods
+   - Repository now only contains methods relevant to current architecture
+
+### Recent Feature Additions:
+1. **Lecturer Assignment Modes (Group vs. Rubric)**
+   - Implemented a dual-mode assignment system for administrators assigning lecturers to assessments.
+   - **Group Mode**: Lecturers are assigned to specific groups and evaluate all rubrics for those groups (maintained existing behavior).
+   - **Rubric Mode**: Lecturers are assigned to specific rubrics and evaluate those rubrics across all groups.
+   - Added `LecturerRubricAssignment` entity and repository.
+   - Updated `AdminController` and `admin_assign_lecturers.html` to enforce mutual exclusivity between the two modes via UI toggles and backend clearing of cross-mode data.
+   - Modified `LecturerAssessmentController` and `LecturerAssessmentService` to grant rubric-assigned lecturers access to evaluation forms.
+   - Evaluation forms dynamically filter rubrics based on the lecturer's specific rubric assignments.
+   - Evaluation completion calculation updated to respect rubric-specific assignments while allowing unrestricted general assessment comments.
+
+2. **Role-Based Comment Viewing**
+   - Implemented separate workflows and templates for Admin and Lecturers (Academic/Industrial Supervisors) to view student comments.
+   - **Admin View**:
+     - Admin can select an assessment, then choose any group to view all student comments within that group.
+     - Uses `comment_select_assessment.html`, `comment_select_group.html`, and `comment_view.html`.
+   - **Lecturer/Supervisor View**:
+     - Supervisors select an assessment and are then presented directly with comments from *all* groups they supervise for that assessment (no intermediate group selection).
+     - Comments are filtered to only show those pertaining to students within their supervised groups.
+     - Uses `lecturer_comment_select_assessment.html` and `lecturer_comment_view.html`.
+   - Logic in `GroupCommentController.java` now routes based on `/admin/...` or `/lecturer/...` URL paths.
+
+### Files That Need Deletion (Industrial Supervisor Subsystem):
+- `IndustrialSupervisor.java` - Entity class (no longer needed)
+- `IndustrialSupervisorRepository.java` - Repository interface (no longer needed)
+- `IndustrialSupervisorService.java` - Service class (no longer needed)
+- `IndustrialSupervisorController.java` - Controller class (no longer needed)
+
+### Files That Need Cleanup/Modification:
+1. **Service Layer**:
+   - `AdminService.java` - Remove industrial supervisor methods (`saveIndustrialSupervisor()`, `deleteIndustrialSupervisorById()`, etc.)
+   - `UserService.java` - Remove `IndustrialSupervisor` imports and references in authentication methods
+   - `CalculateService.java` - Update comments about "removing industrial supervisors"
+   - `AssessmentCommentService.java` - Update comments about supervisor comments
+   - `LecturerAssessmentService.java` - Remove "industrial supervisor" filtering logic
+
+2. **HTML Templates** (Label updates needed):
+   - `edit_group.html` - Update "Industrial Supervisor" labels to clarify role
+   - `group_assignment.html` - Update "Industrial Supervisor" labels
+   - `group_assignment_preview.html` - Update "Industrial Supervisor" labels
+   - `manage_supervisors.html` - Should be removed or redirected (page no longer needed)
+   - `comment_select_assessment.html` - Now Admin-specific (removed conditional sidebar/CSS logic)
+   - `comment_select_group.html` - Now Admin-specific (removed conditional sidebar/CSS logic)
+   - `comment_view.html` - Now Admin-specific (removed conditional sidebar/CSS logic)
+   - `lecturer_sidebar.html` - Removed redundant `<head>` section.
+   - `industrial_supervisor_home.html` - Should be removed (dashboard no longer needed)
+
+3. **Security Configuration**:
+   - `SecurityConfig.java` - May need updates to remove industrial supervisor role paths
+   - `CustomAuthenticationSuccessHandler.java` - May need updates for role redirects
+
+### Files That Should Remain As-Is:
+- `Group.java` - Correctly has `industrialSupervisor` field pointing to `Lecturer`
+- `GroupAssignmentDto.java` - Has `industrialSupervisorId` field (needed for group assignment)
+- `AdminController.java` - Uses `group.getIndustrialSupervisor()` which returns `Lecturer`
+
 ## Dependencies
 ### Core Spring Boot Starters
 - `spring-boot-starter-web` - Web MVC framework
@@ -48,20 +117,19 @@
 - `CommentConfigController.java` - Comment configuration management
 - `DataViewController.java` - Data visualization endpoints
 - `DeadlineController.java` - Deadline management
-- `IndustrialSupervisorController.java` - Industrial supervisor functionality
+- `IndustrialSupervisorController.java` - Industrial supervisor functionality **(TO BE DELETED)**
 - `LecturerAssessmentController.java` - Lecturer assessment management
 - `LecturerController.java` - Lecturer-specific endpoints
 - `LogoutController.java` - Logout handling
 - `RubricController.java` - Rubric management
 - `StudentController.java` - Student-specific endpoints
-- `TemplateController.java` - Template management
 
 #### 4. **Models (`model/`) - Domain Entities**
 **User Management:**
 - `Admin.java` - Administrator entity
-- `Lecturer.java` - Lecturer entity
+- `Lecturer.java` - Lecturer entity (now includes industrial supervisor role)
 - `Student.java` - Student entity
-- `IndustrialSupervisor.java` - Industrial supervisor entity
+- `IndustrialSupervisor.java` - Industrial supervisor entity **(TO BE DELETED)**
 
 **Assessment System:**
 - `Assessment.java` - Assessment entity
@@ -73,9 +141,9 @@
 - `StudentResultOverride.java` - Override for student results
 
 **Group Management:**
-- `Group.java` - Student groups
+- `Group.java` - Student groups (has `academicSupervisor` and `industrialSupervisor` both pointing to `Lecturer`)
 - `LecturerGroupAssignment.java` - Lecturer to group assignments
-
+- `LecturerRubricAssignment.java` - Lecturer to specific rubric assignments
 
 **Deadline Management:**
 - `Deadline.java` - Deadline entity
@@ -83,33 +151,33 @@
 
 #### 5. **Repositories (`repositories/`) - Data Access Layer**
 JPA repositories for all domain entities including:
-- `AdminRepository.java`, `LecturerRepository.java`, `StudentRepository.java`, `IndustrialSupervisorRepository.java`
+- `AdminRepository.java`, `LecturerRepository.java`, `StudentRepository.java`, `IndustrialSupervisorRepository.java` **(TO BE DELETED)**
 - `AssessmentRepository.java`, `AssessmentCommentRepository.java`
 - `RubricRepository.java`, `SubRubricRepository.java`, `RatingRepository.java`
-- `GroupRepository.java`, `LecturerGroupAssignmentRepository.java`
+- `GroupRepository.java`, `LecturerGroupAssignmentRepository.java`, `LecturerRubricAssignmentRepository.java`
 - `MarkRepository.java`, `StudentResultOverrideRepository.java`
-- `DeadlineRepository.java`, `RubricTemplateRepository.java`
+- `DeadlineRepository.java`
 - `UserRepository.java` - Generic user repository
 
 #### 6. **Services (`service/`) - Business Logic Layer**
-- `AdminService.java` - Admin business logic
+- `AdminService.java` - Admin business logic (needs cleanup for industrial supervisor methods)
 - `AssessmentService.java` - Assessment management
-- `AssessmentCommentService.java` - Comment management
-- `CalculateService.java` - Calculation utilities
+- `AssessmentCommentService.java` - Comment management (needs comment updates)
+- `CalculateService.java` - Calculation utilities (needs comment updates)
 - `CustomUserDetailsService.java` - Custom user details for Spring Security
 - `DeadlineService.java` - Deadline management
 - `EmailService.java` - Email functionality
-- `IndustrialSupervisorService.java` - Industrial supervisor operations
-- `LecturerAssessmentService.java` - Lecturer assessment logic
+- `IndustrialSupervisorService.java` - Industrial supervisor operations **(TO BE DELETED)**
+- `LecturerAssessmentService.java` - Lecturer assessment logic (needs cleanup)
 - `MarkService.java` - Mark/score management
 - `RubricService.java` - Rubric operations
 - `StudentService.java` - Student management
-- `UserService.java` - User management
+- `UserService.java` - User management (needs cleanup for industrial supervisor references)
 
 #### 7. **DTOs (`dto/`) - Data Transfer Objects**
 - `AssessmentAssignmentDto.java` - Assessment assignment data
 - `AssessmentDataDto.java` - Assessment data transfer
-- `GroupAssignmentDto.java` - Group assignment data
+- `GroupAssignmentDto.java` - Group assignment data (has `industrialSupervisorId` field)
 - `RandomizationInputDto.java` - Randomization input data
 - `RubricCalculationDto.java` - Rubric calculation data
 - `StudentAssessmentDataDto.java` - Student assessment data
@@ -125,7 +193,7 @@ JPA repositories for all domain entities including:
 - `admin_home.html` - Admin dashboard
 - `lecturer_home.html` - Lecturer dashboard
 - `student_home.html` - Student dashboard
-- `industrial_supervisor_home.html` - Supervisor dashboard
+- `industrial_supervisor_home.html` - Supervisor dashboard **(TO BE REMOVED)**
 
 **Assessment Management:**
 - `peer_assessment_form.html` - Peer assessment form
@@ -138,12 +206,12 @@ JPA repositories for all domain entities including:
 - `manage_users.html` - User management
 - `manage_lecturers.html` - Lecturer management
 - `manage_students.html` - Student management
-- `manage_supervisors.html` - Supervisor management
+- `manage_supervisors.html` - Supervisor management **(TO BE REMOVED/REDIRECTED)**
 
 **Group Management:**
-- `group_assignment.html` - Group assignment
-- `group_assignment_preview.html` - Group preview
-- `edit_group.html` - Group editing
+- `group_assignment.html` - Group assignment (needs label updates)
+- `group_assignment_preview.html` - Group preview (needs label updates)
+- `edit_group.html` - Group editing (needs label updates)
 - `admin_assign_lecturers.html` - Lecturer assignment to groups
 
 **Data Views:**
@@ -154,6 +222,9 @@ JPA repositories for all domain entities including:
 **Configuration:**
 - `comment_configuration_single_type.html` - Comment configuration
 - `edit_single_comment.html` - Edit comments
+- `comment_select_assessment.html` - Admin-specific comment assessment selection
+- `comment_select_group.html` - Admin-specific comment group selection
+- `comment_view.html` - Admin-specific student comment view
 - `edit-deadline.html` - Deadline editing
 - `edit_overrides.html` - Result override editing
 
@@ -161,6 +232,8 @@ JPA repositories for all domain entities including:
 - Sidebar templates for different user roles
 
 #### 2. **Static Assets (`static/`)**
+- `lecturer_comment_select_assessment.html` - New Lecturer/Supervisor assessment selection for comments
+- `lecturer_comment_view.html` - New Lecturer/Supervisor combined comment view for supervised groups
 - **CSS (`css/`)**: 40+ CSS files for styling different pages
 - **JavaScript (`js/`)**: `loading.js` for loading animations
 - **Images (`images/`)**: UTM logos and branding images
@@ -171,7 +244,7 @@ JPA repositories for all domain entities including:
 ## Key Features Identified
 
 ### 1. **Multi-role Authentication System**
-- Admin, Lecturer, Student, Industrial Supervisor roles
+- Admin, Lecturer, Student roles (Industrial Supervisor role consolidated into Lecturer)
 - Spring Security with custom success handler
 - Role-based access control
 
@@ -183,7 +256,7 @@ JPA repositories for all domain entities including:
 
 ### 3. **Group Management**
 - Student group creation and assignment
-- Lecturer assignment to groups
+- Lecturer assignment to groups (both academic and industrial supervisor roles, plus assignment by rubrics)
 - Group-based assessment
 
 ### 4. **Data Visualization**
@@ -196,7 +269,6 @@ JPA repositories for all domain entities including:
 - Deadline management
 - Result override capabilities
 - Email functionality
-
 
 ## Technology Patterns
 
@@ -227,9 +299,30 @@ JPA repositories for all domain entities including:
 - Email service configured
 - Actuator endpoints for monitoring
 
-## Next Steps / Areas for Exploration
-1. Database schema analysis (entity relationships)
-2. Security configuration details
-3. Business logic implementation in services
-4. Template system implementation
-5. Assessment calculation algorithms
+## Next Steps / Remaining Tasks
+
+### 1. **Delete Industrial Supervisor Subsystem Files**
+- Delete `IndustrialSupervisor.java`, `IndustrialSupervisorRepository.java`, `IndustrialSupervisorService.java`, `IndustrialSupervisorController.java`
+
+### 2. **Clean Up Service Layer**
+- Remove industrial supervisor methods from `AdminService.java`
+- Remove `IndustrialSupervisor` references from `UserService.java`
+- Update comments in `CalculateService.java` and `AssessmentCommentService.java`
+- Clean up `LecturerAssessmentService.java`
+
+### 3. **Update HTML Templates**
+- Update labels in `edit_group.html`, `group_assignment.html`, `group_assignment_preview.html`
+- Remove/redirect `manage_supervisors.html` and `industrial_supervisor_home.html`
+
+### 4. **Update Security Configuration**
+- Check `SecurityConfig.java` for industrial supervisor role paths
+- Update `CustomAuthenticationSuccessHandler.java` if needed
+
+### 5. **Database Migration**
+- Update database schema to remove `industrial_supervisor` table
+- Ensure foreign keys are properly migrated
+
+### 6. **Testing**
+- Test all functionality after changes
+- Ensure group assignment with industrial supervisor role works correctly
+- Verify authentication and authorization for all roles

@@ -13,12 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Group;
-import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.GroupRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
@@ -31,7 +29,6 @@ public class AdminService {
 
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
-    private final IndustrialSupervisorRepository industrialSupervisorRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
@@ -41,14 +38,12 @@ public class AdminService {
     public AdminService(
             StudentRepository studentRepository, 
             LecturerRepository lecturerRepository, 
-            IndustrialSupervisorRepository industrialSupervisorRepository, 
             GroupRepository groupRepository, 
             PasswordEncoder passwordEncoder,
             LecturerGroupAssignmentRepository assignmentRepository,
             AdminRepository adminRepository) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
-        this.industrialSupervisorRepository = industrialSupervisorRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
         this.assignmentRepository = assignmentRepository;
@@ -94,13 +89,6 @@ private EmailService emailService;
             existingPassword = existingLecturer.get().getPassword();
             isTemp = existingLecturer.get().getIsTempPassword();
             resetToken = existingLecturer.get().getResetPasswordToken();
-        }
-
-        Optional<IndustrialSupervisor> existingSupervisor = industrialSupervisorRepository.findByEmail(student.getEmail());
-        if (existingSupervisor.isPresent()) {
-            existingPassword = existingSupervisor.get().getPassword();
-            isTemp = existingSupervisor.get().getIsTempPassword();
-            resetToken = existingSupervisor.get().getResetPasswordToken();
         }
 
         if (existingPassword != null) {
@@ -170,13 +158,6 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             isTemp = false;
             resetToken = existingAdmin.get().getResetPasswordToken();
         }
-        
-        Optional<IndustrialSupervisor> existingSupervisor = industrialSupervisorRepository.findByEmail(lecturer.getEmail());
-        if (existingSupervisor.isPresent()) {
-            existingPassword = existingSupervisor.get().getPassword();
-            isTemp = existingSupervisor.get().getIsTempPassword();
-            resetToken = existingSupervisor.get().getResetPasswordToken();
-        }
 
         if (existingPassword != null) {
             lecturer.setPassword(existingPassword);
@@ -199,9 +180,6 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
     lecturerRepository.save(lecturer);
 }
 
-public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
-    // ... (existing implementation)
-}
 
 @Transactional
 public int bulkAddStudents(String emailsText, HttpServletRequest request) {
@@ -232,24 +210,6 @@ public int bulkAddLecturers(String emailsText, HttpServletRequest request) {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setEmail(trimmedEmail);
                 saveLecturer(lecturer, request);
-                count++;
-            }
-        }
-    }
-    return count;
-}
-
-@Transactional
-public int bulkAddSupervisors(String emailsText, HttpServletRequest request) {
-    String[] emails = emailsText.split("[,\\n\\r]+");
-    int count = 0;
-    for (String email : emails) {
-        String trimmedEmail = email.trim().toLowerCase();
-        if (!trimmedEmail.isEmpty()) {
-            if (industrialSupervisorRepository.findByEmail(trimmedEmail).isEmpty()) {
-                IndustrialSupervisor supervisor = new IndustrialSupervisor();
-                supervisor.setEmail(trimmedEmail);
-                saveIndustrialSupervisor(supervisor, request);
                 count++;
             }
         }
@@ -296,26 +256,6 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     return null;
 }
 
-public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExclude) {
-    if (email == null || email.trim().isEmpty()) {
-        return "Email is required";
-    }
-    
-    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-    List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
-    
-    for (IndustrialSupervisor supervisor : allSupervisors) {
-        if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
-        if (supervisor.getEmail() != null) {
-            String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
-            if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered as an Industrial Supervisor.";
-            }
-        }
-    }
-    return null;
-}
-
     @Transactional
     public void deleteStudentById(Long id) {
         Student student = studentRepository.findById(id)
@@ -351,20 +291,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
     }
 
     @Transactional
-    public void deleteIndustrialSupervisorById(Long id) {
-        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-
-        industrialSupervisorRepository.unlinkFromGroups(id);
-
-        industrialSupervisorRepository.deleteMarksGiven(id);
-        
-        industrialSupervisorRepository.deleteCommentsBySupervisor(id);
-
-        industrialSupervisorRepository.delete(supervisor);
-    }
-
-    @Transactional
     public void deleteStudentsByIds(List<Long> ids) {
         if (ids == null) return;
         for (Long id : ids) {
@@ -380,13 +306,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         }
     }
 
-    @Transactional
-    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
-        if (ids == null) return;
-        for (Long id : ids) {
-            deleteIndustrialSupervisorById(id);
-        }
-    }
 
     public List<Student> getStudentsWithoutGroup() {
         return studentRepository.findByGroupIsNull();
@@ -410,7 +329,7 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         newGroup.setGroupName(dto.getGroupName());
 
         lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
-        industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+        lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
 
         Group savedGroup = groupRepository.save(newGroup);
 
@@ -444,7 +363,7 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         }
         
         if (dto.getIndustrialSupervisorId() != null) {
-            industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
         } else {
             existingGroup.setIndustrialSupervisor(null);
         }
@@ -509,9 +428,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         return lecturerRepository.findAll();
     }
 
-    public List<IndustrialSupervisor> getAllIndustrialSupervisors() {
-        return industrialSupervisorRepository.findAll();
-    }
 
     public Optional<Student> findStudentById(Long id) {
         return studentRepository.findById(id);
@@ -521,9 +437,6 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         return lecturerRepository.findById(id);
     }
 
-    public Optional<IndustrialSupervisor> findIndustrialSupervisorById(Long id) {
-        return industrialSupervisorRepository.findById(id);
-    }
 
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
@@ -578,15 +491,15 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
             Lecturer newLecturer = new Lecturer();
             newLecturer.setEmail(normalizedEmail);
             saveLecturer(newLecturer, request);
-        } else if ("SUPERVISOR".equalsIgnoreCase(targetRole)) {
-            if (industrialSupervisorRepository.findByEmail(normalizedEmail).isPresent()) {
-                throw new RuntimeException("User is already an Industrial Supervisor");
-            }
-            IndustrialSupervisor newSupervisor = new IndustrialSupervisor();
-            newSupervisor.setEmail(normalizedEmail);
-            saveIndustrialSupervisor(newSupervisor, request);
         } else {
-            throw new RuntimeException("Invalid target role: " + targetRole);
+            throw new RuntimeException("Invalid target role: " + targetRole + ". Only LECTURER role is supported.");
         }
+    }
+
+    public List<Lecturer> searchLecturers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return lecturerRepository.findAll();
+        }
+        return lecturerRepository.findByEmailContainingIgnoreCase(query);
     }
 }

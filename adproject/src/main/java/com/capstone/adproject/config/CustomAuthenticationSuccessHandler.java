@@ -37,10 +37,6 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Redirect to lecturer_home
             response.sendRedirect("/lecturer/home");
 
-        } else if (roles.contains("ROLE_SUPERVISOR")) {
-            // Redirect to industrial_supervisor_home
-            response.sendRedirect("/supervisor/home");
-
         } else {
             // False, hantar balik ke page startup.html
             response.sendRedirect("/");

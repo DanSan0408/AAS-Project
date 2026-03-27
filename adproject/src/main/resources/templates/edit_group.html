@@ -25,7 +25,7 @@
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
                     <a href="/admin/manage-lecturers">Lecturers</a>
-                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
 
@@ -52,6 +52,11 @@
                                 <h3>Academic Supervisor (Lecturer)</h3>
                                 <div class="form-group">
                                     <label for="academicSupervisorId">Lecturer:</label>
+                                    <div class="search-container">
+                                        <input type="text" id="academicSupervisorSearch" placeholder="Search lecturer by email..." 
+                                               class="search-input" onkeyup="searchLecturers('academicSupervisorSearch', 'academicSupervisorId')">
+                                        <div id="academicSupervisorResults" class="search-results"></div>
+                                    </div>
                                     <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
                                         <option value="">-- Select Lecturer --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
@@ -66,12 +71,17 @@
                                 <h3>Industrial Supervisor</h3>
                                 <div class="form-group">
                                     <label for="industrialSupervisorId">Industrial Supervisor:</label>
+                                    <div class="search-container">
+                                        <input type="text" id="industrialSupervisorSearch" placeholder="Search lecturer by email..." 
+                                               class="search-input" onkeyup="searchLecturers('industrialSupervisorSearch', 'industrialSupervisorId')">
+                                        <div id="industrialSupervisorResults" class="search-results"></div>
+                                    </div>
                                     <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                        <option value="">-- Select Supervisor --</option>
-                                        <option th:each="supervisor : ${availableSupervisors}"
-                                                th:value="${supervisor.id}"
-                                                th:text="${supervisor.email}"
-                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and supervisor.id == groupAssignmentDto.industrialSupervisorId}">Supervisor Email</option>
+                                        <option value="">-- Select Lecturer --</option>
+                                        <option th:each="lecturer : ${availableLecturers}"
+                                                th:value="${lecturer.id}"
+                                                th:text="${lecturer.email}"
+                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and lecturer.id == groupAssignmentDto.industrialSupervisorId}">Lecturer Email</option>
                                     </select>
                                 </div>
                                 
@@ -139,5 +149,115 @@
             </div>
         </div>
     </div>
+
+    <script>
+        async function searchLecturers(searchInputId, selectId) {
+            const searchInput = document.getElementById(searchInputId);
+            const resultsDiv = document.getElementById(searchInputId.replace('Search', 'Results'));
+            const selectElement = document.getElementById(selectId);
+            
+            const query = searchInput.value.trim();
+            
+            // Clear results if query is empty
+            if (query.length === 0) {
+                resultsDiv.innerHTML = '';
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/search-lecturers?query=${encodeURIComponent(query)}`);
+                const lecturers = await response.json();
+                
+                // Clear previous results
+                resultsDiv.innerHTML = '';
+                
+                if (lecturers.length === 0) {
+                    resultsDiv.innerHTML = '<div class="search-result-item">No lecturers found</div>';
+                    resultsDiv.style.display = 'block';
+                    return;
+                }
+                
+                // Display results
+                lecturers.forEach(lecturer => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = lecturer.email;
+                    resultItem.onclick = () => {
+                        // Set the select value
+                        selectElement.value = lecturer.id;
+                        // Clear search input and results
+                        searchInput.value = '';
+                        resultsDiv.innerHTML = '';
+                        resultsDiv.style.display = 'none';
+                    };
+                    resultsDiv.appendChild(resultItem);
+                });
+                
+                resultsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error searching lecturers:', error);
+                resultsDiv.innerHTML = '<div class="search-result-item error">Error searching lecturers</div>';
+                resultsDiv.style.display = 'block';
+            }
+        }
+        
+        // Close search results when clicking outside
+        document.addEventListener('click', function(event) {
+            const searchContainers = document.querySelectorAll('.search-container');
+            searchContainers.forEach(container => {
+                if (!container.contains(event.target)) {
+                    const resultsDiv = container.querySelector('.search-results');
+                    if (resultsDiv) {
+                        resultsDiv.style.display = 'none';
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <style>
+        .search-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .search-result-item.error {
+            color: #e74c3c;
+            font-style: italic;
+        }
+    </style>
 </body>
 </html>

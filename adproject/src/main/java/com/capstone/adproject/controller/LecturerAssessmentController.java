@@ -2,10 +2,13 @@ package com.capstone.adproject.controller;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -24,11 +27,14 @@ import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.LecturerRubricAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.RubricRepository;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
@@ -47,6 +53,8 @@ public class LecturerAssessmentController {
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final RubricRepository rubricRepository;
     private final AssessmentCommentRepository assessmentCommentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final GroupRepository groupRepository;
 
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
@@ -55,7 +63,9 @@ public class LecturerAssessmentController {
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
             RubricRepository rubricRepository,
-            AssessmentCommentRepository assessmentCommentRepository) {
+            AssessmentCommentRepository assessmentCommentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            GroupRepository groupRepository) {
         this.lecturerAssessmentService = lecturerAssessmentService;
         this.rubricService = rubricService;
         this.deadlineService = deadlineService;
@@ -63,6 +73,8 @@ public class LecturerAssessmentController {
         this.assignmentRepository = assignmentRepository;
         this.rubricRepository = rubricRepository;
         this.assessmentCommentRepository = assessmentCommentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
+        this.groupRepository = groupRepository;
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
@@ -86,9 +98,14 @@ public class LecturerAssessmentController {
         Lecturer lecturer = getCurrentLecturer(authentication);
         
         List<Assessment> assignedAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
+        List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
+        
+        Set<Assessment> combinedAssessments = new HashSet<>(assignedAssessments);
+        combinedAssessments.addAll(rubricAssessments);
+        List<Assessment> uniqueAssessments = new ArrayList<>(combinedAssessments);
         
         LocalDateTime now = LocalDateTime.now();
-        List<Long> openAssessmentIds = assignedAssessments.stream()
+        List<Long> openAssessmentIds = uniqueAssessments.stream()
             .filter(assessment -> {
                 List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
                     assessment.getId(), "LECTURER");
@@ -105,7 +122,7 @@ public class LecturerAssessmentController {
             .map(Assessment::getId)
             .collect(Collectors.toList());
         
-        model.addAttribute("assessments", assignedAssessments);
+        model.addAttribute("assessments", uniqueAssessments);
         model.addAttribute("openAssessmentIds", openAssessmentIds);
         
         return "lecturer_assessments";
@@ -113,7 +130,7 @@ public class LecturerAssessmentController {
 
     @GetMapping("/{assessmentId}/select-group")
     public String showGroupSelection(
-            @PathVariable Long assessmentId,
+            @PathVariable("assessmentId") Long assessmentId,
             Model model,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -150,6 +167,14 @@ public class LecturerAssessmentController {
         
         List<Group> assignedGroups = assignmentRepository.findGroupsByLecturerAndAssessment(lecturer, assessment);
         
+        boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
+        if (hasRubricAssignment) {
+            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudents();
+            Set<Group> combinedGroups = new HashSet<>(assignedGroups);
+            combinedGroups.addAll(allGroupsWithStudents);
+            assignedGroups = new ArrayList<>(combinedGroups);
+        }
+        
         if (assignedGroups.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", 
                 "You have no groups assigned for this assessment.");
@@ -172,9 +197,9 @@ public class LecturerAssessmentController {
 
     @GetMapping("/{assessmentId}/evaluate")
     public String showCombinedEvaluationForm(
-            @PathVariable Long assessmentId,
-            @RequestParam Long groupId,
-            @RequestParam(required = false) Boolean confirmReevaluation,
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("groupId") Long groupId,
+            @RequestParam(value = "confirmReevaluation", required = false) Boolean confirmReevaluation,
             Model model,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -183,6 +208,15 @@ public class LecturerAssessmentController {
         Lecturer lecturer = getCurrentLecturer(authentication);
 
         List<Group> assignedGroups = assignmentRepository.findGroupsByLecturerAndAssessment(lecturer, assessment);
+
+        boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
+        if (hasRubricAssignment) {
+            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudents();
+            Set<Group> combinedGroups = new HashSet<>(assignedGroups);
+            combinedGroups.addAll(allGroupsWithStudents);
+            assignedGroups = new ArrayList<>(combinedGroups);
+        }
+        
         Group selectedGroup = assignedGroups.stream()
             .filter(g -> g.getId().equals(groupId))
             .findFirst()
@@ -205,15 +239,24 @@ public class LecturerAssessmentController {
             model.addAttribute("showReevaluationWarning", true);
             return "lecturer_reevaluation_warning_combined";
         }
+        
+        boolean isAssignedToGroup = assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, selectedGroup, lecturer);
+        
+        List<LecturerRubricAssignment> rubricAssignments = rubricAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment);
+        Set<Long> allowedRubricIds = rubricAssignments.stream()
+            .map(a -> a.getRubric().getId())
+            .collect(Collectors.toSet());
 
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
 
         List<Rubric> individualRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
 
         List<Student> groupStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
@@ -274,14 +317,15 @@ public class LecturerAssessmentController {
         model.addAttribute("existingIndividualComments", existingIndividualComments);
         model.addAttribute("existingGroupRubricComments", existingGroupRubricComments);
         model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
+        model.addAttribute("isAssignedToGroup", isAssignedToGroup);
 
         return "lecturer_combined_evaluation_form";
     }
 
     @PostMapping("/{assessmentId}/submit")
     public String submitCombinedEvaluation(
-            @PathVariable Long assessmentId,
-            @RequestParam Long groupId,
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("groupId") Long groupId,
             @RequestParam Map<String, String> allParams,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -290,6 +334,15 @@ public class LecturerAssessmentController {
 
         try {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
+            Group selectedGroup = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
+            boolean isAssignedToGroup = assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, selectedGroup, lecturer);
+            boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
+            
+            if (!isAssignedToGroup && !hasRubricAssignment) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Not authorized to evaluate this group.");
+                return "redirect:/lecturer/assessments";
+            }
+            
             List<Student> groupStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
             
             Map<String, String> groupScores = allParams.entrySet().stream()

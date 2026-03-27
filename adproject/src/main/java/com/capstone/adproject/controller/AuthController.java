@@ -77,8 +77,6 @@ public class AuthController {
                     return "/student/home";
                 case "ROLE_LECTURER":
                     return "/lecturer/home";
-                case "ROLE_SUPERVISOR":
-                    return "/supervisor/home";
             }
         }
 

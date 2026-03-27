@@ -10,11 +10,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.model.Admin;
-import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AdminRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
@@ -23,17 +21,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
-    private final IndustrialSupervisorRepository industrialSupervisorRepository;
     private final AdminRepository adminRepository;
 
     public CustomUserDetailsService(
             StudentRepository studentRepository,
             LecturerRepository lecturerRepository,
-            IndustrialSupervisorRepository industrialSupervisorRepository,
             AdminRepository adminRepository) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
-        this.industrialSupervisorRepository = industrialSupervisorRepository;
         this.adminRepository = adminRepository;
     }
 
@@ -62,18 +57,6 @@ public class CustomUserDetailsService implements UserDetailsService {
             if (password == null) {
                 password = lecturer.get().getPassword();
                 email = lecturer.get().getEmail() != null ? lecturer.get().getEmail() : lecturer.get().getUsername();
-            }
-        }
-
-        Optional<IndustrialSupervisor> supervisor = industrialSupervisorRepository.findByEmail(emailOrUsername);
-        if (supervisor.isEmpty()) {
-            supervisor = industrialSupervisorRepository.findByUsername(emailOrUsername);
-        }
-        if (supervisor.isPresent()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_SUPERVISOR"));
-            if (password == null) {
-                password = supervisor.get().getPassword();
-                email = supervisor.get().getEmail() != null ? supervisor.get().getEmail() : supervisor.get().getUsername();
             }
         }
 
