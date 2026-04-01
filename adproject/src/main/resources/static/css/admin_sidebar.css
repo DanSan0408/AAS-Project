@@ -96,6 +96,44 @@
     margin-bottom: 8px;
 }
 
+.sidebar .menu-list li.course-switcher-item {
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    border: 1px solid rgba(74, 0, 24, 0.12);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.sidebar .course-switcher-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar .course-switcher-form label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--admin-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar .course-switcher-form select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid rgba(74, 0, 24, 0.2);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--admin-secondary-dark);
+    background: #fff;
+    outline: none;
+}
+
+.sidebar .course-switcher-form select:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 2px rgba(74, 0, 24, 0.12);
+}
+
 .sidebar .menu-list li a {
     display: flex;
     align-items: center;

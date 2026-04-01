@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin_home.css}">
+    <style>
+        .role-switch-section {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 4px;
+        }
+        .role-button {
+            margin: 5px;
+            font-weight: 500;
+        }
+        .role-info {
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 10px;
+        }
+        .border-left-primary {
+            border-left: 4px solid #007bff !important;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+        .stat-item h6 {
+            color: #007bff;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .stat-item small {
+            color: #999;
+            font-size: 0.85rem;
+        }
+    </style>
+        <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+</head>
+<body class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Super Admin Dashboard</h2>
+            <div class="user-info">
+                Welcome, <span th:text="${superAdminUsername}">Super Admin</span>!
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            <div th:if="${successMessage}" class="alert alert-success" role="alert">
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                <span th:text="${errorMessage}"></span>
+            </div>
+
+            <!-- Role Switching Section -->
+            <div class="role-switch-section">
+                <h4>⚙️ Switch Your Role</h4>
+                <p class="role-info">As a Super Admin, you have three roles. Click below to switch and manage your assigned course.</p>
+                <div>
+                    <a href="/admin/home" class="btn btn-info role-button">
+                        📋 Switch to Admin View
+                    </a>
+                    <a href="/lecturer/home" class="btn btn-warning role-button">
+                        👨‍🏫 Switch to Lecturer View
+                    </a>
+                </div>
+            </div>
+
+            <!-- Global Management Section -->
+            <div>
+                <h4>🌍 Global Management (Super Admin Only)</h4>
+                <p style="color: #666; margin-bottom: 20px;">These features are exclusive to your Super Admin role:</p>
+                
+                <div class="card-deck">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">📚 Manage Courses</h5>
+                            <p class="card-text">Create, edit, and delete courses in the system.</p>
+                            <a th:href="@{/superadmin/manage-courses}" class="btn btn-primary">Go to Course Management</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">✉️ Invite Admin</h5>
+                            <p class="card-text">Send invitations to new administrators for specific courses.</p>
+                            <a th:href="@{/superadmin/invite-admin}" class="btn btn-success">Invite New Admin</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Statistics Section -->
+               <div class="course-overview-section">
+                   <h4>📊 Course Overview & Statistics</h4>
+                   <p>Summary of all courses in the system:</p>
+                
+                <div class="row" th:if="${courseStatistics != null && courseStatistics.size() > 0}">
+                    <div class="col-md-6 mb-3" th:each="courseStats : ${courseStatistics}">
+                        <div class="card border-left-primary">
+                            <div class="card-body">
+                                <h6 class="card-title" th:text="${courseStats.courseName}">Course Name</h6>
+                                <p class="text-muted mb-2">
+                                    <small th:text="'Code: ' + ${courseStats.courseCode}">Course Code</small>
+                                </p>
+                                <p class="text-muted mb-3" th:text="${courseStats.description}">Course Description</p>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="stat-item">
+                                            <h6 th:text="${courseStats.studentCount}">0</h6>
+                                            <small>Students</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-item">
+                                            <h6 th:text="${courseStats.lecturerCount}">0</h6>
+                                            <small>Lecturers</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="stat-item" style="text-align: left;">
+                                            <h6 style="display: inline-block; margin-right: 8px;" th:text="${courseStats.adminCount}">0</h6>
+                                            <small>Admins Assigned</small>
+                                            <p class="mb-0 mt-2 text-muted" th:if="${courseStats.adminEmails != null && !courseStats.adminEmails.isEmpty()}"
+                                               th:text="${#strings.listJoin(courseStats.adminEmails, ', ')}">admin@example.com</p>
+                                            <p class="mb-0 mt-2 text-muted" th:if="${courseStats.adminEmails == null || courseStats.adminEmails.isEmpty()}">No admin assigned</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="stat-item">
+                                            <h6 th:text="${courseStats.assessmentCount}">0</h6>
+                                            <small>Assessments</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="stat-item">
+                                            <h6 th:text="${courseStats.groupCount}">0</h6>
+                                            <small>Groups</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div th:if="${courseStatistics == null || courseStatistics.size() == 0}" class="alert alert-info">
+                    No courses available yet. Create your first course using the Course Management feature.
+                </div>
+            </div>
+
+            <div class="assigned-course-section">
+                <h5>📍 Super Admin Note</h5>
+                <p>Admins can now create and manage courses directly from Admin View.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

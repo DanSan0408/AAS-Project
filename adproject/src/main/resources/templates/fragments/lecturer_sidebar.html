@@ -36,6 +36,10 @@
                     Switch to Admin
                 </a>
             </li>
+
+            <li sec:authorize="hasRole('ROLE_SUPER_ADMIN')" style="background-color: #f8f9fa; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                <a th:href="@{/superadmin/home}" class="switch-role-btn" style="color: #c27803; font-weight: bold;">⬆️ Back to Super Admin</a>
+            </li>
             
             <li class="logout-item">
                 <form th:action="@{/logout}" method="post">

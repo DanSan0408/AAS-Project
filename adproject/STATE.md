@@ -1,5 +1,70 @@
 # Project State Documentation
 
+**Last Updated**: 2026-04-01 (IH)
+
+## Current Status: Course Schema Stabilization
+**Status**: IN PROGRESS - Application-level fixes applied, database cleanup still required
+
+### Summary
+- The system is being normalized to use `courses` as the canonical course table.
+- Legacy overlap between `course` and `courses` created foreign key drift and runtime inconsistencies.
+- Current startup and CRUD issues are mostly caused by residual database references and non-null FK constraints in child tables.
+
+### Recent Changes Applied in Code
+1. **Course Scope and Course Selection Hardening**
+   - `CourseScopeService` now has stronger fallback logic for loading managed courses.
+   - Active course persistence was updated to avoid assigning transient `Course` placeholders.
+
+2. **Foreign Key Auto-Repair Improvements**
+   - `CourseReferenceRepair` now attempts to normalize `course_id` FK targets to canonical table usage at startup.
+   - Orphan assignment rows are cleaned up more aggressively.
+
+3. **Course Create/Delete Reliability Improvements**
+   - `SuperAdminService.saveCourse()` now normalizes input and de-duplicates by course code for create operations.
+   - `SuperAdminService.deleteCourse()` was hardened to clear references and reduce persistence-context side effects.
+
+4. **Controller Fixes for Transient Course Assignment**
+   - Admin create flows for students/lecturers no longer attach transient `Course` objects by id-only placeholders.
+
+5. **Course Switching Reliability Hardening (April 1, 2026)**
+   - Admin course switch dropdown now submits directly via `onchange` in `fragments/sidebar.html` to reduce missed JS-only submissions.
+   - `AdminController.switchCourse()` was hardened to:
+     - fail fast for unauthorized course switches,
+     - explicitly persist `activeCourseId` to the current HTTP session,
+     - avoid redirect loops back to `/admin/switch-course`.
+   - Active-course scoping was strengthened in core views so data is loaded by active course id at query level (assessments/students/lecturers/groups), reducing stale previous-course displays after switching.
+   - `RubricController.manageAssessments()` now loads assessments by active course id directly.
+
+6. **Developer Environment Note**
+   - Maven wrapper files are currently missing (`.mvn/wrapper/maven-wrapper.properties` not found), so `mvnw` commands fail.
+   - Use system Maven (`mvn`) for local run/build until wrapper files are restored.
+
+### Current Known Database Constraints/Behavior
+- Child tables referencing `courses.id` include:
+  - `admin_course_assignment.course_id`
+  - `assessment.course_id`
+  - `lecturer.course_id`
+  - `project_group.course_id`
+  - `student.course_id`
+- Some environments still have `course_id` columns defined as NOT NULL, so `SET course_id = NULL` fails.
+- In those cases, child rows must be deleted or reassigned before deleting parent `courses` rows.
+
+### Manual Cleanup Strategy (Operational)
+1. Delete or reassign child rows referencing target course IDs first.
+2. Delete parent rows from `courses` after child references are removed.
+3. Keep only canonical table usage (`courses`) and retire legacy `course` references once no FK depends on it.
+
+### Open Work
+- Complete one-time database normalization in active environment (remove residual legacy FK mappings and duplicates).
+- Re-verify end-to-end admin flow:
+  - add course
+  - assign admin to course
+  - switch active course
+  - delete course
+  - ensure no cross-course data overlap
+- Runtime verification pending after latest switch hardening:
+   - confirm `/admin/home`, `/admin/manage-students`, `/admin/manage-lecturers`, `/rubrics/manage`, and `/admin/data-views` all reflect the newly selected active course immediately.
+
 ## Project Overview
 **Project Name**: adproject  
 **Description**: Demo project for Spring Boot - AAS (Assessment Administration System)  

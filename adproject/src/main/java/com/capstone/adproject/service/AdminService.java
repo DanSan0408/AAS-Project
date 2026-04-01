@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
@@ -33,6 +34,7 @@ public class AdminService {
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
+    private final CourseScopeService courseScopeService;
 
     @Autowired
     public AdminService(
@@ -41,13 +43,15 @@ public class AdminService {
             GroupRepository groupRepository, 
             PasswordEncoder passwordEncoder,
             LecturerGroupAssignmentRepository assignmentRepository,
-            AdminRepository adminRepository) {
+            AdminRepository adminRepository,
+            CourseScopeService courseScopeService) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
         this.assignmentRepository = assignmentRepository;
         this.adminRepository = adminRepository;
+        this.courseScopeService = courseScopeService;
     }
 
     @Autowired
@@ -66,12 +70,17 @@ private EmailService emailService;
         student.setIsTempPassword(existingStudent.getIsTempPassword());
         student.setUsername(existingStudent.getUsername()); 
         student.setResetPasswordToken(existingStudent.getResetPasswordToken());
+        student.setCourse(existingStudent.getCourse());
         
         if (!existingStudent.getEmail().equals(student.getEmail())) {
             student.setEmail(student.getEmail());
         }
         
     } else {
+        Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected for student creation"));
+        student.setCourse(activeCourse);
+
         // Check if user already exists in other tables to sync password
         String existingPassword = null;
         Boolean isTemp = true;
@@ -112,6 +121,24 @@ private EmailService emailService;
     studentRepository.save(student);
 }
 
+private Optional<Course> resolveCurrentAdminCourse() {
+    Course activeCourse = courseScopeService.getActiveCourseForCurrentUser();
+    if (activeCourse != null && activeCourse.getId() != null) {
+        return Optional.of(activeCourse);
+    }
+
+    List<Course> managed = courseScopeService.getManagedCoursesForCurrentUser();
+    if (!managed.isEmpty()) {
+        return Optional.of(managed.get(0));
+    }
+
+    return Optional.empty();
+}
+
+public Optional<Course> getCurrentAdminCourse() {
+    return resolveCurrentAdminCourse();
+}
+
 private void sendWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
     String applicationUrl = request.getScheme() + "://" + request.getServerName();
     if (request.getServerPort() != 80 && request.getServerPort() != 443) {
@@ -145,8 +172,14 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
         lecturer.setUsername(existingLecturer.getUsername());
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
+        lecturer.setRoles(existingLecturer.getRoles()); // Preserve existing roles
+        lecturer.setCourse(existingLecturer.getCourse());
         
     } else {
+        Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected for lecturer creation"));
+        lecturer.setCourse(activeCourse);
+
         // Check if user already exists in other tables to sync password
         String existingPassword = null;
         Boolean isTemp = true;
@@ -168,6 +201,7 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             lecturer.setPassword(passwordEncoder.encode(tempPassword));
             lecturer.setIsTempPassword(true);
             lecturer.setResetPasswordToken(resetToken);
+            lecturer.setRoles("ROLE_LECTURER"); // Default role for new lecturer
             
             sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Lecturer", resetToken, request);
         }
@@ -234,6 +268,10 @@ public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) 
         }
     }
     return null;
+}
+
+private Optional<Long> getActiveCourseId() {
+    return Optional.ofNullable(courseScopeService.getActiveCourseIdForCurrentUser());
 }
 
 public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude) {
@@ -308,7 +346,9 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
 
 
     public List<Student> getStudentsWithoutGroup() {
-        return studentRepository.findByGroupIsNull();
+        return getActiveCourseId()
+            .map(studentRepository::findByCourseIdAndGroupIsNull)
+            .orElse(List.of());
     }
     
     public List<Student> getStudentsByGroup(Group group) {
@@ -316,7 +356,9 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
     
     public List<Group> getAllGroups() {
-        return groupRepository.findAll();
+        return getActiveCourseId()
+            .map(groupRepository::findByCourseId)
+            .orElse(List.of());
     }
     
     public Optional<Group> findGroupById(Long id) {
@@ -327,6 +369,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
         Group newGroup = new Group();
         newGroup.setGroupName(dto.getGroupName());
+        resolveCurrentAdminCourse().ifPresent(newGroup::setCourse);
 
         lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
         lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
@@ -336,8 +379,21 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
 
+            if (newGroup.getCourse() == null) {
+                studentsToAssign.stream()
+                        .map(Student::getCourse)
+                        .filter(c -> c != null)
+                        .findFirst()
+                        .ifPresent(newGroup::setCourse);
+            }
+
+            groupRepository.save(savedGroup);
+
             for (Student student : studentsToAssign) {
                 student.setGroup(savedGroup);
+                if (student.getCourse() == null && savedGroup.getCourse() != null) {
+                    student.setCourse(savedGroup.getCourse());
+                }
             }
             studentRepository.saveAll(studentsToAssign);
 
@@ -353,6 +409,10 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void updateGroup(Long groupId, GroupAssignmentDto dto) {
         Group existingGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+
+        if (existingGroup.getCourse() == null) {
+            resolveCurrentAdminCourse().ifPresent(existingGroup::setCourse);
+        }
 
         existingGroup.setGroupName(dto.getGroupName());
         
@@ -375,7 +435,12 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
             
             List<Student> studentsToSave = newStudentsToAssign.stream()
                 .filter(student -> student.getGroup() == null)
-                .peek(student -> student.setGroup(existingGroup))
+                .peek(student -> {
+                    student.setGroup(existingGroup);
+                    if (student.getCourse() == null && existingGroup.getCourse() != null) {
+                        student.setCourse(existingGroup.getCourse());
+                    }
+                })
                 .toList();
             
             studentRepository.saveAll(studentsToSave);
@@ -421,11 +486,15 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
 
     public List<Student> getAllStudents() {
-        return studentRepository.findAllWithGroupEagerly();
+        return getActiveCourseId()
+            .map(studentRepository::findAllWithGroupEagerlyByCourseId)
+            .orElse(List.of());
     }
 
     public List<Lecturer> getAllLecturers() {
-        return lecturerRepository.findAll();
+        return getActiveCourseId()
+            .map(lecturerRepository::findByCourseId)
+            .orElse(List.of());
     }
 
 
@@ -440,13 +509,16 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
 
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            return studentRepository.findByGroupIsNullAndUsernameContainingIgnoreCase(searchTerm);
+            return getStudentsWithoutGroup().stream()
+                .filter(student -> student.getUsername() != null
+                    && student.getUsername().toLowerCase().contains(searchTerm.toLowerCase()))
+                .toList();
         }
-        return studentRepository.findByGroupIsNull(); 
+        return getStudentsWithoutGroup(); 
     }
 
     public GroupAssignmentDto generateSingleRandomGroup() {
-        List<Student> availableStudents = studentRepository.findByGroupIsNull();
+        List<Student> availableStudents = getStudentsWithoutGroup();
         
         GroupAssignmentDto dto = new GroupAssignmentDto();
         dto.setGroupName("Random Group (Ready to Edit)");
@@ -469,7 +541,9 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
 
     public long getAvailableStudentsCount() {
-        return studentRepository.countByGroupIsNull(); 
+        return getActiveCourseId()
+            .map(studentRepository::countByCourseIdAndGroupIsNull)
+            .orElse(0L); 
     }
 
     public Optional<Admin> findAdminByEmail(String email) {
@@ -485,12 +559,21 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         String normalizedEmail = email.trim().toLowerCase();
 
         if ("LECTURER".equalsIgnoreCase(targetRole)) {
-            if (lecturerRepository.findByEmail(normalizedEmail).isPresent()) {
-                throw new RuntimeException("User is already a Lecturer");
+            Optional<Lecturer> existingLecturerOpt = lecturerRepository.findByEmail(normalizedEmail);
+            Lecturer lecturerToUpdate;
+            if (existingLecturerOpt.isPresent()) {
+                lecturerToUpdate = existingLecturerOpt.get();
+                String currentRoles = lecturerToUpdate.getRoles() != null ? lecturerToUpdate.getRoles() : "";
+                if (!currentRoles.contains("ROLE_LECTURER")) {
+                    lecturerToUpdate.setRoles(currentRoles.isEmpty() ? "ROLE_LECTURER" : currentRoles + ",ROLE_LECTURER");
+                }
+            } else {
+                lecturerToUpdate = new Lecturer();
+                lecturerToUpdate.setEmail(normalizedEmail);
+                lecturerToUpdate.setRoles("ROLE_LECTURER");
+                // Password and temp password will be handled by saveLecturer
             }
-            Lecturer newLecturer = new Lecturer();
-            newLecturer.setEmail(normalizedEmail);
-            saveLecturer(newLecturer, request);
+            saveLecturer(lecturerToUpdate, request);
         } else {
             throw new RuntimeException("Invalid target role: " + targetRole + ". Only LECTURER role is supported.");
         }

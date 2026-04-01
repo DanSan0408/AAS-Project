@@ -4,8 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -13,17 +11,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "lecturer")
+@Table(name = "super_admin")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Lecturer {
+public class SuperAdmin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -31,14 +29,9 @@ public class Lecturer {
 
     @Column(unique = true, nullable = false)
     private String email;
-    
+
     private String resetPasswordToken;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean isTempPassword = false;
-
-    private String roles; // Added for multi-role support
-    @ManyToOne
-    @JoinColumn(name = "course_id")
-    private Course course; // Added for multi-course support
+    @Column(nullable = false)
+    private String roles = "ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_LECTURER";
 }

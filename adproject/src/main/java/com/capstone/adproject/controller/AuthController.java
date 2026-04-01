@@ -71,6 +71,8 @@ public class AuthController {
             String role = authority.getAuthority();
             
             switch (role) {
+                case "ROLE_SUPER_ADMIN":
+                    return "/superadmin/home";
                 case "ROLE_ADMIN":
                     return "/admin/home";
                 case "ROLE_STUDENT":

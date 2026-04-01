@@ -25,6 +25,25 @@
         <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
             <span th:text="${errorMessage}"></span>
         </div>
+
+        <div class="managed-courses-indicator">
+            <div class="managed-courses-header">
+                <h3><i class="fas fa-book-open"></i> Managing Course(s)</h3>
+                <span class="managed-courses-count" th:text="${managedCourseCount}">0</span>
+            </div>
+            <p class="managed-courses-subtitle">Courses assigned by Super Admin are listed here.</p>
+
+            <div class="managed-courses-list" th:if="${managedCourseCount > 0}">
+                <div class="managed-course-chip" th:each="course : ${managedCourses}">
+                    <span class="managed-course-code" th:text="${course.courseCode}">SEC-101</span>
+                    <span class="managed-course-name" th:text="${course.courseName}">Software Engineering Capstone</span>
+                </div>
+            </div>
+
+            <div class="managed-courses-empty" th:if="${managedCourseCount == 0}">
+                No course is assigned to this admin yet.
+            </div>
+        </div>
         
         <div class="content-flex-container">
             

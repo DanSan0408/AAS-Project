@@ -11,8 +11,21 @@
             <span sec:authentication="name"></span>
         </div>
         <ul class="menu-list">
+            <li class="course-switcher-item" th:if="${managedCourses != null and !#lists.isEmpty(managedCourses)}">
+                <form id="courseSwitcherForm" th:action="@{/admin/switch-course}" method="post" class="course-switcher-form">
+                    <label for="activeCourseSelect">Active Course</label>
+                    <select id="activeCourseSelect" name="courseId" onchange="this.form.submit()">
+                        <option th:each="course : ${managedCourses}"
+                                th:value="${course.id}"
+                                th:selected="${activeCourseId != null and activeCourseId == course.id}"
+                                th:text="${course.courseCode + ' - ' + course.courseName}">Course</option>
+                    </select>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                </form>
+            </li>
             <li><a href="/admin/home">Dashboard</a></li>
             <li><a href="/admin/manage-users">Manage Users</a></li>
+            <li><a href="/admin/manage-courses">Manage Courses</a></li>
             <li><a href="/rubrics/manage">Manage Assessments</a></li>
             <li><a href="/admin/data-views">Data Views</a></li>
             <li class="nav-item">
@@ -24,6 +37,9 @@
             <li sec:authorize="hasRole('ROLE_LECTURER')">
                 <a th:href="@{/lecturer/home}" class="switch-role-btn">Switch to Lecturer</a>
             </li>
+            <li sec:authorize="hasRole('ROLE_SUPER_ADMIN')" style="background-color: #f8f9fa; border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px;">
+                <a th:href="@{/superadmin/home}" class="switch-role-btn" style="color: #c27803; font-weight: bold;">⬆️ Back to Super Admin</a>
+            </li>
             <li>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit">Logout</button>
@@ -32,5 +48,20 @@
             </li>
         </ul>
     </div>
+
+    <script th:inline="javascript">
+        (function() {
+            var form = document.getElementById('courseSwitcherForm');
+            var select = document.getElementById('activeCourseSelect');
+            if (!form || !select) {
+                return;
+            }
+
+            // Use standard form POST so session state is committed before navigation.
+            select.addEventListener('change', function() {
+                form.submit();
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -40,4 +40,8 @@ public class Student {
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course; // Added for multi-course support
 }
