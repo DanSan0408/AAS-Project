@@ -31,6 +31,10 @@ public class Group {
     @JoinColumn(name = "industrial_supervisor_id")
     private Lecturer industrialSupervisor;
 
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
+
     @OneToMany(mappedBy = "group")
     private List<Student> students = new ArrayList<>(); 
 
@@ -79,6 +83,14 @@ public class Group {
 
     public void setIndustrialSupervisor(Lecturer industrialSupervisor) {
         this.industrialSupervisor = industrialSupervisor;
+    }
+
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
     }
 
     public int getGroupSize() {

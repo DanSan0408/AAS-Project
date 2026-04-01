@@ -8,11 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,6 +37,7 @@ import com.capstone.adproject.dto.AssessmentAssignmentDto;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.dto.RandomizationInputDto;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
@@ -48,11 +51,14 @@ import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.CustomUserDetailsService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.RubricService;
+import com.capstone.adproject.service.SuperAdminService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/admin")
@@ -63,6 +69,8 @@ public class AdminController {
     private final AssessmentService assessmentService;
     private final DeadlineService deadlineService;
     private final RubricService rubricService;
+    private final SuperAdminService superAdminService;
+    private final CourseScopeService courseScopeService;
     private final GroupRepository groupRepository;
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
@@ -74,6 +82,8 @@ public class AdminController {
             AssessmentService assessmentService, 
             DeadlineService deadlineService,
             RubricService rubricService,
+            SuperAdminService superAdminService,
+            CourseScopeService courseScopeService,
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
@@ -83,6 +93,8 @@ public class AdminController {
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
         this.rubricService = rubricService;
+        this.superAdminService = superAdminService;
+        this.courseScopeService = courseScopeService;
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
@@ -105,6 +117,84 @@ public class AdminController {
             return authentication.getName();
         }
         return "Admin";
+    }
+
+    private List<Course> getManagedCoursesForCurrentAdmin() {
+        return courseScopeService.getManagedCoursesForCurrentUser();
+    }
+
+    private boolean isManagedCourseId(Long courseId) {
+        return courseScopeService.isManagedCourseId(courseId);
+    }
+
+    private boolean ownsStudent(Student student) {
+        return student != null
+            && student.getCourse() != null
+            && student.getCourse().getId() != null
+            && courseScopeService.isActiveCourseId(student.getCourse().getId());
+    }
+
+    private boolean ownsLecturer(Lecturer lecturer) {
+        return lecturer != null
+            && lecturer.getCourse() != null
+            && lecturer.getCourse().getId() != null
+            && courseScopeService.isActiveCourseId(lecturer.getCourse().getId());
+    }
+
+    private boolean ownsGroup(Group group) {
+        return group != null
+            && group.getCourse() != null
+            && group.getCourse().getId() != null
+            && courseScopeService.isActiveCourseId(group.getCourse().getId());
+    }
+
+    private boolean ownsAssessment(Assessment assessment) {
+        return assessment != null
+            && assessment.getCourse() != null
+            && assessment.getCourse().getId() != null
+            && courseScopeService.isActiveCourseId(assessment.getCourse().getId());
+    }
+
+    @PostMapping("/switch-course")
+    public String switchCourse(
+            @RequestParam("courseId") Long courseId,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(courseId);
+        if (!switched) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to switch to that course.");
+            return "redirect:/admin/home";
+        }
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY, courseId);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Active course switched successfully.");
+
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank() && !referer.contains("/admin/switch-course")) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/admin/home";
+    }
+
+    @PostMapping("/api/set-course/{courseId}")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> setCourseApi(@PathVariable("courseId") Long courseId) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(courseId);
+        if (!switched) {
+            body.put("success", false);
+            body.put("message", "You are not authorized to switch to that course.");
+            return ResponseEntity.status(403).body(body);
+        }
+
+        Course activeCourse = courseScopeService.getActiveCourseForCurrentUser();
+        body.put("success", true);
+        body.put("activeCourseId", courseScopeService.getActiveCourseIdForCurrentUser());
+        body.put("courseCode", activeCourse != null ? activeCourse.getCourseCode() : null);
+        body.put("courseName", activeCourse != null ? activeCourse.getCourseName() : null);
+        return ResponseEntity.ok(body);
     }
 
     private void refreshAuthentication(String email) {
@@ -179,8 +269,23 @@ public class AdminController {
     //gathering data from various services and pass it to admin_home
     @GetMapping("/home")
     public String adminHome(Model model) {
+        List<Course> managedCourses = getManagedCoursesForCurrentAdmin();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Set<Long> managedCourseIds = managedCourses.stream()
+            .map(Course::getId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
 
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
+        List<Assessment> allAssessments = activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
+                .filter(this::ownsAssessment)
+                .collect(Collectors.toList());
+
+        Set<Long> managedAssessmentIds = allAssessments.stream()
+            .map(Assessment::getId)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
 
         Function<Assessment, Map<String, Map<String, List<Object>>>> componentGrouper = this::groupAssessmentComponents;
         model.addAttribute("groupAssessmentComponents", componentGrouper);
@@ -190,7 +295,14 @@ public class AdminController {
 
         model.addAttribute("allAssessments", allAssessments);
         model.addAttribute("adminUsername", getLoggedInUsername());
-        model.addAttribute("deadlines", deadlineService.getAllDeadlines());
+        model.addAttribute("deadlines", deadlineService.getAllDeadlines().stream()
+            .filter(d -> d.getAssessmentId() != null && managedAssessmentIds.contains(d.getAssessmentId()))
+            .collect(Collectors.toList()));
+
+        model.addAttribute("managedCourses", managedCourses);
+        model.addAttribute("managedCourseCount", managedCourseIds.size());
+        model.addAttribute("activeCourseId", activeCourseId);
+        model.addAttribute("activeCourse", courseScopeService.getActiveCourseForCurrentUser());
 
         if (!model.containsAttribute("deadlineToSave")) {
             model.addAttribute("deadlineToSave", new com.capstone.adproject.model.Deadline());
@@ -211,10 +323,21 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
             return "redirect:/admin/home";
         }
+        if (!ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to access this assessment.");
+            return "redirect:/admin/home";
+        }
         
         //fetch all groups and all lecturers
-        List<Group> allGroups = groupRepository.findAllWithStudents();
-        List<Lecturer> allLecturers = lecturerRepository.findAll();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Group> allGroups = activeCourseId == null
+            ? List.of()
+            : groupRepository.findAllWithStudentsByCourseId(activeCourseId).stream()
+            .filter(this::ownsGroup)
+            .collect(Collectors.toList());
+        List<Lecturer> allLecturers = lecturerRepository.findAll().stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList());
         
         //fetch assignments
         List<LecturerGroupAssignment> existingAssignments = 
@@ -281,6 +404,10 @@ public class AdminController {
                 redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
                 return "redirect:/admin/home";
             }
+            if (!ownsAssessment(assessment)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to modify this assessment.");
+                return "redirect:/admin/home";
+            }
             
             // Delete old assignment existing untuk assessment
             assignmentRepository.deleteByAssessment(assessment);
@@ -334,10 +461,16 @@ public class AdminController {
                     Long groupId = entry.getKey();
                     Group group = groupRepository.findById(groupId)
                         .orElseThrow(() -> new RuntimeException("Group not found: " + groupId));
+                    if (!ownsGroup(group)) {
+                        throw new RuntimeException("Unauthorized group access: " + groupId);
+                    }
                     
                     for (Long lecturerId : entry.getValue()) {
                         Lecturer lecturer = lecturerRepository.findById(lecturerId)
                             .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                        if (!ownsLecturer(lecturer)) {
+                            throw new RuntimeException("Unauthorized lecturer access: " + lecturerId);
+                        }
                         
                         if (!assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer)) {
                             LecturerGroupAssignment assignment = new LecturerGroupAssignment();
@@ -364,6 +497,9 @@ public class AdminController {
                     for (Long lecturerId : entry.getValue()) {
                         Lecturer lecturer = lecturerRepository.findById(lecturerId)
                             .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                        if (!ownsLecturer(lecturer)) {
+                            throw new RuntimeException("Unauthorized lecturer access: " + lecturerId);
+                        }
                         
                         LecturerRubricAssignment assignment = new LecturerRubricAssignment();
                         assignment.setAssessment(assessment);
@@ -391,14 +527,25 @@ public class AdminController {
     @GetMapping("/group-assignment")
     public String groupAssignmentPage(Model model) {
         
-        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
+        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList());
+        List<Lecturer> managedLecturers = adminService.getAllLecturers().stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList());
+        List<Group> managedGroups = adminService.getAllGroups().stream()
+            .filter(this::ownsGroup)
+            .collect(Collectors.toList());
+        List<Student> managedStudents = adminService.getAllStudents().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList());
         
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
         model.addAttribute("availableStudents", unassignedStudents); 
-        model.addAttribute("availableLecturers", adminService.getAllLecturers());
-        model.addAttribute("allGroups", adminService.getAllGroups());
-        model.addAttribute("allStudents", adminService.getAllStudents());
+        model.addAttribute("availableLecturers", managedLecturers);
+        model.addAttribute("allGroups", managedGroups);
+        model.addAttribute("allStudents", managedStudents);
         
         if (!model.containsAttribute("randomizationInput")) {
             model.addAttribute("randomizationInput", new RandomizationInputDto());
@@ -410,7 +557,33 @@ public class AdminController {
     }
     
     @PostMapping("/group-assignment")
-    public String createAndAssignGroup(@ModelAttribute GroupAssignmentDto groupAssignmentDto) {
+    public String createAndAssignGroup(@ModelAttribute GroupAssignmentDto groupAssignmentDto, RedirectAttributes redirectAttributes) {
+        if (groupAssignmentDto.getSelectedStudentIds() != null) {
+            boolean hasUnauthorizedStudents = groupAssignmentDto.getSelectedStudentIds().stream()
+                .map(adminService::findStudentById)
+                .anyMatch(studentOpt -> studentOpt.isEmpty() || !ownsStudent(studentOpt.get()));
+            if (hasUnauthorizedStudents) {
+                redirectAttributes.addFlashAttribute("error", "Cannot assign students from another admin's course.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
+
+        if (groupAssignmentDto.getAcademicSupervisorId() != null) {
+            Optional<Lecturer> lecturerOpt = adminService.findLecturerById(groupAssignmentDto.getAcademicSupervisorId());
+            if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                redirectAttributes.addFlashAttribute("error", "Cannot assign an academic supervisor outside your managed courses.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
+
+        if (groupAssignmentDto.getIndustrialSupervisorId() != null) {
+            Optional<Lecturer> lecturerOpt = adminService.findLecturerById(groupAssignmentDto.getIndustrialSupervisorId());
+            if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                redirectAttributes.addFlashAttribute("error", "Cannot assign an industrial supervisor outside your managed courses.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
+
         adminService.assignStudentsToNewGroup(groupAssignmentDto);
         return "redirect:/admin/group-assignment";
     }
@@ -424,6 +597,10 @@ public class AdminController {
         }
         
         Group group = groupOpt.get();
+        if (!ownsGroup(group)) {
+            redirectAttributes.addFlashAttribute("error", "You are not authorized to edit this group.");
+            return "redirect:/admin/group-assignment";
+        }
         
         GroupAssignmentDto dto = new GroupAssignmentDto();
         dto.setGroupName(group.getGroupName());
@@ -438,8 +615,12 @@ public class AdminController {
         model.addAttribute("group", group);
         model.addAttribute("groupAssignmentDto", dto); 
         model.addAttribute("studentsInGroup", adminService.getStudentsByGroup(group));
-        model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup());
-        model.addAttribute("availableLecturers", adminService.getAllLecturers());
+        model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList()));
+        model.addAttribute("availableLecturers", adminService.getAllLecturers().stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList()));
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "edit_group";
@@ -451,6 +632,38 @@ public class AdminController {
                             RedirectAttributes redirectAttributes) {
         
         try {
+            Optional<Group> groupOpt = adminService.findGroupById(groupId);
+            if (groupOpt.isEmpty() || !ownsGroup(groupOpt.get())) {
+                redirectAttributes.addFlashAttribute("error", "You are not authorized to update this group.");
+                return "redirect:/admin/group-assignment";
+            }
+
+            if (dto.getSelectedStudentIds() != null) {
+                boolean hasUnauthorizedStudents = dto.getSelectedStudentIds().stream()
+                    .map(adminService::findStudentById)
+                    .anyMatch(studentOpt -> studentOpt.isEmpty() || !ownsStudent(studentOpt.get()));
+                if (hasUnauthorizedStudents) {
+                    redirectAttributes.addFlashAttribute("error", "Cannot add students from another admin's course.");
+                    return "redirect:/admin/group/edit/" + groupId;
+                }
+            }
+
+            if (dto.getAcademicSupervisorId() != null) {
+                Optional<Lecturer> lecturerOpt = adminService.findLecturerById(dto.getAcademicSupervisorId());
+                if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                    redirectAttributes.addFlashAttribute("error", "Academic supervisor is outside your managed courses.");
+                    return "redirect:/admin/group/edit/" + groupId;
+                }
+            }
+
+            if (dto.getIndustrialSupervisorId() != null) {
+                Optional<Lecturer> lecturerOpt = adminService.findLecturerById(dto.getIndustrialSupervisorId());
+                if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                    redirectAttributes.addFlashAttribute("error", "Industrial supervisor is outside your managed courses.");
+                    return "redirect:/admin/group/edit/" + groupId;
+                }
+            }
+
             adminService.updateGroup(groupId, dto);
             redirectAttributes.addFlashAttribute("success", "Group updated successfully!");
         } catch (RuntimeException e) {
@@ -462,8 +675,13 @@ public class AdminController {
     
     @GetMapping("/group/remove-student/{studentId}")
     public String removeStudentFromGroup(@PathVariable("studentId") Long studentId, RedirectAttributes redirectAttributes) {
+        Optional<Student> studentOpt = adminService.findStudentById(studentId);
+        if (studentOpt.isEmpty() || !ownsStudent(studentOpt.get())) {
+            redirectAttributes.addFlashAttribute("error", "You are not authorized to modify this student.");
+            return "redirect:/admin/group-assignment";
+        }
         
-        Long groupId = adminService.findStudentById(studentId)
+        Long groupId = studentOpt
                                        .map(Student::getGroup)
                                        .map(Group::getId)
                                        .orElse(null);
@@ -482,6 +700,11 @@ public class AdminController {
     @PostMapping("/group/delete/{groupId}")
     public String deleteGroup(@PathVariable("groupId") Long groupId, RedirectAttributes redirectAttributes) {
         try {
+            Optional<Group> groupOpt = adminService.findGroupById(groupId);
+            if (groupOpt.isEmpty() || !ownsGroup(groupOpt.get())) {
+                redirectAttributes.addFlashAttribute("error", "You are not authorized to delete this group.");
+                return "redirect:/admin/group-assignment";
+            }
             adminService.deleteGroupById(groupId); 
             redirectAttributes.addFlashAttribute("success", "Group ID " + groupId + " and all associated student assignments cleared successfully!");
         } catch (Exception e) {
@@ -496,9 +719,83 @@ public class AdminController {
         return "manage_users";
     }
 
+    @GetMapping("/manage-courses")
+    public String manageCourses(Model model) {
+        model.addAttribute("courses", getManagedCoursesForCurrentAdmin());
+        model.addAttribute("newCourse", new Course());
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        return "admin_manage_courses";
+    }
+
+    @PostMapping("/courses/add")
+    public String addCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
+        try {
+            Course savedCourse = superAdminService.saveCourse(course);
+
+            Optional<Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
+            if (currentLecturer.isPresent()) {
+                superAdminService.assignAdminToCourse(currentLecturer.get().getId(), savedCourse.getId());
+                redirectAttributes.addFlashAttribute("successMessage", "Course added and assigned to you successfully!");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", "Course added successfully, but could not auto-assign because your lecturer profile was not found.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error adding course: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-courses";
+    }
+
+    @GetMapping("/courses/edit/{id}")
+    public String editCourse(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        return superAdminService.getCourseById(id).map(course -> {
+            if (!isManagedCourseId(course.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this course.");
+                return "redirect:/admin/manage-courses";
+            }
+            model.addAttribute("course", course);
+            model.addAttribute("adminUsername", getLoggedInUsername());
+            return "admin_edit_course";
+        }).orElseGet(() -> {
+            redirectAttributes.addFlashAttribute("errorMessage", "Course not found.");
+            return "redirect:/admin/manage-courses";
+        });
+    }
+
+    @PostMapping("/courses/update")
+    public String updateCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
+        try {
+            if (course.getId() == null || !isManagedCourseId(course.getId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this course.");
+                return "redirect:/admin/manage-courses";
+            }
+            superAdminService.saveCourse(course);
+            redirectAttributes.addFlashAttribute("successMessage", "Course updated successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error updating course: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-courses";
+    }
+
+    @PostMapping("/courses/delete/{id}")
+    public String deleteCourse(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            if (!isManagedCourseId(id)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to delete this course.");
+                return "redirect:/admin/manage-courses";
+            }
+            superAdminService.deleteCourse(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Course deleted successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting course: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-courses";
+    }
+
     @GetMapping("/manage-students")
 public String manageStudents(Model model, @ModelAttribute("student") Student student) {
-    model.addAttribute("students", adminService.getAllStudents());
+    model.addAttribute("students", adminService.getAllStudents().stream()
+        .filter(this::ownsStudent)
+        .collect(Collectors.toList()));
 
     if (student == null || student.getId() == null && 
         (student.getEmail() == null || student.getEmail().isEmpty())) { 
@@ -519,6 +816,20 @@ public String saveStudent(
         HttpServletRequest request) {
     try {
         boolean isUpdate = (student.getId() != null);
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+
+        if (activeCourseId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No active course selected. Please assign a course first.");
+            return "redirect:/admin/manage-students";
+        }
+
+        if (isUpdate) {
+            Optional<Student> existingStudentOpt = adminService.findStudentById(student.getId());
+            if (existingStudentOpt.isEmpty() || !ownsStudent(existingStudentOpt.get())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this student.");
+                return "redirect:/admin/manage-students";
+            }
+        }
         
         if (!confirmDuplicate) {
             String duplicateMessage = adminService.checkStudentEmailDuplicate(
@@ -549,7 +860,9 @@ public String saveStudent(
 
     @GetMapping("/manage-lecturers")
 public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer lecturer) {
-    model.addAttribute("lecturers", adminService.getAllLecturers());
+    model.addAttribute("lecturers", adminService.getAllLecturers().stream()
+        .filter(this::ownsLecturer)
+        .collect(Collectors.toList()));
     
     if (lecturer == null || lecturer.getId() == null && 
         (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
@@ -570,6 +883,20 @@ public String saveLecturer(
         HttpServletRequest request) {
     try {
         boolean isUpdate = (lecturer.getId() != null);
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+
+        if (activeCourseId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No active course selected. Please assign a course first.");
+            return "redirect:/admin/manage-lecturers";
+        }
+
+        if (isUpdate) {
+            Optional<Lecturer> existingLecturerOpt = adminService.findLecturerById(lecturer.getId());
+            if (existingLecturerOpt.isEmpty() || !ownsLecturer(existingLecturerOpt.get())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this lecturer.");
+                return "redirect:/admin/manage-lecturers";
+            }
+        }
         
         if (!confirmDuplicate) {
             String duplicateMessage = adminService.checkLecturerEmailDuplicate(
@@ -603,6 +930,11 @@ public String saveLecturer(
     @GetMapping("/delete-student/{id}")
 public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
     try {
+        Optional<Student> studentOpt = adminService.findStudentById(id);
+        if (studentOpt.isEmpty() || !ownsStudent(studentOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to delete this student.");
+            return "redirect:/admin/manage-students";
+        }
         adminService.deleteStudentById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Student deleted successfully!");
     } catch (Exception e) {
@@ -614,6 +946,11 @@ public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redi
 @GetMapping("/delete-lecturer/{id}")
 public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
     try {
+        Optional<Lecturer> lecturerOpt = adminService.findLecturerById(id);
+        if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to delete this lecturer.");
+            return "redirect:/admin/manage-lecturers";
+        }
         adminService.deleteLecturerById(id);
         redirectAttributes.addFlashAttribute("successMessage", "Lecturer deleted successfully!");
     } catch (Exception e) {
@@ -624,21 +961,31 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
 
 
     @GetMapping("/edit-student/{id}")
-    public String editStudent(@PathVariable("id") Long id, Model model) {
-        adminService.findStudentById(id).ifPresent(student -> {
-            model.addAttribute("student", student);
-        });
-        model.addAttribute("students", adminService.getAllStudents());
+    public String editStudent(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        Optional<Student> studentOpt = adminService.findStudentById(id);
+        if (studentOpt.isEmpty() || !ownsStudent(studentOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this student.");
+            return "redirect:/admin/manage-students";
+        }
+        model.addAttribute("student", studentOpt.get());
+        model.addAttribute("students", adminService.getAllStudents().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList()));
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "manage_students";
     }
 
     @GetMapping("/edit-lecturer/{id}")
-    public String editLecturer(@PathVariable("id") Long id, Model model) {
-        adminService.findLecturerById(id).ifPresent(lecturer -> {
-            model.addAttribute("lecturer", lecturer);
-        });
-        model.addAttribute("lecturers", adminService.getAllLecturers());
+    public String editLecturer(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+        Optional<Lecturer> lecturerOpt = adminService.findLecturerById(id);
+        if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this lecturer.");
+            return "redirect:/admin/manage-lecturers";
+        }
+        model.addAttribute("lecturer", lecturerOpt.get());
+        model.addAttribute("lecturers", adminService.getAllLecturers().stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList()));
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "manage_lecturers";
     }
@@ -646,9 +993,12 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
 
     @GetMapping("/group-assignment/randomize")
     public String showRandomizeForm(Model model) {
+        int availableStudentsCount = (int) adminService.getStudentsWithoutGroup().stream()
+            .filter(this::ownsStudent)
+            .count();
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("randomizationInput", new RandomizationInputDto());
-        model.addAttribute("availableStudentsCount", adminService.getStudentsWithoutGroup().size());
+        model.addAttribute("availableStudentsCount", availableStudentsCount);
         
         return "randomize_groups_input"; 
     }
@@ -659,14 +1009,15 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
                                         RedirectAttributes redirectAttributes) {
 
         int maxStudents = randomizationInput.getMaxStudentsPerGroup();
-        long availableStudentsCount = adminService.getAvailableStudentsCount(); 
+        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList());
+        long availableStudentsCount = unassignedStudents.size(); 
 
         if (maxStudents < 1) {
             redirectAttributes.addFlashAttribute("error", "Cannot randomize: the max group size is invalid.");
             return "redirect:/admin/group-assignment"; 
         }
-        
-        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
         
         if (unassignedStudents.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "No students are currently unassigned.");
@@ -687,6 +1038,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         singleRandomGroup.setSelectedStudentIds(studentIds);
 
         Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
+            .filter(this::ownsStudent)
             .collect(Collectors.toMap(Student::getId, Function.identity()));
         
         // Add the comma-separated string for easier template processing
@@ -702,7 +1054,9 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
         model.addAttribute("studentLookupMap", studentLookupMap); 
         model.addAttribute("availableStudentsForAdd", unassignedStudents); 
-        model.addAttribute("availableLecturers", adminService.getAllLecturers());
+        model.addAttribute("availableLecturers", adminService.getAllLecturers().stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList()));
         
         return "group_assignment_preview"; 
     }
@@ -732,6 +1086,10 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
             redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found.");
             return "redirect:/admin/home";
         }
+        if (!ownsAssessment(assessmentOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to assign this assessment.");
+            return "redirect:/admin/home";
+        }
 
         AssessmentAssignmentDto dto = new AssessmentAssignmentDto();
         dto.setAssessmentId(assessmentId);
@@ -748,6 +1106,13 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
 
     @PostMapping("/assessment/assign")
 public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
+    Optional<Assessment> assessmentOpt = dto.getAssessmentId() == null
+        ? Optional.empty()
+        : assessmentService.getAssessmentById(dto.getAssessmentId());
+    if (assessmentOpt.isEmpty() || !ownsAssessment(assessmentOpt.get())) {
+        redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to assign this assessment.");
+        return "redirect:/admin/home";
+    }
     
     if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
          redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
@@ -808,9 +1173,22 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
             redirectAttributes.addFlashAttribute("errorMessage", "No students selected for deletion.");
             return "redirect:/admin/manage-students";
         }
+
+        List<Long> authorizedIds = ids.stream()
+            .map(adminService::findStudentById)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(this::ownsStudent)
+            .map(Student::getId)
+            .collect(Collectors.toList());
+
+        if (authorizedIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No authorized students selected for deletion.");
+            return "redirect:/admin/manage-students";
+        }
         
         try {
-            adminService.deleteStudentsByIds(ids);
+            adminService.deleteStudentsByIds(authorizedIds);
             redirectAttributes.addFlashAttribute("successMessage", "Selected students deleted successfully.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting students: " + e.getMessage());
@@ -825,8 +1203,21 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
             return "redirect:/admin/manage-lecturers";
         }
 
+        List<Long> authorizedIds = ids.stream()
+            .map(adminService::findLecturerById)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(this::ownsLecturer)
+            .map(Lecturer::getId)
+            .collect(Collectors.toList());
+
+        if (authorizedIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No authorized lecturers selected for deletion.");
+            return "redirect:/admin/manage-lecturers";
+        }
+
         try {
-            adminService.deleteLecturersByIds(ids);
+            adminService.deleteLecturersByIds(authorizedIds);
             redirectAttributes.addFlashAttribute("successMessage", "Selected lecturers deleted successfully.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting lecturers: " + e.getMessage());
@@ -846,10 +1237,23 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
         return "redirect:/admin/manage-lecturers";
     }
 
+    @PostMapping("/bulk-add-students")
+    public String bulkAddStudents(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            int count = adminService.bulkAddStudents(emailsText, request);
+            redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-students";
+    }
+
     @GetMapping("/search-lecturers")
     @ResponseBody
     public List<Lecturer> searchLecturers(@RequestParam("query") String query) {
-        return adminService.searchLecturers(query);
+        return adminService.searchLecturers(query).stream()
+            .filter(this::ownsLecturer)
+            .collect(Collectors.toList());
     }
 
 }

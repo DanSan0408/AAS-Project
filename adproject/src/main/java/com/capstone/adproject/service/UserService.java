@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.SuperAdmin;
 import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.repositories.SuperAdminRepository;
 
 @Service
 public class UserService {
@@ -18,33 +20,39 @@ public class UserService {
     private final AdminRepository adminRepo;
     private final StudentRepository studentRepo;
     private final LecturerRepository lecturerRepo;
+    private final SuperAdminRepository superAdminRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, PasswordEncoder passwordEncoder) {
+    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, SuperAdminRepository superAdminRepo, PasswordEncoder passwordEncoder) {
         this.adminRepo = adminRepo;
         this.studentRepo = studentRepo;
         this.lecturerRepo = lecturerRepo;
+        this.superAdminRepo = superAdminRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
    public Object findUserByEmail(String email) {
-    return adminRepo.findByEmail(email)
+    return superAdminRepo.findByEmail(email)
+        .map(u -> (Object)u)
+        .orElseGet(() -> adminRepo.findByEmail(email)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByEmail(email)
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByEmail(email)
                 .map(u -> (Object)u)
-                .orElse(null)));
+                .orElse(null))));
 }
 
 public Object findUserByResetToken(String token) {
-    return adminRepo.findByResetPasswordToken(token)
+    return superAdminRepo.findByResetPasswordToken(token)
+        .map(u -> (Object)u)
+        .orElseGet(() -> adminRepo.findByResetPasswordToken(token)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByResetPasswordToken(token)
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByResetPasswordToken(token)
                 .map(u -> (Object)u)
-                .orElse(null)));
+                .orElse(null))));
 }
 
     public String generateResetToken(Object user) {
@@ -53,6 +61,9 @@ public Object findUserByResetToken(String token) {
         if (user instanceof Admin admin) {
             admin.setResetPasswordToken(token);
             adminRepo.save(admin);
+        } else if (user instanceof SuperAdmin superAdmin) {
+            superAdmin.setResetPasswordToken(token);
+            superAdminRepo.save(superAdmin);
         } else if (user instanceof Student student) {
             student.setResetPasswordToken(token);
             studentRepo.save(student);
@@ -69,6 +80,8 @@ public Object findUserByResetToken(String token) {
 
         if (user instanceof Admin admin) {
             email = admin.getEmail();
+        } else if (user instanceof SuperAdmin superAdmin) {
+            email = superAdmin.getEmail();
         } else if (user instanceof Student student) {
             email = student.getEmail();
         } else if (user instanceof Lecturer lecturer) {
@@ -77,6 +90,11 @@ public Object findUserByResetToken(String token) {
 
         if (email != null) {
             final String finalEmail = email;
+            superAdminRepo.findByEmail(finalEmail).ifPresent(sa -> {
+                sa.setPassword(encodedPassword);
+                sa.setResetPasswordToken(null);
+                superAdminRepo.save(sa);
+            });
             adminRepo.findByEmail(finalEmail).ifPresent(a -> {
                 a.setPassword(encodedPassword);
                 a.setResetPasswordToken(null);
@@ -90,6 +108,7 @@ public Object findUserByResetToken(String token) {
             lecturerRepo.findByEmail(finalEmail).ifPresent(l -> {
                 l.setPassword(encodedPassword);
                 l.setResetPasswordToken(null);
+                l.setIsTempPassword(false); // Password is no longer temporary
                 lecturerRepo.save(l);
             });
         }

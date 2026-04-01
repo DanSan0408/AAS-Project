@@ -16,6 +16,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 
@@ -27,6 +29,10 @@ public class Assessment {
     private Long id;
 
     private String title;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
 
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rubric> rubrics = new ArrayList<>();
@@ -83,6 +89,9 @@ public class Assessment {
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public Course getCourse() { return course; }
+    public void setCourse(Course course) { this.course = course; }
 
     public List<Rubric> getRubrics() { 
         if (rubrics == null) { 

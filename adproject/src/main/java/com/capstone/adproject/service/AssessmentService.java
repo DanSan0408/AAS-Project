@@ -1,5 +1,6 @@
 package com.capstone.adproject.service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,18 @@ public class AssessmentService {
             calculateAssessmentMarks(assessment);
         }
         
+        return assessments;
+    }
+
+    public List<Assessment> findAllAssessmentsWithRubricsByCourseId(Long courseId) {
+        if (courseId == null) {
+            return Collections.emptyList();
+        }
+
+        List<Assessment> assessments = assessmentRepository.findAllWithRubricsByCourseId(courseId);
+        for (Assessment assessment : assessments) {
+            calculateAssessmentMarks(assessment);
+        }
         return assessments;
     }
 

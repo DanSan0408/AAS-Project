@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Super Admin Sidebar</title>
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+</head>
+<body>
+    <div th:fragment="superadmin_sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h3>UTM CAS</h3>
+            <p>Super Admin</p>
+        </div>
+        <ul class="list-unstyled components">
+            <li>
+                <a th:href="@{/superadmin/home}">🏠 Dashboard</a>
+            </li>
+            
+            <!-- Super Admin Features -->
+            <li class="role-divider">
+                <strong style="font-size: 0.85rem; color: #666;">GLOBAL MANAGEMENT</strong>
+            </li>
+            <li>
+                <a th:href="@{/superadmin/manage-courses}">📚 Manage Courses</a>
+            </li>
+            <li>
+                <a th:href="@{/superadmin/invite-admin}">✉️ Invite Admin</a>
+            </li>
+            
+            <!-- Role Switching -->
+            <li class="role-divider">
+                <strong style="font-size: 0.85rem; color: #666;">SWITCH ROLE</strong>
+            </li>
+            <li class="role-switch-link">
+                <a th:href="@{/admin/home}">📋 Admin View</a>
+            </li>
+            <li class="role-switch-link">
+                <a th:href="@{/lecturer/home}">👨‍🏫 Lecturer View</a>
+            </li>
+            
+            <!-- Logout -->
+            <li class="role-divider"></li>
+            <li>
+                <form th:action="@{/logout}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-link logout-btn">🚪 Logout</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

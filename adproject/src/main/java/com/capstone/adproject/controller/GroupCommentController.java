@@ -1,10 +1,12 @@
 package com.capstone.adproject.controller;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List; // Added this import
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -17,14 +19,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping; // Import Logger
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Import LoggerFactory
 
+import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
+import com.capstone.adproject.service.CourseScopeService;
 
 @Controller
 @RequestMapping("/{role}/comments/view")
@@ -35,24 +40,78 @@ public class GroupCommentController {
     private final AssessmentService assessmentService;
     private final GroupRepository groupRepository;
     private final LecturerRepository lecturerRepository;
+    private final AdminCourseAssignmentRepository adminCourseAssignmentRepository;
     private final CalculateService calculateService;
+    private final CourseScopeService courseScopeService;
 
     public GroupCommentController(
             AssessmentService assessmentService,
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
-            CalculateService calculateService) {
+            AdminCourseAssignmentRepository adminCourseAssignmentRepository,
+            CalculateService calculateService,
+            CourseScopeService courseScopeService) {
         this.assessmentService = assessmentService;
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
+        this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
         this.calculateService = calculateService;
+        this.courseScopeService = courseScopeService;
+    }
+
+    private Set<Long> getManagedCourseIdsForAdmin(String adminEmail) {
+        Set<Long> activeCourseIds = courseScopeService.getActiveCourseIdsForCurrentUser();
+        if (!activeCourseIds.isEmpty()) {
+            return activeCourseIds;
+        }
+
+        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(adminEmail)
+            .or(() -> lecturerRepository.findByUsername(adminEmail));
+
+        if (lecturerOpt.isEmpty()) {
+            return Set.of();
+        }
+
+        Lecturer lecturer = lecturerOpt.get();
+        Set<Long> managedCourseIds = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId()).stream()
+            .map(AdminCourseAssignment::getCourse)
+            .filter(c -> c != null && c.getId() != null)
+            .map(c -> c.getId())
+            .collect(Collectors.toCollection(HashSet::new));
+
+        if (managedCourseIds.isEmpty() && lecturer.getCourse() != null && lecturer.getCourse().getId() != null) {
+            managedCourseIds.add(lecturer.getCourse().getId());
+        }
+
+        return managedCourseIds;
+    }
+
+    private boolean assessmentInManagedCourses(Assessment assessment, Set<Long> managedCourseIds) {
+        return assessment != null
+            && assessment.getCourse() != null
+            && assessment.getCourse().getId() != null
+            && managedCourseIds.contains(assessment.getCourse().getId());
+    }
+
+    private boolean groupInManagedCourses(Group group, Set<Long> managedCourseIds) {
+        return group != null
+            && group.getCourse() != null
+            && group.getCourse().getId() != null
+            && managedCourseIds.contains(group.getCourse().getId());
     }
 
     @GetMapping("/assessments")
     public String selectAssessment(@PathVariable("role") String role, Authentication auth, Model model) {
         boolean isAdmin = "admin".equalsIgnoreCase(role);
         logger.info("selectAssessment: Accessed with role='{}', isAdmin={}", role, isAdmin);
-        model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics());
+        if (isAdmin) {
+            Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
+            model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics().stream()
+                .filter(a -> assessmentInManagedCourses(a, managedCourseIds))
+                .collect(Collectors.toList()));
+        } else {
+            model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics());
+        }
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", role);
         if (isAdmin) {
@@ -77,10 +136,18 @@ public class GroupCommentController {
         } 
 
         List<Group> groups;
+        Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
+
+        if (!assessmentInManagedCourses(assessmentOpt.get(), managedCourseIds)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment is outside your managed courses.");
+            return "redirect:/" + role + "/comments/view/assessments";
+        }
 
         if (isAdmin) {
             logger.info("selectGroup: Admin context. Fetching all groups."); // Debug log
-            groups = groupRepository.findAll();
+            groups = groupRepository.findAll().stream()
+                .filter(g -> groupInManagedCourses(g, managedCourseIds))
+                .collect(Collectors.toList());
         } else {
             String username = auth.getName();
             Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username)
@@ -113,7 +180,7 @@ public class GroupCommentController {
         Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(assessmentId);
         boolean isAdmin = "admin".equalsIgnoreCase(role);
         logger.info("viewComments (Admin/Specific Group): Accessed with role='{}', isAdmin={}", role, isAdmin);
-        Optional<Group> groupOpt = groupRepository.findById(groupId);
+        Optional<Group> groupOpt = groupId == null ? Optional.empty() : groupRepository.findById(groupId);
         if (!isAdmin) { // This method is now exclusively for Admin
             return "redirect:/" + role + "/comments/view/assessment/" + assessmentId + "/view"; // Redirect to lecturer's combined view
         }
@@ -125,6 +192,11 @@ public class GroupCommentController {
         
         Assessment assessment = assessmentOpt.get();
         Group group = groupOpt.get();
+        Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
+        if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access to another course's comments.");
+            return "redirect:/" + role + "/comments/view/assessments";
+        }
         List<Student> students = group.getStudents();
         
         // Fetch comments using existing CalculateService which properly identifies Evaluators (Peer/Lecturer)

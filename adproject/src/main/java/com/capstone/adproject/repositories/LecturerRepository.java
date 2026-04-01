@@ -14,12 +14,18 @@ import com.capstone.adproject.model.Lecturer;
 @Repository
 public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     Optional<Lecturer> findByUsername(String username);
+    Optional<Lecturer> findByUsernameIgnoreCase(String username);
 
     Optional<Lecturer> findByEmail(String email);
+    Optional<Lecturer> findByEmailIgnoreCase(String email);
 
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
 
     List<Lecturer> findByEmailContainingIgnoreCase(String email);
+
+    List<Lecturer> findByRolesContaining(String role);
+
+    List<Lecturer> findByCourseId(Long courseId);
 
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")

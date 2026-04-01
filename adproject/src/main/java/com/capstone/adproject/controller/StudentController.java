@@ -164,11 +164,17 @@ public class StudentController {
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
             .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long currentCourseId = currentStudent.getCourse() != null ? currentStudent.getCourse().getId() : null;
         
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
+        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
+            .filter(a -> currentCourseId != null
+                && a.getCourse() != null
+                && currentCourseId.equals(a.getCourse().getId()))
+            .collect(Collectors.toList());
         List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
         List<Deadline> studentDeadlines = allDeadlines.stream()
             .filter(d -> "STUDENT".equals(d.getAssessorType()))
+            .filter(d -> allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
             .collect(Collectors.toList());
         
         boolean hasGroup = currentStudent.getGroup() != null;
@@ -215,13 +221,18 @@ public class StudentController {
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
             .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long currentCourseId = currentStudent.getCourse() != null ? currentStudent.getCourse().getId() : null;
         
         if (currentStudent.getGroup() == null) {
             model.addAttribute("error", "You are not assigned to any group yet.");
             return "student_assessments";
         }
         
-        List<Assessment> assessments = assessmentRepository.findAll();
+        List<Assessment> assessments = assessmentRepository.findAll().stream()
+            .filter(a -> currentCourseId != null
+                && a.getCourse() != null
+                && currentCourseId.equals(a.getCourse().getId()))
+            .collect(Collectors.toList());
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
         for (Assessment assessment : assessments) {

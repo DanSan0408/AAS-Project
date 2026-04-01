@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RubricRepository;
 import com.capstone.adproject.repositories.SubRubricRepository;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
@@ -31,15 +34,21 @@ public class RubricService {
     private final RubricRepository rubricRepository;
     private final SubRubricRepository subRubricRepository;
     private final MarkRepository markRepository;
+    private final EntityManager entityManager;
+    private final JdbcTemplate jdbcTemplate;
 
     public RubricService(AssessmentRepository assessmentRepository, 
                          RubricRepository rubricRepository,
                          SubRubricRepository subRubricRepository,
-                         MarkRepository markRepository) {
+                         MarkRepository markRepository,
+                         EntityManager entityManager,
+                         JdbcTemplate jdbcTemplate) {
         this.assessmentRepository = assessmentRepository;
         this.rubricRepository = rubricRepository;
         this.subRubricRepository = subRubricRepository;
         this.markRepository = markRepository;
+        this.entityManager = entityManager;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Transactional
@@ -154,7 +163,106 @@ public class RubricService {
 
     @Transactional
     public Assessment saveAssessment(Assessment assessment) {
+        // Validate course exists and is loaded from database
+        if (assessment.getCourse() == null || assessment.getCourse().getId() == null) {
+            throw new IllegalArgumentException("Assessment must have a valid course assigned");
+        }
+        
+        // Ensure course is loaded from database (not a detached/transient object)
+        Long courseId = assessment.getCourse().getId();
+        com.capstone.adproject.model.Course course = entityManager.find(com.capstone.adproject.model.Course.class, courseId);
+        
+        if (course == null) {
+            throw new EntityNotFoundException("Course not found with ID: " + courseId);
+        }
+
+        // If legacy schemas have both course/courses, ensure FK target table contains this id.
+        ensureAssessmentForeignKeyCourseExists(courseId);
+        
+        // Set the attached course object
+        assessment.setCourse(course);
         return assessmentRepository.save(assessment);
+    }
+
+    private void ensureAssessmentForeignKeyCourseExists(Long courseId) {
+        String schema = jdbcTemplate.queryForObject("SELECT DATABASE()", String.class);
+        if (isBlank(schema)) {
+            return;
+        }
+
+        String referencedCourseTable = jdbcTemplate.query(
+            """
+            SELECT kcu.REFERENCED_TABLE_NAME
+            FROM information_schema.KEY_COLUMN_USAGE kcu
+            JOIN information_schema.TABLE_CONSTRAINTS tc
+              ON tc.CONSTRAINT_SCHEMA = kcu.CONSTRAINT_SCHEMA
+             AND tc.TABLE_NAME = kcu.TABLE_NAME
+             AND tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+            WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
+              AND kcu.TABLE_SCHEMA = ?
+              AND LOWER(kcu.TABLE_NAME) = 'assessment'
+              AND LOWER(kcu.COLUMN_NAME) = 'course_id'
+              AND kcu.REFERENCED_TABLE_NAME IS NOT NULL
+            LIMIT 1
+            """,
+            rs -> rs.next() ? rs.getString(1) : null,
+            schema
+        );
+
+        if (isBlank(referencedCourseTable)) {
+            return;
+        }
+
+        Integer exists = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM " + q(referencedCourseTable) + " WHERE id = ?",
+            Integer.class,
+            courseId
+        );
+        if (exists != null && exists > 0) {
+            return;
+        }
+
+        String fallbackSourceTable = "courses".equalsIgnoreCase(referencedCourseTable) ? "course" : "courses";
+        Integer sourceExists = jdbcTemplate.queryForObject(
+            """
+            SELECT COUNT(*)
+            FROM information_schema.TABLES
+            WHERE TABLE_SCHEMA = ?
+              AND LOWER(TABLE_NAME) = LOWER(?)
+            """,
+            Integer.class,
+            schema,
+            fallbackSourceTable
+        );
+
+        if (sourceExists == null || sourceExists == 0) {
+            throw new EntityNotFoundException("Course not found in FK target table " + referencedCourseTable + " for id " + courseId);
+        }
+
+        int copied = jdbcTemplate.update(
+            Objects.requireNonNull(
+                """
+                INSERT INTO %s (id, courseName, courseCode, description)
+                SELECT c.id, c.courseName, c.courseCode, c.description
+                FROM %s c
+                WHERE c.id = ?
+                  AND NOT EXISTS (SELECT 1 FROM %s t WHERE t.id = c.id)
+                """.formatted(q(referencedCourseTable), q(fallbackSourceTable), q(referencedCourseTable))
+            ),
+            courseId
+        );
+
+        if (copied == 0) {
+            throw new EntityNotFoundException("Course not found with ID: " + courseId);
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String q(String identifier) {
+        return "`" + identifier.replace("`", "``") + "`";
     }
     
     @Transactional

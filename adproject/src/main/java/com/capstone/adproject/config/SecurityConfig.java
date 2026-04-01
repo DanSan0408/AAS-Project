@@ -71,10 +71,11 @@ public class SecurityConfig {
         //authenticate and authorize
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", 
-                    "/forgot_password", "/reset_password/**", "/debug/**").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/rubrics/**").hasRole("ADMIN")
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**",
+                    "/forgot_password", "/reset_password/**", "/debug/**", "/superadmin/invite-admin").permitAll() // Added /superadmin/invite-admin for initial admin creation
+                .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages
+                .requestMatchers("/rubrics/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access rubric pages
                 .requestMatchers("/student/**", "/student/assessment/**").hasRole("STUDENT")
                 .requestMatchers("/lecturer/**").hasRole("LECTURER")
                 .anyRequest().authenticated()

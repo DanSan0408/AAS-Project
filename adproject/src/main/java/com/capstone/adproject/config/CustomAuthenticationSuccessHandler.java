@@ -25,10 +25,12 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities()); //getAuthorities : return a collection of GrantedAuthority objects (roles/authorities to a user)
 
         // nak hantar user ke page yang betul
-        if (roles.contains("ROLE_ADMIN")) {
+        if (roles.contains("ROLE_SUPER_ADMIN")) {
+            // Redirect to superadmin_home
+            response.sendRedirect("/superadmin/home");
+        } else if (roles.contains("ROLE_ADMIN")) {
             // Redirect to admin_home
             response.sendRedirect("/admin/home");
-
         } else if (roles.contains("ROLE_STUDENT")) {
             // Redirect to student_home
             response.sendRedirect("/student/home");

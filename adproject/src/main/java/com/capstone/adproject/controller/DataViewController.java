@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.capstone.adproject.dto.AssessmentDataDto;
 import com.capstone.adproject.dto.RubricCalculationDto;
 import com.capstone.adproject.dto.StudentAssessmentDataDto;
-import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Rubric;
@@ -31,77 +31,118 @@ import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
+import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.StudentService;
-
-class OverrideForm {
-    private List<StudentResultUpdate> updates = new ArrayList<>();
-    public List<StudentResultUpdate> getUpdates() { return updates; }
-    public void setUpdates(List<StudentResultUpdate> updates) { this.updates = updates; }
-}
-
-class StudentResultUpdate {
-    private Long studentId;
-    private Double factor;
-    private Double grandTotal;
-    
-    public StudentResultUpdate() {}
-    
-    public StudentResultUpdate(Long studentId, Double factor, Double grandTotal) {
-        this.studentId = studentId;
-        this.factor = factor;
-        this.grandTotal = grandTotal;
-    }
-
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
-    public Double getFactor() { return factor; }
-    public void setFactor(Double factor) { this.factor = factor; }
-    public Double getGrandTotal() { return grandTotal; }
-    public void setGrandTotal(Double grandTotal) { this.grandTotal = grandTotal; }
-}
 
 @Controller
 @RequestMapping("/admin/data-views")
 public class DataViewController {
+
+    public static class OverrideForm {
+        private List<StudentResultUpdate> updates = new ArrayList<>();
+        public List<StudentResultUpdate> getUpdates() { return updates; }
+        public void setUpdates(List<StudentResultUpdate> updates) { this.updates = updates; }
+    }
+
+    public static class StudentResultUpdate {
+        private Long studentId;
+        private Double factor;
+        private Double grandTotal;
+
+        public StudentResultUpdate() {}
+
+        public StudentResultUpdate(Long studentId, Double factor, Double grandTotal) {
+            this.studentId = studentId;
+            this.factor = factor;
+            this.grandTotal = grandTotal;
+        }
+
+        public Long getStudentId() { return studentId; }
+        public void setStudentId(Long studentId) { this.studentId = studentId; }
+        public Double getFactor() { return factor; }
+        public void setFactor(Double factor) { this.factor = factor; }
+        public Double getGrandTotal() { return grandTotal; }
+        public void setGrandTotal(Double grandTotal) { this.grandTotal = grandTotal; }
+    }
 
     private final AssessmentService assessmentService;
     private final StudentService studentService;
     private final CalculateService calculateService;
     private final GroupRepository groupRepository;
     private final StudentResultOverrideRepository overrideRepository;
+    private final CourseScopeService courseScopeService;
 
     public DataViewController(
             AssessmentService assessmentService,
             StudentService studentService,
             CalculateService calculateService,
             GroupRepository groupRepository,
-            StudentResultOverrideRepository overrideRepository) {
+            StudentResultOverrideRepository overrideRepository,
+            CourseScopeService courseScopeService) {
         this.assessmentService = assessmentService;
         this.studentService = studentService;
         this.calculateService = calculateService;
         this.groupRepository = groupRepository;
         this.overrideRepository = overrideRepository;
+        this.courseScopeService = courseScopeService;
     }
 
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            return ((Admin) authentication.getPrincipal()).getEmail();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
         }
-        return "Admin";
+        return "";
+    }
+
+    private Set<Long> getManagedCourseIdsForCurrentUser() {
+        return courseScopeService.getActiveCourseIdsForCurrentUser();
+    }
+
+    private boolean ownsAssessment(Assessment assessment) {
+        return assessment != null
+            && assessment.getCourse() != null
+            && assessment.getCourse().getId() != null
+            && getManagedCourseIdsForCurrentUser().contains(assessment.getCourse().getId());
+    }
+
+    private boolean ownsGroup(Group group) {
+        return group != null
+            && group.getCourse() != null
+            && group.getCourse().getId() != null
+            && getManagedCourseIdsForCurrentUser().contains(group.getCourse().getId());
+    }
+
+    private boolean ownsStudent(Student student) {
+        return student != null
+            && student.getCourse() != null
+            && student.getCourse().getId() != null
+            && getManagedCourseIdsForCurrentUser().contains(student.getCourse().getId());
     }
 
     @GetMapping
     public String showDataViewsHome(Model model) {
-        model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics());
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        model.addAttribute("assessments", activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
+                .filter(this::ownsAssessment)
+                .collect(Collectors.toList()));
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "data_views_home";
     }
 
     @GetMapping("/overall")
     public String showOverallData(Model model) {
-        List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
-        List<Student> students = studentService.getAllStudents();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Assessment> assessments = activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
+                .filter(this::ownsAssessment)
+                .collect(Collectors.toList());
+        List<Student> students = studentService.getAllStudents().stream()
+            .filter(this::ownsStudent)
+            .collect(Collectors.toList());
         
         students.sort((s1, s2) -> {
             String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -161,14 +202,25 @@ public class DataViewController {
         
         Assessment assessment = assessmentService.getAssessmentById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        if (!ownsAssessment(assessment)) {
+            throw new RuntimeException("Unauthorized assessment access");
+        }
         
-        List<Group> allGroups = groupRepository.findAll();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Group> allGroups = activeCourseId == null
+            ? List.of()
+            : groupRepository.findByCourseId(activeCourseId).stream()
+            .filter(this::ownsGroup)
+            .collect(Collectors.toList());
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("assessment", assessment);
         
         Group selectedGroup = null;
         if (groupId != null) {
             selectedGroup = groupRepository.findById(groupId).orElse(null);
+            if (selectedGroup != null && !ownsGroup(selectedGroup)) {
+                selectedGroup = null;
+            }
         } else if (!allGroups.isEmpty()) {
             selectedGroup = allGroups.get(0);
         }
@@ -186,7 +238,9 @@ public class DataViewController {
         Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
         
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
-            List<Student> students = new ArrayList<>(selectedGroup.getStudents());
+            List<Student> students = selectedGroup.getStudents().stream()
+                .filter(this::ownsStudent)
+                .collect(Collectors.toList());
             
             students.sort((s1, s2) -> {
                 String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -256,7 +310,9 @@ public class DataViewController {
             @RequestParam(required = false) Long groupId, 
             Model model) {
         
-        List<Group> groups = groupRepository.findAll();
+        List<Group> groups = groupRepository.findAll().stream()
+            .filter(this::ownsGroup)
+            .collect(Collectors.toList());
         model.addAttribute("groups", groups);
         model.addAttribute("selectedGroupId", groupId);
         model.addAttribute("adminUsername", getLoggedInUsername());
@@ -266,8 +322,10 @@ public class DataViewController {
         
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).orElse(null);
-            if (group != null) {
-                students = new ArrayList<>(group.getStudents());
+            if (group != null && ownsGroup(group)) {
+                students = group.getStudents().stream()
+                    .filter(this::ownsStudent)
+                    .collect(Collectors.toList());
                 
                 students.sort((s1, s2) -> {
                     String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -275,7 +333,9 @@ public class DataViewController {
                     return email1.compareToIgnoreCase(email2);
                 });
                 
-                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
+                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics().stream()
+                    .filter(this::ownsAssessment)
+                    .collect(Collectors.toList());
                 
                 for (Student student : students) {
                     Double currentFactor = 0.0;
@@ -300,7 +360,7 @@ public class DataViewController {
         for (StudentResultUpdate update : form.getUpdates()) {
             if (update.getStudentId() != null) {
                 Student student = studentService.findStudentById(update.getStudentId()).orElse(null);
-                if (student != null) {
+                if (student != null && ownsStudent(student)) {
                     StudentResultOverride override = overrideRepository.findByStudent(student)
                         .orElse(new StudentResultOverride());
                     
