@@ -32,6 +32,28 @@ body.comment-config-page .main-content {
     align-items: center !important;
 }
 
+@media (max-width: 1024px) {
+    body.comment-config-page .main-content {
+        margin-left: 0 !important;
+        padding: 30px 20px 80px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.comment-config-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 80px 15px !important;
+    }
+    body.comment-config-page .header-container { flex-direction: column !important; }
+    body.comment-config-page .header-container img { max-width: 120px !important; }
+    body.comment-config-page .header-container h1 { font-size: 1.8rem !important; text-align: center !important; }
+    body.comment-config-page .page-header h1 { font-size: 1.4rem !important; }
+    body.comment-config-page .page-header p { font-size: 1rem !important; }
+    body.comment-config-page .config-container { max-width: 100% !important; }
+    body.comment-config-page .comment-card { padding: 15px !important; }
+    body.comment-config-page .comment-header { flex-direction: column !important; gap: 10px !important; }
+}
+
 body.comment-config-page .header-container {
     display: flex !important;
     flex-direction: row !important;

@@ -30,6 +30,33 @@ body.edit-overrides-page .main-content {
     align-items: center !important;
 }
 
+@media (max-width: 1024px) {
+    body.edit-overrides-page .main-content {
+        margin-left: 0 !important;
+        padding: 30px 20px 80px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.edit-overrides-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 80px 15px !important;
+    }
+    body.edit-overrides-page .header-container { flex-direction: column !important; }
+    body.edit-overrides-page .header-container img { max-width: 120px !important; }
+    body.edit-overrides-page .header-container h1 { font-size: 1.8rem !important; text-align: center !important; }
+    body.edit-overrides-page .page-header { flex-direction: column !important; align-items: flex-start !important; }
+    body.edit-overrides-page .page-header h1 { font-size: 1.4rem !important; }
+    body.edit-overrides-page .filter-form { flex-direction: column !important; align-items: stretch; margin-bottom: 15px; }
+    body.edit-overrides-page .filter-form label { margin-right: 0 !important; margin-bottom: 8px !important; }
+    body.edit-overrides-page select { min-width: 100% !important; }
+    body.edit-overrides-page .table-card { padding: 0 !important; }
+    body.edit-overrides-page .data-table { font-size: 0.9rem !important; }
+    body.edit-overrides-page th { padding: 10px !important; font-size: 0.85rem !important; }
+    body.edit-overrides-page td { padding: 10px !important; }
+    body.edit-overrides-page .inp-number { padding: 6px !important; }
+}
+
 body.edit-overrides-page .header-container {
     display: flex !important;
     flex-direction: row !important;

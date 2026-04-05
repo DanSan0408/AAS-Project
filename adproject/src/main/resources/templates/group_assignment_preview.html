@@ -44,42 +44,44 @@
                         
                         <input type="hidden" id="selectedStudentIdsInput" name="selectedStudentIds" th:value="${selectedStudentIdsStr}" />
 
-                        <table class="group-table">
-                            <thead>
-                                <tr>
-                                    <th>Group Name (Editable)</th>
-                                    <th>Academic Supervisor</th>
-                                    <th>Industrial Supervisor</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <input type="text" name="groupName" 
-                                                th:value="${randomGroupPreview.groupName}"
-                                                placeholder="Enter Group Name" required/>
-                                    </td>
-                                    
-                                    <td>
-                                        <select name="academicSupervisorId" required>
-                                            <option value="">-- Select Lecturer --</option>
-                                            <option th:each="lecturer : ${availableLecturers}"
-                                                    th:value="${lecturer.id}"
-                                                    th:text="${lecturer.email}"></option>
-                                        </select>
-                                    </td>
-                                    
-                                    <td>
-                                        <select name="industrialSupervisorId" required>
-                                            <option value="">-- Select Lecturer --</option>
-                                            <option th:each="lecturer : ${availableLecturers}"
-                                                    th:value="${lecturer.id}"
-                                                    th:text="${lecturer.email}"></option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="group-table">
+                                <thead>
+                                    <tr>
+                                        <th>Group Name (Editable)</th>
+                                        <th>Academic Supervisor</th>
+                                        <th>Industrial Supervisor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <input type="text" name="groupName" 
+                                                    th:value="${randomGroupPreview.groupName}"
+                                                    placeholder="Enter Group Name" required/>
+                                        </td>
+                                        
+                                        <td>
+                                            <select name="academicSupervisorId" required>
+                                                <option value="">-- Select Lecturer --</option>
+                                                <option th:each="lecturer : ${availableLecturers}"
+                                                        th:value="${lecturer.id}"
+                                                        th:text="${lecturer.email}"></option>
+                                            </select>
+                                        </td>
+                                        
+                                        <td>
+                                            <select name="industrialSupervisorId" required>
+                                                <option value="">-- Select Lecturer --</option>
+                                                <option th:each="lecturer : ${availableLecturers}"
+                                                        th:value="${lecturer.id}"
+                                                        th:text="${lecturer.email}"></option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <h2>Group Members (<span id="currentGroupSize">0</span> / <span th:text="${maxStudentsPerGroup}"></span>)</h2>
                         

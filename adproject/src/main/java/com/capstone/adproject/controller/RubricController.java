@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
-import org.springframework.stereotype.Controller; 
+import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,23 +26,25 @@ import com.capstone.adproject.model.SubRubric;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.RubricService;
+import com.capstone.adproject.service.RubricTemplateService;
 import com.capstone.adproject.service.SuperAdminService;
 
-@Controller
-@RequestMapping("/rubrics")
-public class RubricController {
+@Controller @RequestMapping("/rubrics") public class RubricController {
 
     private final RubricService rubricService;
     private final AssessmentService assessmentService;
     private final CourseScopeService courseScopeService;
     private final SuperAdminService superAdminService;
+    private final RubricTemplateService rubricTemplateService;
 
     public RubricController(RubricService rubricService, AssessmentService assessmentService,
-            CourseScopeService courseScopeService, SuperAdminService superAdminService) {
+            CourseScopeService courseScopeService, SuperAdminService superAdminService,
+            RubricTemplateService rubricTemplateService) {
         this.rubricService = rubricService;
         this.assessmentService = assessmentService;
         this.courseScopeService = courseScopeService;
         this.superAdminService = superAdminService;
+        this.rubricTemplateService = rubricTemplateService;
     }
 
     private Set<Long> getManagedCourseIdsForCurrentUser() {
@@ -51,9 +53,9 @@ public class RubricController {
 
     private boolean ownsAssessment(Assessment assessment) {
         return assessment != null
-            && assessment.getCourse() != null
-            && assessment.getCourse().getId() != null
-            && getManagedCourseIdsForCurrentUser().contains(assessment.getCourse().getId());
+                && assessment.getCourse() != null
+                && assessment.getCourse().getId() != null
+                && getManagedCourseIdsForCurrentUser().contains(assessment.getCourse().getId());
     }
 
     private boolean ownsRubric(Rubric rubric) {
@@ -64,39 +66,40 @@ public class RubricController {
     public String manageAssessments(Model model) {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         model.addAttribute("assessments", activeCourseId == null
-            ? List.of()
-            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
-                .filter(this::ownsAssessment)
-                .collect(Collectors.toList()));
-        
+                ? List.of()
+                : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
+                        .filter(this::ownsAssessment)
+                        .collect(Collectors.toList()));
+
         if (!model.containsAttribute("newAssessment")) {
             model.addAttribute("newAssessment", new Assessment());
         }
-        
+
         return "manage-assessments";
     }
 
     @PostMapping("/assessment/save")
     public String saveAssessment(@ModelAttribute Assessment assessment,
-                                 @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
-                                 RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
+            RedirectAttributes redirectAttributes) {
 
         Long assessmentId = assessment.getId();
 
         if (!duplicateConfirmed) {
             Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
-            boolean isDuplicate = (activeCourseId == null ? List.<Assessment>of() : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId)).stream()
-                .filter(a -> assessmentId == null || !assessmentId.equals(a.getId()))
-                .anyMatch(a -> a.getTitle() != null
-                    && a.getTitle().replaceAll("\\s+", "").equalsIgnoreCase(
-                        assessment.getTitle() == null ? "" : assessment.getTitle().replaceAll("\\s+", "")));
+            boolean isDuplicate = (activeCourseId == null ? List.<Assessment>of()
+                    : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId)).stream()
+                    .filter(a -> assessmentId == null || !assessmentId.equals(a.getId()))
+                    .anyMatch(a -> a.getTitle() != null
+                            && a.getTitle().replaceAll("\\s+", "").equalsIgnoreCase(
+                                    assessment.getTitle() == null ? "" : assessment.getTitle().replaceAll("\\s+", "")));
 
             if (isDuplicate) {
-                redirectAttributes.addFlashAttribute("newAssessment", assessment); 
+                redirectAttributes.addFlashAttribute("newAssessment", assessment);
                 redirectAttributes.addFlashAttribute("duplicateFound", true);
                 redirectAttributes.addFlashAttribute("errorMessage",
-                    "An Assessment with the title '" + assessment.getTitle() + "' already exists in your managed courses. Click 'Save' again to confirm the duplicate entry."
-                );
+                        "An Assessment with the title '" + assessment.getTitle()
+                                + "' already exists in your managed courses. Click 'Save' again to confirm the duplicate entry.");
                 return "redirect:/rubrics/manage";
             }
         }
@@ -104,7 +107,8 @@ public class RubricController {
         if (assessment.getId() != null) {
             Assessment existingAssessment = rubricService.findAssessmentById(assessment.getId());
             if (!ownsAssessment(existingAssessment)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this assessment.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "You are not authorized to update this assessment.");
                 return "redirect:/rubrics/manage";
             }
             existingAssessment.setTitle(assessment.getTitle());
@@ -113,26 +117,30 @@ public class RubricController {
         } else {
             Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
             if (activeCourseId == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "No active course selected. Please select a course and try again.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "No active course selected. Please select a course and try again.");
                 return "redirect:/rubrics/manage";
             }
 
             if (!getManagedCourseIdsForCurrentUser().contains(activeCourseId)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Assessment must belong to one of your managed courses.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Assessment must belong to one of your managed courses.");
                 return "redirect:/rubrics/manage";
             }
 
             // ✅ FIX: Validate course exists before setting
             var courseOpt = superAdminService.getCourseById(activeCourseId);
             if (courseOpt.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Selected course no longer exists. Please switch course and try again.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Selected course no longer exists. Please switch course and try again.");
                 return "redirect:/rubrics/manage";
             }
-            
+
             assessment.setCourse(courseOpt.get());
 
             if (assessment.getCourse() == null || assessment.getCourse().getId() == null) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Selected course no longer exists. Please switch course and try again.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Selected course no longer exists. Please switch course and try again.");
                 return "redirect:/rubrics/manage";
             }
 
@@ -153,7 +161,8 @@ public class RubricController {
         try {
             Assessment assessment = rubricService.findAssessmentById(id);
             if (!ownsAssessment(assessment)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to delete this assessment.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "You are not authorized to delete this assessment.");
                 return "redirect:/rubrics/manage";
             }
             rubricService.deleteAssessment(id);
@@ -166,26 +175,27 @@ public class RubricController {
 
     @GetMapping("/view/{assessmentId}")
     @Transactional
-    public String viewAssessmentRubrics(@PathVariable("assessmentId") Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
-        Assessment assessment = rubricService.findAssessmentById(assessmentId); 
+    public String viewAssessmentRubrics(@PathVariable("assessmentId") Long assessmentId, Model model,
+            RedirectAttributes redirectAttributes) {
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
         if (!ownsAssessment(assessment)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to view this assessment.");
             return "redirect:/rubrics/manage";
         }
 
         rubricService.initializeRubricOrders(assessmentId);
-        
+
         assessment = rubricService.findAssessmentById(assessmentId);
 
         Map<String, Map<String, List<Object>>> groupedRubrics = new LinkedHashMap<>();
         final String DUMMY_KEY = "ASSESSMENT_GROUPING";
         Map<String, List<Object>> innerGroup = new LinkedHashMap<>();
-    
+
         if (assessment.getRubrics() != null) {
             Hibernate.initialize(assessment.getRubrics());
             for (Rubric rubric : assessment.getRubrics()) {
                 if (rubric.getSubRubrics() != null) {
-                    Hibernate.initialize(rubric.getSubRubrics()); 
+                    Hibernate.initialize(rubric.getSubRubrics());
                     rubric.getSubRubrics().forEach(subRubric -> {
                         if (subRubric.getRatings() != null) {
                             Hibernate.initialize(subRubric.getRatings());
@@ -203,25 +213,27 @@ public class RubricController {
                 innerGroup.computeIfAbsent(assessmentType, k -> new ArrayList<>()).add(rubric);
             }
         }
-        
+
         for (List<Object> rubrics : innerGroup.values()) {
             rubrics.sort((o1, o2) -> {
                 if (o1 instanceof Rubric && o2 instanceof Rubric) {
                     Integer order1 = ((Rubric) o1).getDisplayOrder();
                     Integer order2 = ((Rubric) o2).getDisplayOrder();
-                    if (order1 == null) order1 = 0;
-                    if (order2 == null) order2 = 0;
+                    if (order1 == null)
+                        order1 = 0;
+                    if (order2 == null)
+                        order2 = 0;
                     return Integer.compare(order1, order2);
                 }
                 return 0;
             });
         }
-        
+
         groupedRubrics.put(DUMMY_KEY, innerGroup);
 
         model.addAttribute("assessment", assessment);
-        model.addAttribute("groupedRubrics", groupedRubrics); 
-        
+        model.addAttribute("groupedRubrics", groupedRubrics);
+
         return "view-assessment-rubrics";
     }
 
@@ -237,11 +249,13 @@ public class RubricController {
     }
 
     @PostMapping("/assessment/{id}/fill/save")
-    public String saveBulkFill(@PathVariable("id") Long id, @ModelAttribute Assessment assessment, RedirectAttributes redirectAttributes) {
+    public String saveBulkFill(@PathVariable("id") Long id, @ModelAttribute Assessment assessment,
+            RedirectAttributes redirectAttributes) {
         try {
             Assessment existingAssessment = rubricService.findAssessmentById(id);
             if (!ownsAssessment(existingAssessment)) {
-                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this assessment.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "You are not authorized to update this assessment.");
                 return "redirect:/rubrics/manage";
             }
             rubricService.saveBulkAssessment(assessment);
@@ -254,30 +268,34 @@ public class RubricController {
     }
 
     @GetMapping("/add/{assessmentId}")
-    public String showAddRubricForm(@PathVariable("assessmentId") Long assessmentId, Model model, RedirectAttributes redirectAttributes) {
+    public String showAddRubricForm(@PathVariable("assessmentId") Long assessmentId, Model model,
+            RedirectAttributes redirectAttributes) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         if (!ownsAssessment(assessment)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to add rubrics to this assessment.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "You are not authorized to add rubrics to this assessment.");
             return "redirect:/rubrics/manage";
         }
         Rubric rubric = new Rubric();
         rubric.setAssessment(assessment);
-        
+
         rubric.setSubRubrics(new ArrayList<>());
         rubric.setRatings(new ArrayList<>());
-        
+
         model.addAttribute("rubric", rubric);
-        model.addAttribute("pageTitle", "Add New Rubric"); 
+        model.addAttribute("pageTitle", "Add New Rubric");
         model.addAttribute("formAction", "/rubrics/save");
-        
-        model.addAttribute("assessmentTypesOptions", new String[]{"Individual Assessment", "Group Assessment"});
-        
-        return "rubric-form"; 
+
+        model.addAttribute("assessmentTypesOptions", new String[] { "Individual Assessment", "Group Assessment" });
+        model.addAttribute("availableTemplates", rubricTemplateService.getTemplatesForActiveCourse());
+
+        return "rubric-form";
     }
 
     @GetMapping("/edit/{rubricId}")
     @Transactional
-    public String showEditRubricForm(@PathVariable("rubricId") Long rubricId, Model model, RedirectAttributes redirectAttributes) {
+    public String showEditRubricForm(@PathVariable("rubricId") Long rubricId, Model model,
+            RedirectAttributes redirectAttributes) {
         Rubric existingRubric = rubricService.findRubricById(rubricId);
         if (!ownsRubric(existingRubric)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this rubric.");
@@ -286,7 +304,7 @@ public class RubricController {
 
         if (!model.containsAttribute("rubric")) {
             Rubric rubric = existingRubric;
-            
+
             if (rubric.getSubRubrics() == null) {
                 rubric.setSubRubrics(new ArrayList<>());
             } else {
@@ -296,30 +314,31 @@ public class RubricController {
                     }
                 }
             }
-            
+
             if (rubric.getRatings() == null) {
                 rubric.setRatings(new ArrayList<>());
             }
-            
+
             model.addAttribute("rubric", rubric);
         }
-        
+
         model.addAttribute("pageTitle", "Edit Rubric");
-        model.addAttribute("formAction", "/rubrics/save"); 
-        
-        model.addAttribute("assessmentTypesOptions", new String[]{"Individual Assessment", "Group Assessment"});
-        
+        model.addAttribute("formAction", "/rubrics/save");
+
+        model.addAttribute("assessmentTypesOptions", new String[] { "Individual Assessment", "Group Assessment" });
+        model.addAttribute("availableTemplates", rubricTemplateService.getTemplatesForActiveCourse());
+
         return "rubric-form";
     }
 
     @PostMapping("/save")
     @Transactional
-    public String saveOrUpdateRubric(@ModelAttribute Rubric rubric, 
-                                     @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
-                                     @RequestParam Map<String, String> allParams,
-                                     RedirectAttributes redirectAttributes,
-                                     Model model) {
-        
+    public String saveOrUpdateRubric(@ModelAttribute Rubric rubric,
+            @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,
+            @RequestParam Map<String, String> allParams,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
         Long assessmentId = rubric.getAssessment().getId();
         Long rubricId = rubric.getId();
 
@@ -340,30 +359,29 @@ public class RubricController {
         List<String> commentLabels = rubric.getRubricCommentLabels();
         if (commentLabels != null && !commentLabels.isEmpty()) {
             List<Boolean> anonymousFlags = new ArrayList<>();
-            
+
             for (int i = 0; i < commentLabels.size(); i++) {
                 String paramKey = "rubricCommentAnonymousFlags[" + i + "]";
                 boolean isChecked = allParams.containsKey(paramKey) && "true".equals(allParams.get(paramKey));
                 anonymousFlags.add(isChecked);
             }
-            
+
             rubric.setRubricCommentAnonymousFlags(anonymousFlags);
         }
 
         if (!duplicateConfirmed) {
             boolean isDuplicate = rubricService.isRubricNameDuplicate(
-                rubric.getName(),
-                assessmentId, 
-                rubricId
-            );
+                    rubric.getName(),
+                    assessmentId,
+                    rubricId);
 
             if (isDuplicate) {
                 redirectAttributes.addFlashAttribute("rubric", rubric);
                 redirectAttributes.addFlashAttribute("duplicateFound", true);
-                redirectAttributes.addFlashAttribute("errorMessage", 
-                    "A Rubric with the name '" + rubric.getName() + "' already exists in this assessment. Click 'Save' again to confirm the duplicate entry."
-                );
-                
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "A Rubric with the name '" + rubric.getName()
+                                + "' already exists in this assessment. Click 'Save' again to confirm the duplicate entry.");
+
                 String redirectPath = (rubricId == null) ? "/rubrics/add/" + assessmentId : "/rubrics/edit/" + rubricId;
                 return "redirect:" + redirectPath;
             }
@@ -374,11 +392,11 @@ public class RubricController {
         } else {
             rubric.setCloMarks(null);
         }
-        
+
         if (rubric.getSubRubrics() != null) {
             for (SubRubric subRubric : rubric.getSubRubrics()) {
                 subRubric.setRubric(rubric);
-                
+
                 if (subRubric.getRatings() != null) {
                     for (Rating rating : subRubric.getRatings()) {
                         rating.setSubRubric(subRubric);
@@ -387,21 +405,21 @@ public class RubricController {
                 }
             }
         }
-        
+
         if (rubric.getRatings() != null) {
             for (Rating rating : rubric.getRatings()) {
                 rating.setRubric(rubric);
                 rating.setSubRubric(null);
             }
         }
-        
+
         Rubric savedRubric = rubricService.saveRubric(rubric);
 
         redirectAttributes.addFlashAttribute("successMessage", "Rubric saved successfully.");
-        
+
         return "redirect:/rubrics/view/" + savedRubric.getAssessment().getId();
     }
-    
+
     @PostMapping("/delete/{rubricId}")
     public String deleteRubric(@PathVariable("rubricId") Long rubricId, RedirectAttributes redirectAttributes) {
         Rubric rubric = rubricService.findRubricById(rubricId);
@@ -420,7 +438,8 @@ public class RubricController {
     }
 
     @GetMapping("/assessment/edit/{id}")
-    public String showEditAssessmentForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
+    public String showEditAssessmentForm(@PathVariable("id") Long id, Model model,
+            RedirectAttributes redirectAttributes) {
         Assessment assessment = rubricService.findAssessmentById(id);
         if (!ownsAssessment(assessment)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this assessment.");
@@ -428,16 +447,16 @@ public class RubricController {
         }
         model.addAttribute("newAssessment", assessment);
         model.addAttribute("assessments", rubricService.findAllAssessments().stream()
-            .filter(this::ownsAssessment)
-            .collect(Collectors.toList()));
+                .filter(this::ownsAssessment)
+                .collect(Collectors.toList()));
         return "manage-assessments";
     }
-    
+
     @PostMapping("/assessment/{assessmentId}/move-block")
     public String moveAssessmentBlock(@PathVariable("assessmentId") Long assessmentId,
-                                       @RequestParam("blockType") String blockType,
-                                       @RequestParam("direction") String direction,
-                                       RedirectAttributes redirectAttributes) {
+            @RequestParam("blockType") String blockType,
+            @RequestParam("direction") String direction,
+            RedirectAttributes redirectAttributes) {
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         if (!ownsAssessment(assessment)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to reorder this assessment.");
@@ -447,17 +466,17 @@ public class RubricController {
             rubricService.moveAssessmentBlock(assessmentId, blockType, direction);
         } catch (Exception e) {
         }
-        
+
         String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
         redirectAttributes.addFlashAttribute("focusBlock", anchor);
-        
+
         return "redirect:/rubrics/view/" + assessmentId;
     }
 
     @PostMapping("/rubric/{rubricId}/move")
     public String moveRubric(@PathVariable("rubricId") Long rubricId,
-                              @RequestParam("direction") String direction,
-                              RedirectAttributes redirectAttributes) {
+            @RequestParam("direction") String direction,
+            RedirectAttributes redirectAttributes) {
         try {
             Rubric rubric = rubricService.findRubricById(rubricId);
             if (!ownsRubric(rubric)) {
@@ -465,13 +484,13 @@ public class RubricController {
                 return "redirect:/rubrics/manage";
             }
             Long assessmentId = rubric.getAssessment().getId();
-            
+
             rubricService.moveRubric(rubricId, direction);
-            
+
             redirectAttributes.addFlashAttribute("focusRubricId", rubricId);
-            
+
             return "redirect:/rubrics/view/" + assessmentId;
-            
+
         } catch (Exception e) {
             return "redirect:/rubrics/manage";
         }

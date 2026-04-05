@@ -1,3 +1,39 @@
 body.manage-users-page #supervisorTable tbody tr:hover {
     background-color: rgba(74, 0, 24, 0.08) !important;
 }
+
+@media (max-width: 768px) {
+    body.manage-users-page .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    
+    body.manage-users-page .header-container {
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    body.manage-users-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.manage-users-page .header-container h1 { 
+        font-size: 1.5rem !important; 
+    }
+    
+    body.manage-users-page .user-editing-sidebar {
+        display: none;
+    }
+    
+    body.manage-users-page .user-editing-main {
+        width: 100%;
+    }
+    
+    body.manage-users-page .table-responsive {
+        overflow-x: auto;
+    }
+    
+    body.manage-users-page table {
+        font-size: 0.9rem;
+    }
+}

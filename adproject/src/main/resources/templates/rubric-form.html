@@ -2,9 +2,13 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">Rubric Form</title>
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="rubric-form-page">
@@ -30,6 +34,21 @@
                 <input type="hidden" th:field="*{id}" />
                 <input type="hidden" th:field="*{assessment}" />
                 <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
+
+                <!-- ⚡ Template Injector UI -->
+                <div th:if="${availableTemplates != null and !availableTemplates.empty}" class="form-group template-injector-card">
+                    <label class="template-injector-title"><i class="fas fa-magic"></i> Auto-Build from Blueprint</label>
+                    <div class="template-injector-controls">
+                        <select id="templateSelect" class="template-select">
+                            <option value="">-- Select a Blueprint --</option>
+                            <option th:each="template : ${availableTemplates}" th:value="${template.id}" th:text="${template.name}"></option>
+                        </select>
+                        <button type="button" id="applyTemplateBtn" class="btn template-apply-btn">
+                            <i class="fas fa-bolt"></i> Apply
+                        </button>
+                    </div>
+                    <small class="template-injector-help">This will instantly generate the empty rubric structure.</small>
+                </div>
 
                 <!-- ✅ CHANGED: Removed required and asterisk from Rubric Name -->
                 <div class="form-group">
@@ -350,8 +369,98 @@
                 updateSubRubricMarks(e.target.getAttribute('data-subindex'));
             }
         });
+
+        // ⚡ The Magic Injector Logic
+        const applyTemplateBtn = document.getElementById('applyTemplateBtn');
+        if (applyTemplateBtn) {
+            applyTemplateBtn.addEventListener('click', function() {
+                const templateId = document.getElementById('templateSelect').value;
+                if (!templateId) {
+                    alert('Please select a blueprint first.');
+                    return;
+                }
+                
+                if (subRubricIndex > 0 || directRatingIndex > 0) {
+                    if (!confirm('Applying a blueprint will not clear existing rows, but will append new ones. Continue?')) {
+                        return;
+                    }
+                }
+                
+                const apiUrl = /*[[@{/rubrics/templates/api/}]]*/ '/rubrics/templates/api/';
+                
+                fetch(apiUrl + templateId)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(text => {
+                        if (!text) return;
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                            // In case it was double-stringified in the database
+                            if (typeof data === 'string') {
+                                data = JSON.parse(data);
+                            }
+                        } catch(e) {
+                            console.error('Error parsing blueprint JSON:', e);
+                            alert('Blueprint data is corrupted or invalid format.');
+                            return;
+                        }
+                        
+                        let bp = data;
+                        
+                        // Graceful backward compatibility mapping
+                        if (data.rubrics && data.rubrics.length > 0) {
+                            let first = data.rubrics[0];
+                            bp = {
+                                subRubrics: Array.from({length: first.subRubricsCount || 0}).map(() => ({ratingsCount: first.ratingsCount || 0})),
+                                directRatingsCount: (first.subRubricsCount === 0) ? (first.ratingsCount || 0) : 0,
+                                commentsCount: first.commentsCount || 0
+                            };
+                        }
+                        
+                        // 1. Inflate Sub-Rubrics
+                        if (bp.subRubrics) {
+                            bp.subRubrics.forEach(sr => {
+                                const currentSubIndex = subRubricIndex;
+                                if (addSubBtn) addSubBtn.click();
+                                
+                                setTimeout(() => {
+                                    const ratingBtn = document.querySelector(`.add-sub-rating-btn[data-subindex="${currentSubIndex}"]`);
+                                    if (ratingBtn) {
+                                        for (let j = 0; j < (sr.ratingsCount || 0); j++) {
+                                            ratingBtn.click();
+                                        }
+                                    }
+                                }, 20); // Small delay allows DOM to fully register new nodes
+                            });
+                        }
+                        
+                        // 2. Inflate Direct Ratings
+                        for (let i = 0; i < (bp.directRatingsCount || 0); i++) {
+                            if (addDirectBtn) addDirectBtn.click();
+                        }
+                        
+                        // 3. Inflate Rubric Comments
+                        for (let i = 0; i < (bp.commentsCount || 0); i++) {
+                            if (addCommentBtn) addCommentBtn.click();
+                        }
+                        
+                        setTimeout(() => {
+                            alert('Template Applied successfully!');
+                        }, 100);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching template:', error);
+                        alert('Failed to load blueprint data.');
+                    });
+            });
+        }
     });
 /*]]>*/
 </script>
+
+<script th:src="@{/js/loading.js}"></script>
 </body>
 </html>

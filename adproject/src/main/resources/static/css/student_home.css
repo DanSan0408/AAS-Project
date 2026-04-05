@@ -328,6 +328,7 @@ body.student-home-page .badge-supervisor {
 @media (max-width: 1000px) {
     body.student-home-page .content-flex-container {
         flex-direction: column !important;
+        gap: 20px !important;
     }
     
     body.student-home-page .rubric-section, 
@@ -340,5 +341,66 @@ body.student-home-page .badge-supervisor {
     body.student-home-page .main-content {
         margin-left: 0 !important;
         padding: 20px !important;
+    }
+
+    body.student-home-page .rubric-section {
+        max-height: none !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+    }
+
+    body.student-home-page .rubric-section h2 {
+        position: static !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.student-home-page .main-content {
+        padding: 16px !important;
+    }
+
+    body.student-home-page .header {
+        margin-bottom: 24px !important;
+        padding: 16px !important;
+    }
+
+    body.student-home-page .header-container {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    body.student-home-page .header-container h1 {
+        font-size: 1.6rem !important;
+        text-align: center !important;
+    }
+
+    body.student-home-page .deadline-section {
+        min-width: 0 !important;
+    }
+
+    body.student-home-page .assessment-box {
+        padding: 18px !important;
+    }
+
+    body.student-home-page .assess-type-group {
+        padding: 14px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body.student-home-page .main-content {
+        padding: 12px !important;
+    }
+
+    body.student-home-page .header-container h1 {
+        font-size: 1.35rem !important;
+    }
+
+    body.student-home-page .assessment-header h3 {
+        font-size: 1.15rem !important;
+    }
+
+    body.student-home-page .deadline-item {
+        padding: 14px !important;
     }
 }

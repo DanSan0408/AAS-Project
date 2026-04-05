@@ -99,6 +99,34 @@ body.lecturer-page .alert-error {
     color: #7F1D1D;
 }
 
+@media (max-width: 768px) {
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    
+    body.lecturer-page .header-container {
+        gap: 10px !important;
+    }
+    
+    body.lecturer-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.lecturer-page .header-container h1 { 
+        font-size: 1.6rem !important; 
+    }
+    
+    body.lecturer-page .selection-container {
+        padding: 20px;
+    }
+    
+    body.lecturer-page .dashboard-header h2 {
+        font-size: 1.4rem;
+    }
+}
+
+
 body.lecturer-page .alert-success {
     background-color: #D1FAE5;
     border-color: var(--lecturer-success);

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Build Rubric Blueprint</title>
+    
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/rubric_template_builder.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="rubric-form-page">
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="card">
+            <h1>Rubric Blueprint Builder</h1>
+            <p class="info-text">
+                Design the structure of a rubric template. Add sub-rubrics, direct ratings, and comments to mimic a real rubric.
+                This blueprint can then be used to quickly generate the full rubric form.
+            </p>
+
+            <form th:action="@{/rubrics/templates/save}" th:object="${rubricTemplate}" method="post" id="blueprintForm">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{structureData}" id="structureData" />
+                
+                <div class="form-group">
+                    <label>Template Name <span style="color:red;">*</span></label>
+                    <input type="text" th:field="*{name}" placeholder="e.g. Standard 5-Scale Lab Report" required />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea th:field="*{description}" rows="2" placeholder="Briefly describe what this structure is used for..." style="width: 100%; padding: 10px 15px; border: 2px solid var(--color-border); border-radius: 6px;"></textarea>
+                </div>
+
+                <div class="section-container section-blue">
+                    <div class="section-header">
+                        <h2>Sub-Rubrics</h2>
+                        <button type="button" class="btn btn-add" onclick="addSubRubric()">+ Add Sub-Rubric</button>
+                    </div>
+                    <p class="info-text">Sub-rubrics allow you to break down this rubric into smaller components.</p>
+                    <div id="blueprint-sub-rubrics"></div>
+                </div>
+
+                <div class="section-container section-green">
+                    <div class="section-header">
+                        <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
+                        <button type="button" class="btn btn-add" style="background-color: var(--color-success) !important;" onclick="addDirectRating()">+ Add Direct Rating</button>
+                    </div>
+                    <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
+                    <div id="blueprint-direct-ratings"></div>
+                </div>
+
+                <div class="section-container section-purple">
+                    <div class="section-header">
+                        <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
+                        <button type="button" class="btn btn-add" style="background-color: var(--color-purple) !important;" onclick="addComment()">+ Add Comment Question</button>
+                    </div>
+                    <p class="info-text">Add optional comment questions specific to this rubric only.</p>
+                    <div id="blueprint-comments"></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="button-container">
+            <a th:href="@{/rubrics/templates/manage}" class="btn btn-danger">Cancel</a>
+            <button type="submit" form="blueprintForm" class="btn btn-primary" onclick="serializeBlueprint()">
+                <i class="fas fa-save"></i> Save Blueprint Structure
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let blueprint = {
+            subRubrics: [],
+            directRatingsCount: 0,
+            commentsCount: 0
+        };
+
+        function addSubRubric() { blueprint.subRubrics.push({ ratingsCount: 1 }); renderBlueprint(); }
+        function removeSubRubric(index) { blueprint.subRubrics.splice(index, 1); renderBlueprint(); }
+        function addRatingToSub(index) { blueprint.subRubrics[index].ratingsCount++; renderBlueprint(); }
+        function removeRatingFromSub(index) { if (blueprint.subRubrics[index].ratingsCount > 0) { blueprint.subRubrics[index].ratingsCount--; renderBlueprint(); } }
+        function addDirectRating() { blueprint.directRatingsCount++; renderBlueprint(); }
+        function removeDirectRating() { if (blueprint.directRatingsCount > 0) blueprint.directRatingsCount--; renderBlueprint(); }
+        function addComment() { blueprint.commentsCount++; renderBlueprint(); }
+        function removeComment() { if (blueprint.commentsCount > 0) blueprint.commentsCount--; renderBlueprint(); }
+
+        function serializeBlueprint() {
+            document.getElementById('structureData').value = JSON.stringify(blueprint);
+        }
+
+        function renderBlueprint() {
+            const subContainer = document.getElementById('blueprint-sub-rubrics');
+            subContainer.innerHTML = '';
+            blueprint.subRubrics.forEach((sr, i) => {
+                let ratingsHtml = '';
+                for(let r=0; r<sr.ratingsCount; r++) {
+                    ratingsHtml += `<div class="rating-card" style="padding:10px; margin-bottom:5px; border: 1px solid var(--color-border); border-radius: 4px; background:#fff;"><span style="font-weight:600; font-size:0.9rem;">Rating Row ${r+1}</span></div>`;
+                }
+                subContainer.innerHTML += `
+                    <div class="sub-rubric-card">
+                        <button type="button" class="remove-btn remove-sub-rubric-btn" onclick="removeSubRubric(${i})"><i class="fas fa-times"></i></button>
+                        <h4 style="margin-top:0;">Sub-Rubric Block ${i+1}</h4>
+                        <div class="ratings-section" style="background:#fff; border:1px solid var(--color-border); padding:15px; border-radius:6px; margin-top: 10px;">
+                            <div class="section-header" style="margin-bottom: 10px;">
+                                <h5 style="margin:0; font-size:1rem;">Ratings (${sr.ratingsCount})</h5>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeRatingFromSub(${i})">-</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="addRatingToSub(${i})">+</button>
+                                </div>
+                            </div>
+                            <div style="margin-bottom:10px;">${ratingsHtml}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const drContainer = document.getElementById('blueprint-direct-ratings');
+            drContainer.innerHTML = '';
+            for(let i=0; i<blueprint.directRatingsCount; i++) {
+                drContainer.innerHTML += `
+                    <div class="rating-card" style="padding:15px; background:#fff; border:1px solid var(--color-border); border-radius:6px; position:relative; margin-bottom:10px;">
+                        <button type="button" class="remove-btn remove-direct-rating-btn" onclick="removeDirectRating()" style="position:absolute; top:10px; right:10px;"><i class="fas fa-times"></i></button>
+                        <p style="margin:0; font-weight:600;">Direct Rating Block ${i+1}</p>
+                    </div>
+                `;
+            }
+            if (blueprint.directRatingsCount === 0) drContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No direct ratings added.</p>';
+
+            const commentsContainer = document.getElementById('blueprint-comments');
+            commentsContainer.innerHTML = '';
+            for(let i=0; i<blueprint.commentsCount; i++) {
+                commentsContainer.innerHTML += `
+                    <div class="comment-card" style="padding:15px; background:#fff; border:1px solid var(--color-border); border-radius:6px; position:relative; margin-bottom:10px;">
+                        <button type="button" class="remove-btn remove-rubric-comment-btn" onclick="removeComment()" style="position:absolute; top:10px; right:10px;"><i class="fas fa-times"></i></button>
+                        <p style="margin:0; font-weight:600;">Comment Question Block ${i+1}</p>
+                    </div>
+                `;
+            }
+            if (blueprint.commentsCount === 0) commentsContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No rubric-specific comments added.</p>';
+
+            serializeBlueprint();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const existingData = document.getElementById('structureData').value;
+            if (existingData && existingData.trim().length > 0 && existingData !== 'null') {
+                try {
+                    const parsed = JSON.parse(existingData);
+                    if (parsed.rubrics && parsed.rubrics.length > 0) {
+                        // Handle legacy flat format just in case
+                        let legacy = parsed.rubrics[0];
+                        blueprint.subRubrics = Array.from({length: legacy.subRubricsCount || 0}).map(() => ({ratingsCount: legacy.ratingsCount || 0}));
+                        blueprint.directRatingsCount = legacy.subRubricsCount === 0 ? (legacy.ratingsCount || 0) : 0;
+                        blueprint.commentsCount = legacy.commentsCount || 0;
+                    } else if (parsed.subRubrics || parsed.directRatingsCount !== undefined) {
+                        blueprint = parsed;
+                    }
+                } catch(e) { console.error("Could not parse JSON", e); }
+            } else {
+                 blueprint.subRubrics.push({ ratingsCount: 4 });
+            }
+            renderBlueprint();
+        });
+    </script>
+    
+    <script th:src="@{/js/loading.js}"></script>
+</body>
+</html>

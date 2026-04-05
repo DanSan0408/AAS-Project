@@ -33,6 +33,29 @@ body.student-comments-page .main-content {
     min-height: 100vh;
 }
 
+@media (max-width: 1024px) {
+    body.student-comments-page .main-content {
+        margin-left: 0 !important;
+        padding: 30px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.student-comments-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px !important;
+    }
+    body.student-comments-page .header-container { flex-direction: column !important; margin-bottom: 20px !important; }
+    body.student-comments-page .header-container img { max-width: 120px !important; }
+    body.student-comments-page .header-container h1 { font-size: 1.5rem !important; text-align: center !important; }
+    body.student-comments-page .stats-summary { flex-direction: column !important; gap: 15px !important; padding: 20px !important; }
+    body.student-comments-page .stat-card { padding: 15px !important; }
+    body.student-comments-page .stat-number { font-size: 2em !important; }
+    body.student-comments-page .assessment-comments-block { padding: 20px !important; }
+    body.student-comments-page .comments-grid { grid-template-columns: 1fr !important; }
+    body.student-comments-page .comment-card { padding: 15px !important; }
+}
+
 body.student-comments-page .content-container {
     padding: 0 !important;
     max-width: 1400px !important;

@@ -526,6 +526,11 @@ body.group-page .carousel-viewport {
     border-top: 1px solid var(--color-border) !important;
 }
 
+body.group-page .student-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
 @media (max-width: 900px) {
     body.group-page .creation-wrapper {
         flex-direction: column !important;
@@ -550,5 +555,42 @@ body.group-page .carousel-viewport {
         width: 100% !important;
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    body.group-page .group-table {
+        min-width: 680px !important;
+    }
+
+    body.group-page .carousel-controls {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    body.group-page #pageInfo {
+        width: 100% !important;
+        text-align: center !important;
+        order: 3 !important;
+    }
+}
+
+@media (max-width: 600px) {
+    body.group-page .main-content {
+        padding: 12px !important;
+    }
+
+    body.group-page .card {
+        padding: 18px !important;
+    }
+
+    body.group-page .card-header h1 {
+        font-size: 1.5rem !important;
+    }
+
+    body.group-page .user-editing-main {
+        padding: 14px !important;
+    }
+
+    body.group-page .group-table {
+        min-width: 620px !important;
     }
 }

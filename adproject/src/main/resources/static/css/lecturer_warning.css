@@ -97,6 +97,35 @@ body.lecturer-page .warning-icon {
     animation: pulse 2s ease-in-out infinite;
 }
 
+@media (max-width: 768px) {
+    body.lecturer-page .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    
+    body.lecturer-page .header-container {
+        gap: 10px !important;
+    }
+    
+    body.lecturer-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.lecturer-page .header-container h1 { 
+        font-size: 1.6rem !important; 
+    }
+    
+    body.lecturer-page .warning-container {
+        max-width: 100%;
+        width: 100%;
+        padding: 25px;
+    }
+    
+    body.lecturer-page .warning-title {
+        font-size: 1.3rem;
+    }
+}
+
 @keyframes pulse {
     0%, 100% {
         transform: scale(1);

@@ -56,6 +56,100 @@ body.superadmin-page .main-content {
     width: auto !important;
 }
 
+body.superadmin-page .sidebar {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 250px;
+    height: calc(100vh - 30px);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(30, 64, 175, 0.12);
+    z-index: 1300;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    transition: transform 0.25s ease;
+}
+
+body.superadmin-page .sidebar-header {
+    padding: 24px 18px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: #fff;
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+}
+
+body.superadmin-page .sidebar-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+body.superadmin-page .sidebar-header p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+body.superadmin-page .components {
+    list-style: none;
+    padding: 14px;
+    margin: 0;
+}
+
+body.superadmin-page .components li a,
+body.superadmin-page .logout-btn {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--color-secondary);
+    background: transparent;
+    border: 0;
+    font-weight: 600;
+    text-align: left;
+}
+
+body.superadmin-page .components li a:hover,
+body.superadmin-page .logout-btn:hover {
+    background: #eef2ff;
+    color: var(--color-primary);
+}
+
+body.superadmin-page .sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1301;
+    border: 0;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: #fff;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+body.superadmin-page .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(19, 19, 24, 0.45);
+    pointer-events: none;
+}
+
+body.superadmin-page.sidebar-open {
+    overflow: hidden;
+}
+
 /* Course Overview Section */
 .course-overview-section {
     margin-top: 30px;
@@ -335,10 +429,39 @@ div > p {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1279px) {
+    body.superadmin-page .sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.superadmin-page .sidebar {
+        top: 0;
+        left: 0;
+        width: 85vw;
+        max-width: 420px;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        transform: translateX(-105%);
+    }
+
+    body.superadmin-page.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    body.superadmin-page.sidebar-open .sidebar-overlay {
+        display: block;
+        pointer-events: auto;
+    }
+
+    body.superadmin-page .main-content,
+    body.superadmin-page.main-content,
     .main-content {
-        margin-left: 0;
-        padding: 20px;
+        margin-left: 0 !important;
+        padding: 20px !important;
+        margin-top: 56px;
     }
 
     .header {

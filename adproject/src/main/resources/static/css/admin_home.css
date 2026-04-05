@@ -699,7 +699,7 @@ body.admin-page .btn-delete:hover {
     background: #7F1D1D !important;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1279px) {
     body.admin-page .content-flex-container {
         flex-direction: column !important;
     }
@@ -713,6 +713,72 @@ body.admin-page .btn-delete:hover {
     
     body.admin-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px !important;
+        margin-top: 56px !important;
+    }
+
+    body.admin-page .assessment-header {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+    }
+
+    body.admin-page .assessment-header-buttons {
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    body.admin-page .assessment-header-buttons .add-rubric-button {
+        flex: 1 1 calc(50% - 10px) !important;
+        min-height: 44px !important;
+        justify-content: center !important;
+        font-size: 0.9rem !important;
+        padding: 10px 14px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.admin-page .main-content {
+        margin-top: 56px !important;
+        padding: 16px !important;
+    }
+
+    body.admin-page .header {
+        margin-bottom: 20px !important;
+        padding: 14px !important;
+    }
+
+    body.admin-page .header-container {
+        gap: 10px !important;
+    }
+
+    body.admin-page .header-container img {
+        height: 38px !important;
+    }
+
+    body.admin-page .header-container h1 {
+        font-size: 1.4rem !important;
+    }
+
+    body.admin-page .assessment-box {
+        padding: 16px !important;
+    }
+
+    body.admin-page .assessment-header-buttons .add-rubric-button {
+        flex: 1 1 100% !important;
+        justify-content: center !important;
+        font-size: 0.88rem !important;
+    }
+
+    body.admin-page .question-meta {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    body.admin-page .deadline-display p {
+        flex-wrap: wrap !important;
     }
 }
