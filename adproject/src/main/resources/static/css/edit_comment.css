@@ -48,12 +48,37 @@ body.edit-comment-page .header-container h1 { margin: 0 !important; color: var(-
 
 body.edit-comment-page .page-header {
     text-align: center !important;
-    margin-bottom: 30px !important;
-    width: 100% !important;
-    max-width: 800px !important;
 }
 
-body.edit-comment-page .page-header h1 {
+@media (max-width: 768px) {
+    body.edit-comment-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 60px 15px !important;
+    }
+    
+    body.edit-comment-page .header-container {
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    body.edit-comment-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.edit-comment-page .header-container h1 { 
+        font-size: 1.5rem !important; 
+    }
+    
+    body.edit-comment-page .card {
+        padding: 20px;
+    }
+    
+    body.edit-comment-page .settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+body.edit-comment-page .page-header {
     color: var(--color-primary) !important;
     font-size: 2rem !important;
     margin-bottom: 10px !important;

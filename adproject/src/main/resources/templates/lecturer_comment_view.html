@@ -35,7 +35,20 @@
         .row { display: flex; flex-wrap: wrap; margin-right: -10px; margin-left: -10px; }
         .col-md-6 { flex: 0 0 50%; max-width: 50%; padding-right: 10px; padding-left: 10px; box-sizing: border-box; }
         @media (max-width: 768px) { .col-md-6 { flex: 0 0 100%; max-width: 100%; } }
-        @media (max-width: 1000px) { .main-content { margin-left: 0; padding: 20px; } }
+        @media (max-width: 1000px) {
+            .main-content { margin-left: 0; padding: 20px; }
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            .header-container h1 { font-size: 2rem; }
+            .page-content { padding: 20px; }
+        }
+
+        @media (max-width: 640px) {
+            .page-content h2 { font-size: 1.4rem; }
+            .group-card { padding: 14px; }
+            .student-card { padding: 12px; }
+            .comment-text { margin-left: 0; }
+            .btn-secondary { width: 100%; text-align: center; }
+        }
     </style>
 </head>
 <body class="lecturer-page">

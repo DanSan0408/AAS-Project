@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Super Admin Sidebar</title>
-    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
 </head>
 <body>
-    <div th:fragment="superadmin_sidebar" class="sidebar">
+    <th:block th:fragment="superadmin_sidebar">
+    <button type="button" class="sidebar-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+    <div class="sidebar-overlay" aria-hidden="true"></div>
+    <div class="sidebar">
         <div class="sidebar-header">
             <h3>UTM CAS</h3>
             <p>Super Admin</p>
@@ -48,5 +49,64 @@
             </li>
         </ul>
     </div>
+
+    <script>
+        (function() {
+            var body = document.body;
+            var sidebarToggle = document.querySelector('.sidebar-toggle');
+            var sidebarOverlay = document.querySelector('.sidebar-overlay');
+            var lastScrollY = 0;
+
+            function lockBodyScroll() {
+                lastScrollY = window.scrollY || window.pageYOffset || 0;
+                body.style.position = 'fixed';
+                body.style.top = '-' + lastScrollY + 'px';
+                body.style.left = '0';
+                body.style.right = '0';
+                body.style.width = '100%';
+            }
+
+            function unlockBodyScroll() {
+                body.style.position = '';
+                body.style.top = '';
+                body.style.left = '';
+                body.style.right = '';
+                body.style.width = '';
+                window.scrollTo(0, lastScrollY);
+            }
+
+            function closeSidebar() {
+                body.classList.remove('sidebar-open');
+                unlockBodyScroll();
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    var willOpen = !body.classList.contains('sidebar-open');
+                    body.classList.toggle('sidebar-open');
+                    if (willOpen) {
+                        lockBodyScroll();
+                    } else {
+                        unlockBodyScroll();
+                    }
+                    sidebarToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 1279) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>
+    </th:block>
 </body>
 </html>

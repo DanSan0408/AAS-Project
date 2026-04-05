@@ -1,5 +1,6 @@
 :root {
     --color-primary: #4A0018;
+    --color-primary-light: #6B0025;
     --color-secondary: #3F3F46;
     --color-background: #F4F2EE;
     --color-surface: #FFFFFF;
@@ -190,4 +191,25 @@ body {
     .main-content { margin-left: 0 !important; padding: 20px !important; }
     .overall-card { flex-direction: column !important; text-align: center !important; gap: 20px !important; }
     .assessment-grid { grid-template-columns: 1fr !important; }
+
+    .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    .header-container h1 {
+        font-size: 2rem !important;
+    }
+
+    .card-action,
+    .card-action .btn {
+        width: 100% !important;
+    }
+
+    .card-header h3 {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: initial !important;
+    }
 }

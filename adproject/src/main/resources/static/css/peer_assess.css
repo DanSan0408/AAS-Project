@@ -37,6 +37,27 @@ body {
     min-height: 100vh;
 }
 
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    .content-container { gap: 20px; }
+    .header-container { flex-direction: column; margin-bottom: 20px; }
+    .header-container img { max-width: 120px; }
+    .header-container h1 { font-size: 1.5rem; text-align: center; }
+    .assessment-info { padding: 20px; }
+    .assessment-info h2 { font-size: 1.3em; margin-bottom: 15px; }
+    .evaluation-info { flex-direction: column; gap: 15px; font-size: 1em; }
+}
+
 .content-container {
     max-width: 1200px; 
     margin: 0 auto;

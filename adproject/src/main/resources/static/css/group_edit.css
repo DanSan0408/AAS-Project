@@ -304,6 +304,12 @@ body.group-edit-page .student-table {
     overflow: hidden !important;
 }
 
+body.group-edit-page .student-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
 body.group-edit-page .student-table th,
 body.group-edit-page .student-table td {
     border: 1px solid var(--color-border) !important;
@@ -367,5 +373,31 @@ body.group-edit-page .student-table input[type="checkbox"] {
         width: 100% !important;
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    body.group-edit-page .student-table {
+        min-width: 620px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    body.group-edit-page .main-content {
+        padding: 12px !important;
+    }
+
+    body.group-edit-page .card {
+        padding: 18px !important;
+    }
+
+    body.group-edit-page .card-header h1 {
+        font-size: 1.5rem !important;
+    }
+
+    body.group-edit-page .user-editing-main {
+        padding: 14px !important;
+    }
+
+    body.group-edit-page .user-editing-main h2 {
+        font-size: 1.25rem !important;
     }
 }

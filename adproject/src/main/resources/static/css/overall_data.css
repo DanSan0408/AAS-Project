@@ -18,7 +18,16 @@ body.overall-data-page {
     color: var(--color-secondary);
     display: flex;
     min-height: 100vh;
-    overflow-x: auto; 
+    overflow-x: hidden; 
+}
+
+body.overall-data-page {
+    overflow-x: auto !important;
+}
+
+body.overall-data-page .main-content,
+body.overall-data-page .overall-container {
+    overflow-x: visible !important;
 }
 
 body.overall-data-page .main-content {
@@ -36,6 +45,19 @@ body.overall-data-page .header-container {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
+    body.overall-data-page {
+        overflow-x: hidden;
+    }
+
+    body.overall-data-page .table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body.overall-data-page .overall-table {
+        width: max-content;
+        min-width: 100%;
+    }
     justify-content: center !important;
     gap: 20px !important;
     margin-bottom: 30px !important;
@@ -63,7 +85,7 @@ body.overall-data-page .action-buttons { display: flex !important; gap: 10px !im
 
 body.overall-data-page .table-wrapper {
     width: 100% !important;
-    overflow: visible !important; 
+    overflow-x: auto !important; 
     background-color: var(--color-surface) !important;
     border-radius: 8px !important;
     border: 1px solid var(--color-border) !important;
@@ -127,6 +149,31 @@ body.overall-data-page .btn-print { background-color: var(--color-success) !impo
 
 body.overall-data-page .legend-card { background-color: var(--color-surface) !important; padding: 20px !important; border-radius: 8px !important; border: 1px solid var(--color-border) !important; }
 body.overall-data-page .legend-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; gap: 15px !important; font-size: 0.9rem !important; }
+
+@media (max-width: 1279px) {
+    body.overall-data-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+        margin-top: 56px !important;
+    }
+
+    body.overall-data-page .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    body.overall-data-page .page-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    body.overall-data-page .action-buttons {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+}
 
 @media print {
     body.overall-data-page .sidebar, 

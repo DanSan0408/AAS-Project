@@ -91,22 +91,24 @@
                                 <div th:if="${availableStudents.isEmpty()}">
                                     <p style="font-style: italic;">No unassigned students available to add.</p>
                                 </div>
-                                <table th:unless="${availableStudents.isEmpty()}" class="student-table" style="margin-top: 0;">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 10%;">Select</th>
-                                            <th>Student Email</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="student : ${availableStudents}">
-                                            <td>
-                                                <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
-                                            </td>
-                                            <td th:text="${student.email}">Student Email</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div th:unless="${availableStudents.isEmpty()}" class="student-table-wrapper">
+                                    <table class="student-table" style="margin-top: 0;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 10%;">Select</th>
+                                                <th>Student Email</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="student : ${availableStudents}">
+                                                <td>
+                                                    <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
+                                                </td>
+                                                <td th:text="${student.email}">Student Email</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 
                                 <hr/>
 
@@ -121,25 +123,27 @@
                                 <p style="font-style: italic;">This group has no students assigned yet.</p>
                             </div>
                             
-                            <table th:unless="${studentsInGroup.isEmpty()}" class="student-table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <th>Email</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="student : ${studentsInGroup}">
-                                        <td th:text="${student.id}">101</td>
-                                        <td th:text="${student.email}">Student Email</td>
-                                        <td>
-                                            <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"
-                                               onclick="return confirm('Are you sure you want to remove this student from the group?');">Remove</a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div th:unless="${studentsInGroup.isEmpty()}" class="student-table-wrapper">
+                                <table class="student-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Email</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="student : ${studentsInGroup}">
+                                            <td th:text="${student.id}">101</td>
+                                            <td th:text="${student.email}">Student Email</td>
+                                            <td>
+                                                <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"
+                                                   onclick="return confirm('Are you sure you want to remove this student from the group?');">Remove</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                             
                             <br>
                             <a th:href="@{/admin/group-assignment}" class="btn btn-secondary" style="width: 100%; display:block; text-align:center;">Back to Group List</a>

@@ -541,6 +541,70 @@ body.data-view-page .btn-secondary:hover {
     background-color: #52525B !important;
 }
 
+@media (max-width: 1000px) {
+    body.data-view-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+    }
+
+    body.data-view-page .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    body.data-view-page .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 14px !important;
+        padding: 18px !important;
+    }
+
+    body.data-view-page .action-buttons {
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.data-view-page .group-selector {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    body.data-view-page select {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    body.data-view-page .student-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.data-view-page .data-table {
+        min-width: 900px !important;
+    }
+
+    body.data-view-page .summary-section {
+        text-align: left !important;
+        padding: 14px !important;
+    }
+
+    body.data-view-page .summary-row,
+    body.data-view-page .summary-row.total {
+        justify-content: space-between !important;
+        font-size: 1rem !important;
+    }
+
+    body.data-view-page .overall-comments-section,
+    body.data-view-page .comments-block {
+        padding: 14px !important;
+    }
+}
+
 @media print {
     body.data-view-page .sidebar, 
     body.data-view-page .action-buttons, 

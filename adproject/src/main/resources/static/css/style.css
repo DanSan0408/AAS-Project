@@ -21,19 +21,21 @@ body {
  	padding: 0;
  	display: flex;
  	color: var(--text-light);
+	overflow-x: hidden;
 }
 
 .main-content:not(.admin-main-content) {
  	flex-grow: 1;
- 	margin-left: 260px; 
- 	padding: 40px;
+	margin-left: var(--sidebar-width);
+	padding: clamp(16px, 2vw, 40px);
  	background-color: var(--dark-bg); 
  	display: flex;
  	justify-content: flex-start;
  	align-items: flex-start;
  	flex-direction: column;
  	min-height: 100vh; 
- 	width: calc(100% - 260px); 
+	width: calc(100% - var(--sidebar-width));
+    box-sizing: border-box;
 }
 
 body:not(.admin-page) .header {
@@ -128,6 +130,41 @@ body:not(.admin-page) .deadline-list {
  		margin-left: 0;
  		width: 100%;
  	}
+}
+
+@media (max-width: 1024px) {
+	.main-content:not(.admin-main-content) {
+		padding: clamp(14px, 2.5vw, 24px);
+	}
+
+	body:not(.admin-page) .header-container img {
+		width: clamp(120px, 24vw, 180px);
+	}
+
+	body:not(.admin-page) .header-container h1 {
+		font-size: clamp(1.4rem, 2.8vw, 2.1rem);
+	}
+}
+
+@media (max-width: 1279px) {
+	.main-content:not(.admin-main-content) {
+		margin-left: 0;
+		width: 100%;
+		padding: 16px;
+	}
+
+	body:not(.admin-page) .header {
+		margin-top: 56px;
+	}
+
+	body:not(.admin-page) .header-container {
+		gap: 10px;
+	}
+
+	body:not(.admin-page) .rubric-section,
+	body:not(.admin-page) .deadline-section {
+		padding: 16px;
+	}
 }
 
 body:not(.admin-page) .assessment-box {

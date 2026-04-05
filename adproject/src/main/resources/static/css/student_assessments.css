@@ -29,6 +29,29 @@ body {
     background-color: var(--student-background);
 }
 
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    .content-container { gap: 20px; }
+    .header-container { flex-direction: column; margin-bottom: 20px; }
+    .header-container img { max-width: 120px; }
+    .header-container h1 { font-size: 1.5rem; text-align: center; }
+    .group-section, .assessments-section { padding: 20px; }
+    .group-section h2, .assessments-section h2 { font-size: 1.3em; margin-bottom: 15px; }
+    .members-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .member-card { padding: 10px; flex-direction: column; text-align: center; }
+    .assessment-block { padding: 15px; }
+}
+
 .content-container {
     max-width: 1400px;
     margin: 0 auto;

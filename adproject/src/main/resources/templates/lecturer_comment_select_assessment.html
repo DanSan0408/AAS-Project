@@ -17,6 +17,7 @@
         .page-content { padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; border: 1px solid #E5E7EB; }
         .page-content h2 { color: #4A0018; border-bottom: 3px solid #4A0018; padding-bottom: 15px; margin-bottom: 25px; text-align: center; }
         
+        .table-responsive { width: 100%; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px 15px; border-bottom: 1px solid #E5E7EB; text-align: left; }
         th { background-color: #f8f9fa; color: #3F3F46; font-weight: 600; }
@@ -26,6 +27,15 @@
         
         @media (max-width: 1000px) {
             .main-content { margin-left: 0; padding: 20px; }
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            .header-container h1 { font-size: 2rem; }
+            .page-content { padding: 20px; }
+            table { min-width: 560px; }
+        }
+
+        @media (max-width: 640px) {
+            .btn-primary { width: 100%; text-align: center; }
+            th, td { padding: 10px; }
         }
     </style>
 </head>

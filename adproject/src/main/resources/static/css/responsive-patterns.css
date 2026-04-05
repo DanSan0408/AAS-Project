@@ -1,0 +1,576 @@
+/**
+ * Responsive Component Patterns
+ * =============================
+ * This file documents and centralizes the 5 key responsive patterns used throughout the system.
+ * Import this file after critical.css to establish consistent responsive behavior.
+ * 
+ * Patterns:
+ * 1. Responsive Table Pattern - Safe horizontal scrolling on small screens
+ * 2. Form Grid Pattern - Multi-column to single-column stacking
+ * 3. Button/Action Bar Wrapping - Flexible button group wrapping
+ * 4. Modal/Drawer Behavior - Off-canvas and overlay patterns
+ * 5. Card/List Mobile Fallback - Grid to list fallback for dense data
+ */
+
+/* ============================================================================
+ * PATTERN 1: RESPONSIVE TABLE PATTERN
+ * Use: Wrapping data tables for safe horizontal overflow on small screens
+ * ============================================================================ */
+
+.table-responsive {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.table-responsive table {
+  margin-bottom: 0;
+  min-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 0;
+  }
+
+  .table-responsive table {
+    font-size: 0.875rem;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 0.5rem 0.75rem;
+    white-space: normal;
+  }
+}
+
+/* Alternative: Card-based table fallback for very small screens */
+@media (max-width: 480px) {
+  .table-responsive {
+    display: block;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .table-responsive table {
+    display: block;
+  }
+
+  .table-responsive thead {
+    display: none;
+  }
+
+  .table-responsive tbody {
+    display: block;
+  }
+
+  .table-responsive tr {
+    display: block;
+    border: 1px solid #ddd;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .table-responsive td {
+    display: block;
+    text-align: right;
+    padding: 0.75rem;
+    position: relative;
+    padding-left: 50%;
+  }
+
+  .table-responsive td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0.75rem;
+    font-weight: bold;
+    text-align: left;
+  }
+}
+
+/* ============================================================================
+ * PATTERN 2: FORM GRID PATTERN
+ * Use: Multi-column forms that stack to single column on small screens
+ * ============================================================================ */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-grid--full {
+  grid-column: 1 / -1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.75rem;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* ============================================================================
+ * PATTERN 3: BUTTON/ACTION BAR WRAPPING PATTERN
+ * Use: Button groups that wrap flexibly on small screens
+ * ============================================================================ */
+
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
+}
+
+.action-bar--centered {
+  justify-content: center;
+}
+
+.action-bar--right {
+  justify-content: flex-end;
+}
+
+.action-bar--space-between {
+  justify-content: space-between;
+}
+
+.action-bar button,
+.action-bar a.btn,
+.action-bar input[type="submit"],
+.action-bar input[type="button"] {
+  white-space: nowrap;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+@media (max-width: 768px) {
+  .action-bar {
+    gap: 0.25rem;
+    margin: 0.75rem 0;
+  }
+
+  .action-bar button,
+  .action-bar a.btn,
+  .action-bar input[type="submit"],
+  .action-bar input[type="button"] {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    min-height: 44px; /* Touch target */
+  }
+
+  .action-bar--space-between {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .action-bar {
+    flex-direction: column;
+  }
+
+  .action-bar button,
+  .action-bar a.btn,
+  .action-bar input[type="submit"],
+  .action-bar input[type="button"] {
+    width: 100%;
+    text-align: center;
+  }
+
+  .action-bar--centered {
+    justify-content: stretch;
+  }
+
+  .action-bar--right {
+    justify-content: stretch;
+  }
+}
+
+/* ============================================================================
+ * PATTERN 4: MODAL/DRAWER BEHAVIOR PATTERN
+ * Use: Off-canvas sidebars and overlay modals for navigation
+ * ============================================================================ */
+
+/* Sidebar/Drawer Container */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;
+  background: white;
+  z-index: 999;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-out;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.drawer.open {
+  transform: translateX(0);
+}
+
+/* Overlay/Backdrop */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+.drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Toggle Button for Drawer */
+.drawer-toggle {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  background: #333;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.drawer-toggle:hover {
+  background: #555;
+}
+
+@media (max-width: 768px) {
+  .drawer-toggle {
+    display: block;
+  }
+
+  .drawer {
+    width: 80%;
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .drawer {
+    width: 100%;
+  }
+
+  .drawer-toggle {
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+  }
+}
+
+/* ============================================================================
+ * PATTERN 5: CARD/LIST MOBILE FALLBACK PATTERN
+ * Use: Grid of cards that falls back to list on small screens
+ * ============================================================================ */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.card-content {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .card-content {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid {
+    display: block;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .card-title {
+    margin-bottom: 0.25rem;
+  }
+
+  .card-actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================================================================
+ * ACCESSIBILITY ENHANCEMENTS (Phase 6)
+ * ============================================================================ */
+
+/* Keyboard Focus Visibility - Always visible for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #4A90E2;
+  outline-offset: 2px;
+}
+
+/* Touch Target Minimum Size - 44x44px per WCAG recommendations */
+button,
+a.btn,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a[role="button"],
+.action-bar button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.drawer-toggle {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Text Readability on Small Screens */
+@media (max-width: 480px) {
+  body {
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+  }
+
+  h1, .h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  h2, .h2 {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+
+  h3, .h3 {
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  label {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+}
+
+/* Prevent Unintended Horizontal Scrolling */
+body,
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.container,
+.main-content {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure overflow: auto elements don't create unexpected scroll */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .responsive-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ============================================================================
+ * HELPER UTILITIES
+ * ============================================================================ */
+
+/* Hide/Show by Breakpoint */
+.hide-mobile {
+  display: none;
+}
+
+.show-mobile {
+  display: block;
+}
+
+@media (min-width: 769px) {
+  .hide-mobile {
+    display: block;
+  }
+
+  .show-mobile {
+    display: none;
+  }
+}
+
+/* Touch-Friendly Minimum Size */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Spacing */
+.spacing-mobile-reduced {
+  margin: 0.5rem 0;
+}
+
+@media (min-width: 769px) {
+  .spacing-mobile-reduced {
+    margin: 1rem 0;
+  }
+}
+
+/* Responsive Typography */
+.text-responsive {
+  font-size: clamp(0.875rem, 2vw, 1.125rem);
+}
+
+/* Container Queries Alternative (if needed) */
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  padding: 0 1rem;
+  margin: 0 auto;
+}
+
+@media (min-width: 480px) {
+  .container-responsive {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    max-width: 720px;
+    padding: 0 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1140px;
+  }
+}

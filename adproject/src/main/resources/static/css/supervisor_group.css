@@ -100,6 +100,33 @@ body.supervisor-page .alert i {
     font-size: 1.2em;
 }
 
+@media (max-width: 768px) {
+    body.supervisor-page .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    
+    body.supervisor-page .header-container {
+        gap: 10px !important;
+    }
+    
+    body.supervisor-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.supervisor-page .header-container h1 { 
+        font-size: 1.6rem !important; 
+    }
+    
+    body.supervisor-page .page-title {
+        font-size: 1.4rem;
+    }
+    
+    body.supervisor-page .groups-container {
+        padding: 0 10px;
+    }
+}
+
 body.supervisor-page .groups-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));

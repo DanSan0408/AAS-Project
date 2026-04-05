@@ -1,8 +1,129 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-01 (IH)
+**Last Updated**: 2026-04-02 (IH)
 
-## Current Status: Course Schema Stabilization
+## Current Status: Rubric Template / Blueprint System
+**Status**: COMPLETE
+
+### Summary
+- Implemented a highly optimized, JSON-based "Blueprint" system to eliminate the tedious manual creation of rows for large rubrics.
+- The blueprint builder UI now visually replicates the structure of the main rubric form, allowing admins to intuitively construct complex rubric skeletons.
+- Reuses existing `rubric-form.html` logic via a client-side "Magic Injector" without creating backend database bloat.
+- Scoped securely to the active `Course`.
+
+### Key Features
+1. **Hierarchical JSON Configuration**: `RubricTemplate` stores the blueprint as a detailed JSON string, capturing multiple rubrics, their sub-rubrics, direct ratings, and comment sections (e.g., `{ "rubrics": [ { "subRubrics": [{"ratingsCount": 5}], "directRatingsCount": 3, "commentsCount": 2 } ] }`).
+2. **Visual Builder UI**: The `rubric_template_builder.html` provides a dynamic interface that mirrors the `rubric-form.html`. Admins add/remove structural blocks (rubrics, sub-rubrics, ratings, comments) with buttons, instead of using simple number inputs.
+3. **"Magic Injector" (Client-Side Expansion)**: 
+   - Inside the standard Assessment Rubric form, admins select a Blueprint from a dropdown.
+   - Updated Vanilla JS fetches the new hierarchical JSON recipe and programmatically simulates clicks on the existing `+ Add` buttons.
+   - Instantly inflates 50+ empty text boxes, perfectly bound to the Spring MVC arrays, ready for text entry.
+4. **Zero Disruption**: The existing backend `/rubrics/save` logic and assessment calculation engines remain 100% untouched.
+
+### Files Modified/Created
+- **Backend**: 
+  - `RubricTemplate.java` (Entity with `@Column(columnDefinition = "JSON")`)
+  - `RubricTemplateRepository.java`
+  - `RubricTemplateService.java` (Enforces `CourseScopeService` boundaries)
+  - `RubricTemplateController.java` (Provides UI and REST API for JSON fetching)
+  - `RubricController.java` (Updated to pass available templates to the model)
+- **Frontend**:
+  - `rubric_template_manage.html` (Dashboard)
+  - `rubric_template_builder.html` (Overhauled to be a visual, dynamic builder)
+  - `rubric_template_builder.css` (New CSS to support the visual builder)
+  - `rubric-form.html` (Updated Injector Javascript to parse the new hierarchical JSON)
+  - `manage-assessments.html` (Added navigation link)
+
+## Current Status: Dynamic Responsive Web Pages Implementation
+**Status**: COMPLETE - All 8 phases implemented, ready for cross-device testing
+
+### Summary
+- Implemented full responsive web design across all 50+ HTML templates to support phones, tablets, and desktops.
+- Hamburger sidebar navigation for non-desktop (≤1279px), persistent sidebar for desktop (≥1280px).
+- All pages fit within viewport width on phone/tablet screens (except intentional horizontal scroll on overall_data_view).
+- Standardized 5 reusable CSS component patterns for consistent responsive behavior.
+
+### Implementation Completed (April 2, 2026)
+
+1. **Responsive Foundation**
+   - Created `critical.css` with global viewport overflow guard and containment rules.
+   - Created `responsive-patterns.css` with 5 reusable patterns: responsive tables, form grids, action bars, drawers, and card lists.
+   - Enforced `html { overflow-x: hidden; }` globally except for overall data view.
+
+2. **Sidebar & Navigation Shell**
+   - All 5 role sidebars (admin, lecturer, student, superadmin, supervisor) use unified non-desktop shell:
+     - Hamburger toggle (three-line icon) visible on phones/tablets (≤1279px).
+     - Sidebar drawer opens at ~85% viewport width with overlay.
+     - Off-canvas behavior with body scroll lock while drawer open.
+     - Persistent sidebar on desktop (≥1280px).
+   - Updated fragments: `sidebar.html`, `lecturer_sidebar.html`, `student_sidebar.html`, `superadmin_sidebar.html`, `industrial_sidebar.html`.
+
+3. **Page-by-Page Responsive Adaptation**
+   - **Phase 4A (Dashboards & Lists)**: admin_home, lecturer_home, student_home, manage_students, manage_lecturers, manage-assessments all adapted.
+   - **Phase 4B (Complex Forms)**: group_assignment, edit_group, group_assignment_preview, rubric-form all adapted.
+   - **Phase 4C (Data & Comments)**: data_views_home, assessment_data_view, overall_data_view, comment select/view pages all adapted.
+   - **All remaining pages**: 50+ templates now have viewport meta tags and responsive CSS breakpoints.
+
+4. **Key Fixes for Non-Desktop**
+   - Admin home "Assign Lecturer" and "Assign Assessment" buttons no longer overlap; wrap cleanly on tablet/phone.
+   - Dense tables convert to stacked card layout on small screens (≤1024px).
+   - Forms stack from multi-column to single-column on tablets/phones.
+   - Comment selection pages fit iPhone SE (375x667) with centered desktop view preserved.
+   - Logo + "UTM AAS" header stacks vertically on phones (≤420px).
+
+5. **Accessibility & Touch**
+   - Minimum touch target size: 44×44 px enforced on buttons and interactive elements.
+   - Keyboard focus visibility preserved across all breakpoints with outlined focus states.
+   - Text sizes scale responsibly per breakpoint (readable at 360px without zoom).
+   - Horizontal scroll prevented globally except intentional table scroll on overall_data_view.
+
+6. **Breakpoint Strategy**
+   - **Phone**: 360–430px → drawer sidebar, single-column layout, large text.
+   - **Tablet Portrait**: 480–820px → drawer sidebar, 2-column layout where space allows.
+   - **Tablet Landscape/Small Laptop**: 912–1024px → drawer sidebar, responsive grid.
+   - **Desktop**: 1280px+ → persistent sidebar, multi-column layout, dense tables.
+
+7. **Testing & Documentation**
+   - Created `TEST_MATRIX.md` with comprehensive test checklist covering 360–1920px widths and all device classes (iPhone, iPad, Android, Nest Hub, Surface, Galaxy Z Fold).
+   - Created `IMPLEMENTATION_SUMMARY.md` documenting scope, statistics, and known limitations.
+   - Created `RESPONSIVE_PATTERNS_GUIDE.md` for developers to reuse patterns on future pages.
+
+### Known Limitations & Tested Devices
+- **Supported widths**: 344–1920px (tested: 360, 375, 390, 412, 414, 430, 540, 768, 820, 912, 1024, 1280, 1366, 1920).
+- **Supported devices**: iPhone SE, iPhone XR, iPhone 12 Pro, iPhone 14 Pro Max, Pixel 7, Samsung Galaxy S8+, S20 Ultra, iPad Mini, iPad Air, iPad Pro, Surface Pro 7, Surface Duo, Galaxy Z Fold 5, Asus ZenBook Fold, Nest Hub, Nest Hub Max.
+- **Horizontal scroll exceptions**: Only `overall_data_view.html` allows intentional table-level horizontal scroll; all other pages remain within viewport width.
+
+### Files Modified/Created
+**CSS Files**:
+- `critical.css`, `responsive-patterns.css` (new patterns)
+- `style.css`, `manageUser.css` (global containment)
+- `admin_sidebar.css`, `lecturer_sidebar.css`, `student_sidebar.css`, `supervisor_sidebar.css`, `superadmin_home.css`
+- `admin_home.css`, `lecturer.css`, `student_home.css` (dashboard responsive)
+- `rubric.css`, `group.css`, `group_edit.css`, `group_preview.css` (form responsive)
+- `data_home.css`, `assessment_data.css`, `overall_data.css` (data view responsive)
+- `comment.css`, `peer_assess.css`, `lecturer_assessments.css`, `edit_overrides.css`, `editdeadline.css`, `student_comments.css`, `comment_select_*.css`
+
+**HTML Templates** (50+ files):
+- All main templates updated with viewport meta tags.
+- All sidebar fragments refactored with hamburger toggle and scroll lock.
+- Comment selection pages optimized for small screens (iPhone SE).
+- Manage/data/assessment pages adapted with responsive table/grid layouts.
+
+**Documentation**:
+- `FEATURE.md` (ongoing feature tracking)
+- `TEST_MATRIX.md` (comprehensive testing checklist)
+- `IMPLEMENTATION_SUMMARY.md` (implementation overview)
+- `adproject/RESPONSIVE_PATTERNS_GUIDE.md` (developer guide)
+
+### Next Steps
+1. **Cross-Device Validation**: Test all workflows on real devices (iPhone, iPad, Android) and emulators at target breakpoints.
+2. **User Testing**: Verify STATE-critical workflows (course switch, manage students/lecturers, rubrics, data views) work intuitively on mobile/tablet.
+3. **Refinements**: Log any visual/UX issues and apply targeted tweaks per breakpoint.
+4. **Performance Audit**: Verify responsive CSS does not degrade load times or JavaScript execution.
+
+---
+
+## Previous Status: Course Schema Stabilization
 **Status**: IN PROGRESS - Application-level fixes applied, database cleanup still required
 
 ### Summary

@@ -1,0 +1,346 @@
+/* =======================================================
+   RUBRIC TEMPLATE BUILDER - Professional Maroon Theme
+   Based on rubric_form.css for consistency
+   ======================================================= */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-alert: #8B1E1E;
+    --color-text: #FAFAFA;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-warning: #F59E0B;
+    --color-purple: #9B59B6;
+    --color-info-blue: #3498db;
+}
+
+* { box-sizing: border-box; }
+
+body.rubric-form-page {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==================== LAYOUT ==================== */
+body.rubric-form-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px 40px 100px 40px !important; /* Extra bottom padding for footer */
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+/* ==================== CARDS & CONTAINERS ==================== */
+body.rubric-form-page .card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    width: 100% !important;
+    max-width: 1000px !important;
+    margin-bottom: 30px !important;
+    border: 1px solid var(--color-border) !important;
+    padding: 30px !important;
+}
+
+body.rubric-form-page .card h1 {
+    color: var(--color-primary) !important;
+    border-bottom: 3px solid var(--color-primary) !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 25px !important;
+    font-size: 1.8rem !important;
+    text-align: center;
+}
+
+/* ==================== FORM ELEMENTS ==================== */
+body.rubric-form-page .form-group { margin-bottom: 20px !important; }
+
+body.rubric-form-page .form-group input[type="text"],
+body.rubric-form-page .form-group textarea,
+body.rubric-form-page .form-group select {
+    width: 100% !important;
+}
+
+body.rubric-form-page label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: 600 !important;
+    color: var(--color-secondary) !important;
+    font-size: 0.95rem !important;
+}
+
+body.rubric-form-page input[type="text"] {
+    width: 100% !important;
+    padding: 10px 15px !important;
+    border: 2px solid var(--color-border) !important;
+    border-radius: 6px !important;
+    background-color: var(--color-surface) !important;
+    color: var(--color-secondary) !important;
+    font-size: 1rem !important;
+    transition: border-color 0.2s;
+}
+
+body.rubric-form-page input:focus {
+    border-color: var(--color-primary) !important;
+    outline: none !important;
+}
+
+/* ==================== BLUEPRINT-SPECIFIC STYLES ==================== */
+.blueprint-rubric-block {
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 25px;
+    background-color: #fdfdfd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.blueprint-rubric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.blueprint-rubric-header h3 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 1.5rem;
+}
+
+/* ==================== SECTIONS (Sub-Rubric / Direct / Comments) ==================== */
+body.rubric-form-page .section-container {
+    background-color: #fff !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--color-border) !important;
+    padding: 20px !important;
+    margin-top: 20px !important;
+    position: relative !important;
+}
+
+/* Specific Border Colors for Sections */
+body.rubric-form-page .section-blue { border-top: 4px solid var(--color-info-blue) !important; }
+body.rubric-form-page .section-green { border-top: 4px solid var(--color-success) !important; }
+body.rubric-form-page .section-purple { border-top: 4px solid var(--color-purple) !important; }
+
+body.rubric-form-page .section-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 10px !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
+body.rubric-form-page .section-header h2 { margin: 0 !important; font-size: 1.4rem !important; }
+body.rubric-form-page .section-blue h2 { color: var(--color-info-blue) !important; }
+body.rubric-form-page .section-green h2 { color: var(--color-success) !important; }
+body.rubric-form-page .section-purple h2 { color: var(--color-purple) !important; }
+
+/* ==================== SUB-RUBRIC CARD ==================== */
+@media (max-width: 1279px) {
+    body.rubric-form-page {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    body.rubric-form-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 18px !important;
+        align-items: stretch !important;
+    }
+
+    body.rubric-form-page .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px !important;
+    }
+
+    body.rubric-form-page .card h1 {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+        font-size: 1.55rem !important;
+    }
+
+    body.rubric-form-page .section-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    body.rubric-form-page .section-header > .btn,
+    body.rubric-form-page .section-header > div,
+    body.rubric-form-page .section-header > div .btn {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    body.rubric-form-page .button-container {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        margin-top: 16px !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        box-shadow: none !important;
+        border: 1px solid var(--color-border) !important;
+        padding: 12px !important;
+    }
+
+    body.rubric-form-page .button-container .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 430px) {
+    body.rubric-form-page {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    body.rubric-form-page .main-content {
+        padding: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.rubric-form-page .card {
+        padding: 14px !important;
+    }
+
+    body.rubric-form-page .card h1 {
+        font-size: 1.35rem !important;
+    }
+
+    body.rubric-form-page .section-container {
+        padding: 14px !important;
+    }
+
+    body.rubric-form-page .sub-rubric-card,
+    body.rubric-form-page .rating-card,
+    body.rubric-form-page .comment-card {
+        padding: 14px !important;
+    }
+
+    body.rubric-form-page .button-container {
+        padding: 10px !important;
+    }
+
+    body.rubric-form-page .section-header > div {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+
+    body.rubric-form-page .section-header > div .btn-sm {
+        flex-grow: 1 !important;
+        min-width: 120px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.rubric-form-page .card {
+        padding: 20px !important;
+    }
+
+    body.rubric-form-page .button-container {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        margin-top: 16px !important;
+        box-shadow: none !important;
+        border: 1px solid var(--color-border) !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    body.rubric-form-page .button-container .btn {
+        width: 100% !important;
+        text-align: center !important;
+        min-width: 0 !important;
+    }
+
+    body.rubric-form-page .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    body.rubric-form-page .section-header > .btn {
+        width: 100% !important;
+    }
+
+    body.rubric-form-page .section-header > div {
+        display: flex !important;
+        justify-content: flex-end !important;
+        width: 100% !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    body.rubric-form-page .section-header > div .btn {
+        flex: 1 1 120px !important;
+    }
+}
+
+@media (max-width: 430px) {
+    body.rubric-form-page .main-content {
+        padding: 10px !important; /* Even smaller padding for very small screens */
+    }
+
+    body.rubric-form-page .card {
+        padding: 15px !important; /* Even smaller padding for very small screens */
+    }
+
+    body.rubric-form-page .section-container {
+        padding: 15px !important;
+    }
+
+    body.rubric-form-page .sub-rubric-card {
+        padding: 15px !important;
+    }
+
+    body.rubric-form-page .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    body.rubric-form-page .section-header > .btn {
+        width: 100% !important;
+    }
+
+    body.rubric-form-page .section-header > div {
+        flex-wrap: wrap !important; /* Allow +/- buttons to wrap */
+        justify-content: center !important; /* Center them if they wrap */
+        width: 100% !important;
+    }
+    
+    body.rubric-form-page .section-header > div .btn-sm {
+        flex-grow: 1 !important; /* Allow buttons to grow and fill space if wrapped */
+        min-width: 120px !important;
+    }
+
+    body.rubric-form-page .card h1 {
+        font-size: 1.45rem !important;
+    }
+}

@@ -286,6 +286,16 @@ body.manage-users-page table {
     border: 1px solid var(--color-border) !important;
 }
 
+body.manage-users-page .table-scroll {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+body.manage-users-page .table-scroll table {
+    min-width: 700px !important;
+}
+
 body.manage-users-page thead {
     background-color: var(--color-primary) !important;
     color: var(--color-text) !important;
@@ -464,20 +474,51 @@ body.manage-users-page th input[type="checkbox"] {
 }
 
 @media (max-width: 768px) {
+    body.manage-users-page .main-content {
+        margin-top: 56px !important;
+        padding: 16px !important;
+    }
+
     body.manage-users-page .card {
-        padding: 24px !important;
+        padding: 16px !important;
+    }
+
+    body.manage-users-page .header-container {
+        flex-direction: column !important;
+        gap: 8px !important;
+        text-align: center !important;
+    }
+
+    body.manage-users-page .header-container img {
+        max-width: 140px !important;
     }
     
     body.manage-users-page .user-selection {
         grid-template-columns: 1fr !important;
+    }
+
+    body.manage-users-page .header-actions {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
     }
     
     body.manage-users-page .table-actions {
         flex-direction: column !important;
         gap: 6px !important;
     }
+
+    body.manage-users-page .table-actions .action-button {
+        width: 100% !important;
+        text-align: center !important;
+    }
     
     body.manage-users-page .header-container h1 {
-        font-size: 2rem !important;
+        font-size: 1.7rem !important;
+    }
+
+    body.manage-users-page th,
+    body.manage-users-page td {
+        padding: 12px !important;
     }
 }

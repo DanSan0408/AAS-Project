@@ -328,6 +328,7 @@ body.lecturer-page .badge-supervisor {
 @media (max-width: 1000px) {
     body.lecturer-page .content-flex-container {
         flex-direction: column !important;
+        gap: 20px !important;
     }
     
     body.lecturer-page .rubric-section, 
@@ -340,5 +341,66 @@ body.lecturer-page .badge-supervisor {
     body.lecturer-page .main-content {
         margin-left: 0 !important;
         padding: 20px !important;
+    }
+
+    body.lecturer-page .rubric-section {
+        max-height: none !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+    }
+
+    body.lecturer-page .rubric-section h2 {
+        position: static !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.lecturer-page .main-content {
+        padding: 16px !important;
+    }
+
+    body.lecturer-page .header {
+        margin-bottom: 24px !important;
+        padding: 16px !important;
+    }
+
+    body.lecturer-page .header-container {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    body.lecturer-page .header-container h1 {
+        font-size: 1.6rem !important;
+        text-align: center !important;
+    }
+
+    body.lecturer-page .deadline-section {
+        min-width: 0 !important;
+    }
+
+    body.lecturer-page .assessment-box {
+        padding: 18px !important;
+    }
+
+    body.lecturer-page .assess-type-group {
+        padding: 14px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body.lecturer-page .main-content {
+        padding: 12px !important;
+    }
+
+    body.lecturer-page .header-container h1 {
+        font-size: 1.35rem !important;
+    }
+
+    body.lecturer-page .assessment-header h3 {
+        font-size: 1.15rem !important;
+    }
+
+    body.lecturer-page .deadline-item {
+        padding: 14px !important;
     }
 }

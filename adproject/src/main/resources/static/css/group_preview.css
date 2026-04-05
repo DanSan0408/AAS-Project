@@ -172,6 +172,11 @@ body.group-preview-page .group-table {
     box-shadow: 0 2px 8px rgba(74, 0, 24, 0.08) !important;
 }
 
+body.group-preview-page .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+}
+
 body.group-preview-page .group-table th,
 body.group-preview-page .group-table td {
     padding: 14px !important;
@@ -379,5 +384,15 @@ body.group-preview-page .action-buttons {
         width: 100% !important;
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    body.group-preview-page .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    body.group-preview-page .card {
+        padding: 20px !important;
     }
 }

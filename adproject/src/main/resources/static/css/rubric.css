@@ -81,6 +81,22 @@ body.rubric-page .card-header {
     border-bottom: 2px solid var(--color-border) !important;
 }
 
+body.rubric-page .manage-blueprint-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
+
+body.rubric-page .manage-blueprint-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex-wrap: wrap !important;
+}
+
 body.rubric-page .card-header h2 {
     color: var(--color-primary) !important;
     margin: 0 !important;
@@ -303,7 +319,7 @@ body.rubric-page .alert-error {
     border-color: var(--color-alert) !important;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1279px) {
     body.rubric-page .main-content {
         margin-left: 0 !important;
         padding: 20px !important;
@@ -316,5 +332,181 @@ body.rubric-page .alert-error {
     
     body.rubric-page .btn {
         width: 100% !important;
+    }
+
+    body.rubric-page .table-responsive {
+        overflow-x: hidden !important;
+    }
+
+    body.rubric-page table {
+        table-layout: fixed !important;
+    }
+
+    body.rubric-page th,
+    body.rubric-page td {
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.rubric-page {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    body.rubric-page .main-content {
+        margin-left: 0 !important;
+        margin-top: 56px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px !important;
+    }
+
+    body.rubric-page .header-container {
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-bottom: 20px !important;
+    }
+
+    body.rubric-page .header-container img {
+        max-width: 140px !important;
+    }
+
+    body.rubric-page .header-container h1 {
+        font-size: 1.7rem !important;
+    }
+
+    body.rubric-page .card-header {
+        padding: 16px !important;
+    }
+
+    body.rubric-page .manage-blueprint-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    body.rubric-page .manage-blueprint-actions {
+        width: 100% !important;
+        justify-content: stretch !important;
+        flex-direction: column !important;
+    }
+
+    body.rubric-page .manage-blueprint-actions .btn {
+        width: 100% !important;
+    }
+
+    body.rubric-page .card-header h2 {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    body.rubric-page .table-responsive {
+        overflow-x: hidden !important;
+    }
+
+    body.rubric-page table,
+    body.rubric-page thead,
+    body.rubric-page tbody,
+    body.rubric-page tr,
+    body.rubric-page td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    body.rubric-page thead {
+        display: none !important;
+    }
+
+    body.rubric-page tbody tr {
+        border: 1px solid var(--color-border) !important;
+        border-radius: 10px !important;
+        margin-bottom: 14px !important;
+        padding: 10px !important;
+        box-shadow: 0 2px 8px rgba(74, 0, 24, 0.08) !important;
+    }
+
+    body.rubric-page td {
+        border: none !important;
+        padding: 8px 6px !important;
+        text-align: left !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    body.rubric-page td::before {
+        display: block !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.3px !important;
+        text-transform: uppercase !important;
+        color: var(--color-primary) !important;
+        margin-bottom: 4px !important;
+        opacity: 0.9 !important;
+        content: attr(data-label);
+    }
+
+    body.rubric-page .action-buttons {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    body.rubric-page .btn-sm {
+        width: 100% !important;
+        min-height: 42px !important;
+    }
+
+    body.rubric-page .dropdown {
+        width: 100% !important;
+    }
+
+    body.rubric-page .dropdown-menu {
+        position: static !important;
+        margin-top: 8px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Further refinements for very small phone screens */
+@media (max-width: 430px) {
+    body.rubric-page {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    body.rubric-page .main-content {
+        margin-left: 0 !important;
+        padding: 10px !important;
+        width: 100% !important;
+    }
+
+    body.rubric-page .card {
+        padding: 15px !important;
+    }
+
+    body.rubric-page .card-header {
+        padding: 15px !important;
+    }
+
+    body.rubric-page .card-header h2 {
+        font-size: 1.2rem !important;
+    }
+
+    body.rubric-page .manage-blueprint-actions {
+        gap: 8px !important;
+    }
+
+    body.rubric-page .manage-blueprint-actions .btn {
+        min-height: 44px !important;
+    }
+    
+    body.rubric-page .header-container h1 {
+        font-size: 1.5rem !important;
     }
 }
