@@ -71,11 +71,14 @@ public class SecurityConfig {
         //authenticate and authorize
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**",
-                    "/forgot_password", "/reset_password/**", "/debug/**", "/superadmin/invite-admin").permitAll() // Added /superadmin/invite-admin for initial admin creation
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", 
+                    "/forgot_password", "/reset_password/**").permitAll()
                 .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages
                 .requestMatchers("/rubrics/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access rubric pages
+                .requestMatchers("/deadlines/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Explicitly lock orphaned controllers
+                .requestMatchers("/api/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "LECTURER") // Protect future REST calls
+                .requestMatchers("/*/comments/view/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "LECTURER") // Prevent {role} dynamic path bypass
                 .requestMatchers("/student/**", "/student/assessment/**").hasRole("STUDENT")
                 .requestMatchers("/lecturer/**").hasRole("LECTURER")
                 .anyRequest().authenticated()

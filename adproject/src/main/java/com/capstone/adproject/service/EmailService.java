@@ -1,8 +1,11 @@
 package com.capstone.adproject.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.internet.MimeMessage;
@@ -10,12 +13,15 @@ import jakarta.mail.internet.MimeMessage;
 @Service
 public class EmailService {
     
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+    
     private final JavaMailSender mailSender;
     
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    @Async("emailTaskExecutor")
     public void sendResetPasswordEmail(String userEmail, String link) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -47,11 +53,11 @@ public class EmailService {
 
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to send HTML password reset email", e);
+            logger.error("Failed to send HTML password reset email to: {}", userEmail, e);
         }
     }
 
+    @Async("emailTaskExecutor")
     public void sendWelcomeEmailWithPassword(String userEmail, String temporaryPassword, String userType, String resetLink) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -90,8 +96,44 @@ public class EmailService {
 
             mailSender.send(message);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to send welcome email with password", e);
+            logger.error("Failed to send welcome email with password to: {}", userEmail, e);
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    public void sendDeadlineEmail(String userEmail, String subject, String textMessage) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("noreply@yourdomain.com");
+            helper.setTo(userEmail);
+            helper.setSubject(subject);
+
+            // Convert plain text newlines to HTML breaks
+            String htmlMessage = textMessage.replace("\n", "<br>");
+
+            String htmlContent = "<html><body style='font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 20px;'>"
+                + "<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);'>"
+                + "<img src='cid:logo' alt='UTM Logo' style='max-width: 150px; height: auto; margin-bottom: 25px; display: block; margin-left: auto; margin-right: auto;'>"
+                + "<h2 style='color: #2c3e50; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;'>" + subject + "</h2>"
+                + "<div style='color: #34495e; font-size: 16px; line-height: 1.6;'>"
+                + htmlMessage
+                + "</div>"
+                + "<hr style='border: none; border-top: 1px solid #ecf0f1; margin: 30px 0;'>"
+                + "<p style='color: #95a5a6; font-size: 12px; text-align: center;'>This is an automated notification from the UTM Assessment Administration System.</p>"
+                + "</div>"
+                + "<p style='margin-top: 20px; font-size: 12px; color: #95a5a6; text-align: center;'>&copy; Danial Ihsan</p>"
+                + "</body></html>";
+
+            helper.setText(htmlContent, true);
+
+            ClassPathResource logoResource = new ClassPathResource("static/images/logoUTM.png");
+            helper.addInline("logo", logoResource);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error("Failed to send deadline email to: {}", userEmail, e);
         }
     }
 }

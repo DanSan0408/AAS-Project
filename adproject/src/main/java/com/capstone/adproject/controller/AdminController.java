@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.CustomUserDetailsService;
 import com.capstone.adproject.service.DeadlineService;
+import com.capstone.adproject.service.EmailService;
 import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.SuperAdminService;
 
@@ -75,6 +77,7 @@ public class AdminController {
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final EmailService emailService;
 
     //constructor
     public AdminController(
@@ -88,7 +91,8 @@ public class AdminController {
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
-            CustomUserDetailsService userDetailsService) {
+            CustomUserDetailsService userDetailsService,
+            EmailService emailService) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
@@ -100,6 +104,7 @@ public class AdminController {
         this.assignmentRepository = assignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.userDetailsService = userDetailsService;
+        this.emailService = emailService;
     }
 
     //ensure that dates objects are converted as dates
@@ -293,10 +298,14 @@ public class AdminController {
         Function<Object, Boolean> rubricChecker = this::isRubricType;
         model.addAttribute("isRubricType", rubricChecker);
 
+        long nowMillis = System.currentTimeMillis();
+        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
         model.addAttribute("allAssessments", allAssessments);
         model.addAttribute("adminUsername", getLoggedInUsername());
-        model.addAttribute("deadlines", deadlineService.getAllDeadlines().stream()
-            .filter(d -> d.getAssessmentId() != null && managedAssessmentIds.contains(d.getAssessmentId()))
+        model.addAttribute("allDeadlines", allDeadlines);
+        model.addAttribute("deadlines", allDeadlines.stream()
+            .filter(d -> d.getAssessmentId() == null || managedAssessmentIds.contains(d.getAssessmentId()))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList()));
 
         model.addAttribute("managedCourses", managedCourses);
@@ -409,6 +418,18 @@ public class AdminController {
                 return "redirect:/admin/home";
             }
             
+            Set<String> previouslyAssignedEmails = new HashSet<>();
+            assignmentRepository.findByAssessment(assessment).forEach(a -> {
+                if (a.getLecturer() != null && a.getLecturer().getEmail() != null) {
+                    previouslyAssignedEmails.add(a.getLecturer().getEmail());
+                }
+            });
+            rubricAssignmentRepository.findByAssessment(assessment).forEach(a -> {
+                if (a.getLecturer() != null && a.getLecturer().getEmail() != null) {
+                    previouslyAssignedEmails.add(a.getLecturer().getEmail());
+                }
+            });
+            
             // Delete old assignment existing untuk assessment
             assignmentRepository.deleteByAssessment(assessment);
             assignmentRepository.flush();
@@ -422,6 +443,7 @@ public class AdminController {
             Map<Long, List<Long>> rubricLecturerAssignments = new java.util.HashMap<>();
             
             String assignmentMode = allParams.getOrDefault("assignmentMode", "GROUP");
+            Set<String> currentlyAssignedEmails = new HashSet<>();
             
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 String key = entry.getKey();
@@ -479,6 +501,7 @@ public class AdminController {
                             assignment.setLecturer(lecturer);
                             assignments.add(assignment);
                         }
+                        if (lecturer.getEmail() != null) currentlyAssignedEmails.add(lecturer.getEmail());
                     }
                 }
                 
@@ -506,10 +529,45 @@ public class AdminController {
                         assignment.setRubric(rubric);
                         assignment.setLecturer(lecturer);
                         rubricAssignments.add(assignment);
+                        if (lecturer.getEmail() != null) currentlyAssignedEmails.add(lecturer.getEmail());
                     }
                 }
                 
                 rubricAssignmentRepository.saveAll(rubricAssignments);
+            }
+            
+            Set<String> newlyAssignedEmails = new HashSet<>(currentlyAssignedEmails);
+            newlyAssignedEmails.removeAll(previouslyAssignedEmails);
+            
+            if (!newlyAssignedEmails.isEmpty()) {
+                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessmentId);
+                Deadline applicableDeadline = null;
+                long nowMillis = System.currentTimeMillis();
+                for (Deadline d : deadlines) {
+                    String type = d.getAssessorType();
+                    if (type == null || "LECTURER".equalsIgnoreCase(type) || "SUPERVISOR".equalsIgnoreCase(type)) {
+                        long open = d.getOpenDate() != null ? d.getOpenDate().getTime() : 0;
+                        long close = d.getDate() != null ? d.getDate().getTime() + 86399999L : Long.MAX_VALUE;
+                        if (nowMillis >= open && nowMillis <= close) {
+                            applicableDeadline = d;
+                            break;
+                        }
+                    }
+                }
+                if (applicableDeadline != null) {
+                    String title = applicableDeadline.getTitle() != null && !applicableDeadline.getTitle().isEmpty() ? applicableDeadline.getTitle() : assessment.getTitle();
+                    String subject = "Assessment Now Open: " + title;
+                    String message = "Hello,\n\nThe assessment '" + title + "' is now open for evaluation.\n"
+                            + "You have been assigned as an evaluator. Please log in to the Assessment Administration System to complete your tasks.\n\n"
+                            + "Deadline closes on: " + new SimpleDateFormat("yyyy-MM-dd").format(applicableDeadline.getDate()) + "\n\nBest regards,\nUTM AAS Admin";
+                    for (String email : newlyAssignedEmails) {
+                        try {
+                            emailService.sendDeadlineEmail(email, subject, message);
+                        } catch (Exception e) {
+                            System.err.println("Failed to send assignment email to " + email);
+                        }
+                    }
+                }
             }
             
             redirectAttributes.addFlashAttribute("successMessage", 

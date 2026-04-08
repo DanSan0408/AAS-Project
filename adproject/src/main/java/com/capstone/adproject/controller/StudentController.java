@@ -89,9 +89,9 @@ public class StudentController {
                 openMillis = deadline.getOpenDate().getTime();
             }
             
-            long closeMillis = deadline.getDate().getTime();
+            long closeMillis = deadline.getDate().getTime() + 86399999L;
             
-            if (nowMillis >= openMillis && nowMillis < closeMillis) {
+            if (nowMillis >= openMillis && nowMillis <= closeMillis) {
                 return true;
             }
         }
@@ -172,9 +172,11 @@ public class StudentController {
                 && currentCourseId.equals(a.getCourse().getId()))
             .collect(Collectors.toList());
         List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        long nowMillis = System.currentTimeMillis();
         List<Deadline> studentDeadlines = allDeadlines.stream()
-            .filter(d -> "STUDENT".equals(d.getAssessorType()))
-            .filter(d -> allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> "STUDENT".equals(d.getAssessorType()) || d.getAssessorType() == null || d.getAssessorType().isEmpty())
+            .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         
         boolean hasGroup = currentStudent.getGroup() != null;

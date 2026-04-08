@@ -1,6 +1,52 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-02 (IH)
+**Last Updated**: 2026-04-07 (IH)
+
+## Current Status: Email Dispatch Optimization
+**Status**: COMPLETE
+
+### Summary
+- Implemented asynchronous email dispatch using Spring's `@Async` annotation to decouple email sending from the main HTTP thread.
+- This reduces the perceived UI response time for email-triggering actions (e.g., "Add Student", "Forgot Password") from ~20 seconds down to milliseconds.
+- Configured a dedicated `ThreadPoolTaskExecutor` in a new `AsyncConfig` class to manage background email threads safely without exhausting server resources.
+- Enhanced actual SMTP transit performance by enabling connection pooling (Keep-Alive) via `application.properties` (`quitwait=false` and 5000ms timeouts). This eliminates the costly 20-second TLS handshake for sequential emails.
+- Updated `EmailService` to gracefully log background delivery failures using SLF4J rather than throwing runtime exceptions that would silently crash background tasks.
+
+### Files Modified/Created
+- **Backend**:
+  - `AsyncConfig.java` (New - Enables `@EnableAsync` and defines `emailTaskExecutor`)
+  - `EmailService.java` (Modified - Added `@Async` and robust `logger.error` handling)
+- **Resources**:
+  - `application.properties` (Modified - Added JavaMail connection pooling and Keep-Alive properties)
+
+## Current Status: Automated Email Notifications (Deadlines & Assignments)
+**Status**: COMPLETE
+
+### Summary
+- Implemented a scheduled background service (`DeadlineNotificationService`) that runs daily at 8:00 AM to check for opening and expiring deadlines.
+- Automatically dispatches HTML-formatted email alerts to the appropriate audiences (Students, Lecturers, or Supervisors) based on the `assessorType` of the deadline.
+- Added a new `sendDeadlineEmail` method in `EmailService` that uses the standardized UTM CAS email template (with the inline UTM logo and proper HTML formatting).
+- Enhanced `AdminController` to detect when a lecturer is newly assigned to an assessment (via Group or Rubric mode). If the assessment is already open, the system immediately sends them an "Assessment Now Open" notification to ensure they don't miss their evaluation window.
+- Enabled Spring Boot scheduling via a new `SchedulingConfig` class.
+
+### Files Modified/Created
+- **Backend**:
+  - `SchedulingConfig.java` (New - Enables `@EnableScheduling`)
+  - `DeadlineNotificationService.java` (New - Contains the daily `@Scheduled` cron job)
+  - `EmailService.java` (Added `sendDeadlineEmail` method)
+  - `AdminController.java` (Added differential logic during lecturer assignment to trigger instant emails for newly assigned lecturers on active assessments)
+
+### Next Steps
+- Consider adding a user preference toggle for email notifications.
+- Monitor SMTP performance if the user base grows significantly. As scale increases, consider swapping raw SMTP for a Transactional Email API (e.g., SendGrid, AWS SES) or moving to a message broker (e.g., RabbitMQ/Kafka).
+
+## Current Status: Deadline Expiration & Visibility
+**Status**: COMPLETE
+
+### Summary
+- Implemented a 24-hour expiration logic for deadlines across all dashboards. Deadlines now automatically disappear from view 24 hours after their set date.
+- Fixed visibility issues where general deadlines (those not tied to a specific assessment) were missing from the Admin and Lecturer dashboards.
+- Adjusted Java Stream filters in `AdminController`, `LecturerController`, and `StudentController` to properly handle `null` assessment IDs and general assessor types, ensuring global deadlines are correctly displayed to all relevant roles.
 
 ## Current Status: Rubric Template / Blueprint System
 **Status**: COMPLETE
