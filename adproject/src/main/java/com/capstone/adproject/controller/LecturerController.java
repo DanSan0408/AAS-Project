@@ -79,10 +79,14 @@ public class LecturerController {
             .collect(Collectors.toList());
         model.addAttribute("allAssessments", allAssessments);
         
-        List<Deadline> allDeadlines = deadlineService.getAllDeadlines().stream()
-            .filter(d -> allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+        long nowMillis = System.currentTimeMillis();
+        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        List<Deadline> filteredDeadlines = allDeadlines.stream()
+            .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         model.addAttribute("allDeadlines", allDeadlines);
+        model.addAttribute("deadlines", filteredDeadlines);
 
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
         model.addAttribute("isRubricType", isRubricType);

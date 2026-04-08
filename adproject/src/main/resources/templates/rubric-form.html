@@ -10,6 +10,16 @@
     <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Mobile optimization for deeply nested form cards */
+        @media (max-width: 768px) {
+            .card { padding: 15px 10px !important; }
+            .section-container { padding: 15px 10px !important; margin-left: 0 !important; margin-right: 0 !important; }
+            .sub-rubric-card, .rating-card, .comment-card { padding: 12px 10px !important; }
+            .form-grid { display: flex; flex-direction: column; gap: 10px; }
+            .col-fixed, .col-grow { width: 100% !important; }
+        }
+    </style>
 </head>
 <body class="rubric-form-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -20,15 +30,17 @@
             <h1>UTM AAS</h1>
         </div>
 
-        
-        <div class="card">
-            <div id="submission-message"></div>
+        <div class="page-header" style="margin-bottom: 20px;">
+            <h1 th:text="${pageTitle} + ' for ' + ${rubric.assessment.title}" style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Add New Rubric</h1>
+            <p class="text-muted" style="margin-top: 5px;">Configure the rubric structure below.</p>
+        </div>
 
-            <h1 th:text="${pageTitle} + ' for ' + ${rubric.assessment.title}">Add New Rubric</h1>
-            
-            <div th:if="${errorMessage}" class="alert alert-error">
-                <p th:text="${errorMessage}"></p>
-            </div>
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 20px;">
+            <p th:text="${errorMessage}" style="margin:0;"></p>
+        </div>
+
+        <div class="card" style="box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden;">
+            <div id="submission-message"></div>
 
             <form id="rubricForm" th:action="${formAction}" th:object="${rubric}" method="post">
                 <input type="hidden" th:field="*{id}" />
@@ -38,7 +50,7 @@
                 <!-- ⚡ Template Injector UI -->
                 <div th:if="${availableTemplates != null and !availableTemplates.empty}" class="form-group template-injector-card">
                     <label class="template-injector-title"><i class="fas fa-magic"></i> Auto-Build from Blueprint</label>
-                    <div class="template-injector-controls">
+                    <div class="template-injector-controls" style="display: flex; flex-wrap: wrap; gap: 10px;">
                         <select id="templateSelect" class="template-select">
                             <option value="">-- Select a Blueprint --</option>
                             <option th:each="template : ${availableTemplates}" th:value="${template.id}" th:text="${template.name}"></option>
@@ -72,7 +84,7 @@
                     </select>
                 </div>
 
-                <div class="rating-row">
+                <div class="rating-row form-grid">
                     <div class="form-group col-grow">
                         <label>Total Marks *</label>
                         <input type="number" id="rubricMarks" step="0.01" th:field="*{marks}" required>
@@ -92,7 +104,7 @@
                 </div>
 
                 <div class="section-container section-blue">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2>Sub-Rubrics</h2>
                         <button type="button" id="addSubRubricBtn" class="btn btn-add">+ Add Sub-Rubric</button>
                     </div>
@@ -129,7 +141,7 @@
                                         <button type="button" class="remove-btn remove-rating-btn">Remove</button>
                                         <input type="hidden" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].id}" />
                                         
-                                        <div class="rating-row">
+                                        <div class="rating-row form-grid">
                                             <div class="form-group col-grow">
                                                 <label>Rating Name *</label>
                                                 <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].name}" required>
@@ -154,7 +166,7 @@
 
                 <!-- ✅ CHANGED: Moved "Add Direct Rating" button below container -->
                 <div class="section-container section-green">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
@@ -164,7 +176,7 @@
                             <button type="button" class="remove-btn remove-direct-rating-btn">Remove</button>
                             <input type="hidden" th:field="*{ratings[__${ratingIterStat.index}__].id}" />
                             
-                            <div class="rating-row">
+                            <div class="rating-row form-grid">
                                 <div class="form-group col-grow">
                                     <label>Rating Name *</label>
                                     <input type="text" th:field="*{ratings[__${ratingIterStat.index}__].name}" required>
@@ -188,7 +200,7 @@
                 
                 <!-- ✅ CHANGED: Moved "Add Comment Question" button below containers -->
                 <div class="section-container section-purple">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
                     </div>
                     <p class="info-text">Add optional comment questions specific to this rubric only.</p>
@@ -202,7 +214,7 @@
                                 <textarea th:name="'rubricCommentLabels[' + ${iterStat.index} + ']'" th:text="${commentLabel}" rows="2" style="width: 100%;"></textarea>
                             </div>
                             
-                            <div class="rating-row">
+                            <div class="rating-row form-grid">
                                 <div class="form-group col-grow">
                                     <label>Min Length</label>
                                     <input type="number" th:name="'rubricCommentMinLengths[' + ${iterStat.index} + ']'" th:value="${rubric.rubricCommentMinLengths != null and iterStat.index < rubric.rubricCommentMinLengths.size() ? rubric.rubricCommentMinLengths[iterStat.index] : 20}" min="10" max="500">
@@ -225,7 +237,7 @@
                     <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;">+ Add Comment Question</button>
                 </div>
                 
-                <div class="button-container">
+                <div class="button-container action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
                     <a th:href="@{/rubrics/view/{id}(id=${rubric.assessment.id})}" class="btn btn-danger">Cancel</a>
                     <button type="submit" id="submitButton" class="btn btn-primary">Save Rubric</button>
                 </div>
@@ -292,7 +304,7 @@
                 card.className = 'rating-card';
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-rating-btn"><i class="fas fa-times"></i></button>
-                    <div class="rating-row">
+                    <div class="rating-row form-grid">
                         <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="subRubrics[${subIndex}].ratings[${rIdx}].name" required></div>
                         <div class="form-group col-fixed"><label>Marks</label><input type="number" step="0.01" name="subRubrics[${subIndex}].ratings[${rIdx}].marks" class="rating-marks sub-rating-marks" data-subindex="${subIndex}"></div>
                     </div>
@@ -310,7 +322,7 @@
                 card.className = 'rating-card';
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-direct-rating-btn"><i class="fas fa-times"></i></button>
-                    <div class="rating-row">
+                    <div class="rating-row form-grid">
                         <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="ratings[${directRatingIndex}].name" required></div>
                         <div class="form-group col-fixed"><label>Marks *</label><input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="direct-rating-marks"></div>
                     </div>
@@ -330,7 +342,7 @@
                 card.innerHTML = `
                     <button type="button" class="remove-btn remove-rubric-comment-btn"><i class="fas fa-times"></i></button>
                     <div class="form-group"><label>Comment Question</label><textarea name="rubricCommentLabels[${rubricCommentIndex}]" rows="2"></textarea></div>
-                    <div class="rating-row">
+                    <div class="rating-row form-grid">
                         <div class="form-group col-grow"><label>Min Length</label><input type="number" name="rubricCommentMinLengths[${rubricCommentIndex}]" value="20"></div>
                         <div class="form-group col-grow" style="padding-top:25px;"><label><input type="checkbox" name="rubricCommentAnonymousFlags[${rubricCommentIndex}]" value="true"> Anonymous</label></div>
                     </div>
