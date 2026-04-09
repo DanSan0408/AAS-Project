@@ -3,6 +3,8 @@ package com.capstone.adproject.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.Filter;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
 @Table(name = "project_group")
 public class Group {

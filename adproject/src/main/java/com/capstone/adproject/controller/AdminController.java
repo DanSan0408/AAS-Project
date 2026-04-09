@@ -283,9 +283,7 @@ public class AdminController {
 
         List<Assessment> allAssessments = activeCourseId == null
             ? List.of()
-            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
-                .filter(this::ownsAssessment)
-                .collect(Collectors.toList());
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
 
         Set<Long> managedAssessmentIds = allAssessments.stream()
             .map(Assessment::getId)
@@ -341,12 +339,9 @@ public class AdminController {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Group> allGroups = activeCourseId == null
             ? List.of()
-            : groupRepository.findAllWithStudentsByCourseId(activeCourseId).stream()
-            .filter(this::ownsGroup)
-            .collect(Collectors.toList());
-        List<Lecturer> allLecturers = lecturerRepository.findAll().stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList());
+            : groupRepository.findAllWithStudentsByCourseId(activeCourseId);
+        
+        List<Lecturer> allLecturers = lecturerRepository.findAll();
         
         //fetch assignments
         List<LecturerGroupAssignment> existingAssignments = 
@@ -585,18 +580,10 @@ public class AdminController {
     @GetMapping("/group-assignment")
     public String groupAssignmentPage(Model model) {
         
-        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList());
-        List<Lecturer> managedLecturers = adminService.getAllLecturers().stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList());
-        List<Group> managedGroups = adminService.getAllGroups().stream()
-            .filter(this::ownsGroup)
-            .collect(Collectors.toList());
-        List<Student> managedStudents = adminService.getAllStudents().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList());
+        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
+        List<Lecturer> managedLecturers = adminService.getAllLecturers();
+        List<Group> managedGroups = adminService.getAllGroups();
+        List<Student> managedStudents = adminService.getAllStudents();
         
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
@@ -673,12 +660,8 @@ public class AdminController {
         model.addAttribute("group", group);
         model.addAttribute("groupAssignmentDto", dto); 
         model.addAttribute("studentsInGroup", adminService.getStudentsByGroup(group));
-        model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList()));
-        model.addAttribute("availableLecturers", adminService.getAllLecturers().stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList()));
+        model.addAttribute("availableStudents", adminService.getStudentsWithoutGroup());
+        model.addAttribute("availableLecturers", adminService.getAllLecturers());
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "edit_group";
@@ -851,9 +834,7 @@ public class AdminController {
 
     @GetMapping("/manage-students")
 public String manageStudents(Model model, @ModelAttribute("student") Student student) {
-    model.addAttribute("students", adminService.getAllStudents().stream()
-        .filter(this::ownsStudent)
-        .collect(Collectors.toList()));
+    model.addAttribute("students", adminService.getAllStudents());
 
     if (student == null || student.getId() == null && 
         (student.getEmail() == null || student.getEmail().isEmpty())) { 
@@ -887,6 +868,9 @@ public String saveStudent(
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this student.");
                 return "redirect:/admin/manage-students";
             }
+        } else {
+            // Phase 4: Mutation Guarding - Force new students into the active course, ignoring any payload manipulation
+            student.setCourse(courseScopeService.getActiveCourseForCurrentUser());
         }
         
         if (!confirmDuplicate) {
@@ -918,9 +902,7 @@ public String saveStudent(
 
     @GetMapping("/manage-lecturers")
 public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer lecturer) {
-    model.addAttribute("lecturers", adminService.getAllLecturers().stream()
-        .filter(this::ownsLecturer)
-        .collect(Collectors.toList()));
+    model.addAttribute("lecturers", adminService.getAllLecturers());
     
     if (lecturer == null || lecturer.getId() == null && 
         (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
@@ -954,6 +936,9 @@ public String saveLecturer(
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this lecturer.");
                 return "redirect:/admin/manage-lecturers";
             }
+        } else {
+            // Phase 4: Mutation Guarding - Force new lecturers into the active course
+            lecturer.setCourse(courseScopeService.getActiveCourseForCurrentUser());
         }
         
         if (!confirmDuplicate) {
@@ -1026,9 +1011,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
             return "redirect:/admin/manage-students";
         }
         model.addAttribute("student", studentOpt.get());
-        model.addAttribute("students", adminService.getAllStudents().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList()));
+        model.addAttribute("students", adminService.getAllStudents());
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "manage_students";
     }
@@ -1041,9 +1024,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
             return "redirect:/admin/manage-lecturers";
         }
         model.addAttribute("lecturer", lecturerOpt.get());
-        model.addAttribute("lecturers", adminService.getAllLecturers().stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList()));
+        model.addAttribute("lecturers", adminService.getAllLecturers());
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "manage_lecturers";
     }
@@ -1051,9 +1032,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
 
     @GetMapping("/group-assignment/randomize")
     public String showRandomizeForm(Model model) {
-        int availableStudentsCount = (int) adminService.getStudentsWithoutGroup().stream()
-            .filter(this::ownsStudent)
-            .count();
+        int availableStudentsCount = adminService.getStudentsWithoutGroup().size();
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("randomizationInput", new RandomizationInputDto());
         model.addAttribute("availableStudentsCount", availableStudentsCount);
@@ -1067,9 +1046,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
                                         RedirectAttributes redirectAttributes) {
 
         int maxStudents = randomizationInput.getMaxStudentsPerGroup();
-        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList());
+        List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
         long availableStudentsCount = unassignedStudents.size(); 
 
         if (maxStudents < 1) {
@@ -1096,7 +1073,6 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         singleRandomGroup.setSelectedStudentIds(studentIds);
 
         Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
-            .filter(this::ownsStudent)
             .collect(Collectors.toMap(Student::getId, Function.identity()));
         
         // Add the comma-separated string for easier template processing
@@ -1112,9 +1088,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
         model.addAttribute("studentLookupMap", studentLookupMap); 
         model.addAttribute("availableStudentsForAdd", unassignedStudents); 
-        model.addAttribute("availableLecturers", adminService.getAllLecturers().stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList()));
+        model.addAttribute("availableLecturers", adminService.getAllLecturers());
         
         return "group_assignment_preview"; 
     }
@@ -1123,6 +1097,17 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
     public String createRandomGroups(
         @ModelAttribute("randomGroupPreview") GroupAssignmentDto groupToCreate, 
         RedirectAttributes redirectAttributes) {
+
+        // Phase 4: Mutation Guarding - Prevent cross-course student relationship hijacking via payload
+        if (groupToCreate.getSelectedStudentIds() != null) {
+            boolean hasUnauthorizedStudents = groupToCreate.getSelectedStudentIds().stream()
+                .map(adminService::findStudentById)
+                .anyMatch(studentOpt -> studentOpt.isEmpty() || !ownsStudent(studentOpt.get()));
+            if (hasUnauthorizedStudents) {
+                redirectAttributes.addFlashAttribute("error", "Security validation failed: Cannot assign students from another admin's course.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
 
         try {
             int count = adminService.createSingleGroupFromRandomization(groupToCreate); 
@@ -1309,9 +1294,7 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
     @GetMapping("/search-lecturers")
     @ResponseBody
     public List<Lecturer> searchLecturers(@RequestParam("query") String query) {
-        return adminService.searchLecturers(query).stream()
-            .filter(this::ownsLecturer)
-            .collect(Collectors.toList());
+        return adminService.searchLecturers(query);
     }
 
 }

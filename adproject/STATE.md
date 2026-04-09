@@ -2,6 +2,30 @@
 
 **Last Updated**: 2026-04-07 (IH)
 
+## Current Status: Deployment Security Hardening (Phases 1-4)
+**Status**: COMPLETE
+
+### Summary
+Successfully implemented a comprehensive 4-phase security lockdown to prepare the application for production deployment, mitigating IDOR, data leakage, and unauthorized mutations.
+
+### Key Features
+1. **Phase 1: Global Access Control**
+   - Hardened `SecurityConfig.java` to prevent unauthenticated access to backend URLs.
+   - Fixed dynamic path bypass vulnerability in `/*/comments/view/**`.
+2. **Phase 2: Database Query Lockdown (Row Level Security)**
+   - Implemented global Hibernate `@Filter` annotations on `Student`, `Lecturer`, `Group`, `Assessment`, and `RubricTemplate` entities.
+   - Upgraded `CourseScopeInterceptor` to enforce the active course ID at the database level, automatically preventing cross-course data leakage without relying on in-memory Java stream filtering.
+3. **Phase 3: Controller-Level Read Auditing (GET IDOR Protection)**
+   - Hardened `StudentController`, `GroupCommentController`, and `DeadlineController` to verify that requested entities (by ID) strictly belong to the user's active course or assigned group.
+4. **Phase 4: Mutation Guarding (POST IDOR Protection)**
+   - Secured `POST` endpoints against payload manipulation.
+   - Prevented cross-course relationship hijacking in complex DTOs (e.g., `GroupAssignmentDto` randomization, bulk rubric edits in `RubricController`).
+
+### Files Modified
+- **Configuration**: `SecurityConfig.java`, `CourseScopeInterceptor.java`
+- **Entities**: `Student.java`, `Lecturer.java`, `Group.java`, `Assessment.java`, `RubricTemplate.java`
+- **Controllers**: `AdminController.java`, `RubricController.java`, `DataViewController.java`, `StudentController.java`, `GroupCommentController.java`, `DeadlineController.java`, `RubricTemplateController.java`
+
 ## Current Status: Email Dispatch Optimization
 **Status**: COMPLETE
 

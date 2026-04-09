@@ -21,6 +21,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 
+import org.hibernate.annotations.Filter;
+
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
 public class Assessment {
 
