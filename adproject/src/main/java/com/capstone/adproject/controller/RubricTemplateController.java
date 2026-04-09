@@ -15,15 +15,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.RubricTemplate;
 import com.capstone.adproject.service.RubricTemplateService;
+import com.capstone.adproject.service.CourseScopeService;
 
 @Controller
 @RequestMapping("/rubrics/templates")
 public class RubricTemplateController {
 
     private final RubricTemplateService rubricTemplateService;
+    private final CourseScopeService courseScopeService;
 
-    public RubricTemplateController(RubricTemplateService rubricTemplateService) {
+    public RubricTemplateController(RubricTemplateService rubricTemplateService, CourseScopeService courseScopeService) {
         this.rubricTemplateService = rubricTemplateService;
+        this.courseScopeService = courseScopeService;
     }
 
     @GetMapping("/manage")
@@ -54,6 +57,21 @@ public class RubricTemplateController {
 
     @PostMapping("/save")
     public String saveTemplate(@ModelAttribute("rubricTemplate") RubricTemplate rubricTemplate, RedirectAttributes redirectAttributes) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No active course selected.");
+            return "redirect:/rubrics/templates/manage";
+        }
+
+        if (rubricTemplate.getId() != null) {
+            Optional<RubricTemplate> existing = rubricTemplateService.getTemplateById(rubricTemplate.getId());
+            if (existing.isEmpty() || existing.get().getCourse() == null || !existing.get().getCourse().getId().equals(activeCourseId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Security validation failed: Unauthorized to edit this blueprint.");
+                return "redirect:/rubrics/templates/manage";
+            }
+        }
+
+        rubricTemplate.setCourse(courseScopeService.getActiveCourseForCurrentUser());
         rubricTemplateService.saveTemplate(rubricTemplate);
         redirectAttributes.addFlashAttribute("successMessage", "Rubric Template saved successfully.");
         return "redirect:/rubrics/templates/manage";
@@ -61,6 +79,13 @@ public class RubricTemplateController {
 
     @PostMapping("/delete/{id}")
     public String deleteTemplate(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Optional<RubricTemplate> existing = rubricTemplateService.getTemplateById(id);
+        if (existing.isEmpty() || existing.get().getCourse() == null || !existing.get().getCourse().getId().equals(activeCourseId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Security validation failed: Unauthorized to delete this blueprint.");
+            return "redirect:/rubrics/templates/manage";
+        }
+        
         rubricTemplateService.deleteTemplate(id);
         redirectAttributes.addFlashAttribute("successMessage", "Rubric Blueprint deleted successfully.");
         return "redirect:/rubrics/templates/manage";

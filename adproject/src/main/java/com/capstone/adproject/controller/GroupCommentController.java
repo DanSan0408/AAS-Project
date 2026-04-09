@@ -246,6 +246,12 @@ public class GroupCommentController {
             return "redirect:/";
         }
         Lecturer lecturer = lecturerOpt.get();
+        
+        if (assessment.getCourse() == null || lecturer.getCourse() == null || 
+            !assessment.getCourse().getId().equals(lecturer.getCourse().getId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to view comments for this assessment.");
+            return "redirect:/" + role + "/comments/view/assessments";
+        }
 
         // Filter groups where the current lecturer is either Academic or Industrial Supervisor
         List<Group> supervisedGroups = groupRepository.findAll().stream()

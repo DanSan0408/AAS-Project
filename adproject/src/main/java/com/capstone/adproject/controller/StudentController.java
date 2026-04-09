@@ -226,7 +226,9 @@ public class StudentController {
         Long currentCourseId = currentStudent.getCourse() != null ? currentStudent.getCourse().getId() : null;
         
         if (currentStudent.getGroup() == null) {
-            model.addAttribute("error", "You are not assigned to any group yet.");
+            if (!model.containsAttribute("error")) {
+                model.addAttribute("error", "You are not assigned to any group yet.");
+            }
             return "student_assessments";
         }
         
@@ -281,6 +283,12 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment is not currently open for evaluation.");
@@ -380,6 +388,12 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment has been closed. Submissions are no longer accepted.");
@@ -633,6 +647,12 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment is not currently open for evaluation.");
@@ -730,6 +750,12 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment has been closed. Submissions are no longer accepted.");
@@ -1021,6 +1047,11 @@ public String viewMyComments(Model model, Principal principal) {
         
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        
+        if (currentStudent.getCourse() == null || assessment.getCourse() == null ||
+            !currentStudent.getCourse().getId().equals(assessment.getCourse().getId())) {
+            return "redirect:/student/home";
+        }
         
         List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(currentStudent, assessment);
         

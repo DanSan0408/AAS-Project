@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -125,9 +124,7 @@ public class DataViewController {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         model.addAttribute("assessments", activeCourseId == null
             ? List.of()
-            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
-                .filter(this::ownsAssessment)
-                .collect(Collectors.toList()));
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId));
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "data_views_home";
     }
@@ -137,12 +134,8 @@ public class DataViewController {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Assessment> assessments = activeCourseId == null
             ? List.of()
-            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
-                .filter(this::ownsAssessment)
-                .collect(Collectors.toList());
-        List<Student> students = studentService.getAllStudents().stream()
-            .filter(this::ownsStudent)
-            .collect(Collectors.toList());
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        List<Student> students = studentService.getAllStudents();
         
         students.sort((s1, s2) -> {
             String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -209,9 +202,7 @@ public class DataViewController {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Group> allGroups = activeCourseId == null
             ? List.of()
-            : groupRepository.findByCourseId(activeCourseId).stream()
-            .filter(this::ownsGroup)
-            .collect(Collectors.toList());
+            : groupRepository.findByCourseId(activeCourseId);
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("assessment", assessment);
         
@@ -238,9 +229,7 @@ public class DataViewController {
         Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
         
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
-            List<Student> students = selectedGroup.getStudents().stream()
-                .filter(this::ownsStudent)
-                .collect(Collectors.toList());
+            List<Student> students = selectedGroup.getStudents();
             
             students.sort((s1, s2) -> {
                 String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -310,9 +299,7 @@ public class DataViewController {
             @RequestParam(required = false) Long groupId, 
             Model model) {
         
-        List<Group> groups = groupRepository.findAll().stream()
-            .filter(this::ownsGroup)
-            .collect(Collectors.toList());
+        List<Group> groups = groupRepository.findAll();
         model.addAttribute("groups", groups);
         model.addAttribute("selectedGroupId", groupId);
         model.addAttribute("adminUsername", getLoggedInUsername());
@@ -323,9 +310,7 @@ public class DataViewController {
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).orElse(null);
             if (group != null && ownsGroup(group)) {
-                students = group.getStudents().stream()
-                    .filter(this::ownsStudent)
-                    .collect(Collectors.toList());
+                students = group.getStudents();
                 
                 students.sort((s1, s2) -> {
                     String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -333,9 +318,7 @@ public class DataViewController {
                     return email1.compareToIgnoreCase(email2);
                 });
                 
-                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics().stream()
-                    .filter(this::ownsAssessment)
-                    .collect(Collectors.toList());
+                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
                 
                 for (Student student : students) {
                     Double currentFactor = 0.0;

@@ -1,5 +1,9 @@
 package com.capstone.adproject.model;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,6 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
 @Table(name = "student")
 @Data

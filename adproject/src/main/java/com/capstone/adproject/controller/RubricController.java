@@ -47,15 +47,11 @@ import com.capstone.adproject.service.SuperAdminService;
         this.rubricTemplateService = rubricTemplateService;
     }
 
-    private Set<Long> getManagedCourseIdsForCurrentUser() {
-        return courseScopeService.getActiveCourseIdsForCurrentUser();
-    }
-
     private boolean ownsAssessment(Assessment assessment) {
         return assessment != null
                 && assessment.getCourse() != null
                 && assessment.getCourse().getId() != null
-                && getManagedCourseIdsForCurrentUser().contains(assessment.getCourse().getId());
+                && courseScopeService.isActiveCourseId(assessment.getCourse().getId());
     }
 
     private boolean ownsRubric(Rubric rubric) {
@@ -67,9 +63,7 @@ import com.capstone.adproject.service.SuperAdminService;
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         model.addAttribute("assessments", activeCourseId == null
                 ? List.of()
-                : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId).stream()
-                        .filter(this::ownsAssessment)
-                        .collect(Collectors.toList()));
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId));
 
         if (!model.containsAttribute("newAssessment")) {
             model.addAttribute("newAssessment", new Assessment());
@@ -122,7 +116,7 @@ import com.capstone.adproject.service.SuperAdminService;
                 return "redirect:/rubrics/manage";
             }
 
-            if (!getManagedCourseIdsForCurrentUser().contains(activeCourseId)) {
+            if (!courseScopeService.isManagedCourseId(activeCourseId)) {
                 redirectAttributes.addFlashAttribute("errorMessage",
                         "Assessment must belong to one of your managed courses.");
                 return "redirect:/rubrics/manage";
@@ -252,12 +246,23 @@ import com.capstone.adproject.service.SuperAdminService;
     public String saveBulkFill(@PathVariable("id") Long id, @ModelAttribute Assessment assessment,
             RedirectAttributes redirectAttributes) {
         try {
+            // Phase 4: Mutation Guarding - Ensure payload ID matches path ID
+            if (assessment.getId() != null && !assessment.getId().equals(id)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Security validation failed: Payload ID mismatch.");
+                return "redirect:/rubrics/manage";
+            }
+            assessment.setId(id);
+
             Assessment existingAssessment = rubricService.findAssessmentById(id);
             if (!ownsAssessment(existingAssessment)) {
                 redirectAttributes.addFlashAttribute("errorMessage",
                         "You are not authorized to update this assessment.");
                 return "redirect:/rubrics/manage";
             }
+            
+            // Phase 4: Prevent course hijacking via modified payload
+            assessment.setCourse(existingAssessment.getCourse());
+
             rubricService.saveBulkAssessment(assessment);
             redirectAttributes.addFlashAttribute("successMessage", "Assessment content saved successfully!");
             return "redirect:/rubrics/view/" + id;
@@ -446,9 +451,10 @@ import com.capstone.adproject.service.SuperAdminService;
             return "redirect:/rubrics/manage";
         }
         model.addAttribute("newAssessment", assessment);
-        model.addAttribute("assessments", rubricService.findAllAssessments().stream()
-                .filter(this::ownsAssessment)
-                .collect(Collectors.toList()));
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        model.addAttribute("assessments", activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId));
         return "manage-assessments";
     }
 
