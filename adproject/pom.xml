@@ -92,6 +92,26 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <dependency>
+    <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+    <artifactId>owasp-java-html-sanitizer</artifactId>
+    <version>20220608.1</version>
+    </dependency>
+ 
+ <!-- Bucket4j Spring Boot Starter for Rate Limiting -->
+    <dependency>
+        <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+        <artifactId>bucket4j-spring-boot-starter</artifactId>
+        <version>0.8.1</version> <!-- Use the latest stable version -->
+    </dependency>
+
+    <!-- Google Guava for LoadingCache (used in RateLimitInterceptor) -->
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>32.1.3-jre</version> <!-- Use a recent stable version -->
+    </dependency>
+
     </dependencies>
 
     <build>

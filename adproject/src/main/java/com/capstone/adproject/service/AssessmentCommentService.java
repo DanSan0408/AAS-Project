@@ -17,6 +17,7 @@ import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
 public class AssessmentCommentService {
@@ -29,6 +30,9 @@ public class AssessmentCommentService {
     
     @Transactional
     public AssessmentComment saveComment(AssessmentComment comment) {
+        if (comment.getCommentText() != null) {
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(comment.getCommentText()));
+        }
         return commentRepository.save(comment);
     }
     
@@ -135,7 +139,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(evaluatorName);
             comment.setEvaluatedStudent(evaluatedStudent);
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText.trim());
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
             comment.setAnonymousIdentifier(identifier);
             comment.setCommentIndex(i);
@@ -177,7 +181,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(student.getUsername());
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText.trim());
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SELF);
             comment.setAnonymousIdentifier("You (Self)");
             comment.setCommentIndex(i);
@@ -221,7 +225,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(student.getUsername());
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText.trim());
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
             comment.setAnonymousIdentifier("You (Team Evaluation)");
             comment.setCommentIndex(i);
@@ -251,7 +255,7 @@ public class AssessmentCommentService {
         AssessmentComment comment;
         if (!existing.isEmpty()) {
             comment = existing.get(0);
-            comment.setCommentText(commentText);
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText));
         } else {
             comment = new AssessmentComment();
             comment.setEvaluatorId(lecturerId);
@@ -259,7 +263,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(lecturerName);
             comment.setEvaluatedStudent(evaluatedStudent);
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText);
+            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
             comment.setCommentIndex(0);
             comment.setRubricAssessmentType(rubricType);

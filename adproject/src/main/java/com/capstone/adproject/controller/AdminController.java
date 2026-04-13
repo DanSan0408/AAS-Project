@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -61,6 +62,7 @@ import com.capstone.adproject.service.SuperAdminService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/admin")
@@ -602,7 +604,18 @@ public class AdminController {
     }
     
     @PostMapping("/group-assignment")
-    public String createAndAssignGroup(@ModelAttribute GroupAssignmentDto groupAssignmentDto, RedirectAttributes redirectAttributes) {
+    public String createAndAssignGroup(
+            @Valid @ModelAttribute("groupAssignmentDto") GroupAssignmentDto groupAssignmentDto, 
+            BindingResult bindingResult, 
+            RedirectAttributes redirectAttributes) {
+        
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.groupAssignmentDto", bindingResult);
+            redirectAttributes.addFlashAttribute("groupAssignmentDto", groupAssignmentDto);
+            redirectAttributes.addFlashAttribute("error", "Validation failed. Please verify the group details.");
+            return "redirect:/admin/group-assignment";
+        }
+        
         if (groupAssignmentDto.getSelectedStudentIds() != null) {
             boolean hasUnauthorizedStudents = groupAssignmentDto.getSelectedStudentIds().stream()
                 .map(adminService::findStudentById)
@@ -669,9 +682,17 @@ public class AdminController {
 
     @PostMapping("/group/edit/{groupId}")
     public String updateGroup(@PathVariable("groupId") Long groupId, 
-                            @ModelAttribute GroupAssignmentDto dto,
+                            @Valid @ModelAttribute("groupAssignmentDto") GroupAssignmentDto dto,
+                            BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
         
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.groupAssignmentDto", bindingResult);
+            redirectAttributes.addFlashAttribute("groupAssignmentDto", dto);
+            redirectAttributes.addFlashAttribute("error", "Validation failed. Please verify the group details.");
+            return "redirect:/admin/group/edit/" + groupId;
+        }
+
         try {
             Optional<Group> groupOpt = adminService.findGroupById(groupId);
             if (groupOpt.isEmpty() || !ownsGroup(groupOpt.get())) {
@@ -769,7 +790,18 @@ public class AdminController {
     }
 
     @PostMapping("/courses/add")
-    public String addCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
+    public String addCourse(
+            @Valid @ModelAttribute("newCourse") Course course, 
+            BindingResult bindingResult, 
+            RedirectAttributes redirectAttributes) {
+        
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.newCourse", bindingResult);
+            redirectAttributes.addFlashAttribute("newCourse", course);
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please check the course fields.");
+            return "redirect:/admin/manage-courses";
+        }
+        
         try {
             Course savedCourse = superAdminService.saveCourse(course);
 
@@ -803,7 +835,16 @@ public class AdminController {
     }
 
     @PostMapping("/courses/update")
-    public String updateCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
+    public String updateCourse(
+            @Valid @ModelAttribute("course") Course course, 
+            BindingResult bindingResult, 
+            RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.course", bindingResult);
+            redirectAttributes.addFlashAttribute("course", course);
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed for course update.");
+            return "redirect:/admin/courses/edit/" + course.getId();
+        }
         try {
             if (course.getId() == null || !isManagedCourseId(course.getId())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this course.");
@@ -849,10 +890,25 @@ public String manageStudents(Model model, @ModelAttribute("student") Student stu
 
     @PostMapping("/manage-students")
 public String saveStudent(
-        @ModelAttribute Student student,
+        @Valid @ModelAttribute("student") Student student,
+        BindingResult bindingResult,
         @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
         RedirectAttributes redirectAttributes,
         HttpServletRequest request) {
+    
+    if (bindingResult.hasErrors()) {
+        boolean hasRealErrors = bindingResult.getFieldErrors().stream().anyMatch(error -> {
+            String field = error.getField();
+            return !("username".equals(field) || "password".equals(field) || "course".equals(field) || "isTempPassword".equals(field));
+        });
+        
+        if (hasRealErrors) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.student", bindingResult);
+            redirectAttributes.addFlashAttribute("student", student);
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please check the student fields.");
+            return "redirect:/admin/manage-students";
+        }
+    }
     try {
         boolean isUpdate = (student.getId() != null);
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
@@ -917,10 +973,25 @@ public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer 
 
     @PostMapping("/manage-lecturers")
 public String saveLecturer(
-        @ModelAttribute Lecturer lecturer,
+        @Valid @ModelAttribute("lecturer") Lecturer lecturer,
+        BindingResult bindingResult,
         @RequestParam(value = "confirmDuplicate", defaultValue = "false") boolean confirmDuplicate,
         RedirectAttributes redirectAttributes,
         HttpServletRequest request) {
+    
+    if (bindingResult.hasErrors()) {
+        boolean hasRealErrors = bindingResult.getFieldErrors().stream().anyMatch(error -> {
+            String field = error.getField();
+            return !("username".equals(field) || "password".equals(field) || "course".equals(field) || "isTempPassword".equals(field));
+        });
+        
+        if (hasRealErrors) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.lecturer", bindingResult);
+            redirectAttributes.addFlashAttribute("lecturer", lecturer);
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please check the lecturer fields.");
+            return "redirect:/admin/manage-lecturers";
+        }
+    }
     try {
         boolean isUpdate = (lecturer.getId() != null);
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
@@ -1041,9 +1112,17 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
     }
 
     @PostMapping("/group-assignment/randomize/preview")
-    public String previewRandomGroups(@ModelAttribute RandomizationInputDto randomizationInput, 
+    public String previewRandomGroups(@Valid @ModelAttribute("randomizationInput") RandomizationInputDto randomizationInput, 
+                                        BindingResult bindingResult,
                                         Model model,
                                         RedirectAttributes redirectAttributes) {
+
+        if (bindingResult.hasErrors()) {
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.randomizationInput", bindingResult);
+            redirectAttributes.addFlashAttribute("randomizationInput", randomizationInput);
+            redirectAttributes.addFlashAttribute("error", "Validation failed. Please verify the number of students per group.");
+            return "redirect:/admin/group-assignment";
+        }
 
         int maxStudents = randomizationInput.getMaxStudentsPerGroup();
         List<Student> unassignedStudents = adminService.getStudentsWithoutGroup();
@@ -1064,7 +1143,8 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         int actualGroupSize = Math.min(maxStudents, unassignedStudents.size());
         
         GroupAssignmentDto singleRandomGroup = new GroupAssignmentDto();
-        singleRandomGroup.setGroupName("Random Group (Size: " + actualGroupSize + ")");
+        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        singleRandomGroup.setGroupName("Random Group " + uniqueId + " (Size: " + actualGroupSize + ")");
         
         List<Long> studentIds = unassignedStudents.subList(0, actualGroupSize).stream()
             .map(Student::getId)
@@ -1148,7 +1228,18 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
     }
 
     @PostMapping("/assessment/assign")
-public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, RedirectAttributes redirectAttributes) {
+public String assignAssessment(
+        @Valid @ModelAttribute("assignmentDto") AssessmentAssignmentDto dto, 
+        BindingResult bindingResult, 
+        RedirectAttributes redirectAttributes) {
+    
+    if (bindingResult.hasErrors()) {
+        redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.assignmentDto", bindingResult);
+        redirectAttributes.addFlashAttribute("assignmentDto", dto);
+        redirectAttributes.addFlashAttribute("errorMessage", "Validation failed. Please check the assignment details.");
+        return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+    }
+
     Optional<Assessment> assessmentOpt = dto.getAssessmentId() == null
         ? Optional.empty()
         : assessmentService.getAssessmentById(dto.getAssessmentId());
@@ -1160,6 +1251,14 @@ public String assignAssessment(@ModelAttribute("assignmentDto") AssessmentAssign
     if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
          redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
          return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+    }
+
+    // Business Logic Validation: Ensure Open Date is before End Date
+    if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null && dto.getEndDate() != null) {
+        if (!dto.getOpenDate().before(dto.getEndDate())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Business Logic Error: The Open Date must be strictly before the End Date.");
+            return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+        }
     }
 
     List<Deadline> existingDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(

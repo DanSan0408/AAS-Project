@@ -15,6 +15,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 
 @FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
 @Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
@@ -29,6 +31,7 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @Column(unique = true, nullable = true)
     private String username;
 
@@ -39,6 +42,8 @@ public class Student {
     @JoinColumn(name = "group_id")
     private Group group; 
 
+    @NotBlank
+    @Email
     @Column(unique = true, nullable = false)
     private String email;
     

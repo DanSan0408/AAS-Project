@@ -13,6 +13,8 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 
 @Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
@@ -26,12 +28,15 @@ public class Lecturer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     @Column(unique = true, nullable = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
 
+    @NotBlank
+    @Email
     @Column(unique = true, nullable = false)
     private String email;
     

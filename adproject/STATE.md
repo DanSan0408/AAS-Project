@@ -1,6 +1,52 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-07 (IH)
+**Last Updated**: 2026-04-13 (IH)
+
+## Current Status: Admin Course Management
+**Status**: COMPLETE
+
+### Summary
+Delegated course management capabilities from SuperAdmins to regular Admins. Admins can now create, edit, and delete the courses they are assigned to, streamlining course setup without requiring super-user intervention. This feature is fully integrated with the existing course-scoping security model.
+
+### Key Features
+1.  **Admin Course Dashboard**: Created `admin_manage_courses.html` to provide admins with a central view to see all courses they manage, with options to add, edit, or delete.
+2.  **Create and Edit Forms**: Implemented `admin_manage_courses.html` (for creation) and `admin_edit_course.html` (for editing) to handle course data entry.
+3.  **Backend Endpoints**: Added new endpoints in `AdminController` to handle `GET`, `POST`, and `DELETE` requests for course management.
+4.  **Secure Deletion**: The delete functionality reuses the hardened `SuperAdminService.deleteCourse()` method, which safely removes a course and all its cascading dependencies (student assignments, group links, assessments, etc.) using transactional native queries.
+5.  **Authorization**: All course management actions are protected, ensuring admins can only modify courses they are explicitly assigned to manage.
+
+### Files Modified/Created
+- **New**: `admin_manage_courses.html`, `admin_edit_course.html`
+- **Controllers**: `AdminController.java` (added new endpoints)
+- **Services**: `SuperAdminService.java` (reused for persistence logic)
+- **Templates**: `fragments/sidebar.html` (added "Manage Courses" link)
+
+---
+
+## Current Status: Validation, Sanitization, and Error Handling
+**Status**: COMPLETE
+
+### Summary
+Successfully implemented industry-standard input validation, XSS sanitization, and global error handling to prevent malicious payloads, data corruption, and stack trace leaks.
+
+### Key Features
+1. **Phase 1: API Boundary Validation**
+   - Added `@Valid` and `BindingResult` to data-modifying endpoints in `AdminController`.
+   - Implemented cross-field business logic validation (e.g., ensuring Open Date is strictly before End Date for Deadlines).
+2. **Phase 2: XSS Sanitization**
+   - Integrated `owasp-java-html-sanitizer` to scrub malicious tags (`<script>`, `<iframe>`) from rich text inputs.
+   - Applied global sanitization to `AssessmentCommentService`, `LecturerAssessmentService`, and `RubricController`.
+   - Safely enabled `th:utext` across comment view templates to render preserved safe HTML (`<b>`, `<i>`, `<br>`).
+3. **Phase 3: Global Error Handling**
+   - Created `GlobalExceptionHandler` (`@ControllerAdvice`) to catch `ConstraintViolationException`, `DataIntegrityViolationException`, and generic `Exception`s.
+   - Gracefully handles missing static resources (e.g., `favicon.ico`) to prevent terminal log spam.
+   - Designed a responsive, user-friendly `error.html` fallback UI with clear recovery actions (Retry, Go Back, Return Home), completely hiding backend stack traces from end-users.
+
+### Files Modified/Created
+- **New**: `HtmlSanitizerUtil.java`, `GlobalExceptionHandler.java`, `error.html`
+- **Controllers**: `AdminController.java`, `RubricController.java`
+- **Services**: `AssessmentCommentService.java`, `LecturerAssessmentService.java`
+- **Templates**: `student_comments.html`, `comment_view.html`, `lecturer_comment_view.html`, etc.
 
 ## Current Status: Deployment Security Hardening (Phases 1-4)
 **Status**: COMPLETE
@@ -25,6 +71,26 @@ Successfully implemented a comprehensive 4-phase security lockdown to prepare th
 - **Configuration**: `SecurityConfig.java`, `CourseScopeInterceptor.java`
 - **Entities**: `Student.java`, `Lecturer.java`, `Group.java`, `Assessment.java`, `RubricTemplate.java`
 - **Controllers**: `AdminController.java`, `RubricController.java`, `DataViewController.java`, `StudentController.java`, `GroupCommentController.java`, `DeadlineController.java`, `RubricTemplateController.java`
+
+## Current Status: Email Dispatch Optimization
+**Status**: COMPLETE
+
+### Summary
+Implemented a robust Cross-Origin Resource Sharing (CORS) policy to securely allow requests from whitelisted frontend domains while blocking all others. This is a critical security measure for production deployment.
+
+### Key Features
+1.  **Spring Security Integration**: Configured CORS directly within `SecurityConfig.java` using a `CorsConfigurationSource` bean, keeping all security rules centralized.
+2.  **Origin Whitelisting**: Explicitly defined allowed origins, including placeholders for local development (`http://localhost:3000`) and production (`https://your-frontend-domain.com`). Wildcard `*` is avoided to enhance security.
+3.  **Credential Support**: Enabled `allowCredentials = true` to ensure that session cookies (like `JSESSIONID` and `remember-me`) are correctly sent with cross-origin requests, allowing stateful authentication to function properly.
+4.  **Method and Header Control**: Restricted allowed HTTP methods to `GET, POST, PUT, DELETE, OPTIONS` and specified allowed headers like `Authorization` and `Content-Type`.
+
+### Files Modified
+- **Configuration**: `SecurityConfig.java` (added `cors()` to the filter chain and a `CorsConfigurationSource` bean).
+
+### Next Steps
+- Before deployment, ensure the placeholder `https://your-frontend-domain.com` in `SecurityConfig.java` is replaced with the actual domain of the production frontend application.
+
+---
 
 ## Current Status: Email Dispatch Optimization
 **Status**: COMPLETE
@@ -63,6 +129,53 @@ Successfully implemented a comprehensive 4-phase security lockdown to prepare th
 ### Next Steps
 - Consider adding a user preference toggle for email notifications.
 - Monitor SMTP performance if the user base grows significantly. As scale increases, consider swapping raw SMTP for a Transactional Email API (e.g., SendGrid, AWS SES) or moving to a message broker (e.g., RabbitMQ/Kafka).
+
+---
+
+## Current Status: CORS Configuration
+**Status**: COMPLETE
+
+### Summary
+Implemented a robust Cross-Origin Resource Sharing (CORS) policy to securely allow requests from whitelisted frontend domains while blocking all others. This is a critical security measure for production deployment.
+
+### Key Features
+1.  **Spring Security Integration**: Configured CORS directly within `SecurityConfig.java` using a `CorsConfigurationSource` bean, keeping all security rules centralized.
+2.  **Origin Whitelisting**: Explicitly defined allowed origins, including placeholders for local development (`http://localhost:3000`) and production (`https://your-frontend-domain.com`). Wildcard `*` is avoided to enhance security.
+3.  **Credential Support**: Enabled `allowCredentials = true` to ensure that session cookies (like `JSESSIONID` and `remember-me`) are correctly sent with cross-origin requests, allowing stateful authentication to function properly.
+4.  **Method and Header Control**: Restricted allowed HTTP methods to `GET, POST, PUT, DELETE, OPTIONS` and specified allowed headers like `Authorization` and `Content-Type`.
+
+### Files Modified
+- **Configuration**: `SecurityConfig.java` (added `cors()` to the filter chain and a `CorsConfigurationSource` bean).
+
+### Next Steps
+- Before deployment, ensure the placeholder `https://your-frontend-domain.com` in `SecurityConfig.java` is replaced with the actual domain of the production frontend application.
+
+---
+
+## Current Status: Rate Limiting Implementation
+**Status**: COMPLETE
+
+### Summary
+Implemented rate limiting to protect backend resources from abuse, spam, and accidental overuse. This adds per-IP limits to API endpoints, returning a `429 Too Many Requests` status when clients exceed the defined limits.
+
+### Key Features
+1.  **Per-IP Rate Limiting**: Requests will be limited based on the client's IP address.
+2.  **Custom Interceptor**: A Spring `HandlerInterceptor` will be used to apply rate limiting logic before controller execution.
+3.  **Bucket4j Integration**: Utilizing the `Bucket4j` library for efficient token bucket algorithm implementation.
+4.  **Error Handling**: Clients exceeding the rate limit receive a `429 Too Many Requests` HTTP status, along with `X-Rate-Limit-Remaining` and `X-Rate-Limit-Retry-After-Seconds` headers.
+
+### Files Modified/Created
+- **New**: `src/main/java/com/capstone/adproject/config/RateLimitConfig.java`, `src/main/java/com/capstone/adproject/interceptor/RateLimitInterceptor.java`, `src/main/java/com/capstone/adproject/config/WebMvcConfig.java`
+- **Configuration**: `pom.xml` (add `bucket4j-spring-boot-starter` and `google.guava` dependencies)
+- **Deleted**: `src/main/java/com/capstone/adproject/controller/TestController.java` (temporary test endpoint)
+- **Moved**: `src/main/java/com/capstone/adproject/controller/RateLimitInterceptorTest.java` to `src/test/java/com/capstone/adproject/interceptor/RateLimitInterceptorTest.java`
+
+### Next Steps
+- Define specific rate limits for different endpoints or user roles.
+- Consider integrating with a distributed cache (e.g., Redis) for clustered environments.
+- Implement more granular rate limiting strategies (e.g., per-user, per-endpoint).
+
+---
 
 ## Current Status: Deadline Expiration & Visibility
 **Status**: COMPLETE

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - UTM CAS</title>
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .error-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .error-icon {
+            font-size: 64px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        p.error-message {
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h1>Oops! Something went wrong.</h1>
+        
+        <!-- Safe, generic error message passed from GlobalExceptionHandler -->
+        <p class="error-message" th:text="${errorMessage != null ? errorMessage : 'An unexpected system error occurred while processing your request. Please try again later.'}"></p>
+        
+        <div class="actions">
+            <button onclick="window.history.back()" class="btn btn-secondary">Go Back</button>
+            <button onclick="window.location.reload()" class="btn btn-secondary">Retry</button>
+            <a th:href="@{/}" class="btn btn-primary">Return Home</a>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/loading.js}"></script>
+</body>
+</html>
