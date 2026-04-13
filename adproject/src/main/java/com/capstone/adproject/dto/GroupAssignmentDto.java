@@ -1,9 +1,11 @@
 package com.capstone.adproject.dto;
 
 import java.util.List;
+import jakarta.validation.constraints.NotBlank;
 
 public class GroupAssignmentDto {
 
+    @NotBlank
     private String groupName;
     private Long academicSupervisorId;
     private Long industrialSupervisorId;

@@ -113,7 +113,9 @@ private EmailService emailService;
             sendWelcomeEmail(student.getEmail(), tempPassword, "Student", resetToken, request);
         }
         
-        student.setUsername(null); 
+        if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+            student.setUsername(student.getEmail().split("@")[0]);
+        }
         studentRepository.save(student);
         return; 
     }
@@ -206,7 +208,9 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Lecturer", resetToken, request);
         }
         
-        lecturer.setUsername(null);
+        if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
+            lecturer.setUsername(lecturer.getEmail().split("@")[0]);
+        }
         lecturerRepository.save(lecturer);
         return;
     }
@@ -368,11 +372,19 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
         Group newGroup = new Group();
-        newGroup.setGroupName(dto.getGroupName());
+        String groupName = dto.getGroupName();
+        if (groupName == null || groupName.trim().isEmpty()) {
+            groupName = "Random Group " + java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        }
+        newGroup.setGroupName(groupName);
         resolveCurrentAdminCourse().ifPresent(newGroup::setCourse);
 
-        lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
-        lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+        if (dto.getAcademicSupervisorId() != null) {
+            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
+        }
+        if (dto.getIndustrialSupervisorId() != null) {
+            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+        }
 
         Group savedGroup = groupRepository.save(newGroup);
 
@@ -393,6 +405,9 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
                 student.setGroup(savedGroup);
                 if (student.getCourse() == null && savedGroup.getCourse() != null) {
                     student.setCourse(savedGroup.getCourse());
+                }
+                if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+                    student.setUsername(student.getEmail() != null ? student.getEmail().split("@")[0] : "student" + student.getId());
                 }
             }
             studentRepository.saveAll(studentsToAssign);
@@ -521,7 +536,8 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         List<Student> availableStudents = getStudentsWithoutGroup();
         
         GroupAssignmentDto dto = new GroupAssignmentDto();
-        dto.setGroupName("Random Group (Ready to Edit)");
+        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        dto.setGroupName("Random Group " + uniqueId);
         
         List<Long> studentIds = availableStudents.stream()
                                                  .map(Student::getId)

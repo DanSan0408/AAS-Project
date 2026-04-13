@@ -2,10 +2,16 @@ package com.capstone.adproject.dto;
 
 import java.util.Date;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class AssessmentAssignmentDto {
     
+    @NotNull
     private Long assessmentId;
     private Long deadlineId;
+
+    @NotBlank
     private String title;
     private String assessorType;
     private String openType; 
@@ -14,6 +20,7 @@ public class AssessmentAssignmentDto {
 
     public AssessmentAssignmentDto() {
     }
+
 
     public Long getAssessmentId() {
         return assessmentId;

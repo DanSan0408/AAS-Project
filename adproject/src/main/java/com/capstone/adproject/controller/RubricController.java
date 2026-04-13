@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Controller;
@@ -28,6 +26,7 @@ import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.RubricTemplateService;
 import com.capstone.adproject.service.SuperAdminService;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Controller @RequestMapping("/rubrics") public class RubricController {
 
@@ -78,6 +77,10 @@ import com.capstone.adproject.service.SuperAdminService;
             RedirectAttributes redirectAttributes) {
 
         Long assessmentId = assessment.getId();
+        
+        if (assessment.getTitle() != null) {
+            assessment.setTitle(HtmlSanitizerUtil.sanitize(assessment.getTitle()));
+        }
 
         if (!duplicateConfirmed) {
             Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
@@ -346,6 +349,10 @@ import com.capstone.adproject.service.SuperAdminService;
 
         Long assessmentId = rubric.getAssessment().getId();
         Long rubricId = rubric.getId();
+        
+        if (rubric.getName() != null) {
+            rubric.setName(HtmlSanitizerUtil.sanitize(rubric.getName()));
+        }
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         if (!ownsAssessment(assessment)) {

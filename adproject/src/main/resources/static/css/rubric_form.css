@@ -33,7 +33,7 @@ body.rubric-form-page {
 /* ==================== LAYOUT ==================== */
 body.rubric-form-page .main-content {
     margin-left: 270px !important;
-    padding: 40px 40px 100px 40px !important; /* Extra bottom padding for footer */
+    padding: 40px 40px 140px 40px !important; /* Extra bottom padding for floating action bar */
     flex-grow: 1 !important;
     background-color: var(--color-background) !important;
     display: flex !important;
@@ -389,6 +389,18 @@ body.rubric-form-page .button-container {
         width: 100% !important;
         min-width: 0 !important;
     }
+}
+
+/* ==================== RESPONSIVE OVERRIDES ==================== */
+
+/*
+ * Fix for floating action bar overlap on hover.
+ * The .card:hover transform from responsive-patterns.css creates a new stacking context,
+ * which can break the 'position: fixed' behavior of a descendant action bar.
+ * Disabling the transform on this specific page resolves the layout issue.
+ */
+body.rubric-form-page .card:hover {
+    transform: none !important;
 }
 
 @media (max-width: 430px) {
