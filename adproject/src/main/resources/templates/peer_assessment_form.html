@@ -365,7 +365,7 @@
         </div>
     </div>
     
-    <script th:inline="javascript">
+    <script  th:attr="nonce=${cspNonce}" th:inline="javascript">
         const hasExisting = /*[[${hasExistingEvaluation}]]*/ false;
         const isTeamEval = /*[[${isTeamEvaluation}]]*/ false;
         

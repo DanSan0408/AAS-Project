@@ -6,10 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "deadlines")
+@Table(name = "deadlines", indexes = {
+    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessment_id, assessor_type")
+})
+
 public class Deadline {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

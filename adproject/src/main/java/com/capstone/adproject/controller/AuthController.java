@@ -164,4 +164,5 @@ public class AuthController {
         model.addAttribute("message", "Your password has been successfully updated. You can now login.");
         return "login";
     }
+
 }

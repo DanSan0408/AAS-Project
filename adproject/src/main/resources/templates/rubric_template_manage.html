@@ -103,7 +103,9 @@
                                     <a th:href="@{/rubrics/templates/edit/{id}(id=${template.id})}" class="btn btn-sm btn-edit" title="Edit Blueprint">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form th:action="@{/rubrics/templates/delete/{id}(id=${template.id})}" method="post" onsubmit="return confirm('Are you sure you want to delete this blueprint?');" style="display:inline;">
+                                    <form th:action="@{/rubrics/templates/delete/{id}(id=${template.id})}" method="post" 
+                                          style="display:inline;"
+                                          data-action="confirm-submit" data-confirm-message="Are you sure you want to delete this blueprint?">
                                         <button type="submit" class="btn btn-sm btn-delete" title="Delete Blueprint">
                                             <i class="fas fa-trash"></i> Delete
                                         </button>
@@ -116,6 +118,7 @@
             </div>
         </div>
     </div>
-    <script th:src="@{/js/loading.js}"></script>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:src="@{/js/loading.js}"></script>
 </body>
 </html>

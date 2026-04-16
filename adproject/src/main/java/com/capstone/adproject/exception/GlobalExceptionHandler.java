@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import com.capstone.adproject.service.MonitoringService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
@@ -17,46 +19,53 @@ import jakarta.validation.ConstraintViolationException;
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final MonitoringService monitoringService;
 
-    // Fallback for unhandled validation errors
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ModelAndView handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
-        logger.warn("Constraint violation at {}: {}", request.getRequestURI(), ex.getMessage());
-        
-        ModelAndView mav = new ModelAndView("error"); // Assumes a generic error.html template exists
-        mav.addObject("errorMessage", "Validation failed for the submitted data. Please verify your inputs and try again.");
-        return mav;
+    public GlobalExceptionHandler(MonitoringService monitoringService) {
+        this.monitoringService = monitoringService;
     }
 
-    // Fallback for database integrity violations (e.g., duplicate unique keys not explicitly caught)
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ModelAndView handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
-        logger.warn("Data integrity violation at {}: {}", request.getRequestURI(), ex.getMessage());
-        
-        ModelAndView mav = new ModelAndView("error");
-        mav.addObject("errorMessage", "A database conflict occurred. This is often caused by submitting duplicate information.");
-        return mav;
-    }
-
-    // Gracefully handle 404 Missing Files (like favicon.ico) without spamming the terminal
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ModelAndView handleNoResourceFoundException(NoResourceFoundException ex, HttpServletRequest request) {
-        logger.warn("Resource not found: {}", request.getRequestURI());
-        
-        ModelAndView mav = new ModelAndView("error");
-        mav.addObject("errorMessage", "The requested resource could not be found.");
-        return mav;
+    public ModelAndView handleNoResourceFoundException(NoResourceFoundException ex) {
+        // This prevents log spam for missing resources like favicon.ico
+        logger.warn("Resource not found: {}", ex.getResourcePath());
+        ModelAndView modelAndView = new ModelAndView("error");
+        modelAndView.addObject("errorMessage", "The page you are looking for does not exist.");
+        modelAndView.addObject("status", HttpStatus.NOT_FOUND.value());
+        return modelAndView;
     }
 
-    // Catch-all for generic exceptions to prevent stack trace leaks
-    @ExceptionHandler(Exception.class)
-    public ModelAndView handleGenericException(Exception ex, HttpServletRequest request) {
-        // Log the full stack trace server-side ONLY for debugging
-        logger.error("Unexpected system error occurred at {}", request.getRequestURI(), ex);
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ModelAndView handleConstraintViolationException(ConstraintViolationException ex, HttpServletRequest request) {
+        logger.warn("Constraint violation for request URL: {}", request.getRequestURL(), ex);
+        ModelAndView modelAndView = new ModelAndView("error");
+        modelAndView.addObject("errorMessage", "There was a problem with your submission. Please check the fields and try again.");
+        modelAndView.addObject("status", HttpStatus.BAD_REQUEST.value());
+        return modelAndView;
+    }
 
-        ModelAndView mav = new ModelAndView("error");
-        mav.addObject("errorMessage", "An unexpected system error occurred. Please try again later or contact the administrator.");
-        return mav;
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ModelAndView handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpServletRequest request) {
+        logger.error("Data integrity violation for request URL: {}", request.getRequestURL(), ex);
+        ModelAndView modelAndView = new ModelAndView("error");
+        modelAndView.addObject("errorMessage", "A database error occurred. This could be due to a duplicate entry. Please try again.");
+        modelAndView.addObject("status", HttpStatus.CONFLICT.value());
+        return modelAndView;
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ModelAndView handleGenericException(Exception ex, HttpServletRequest request) {
+        // Increment the critical error counter for any unexpected exception (5xx)
+        monitoringService.incrementCriticalErrorCount();
+
+        logger.error("Caught unhandled exception for request URL: {}", request.getRequestURL(), ex);
+        ModelAndView modelAndView = new ModelAndView("error");
+        modelAndView.addObject("errorMessage", "An unexpected error occurred. Please try again later or contact support.");
+        modelAndView.addObject("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        return modelAndView;
     }
 }

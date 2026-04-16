@@ -78,12 +78,15 @@ public class SecurityConfig {
         http
         // Apply CORS configuration first
             .cors(withDefaults())
+            // Disable CSRF for the CSP report endpoint, as it's a browser-sent POST without a token
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/csp-violations"))
         //authenticate and authorize
             .authenticationProvider(daoAuthenticationProvider())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**", 
-                    "/forgot_password", "/reset_password/**").permitAll()
+                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**",
+                    "/forgot_password", "/reset_password/**", "/csp-violations").permitAll()
                 .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages
                 .requestMatchers("/rubrics/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access rubric pages
@@ -119,6 +122,19 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .permitAll()
+            )
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> {
+                    String policy = "default-src 'self'; " +
+                                    "script-src 'self' 'nonce-{nonce}'; " +
+                                    "style-src 'self' 'unsafe-inline'; " + // Temporarily allow inline styles to focus on scripts
+                                    "img-src 'self' data:; " +
+                                    "font-src 'self'; " +
+                                    "connect-src 'self'; " +
+                                    "frame-src 'none'; object-src 'none'; " +
+                                    "report-uri /csp-violations;";
+                    csp.policyDirectives(policy);
+                })
             );
 
         return http.build();

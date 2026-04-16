@@ -20,11 +20,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
+import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 import org.hibernate.annotations.Filter;
 
 @Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
+@Table(name = "assessment", indexes = {
+    @Index(name = "idx_assessment_course", columnList = "course_id")
+})
+
 public class Assessment {
 
     @Id

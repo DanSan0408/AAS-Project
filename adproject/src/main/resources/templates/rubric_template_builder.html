@@ -59,7 +59,7 @@
                 <div class="section-container section-blue">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2>Sub-Rubrics</h2>
-                        <button type="button" class="btn btn-add" onclick="addSubRubric()">+ Add Sub-Rubric</button>
+                        <button type="button" id="addSubRubricBtn" class="btn btn-add">+ Add Sub-Rubric</button>
                     </div>
                     <p class="info-text">Sub-rubrics allow you to break down this rubric into smaller components.</p>
                     <div id="blueprint-sub-rubrics"></div>
@@ -68,7 +68,7 @@
                 <div class="section-container section-green">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
-                        <button type="button" class="btn btn-add" style="background-color: var(--color-success) !important;" onclick="addDirectRating()">+ Add Direct Rating</button>
+                        <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important;">+ Add Direct Rating</button>
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
                     <div id="blueprint-direct-ratings"></div>
@@ -77,7 +77,7 @@
                 <div class="section-container section-purple">
                 <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
-                        <button type="button" class="btn btn-add" style="background-color: var(--color-purple) !important;" onclick="addComment()">+ Add Comment Question</button>
+                        <button type="button" id="addCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important;">+ Add Comment Question</button>
                     </div>
                     <p class="info-text">Add optional comment questions specific to this rubric only.</p>
                     <div id="blueprint-comments"></div>
@@ -87,86 +87,87 @@
 
     <div class="button-container action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
             <a th:href="@{/rubrics/templates/manage}" class="btn btn-danger">Cancel</a>
-            <button type="submit" form="blueprintForm" class="btn btn-primary" onclick="serializeBlueprint()">
+            <button type="submit" form="blueprintForm" class="btn btn-primary">
                 <i class="fas fa-save"></i> Save Blueprint Structure
             </button>
         </div>
     </div>
 
-    <script>
-        let blueprint = {
-            subRubrics: [],
-            directRatingsCount: 0,
-            commentsCount: 0
-        };
-
-        function addSubRubric() { blueprint.subRubrics.push({ ratingsCount: 1 }); renderBlueprint(); }
-        function removeSubRubric(index) { blueprint.subRubrics.splice(index, 1); renderBlueprint(); }
-        function addRatingToSub(index) { blueprint.subRubrics[index].ratingsCount++; renderBlueprint(); }
-        function removeRatingFromSub(index) { if (blueprint.subRubrics[index].ratingsCount > 0) { blueprint.subRubrics[index].ratingsCount--; renderBlueprint(); } }
-        function addDirectRating() { blueprint.directRatingsCount++; renderBlueprint(); }
-        function removeDirectRating() { if (blueprint.directRatingsCount > 0) blueprint.directRatingsCount--; renderBlueprint(); }
-        function addComment() { blueprint.commentsCount++; renderBlueprint(); }
-        function removeComment() { if (blueprint.commentsCount > 0) blueprint.commentsCount--; renderBlueprint(); }
-
-        function serializeBlueprint() {
-            document.getElementById('structureData').value = JSON.stringify(blueprint);
-        }
-
-        function renderBlueprint() {
-            const subContainer = document.getElementById('blueprint-sub-rubrics');
-            subContainer.innerHTML = '';
-            blueprint.subRubrics.forEach((sr, i) => {
-                let ratingsHtml = '';
-                for(let r=0; r<sr.ratingsCount; r++) {
-                    ratingsHtml += `<div class="rating-card"><span style="font-weight:600; font-size:0.9rem;">Rating Row ${r+1}</span></div>`;
-                }
-                subContainer.innerHTML += `
-                    <div class="sub-rubric-card">
-                        <button type="button" class="remove-btn remove-sub-rubric-btn" onclick="removeSubRubric(${i})">Remove Sub-Rubric</button>
-                        <h4 style="margin-top:0; margin-bottom:15px;">Sub-Rubric Block ${i+1}</h4>
-                        <div class="ratings-section">
-                            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
-                                <h5 style="margin:0; font-size:1rem;">Ratings (${sr.ratingsCount})</h5>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="removeRatingFromSub(${i})">-</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" onclick="addRatingToSub(${i})">+</button>
-                                </div>
-                            </div>
-                            <div style="margin-bottom:10px;">${ratingsHtml}</div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            const drContainer = document.getElementById('blueprint-direct-ratings');
-            drContainer.innerHTML = '';
-            for(let i=0; i<blueprint.directRatingsCount; i++) {
-                drContainer.innerHTML += `
-                    <div class="rating-card">
-                        <button type="button" class="remove-btn remove-direct-rating-btn" onclick="removeDirectRating()">Remove</button>
-                        <p style="margin:0; font-weight:600;">Direct Rating Block ${i+1}</p>
-                    </div>
-                `;
-            }
-            if (blueprint.directRatingsCount === 0) drContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No direct ratings added.</p>';
-
-            const commentsContainer = document.getElementById('blueprint-comments');
-            commentsContainer.innerHTML = '';
-            for(let i=0; i<blueprint.commentsCount; i++) {
-                commentsContainer.innerHTML += `
-                    <div class="comment-card">
-                        <button type="button" class="remove-btn remove-rubric-comment-btn" onclick="removeComment()">Remove</button>
-                        <p style="margin:0; font-weight:600;">Comment Question Block ${i+1}</p>
-                    </div>
-                `;
-            }
-            if (blueprint.commentsCount === 0) commentsContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No rubric-specific comments added.</p>';
-
-            serializeBlueprint();
-        }
-
+    <script th:attr="nonce=${cspNonce}">
         document.addEventListener('DOMContentLoaded', () => {
+            let blueprint = {
+                subRubrics: [],
+                directRatingsCount: 0,
+                commentsCount: 0
+            };
+
+            const addSubRubric = () => { blueprint.subRubrics.push({ ratingsCount: 1 }); renderBlueprint(); };
+            const removeSubRubric = (index) => { blueprint.subRubrics.splice(index, 1); renderBlueprint(); };
+            const addRatingToSub = (index) => { blueprint.subRubrics[index].ratingsCount++; renderBlueprint(); };
+            const removeRatingFromSub = (index) => { if (blueprint.subRubrics[index].ratingsCount > 0) { blueprint.subRubrics[index].ratingsCount--; renderBlueprint(); } };
+            const addDirectRating = () => { blueprint.directRatingsCount++; renderBlueprint(); };
+            const removeDirectRating = () => { if (blueprint.directRatingsCount > 0) blueprint.directRatingsCount--; renderBlueprint(); };
+            const addComment = () => { blueprint.commentsCount++; renderBlueprint(); };
+            const removeComment = () => { if (blueprint.commentsCount > 0) blueprint.commentsCount--; renderBlueprint(); };
+
+            const serializeBlueprint = () => {
+                document.getElementById('structureData').value = JSON.stringify(blueprint);
+            };
+
+            function renderBlueprint() {
+                const subContainer = document.getElementById('blueprint-sub-rubrics');
+                subContainer.innerHTML = '';
+                blueprint.subRubrics.forEach((sr, i) => {
+                    let ratingsHtml = '';
+                    for(let r=0; r<sr.ratingsCount; r++) {
+                        ratingsHtml += `<div class="rating-card"><span style="font-weight:600; font-size:0.9rem;">Rating Row ${r+1}</span></div>`;
+                    }
+                    subContainer.innerHTML += `
+                        <div class="sub-rubric-card">
+                            <button type="button" class="remove-btn remove-sub-rubric-btn" data-action="remove-sub-rubric" data-index="${i}">Remove Sub-Rubric</button>
+                            <h4 style="margin-top:0; margin-bottom:15px;">Sub-Rubric Block ${i+1}</h4>
+                            <div class="ratings-section">
+                                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                                    <h5 style="margin:0; font-size:1rem;">Ratings (${sr.ratingsCount})</h5>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-danger" data-action="remove-rating-from-sub" data-index="${i}">-</button>
+                                        <button type="button" class="btn btn-sm btn-secondary" data-action="add-rating-to-sub" data-index="${i}">+</button>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:10px;">${ratingsHtml}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const drContainer = document.getElementById('blueprint-direct-ratings');
+                drContainer.innerHTML = '';
+                for(let i=0; i<blueprint.directRatingsCount; i++) {
+                    drContainer.innerHTML += `
+                        <div class="rating-card">
+                            <button type="button" class="remove-btn remove-direct-rating-btn" data-action="remove-direct-rating">Remove</button>
+                            <p style="margin:0; font-weight:600;">Direct Rating Block ${i+1}</p>
+                        </div>
+                    `;
+                }
+                if (blueprint.directRatingsCount === 0) drContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No direct ratings added.</p>';
+
+                const commentsContainer = document.getElementById('blueprint-comments');
+                commentsContainer.innerHTML = '';
+                for(let i=0; i<blueprint.commentsCount; i++) {
+                    commentsContainer.innerHTML += `
+                        <div class="comment-card">
+                            <button type="button" class="remove-btn remove-rubric-comment-btn" data-action="remove-comment">Remove</button>
+                            <p style="margin:0; font-weight:600;">Comment Question Block ${i+1}</p>
+                        </div>
+                    `;
+                }
+                if (blueprint.commentsCount === 0) commentsContainer.innerHTML = '<p class="info-text" style="margin-top:0;">No rubric-specific comments added.</p>';
+
+                serializeBlueprint();
+            }
+
+            // Initial Load
             const existingData = document.getElementById('structureData').value;
             if (existingData && existingData.trim().length > 0 && existingData !== 'null') {
                 try {
@@ -185,9 +186,30 @@
                  blueprint.subRubrics.push({ ratingsCount: 4 });
             }
             renderBlueprint();
+
+            // Event Listeners
+            document.getElementById('addSubRubricBtn').addEventListener('click', addSubRubric);
+            document.getElementById('addDirectRatingBtn').addEventListener('click', addDirectRating);
+            document.getElementById('addCommentBtn').addEventListener('click', addComment);
+            document.getElementById('blueprintForm').addEventListener('submit', serializeBlueprint);
+
+            // Event Delegation for dynamic buttons
+            document.body.addEventListener('click', function(event) {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const action = target.dataset.action;
+                const index = parseInt(target.dataset.index, 10);
+
+                if (action === 'remove-sub-rubric') removeSubRubric(index);
+                else if (action === 'add-rating-to-sub') addRatingToSub(index);
+                else if (action === 'remove-rating-from-sub') removeRatingFromSub(index);
+                else if (action === 'remove-direct-rating') removeDirectRating();
+                else if (action === 'remove-comment') removeComment();
+            });
         });
     </script>
     
-    <script th:src="@{/js/loading.js}"></script>
+    <script th:attr="nonce=${cspNonce}" th:src="@{/js/loading.js}"></script>
 </body>
 </html>

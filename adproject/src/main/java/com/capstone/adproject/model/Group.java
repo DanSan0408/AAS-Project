@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -16,7 +17,12 @@ import jakarta.persistence.Table;
 
 @Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
-@Table(name = "project_group")
+@Table(name = "project_group", indexes = {
+    @Index(name = "idx_group_course", columnList = "course_id"),
+    @Index(name = "idx_group_academic_sup", columnList = "academic_supervisor_id"),
+    @Index(name = "idx_group_industrial_sup", columnList = "industrial_supervisor_id")
+})
+
 public class Group {
 
     @Id

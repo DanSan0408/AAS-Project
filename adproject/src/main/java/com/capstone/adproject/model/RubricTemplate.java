@@ -7,13 +7,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
-@Table(name = "rubric_templates")
+@Table(name = "rubric_templates", indexes = {
+    @Index(name = "idx_rubric_template_course", columnList = "course_id")
+})
+
 public class RubricTemplate {
 
     @Id

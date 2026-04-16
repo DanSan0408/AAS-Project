@@ -79,12 +79,10 @@
                                                       th:action="@{/admin/group/delete/{id}(id=${group.id})}" 
                                                       method="post" 
                                                       style="display: inline-block;">
-                                                    
-                                                    <button 
-                                                        type="button" 
-                                                        class="btn-delete" 
-                                                        th:attr="data-group-name=${group.groupName}, data-group-id=${group.id}" 
-                                                        onclick="confirmDeleteGroupAndSubmit(this)">
+                                                    <button type="button" class="btn-delete"
+                                                            data-action="confirm-delete-group"
+                                                            th:data-group-name="${group.groupName}"
+                                                            th:data-group-id="${group.id}">
                                                         Delete
                                                     </button>
                                                 </form>
@@ -113,20 +111,20 @@
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" class="form-group">
                                             <label for="studentSearch">Search Student Email:</label>
-                                            <input type="text" id="studentSearch" onkeyup="filterStudents()" placeholder="Search by email..." style="width: 100%;">
+                                            <input type="text" id="studentSearch" placeholder="Search by email..." style="width: 100%;">
                                         </div>
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" id="studentCarouselContainer">
                                             
                                             <div class="carousel-controls">
-                                                <button type="button" id="prevBtn" class="carousel-btn" onclick="moveCarousel(-1)">&#9664; Prev</button>
+                                                <button type="button" id="prevBtn" class="carousel-btn" data-action="carousel-prev">&#9664; Prev</button>
                                                 <span id="pageInfo">Page 1 of 1</span>
-                                                <button type="button" id="nextBtn" class="carousel-btn" onclick="moveCarousel(1)">Next &#9654;</button>
+                                                <button type="button" id="nextBtn" class="carousel-btn" data-action="carousel-next">Next &#9654;</button>
                                             </div>
 
                                             <div class="carousel-viewport student-table-wrapper">
                                                 <div id="studentCarousel" class="carousel-track">
-                                                    <table id="studentTable"> 
+                                                    <table id="studentTable">
                                                         <thead>
                                                             <tr>
                                                                 <th style="width: 10%;">Select</th>
@@ -156,8 +154,7 @@
                                         <div class="form-group">
                                             <label for="academicSupervisorId">Lecturer:</label>
                                             <div class="search-container">
-                                                <input type="text" id="academicSupervisorSearch" placeholder="Search lecturer by email..." 
-                                                       class="search-input" onkeyup="searchLecturers('academicSupervisorSearch', 'academicSupervisorId')">
+                                                <input type="text" id="academicSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="academicSupervisorId">
                                                 <div id="academicSupervisorResults" class="search-results"></div>
                                             </div>
                                             <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
@@ -174,8 +171,7 @@
                                         <div class="form-group">
                                             <label for="industrialSupervisorId">Industrial Supervisor:</label>
                                             <div class="search-container">
-                                                <input type="text" id="industrialSupervisorSearch" placeholder="Search lecturer by email..." 
-                                                       class="search-input" onkeyup="searchLecturers('industrialSupervisorSearch', 'industrialSupervisorId')">
+                                                <input type="text" id="industrialSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="industrialSupervisorId">
                                                 <div id="industrialSupervisorResults" class="search-results"></div>
                                             </div>
                                             <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
@@ -291,11 +287,12 @@
 }
 </style>
     
-<script>
+<script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+<script th:attr="nonce=${cspNonce}">
     const STUDENTS_PER_PAGE = 4;
     let currentPage = 0;
     let totalPages = 1;
-    let studentRows = [];
+    let studentRows = []; // This will hold all student row elements
 
     function initializePagination() {
         const tableBody = document.querySelector('#studentTable tbody');
@@ -303,11 +300,8 @@
             studentRows = Array.from(tableBody.querySelectorAll('.student-row'));
             
             if (studentRows.length > 0) {
-                totalPages = Math.ceil(studentRows.length / STUDENTS_PER_PAGE);
-                
                 studentRows.forEach(row => row.setAttribute('data-filtered-match', 'true'));
-
-                updateDisplay();
+                updateDisplay(); // Initial display setup
             }
         }
     }
@@ -319,30 +313,6 @@
         
         if (counterElement) {
             counterElement.textContent = count;
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', (event) => {
-        initializePagination();
-        
-        const searchInput = document.getElementById('studentSearch');
-        if(searchInput) {
-             searchInput.addEventListener('keyup', filterStudents);
-        }
-        
-        const checkboxes = document.querySelectorAll('input[name="selectedStudentIds"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateSelectedCount);
-        });
-        
-        updateSelectedCount();
-    });
-
-    function moveCarousel(direction) {
-        const newPage = currentPage + direction;
-        if (newPage >= 0 && newPage < totalPages) {
-            currentPage = newPage;
-            updateDisplay();
         }
     }
 
@@ -364,7 +334,7 @@
         });
 
         currentlyVisibleRows.slice(startIndex, endIndex).forEach(row => {
-            row.style.display = 'table-row';
+            row.style.display = ''; // Use default display
         });
 
 

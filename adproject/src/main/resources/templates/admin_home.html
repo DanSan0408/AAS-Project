@@ -108,9 +108,10 @@
                                         <div style="margin-top: 10px;">
                                             <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" 
                                                class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
-                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" 
-                                                  method="post" style="display:inline;" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this rubric?');">
+                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post"
+                                                  style="display:inline;"
+                                                  data-action="confirm-submit"
+                                                  data-confirm-message="Are you sure you want to delete this rubric?">
                                                 <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
                                             </form>
                                         </div>
@@ -137,10 +138,11 @@
                                                 <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
                                                     <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                                      method="post" style="display: inline;"
-                                                      onsubmit="return confirm('Delete this question?');">
+                                                </a> <form
+                                                    th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
+                                                    method="post" style="display: inline;"
+                                                    data-action="confirm-submit"
+                                                    data-confirm-message="Delete this question?">
                                                     <input type="hidden" name="type" value="group"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
@@ -190,9 +192,9 @@
                                         <div style="margin-top: 10px;">
                                             <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" 
                                                class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
-                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" 
-                                                  method="post" style="display:inline;" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this rubric?');">
+                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post"
+                                                  style="display:inline;" data-action="confirm-submit"
+                                                  data-confirm-message="Are you sure you want to delete this rubric?">
                                                 <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
                                             </form>
                                         </div>
@@ -219,10 +221,11 @@
                                                 <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
                                                     <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                                      method="post" style="display: inline;"
-                                                      onsubmit="return confirm('Delete this question?');">
+                                                </a> <form
+                                                    th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
+                                                    method="post" style="display: inline;"
+                                                    data-action="confirm-submit"
+                                                    data-confirm-message="Delete this question?">
                                                     <input type="hidden" name="type" value="individual"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
@@ -354,11 +357,10 @@
                                 <a th:href="@{/deadlines/edit/{id}(id=${deadline.id})}" 
                                    class="rubric-action-btn edit-btn">
                                     Edit
-                                </a>
-                                <form th:action="@{/deadlines/delete/{id}(id=${deadline.id})}" 
-                                      method="post" 
-                                      style="display:inline; margin-left: 5px;" 
-                                      onsubmit="return confirm('Are you sure you want to delete this deadline?');">
+                                </a> <form
+                                    th:action="@{/deadlines/delete/{id}(id=${deadline.id})}" method="post"
+                                    style="display:inline; margin-left: 5px;" data-action="confirm-submit"
+                                    data-confirm-message="Are you sure you want to delete this deadline?">
                                     <button type="submit" class="rubric-action-btn delete-btn">
                                         Delete
                                     </button>
@@ -377,34 +379,7 @@
         </div>
     </div>
     
-    <script th:inline="javascript">
-    const isDuplicate = /*[[${isDuplicate}]]*/ false;
-    
-    if (isDuplicate === true) {
-        const deadlineData = /*[[${deadlineToSave}]]*/ null;
-        const existingTitle = /*[[${existingTitle}]]*/ '';
-        const newTitle = deadlineData ? deadlineData.title : 'the entered title';
-
-        let message = `A deadline similar to "${newTitle}" already exists`;
-        if (existingTitle) {
-            message += ` (existing: "${existingTitle}")`;
-        }
-        message += `. The titles are the same when ignoring spaces. Do you really want to save this duplicate?`;
-
-        let confirmed = confirm(message);
-        
-        if (confirmed) {
-            const form = document.getElementById('newDeadlineForm');
-            const confirmInput = document.createElement('input');
-            confirmInput.type = 'hidden';
-            confirmInput.name = 'confirmDuplicate';
-            confirmInput.value = 'true';
-            form.appendChild(confirmInput);
-            form.submit();
-        } else {
-            console.log("Duplicate entry creation cancelled by admin.");
-        }
-    }
-    </script>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript"></script>
 </body>
 </html>
