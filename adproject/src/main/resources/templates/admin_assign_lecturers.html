@@ -36,14 +36,14 @@
                 <h3 style="margin-top: 0;">Assignment Mode</h3>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
-                        <input type="radio" name="assignmentMode" value="GROUP" th:checked="${assignmentMode == 'GROUP'}" onchange="toggleMode()">
+                        <input type="radio" name="assignmentMode" value="GROUP" th:checked="${assignmentMode == 'GROUP'}">
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Groups</strong>
                             <span style="color: #666; font-size: 0.9em;">Lecturers evaluate all rubrics for specific groups</span>
                         </div>
                     </label>
                     <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
-                        <input type="radio" name="assignmentMode" value="RUBRIC" th:checked="${assignmentMode == 'RUBRIC'}" onchange="toggleMode()">
+                        <input type="radio" name="assignmentMode" value="RUBRIC" th:checked="${assignmentMode == 'RUBRIC'}">
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Rubrics</strong>
                             <span style="color: #666; font-size: 0.9em;">Lecturers evaluate specific rubrics for all groups</span>
@@ -114,8 +114,7 @@
                                                         th:selected="${lec.id == lecturer.id}">
                                                     Lecturer Email
                                                 </option>
-                                            </select>
-                                            <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                        </select> <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -128,15 +127,14 @@
                                                     th:value="${lec.id}" 
                                                     th:text="${lec.email}">
                                                 Lecturer Email
-                                            </option>
-                                        </select>
-                                        <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
+                                            </option> </select>
+                                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <button type="button" class="btn-link-add" th:onclick="'addLecturerField(' + ${group.id} + ')'">
+                                <button type="button" class="btn-link-add" data-action="add-lecturer-field" th:data-group-id="${group.id}">
                                     <i class="fas fa-plus-circle"></i> Add Another Lecturer
                                 </button>
                             </div>
@@ -152,66 +150,70 @@
         </form>
     </div>
 
-    <script th:inline="javascript">
-        const allLecturers = /*[[${allLecturers}]]*/ [];
-        
-        function addLecturerField(groupId) {
-            const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
-            const existingFields = container.querySelectorAll('.lecturer-row');
-            const newIndex = existingFields.length;
-            
-            const newField = document.createElement('div');
-            newField.className = 'lecturer-row';
-            newField.innerHTML = `
-                <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
-                    <option value="none">-- Select Lecturer --</option>
-                    ${allLecturers.map(lec => `<option value="${lec.id}">${lec.email}</option>`).join('')}
-                </select>
-                <button type="button" class="btn-icon-remove" onclick="removeLecturerField(this)" title="Remove Lecturer">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            container.appendChild(newField);
-        }
-        
-        function removeLecturerField(button) {
-            const field = button.closest('.lecturer-row');
-            const container = field.parentElement;
-            
-            if (container.querySelectorAll('.lecturer-row').length > 1) {
-                field.remove();
-            } else {
-                const select = field.querySelector('select');
-                if(select) select.value = 'none';
-            }
-        }
+<script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
+        document.addEventListener('DOMContentLoaded', function() {
+            const allLecturers = /*[[${allLecturers}]]*/ [];
 
-        function toggleMode() {
-            const modeElement = document.querySelector('input[name="assignmentMode"]:checked');
-            if (!modeElement) return;
-            
-            const mode = modeElement.value;
+            // --- Page Specific Logic for admin_assign_lecturers.html ---
+
+            // Handle Assignment Mode Toggle
+            const assignmentModeRadios = document.querySelectorAll('input[name="assignmentMode"]');
             const rubricSection = document.getElementById('rubricModeSection');
             const groupSection = document.getElementById('groupModeSection');
-            
-            if (mode === 'RUBRIC') {
-                rubricSection.style.display = 'block';
-                groupSection.style.display = 'none';
-                
-                // disable group inputs to avoid submitting them
-                rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
-                groupSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
-            } else {
-                rubricSection.style.display = 'none';
-                groupSection.style.display = 'block';
-                
-                rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
-                groupSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', toggleMode);
+
+            const toggleMode = () => {
+                const mode = document.querySelector('input[name="assignmentMode"]:checked').value;
+                if (mode === 'RUBRIC') {
+                    rubricSection.style.display = 'block';
+                    groupSection.style.display = 'none';
+                    rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
+                    groupSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
+                } else {
+                    rubricSection.style.display = 'none';
+                    groupSection.style.display = 'block';
+                    rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
+                    groupSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
+                }
+            };
+
+            assignmentModeRadios.forEach(radio => radio.addEventListener('change', toggleMode));
+            toggleMode(); // Initial call
+
+            // Handle Add/Remove Lecturer Fields via Event Delegation
+            document.body.addEventListener('click', function(event) {
+                const addBtn = event.target.closest('[data-action="add-lecturer-field"]');
+                if (addBtn) {
+                    const groupId = addBtn.dataset.groupId;
+                    const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
+                    const newIndex = container.querySelectorAll('.lecturer-row').length;
+                    const newField = document.createElement('div');
+                    newField.className = 'lecturer-row';
+                    newField.innerHTML = `
+                        <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
+                            <option value="none">-- Select Lecturer --</option>
+                            ${allLecturers.map(lec => `<option value="${lec.id}">${lec.email}</option>`).join('')}
+                        </select>
+                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    container.appendChild(newField);
+                }
+
+                const removeBtn = event.target.closest('[data-action="remove-lecturer-field"]');
+                if (removeBtn) {
+                    const field = removeBtn.closest('.lecturer-row');
+                    const container = field.parentElement;
+                    if (container.querySelectorAll('.lecturer-row').length > 1) {
+                        field.remove();
+                    } else {
+                        const select = field.querySelector('select');
+                        if (select) select.value = 'none';
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>

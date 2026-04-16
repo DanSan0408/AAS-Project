@@ -93,13 +93,12 @@
                         </form>
                     </div>
 
-                    <form th:action="@{/admin/bulk-delete-students}" method="post" id="bulkDeleteForm">
+                    <form th:action="@{/admin/bulk-delete-students}" method="post" id="bulkDeleteForm"
+                          data-action="confirm-submit"
+                          data-confirm-message="Are you sure you want to delete the selected students? This cannot be undone.">
                         <div class="header-actions">
                             <h3>Existing Students</h3>
-                            <button type="submit" 
-                                    class="action-button delete" 
-                                    style="padding: 8px 15px; font-size: 0.9em;"
-                                    onclick="return confirm('Are you sure you want to delete the selected students? This cannot be undone.');">
+                            <button type="submit" class="action-button delete" style="padding: 8px 15px; font-size: 0.9em;">
                                 Delete Selected
                             </button>
                         </div>
@@ -109,7 +108,7 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 50px; text-align: center;">
-                                            <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                                            <input type="checkbox" id="selectAll" data-action="toggle-select-all" data-target-selector=".user-checkbox">
                                         </th>
                                         <th>ID</th>
                                         <th>Email</th>
@@ -127,9 +126,9 @@
                                             <div class="table-actions">
                                                 <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
                                                 <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" 
-                                                class="action-button delete"
-                                                onclick="return confirm('Are you sure you want to delete this student? This action cannot be undone.');">
-                                                Delete
+                                                   class="action-button delete"
+                                                   data-action="confirm-link" data-confirm-message="Are you sure you want to delete this student? This action cannot be undone.">
+                                                   Delete
                                                 </a>
                                             </div>
                                         </td>
@@ -142,15 +141,8 @@
             </div>
         </div>
     </div>
-    <script th:inline="javascript">
-        
-        function toggleSelectAll(source) {
-            checkboxes = document.getElementsByClassName('user-checkbox');
-            for(var i=0, n=checkboxes.length;i<n;i++) {
-                checkboxes[i].checked = source.checked;
-            }
-        }
-
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             const isDuplicate = /*[[${isDuplicate}]]*/ false;
             

@@ -136,4 +136,39 @@ public class EmailService {
             logger.error("Failed to send deadline email to: {}", userEmail, e);
         }
     }
+
+    /**
+     * Sends a generic alert email with a standardized template.
+     *
+     * @param userEmail The recipient's email address.
+     * @param subject The subject line of the email.
+     * @param textMessage The main body content of the alert (plain text, will be converted to HTML).
+     */
+    @Async("emailTaskExecutor")
+    public void sendAlertEmail(String userEmail, String subject, String textMessage) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("noreply@yourdomain.com");
+            helper.setTo(userEmail);
+            helper.setSubject(subject);
+
+            String htmlMessage = textMessage.replace("\n", "<br>");
+
+            String htmlContent = "<html><body style='font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 20px;'>"
+                + "<div style='max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);'>"
+                + "<h2 style='color: #e74c3c; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #e74c3c; padding-bottom: 10px;'>🚨 " + subject + "</h2>"
+                + "<div style='color: #34495e; font-size: 16px; line-height: 1.6;'>"
+                + htmlMessage
+                + "</div>"
+                + "<hr style='border: none; border-top: 1px solid #ecf0f1; margin: 30px 0;'>"
+                + "<p style='color: #95a5a6; font-size: 12px; text-align: center;'>This is an automated alert from your Application Monitoring System.</p>"
+                + "</div></body></html>";
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error("Failed to send alert email to {}: {}", userEmail, e.getMessage(), e);
+        }
+    }
 }

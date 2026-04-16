@@ -58,12 +58,12 @@
         <p class="error-message" th:text="${errorMessage != null ? errorMessage : 'An unexpected system error occurred while processing your request. Please try again later.'}"></p>
         
         <div class="actions">
-            <button onclick="window.history.back()" class="btn btn-secondary">Go Back</button>
-            <button onclick="window.location.reload()" class="btn btn-secondary">Retry</button>
+            <button data-action="history-back" class="btn btn-secondary">Go Back</button>
+            <button data-action="reload-page" class="btn btn-secondary">Retry</button>
             <a th:href="@{/}" class="btn btn-primary">Return Home</a>
         </div>
     </div>
     
-    <script th:src="@{/js/loading.js}"></script>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
 </html>

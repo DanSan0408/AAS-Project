@@ -103,8 +103,9 @@
                                     <div class="dropdown">
                                         <button type="button"
                                                 class="btn btn-sm btn-configure dropdown-toggle"
-                                                th:onclick="'toggleDropdown(' + ${assessment.id} + ')'"
-                                                title="More Options">
+                                                title="More Options"
+                                                data-action="toggle-dropdown"
+                                                th:data-target-id="'dropdown-' + ${assessment.id}">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div th:id="'dropdown-' + ${assessment.id}" class="dropdown-menu">
@@ -146,8 +147,9 @@
                                     
                                     <form th:action="@{/rubrics/assessment/delete/{id}(id=${assessment.id})}" 
                                           method="post" 
-                                          onsubmit="return confirm('Are you sure you want to delete this assessment and all its rubrics?');"
-                                          style="display:inline;">
+                                          style="display:inline;"
+                                          data-action="confirm-submit"
+                                          data-confirm-message="Are you sure you want to delete this assessment and all its rubrics?">
                                         <button type="submit" class="btn btn-sm btn-delete" title="Delete">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -161,31 +163,8 @@
         </div>
     </div>
     
-<script th:inline="javascript">
-    
-    function toggleDropdown(assessmentId) {
-        const dropdownId = 'dropdown-' + assessmentId;
-        const dropdown = document.getElementById(dropdownId);
-        
-        document.querySelectorAll('.dropdown-menu').forEach(d => {
-            if (d.id !== dropdownId) {
-                d.classList.remove('show');
-            }
-        });
-        
-        if(dropdown) {
-            dropdown.classList.toggle('show');
-        }
-    }
-
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.dropdown')) {
-            document.querySelectorAll('.dropdown-menu').forEach(d => {
-                d.classList.remove('show');
-            });
-        }
-    });
-
+<script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+<script th:attr="nonce=${cspNonce}" th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
         const assessmentForm = document.getElementById('assessment-form');
         const saveButton = document.getElementById('saveButton');

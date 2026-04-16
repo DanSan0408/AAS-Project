@@ -30,8 +30,8 @@
             <div class="card filter-section">
                 <form action="" method="get" class="filter-form">
                     <div class="form-group">
-                        <label><i class="fas fa-users"></i> Select Group to Edit:</label>
-                        <select name="groupId" onchange="this.form.submit()">
+                        <label for="groupSelect"><i class="fas fa-users"></i> Select Group to Edit:</label>
+                        <select name="groupId" id="groupSelect" data-action="auto-submit-form">
                             <option value="">-- Choose a Group --</option>
                             <option th:each="g : ${groups}" 
                                     th:value="${g.id}" 
@@ -88,5 +88,6 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
 </html>

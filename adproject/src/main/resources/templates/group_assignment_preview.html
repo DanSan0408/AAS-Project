@@ -112,7 +112,7 @@
     </div>
 
 
-    <script>
+    <script th:attr="nonce=${cspNonce}">
         var hiddenInput = document.getElementById('selectedStudentIdsInput');
         var initialIdsString = hiddenInput.value;
         
@@ -201,9 +201,8 @@
                 var removeButton = document.createElement('button');
                 removeButton.type = 'button';
                 removeButton.className = 'remove-student-btn';
-                removeButton.textContent = 'Remove';
+                removeButton.innerHTML = '<i class="fas fa-times"></i> Remove';
                 removeButton.setAttribute('data-student-id', studentId);
-                removeButton.onclick = removeStudent;
 
                 listItem.appendChild(nameSpan);
                 listItem.appendChild(removeButton);
@@ -228,38 +227,39 @@
             updateGroupSizeDisplay();
         }
         
-        function removeStudent(event) {
-            var studentId = parseInt(event.target.getAttribute('data-student-id'));
-            console.log("Removing student:", studentId);
-            currentStudentIds = currentStudentIds.filter(function(id) {
-                return id !== studentId;
-            });
-            renderStudents();
-        }
-
-        addStudentButton.onclick = function() {
-            if (currentStudentIds.length >= maxGroupSize) {
-                return; 
-            }
-            
-            var selectedId = addStudentSelect.value;
-            if (selectedId) {
-                var studentId = parseInt(selectedId);
-                
-                if (!currentStudentIds.includes(studentId)) {
-                    console.log("Adding student:", studentId);
-                    currentStudentIds.push(studentId);
-                    addStudentSelect.value = ""; 
-                    renderStudents();
-                }
-            }
-        };
-
         window.addEventListener('DOMContentLoaded', function() {
             console.log("=== Page Loaded ===");
-            console.log("Current Student IDs:", currentStudentIds);
-            console.log("Max Group Size:", maxGroupSize);
             renderStudents();
+
+            // Event Delegation for Remove buttons
+            studentList.addEventListener('click', function(event) {
+                const removeBtn = event.target.closest('.remove-student-btn');
+                if (removeBtn) {
+                    const studentId = parseInt(removeBtn.getAttribute('data-student-id'));
+                    console.log("Removing student:", studentId);
+                    currentStudentIds = currentStudentIds.filter(id => id !== studentId);
+                    renderStudents();
+                }
+            });
+
+            // Event Listener for Add button
+            addStudentButton.addEventListener('click', function() {
+                if (currentStudentIds.length >= maxGroupSize) {
+                    return; 
+                }
+                
+                var selectedId = addStudentSelect.value;
+                if (selectedId) {
+                    var studentId = parseInt(selectedId);
+                    
+                    if (!currentStudentIds.includes(studentId)) {
+                        console.log("Adding student:", studentId);
+                        currentStudentIds.push(studentId);
+                        addStudentSelect.value = ""; 
+                        renderStudents();
+                    }
+                }
+            });
         });
     </script>
 </body>

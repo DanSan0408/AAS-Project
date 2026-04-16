@@ -148,7 +148,7 @@
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
     </form>
 
-    <script th:inline="javascript">
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
         function assignRole(email, role) {
             if (confirm('Assign ' + role + ' role to ' + email + '?')) {
                 document.getElementById('assignRoleEmail').value = email;

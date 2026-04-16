@@ -1,6 +1,88 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-13 (IH)
+**Last Updated**: 2026-04-16 (IH)
+
+---
+
+## Current Status: Content Security Policy (CSP) Implementation
+**Status**: COMPLETE
+
+### Summary
+Implementing a Content Security Policy (CSP) to harden the application against Cross-Site Scripting (XSS) and data injection attacks. The implementation will follow a safe, phased approach to avoid breaking existing functionality.
+
+### Key Features (Phase 1: Report-Only Mode)
+1.  **Report-Only Header**: Configured Spring Security to send a `Content-Security-Policy-Report-Only` header with a strict policy. This allows us to monitor violations without blocking any resources.
+2.  **Strict Initial Policy**: The initial policy restricts all content (scripts, styles, images) to `'self'` (the same origin), which will generate reports for all external and inline resources.
+3.  **Violation Reporting Endpoint**: Created a new unauthenticated endpoint at `/csp-violations` to receive JSON-formatted violation reports from users' browsers.
+4.  **Violation Logging**: The reporting endpoint logs all incoming violation reports, providing the necessary data to identify which parts of the application need refactoring to comply with the CSP.
+
+### Files Modified/Created
+- **New**: `CspController.java`
+- **Modified**: `SecurityConfig.java` (added CSP header and CSRF exception)
+
+### Next Steps
+- **Status**: Phase 1 Complete.
+- The application was deployed with the report-only policy.
+- The CSRF filter was blocking the violation reports, which has now been fixed by adding an exception for the `/csp-violations` endpoint in `SecurityConfig.java`.
+- Application logs now successfully show incoming CSP violation reports.
+- **Phase 2 Started**: Implemented a nonce-based strategy for scripts in `SecurityConfig.java`. The policy is now `script-src 'self' 'nonce-{nonce}'` and `style-src 'self' 'unsafe-inline'`.
+- The backend changes for Phase 2 are complete.
+- **
+## Current Status: Production Alarms
+**Status**: COMPLETE
+
+### Summary
+Implemented a self-contained, in-app alerting system to provide immediate notifications for critical production issues. The system monitors for spikes in 5xx server errors and sends email alerts when predefined thresholds are breached, enabling a rapid response before customers are widely affected.
+
+### Key Features
+1.  **In-App Metric Monitoring**: Created `MonitoringService` which uses Micrometer to define and increment custom application counters (e.g., `adproject.critical.errors.total`).
+2.  **Scheduled Threshold Checking**: A new `AlertingService` runs a `@Scheduled` task every minute to check the rate of increase for monitored metrics.
+3.  **Configurable Thresholds**: Alerting behavior is controlled via `application.properties`, allowing operators to enable/disable the system, set the alert recipient email, and define the error rate threshold (e.g., 5 errors per minute).
+4.  **Asynchronous Email Alerts**: When a threshold is breached, the `AlertingService` uses the existing asynchronous `EmailService` to dispatch a formatted HTML alert email without blocking the main application thread.
+5.  **Error Integration**: The `GlobalExceptionHandler` was modified to call `monitoringService.incrementCriticalErrorCount()` for every unhandled exception, ensuring all 5xx errors are tracked.
+
+### Files Modified/Created
+- **New**: `MonitoringService.java`, `AlertingService.java`
+- **Modified**: `GlobalExceptionHandler.java`, `EmailService.java`, `application.properties`
+
+### Next Steps
+- Add monitoring and alerts for other business-critical metrics, such as failed user signups or latency spikes.
+- For long-term scalability, consider migrating to an external monitoring stack like Prometheus (for metric scraping) and Alertmanager (for alert routing).
+
+## Current Status: Production-Ready Structured Logging
+**Status**: COMPLETE
+
+### Summary
+Implemented structured JSON logging with MDC (Mapped Diagnostic Context) traceability to ensure logs are production-ready, easily searchable in cloud environments, and contain deep user context without altering existing business logic code.
+
+### Key Features
+1. **MDC Traceability**: Created a `LoggingInterceptor` that generates a unique `requestId` (UUID) and extracts the authenticated `username` for every HTTP request, injecting them into the SLF4J MDC.
+2. **Thread-Safety**: Ensured MDC is explicitly cleared in `afterCompletion` to prevent data leaks across Tomcat's worker thread pools.
+3. **Environment-Aware Profiles**: Created `logback-spring.xml` with profile-based routing:
+    - `dev` / `default` profile: Outputs colorful, human-readable console logs injecting the `[ReqID]` and `[User]`.
+    - `prod` profile: Outputs structured JSON logs automatically mapping the MDC context into top-level JSON keys for seamless integration with AWS CloudWatch, Datadog, or the ELK stack.
+4. **JSON Encoding**: Added `logstash-logback-encoder` to serialize logs correctly in production.
+
+### Files Modified/Created
+- **New**: `LoggingInterceptor.java`, `LoggingWebConfig.java`, `logback-spring.xml`
+- **Configuration**: `pom.xml` (added `logstash-logback-encoder` dependency)
+
+---
+
+## Current Status: Database Indexing & Performance Optimization
+**Status**: COMPLETE
+
+### Summary
+Implemented targeted database indexing to optimize high-frequency read operations, relational joins, and course-scoped queries. This drastically reduces full table scans and improves dashboard load times while carefully avoiding unnecessary write penalties.
+
+### Key Features
+1. **Tier 1 (Identity & Auth)**: Added unique constraints and indexes on `email` and `username` for user tables (`Student`, `Lecturer`) to speed up authentication and identity lookups.
+2. **Tier 2 (Global Course Scoping)**: Because the `CourseScopeInterceptor` injects `WHERE course_id = ?` into almost all read queries (Row-Level Security), `course_id` indexes were added to `Student`, `Lecturer`, `Group` (`project_group`), `Assessment`, and `RubricTemplate` tables.
+3. **Tier 3 (Relational & Background Jobs)**: Added composite indexes to speed up complex joins and heavily filtered views (e.g., `academic_supervisor_id` / `industrial_supervisor_id` in Groups, `assessment_id` + `assessor_type` in Deadlines, and assignment junction tables).
+4. **Write Penalty Avoidance**: Explicitly excluded large text fields (`comments`, `rubric_description`), JSON structures, and low-cardinality boolean flags from indexing.
+
+### Files Modified
+- **Entities**: `Student.java`, `Lecturer.java`, `Group.java`, `Assessment.java`, `RubricTemplate.java`, `Deadline.java`, `LecturerGroupAssignment.java`, `LecturerRubricAssignment.java`
 
 ## Current Status: Admin Course Management
 **Status**: COMPLETE
