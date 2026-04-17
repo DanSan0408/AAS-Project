@@ -174,7 +174,16 @@ public class StudentController {
         List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
         long nowMillis = System.currentTimeMillis();
         List<Deadline> studentDeadlines = allDeadlines.stream()
-            .filter(d -> "STUDENT".equals(d.getAssessorType()) || d.getAssessorType() == null || d.getAssessorType().isEmpty())
+            .filter(d -> {
+                String assessorType = d.getAssessorType();
+                if (assessorType == null || assessorType.isBlank()) {
+                    return true;
+                }
+                String normalizedType = assessorType.trim().toUpperCase();
+                return "STUDENT".equals(normalizedType)
+                    || "GENERAL".equals(normalizedType)
+                    || "ALL".equals(normalizedType);
+            })
             .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());

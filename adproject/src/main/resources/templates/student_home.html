@@ -66,13 +66,13 @@
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
-                    <div th:if="${allDeadlines == null or #lists.isEmpty(allDeadlines)}" 
+                    <div th:if="${deadlines == null or #lists.isEmpty(deadlines)}" 
                          style="text-align: center; padding: 20px; color: #6B6B6B;">
                         <i class="fas fa-calendar-times" style="font-size: 2em; margin-bottom: 10px;"></i>
                         <p>No deadlines available</p>
                     </div>
                     
-                    <div th:each="deadline : ${allDeadlines}" 
+                    <div th:each="deadline : ${deadlines}" 
                          class="deadline-item"
                          th:classappend="${deadline.assessorType == 'STUDENT' ? 'student-deadline' : 
                                          (deadline.assessorType == 'LECTURER' ? 'lecturer-deadline' : 

@@ -13,16 +13,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Course;
+import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.SuperAdminService;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/superadmin")
 public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
+    private final LecturerRepository lecturerRepository;
 
-    public SuperAdminController(SuperAdminService superAdminService) {
+    public SuperAdminController(SuperAdminService superAdminService, LecturerRepository lecturerRepository) {
         this.superAdminService = superAdminService;
+        this.lecturerRepository = lecturerRepository;
     }
 
     private String getLoggedInUsername() {
@@ -71,6 +75,11 @@ public class SuperAdminController {
     @PostMapping("/courses/add")
     public String addCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
         try {
+            Optional<com.capstone.adproject.model.Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
+            if (currentLecturer.isPresent()) {
+                course.setCreatedBy(currentLecturer.get());
+            }
+
             superAdminService.saveCourse(course);
             redirectAttributes.addFlashAttribute("successMessage", "Course added successfully!");
         } catch (Exception e) {

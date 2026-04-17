@@ -1,69 +1,398 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - UTM CAS</title>
-    <link rel="stylesheet" th:href="@{/css/critical.css}">
-    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <style>
+        :root {
+            --color-primary: #4A0018;
+            --color-secondary: #3F3F46;
+            --color-accent: #F8A617;
+            --color-background: #F4F2EE;
+            --color-surface: #FFFFFF;
+            --color-border: #E5E7EB;
+            --color-text: #111827;
+            --color-muted: #6B7280;
+            --color-danger: #B91C1C;
+            --color-primary-light: #6B0025;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            min-height: 100%;
+        }
+
         body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--color-text);
+            background:
+                radial-gradient(circle at top left, rgba(248, 166, 23, 0.16), transparent 32%),
+                radial-gradient(circle at bottom right, rgba(74, 0, 24, 0.14), transparent 30%),
+                linear-gradient(180deg, #f7f5f1 0%, var(--color-background) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background-color: #f3f4f6;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 24px;
         }
-        .error-container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
+
+        .error-page {
+            width: 100%;
+            max-width: 860px;
+            position: relative;
         }
-        .error-icon {
-            font-size: 64px;
-            color: #e74c3c;
-            margin-bottom: 20px;
+
+        .error-page::before {
+            content: '';
+            position: absolute;
+            inset: -18px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(74, 0, 24, 0.12), rgba(248, 166, 23, 0.12));
+            filter: blur(18px);
+            z-index: 0;
         }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 24px;
+
+        .error-shell {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(74, 0, 24, 0.1);
+            box-shadow: 0 18px 60px rgba(74, 0, 24, 0.14);
+            backdrop-filter: blur(10px);
         }
-        p.error-message {
-            color: #7f8c8d;
-            font-size: 16px;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-        .actions {
+
+        .error-header {
+            padding: 26px 30px;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: #fff;
             display: flex;
-            gap: 15px;
-            justify-content: center;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14);
+            display: grid;
+            place-items: center;
+            font-size: 28px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-copy .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.75);
+            font-weight: 700;
+        }
+
+        .brand-copy h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 0.88rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #f59e0b;
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.18);
+        }
+
+        .error-body {
+            padding: 34px 30px 30px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .message-card {
+            background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+            border: 1px solid var(--color-border);
+            border-radius: 20px;
+            padding: 28px;
+        }
+
+        .error-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 22px;
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            color: var(--color-danger);
+            background: linear-gradient(135deg, rgba(185, 28, 28, 0.08), rgba(248, 166, 23, 0.1));
+            border: 1px solid rgba(185, 28, 28, 0.14);
+            margin-bottom: 18px;
+        }
+
+        .message-card h2 {
+            margin: 0 0 10px;
+            color: var(--color-primary);
+            font-size: clamp(1.6rem, 3vw, 2.1rem);
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+
+        .message-card p {
+            margin: 0;
+            color: var(--color-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .meta-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .meta-panel {
+            border-radius: 18px;
+            padding: 20px;
+            background: linear-gradient(180deg, rgba(74, 0, 24, 0.06), rgba(248, 166, 23, 0.08));
+            border: 1px solid rgba(74, 0, 24, 0.12);
+        }
+
+        .meta-label {
+            display: block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--color-secondary);
+            margin-bottom: 8px;
+            font-weight: 800;
+        }
+
+        .meta-value {
+            color: var(--color-primary);
+            font-size: 1rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+
+        .actions {
+            margin-top: 22px;
+            display: flex;
             flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            border-radius: 12px;
+            min-height: 46px;
+            padding: 0 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(74, 0, 24, 0.18);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 16px 28px rgba(74, 0, 24, 0.22);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: var(--color-primary);
+            border: 1px solid rgba(74, 0, 24, 0.16);
+        }
+
+        .btn-secondary:hover {
+            background: #fdf7f8;
+        }
+
+        .tips {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .tip {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #fff;
+            border: 1px solid var(--color-border);
+            color: var(--color-secondary);
+            font-size: 0.92rem;
+            line-height: 1.55;
+        }
+
+        .tip strong {
+            display: block;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        @media (max-width: 860px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .tips {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .error-header {
+                padding: 20px 18px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .error-body {
+                padding: 22px 18px 18px;
+            }
+
+            .message-card {
+                padding: 20px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="error-container">
-        <div class="error-icon">⚠️</div>
-        <h1>Oops! Something went wrong.</h1>
-        
-        <!-- Safe, generic error message passed from GlobalExceptionHandler -->
-        <p class="error-message" th:text="${errorMessage != null ? errorMessage : 'An unexpected system error occurred while processing your request. Please try again later.'}"></p>
-        
-        <div class="actions">
-            <button data-action="history-back" class="btn btn-secondary">Go Back</button>
-            <button data-action="reload-page" class="btn btn-secondary">Retry</button>
-            <a th:href="@{/}" class="btn btn-primary">Return Home</a>
-        </div>
-    </div>
-    
-    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <main class="error-page" aria-labelledby="error-title">
+        <section class="error-shell">
+            <header class="error-header">
+                <div class="brand-mark">
+                    <div class="brand-logo" aria-hidden="true">⚠</div>
+                    <div class="brand-copy">
+                        <span class="eyebrow">UTM AAS</span>
+                        <h1>System Error</h1>
+                    </div>
+                </div>
+                <div class="status-pill" aria-label="Status">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    Unavailable
+                </div>
+            </header>
+
+            <div class="error-body">
+                <div class="hero">
+                    <article class="message-card">
+                        <div class="error-icon" aria-hidden="true">⚠</div>
+                        <h2 id="error-title">Oops. Something went wrong.</h2>
+                        <p>
+                            An unexpected problem occurred while processing your request.
+                            The team has been notified where possible, and you can safely
+                            return to the previous page or go back to the dashboard.
+                        </p>
+
+                        <div class="actions">
+                            <a href="/" class="btn btn-primary">Return Home</a>
+                            <a href="." class="btn btn-secondary">Retry</a>
+                        </div>
+                    </article>
+
+                    <aside class="meta-grid" aria-label="Error details and guidance">
+                        <div class="meta-panel">
+                            <span class="meta-label">Status</span>
+                            <div class="meta-value">Error page triggered by the application.</div>
+                        </div>
+                        <div class="meta-panel">
+                            <span class="meta-label">What to try</span>
+                            <div class="meta-value">Refresh once, then go back to the dashboard or sign in again if the session expired.</div>
+                        </div>
+                        <div class="meta-panel">
+                            <span class="meta-label">Contact Support</span>
+                            <div class="meta-value">
+                                Email <a href="mailto:ihsan.rubix@gmail.com" style="color: var(--color-primary); text-decoration: none; font-weight: 800;">ihsan.rubix@gmail.com</a>
+                                if the problem continues.
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <div class="tips">
+                    <div class="tip">
+                        <strong>404</strong>
+                        The page may have moved or the URL may be incorrect.
+                    </div>
+                    <div class="tip">
+                        <strong>403</strong>
+                        You might need a different role or an active session.
+                    </div>
+                    <div class="tip">
+                        <strong>500</strong>
+                        A server-side issue occurred and should be retried later.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

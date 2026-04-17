@@ -1,28 +1,28 @@
 /*
- * Super Admin Dashboard Styles - Professional & Premium
- * Primary: Royal Blue #1e40af
+ * Super Admin Dashboard Styles
+ * Aligned with Admin palette:
+ * Primary: Deep Maroon #4A0018
  * Secondary: Graphite Grey #3F3F46
  * Accent: Gold #F8A617
- * Theme: Elevated, Executive Look
  */
 
 :root {
-    --color-primary: #1e40af;
+    --color-primary: #4A0018;
     --color-secondary: #3F3F46;
     --color-accent: #F8A617;
-    --color-background: #f0f4f8;
-    --color-text: #1a202c;
-    --color-primary-light: #3b82f6;
-    --color-primary-dark: #1e3a8a;
+    --color-background: #F4F2EE;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-primary-dark: #2D000E;
     --color-secondary-light: #52525B;
     --color-secondary-dark: #27272A;
     --color-surface: #FFFFFF;
-    --color-border: #e5e7eb;
-    --color-hover: #f9fafb;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
     --color-success: #059669;
-    --color-warning: #f59e0b;
-    --color-info: #0284c7;
-    --color-danger: #dc2626;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+    --color-danger: #8B1E1E;
 }
 
 * {
@@ -65,7 +65,7 @@ body.superadmin-page .sidebar {
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid var(--color-border);
     border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(30, 64, 175, 0.12);
+    box-shadow: 0 6px 20px rgba(74, 0, 24, 0.12);
     z-index: 1300;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -115,7 +115,7 @@ body.superadmin-page .logout-btn {
 
 body.superadmin-page .components li a:hover,
 body.superadmin-page .logout-btn:hover {
-    background: #eef2ff;
+    background: rgba(74, 0, 24, 0.08);
     color: var(--color-primary);
 }
 
@@ -169,7 +169,7 @@ body.superadmin-page.sidebar-open {
     color: white;
     padding: 25px 30px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.15);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -256,7 +256,7 @@ div > p {
 
 .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 16px rgba(74, 0, 24, 0.12);
     border-color: var(--color-primary-light);
 }
 
@@ -291,7 +291,48 @@ div > p {
 .btn-primary:hover {
     background: var(--color-primary-dark);
     border-color: var(--color-primary-dark);
-    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.25);
+}
+
+.btn {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    min-height: 38px;
+    padding: 8px 14px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary {
+    background: var(--color-secondary);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: var(--color-secondary-dark);
+}
+
+.btn-info {
+    background: var(--color-info);
+    color: #fff;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: #d97706;
 }
 
 .btn-success {
@@ -335,6 +376,15 @@ div > p {
     padding: 12px;
 }
 
+.stat-item.text-left {
+    text-align: left;
+}
+
+.inline-stat {
+    display: inline-block;
+    margin-right: 8px;
+}
+
 .stat-item h6 {
     color: var(--color-primary);
     font-weight: 700;
@@ -349,56 +399,58 @@ div > p {
     letter-spacing: 0.5px;
 }
 
-/* Course Overview Cards */
-.card.border-left-primary {
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-}
-
-.card.border-left-primary .card-body {
-    padding: 24px;
-}
-
-.card.border-left-primary .card-title {
-    font-size: 18px;
-    margin-bottom: 8px;
-}
-
-.card.border-left-primary .text-muted {
-    color: #6b7280 !important;
-    font-size: 13px;
-}
-
-.card.border-left-primary .row {
-    margin-top: 16px;
-}
-
-/* Assigned Course Section */
-.assigned-course-section {
-    margin-top: 30px;
-    padding: 24px;
-    background: linear-gradient(135deg, #e8f1ff 0%, #f0f4f8 100%);
-    border-radius: 8px;
+/* Course overview table */
+.course-overview-table-wrapper {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-left: 5px solid var(--color-primary);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+    overflow-x: auto;
 }
 
-.assigned-course-section h5 {
-    color: var(--color-primary);
-    font-size: 16px;
+.course-overview-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+}
+
+.course-overview-table th,
+.course-overview-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.92rem;
+}
+
+.course-overview-table th {
+    background: #f8fafc;
+    color: var(--color-primary-dark);
+    font-size: 0.8rem;
     font-weight: 700;
-    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-.assigned-course-section p {
-    color: var(--color-secondary);
-    font-size: 14px;
-    margin: 8px 0;
-    line-height: 1.6;
+.course-overview-table tbody tr:hover {
+    background: var(--color-hover);
 }
 
-.assigned-course-section p strong {
+.course-overview-table td:nth-child(1),
+.course-overview-table td:nth-child(2) {
+    font-weight: 600;
     color: var(--color-primary);
+}
+
+.course-overview-table td:nth-child(4),
+.course-overview-table td:nth-child(5),
+.course-overview-table td:nth-child(6),
+.course-overview-table td:nth-child(8),
+.course-overview-table td:nth-child(9) {
+    text-align: center;
+    font-weight: 700;
 }
 
 /* Alert Styling */
@@ -423,9 +475,131 @@ div > p {
 }
 
 .alert-info {
-    background: #eff6ff;
-    border-color: #bfdbfe;
-    color: #1e40af;
+    background: #f5f3ff;
+    border-color: #e9d5ff;
+    color: var(--color-primary);
+}
+
+/* Utility classes used by templates without Bootstrap */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.text-muted {
+    color: #6b7280;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.col-md-6,
+.col-6,
+.col-12 {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.col-md-6,
+.col-12 {
+    width: 100%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+/* Reusable form styles for invite/edit pages */
+body.superadmin-page .form-group {
+    margin-bottom: 16px;
+}
+
+body.superadmin-page .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-secondary-dark);
+    font-weight: 600;
+}
+
+body.superadmin-page .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    font-size: 0.95rem;
+    color: var(--color-secondary-dark);
+    background: #fff;
+}
+
+body.superadmin-page .form-control:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.12);
+}
+
+body.superadmin-page .form-card {
+    border: 1px solid var(--color-border);
+    border-left: 5px solid var(--color-primary);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+}
+
+body.superadmin-page .form-card .card-body {
+    padding: 24px;
+}
+
+body.superadmin-page .form-card h3 {
+    margin: 0 0 18px;
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+body.superadmin-page .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+body.superadmin-page .section-label {
+    font-size: 0.82rem;
+    color: #71717a;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+body.superadmin-page .logout-form {
+    display: inline;
 }
 
 /* Responsive Design */

@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Course</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/admin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_manage_courses.css}">
 </head>
 <body class="admin-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -19,7 +20,7 @@
             </div>
         </div>
 
-        <div class="container mt-4">
+        <div class="container manage-courses-container">
             <div th:if="${successMessage}" class="alert alert-success" role="alert">
                 <span th:text="${successMessage}"></span>
             </div>
@@ -27,7 +28,7 @@
                 <span th:text="${errorMessage}"></span>
             </div>
 
-            <div class="card">
+            <div class="card manage-course-card">
                 <div class="card-body">
                     <h4 class="card-title">Edit Course</h4>
                     <form th:action="@{/admin/courses/update}" th:object="${course}" method="post">
@@ -44,16 +45,14 @@
                             <label for="description">Description</label>
                             <textarea id="description" th:field="*{description}" class="form-control"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Course</button>
-                        <a th:href="@{/admin/manage-courses}" class="btn btn-secondary">Cancel</a>
+                        <div class="edit-course-actions">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Course</button>
+                            <a th:href="@{/admin/manage-courses}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancel</a>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
-
-    <script th:attr="nonce=${cspNonce}" src="https://code.jquery.com/jquery-3.5.1.slim.min.js" ></script>
-    <script th:attr="nonce=${cspNonce}" src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

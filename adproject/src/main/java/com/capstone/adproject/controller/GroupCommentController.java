@@ -26,7 +26,9 @@ import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
@@ -40,6 +42,8 @@ public class GroupCommentController {
     private final AssessmentService assessmentService;
     private final GroupRepository groupRepository;
     private final LecturerRepository lecturerRepository;
+    private final LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository;
+    private final LecturerRubricAssignmentRepository lecturerRubricAssignmentRepository;
     private final AdminCourseAssignmentRepository adminCourseAssignmentRepository;
     private final CalculateService calculateService;
     private final CourseScopeService courseScopeService;
@@ -48,15 +52,51 @@ public class GroupCommentController {
             AssessmentService assessmentService,
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository,
+            LecturerRubricAssignmentRepository lecturerRubricAssignmentRepository,
             AdminCourseAssignmentRepository adminCourseAssignmentRepository,
             CalculateService calculateService,
             CourseScopeService courseScopeService) {
         this.assessmentService = assessmentService;
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
+        this.lecturerGroupAssignmentRepository = lecturerGroupAssignmentRepository;
+        this.lecturerRubricAssignmentRepository = lecturerRubricAssignmentRepository;
         this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
         this.calculateService = calculateService;
         this.courseScopeService = courseScopeService;
+    }
+
+    private Optional<Lecturer> findLecturerByAuthName(String authName) {
+        return lecturerRepository.findByEmail(authName)
+            .or(() -> lecturerRepository.findByUsername(authName));
+    }
+
+    private List<Assessment> findAssignedAssessmentsForLecturer(Lecturer lecturer) {
+        Map<Long, Assessment> assignedAssessmentsById = new LinkedHashMap<>();
+
+        lecturerGroupAssignmentRepository.findAssessmentsByLecturer(lecturer).forEach(assessment -> {
+            if (assessment != null && assessment.getId() != null) {
+                assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
+            }
+        });
+
+        lecturerRubricAssignmentRepository.findAssessmentsByLecturer(lecturer).forEach(assessment -> {
+            if (assessment != null && assessment.getId() != null) {
+                assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
+            }
+        });
+
+        return assignedAssessmentsById.values().stream().collect(Collectors.toList());
+    }
+
+    private boolean isLecturerAssignedToAssessment(Lecturer lecturer, Assessment assessment) {
+        boolean hasGroupAssignment = !lecturerGroupAssignmentRepository
+            .findByLecturerAndAssessment(lecturer, assessment)
+            .isEmpty();
+        boolean hasRubricAssignment = lecturerRubricAssignmentRepository
+            .existsByLecturerAndAssessment(lecturer, assessment);
+        return hasGroupAssignment || hasRubricAssignment;
     }
 
     private Set<Long> getManagedCourseIdsForAdmin(String adminEmail) {
@@ -110,7 +150,13 @@ public class GroupCommentController {
                 .filter(a -> assessmentInManagedCourses(a, managedCourseIds))
                 .collect(Collectors.toList()));
         } else {
-            model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics());
+            Optional<Lecturer> lecturerOpt = findLecturerByAuthName(auth.getName());
+            if (lecturerOpt.isEmpty()) {
+                model.addAttribute("assessments", List.of());
+                model.addAttribute("errorMessage", "Lecturer profile not found.");
+            } else {
+                model.addAttribute("assessments", findAssignedAssessmentsForLecturer(lecturerOpt.get()));
+            }
         }
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", role);
@@ -237,8 +283,7 @@ public class GroupCommentController {
         Assessment assessment = assessmentOpt.get();
 
         String username = auth.getName();
-        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username)
-            .or(() -> lecturerRepository.findByUsername(username));
+        Optional<Lecturer> lecturerOpt = findLecturerByAuthName(username);
         
         if (lecturerOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Lecturer profile not found.");
@@ -250,6 +295,11 @@ public class GroupCommentController {
         if (assessment.getCourse() == null || lecturer.getCourse() == null || 
             !assessment.getCourse().getId().equals(lecturer.getCourse().getId())) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to view comments for this assessment.");
+            return "redirect:/" + role + "/comments/view/assessments";
+        }
+
+        if (!isLecturerAssignedToAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not assigned to this assessment.");
             return "redirect:/" + role + "/comments/view/assessments";
         }
 
