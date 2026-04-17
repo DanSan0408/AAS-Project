@@ -56,12 +56,11 @@ public class CourseScopeService {
             return Collections.emptyList();
         }
 
-        if (isSuperAdmin()) {
-            return sortCourses(superAdminService.getAllCourses());
-        }
-
+        // Get courses managed by the current user (admin assignments + courses they created)
         List<Course> managed = findCurrentLecturer(username)
             .map(lecturer -> {
+                Set<Course> allManagedCourses = new LinkedHashSet<>();
+
                 // Step 1: Try to get courses from admin_course_assignment table via direct SQL
                 Set<Long> assignedCourseIds = findAssignedCourseIdsForLecturer(lecturer.getId());
                 List<Course> assignments = loadCoursesByIds(assignedCourseIds).stream()
@@ -83,9 +82,19 @@ public class CourseScopeService {
                     assignments = List.of(legacyCourse);
                 }
 
-                return deduplicateById(assignments);
+                allManagedCourses.addAll(deduplicateById(assignments));
+
+                // Step 4: Add courses created by this lecturer (superadmins can only manage courses they create)
+                List<Course> createdCourses = superAdminService.getAllCourses().stream()
+                    .filter(c -> c != null && c.getId() != null && c.getCreatedBy() != null 
+                              && c.getCreatedBy().getId() != null 
+                              && c.getCreatedBy().getId().equals(lecturer.getId()))
+                    .collect(Collectors.toList());
+                allManagedCourses.addAll(createdCourses);
+
+                return new ArrayList<>(allManagedCourses);
             })
-            .orElse(Collections.emptyList());
+            .orElse(new ArrayList<>());
 
         return sortCourses(managed);
     }
@@ -147,6 +156,13 @@ public class CourseScopeService {
 
     public boolean isManagedCourseId(Long courseId) {
         return courseId != null && getManagedCourseIdsForCurrentUser().contains(courseId);
+    }
+
+    public List<Course> getAllCoursesForSuperAdmin() {
+        if (!isSuperAdmin()) {
+            return Collections.emptyList();
+        }
+        return sortCourses(superAdminService.getAllCourses());
     }
 
     public boolean isActiveCourseId(Long courseId) {

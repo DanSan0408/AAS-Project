@@ -1,0 +1,145 @@
+/* Super admin course management page (CSP-safe, no external CSS dependency) */
+
+body.superadmin-page .manage-courses-container {
+    margin-top: 24px;
+    max-width: 1200px;
+}
+
+body.superadmin-page .course-card {
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+body.superadmin-page .course-card .card-body {
+    padding: 24px;
+}
+
+body.superadmin-page .course-card h3 {
+    margin: 0 0 18px;
+    color: var(--color-primary-dark);
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+body.superadmin-page .course-form .form-group {
+    margin-bottom: 16px;
+}
+
+body.superadmin-page .course-form label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-secondary-dark);
+    font-weight: 600;
+}
+
+body.superadmin-page .course-form input,
+body.superadmin-page .course-form textarea {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: var(--color-secondary-dark);
+    background-color: #fff;
+}
+
+body.superadmin-page .course-form input:focus,
+body.superadmin-page .course-form textarea:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.15);
+}
+
+body.superadmin-page .table-scroll {
+    overflow-x: auto;
+}
+
+body.superadmin-page .course-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 760px;
+}
+
+body.superadmin-page .course-table th,
+body.superadmin-page .course-table td {
+    border-bottom: 1px solid var(--color-border);
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+body.superadmin-page .course-table th {
+    background-color: #f8fafc;
+    color: var(--color-primary-dark);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+body.superadmin-page .course-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+body.superadmin-page .table-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+body.superadmin-page .table-actions form {
+    margin: 0;
+}
+
+body.superadmin-page .btn {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    min-height: 34px;
+    padding: 8px 12px;
+    text-decoration: none;
+}
+
+body.superadmin-page .btn-info {
+    background-color: var(--color-info);
+    color: #fff;
+}
+
+body.superadmin-page .btn-info:hover {
+    background-color: #0369a1;
+    color: #fff;
+}
+
+body.superadmin-page .btn-danger {
+    background-color: var(--color-danger);
+    color: #fff;
+}
+
+body.superadmin-page .btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+body.superadmin-page .empty-state {
+    color: var(--color-secondary-light);
+    text-align: center;
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    body.superadmin-page .course-card .card-body {
+        padding: 18px;
+    }
+
+    body.superadmin-page .manage-courses-container {
+        margin-top: 12px;
+    }
+}

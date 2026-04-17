@@ -1,0 +1,275 @@
+/* Admin manage courses page styles (self-hosted, responsive, iPhone SE friendly) */
+
+body.admin-page .manage-courses-container {
+    margin: 24px auto 0;
+    width: 100%;
+    max-width: 1200px;
+}
+
+body.admin-page .manage-course-card {
+    width: 100%;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+}
+
+body.admin-page .manage-course-card .card-body {
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+body.admin-page .main-content {
+    width: calc(100% - 270px) !important;
+    margin-left: 270px !important;
+    margin-right: 0 !important;
+}
+
+body.admin-page .manage-course-card .card-title {
+    color: var(--color-primary);
+    margin-top: 0;
+    margin-bottom: 18px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+body.admin-page .form-group {
+    margin-bottom: 16px;
+}
+
+body.admin-page .form-group label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-secondary-dark);
+    margin-bottom: 6px;
+}
+
+body.admin-page .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    font-size: 0.95rem;
+    color: var(--color-secondary-dark);
+    background: #fff;
+}
+
+body.admin-page .form-control:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.12);
+}
+
+body.admin-page .btn {
+    border: 0;
+    border-radius: 8px;
+    min-height: 40px;
+    padding: 8px 14px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+body.admin-page .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    line-height: 1;
+}
+
+body.admin-page .btn.btn-sm {
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 0.88rem;
+}
+
+body.admin-page .btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: var(--color-text);
+}
+
+body.admin-page .btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+}
+
+body.admin-page .btn-secondary {
+    background: var(--color-secondary);
+    color: #fff;
+}
+
+body.admin-page .btn-secondary:hover {
+    background: var(--color-secondary-dark);
+}
+
+body.admin-page .btn-info {
+    background: var(--color-info);
+    color: #fff;
+}
+
+body.admin-page .btn-info:hover {
+    background: #0369a1;
+}
+
+body.admin-page .btn-danger {
+    background: var(--color-alert);
+    color: #fff;
+}
+
+body.admin-page .btn-danger:hover {
+    background: #7f1d1d;
+}
+
+body.admin-page .inline-action {
+    display: inline-flex;
+}
+
+body.admin-page .table-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+body.admin-page .table-actions form {
+    margin: 0;
+}
+
+body.admin-page .table-actions .btn {
+    min-height: 34px;
+}
+
+body.admin-page .edit-course-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+body.admin-page .table-responsive {
+    width: fit-content;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+body.admin-page .table {
+    width: max-content;
+    min-width: 720px;
+    border-collapse: collapse;
+    background: #fff;
+    margin: 0 auto;
+}
+
+body.admin-page .table th,
+body.admin-page .table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+body.admin-page .table td:last-child {
+    white-space: nowrap;
+    text-align: center;
+}
+
+body.admin-page .table th {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-primary-dark);
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+body.admin-page .table-striped tbody tr:nth-child(even) {
+    background: #fcfcfd;
+}
+
+body.admin-page .table-striped tbody tr:hover {
+    background: #f8fafc;
+}
+
+body.admin-page .text-center {
+    text-align: center;
+}
+
+body.admin-page .text-muted {
+    color: var(--color-secondary-light);
+}
+
+@media (max-width: 768px) {
+    body.admin-page .manage-courses-container {
+        margin-top: 12px;
+    }
+
+    body.admin-page .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    body.admin-page .manage-course-card .card-body {
+        padding: 16px;
+    }
+
+    body.admin-page .btn {
+        min-height: 44px;
+    }
+
+    body.admin-page .table-responsive {
+        width: 100%;
+    }
+
+    body.admin-page .table {
+        width: 100%;
+    }
+}
+
+/* iPhone SE and very narrow devices */
+@media (max-width: 380px) {
+    body.admin-page .manage-course-card .card-title {
+        font-size: 1.05rem;
+    }
+
+    body.admin-page .form-group label {
+        font-size: 0.9rem;
+    }
+
+    body.admin-page .form-control {
+        font-size: 16px;
+    }
+
+    body.admin-page .btn,
+    body.admin-page .btn.btn-sm {
+        min-height: 44px;
+        width: 100%;
+        margin-top: 6px;
+    }
+
+    body.admin-page .inline-action {
+        display: block;
+        width: 100%;
+    }
+
+    body.admin-page .table-actions {
+        display: flex;
+        width: 100%;
+        gap: 6px;
+    }
+
+    body.admin-page .table td:last-child {
+        min-width: 140px;
+    }
+}

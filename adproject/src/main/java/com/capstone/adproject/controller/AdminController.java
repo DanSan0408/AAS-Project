@@ -803,9 +803,13 @@ public class AdminController {
         }
         
         try {
+            Optional<Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
+            if (currentLecturer.isPresent()) {
+                course.setCreatedBy(currentLecturer.get());
+            }
+            
             Course savedCourse = superAdminService.saveCourse(course);
 
-            Optional<Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
             if (currentLecturer.isPresent()) {
                 superAdminService.assignAdminToCourse(currentLecturer.get().getId(), savedCourse.getId());
                 redirectAttributes.addFlashAttribute("successMessage", "Course added and assigned to you successfully!");

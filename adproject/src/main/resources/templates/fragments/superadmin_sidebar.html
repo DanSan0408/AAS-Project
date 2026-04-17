@@ -15,36 +15,36 @@
         </div>
         <ul class="list-unstyled components">
             <li>
-                <a th:href="@{/superadmin/home}">🏠 Dashboard</a>
+                <a th:href="@{/superadmin/home}">Dashboard</a>
             </li>
             
             <!-- Super Admin Features -->
             <li class="role-divider">
-                <strong style="font-size: 0.85rem; color: #666;">GLOBAL MANAGEMENT</strong>
+                <strong class="section-label">Global Management</strong>
             </li>
             <li>
-                <a th:href="@{/superadmin/manage-courses}">📚 Manage Courses</a>
+                <a th:href="@{/superadmin/manage-courses}">Manage Courses</a>
             </li>
             <li>
-                <a th:href="@{/superadmin/invite-admin}">✉️ Invite Admin</a>
+                <a th:href="@{/superadmin/invite-admin}">Invite Admin</a>
             </li>
             
             <!-- Role Switching -->
             <li class="role-divider">
-                <strong style="font-size: 0.85rem; color: #666;">SWITCH ROLE</strong>
+                <strong class="section-label">Switch Role</strong>
             </li>
             <li class="role-switch-link">
-                <a th:href="@{/admin/home}">📋 Admin View</a>
+                <a th:href="@{/admin/home}">Admin View</a>
             </li>
             <li class="role-switch-link">
-                <a th:href="@{/lecturer/home}">👨‍🏫 Lecturer View</a>
+                <a th:href="@{/lecturer/home}">Lecturer View</a>
             </li>
             
             <!-- Logout -->
             <li class="role-divider"></li>
             <li>
-                <form th:action="@{/logout}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-link logout-btn">🚪 Logout</button>
+                <form th:action="@{/logout}" method="post" class="logout-form">
+                    <button type="submit" class="btn btn-link logout-btn">Logout</button>
                 </form>
             </li>
         </ul>

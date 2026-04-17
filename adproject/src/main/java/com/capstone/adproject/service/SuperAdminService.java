@@ -146,6 +146,11 @@ public class SuperAdminService {
         entityManager.flush();
         entityManager.clear();
 
+        // Delete rubric templates first (has FK to courses)
+        entityManager.createNativeQuery("DELETE FROM `rubric_templates` WHERE course_id = :courseId")
+            .setParameter("courseId", id)
+            .executeUpdate();
+
         // Detach all known references before deleting the course row.
         entityManager.createNativeQuery("DELETE FROM `admin_course_assignment` WHERE course_id = :courseId")
             .setParameter("courseId", id)

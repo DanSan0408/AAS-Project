@@ -574,3 +574,109 @@ html {
     max-width: 1140px;
   }
 }
+
+/* ============================================================================
+ * ADDED: CONSISTENT SIDEBAR COMPONENT STYLES
+ * ============================================================================ */
+
+/* General Sidebar Item Styling */
+.sidebar-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px;
+  color: #e0e0e0;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-left-color: #F8A617; /* Accent color */
+}
+
+.sidebar-link i {
+  width: 20px;
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+/* Logout Button Styling */
+.logout-item {
+  margin-top: auto; /* Pushes to the bottom */
+}
+
+.logout-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Course Switcher Styling */
+.course-switcher {
+  padding: 15px 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.course-switch-form {
+  margin: 0;
+}
+
+.course-switch-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #5c2c3a;
+  background-color: #f4f2ee;
+  color: #4A0018;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%234A0018' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1em;
+}
+
+.course-switch-select:focus {
+  outline: none;
+  border-color: #F8A617;
+  box-shadow: 0 0 0 2px rgba(248, 166, 23, 0.5);
+}
+
+/* Hides the label but keeps it accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Ensure the menu list fills the space for logout button positioning */
+.sidebar .menu-list {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
