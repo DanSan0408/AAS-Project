@@ -1,9 +1,4 @@
-/* =======================================================
-   INDUSTRIAL SUPERVISOR HOME - NAVY & GOLD THEME
-   Primary: #002B5B | Secondary: #3F3F46 | Accent: #F8A617
-   ======================================================= */
-
-:root {
+root {
     --supervisor-primary: #002B5B;
     --supervisor-secondary: #3F3F46;
     --supervisor-accent: #F8A617;
@@ -21,12 +16,10 @@
     --supervisor-success: #059669;
 }
 
-/* --- Reset & Base Styles --- */
 * {
     box-sizing: border-box;
 }
 
-/* --- General Layout & Typography --- */
 body.supervisor-page {
     background-color: var(--supervisor-background);
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -36,7 +29,6 @@ body.supervisor-page {
     display: flex;
 }
 
-/* Main Content */
 body.supervisor-page .main-content {
     flex-grow: 1 !important;
     padding: 30px 40px !important;
@@ -46,7 +38,6 @@ body.supervisor-page .main-content {
     width: auto !important;
 }
 
-/* Page Headers */
 body.supervisor-page .header {
     background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%) !important;
     padding: 20px 30px !important;
@@ -83,7 +74,6 @@ body.supervisor-page .header-container h1 {
     line-height: 1 !important;
 }
 
-/* Success/Error Messages */
 body.supervisor-page .alert {
     padding: 16px 24px !important;
     margin-bottom: 24px !important;
@@ -104,14 +94,12 @@ body.supervisor-page .alert-danger {
     border-color: var(--supervisor-alert) !important;
 }
 
-/* --- Content Structure --- */
 body.supervisor-page .content-flex-container {
     display: flex !important;
     gap: 35px !important;
     align-items: flex-start !important;
 }
 
-/* Rubric Section */
 body.supervisor-page .rubric-section {
     flex: 2.5 !important;
     background: none !important;
@@ -137,7 +125,6 @@ body.supervisor-page .rubric-section h2 {
     margin-top: 0 !important;
 }
 
-/* Deadline Section */
 body.supervisor-page .deadline-section {
     flex: 1 !important;
     min-width: 350px !important;
@@ -156,7 +143,6 @@ body.supervisor-page .deadline-section h2 {
     border-bottom: 3px solid var(--supervisor-primary) !important;
 }
 
-/* --- Assessment Boxes --- */
 body.supervisor-page .rubric-list {
     display: flex !important;
     flex-direction: column !important;
@@ -197,7 +183,6 @@ body.supervisor-page .assessment-header h3 {
     padding-bottom: 0 !important;
 }
 
-/* Total Marks Section */
 body.supervisor-page .total-marks {
     background: linear-gradient(135deg, rgba(0, 43, 91, 0.05) 0%, rgba(0, 43, 91, 0.02) 100%) !important;
     border: 1px solid rgba(0, 43, 91, 0.15) !important;
@@ -220,7 +205,6 @@ body.supervisor-page .total-marks span {
     color: var(--supervisor-primary) !important;
 }
 
-/* Assessment Type Grouping */
 body.supervisor-page .assess-type-group {
     margin: 25px 0 !important;
     padding: 20px !important;
@@ -268,7 +252,6 @@ body.supervisor-page .rubric-details span {
     color: var(--supervisor-primary) !important;
 }
 
-/* --- Deadline List --- */
 body.supervisor-page .deadline-list {
     display: flex !important;
     flex-direction: column !important;
@@ -316,7 +299,6 @@ body.supervisor-page .deadline-display strong {
     font-weight: 700 !important;
 }
 
-/* Deadline Badges */
 body.supervisor-page .deadline-badge {
     padding: 4px 10px !important;
     border-radius: 12px !important;
@@ -342,7 +324,6 @@ body.supervisor-page .badge-lecturer {
     color: var(--supervisor-text) !important;
 }
 
-/* Responsive Design */
 @media (max-width: 1000px) {
     body.supervisor-page .content-flex-container {
         flex-direction: column !important;

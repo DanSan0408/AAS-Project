@@ -24,7 +24,6 @@ import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentResultOverride;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
@@ -36,19 +35,16 @@ public class CalculateService {
     private final LecturerGroupAssignmentRepository lecturerAssignmentRepository;
     private final AssessmentCommentRepository commentRepository;
     private final StudentResultOverrideRepository overrideRepository;
-    private final IndustrialSupervisorRepository supervisorRepository;
 
     public CalculateService(
             MarkRepository markRepository,
             LecturerGroupAssignmentRepository lecturerAssignmentRepository,
             AssessmentCommentRepository commentRepository,
-            StudentResultOverrideRepository overrideRepository,
-            IndustrialSupervisorRepository supervisorRepository) {
+            StudentResultOverrideRepository overrideRepository) {
         this.markRepository = markRepository;
         this.lecturerAssignmentRepository = lecturerAssignmentRepository;
         this.commentRepository = commentRepository;
         this.overrideRepository = overrideRepository;
-        this.supervisorRepository = supervisorRepository;
     }
 
     public AssessmentDataDto calculateAssessmentData(Assessment assessment, List<Student> students) {
@@ -372,19 +368,11 @@ public class CalculateService {
             Map<String, Object> detail = new HashMap<>();
             
             if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-                Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
-                    supervisorRepository.findById(mark.getSupervisorId());
-                
-                if (supervisorOpt.isPresent()) {
-                    String supervisorName = supervisorOpt.get().getUsername();
-                    detail.put("evaluatorName", supervisorName);
-                    detail.put("evaluatorType", "Supervisor");
-                    evaluatorKey = "supervisor_" + mark.getSupervisorId();
-                } else {
-                    detail.put("evaluatorName", "Supervisor " + mark.getSupervisorId());
-                    detail.put("evaluatorType", "Supervisor");
-                    evaluatorKey = "supervisor_" + mark.getSupervisorId();
-                }
+                // Since we're removing industrial supervisors, treat supervisor marks as lecturer marks
+                // The supervisorId should now reference a lecturer ID
+                detail.put("evaluatorName", "Lecturer (Supervisor Role)");
+                detail.put("evaluatorType", "Lecturer");
+                evaluatorKey = "lecturer_supervisor_" + mark.getSupervisorId();
                 
             } else if (mark.getLecturer() != null) {
                 evaluatorKey = "lecturer_" + mark.getLecturer().getId();
@@ -628,20 +616,16 @@ public class CalculateService {
             .orElse(1.0);
     }
 
-    // ✅ NEW METHOD: Get Group Assessment Comments
     public Map<String, List<String>> getGroupAssessmentComments(Student student, Assessment assessment) {
         Map<String, List<String>> result = new java.util.LinkedHashMap<>();
         
-        // Get all comments for this student and assessment that are for "Group Assessment"
         List<AssessmentComment> groupComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Group Assessment");
         
-        // Filter to only get OVERALL assessment comments (rubricId is null)
         groupComments = groupComments.stream()
             .filter(c -> c.getRubricId() == null)
             .collect(Collectors.toList());
         
-        // Group by evaluator name
         for (AssessmentComment comment : groupComments) {
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
@@ -654,20 +638,16 @@ public class CalculateService {
         return result;
     }
 
-    // ✅ NEW METHOD: Get Individual Assessment Comments
     public Map<String, List<String>> getIndividualAssessmentComments(Student student, Assessment assessment) {
         Map<String, List<String>> result = new java.util.LinkedHashMap<>();
         
-        // Get all comments for this student and assessment that are for "Individual Assessment"
         List<AssessmentComment> individualComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Individual Assessment");
         
-        // Filter to only get OVERALL assessment comments (rubricId is null)
         individualComments = individualComments.stream()
             .filter(c -> c.getRubricId() == null)
             .collect(Collectors.toList());
         
-        // Group by evaluator name
         for (AssessmentComment comment : individualComments) {
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
@@ -682,15 +662,9 @@ public class CalculateService {
 
     private String getEvaluatorKey(Mark mark) {
         if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
-            Optional<com.capstone.adproject.model.IndustrialSupervisor> supervisorOpt = 
-                supervisorRepository.findById(mark.getSupervisorId());
-            
-            if (supervisorOpt.isPresent()) {
-                String supervisorName = supervisorOpt.get().getUsername();
-                return supervisorName;
-            } else {
-                return "Supervisor " + mark.getSupervisorId();
-            }
+            // Since we're removing industrial supervisors, treat supervisor marks as lecturer marks
+            // The supervisorId should now reference a lecturer ID
+            return "Lecturer (Supervisor Role)";
         } else if (mark.getLecturer() != null) {
             return mark.getLecturer().getUsername();
         } else if (mark.getEvaluatorStudent() != null) {

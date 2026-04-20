@@ -1,16 +1,18 @@
 package com.capstone.adproject.service;
 
-import com.capstone.adproject.model.Admin;
-import com.capstone.adproject.model.Student;
-import com.capstone.adproject.model.Lecturer;
-import com.capstone.adproject.model.IndustrialSupervisor;
-import com.capstone.adproject.repositories.AdminRepository;
-import com.capstone.adproject.repositories.StudentRepository;
-import com.capstone.adproject.repositories.LecturerRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.UUID;
+
+import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.SuperAdmin;
+import com.capstone.adproject.repositories.AdminRepository;
+import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.repositories.SuperAdminRepository;
 
 @Service
 public class UserService {
@@ -18,83 +20,97 @@ public class UserService {
     private final AdminRepository adminRepo;
     private final StudentRepository studentRepo;
     private final LecturerRepository lecturerRepo;
-    private final IndustrialSupervisorRepository supervisorRepo;
+    private final SuperAdminRepository superAdminRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, IndustrialSupervisorRepository supervisorRepo, PasswordEncoder passwordEncoder) {
+    public UserService(AdminRepository adminRepo, StudentRepository studentRepo, LecturerRepository lecturerRepo, SuperAdminRepository superAdminRepo, PasswordEncoder passwordEncoder) {
         this.adminRepo = adminRepo;
         this.studentRepo = studentRepo;
         this.lecturerRepo = lecturerRepo;
-        this.supervisorRepo = supervisorRepo;
+        this.superAdminRepo = superAdminRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
    public Object findUserByEmail(String email) {
-    // Use orElse(null) to handle the Optional return type
-    return adminRepo.findByEmail(email)
+    return superAdminRepo.findByEmail(email)
+        .map(u -> (Object)u)
+        .orElseGet(() -> adminRepo.findByEmail(email)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByEmail(email)
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByEmail(email)
                 .map(u -> (Object)u)
-                .orElseGet(() -> supervisorRepo.findByEmail(email)
-                    .map(u -> (Object)u)
-                    .orElse(null))));
+                .orElse(null))));
 }
 
 public Object findUserByResetToken(String token) {
-    // Use orElse(null) to handle the Optional return type
-    return adminRepo.findByResetPasswordToken(token)
+    return superAdminRepo.findByResetPasswordToken(token)
+        .map(u -> (Object)u)
+        .orElseGet(() -> adminRepo.findByResetPasswordToken(token)
         .map(u -> (Object)u)
         .orElseGet(() -> studentRepo.findByResetPasswordToken(token)
             .map(u -> (Object)u)
             .orElseGet(() -> lecturerRepo.findByResetPasswordToken(token)
                 .map(u -> (Object)u)
-                .orElseGet(() -> supervisorRepo.findByResetPasswordToken(token)
-                    .map(u -> (Object)u)
-                    .orElse(null))));
+                .orElse(null))));
 }
 
     public String generateResetToken(Object user) {
         String token = UUID.randomUUID().toString();
         
-        // Use pattern matching to set the token based on the user type
         if (user instanceof Admin admin) {
             admin.setResetPasswordToken(token);
             adminRepo.save(admin);
+        } else if (user instanceof SuperAdmin superAdmin) {
+            superAdmin.setResetPasswordToken(token);
+            superAdminRepo.save(superAdmin);
         } else if (user instanceof Student student) {
             student.setResetPasswordToken(token);
             studentRepo.save(student);
         } else if (user instanceof Lecturer lecturer) {
             lecturer.setResetPasswordToken(token);
             lecturerRepo.save(lecturer);
-        } else if (user instanceof IndustrialSupervisor supervisor) {
-            supervisor.setResetPasswordToken(token);
-            supervisorRepo.save(supervisor);
         }
         return token;
     }
 
     public void updatePassword(Object user, String newPassword) {
         String encodedPassword = passwordEncoder.encode(newPassword);
-        
-        // Update password and clear the token
+        String email = null;
+
         if (user instanceof Admin admin) {
-            admin.setPassword(encodedPassword);
-            admin.setResetPasswordToken(null);
-            adminRepo.save(admin);
+            email = admin.getEmail();
+        } else if (user instanceof SuperAdmin superAdmin) {
+            email = superAdmin.getEmail();
         } else if (user instanceof Student student) {
-            student.setPassword(encodedPassword);
-            student.setResetPasswordToken(null);
-            studentRepo.save(student);
+            email = student.getEmail();
         } else if (user instanceof Lecturer lecturer) {
-            lecturer.setPassword(encodedPassword);
-            lecturer.setResetPasswordToken(null);
-            lecturerRepo.save(lecturer);
-        } else if (user instanceof IndustrialSupervisor supervisor) {
-            supervisor.setPassword(encodedPassword);
-            supervisor.setResetPasswordToken(null);
-            supervisorRepo.save(supervisor);
+            email = lecturer.getEmail();
+        }
+
+        if (email != null) {
+            final String finalEmail = email;
+            superAdminRepo.findByEmail(finalEmail).ifPresent(sa -> {
+                sa.setPassword(encodedPassword);
+                sa.setResetPasswordToken(null);
+                superAdminRepo.save(sa);
+            });
+            adminRepo.findByEmail(finalEmail).ifPresent(a -> {
+                a.setPassword(encodedPassword);
+                a.setResetPasswordToken(null);
+                adminRepo.save(a);
+            });
+            studentRepo.findByEmail(finalEmail).ifPresent(s -> {
+                s.setPassword(encodedPassword);
+                s.setResetPasswordToken(null);
+                studentRepo.save(s);
+            });
+            lecturerRepo.findByEmail(finalEmail).ifPresent(l -> {
+                l.setPassword(encodedPassword);
+                l.setResetPasswordToken(null);
+                l.setIsTempPassword(false); // Password is no longer temporary
+                lecturerRepo.save(l);
+            });
         }
     }
 }

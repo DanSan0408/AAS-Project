@@ -16,19 +16,21 @@ import jakarta.servlet.http.HttpServletResponse;
 public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     //IOE exception : input/output problem
-    //Servlet exception : servlet operation (server handling like client requests/generate dynamic responses) problem
+    //Servlet exception : servlet operation (server handling like client requests/generate dynamic responses) problem\
+    //onAuthenticationSuccess : to override authenticationsSuccess method in SecurityConfig
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         
-        // AuthorityUtils == helper class in SpringSecurity
-        //authorityListToSet == convert list of GrantedAuthority objects into set of strings
-        Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities()); //getAuthorities -> return a collection of GrantedAuthority objects (roles/authorities to a user)
+        //tukar object(roles) tu ke string
+        Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities()); //getAuthorities : return a collection of GrantedAuthority objects (roles/authorities to a user)
 
         // nak hantar user ke page yang betul
-        if (roles.contains("ROLE_ADMIN")) {
+        if (roles.contains("ROLE_SUPER_ADMIN")) {
+            // Redirect to superadmin_home
+            response.sendRedirect("/superadmin/home");
+        } else if (roles.contains("ROLE_ADMIN")) {
             // Redirect to admin_home
             response.sendRedirect("/admin/home");
-
         } else if (roles.contains("ROLE_STUDENT")) {
             // Redirect to student_home
             response.sendRedirect("/student/home");
@@ -37,12 +39,8 @@ public class CustomAuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             // Redirect to lecturer_home
             response.sendRedirect("/lecturer/home");
 
-        } else if (roles.contains("ROLE_SUPERVISOR")) {
-            // Redirect to industrial_supervisor_home
-            response.sendRedirect("/supervisor/home");
-
         } else {
-            // Felse, hantar balik ke page startup.html
+            // False, hantar balik ke page startup.html
             response.sendRedirect("/");
         }
     }

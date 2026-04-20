@@ -42,7 +42,6 @@
                 <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post">
                     <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
 
-                    <!-- PART 1: GROUP ASSESSMENT RUBRICS -->
                     <div th:if="${groupRubrics != null and !groupRubrics.isEmpty()}">
                         <div class="section-divider">
                             <h2>👥 Part 1: Group Assessment</h2>
@@ -57,7 +56,6 @@
                                 </div>
                             </div>
 
-                            <!-- Sub-Rubrics -->
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-card">
                                 <div class="sub-rubric-title">
                                     <span th:text="${subRubric.name}">Sub-Rubric Name</span>
@@ -82,7 +80,6 @@
                                 </div>
                             </div>
                             
-                            <!-- Direct Ratings -->
                             <div th:if="${(rubric.subRubrics == null or rubric.subRubrics.isEmpty()) and rubric.ratings != null}" 
                                  class="sub-rubric-card">
                                 <div class="rating-options">
@@ -101,7 +98,6 @@
                                 </div>
                             </div>
                             
-                            <!-- ✅ Rubric-Specific Comments with Validation -->
                             <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                 class="rubric-comments-section">
                                 <h4 class="rubric-comments-header">
@@ -127,7 +123,6 @@
                             </div>
                         </div>
 
-                        <!-- Group Assessment-Level Comments -->
                         <div th:with="commentLabels=${assessment.groupCommentLabels},
                                     minLengths=${assessment.groupCommentMinLengths},
                                     hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
@@ -161,7 +156,6 @@
                         </div>
                     </div>
 
-                    <!-- PART 2: INDIVIDUAL ASSESSMENT RUBRICS -->
                     <div th:if="${individualRubrics != null and !individualRubrics.isEmpty()}">
                         <div class="section-divider">
                             <h2>👤 Part 2: Individual Assessment</h2>
@@ -184,7 +178,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Sub-Rubrics -->
                                 <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-card">
                                     <div class="sub-rubric-title">
                                         <span th:text="${subRubric.name}">Sub-Rubric Name</span>
@@ -209,7 +202,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Direct Ratings -->
                                 <div th:if="${(rubric.subRubrics == null or rubric.subRubrics.isEmpty()) and rubric.ratings != null}" 
                                      class="sub-rubric-card">
                                     <div class="rating-options">
@@ -228,7 +220,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- ✅ Rubric-Specific Comments with Validation -->
                                 <div th:if="${rubric.rubricCommentCount != null and rubric.rubricCommentCount > 0}" 
                                     class="rubric-comments-section">
                                     <h4 class="rubric-comments-header">
@@ -254,7 +245,6 @@
                                 </div>
                             </div>
 
-                            <!-- Individual Assessment-Level Comments -->
                             <div th:with="commentLabels=${assessment.individualCommentLabels},
                                         minLengths=${assessment.individualCommentMinLengths},
                                         hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
@@ -303,7 +293,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎯 Comment validation initialized');
     
-    // ✅ Function to validate a single textarea
     function validateTextarea(textarea) {
         const field = textarea.closest('.rubric-comment-field') || textarea.closest('.comment-field');
         if (!field) return;
@@ -311,31 +300,30 @@ document.addEventListener('DOMContentLoaded', function() {
         const minLength = parseInt(field.getAttribute('data-min-length')) || 0;
         const hint = field.querySelector('.rubric-comment-hint') || field.querySelector('.comment-hint');
         
-        if (minLength === 0) return; // No validation needed
+        if (minLength === 0) return; 
         
         const currentLength = textarea.value.trim().length;
         
-        // Remove all classes first
         textarea.classList.remove('insufficient', 'sufficient');
         if (hint) {
             hint.classList.remove('insufficient', 'sufficient');
         }
         
         if (currentLength === 0) {
-            // Empty - neutral state
+            
             if (hint) {
                 hint.style.color = '#95a5a6';
                 hint.innerHTML = `Suggested minimum: ${minLength} characters`;
             }
         } else if (currentLength < minLength) {
-            // Insufficient - RED border
+            
             textarea.classList.add('insufficient');
             if (hint) {
                 hint.classList.add('insufficient');
                 hint.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Minimum ${minLength} characters required (current: ${currentLength})`;
             }
         } else {
-            // Sufficient - GREEN border
+            
             textarea.classList.add('sufficient');
             if (hint) {
                 hint.classList.add('sufficient');
@@ -344,32 +332,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ✅ Initialize validation for all comment textareas
     const allTextareas = document.querySelectorAll('.rubric-comment-field textarea, .comment-textarea');
     
     console.log(`📝 Found ${allTextareas.length} comment textareas`);
     
     allTextareas.forEach(function(textarea) {
-        // Initial validation on page load
+        
         validateTextarea(textarea);
         
-        // Real-time validation on input
         textarea.addEventListener('input', function() {
             validateTextarea(this);
         });
         
-        // Validation on blur (when user leaves the field)
         textarea.addEventListener('blur', function() {
             validateTextarea(this);
         });
     });
     
-    // ✅ Form submission - ALLOW submission (red borders are visual only)
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
             console.log('📤 Form submitted - validation is visual only, allowing save');
-            // Don't prevent submission - let user save even with insufficient comments
+            
         });
     }
 });

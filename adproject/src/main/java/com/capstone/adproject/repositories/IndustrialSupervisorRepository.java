@@ -22,7 +22,6 @@ public interface IndustrialSupervisorRepository extends JpaRepository<Industrial
     
     boolean existsByEmail(String email);
 
-    // --- CLEANUP METHODS FOR SAFE DELETION ---
     
     @Modifying
     @Query("UPDATE Group g SET g.industrialSupervisor = null WHERE g.industrialSupervisor.id = :supervisorId")
@@ -32,7 +31,6 @@ public interface IndustrialSupervisorRepository extends JpaRepository<Industrial
     @Query("DELETE FROM Mark m WHERE m.supervisorId = :supervisorId")
     void deleteMarksGiven(@Param("supervisorId") Long supervisorId);
 
-    // ✅ FIXED: Delete comments by evaluatorId and evaluatorType
     @Modifying
     @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :supervisorId AND ac.evaluatorType = 'SUPERVISOR'")
     void deleteCommentsBySupervisor(@Param("supervisorId") Long supervisorId);

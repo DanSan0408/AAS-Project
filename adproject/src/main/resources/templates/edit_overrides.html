@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Student Grades</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/edit_overrides.css}">
@@ -29,8 +30,8 @@
             <div class="card filter-section">
                 <form action="" method="get" class="filter-form">
                     <div class="form-group">
-                        <label><i class="fas fa-users"></i> Select Group to Edit:</label>
-                        <select name="groupId" onchange="this.form.submit()">
+                        <label for="groupSelect"><i class="fas fa-users"></i> Select Group to Edit:</label>
+                        <select name="groupId" id="groupSelect" data-action="auto-submit-form">
                             <option value="">-- Choose a Group --</option>
                             <option th:each="g : ${groups}" 
                                     th:value="${g.id}" 
@@ -45,15 +46,16 @@
                 <input type="hidden" name="groupId" th:value="${selectedGroupId}" />
                 
                 <div class="card table-card">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                <th>Email</th>
-                                <th style="width: 150px;">Factor <small>(0-5)</small></th>
-                                <th style="width: 150px;">Grand Total <small>(0-100)</small></th>
-                            </tr>
-                        </thead>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Email</th>
+                                    <th style="width: 150px;">Factor <small>(0-5)</small></th>
+                                    <th style="width: 150px;">Grand Total <small>(0-100)</small></th>
+                                </tr>
+                            </thead>
                         <tbody>
                             <tr th:each="student, stat : ${students}">
                                 <td th:text="${student.username}" class="student-name">Name</td>
@@ -71,7 +73,8 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                        </table>
+                    </div>
                 </div>
                 
                 <div class="sticky-footer">
@@ -85,5 +88,6 @@
             </div>
         </div>
     </div>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
 </html>

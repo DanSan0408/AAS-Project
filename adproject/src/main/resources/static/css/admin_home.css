@@ -24,12 +24,10 @@
     --color-info: #3B82F6;
 }
 
-/* --- Reset & Base Styles --- */
 * {
     box-sizing: border-box;
 }
 
-/* --- General Layout & Typography --- */
 body.admin-page {
     background-color: var(--color-background);
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -39,7 +37,6 @@ body.admin-page {
     display: flex;
 }
 
-/* Main Content - More breathing room */
 body.admin-page .main-content {
     flex-grow: 1 !important;
     padding: 30px 40px !important;
@@ -49,7 +46,6 @@ body.admin-page .main-content {
     width: auto !important;
 }
 
-/* Page Headers - Centered and properly aligned */
 body.admin-page .header {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
     padding: 20px 30px !important;
@@ -85,7 +81,6 @@ body.admin-page .header-container h1 {
     line-height: 1 !important;
 }
 
-/* Success/Error Messages */
 body.admin-page .alert {
     padding: 16px 24px !important;
     margin-bottom: 24px !important;
@@ -106,14 +101,92 @@ body.admin-page .alert-danger {
     border-color: var(--color-alert) !important;
 }
 
-/* --- Content Structure --- */
+body.admin-page .managed-courses-indicator {
+    background: linear-gradient(135deg, rgba(74, 0, 24, 0.06) 0%, rgba(248, 166, 23, 0.12) 100%) !important;
+    border: 1px solid rgba(74, 0, 24, 0.15) !important;
+    border-left: 5px solid var(--color-accent) !important;
+    border-radius: 14px !important;
+    padding: 18px 20px !important;
+    margin-bottom: 24px !important;
+}
+
+body.admin-page .managed-courses-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+body.admin-page .managed-courses-header h3 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+}
+
+body.admin-page .managed-courses-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    border-radius: 999px !important;
+    background: var(--color-primary) !important;
+    color: var(--color-text) !important;
+    font-weight: 700 !important;
+    padding: 0 10px !important;
+}
+
+body.admin-page .managed-courses-subtitle {
+    margin: 10px 0 12px 0 !important;
+    color: var(--color-secondary) !important;
+    font-size: 0.92rem !important;
+}
+
+body.admin-page .managed-courses-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
+
+body.admin-page .managed-course-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    border: 1px solid var(--color-border) !important;
+}
+
+body.admin-page .managed-course-code {
+    background: var(--color-primary) !important;
+    color: var(--color-text) !important;
+    border-radius: 7px !important;
+    padding: 3px 8px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+}
+
+body.admin-page .managed-course-name {
+    color: var(--color-secondary) !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+}
+
+body.admin-page .managed-courses-empty {
+    color: #7c2d12 !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+}
+
 body.admin-page .content-flex-container {
     display: flex !important;
     gap: 35px !important;
     align-items: flex-start !important;
 }
 
-/* Rubric Section - No box, flows freely, scrollable */
 body.admin-page .rubric-section {
     flex: 2.5 !important;
     background: none !important;
@@ -139,7 +212,6 @@ body.admin-page .rubric-section h2 {
     margin-top: 0 !important;
 }
 
-/* Deadline Section - Compact sidebar style */
 body.admin-page .deadline-section {
     flex: 1 !important;
     min-width: 350px !important;
@@ -158,7 +230,6 @@ body.admin-page .deadline-section h2 {
     border-bottom: 3px solid var(--color-primary) !important;
 }
 
-/* --- Assessment Boxes --- */
 body.admin-page .rubric-list {
     display: flex !important;
     flex-direction: column !important;
@@ -199,7 +270,6 @@ body.admin-page .assessment-header h3 {
     padding-bottom: 0 !important;
 }
 
-/* Total Marks Section - Maroon accent */
 body.admin-page .total-marks {
     background: linear-gradient(135deg, rgba(74, 0, 24, 0.05) 0%, rgba(74, 0, 24, 0.02) 100%) !important;
     border: 1px solid rgba(74, 0, 24, 0.15) !important;
@@ -230,7 +300,6 @@ body.admin-page .total-marks div p {
     font-style: normal !important;
 }
 
-/* Assessment Type Grouping */
 body.admin-page .assess-type-group {
     margin: 25px 0 !important;
     padding: 20px !important;
@@ -281,7 +350,6 @@ body.admin-page .rubric-details span {
     color: var(--color-primary) !important;
 }
 
-/* --- Buttons - Maroon focused --- */
 body.admin-page .add-rubric-button {
     padding: 11px 20px !important;
     border-radius: 8px !important;
@@ -300,20 +368,26 @@ body.admin-page .add-rubric-button {
     margin-top: 0 !important;
 }
 
+body.admin-page .add-rubric-button i,
+body.admin-page .rubric-action-btn i,
+body.admin-page .btn-sm i,
+body.admin-page .save-deadlines-button i {
+    color: #ffffff !important;
+    margin-right: 6px !important;
+}
+
 body.admin-page .add-rubric-button:hover {
     background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 4px 12px rgba(74, 0, 24, 0.3) !important;
 }
 
-/* Specific button overrides */
 body.admin-page .add-rubric-button[style*="background-color: #9b59b6"],
 body.admin-page .add-rubric-button[style*="background-color: #f7941d"],
 body.admin-page .add-rubric-button[style*="background-color: #e67e22"] {
     background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%) !important;
 }
 
-/* Edit/Delete Buttons */
 body.admin-page .rubric-action-btn {
     padding: 7px 14px !important;
     border-radius: 6px !important;
@@ -347,7 +421,6 @@ body.admin-page .delete-btn:hover {
     box-shadow: 0 2px 6px rgba(139, 30, 30, 0.3) !important;
 }
 
-/* --- Add New Deadline Form - SMALLER AND AT TOP --- */
 body.admin-page .add-new-deadline {
     background: linear-gradient(135deg, rgba(74, 0, 24, 0.03) 0%, rgba(74, 0, 24, 0.01) 100%) !important;
     border: 2px solid rgba(74, 0, 24, 0.1) !important;
@@ -414,7 +487,6 @@ body.admin-page .save-deadlines-button:hover {
     box-shadow: 0 4px 12px rgba(74, 0, 24, 0.3) !important;
 }
 
-/* --- Deadline List --- */
 body.admin-page .deadline-list {
     display: flex !important;
     flex-direction: column !important;
@@ -470,7 +542,6 @@ body.admin-page .date-info {
     font-size: 0.9em !important;
 }
 
-/* Assessor Type Badges - Maroon tones */
 body.admin-page .deadline-type-badge {
     padding: 4px 10px !important;
     border-radius: 12px !important;
@@ -511,7 +582,6 @@ body.admin-page .no-deadlines-message {
     font-style: normal !important;
 }
 
-/* Comments Section */
 body.admin-page .assessment-comments-section {
     background: var(--color-hover) !important;
     border-radius: 12px !important;
@@ -637,8 +707,7 @@ body.admin-page .btn-delete:hover {
     background: #7F1D1D !important;
 }
 
-/* Responsive Design */
-@media (max-width: 1000px) {
+@media (max-width: 1279px) {
     body.admin-page .content-flex-container {
         flex-direction: column !important;
     }
@@ -652,6 +721,72 @@ body.admin-page .btn-delete:hover {
     
     body.admin-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px !important;
+        margin-top: 56px !important;
+    }
+
+    body.admin-page .assessment-header {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+    }
+
+    body.admin-page .assessment-header-buttons {
+        width: 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    body.admin-page .assessment-header-buttons .add-rubric-button {
+        flex: 1 1 calc(50% - 10px) !important;
+        min-height: 44px !important;
+        justify-content: center !important;
+        font-size: 0.9rem !important;
+        padding: 10px 14px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.admin-page .main-content {
+        margin-top: 56px !important;
+        padding: 16px !important;
+    }
+
+    body.admin-page .header {
+        margin-bottom: 20px !important;
+        padding: 14px !important;
+    }
+
+    body.admin-page .header-container {
+        gap: 10px !important;
+    }
+
+    body.admin-page .header-container img {
+        height: 38px !important;
+    }
+
+    body.admin-page .header-container h1 {
+        font-size: 1.4rem !important;
+    }
+
+    body.admin-page .assessment-box {
+        padding: 16px !important;
+    }
+
+    body.admin-page .assessment-header-buttons .add-rubric-button {
+        flex: 1 1 100% !important;
+        justify-content: center !important;
+        font-size: 0.88rem !important;
+    }
+
+    body.admin-page .question-meta {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    body.admin-page .deadline-display p {
+        flex-wrap: wrap !important;
     }
 }

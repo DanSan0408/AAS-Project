@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Home</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/admin_home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -19,12 +20,30 @@
             </div>
         </div>
         
-        <!-- Success/Error Messages -->
         <div th:if="${successMessage}" class="alert alert-success" role="alert">
             <span th:text="${successMessage}"></span>
         </div>
         <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
             <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="managed-courses-indicator">
+            <div class="managed-courses-header">
+                <h3><i class="fas fa-book-open"></i> Managing Course(s)</h3>
+                <span class="managed-courses-count" th:text="${managedCourseCount}">0</span>
+            </div>
+            <p class="managed-courses-subtitle">Courses assigned by Super Admin are listed here.</p>
+
+            <div class="managed-courses-list" th:if="${managedCourseCount > 0}">
+                <div class="managed-course-chip" th:each="course : ${managedCourses}">
+                    <span class="managed-course-code" th:text="${course.courseCode}">SEC-101</span>
+                    <span class="managed-course-name" th:text="${course.courseName}">Software Engineering Capstone</span>
+                </div>
+            </div>
+
+            <div class="managed-courses-empty" th:if="${managedCourseCount == 0}">
+                No course is assigned to this admin yet.
+            </div>
         </div>
         
         <div class="content-flex-container">
@@ -35,19 +54,17 @@
 
                     <div th:each="assessment : ${allAssessments}" class="assessment-box">
                         
-                        <!-- Assessment Header -->
                         <div class="assessment-header">
                             <h3 th:text="${'Assessment: ' + assessment.title}">Assessment: Presentation 1 Assessment</h3>
                             
                             <div class="assessment-header-buttons">
-                                <!-- Assign Lecturers Button -->
+                                
                                 <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" 
                                    class="add-rubric-button" 
                                    style="background-color: #e67e22; display: inline-block;">
                                     <i class="fas fa-user-tie"></i> Assign Lecturers
                                 </a>
                                 
-                                <!-- Assign Assessment Button -->
                                 <a th:href="@{/admin/assessment/assign/{id}(id=${assessment.id})}" 
                                    class="add-rubric-button" 
                                    style="background-color: #f7941d; display: inline-block;">
@@ -66,7 +83,6 @@
                             </div>
                         </div>
 
-                        <!-- ========== RESTRUCTURED: Group and Individual Blocks ========== -->
                         <th:block th:with="
                             groupedComponents=${groupAssessmentComponents.apply(assessment)},
                             groupRubrics=${groupedComponents != null && !groupedComponents.isEmpty() && groupedComponents.values().iterator().next().containsKey('Group Assessment') ? groupedComponents.values().iterator().next().get('Group Assessment') : null},
@@ -74,13 +90,11 @@
                             hasGroupContent=${groupRubrics != null && !groupRubrics.isEmpty() || (assessment.groupCommentCount != null && assessment.groupCommentCount > 0)},
                             hasIndividualContent=${individualRubrics != null && !individualRubrics.isEmpty() || (assessment.individualCommentCount != null && assessment.individualCommentCount > 0)}">
 
-                            <!-- ========== GROUP ASSESSMENT BLOCK ========== -->
                             <div th:if="${hasGroupContent}" class="assess-type-group" style="border-left: 4px solid #3498db;">
                                 <h5 style="color: #3498db; margin-bottom: 15px;">
                                     <i class="fas fa-users"></i> Group Assessment
                                 </h5>
                                 
-                                <!-- Group Rubrics -->
                                 <div th:if="${groupRubrics != null && !groupRubrics.isEmpty()}">
                                     <div th:each="component : ${groupRubrics}" class="rubric-assessment">
                                         <h6 th:text="${component.name}">Rubric Name</h6>
@@ -94,16 +108,16 @@
                                         <div style="margin-top: 10px;">
                                             <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" 
                                                class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
-                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" 
-                                                  method="post" style="display:inline;" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this rubric?');">
+                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post"
+                                                  style="display:inline;"
+                                                  data-action="confirm-submit"
+                                                  data-confirm-message="Are you sure you want to delete this rubric?">
                                                 <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Group Comments Section -->
                                 <div class="assessment-comments-section" style="margin-top: 15px;" 
                                      th:if="${assessment.groupCommentLabels != null && !assessment.groupCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
@@ -123,15 +137,18 @@
                                             <div class="comment-item-actions">
                                                 <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                                      method="post" style="display: inline;"
-                                                      onsubmit="return confirm('Delete this question?');">
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                    <span>Edit</span>
+                                                </a> <form
+                                                    th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
+                                                    method="post" style="display: inline;"
+                                                    data-action="confirm-submit"
+                                                    data-confirm-message="Delete this question?">
                                                     <input type="hidden" name="type" value="group"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash-can"></i>
+                                                        <span>Delete</span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -150,23 +167,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Configure Group Comments Button - ALWAYS SHOW -->
                                 <div style="margin-top: 15px; text-align: center;">
                                     <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" 
-                                       class="add-rubric-button" 
+                                        class="add-rubric-button" 
                                        style="background-color: #9b59b6; display: inline-block;">
                                         <i class="fas fa-cog"></i> Configure Group Comments
                                     </a>
                                 </div>
-                            </div> <!-- Close Group Assessment Block -->
+                            </div> 
                             
-                            <!-- ========== INDIVIDUAL ASSESSMENT BLOCK ========== -->
                             <div th:if="${hasIndividualContent}" class="assess-type-group" style="border-left: 4px solid #2ecc71;">
                                 <h5 style="color: #2ecc71; margin-bottom: 15px;">
                                     <i class="fas fa-user"></i> Individual Assessment
                                 </h5>
                                 
-                                <!-- Individual Rubrics -->
                                 <div th:if="${individualRubrics != null && !individualRubrics.isEmpty()}">
                                     <div th:each="component : ${individualRubrics}" class="rubric-assessment">
                                         <h6 th:text="${component.name}">Rubric Name</h6>
@@ -178,18 +192,17 @@
                                         </div>
                                         
                                         <div style="margin-top: 10px;">
-                                            <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" 
-                                               class="rubric-action-btn edit-btn" style="margin-right: 5px;">Edit</a>
-                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" 
-                                                  method="post" style="display:inline;" 
-                                                  onsubmit="return confirm('Are you sure you want to delete this rubric?');">
-                                                <button type="submit" class="rubric-action-btn delete-btn">Delete</button>
+                                                <a th:href="@{/rubrics/edit/{id}(id=${component.id})}" 
+                                               class="rubric-action-btn edit-btn" style="margin-right: 5px;"><i class="fas fa-edit"></i> Edit</a>
+                                            <form th:action="@{/rubrics/delete/{id}(id=${component.id})}" method="post"
+                                                  style="display:inline;" data-action="confirm-submit"
+                                                  data-confirm-message="Are you sure you want to delete this rubric?">
+                                                <button type="submit" class="rubric-action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
                                             </form>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <!-- Individual Comments Section -->
                                 <div class="assessment-comments-section" style="margin-top: 15px;"
                                      th:if="${assessment.individualCommentLabels != null && !assessment.individualCommentLabels.isEmpty()}">
                                     <div class="comments-section-header">
@@ -209,15 +222,18 @@
                                             <div class="comment-item-actions">
                                                 <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
-                                                      method="post" style="display: inline;"
-                                                      onsubmit="return confirm('Delete this question?');">
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                    <span>Edit</span>
+                                                </a> <form
+                                                    th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
+                                                    method="post" style="display: inline;"
+                                                    data-action="confirm-submit"
+                                                    data-confirm-message="Delete this question?">
                                                     <input type="hidden" name="type" value="individual"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash-can"></i>
+                                                        <span>Delete</span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -236,19 +252,17 @@
                                     </div>
                                 </div>
 
-                                <!-- Configure Individual Comments Button - ALWAYS SHOW -->
                                 <div style="margin-top: 15px; text-align: center;">
                                     <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" 
-                                       class="add-rubric-button" 
+                                        class="add-rubric-button" 
                                        style="background-color: #9b59b6; display: inline-block;">
                                         <i class="fas fa-cog"></i> Configure Individual Comments
                                     </a>
                                 </div>
-                            </div> <!-- Close Individual Assessment Block -->
+                            </div> 
 
                         </th:block>
                         
-                        <!-- Add Rubric Button -->
                         <div style="margin-top: 20px; border-top: 1px solid #4a6681; padding-top: 15px;">
                             <span th:if="${#lists.isEmpty(assessment.rubrics)}" 
                                   style="display: block; margin-bottom: 10px;">
@@ -265,12 +279,9 @@
                 </div>
             </div>
 
-            <!-- Deadline Section with All Features -->
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 
-
-                <!-- Add New General Deadline Form -->
                 <div class="add-new-deadline">
                     <h3>Add New General Deadline</h3>
                     
@@ -300,16 +311,15 @@
                     </form>
                 </div>
                 
-                <!-- Check if there are any deadlines -->
                 <div th:if="${deadlines != null and !#lists.isEmpty(deadlines)}" class="deadline-list">
                     <div th:each="deadline : ${deadlines}" class="deadline-item">
                         <div class="deadline-display">
-                            <!-- Title with Type Badge -->
+                            
                             <p>
                                 <strong>Title:</strong> 
                                 <span th:text="${deadline.title}">Deadline Title</span>
                                 
-                                <!-- Badge for Assessor Type -->
+                                
                                 <span th:if="${deadline.assessorType != null}" 
                                       th:classappend="${'deadline-type-badge ' + 
                                           (deadline.assessorType == 'STUDENT' ? 'badge-student' : 
@@ -323,7 +333,7 @@
                                     GENERAL
                                 </span>
                             </p>
-                            <!-- Open Date -->
+
                             <p>
                                 <strong>Opens:</strong> 
                                 <span th:if="${deadline.openDate != null}" 
@@ -337,7 +347,7 @@
                                 </span>
                             </p>
                             
-                            <!-- End Date -->
+                            
                             <p>
                                 <strong>Closes:</strong> 
                                 <span class="date-info" 
@@ -346,16 +356,15 @@
                                 </span>
                             </p>
                             
-                            <!-- Action Buttons -->
+                            
                             <div class="deadline-actions">
                                 <a th:href="@{/deadlines/edit/{id}(id=${deadline.id})}" 
                                    class="rubric-action-btn edit-btn">
                                     Edit
-                                </a>
-                                <form th:action="@{/deadlines/delete/{id}(id=${deadline.id})}" 
-                                      method="post" 
-                                      style="display:inline; margin-left: 5px;" 
-                                      onsubmit="return confirm('Are you sure you want to delete this deadline?');">
+                                </a> <form
+                                    th:action="@{/deadlines/delete/{id}(id=${deadline.id})}" method="post"
+                                    style="display:inline; margin-left: 5px;" data-action="confirm-submit"
+                                    data-confirm-message="Are you sure you want to delete this deadline?">
                                     <button type="submit" class="rubric-action-btn delete-btn">
                                         Delete
                                     </button>
@@ -365,7 +374,6 @@
                     </div>
                 </div>
                 
-                <!-- No Deadlines Message -->
                 <div th:if="${deadlines == null or #lists.isEmpty(deadlines)}" class="no-deadlines-message">
                     <p>No deadlines have been set yet.</p>
                     <p style="font-size: 0.9em;">Add a general deadline below or assign an assessment to create a deadline.</p>
@@ -374,35 +382,8 @@
             </div>
         </div>
     </div>
-    <!-- Duplicate Detection Script -->
-    <script th:inline="javascript">
-    const isDuplicate = /*[[${isDuplicate}]]*/ false;
     
-    if (isDuplicate === true) {
-        const deadlineData = /*[[${deadlineToSave}]]*/ null;
-        const existingTitle = /*[[${existingTitle}]]*/ '';
-        const newTitle = deadlineData ? deadlineData.title : 'the entered title';
-
-        let message = `A deadline similar to "${newTitle}" already exists`;
-        if (existingTitle) {
-            message += ` (existing: "${existingTitle}")`;
-        }
-        message += `. The titles are the same when ignoring spaces. Do you really want to save this duplicate?`;
-
-        let confirmed = confirm(message);
-        
-        if (confirmed) {
-            const form = document.getElementById('newDeadlineForm');
-            const confirmInput = document.createElement('input');
-            confirmInput.type = 'hidden';
-            confirmInput.name = 'confirmDuplicate';
-            confirmInput.value = 'true';
-            form.appendChild(confirmInput);
-            form.submit();
-        } else {
-            console.log("Duplicate entry creation cancelled by admin.");
-        }
-    }
-    </script>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript"></script>
 </body>
 </html>

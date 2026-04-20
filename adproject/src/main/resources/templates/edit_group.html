@@ -25,7 +25,7 @@
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
                     <a href="/admin/manage-lecturers">Lecturers</a>
-                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
 
@@ -52,9 +52,12 @@
                                 <h3>Academic Supervisor (Lecturer)</h3>
                                 <div class="form-group">
                                     <label for="academicSupervisorId">Lecturer:</label>
+                                    <div class="search-container">
+                                        <input type="text" id="academicSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="academicSupervisorId">
+                                        <div id="academicSupervisorResults" class="search-results"></div>
+                                    </div>
                                     <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
                                         <option value="">-- Select Lecturer --</option>
-                                        <!-- ✅ CHANGED: Use email instead of username -->
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${lecturer.email}"
@@ -67,13 +70,16 @@
                                 <h3>Industrial Supervisor</h3>
                                 <div class="form-group">
                                     <label for="industrialSupervisorId">Industrial Supervisor:</label>
+                                    <div class="search-container">
+                                        <input type="text" id="industrialSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="industrialSupervisorId">
+                                        <div id="industrialSupervisorResults" class="search-results"></div>
+                                    </div>
                                     <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                        <option value="">-- Select Supervisor --</option>
-                                        <!-- ✅ CHANGED: Use email instead of username -->
-                                        <option th:each="supervisor : ${availableSupervisors}"
-                                                th:value="${supervisor.id}"
-                                                th:text="${supervisor.email}"
-                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and supervisor.id == groupAssignmentDto.industrialSupervisorId}">Supervisor Email</option>
+                                        <option value="">-- Select Lecturer --</option>
+                                        <option th:each="lecturer : ${availableLecturers}"
+                                                th:value="${lecturer.id}"
+                                                th:text="${lecturer.email}"
+                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and lecturer.id == groupAssignmentDto.industrialSupervisorId}">Lecturer Email</option>
                                     </select>
                                 </div>
                                 
@@ -83,24 +89,24 @@
                                 <div th:if="${availableStudents.isEmpty()}">
                                     <p style="font-style: italic;">No unassigned students available to add.</p>
                                 </div>
-                                <table th:unless="${availableStudents.isEmpty()}" class="student-table" style="margin-top: 0;">
-                                    <thead>
-                                        <tr>
-                                            <th style="width: 10%;">Select</th>
-                                            <!-- ✅ CHANGED: Column header from Username to Email -->
-                                            <th>Student Email</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="student : ${availableStudents}">
-                                            <td>
-                                                <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
-                                            </td>
-                                            <!-- ✅ CHANGED: Display email instead of username -->
-                                            <td th:text="${student.email}">Student Email</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div th:unless="${availableStudents.isEmpty()}" class="student-table-wrapper">
+                                    <table class="student-table" style="margin-top: 0;">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 10%;">Select</th>
+                                                <th>Student Email</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="student : ${availableStudents}">
+                                                <td>
+                                                    <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
+                                                </td>
+                                                <td th:text="${student.email}">Student Email</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                                 
                                 <hr/>
 
@@ -115,27 +121,28 @@
                                 <p style="font-style: italic;">This group has no students assigned yet.</p>
                             </div>
                             
-                            <table th:unless="${studentsInGroup.isEmpty()}" class="student-table">
-                                <thead>
-                                    <tr>
-                                        <th>Student ID</th>
-                                        <!-- ✅ CHANGED: Column header from Username to Email -->
-                                        <th>Email</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="student : ${studentsInGroup}">
-                                        <td th:text="${student.id}">101</td>
-                                        <!-- ✅ CHANGED: Display email instead of username -->
-                                        <td th:text="${student.email}">Student Email</td>
-                                        <td>
-                                            <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger"
-                                               onclick="return confirm('Are you sure you want to remove this student from the group?');">Remove</a>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div th:unless="${studentsInGroup.isEmpty()}" class="student-table-wrapper">
+                                <table class="student-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Email</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="student : ${studentsInGroup}">
+                                            <td th:text="${student.id}">101</td>
+                                            <td th:text="${student.email}">Student Email</td>
+                                            <td>
+                                                <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger" 
+                                                   data-action="confirm-link" 
+                                                   data-confirm-message="Are you sure you want to remove this student from the group?">Remove</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                             
                             <br>
                             <a th:href="@{/admin/group-assignment}" class="btn btn-secondary" style="width: 100%; display:block; text-align:center;">Back to Group List</a>
@@ -145,5 +152,113 @@
             </div>
         </div>
     </div>
+
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}">
+        document.addEventListener('DOMContentLoaded', function() {
+            async function searchLecturers(searchInput) {
+                const selectId = searchInput.dataset.targetSelect;
+                const resultsDivId = searchInput.id.replace('Search', 'Results');
+                const resultsDiv = document.getElementById(resultsDivId);
+                const selectElement = document.getElementById(selectId);
+                const query = searchInput.value.trim();
+
+                if (query.length === 0) {
+                    resultsDiv.innerHTML = '';
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/admin/search-lecturers?query=${encodeURIComponent(query)}`);
+                    const lecturers = await response.json();
+
+                    resultsDiv.innerHTML = '';
+
+                    if (lecturers.length === 0) {
+                        resultsDiv.innerHTML = '<div class="search-result-item">No lecturers found</div>';
+                        resultsDiv.style.display = 'block';
+                        return;
+                    }
+
+                    lecturers.forEach(lecturer => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        resultItem.textContent = lecturer.email;
+                        resultItem.addEventListener('click', () => {
+                            selectElement.value = lecturer.id;
+                            searchInput.value = '';
+                            resultsDiv.innerHTML = '';
+                            resultsDiv.style.display = 'none';
+                        });
+                        resultsDiv.appendChild(resultItem);
+                    });
+
+                    resultsDiv.style.display = 'block';
+                } catch (error) {
+                    console.error('Error searching lecturers:', error);
+                    resultsDiv.innerHTML = '<div class="search-result-item error">Error searching lecturers</div>';
+                    resultsDiv.style.display = 'block';
+                }
+            }
+
+            document.querySelectorAll('.search-input').forEach(input => {
+                input.addEventListener('keyup', () => searchLecturers(input));
+            });
+
+            document.addEventListener('click', function(event) {
+                document.querySelectorAll('.search-container').forEach(container => {
+                    if (!container.contains(event.target)) {
+                        const resultsDiv = container.querySelector('.search-results');
+                        if (resultsDiv) resultsDiv.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        .search-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .search-result-item.error {
+            color: #e74c3c;
+            font-style: italic;
+        }
+    </style>
 </body>
 </html>

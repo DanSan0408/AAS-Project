@@ -6,10 +6,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "deadlines")
+@Table(name = "deadlines", indexes = {
+    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessmentId, assessorType")
+})
+
 public class Deadline {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,10 +21,9 @@ public class Deadline {
     private String title;
     private Date date;
     private Long assessmentId; 
-private String assessorType; // To store "STUDENT", "LECTURER", or "SUPERVISOR"
+private String assessorType; 
 private Date openDate;
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

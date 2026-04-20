@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${assessment.title} + ' - Rubrics & Comments'">View Rubrics</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/view_rubric.css}">
@@ -60,6 +61,7 @@
                 <p th:if="${#maps.isEmpty(assessment.cloMarks)}" class="text-muted">No CLO marks assigned yet.</p>
             </div>
         </div>
+
         
         <th:block th:with="
             individualOrder=${assessment.individualOrder != null ? assessment.individualOrder : 0},
@@ -82,17 +84,14 @@
             
         </th:block>
         
-        <!-- ==================== EMPTY STATE - NO CONTENT CONFIGURED ==================== -->
         <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
                       (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
                       (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
              class="empty-state-container">
             
-            <!-- Group Assessment Section -->
             <div class="empty-section group-section">
                 <h2><i class="fas fa-users"></i> Group Assessment</h2>
                 
-                <!-- Group Rubrics -->
                 <div class="empty-subsection">
                     <h3>Group Assessment Rubrics</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -101,7 +100,6 @@
                     </a>
                 </div>
                 
-                <!-- Group Comments -->
                 <div class="empty-subsection">
                     <h3>Group Assessment Comments</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -111,11 +109,9 @@
                 </div>
             </div>
             
-            <!-- Individual Assessment Section -->
             <div class="empty-section individual-section">
                 <h2><i class="fas fa-user"></i> Individual Assessment</h2>
                 
-                <!-- Individual Rubrics -->
                 <div class="empty-subsection">
                     <h3>Individual Assessment Rubrics</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -124,7 +120,6 @@
                     </a>
                 </div>
                 
-                <!-- Individual Comments -->
                 <div class="empty-subsection">
                     <h3>Individual Assessment Comments</h3>
                     <p class="empty-text">Nothing Configured</p>
@@ -136,10 +131,8 @@
         </div>
     </div>
     
-    <!-- ==================== FRAGMENT DEFINITIONS ==================== -->
     <div style="display: none;">
         
-        <!-- ==================== GROUP ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="group-block(groupRubrics)">
         <div class="assessment-block" id="group-block">
             <div class="block-header group-header">
@@ -159,7 +152,7 @@
             </div>
             
             <div class="block-content">
-                <!-- RUBRICS SECTION -->
+                
                 <div th:if="${groupRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
@@ -190,13 +183,13 @@
                                     </form>
                                 </div>
                                 <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>
-                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Delete this rubric?');">
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" 
+                                      data-action="confirm-submit" data-confirm-message="Delete this rubric?">
                                     <button type="submit" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
                         
-                        <!-- Sub-Rubrics -->
                         <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
@@ -217,7 +210,6 @@
                             </div>
                         </div>
 
-                        <!-- Direct Ratings -->
                         <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
                             <h5>Rating Levels</h5>
                             <div class="ratings-grid">
@@ -231,7 +223,6 @@
                             </div>
                         </div>
 
-                        <!-- Rubric Comments -->
                         <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
                             <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
                             <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
@@ -252,11 +243,9 @@
                     </div>
                 </div>
 
-                <!-- OVERALL COMMENTS SECTION -->
                 <div class="content-section">
                     <div class="section-label">Overall Assessment Comments</div>
                     
-                    <!-- When comments exist -->
                     <div th:if="${assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels)}" class="assessment-comments-section">
                         <div class="comments-header">
                             <h3><i class="fas fa-comments"></i> Group Feedback Questions</h3>
@@ -301,7 +290,7 @@
                                 </a>
                                 <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
                                       method="post" style="display: inline;"
-                                      onsubmit="return confirm('Delete this question?');">
+                                      data-action="confirm-submit" data-confirm-message="Delete this question?">
                                     <input type="hidden" name="type" value="group"/>
                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                     <button type="submit" class="btn-sm btn-delete" title="Delete this question">
@@ -312,14 +301,12 @@
                         </div>
                     </div>
                     
-                    <!-- When no comments configured -->
                     <div th:if="${assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)}" class="empty-comments">
                         <i class="fas fa-comments"></i>
                         <p>No group comments configured yet.</p>
                         <p class="text-hint">Set up comment questions for group assessment feedback.</p>
                     </div>
                     
-                    <!-- Configure Button - ALWAYS SHOW -->
                     <div class="configure-btn-container">
                         <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="btn btn-primary btn-purple">
                             <i class="fas fa-cog"></i> Configure Group Comments
@@ -328,7 +315,6 @@
                 </div>
             </div>
             
-            <!-- Empty Block State -->
             <div th:if="${groupRubrics == null && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="block-empty">
                 <i class="fas fa-users"></i>
                 <p>No content in Group Assessment yet.</p>
@@ -344,7 +330,6 @@
         </div>
         </th:block>
 
-        <!-- ==================== INDIVIDUAL ASSESSMENT BLOCK ==================== -->
         <th:block th:fragment="individual-block(individualRubrics)">
         <div class="assessment-block" id="individual-block">
             <div class="block-header individual-header">
@@ -364,7 +349,7 @@
             </div>
             
             <div class="block-content">
-                <!-- RUBRICS SECTION -->
+                
                 <div th:if="${individualRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
@@ -395,13 +380,13 @@
                                     </form>
                                 </div>
                                 <a th:href="@{/rubrics/edit/{id}(id=${rubric.id})}" class="btn-sm btn-edit"><i class="fas fa-edit"></i></a>
-                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" onsubmit="return confirm('Delete this rubric?');">
+                                <form th:action="@{/rubrics/delete/{id}(id=${rubric.id})}" method="post" 
+                                      data-action="confirm-submit" data-confirm-message="Delete this rubric?">
                                     <button type="submit" class="btn-sm btn-delete"><i class="fas fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
                         
-                        <!-- Sub-Rubrics Section -->
                         <div th:if="${rubric.subRubrics != null && !#lists.isEmpty(rubric.subRubrics)}">
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-section">
                                 <div class="sub-rubric-header">
@@ -422,7 +407,6 @@
                             </div>
                         </div>
                         
-                        <!-- Direct Ratings (for rubrics WITHOUT sub-rubrics) -->
                         <div th:if="${rubric.ratings != null && !#lists.isEmpty(rubric.ratings)}" class="direct-ratings">
                             <h5>Rating Levels</h5>
                             <div class="ratings-grid">
@@ -436,7 +420,6 @@
                             </div>
                         </div>
 
-                        <!-- Rubric Comments Section -->
                         <div th:if="${rubric.rubricCommentCount != null && rubric.rubricCommentCount > 0}" class="rubric-comments-box">
                             <h4><i class="fas fa-comment-dots"></i> Rubric Comments</h4>
                             <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" class="comment-row">
@@ -457,11 +440,9 @@
                     </div>
                 </div>
 
-                <!-- OVERALL COMMENTS SECTION -->
                 <div class="content-section">
                     <div class="section-label">Overall Assessment Comments</div>
                     
-                    <!-- When comments exist -->
                     <div th:if="${assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels)}" class="assessment-comments-section">
                         <div class="comments-header">
                             <h3><i class="fas fa-comments"></i> Individual Feedback Questions</h3>
@@ -506,7 +487,7 @@
                                 </a>
                                 <form th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}" 
                                       method="post" style="display: inline;"
-                                      onsubmit="return confirm('Delete this question?');">
+                                      data-action="confirm-submit" data-confirm-message="Delete this question?">
                                     <input type="hidden" name="type" value="individual"/>
                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                     <button type="submit" class="btn-sm btn-delete" title="Delete this question">
@@ -517,14 +498,12 @@
                         </div>
                     </div>
                     
-                    <!-- When no comments configured -->
                     <div th:if="${assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels)}" class="empty-comments">
                         <i class="fas fa-comments"></i>
                         <p>No individual comments configured yet.</p>
                         <p class="text-hint">Set up comment questions for individual assessment feedback.</p>
                     </div>
                     
-                    <!-- Configure Button - ALWAYS SHOW -->
                     <div class="configure-btn-container">
                         <a th:href="@{/admin/comment-config/{id}/individual(id=${assessment.id})}" class="btn btn-primary btn-purple">
                             <i class="fas fa-cog"></i> Configure Individual Comments
@@ -533,7 +512,6 @@
                 </div>
             </div>
             
-            <!-- Empty Block State -->
             <div th:if="${(individualRubrics == null || #lists.isEmpty(individualRubrics)) && (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" class="block-empty">
                 <i class="fas fa-user"></i>
                 <p>No content in Individual Assessment yet.</p>
@@ -551,9 +529,9 @@
         
     </div>
 
-    <!-- ✅ Instant scroll-to-rubric script -->
-    <script th:inline="javascript">
-    /*<![CDATA[*/
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script  th:attr="nonce=${cspNonce}" th:inline="javascript">
+    
     document.addEventListener('DOMContentLoaded', function() {
         const focusRubricId = /*[[${focusRubricId}]]*/ null;
         const focusBlock = /*[[${focusBlock}]]*/ null;
@@ -597,7 +575,7 @@
             }
         }
     });
-    /*]]>*/
+    
     </script>
 </body>
 </html>

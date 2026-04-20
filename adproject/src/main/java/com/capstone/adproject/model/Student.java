@@ -1,19 +1,33 @@
 package com.capstone.adproject.model;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
-@Table(name = "student")
+@Table(name = "student", indexes = {
+    @Index(name = "idx_student_course", columnList = "course_id"),
+    @Index(name = "idx_student_group", columnList = "group_id"),
+    @Index(name = "idx_student_email", columnList = "email", unique = true),
+    @Index(name = "idx_student_username", columnList = "username", unique = true)
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,7 +37,7 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ CHANGED: Username is now NULLABLE (kept for backward compatibility)
+    @NotBlank
     @Column(unique = true, nullable = true)
     private String username;
 
@@ -34,13 +48,17 @@ public class Student {
     @JoinColumn(name = "group_id")
     private Group group; 
 
-    // ✅ CHANGED: Email is now the primary identifier for login
+    @NotBlank
+    @Email
     @Column(unique = true, nullable = false)
     private String email;
     
     private String resetPasswordToken;
 
-    // ✅ NEW: Flag to track if password is temporary
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
+
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course; // Added for multi-course support
 }

@@ -1,4 +1,4 @@
-package com.capstone.adproject.service;
+/*package com.capstone.adproject.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,30 +55,18 @@ public class IndustrialSupervisorService {
         this.passwordEncoder = passwordEncoder;
     }
     
-    /**
-     * Find industrial supervisor by username
-     */
     public Optional<IndustrialSupervisor> findByUsername(String username) {
         return industrialSupervisorRepository.findByUsername(username);
     }
     
-    /**
-     * Find industrial supervisor by email
-     */
     public Optional<IndustrialSupervisor> findByEmail(String email) {
         return industrialSupervisorRepository.findByEmail(email);
     }
     
-    /**
-     * Get all groups assigned to a specific industrial supervisor
-     */
     public List<Group> getAssignedGroups(Long supervisorId) {
         return groupRepository.findByIndustrialSupervisorId(supervisorId);
     }
     
-    /**
-     * Get all groups assigned to a specific industrial supervisor by username
-     */
     public List<Group> getAssignedGroupsByUsername(String username) {
         Optional<IndustrialSupervisor> supervisor = findByUsername(username);
         if (supervisor.isPresent()) {
@@ -87,16 +75,10 @@ public class IndustrialSupervisorService {
         return List.of();
     }
     
-    /**
-     * Save or update industrial supervisor
-     */
     public IndustrialSupervisor save(IndustrialSupervisor supervisor) {
         return industrialSupervisorRepository.save(supervisor);
     }
     
-    /**
-     * Create new industrial supervisor with encoded password
-     */
     public IndustrialSupervisor createSupervisor(String username, String password, String email) {
         IndustrialSupervisor supervisor = new IndustrialSupervisor();
         supervisor.setUsername(username);
@@ -105,39 +87,24 @@ public class IndustrialSupervisorService {
         return save(supervisor);
     }
     
-    /**
-     * Check if username exists
-     */
     public boolean existsByUsername(String username) {
         return industrialSupervisorRepository.existsByUsername(username);
     }
     
-    /**
-     * Check if email exists
-     */
     public boolean existsByEmail(String email) {
         return industrialSupervisorRepository.existsByEmail(email);
     }
     
-    // ========== CONTINUOUS EVALUATION METHODS ==========
-    
-    /**
-     * Check if evaluation exists for group
-     */
     public boolean hasEvaluationForGroup(Long supervisorId, Long groupId, Long assessmentId) {
         Long count = markRepository.countBySupervisorIdAndAssessmentId(supervisorId, assessmentId);
         return count != null && count > 0;
     }
     
-    /**
-     * Calculate evaluation progress for a group
-     */
     public Map<String, Object> getEvaluationProgress(
             Long supervisorId, Group group, Assessment assessment) {
         
         Map<String, Object> progress = new HashMap<>();
         
-        // Get group and individual rubrics
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
             .filter(r -> "Group Assessment".equals(r.getAssessmentTypes()))
             .collect(Collectors.toList());
@@ -146,11 +113,9 @@ public class IndustrialSupervisorService {
             .filter(r -> "Individual Assessment".equals(r.getAssessmentTypes()))
             .collect(Collectors.toList());
         
-        // Count total rubrics/sub-rubrics that need evaluation
         int totalGroupItems = countEvaluationItems(groupRubrics);
         int totalIndividualItems = countEvaluationItems(individualRubrics);
         
-        // Check group evaluation completion
         List<Student> students = group.getStudents();
         if (students.isEmpty()) {
             progress.put("status", "NO_STUDENTS");
@@ -160,17 +125,15 @@ public class IndustrialSupervisorService {
         
         Student firstStudent = students.get(0);
         
-        // Count completed group items (check first student as proxy for group)
         int completedGroupItems = countCompletedItems(
             supervisorId, firstStudent.getId(), assessment.getId(), groupRubrics);
         
         boolean groupComplete = (totalGroupItems > 0 && completedGroupItems >= totalGroupItems);
         
-        // ✅ FIXED: Check group comments only if configured
         List<String> groupCommentLabels = assessment.getGroupCommentLabels();
         boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
         
-        boolean groupCommentsComplete = true; // Default to true
+        boolean groupCommentsComplete = true; 
         
         if (hasGroupComments) {
             int groupCommentCount = assessment.getGroupCommentCount();
@@ -182,7 +145,7 @@ public class IndustrialSupervisorService {
                     .findSupervisorCommentsForStudent(supervisorId, firstStudent.getId(), assessment.getId())
                     .stream()
                     .filter(c -> "Group Assessment".equals(c.getRubricAssessmentType()))
-                    .filter(c -> c.getRubricId() == null) // Only general comments
+                    .filter(c -> c.getRubricId() == null) 
                     .filter(c -> c.getCommentText() != null && c.getCommentText().length() >= groupCommentMinLength)
                     .count();
                 
@@ -190,18 +153,15 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Count students evaluated
         int studentsEvaluated = 0;
         for (Student student : students) {
             int completedItems = countCompletedItems(
                 supervisorId, student.getId(), assessment.getId(), individualRubrics);
             
-            // ✅ FIXED: Check individual comments only if configured
             List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
             boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
             
-            boolean commentsComplete = true; // Default to true
-            
+            boolean commentsComplete = true; 
             if (hasIndividualComments) {
                 int individualCommentCount = assessment.getIndividualCommentCount();
                 int individualCommentMinLength = assessment.getIndividualCommentMinLength() != null ? 
@@ -212,7 +172,7 @@ public class IndustrialSupervisorService {
                         .findSupervisorCommentsForStudent(supervisorId, student.getId(), assessment.getId())
                         .stream()
                         .filter(c -> "Individual Assessment".equals(c.getRubricAssessmentType()))
-                        .filter(c -> c.getRubricId() == null) // Only general comments
+                        .filter(c -> c.getRubricId() == null) 
                         .filter(c -> c.getCommentText() != null && c.getCommentText().length() >= individualCommentMinLength)
                         .count();
                     
@@ -225,16 +185,13 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Calculate overall completion
         boolean groupEvaluationComplete = (totalGroupItems == 0 || (groupComplete && groupCommentsComplete));
         boolean allStudentsComplete = (students.isEmpty() || studentsEvaluated >= students.size());
         
-        // Calculate percentage
         int totalParts = (totalGroupItems > 0 ? 1 : 0) + students.size();
         int completedParts = (groupEvaluationComplete ? 1 : 0) + studentsEvaluated;
         double percentage = totalParts > 0 ? (completedParts * 100.0 / totalParts) : 0.0;
         
-        // Determine status
         String status;
         if (percentage >= 100.0) {
             status = "COMPLETED";
@@ -255,9 +212,6 @@ public class IndustrialSupervisorService {
         return progress;
     }
 
-    /**
-     * Count total evaluation items (rubrics + sub-rubrics) that need ratings
-     */
     private int countEvaluationItems(List<Rubric> rubrics) {
         int count = 0;
         for (Rubric rubric : rubrics) {
@@ -270,22 +224,16 @@ public class IndustrialSupervisorService {
         return count;
     }
     
-    /**
-     * Count completed items for a student
-     */
     private int countCompletedItems(
             Long supervisorId, Long studentId, Long assessmentId, List<Rubric> rubrics) {
         
-        // Get all marks for this student from this supervisor
         List<Mark> marks = markRepository.findByEvaluatorStudentIdAndEvaluatedStudentIdAndAssessmentId(
             studentId, studentId, assessmentId);
         
-        // Filter to supervisor marks only
         marks = marks.stream()
             .filter(m -> m.getSupervisorId() != null && m.getSupervisorId().equals(supervisorId))
             .collect(Collectors.toList());
         
-        // Count unique rubric/sub-rubric IDs
         Set<Long> completedRubrics = new HashSet<>();
         Set<Long> completedSubRubrics = new HashSet<>();
         
@@ -297,7 +245,6 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Count how many required items are completed
         int completed = 0;
         for (Rubric rubric : rubrics) {
             if (rubric.hasSubRubrics()) {
@@ -316,9 +263,6 @@ public class IndustrialSupervisorService {
         return completed;
     }
     
-    /**
-     * Save continuous evaluation using existing Mark and AssessmentComment entities
-     */
     @Transactional
     public void saveContinuousEvaluation(
             IndustrialSupervisor supervisor,
@@ -331,7 +275,6 @@ public class IndustrialSupervisorService {
             throw new RuntimeException("No students in group");
         }
         
-        // Get group and individual rubrics
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
             .filter(r -> "Group Assessment".equals(r.getAssessmentTypes()))
             .collect(Collectors.toList());
@@ -340,17 +283,14 @@ public class IndustrialSupervisorService {
             .filter(r -> "Individual Assessment".equals(r.getAssessmentTypes()))
             .collect(Collectors.toList());
         
-        // Parse group evaluation data
         Map<Long, Long> groupRubricRatings = extractRatings(formData, "group_rubric");
         Map<Long, Long> groupSubRubricRatings = extractRatings(formData, "group_subrubric");
         List<String> groupComments = extractComments(formData, "group_comment", 
             assessment.getGroupCommentCount());
         
-        // Parse group rubric-specific comments
         Map<Long, Map<Integer, String>> groupRubricComments = extractRubricComments(
             formData, "group", groupRubrics);
         
-        // Save group evaluation for ALL students
         if (!groupRubricRatings.isEmpty() || !groupSubRubricRatings.isEmpty()) {
             for (Student student : students) {
                 saveMarksForStudent(supervisor, student, student, assessment, 
@@ -358,7 +298,6 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Save group comments for ALL students (only if there are non-empty comments)
         boolean hasGroupComments = groupComments.stream().anyMatch(c -> c != null && !c.trim().isEmpty());
         if (hasGroupComments) {
             for (Student student : students) {
@@ -367,7 +306,6 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Save group rubric-specific comments for ALL students
         if (!groupRubricComments.isEmpty()) {
             for (Student student : students) {
                 saveRubricCommentsForStudent(supervisor, student, assessment, 
@@ -375,7 +313,6 @@ public class IndustrialSupervisorService {
             }
         }
         
-        // Parse and save each student's individual evaluation
         for (Student student : students) {
             String prefix = "student_" + student.getId();
             
@@ -384,25 +321,20 @@ public class IndustrialSupervisorService {
             List<String> studentComments = extractComments(formData, prefix + "_comment", 
                 assessment.getIndividualCommentCount());
             
-            // Parse individual rubric-specific comments
             Map<Long, Map<Integer, String>> studentRubricComments = extractRubricComments(
                 formData, prefix, individualRubrics);
             
-            // Save individual marks
             if (!studentRubricRatings.isEmpty() || !studentSubRubricRatings.isEmpty()) {
-                // For individual: evaluatorStudent = student, evaluatedStudent = student
                 saveMarksForStudent(supervisor, student, student, assessment, 
                     studentRubricRatings, studentSubRubricRatings, "Individual Assessment", true);
             }
             
-            // Save individual comments (only if there are non-empty comments)
             boolean hasIndividualComments = studentComments.stream().anyMatch(c -> c != null && !c.trim().isEmpty());
             if (hasIndividualComments) {
                 saveCommentsForStudent(supervisor, student, assessment, 
                     studentComments, "Individual Assessment");
             }
             
-            // Save individual rubric-specific comments
             if (!studentRubricComments.isEmpty()) {
                 saveRubricCommentsForStudent(supervisor, student, assessment, 
                     studentRubricComments, "Individual Assessment");
@@ -410,9 +342,6 @@ public class IndustrialSupervisorService {
         }
     }
     
-    /**
-     * Extract ratings from form data
-     */
     private Map<Long, Long> extractRatings(Map<String, String> formData, String prefix) {
         Map<Long, Long> ratings = new HashMap<>();
         
@@ -425,7 +354,7 @@ public class IndustrialSupervisorService {
                     Long ratingId = Long.parseLong(entry.getValue());
                     ratings.put(id, ratingId);
                 } catch (NumberFormatException e) {
-                    // Skip invalid
+                
                 }
             }
         }
@@ -433,9 +362,6 @@ public class IndustrialSupervisorService {
         return ratings;
     }
     
-    /**
-     * Extract comments from form data
-     */
     private List<String> extractComments(Map<String, String> formData, String prefix, int count) {
         List<String> comments = new ArrayList<>();
         for (int i = 0; i < count; i++) {
@@ -445,10 +371,6 @@ public class IndustrialSupervisorService {
         return comments;
     }
     
-    /**
-     * Extract rubric-specific comments from form data
-     * Returns Map<rubricId, Map<commentIndex, commentText>>
-     */
     private Map<Long, Map<Integer, String>> extractRubricComments(
             Map<String, String> formData, String prefix, List<Rubric> rubrics) {
         
@@ -463,8 +385,6 @@ public class IndustrialSupervisorService {
             Map<Integer, String> commentsForRubric = new HashMap<>();
             
             for (int i = 0; i < commentCount; i++) {
-                // Field name: group_rubric_{rubricId}_comment_{index}
-                // or: student_{studentId}_rubric_{rubricId}_comment_{index}
                 String key = prefix + "_rubric_" + rubric.getId() + "_comment_" + i;
                 String commentText = formData.getOrDefault(key, "");
                 
@@ -481,9 +401,6 @@ public class IndustrialSupervisorService {
         return rubricCommentsMap;
     }
     
-    /**
-     * Save marks for a student using existing Mark entity
-     */
     @Transactional
     private void saveMarksForStudent(
             IndustrialSupervisor supervisor,
@@ -495,7 +412,6 @@ public class IndustrialSupervisorService {
             String assessmentType,
             boolean isSupervisorMark) {
         
-        // Delete existing marks for this student
         List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
             evaluatorStudent, evaluatedStudent, assessment);
         
@@ -508,7 +424,6 @@ public class IndustrialSupervisorService {
         
         List<Mark> newMarks = new ArrayList<>();
         
-        // Save rubric ratings
         for (Map.Entry<Long, Long> entry : rubricRatings.entrySet()) {
             Long rubricId = entry.getKey();
             Long ratingId = entry.getValue();
@@ -530,7 +445,6 @@ public class IndustrialSupervisorService {
             newMarks.add(mark);
         }
         
-        // Save sub-rubric ratings
         for (Map.Entry<Long, Long> entry : subRubricRatings.entrySet()) {
             Long subRubricId = entry.getKey();
             Long ratingId = entry.getValue();
@@ -564,17 +478,14 @@ public class IndustrialSupervisorService {
             List<String> comments,
             String rubricAssessmentType) {
         
-        // ✅ FIXED: Check if comments are configured before processing
         List<String> commentLabels = "Group Assessment".equals(rubricAssessmentType) ?
             assessment.getGroupCommentLabels() :
             assessment.getIndividualCommentLabels();
         
         if (commentLabels == null || commentLabels.isEmpty()) {
-            // No comments configured for this assessment type - skip entirely
             return;
         }
         
-        // Build list of non-empty comments first
         List<AssessmentComment> newComments = new ArrayList<>();
         
         for (int i = 0; i < comments.size(); i++) {
@@ -593,7 +504,6 @@ public class IndustrialSupervisorService {
             comment.setRubricAssessmentType(rubricAssessmentType);
             comment.setRubricId(null);
             
-            // Set label and anonymity
             if ("Group Assessment".equals(rubricAssessmentType)) {
                 comment.setCommentLabel(assessment.getGroupCommentLabel(i));
                 
@@ -617,9 +527,7 @@ public class IndustrialSupervisorService {
             newComments.add(comment);
         }
         
-        // Only delete and save if we have actual comments to save
         if (!newComments.isEmpty()) {
-            // Delete existing comments for this specific assessment type (general comments only)
             List<AssessmentComment> existingComments = commentRepository
                 .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
                 .stream()
@@ -647,7 +555,6 @@ public class IndustrialSupervisorService {
             Long rubricId = entry.getKey();
             Map<Integer, String> commentsForRubric = entry.getValue();
             
-            // Delete existing rubric-specific comments for this rubric
             List<AssessmentComment> existingComments = commentRepository
                 .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
                 .stream()
@@ -658,7 +565,6 @@ public class IndustrialSupervisorService {
                 commentRepository.deleteAll(existingComments);
             }
             
-            // Get the rubric for labels and anonymity settings
             Rubric rubric = assessment.getRubrics().stream()
                 .filter(r -> r.getId().equals(rubricId))
                 .findFirst()
@@ -668,7 +574,6 @@ public class IndustrialSupervisorService {
                 continue;
             }
             
-            // Save new rubric-specific comments
             List<AssessmentComment> newComments = new ArrayList<>();
             
             for (Map.Entry<Integer, String> commentEntry : commentsForRubric.entrySet()) {
@@ -692,7 +597,6 @@ public class IndustrialSupervisorService {
                 comment.setRubricId(rubricId);
                 comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
                 
-                // Check rubric's anonymity setting for this specific comment
                 Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
                 if (isAnonymous != null && isAnonymous) {
                     comment.setAnonymousIdentifier("Supervisor");
@@ -709,9 +613,6 @@ public class IndustrialSupervisorService {
         }
     }
     
-    /**
-     * Load existing evaluation data
-     */
     public Map<String, Object> loadExistingEvaluation(
             IndustrialSupervisor supervisor, Group group, Assessment assessment) {
         
@@ -724,7 +625,6 @@ public class IndustrialSupervisorService {
         
         Student firstStudent = students.get(0);
         
-        // Load group evaluation (from first student)
         List<Mark> groupMarks = markRepository
             .findByEvaluatorStudentAndEvaluatedStudentAndAssessment(firstStudent, firstStudent, assessment)
             .stream()
@@ -746,7 +646,6 @@ public class IndustrialSupervisorService {
         data.put("groupRubricRatings", groupRubricRatings);
         data.put("groupSubRubricRatings", groupSubRubricRatings);
         
-        // Load group comments (general assessment-level)
         List<AssessmentComment> groupComments = commentRepository
             .findSupervisorCommentsForStudent(supervisor.getId(), firstStudent.getId(), assessment.getId())
             .stream()
@@ -761,13 +660,12 @@ public class IndustrialSupervisorService {
         
         data.put("groupComments", groupCommentTexts);
         
-        // Load group rubric-specific comments
         Map<Long, Map<Integer, String>> groupRubricComments = new HashMap<>();
         List<AssessmentComment> allGroupComments = commentRepository
             .findSupervisorCommentsForStudent(supervisor.getId(), firstStudent.getId(), assessment.getId())
             .stream()
             .filter(c -> "Group Assessment".equals(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() != null) // Only rubric-specific comments
+            .filter(c -> c.getRubricId() != null) 
             .collect(Collectors.toList());
         
         for (AssessmentComment comment : allGroupComments) {
@@ -778,13 +676,11 @@ public class IndustrialSupervisorService {
         
         data.put("groupRubricComments", groupRubricComments);
         
-        // Load each student's data
         Map<Long, Map<String, Object>> studentData = new HashMap<>();
         
         for (Student student : students) {
             Map<String, Object> sData = new HashMap<>();
             
-            // Load marks
             List<Mark> studentMarks = markRepository
                 .findByEvaluatedStudentAndAssessment(student, assessment)
                 .stream()
@@ -806,12 +702,11 @@ public class IndustrialSupervisorService {
             sData.put("rubricRatings", studentRubricRatings);
             sData.put("subRubricRatings", studentSubRubricRatings);
             
-            // Load comments (general assessment-level)
             List<AssessmentComment> studentComments = commentRepository
                 .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
                 .stream()
                 .filter(c -> "Individual Assessment".equals(c.getRubricAssessmentType()))
-                .filter(c -> c.getRubricId() == null) // Only general comments
+                .filter(c -> c.getRubricId() == null) 
                 .sorted((a, b) -> Integer.compare(a.getCommentIndex(), b.getCommentIndex()))
                 .collect(Collectors.toList());
             
@@ -821,13 +716,12 @@ public class IndustrialSupervisorService {
             
             sData.put("comments", studentCommentTexts);
             
-            // Load individual rubric-specific comments
             Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
             List<AssessmentComment> allStudentComments = commentRepository
                 .findSupervisorCommentsForStudent(supervisor.getId(), student.getId(), assessment.getId())
                 .stream()
                 .filter(c -> "Individual Assessment".equals(c.getRubricAssessmentType()))
-                .filter(c -> c.getRubricId() != null) // Only rubric-specific comments
+                .filter(c -> c.getRubricId() != null) 
                 .collect(Collectors.toList());
             
             for (AssessmentComment comment : allStudentComments) {
@@ -846,3 +740,5 @@ public class IndustrialSupervisorService {
         return data;
     }
 }
+
+*/

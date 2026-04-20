@@ -1,8 +1,4 @@
-/* =======================================================
-   COMMENT CONFIG - Professional Maroon Theme
-   ======================================================= */
-
-:root {
+ :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
     --color-background: #F4F2EE;
@@ -36,7 +32,28 @@ body.comment-config-page .main-content {
     align-items: center !important;
 }
 
-/* Header */
+@media (max-width: 1024px) {
+    body.comment-config-page .main-content {
+        margin-left: 0 !important;
+        padding: 30px 20px 80px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.comment-config-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 80px 15px !important;
+    }
+    body.comment-config-page .header-container { flex-direction: column !important; }
+    body.comment-config-page .header-container img { max-width: 120px !important; }
+    body.comment-config-page .header-container h1 { font-size: 1.8rem !important; text-align: center !important; }
+    body.comment-config-page .page-header h1 { font-size: 1.4rem !important; }
+    body.comment-config-page .page-header p { font-size: 1rem !important; }
+    body.comment-config-page .config-container { max-width: 100% !important; }
+    body.comment-config-page .comment-card { padding: 15px !important; }
+    body.comment-config-page .comment-header { flex-direction: column !important; gap: 10px !important; }
+}
+
 body.comment-config-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -66,7 +83,6 @@ body.comment-config-page .page-header p {
     font-size: 1.1rem !important;
 }
 
-/* Config Container */
 body.comment-config-page .config-container {
     width: 100% !important;
     max-width: 800px !important;
@@ -81,7 +97,6 @@ body.comment-config-page .section-header {
 body.comment-config-page .group-type h2 { color: var(--color-info-blue) !important; }
 body.comment-config-page .individual-type h2 { color: var(--color-success) !important; }
 
-/* Comment Cards */
 body.comment-config-page .comment-card {
     background-color: var(--color-surface) !important;
     border-radius: 8px !important;
@@ -148,7 +163,6 @@ body.comment-config-page .toggle-label {
     color: var(--color-primary) !important;
 }
 
-/* Buttons */
 body.comment-config-page .btn-icon-remove {
     background: none !important;
     border: none !important;
@@ -181,37 +195,31 @@ body.comment-config-page .btn-add:hover {
 
 body.comment-config-page .sticky-footer {
     position: fixed !important;
-    bottom: 20px !important;       /* Distance from bottom */
+    bottom: 20px !important;       
     
-    /* STRETCH LOGIC */
-    left: 290px !important;        /* 270px (Sidebar) + 20px (Gap) */
-    right: 20px !important;        /* 20px Gap from right wall */
-    width: auto !important;        /* Let left/right determine width */
+    left: 290px !important;        
+    right: 20px !important;        
+    width: auto !important;        
     
-    /* Styling */
     background-color: var(--color-surface) !important;
     padding: 15px 30px !important;
-    border-radius: 12px !important; /* Rounded rectangle */
+    border-radius: 12px !important; 
     
-    /* 3D Floating Effect */
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid var(--color-border) !important;
     
-    /* CENTER BUTTONS */
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important; /* <--- This centers the buttons */
+    justify-content: center !important; 
     gap: 20px !important;
     z-index: 1000 !important;
     
-    /* Reset margins */
     margin: 0 !important; 
 }
 
 body.comment-config-page .btn-primary { background-color: var(--color-primary) !important; color: white !important; }
 body.comment-config-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
 
-/* Empty State */
 body.comment-config-page .empty-state {
     text-align: center !important;
     padding: 30px !important;
@@ -219,7 +227,6 @@ body.comment-config-page .empty-state {
 }
 body.comment-config-page .empty-state i { font-size: 2rem !important; margin-bottom: 10px !important; }
 
-/* Responsive */
 @media (max-width: 800px) {
     body.comment-config-page .main-content { margin-left: 0 !important; padding: 20px !important; }
     body.comment-config-page .sticky-footer { left: 0 !important; }

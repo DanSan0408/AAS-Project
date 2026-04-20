@@ -6,22 +6,16 @@ import java.util.Map;
 
 import com.capstone.adproject.model.Rubric;
 
-/**
- * DTO for rubric-specific calculations
- */
 public class RubricCalculationDto {
     
     private Rubric rubric;
-    private Double rubricFactor; // Rf
-    private Double evaluatedRubricMark; // Mr (unweighted)
-    private Double weightedRubricMark; // Wr = f × Mr (weighted for Group Assessment)
+    private Double rubricFactor; 
+    private Double evaluatedRubricMark; 
+    private Double weightedRubricMark; 
     private Integer clo;
-    private String assessmentType; // "Group Assessment" or "Individual Assessment"
+    private String assessmentType; 
     
-    // Evaluator details for display
     private List<Map<String, Object>> evaluatorDetails = new ArrayList<>();
-    
-    // Getters and Setters
     
     public Rubric getRubric() {
         return rubric;
@@ -47,7 +41,6 @@ public class RubricCalculationDto {
         this.evaluatedRubricMark = evaluatedRubricMark;
     }
     
-    // NEW: Weighted rubric mark
     public Double getWeightedRubricMark() {
         return weightedRubricMark != null ? weightedRubricMark : 0.0;
     }

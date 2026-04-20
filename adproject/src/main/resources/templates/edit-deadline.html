@@ -32,10 +32,8 @@
 
             <form th:action="@{/deadlines/update}" th:object="${deadline}" method="post">
                 
-                <!-- Hidden ID field -->
                 <input type="hidden" th:field="*{id}" />
                 
-                <!-- Assessment ID (if applicable, readonly) -->
                 <div class="form-section" th:if="${deadline.assessmentId != null}">
                     <label>Assessment ID:</label>
                     <input type="text" 
@@ -46,7 +44,6 @@
                     <small>This deadline is linked to an assessment and cannot be changed.</small>
                 </div>
                 
-                <!-- Title -->
                 <div class="form-section">
                     <label for="title">Title: <span style="color: #e74c3c;">*</span></label>
                     <input type="text" 
@@ -57,7 +54,6 @@
                     <small>A descriptive name for this deadline.</small>
                 </div>
                 
-                <!-- Assessor Type (if applicable) -->
                 <div class="form-section" th:if="${deadline.assessorType != null}">
                     <label for="assessorType">Assessor Type:</label>
                     <input type="text" 
@@ -69,7 +65,6 @@
                     <small>The role assigned to perform this assessment.</small>
                 </div>
                 
-                <!-- Open Date (if applicable) -->
                 <div class="form-section" th:if="${deadline.openDate != null}">
                     <label for="openDate">Open Date:</label>
                     <input type="date" 
@@ -78,7 +73,6 @@
                     <small>The date when this assessment becomes available. Leave empty for instant opening.</small>
                 </div>
                 
-                <!-- End Date (Deadline) -->
                 <div class="form-section">
                     <label for="date">Deadline (Close Date): <span style="color: #e74c3c;">*</span></label>
                     <input type="date" 
@@ -88,7 +82,6 @@
                     <small>The date when this deadline expires.</small>
                 </div>
                 
-                <!-- Action Buttons -->
                 <div class="button-group">
                     <button type="submit" class="btn-primary">
                         Save Changes

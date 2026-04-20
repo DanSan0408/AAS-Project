@@ -37,7 +37,6 @@
                 <div th:each="assessment : ${assessments}" class="assessment-card">
                     <h3 th:text="${assessment.title}">Assessment Title</h3>
                     
-                    <!-- ✅ Show status badge -->
                     <div class="status-container">
                         <span th:if="${openAssessmentIds.contains(assessment.id)}" 
                               class="status-badge status-open">
@@ -72,14 +71,12 @@
                         </ul>
                     </div>
 
-                    <!-- ✅ FIXED: Changed from select-rubric-type to select-group -->
                     <a th:if="${openAssessmentIds.contains(assessment.id)}"
                        th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
                        class="btn-evaluate">
                         Start Assessment
                     </a>
                     
-                    <!-- ✅ Show disabled button if closed -->
                     <button th:unless="${openAssessmentIds.contains(assessment.id)}"
                             class="btn-evaluate btn-disabled" 
                             disabled>

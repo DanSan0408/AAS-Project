@@ -2,21 +2,26 @@ package com.capstone.adproject.dto;
 
 import java.util.Date;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class AssessmentAssignmentDto {
     
+    @NotNull
     private Long assessmentId;
-    private Long deadlineId; // For updates
-    private String title;
-    private String assessorType; // STUDENT, LECTURER, or SUPERVISOR
-    private String openType; // INSTANT or SCHEDULED
-    private Date openDate; // Nullable - only used if openType is SCHEDULED
-    private Date endDate; // Required - the deadline/closing date
+    private Long deadlineId;
 
-    // Constructors
+    @NotBlank
+    private String title;
+    private String assessorType;
+    private String openType; 
+    private Date openDate;
+    private Date endDate; 
+
     public AssessmentAssignmentDto() {
     }
 
-    // Getters and Setters
+
     public Long getAssessmentId() {
         return assessmentId;
     }

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Build Rubric Blueprint</title>
+    
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
+    <link rel="stylesheet" th:href="@{/css/rubric_template_builder.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Mobile optimization for deeply nested form cards */
+        @media (max-width: 768px) {
+            .card { padding: 15px 10px !important; }
+            .section-container { padding: 15px 10px !important; margin-left: 0 !important; margin-right: 0 !important; }
+            .sub-rubric-card, .rating-card, .comment-card { padding: 12px 10px !important; }
+            .form-grid { display: flex; flex-direction: column; gap: 10px; }
+            .col-fixed, .col-grow { width: 100% !important; }
+        }
+    </style>
+</head>
+<body class="rubric-form-page">
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container" style="display: flex; justify-content: center; align-items: center; margin-top: 40px; margin-bottom: 20px; gap: 15px;">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo" style="max-height: 50px; width: auto;"/>
+            <h1 style="margin: 0; font-size: 2rem; color: var(--color-primary);">UTM AAS</h1>
+        </div>
+
+        <div class="page-header" style="margin-bottom: 30px; text-align: center;">
+            <h1 style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Rubric Blueprint Builder</h1>
+            <p class="text-muted" style="margin-top: 5px;">
+                Design the structure of a rubric template. Add sub-rubrics, direct ratings, and comments to mimic a real rubric.
+                This blueprint can then be used to quickly generate the full rubric form.
+            </p>
+        </div>
+
+        <div class="card" style="box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden;">
+
+            <form th:action="@{/rubrics/templates/save}" th:object="${rubricTemplate}" method="post" id="blueprintForm">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{structureData}" id="structureData" />
+                
+                <div class="form-group">
+                    <label>Template Name <span style="color:red;">*</span></label>
+                    <input type="text" th:field="*{name}" placeholder="e.g. Standard 5-Scale Lab Report" required />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea th:field="*{description}" rows="3" placeholder="Briefly describe what this structure is used for..."></textarea>
+                </div>
+
+                <div class="section-container section-blue">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2>Sub-Rubrics</h2>
+                        <button type="button" id="addSubRubricBtn" class="btn btn-add">+ Add Sub-Rubric</button>
+                    </div>
+                    <p class="info-text">Sub-rubrics allow you to break down this rubric into smaller components.</p>
+                    <div id="blueprint-sub-rubrics"></div>
+                </div>
+
+                <div class="section-container section-green">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
+                        <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important;">+ Add Direct Rating</button>
+                    </div>
+                    <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
+                    <div id="blueprint-direct-ratings"></div>
+                </div>
+
+                <div class="section-container section-purple">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
+                        <button type="button" id="addCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important;">+ Add Comment Question</button>
+                    </div>
+                    <p class="info-text">Add optional comment questions specific to this rubric only.</p>
+                    <div id="blueprint-comments"></div>
+                </div>
+            </form>
+        </div>
+
+    <div class="button-container action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+            <a th:href="@{/rubrics/templates/manage}" class="btn btn-danger">Cancel</a>
+            <button type="submit" form="blueprintForm" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Blueprint Structure
+            </button>
+        </div>
+    </div>
+
+    <script th:src="@{/js/rubric-template-builder.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:src="@{/js/loading.js}"></script>
+</body>
+</html>

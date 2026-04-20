@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -23,12 +24,15 @@ import com.capstone.adproject.model.SubRubric;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
 import com.capstone.adproject.repositories.RubricRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.repositories.SubRubricRepository;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
 public class LecturerAssessmentService {
@@ -42,6 +46,8 @@ public class LecturerAssessmentService {
     private final AssessmentCommentRepository assessmentCommentRepository;
     private final LecturerRepository lecturerRepository;
     private final RubricRepository rubricRepository;
+    private final LecturerGroupAssignmentRepository groupAssignmentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
 
     public LecturerAssessmentService(
             MarkRepository markRepository,
@@ -52,7 +58,9 @@ public class LecturerAssessmentService {
             RatingRepository ratingRepository,
             AssessmentCommentRepository assessmentCommentRepository,
             LecturerRepository lecturerRepository,
-            RubricRepository rubricRepository) {
+            RubricRepository rubricRepository,
+            LecturerGroupAssignmentRepository groupAssignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository) {
         this.markRepository = markRepository;
         this.assessmentRepository = assessmentRepository;
         this.groupRepository = groupRepository;
@@ -62,6 +70,8 @@ public class LecturerAssessmentService {
         this.assessmentCommentRepository = assessmentCommentRepository;
         this.lecturerRepository = lecturerRepository;
         this.rubricRepository = rubricRepository;
+        this.groupAssignmentRepository = groupAssignmentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
     }
 
     public List<Assessment> getAssessmentsForLecturerEvaluation() {
@@ -129,19 +139,27 @@ public class LecturerAssessmentService {
             return false;
         }
         
+        Group group = groupRepository.findById(groupId).orElse(null);
+        boolean isAssignedToGroup = groupAssignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer);
+        
+        Set<Long> allowedRubricIds = rubricAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment).stream()
+            .map(a -> a.getRubric().getId())
+            .collect(Collectors.toSet());
+        
         List<Rubric> groupRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
         
         List<Rubric> individualRubrics = assessment.getRubrics().stream()
             .filter(r -> r.getAssessmentTypes() != null && 
                         r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+            .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
         
         Student sampleStudent = groupMembers.get(0);
         
-        // ✅ FIXED: Check group rubrics completion
         if (!groupRubrics.isEmpty()) {
             boolean groupComplete = checkRubricsComplete(
                 assessment, lecturer, sampleStudent, groupRubrics, "Group Assessment");
@@ -150,7 +168,6 @@ public class LecturerAssessmentService {
                 return false;
             }
             
-            // ✅ FIXED: Only check comments if they are actually configured
             List<String> groupCommentLabels = assessment.getGroupCommentLabels();
             boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
             
@@ -172,7 +189,6 @@ public class LecturerAssessmentService {
             }
         }
         
-        // ✅ FIXED: Check individual rubrics completion
         if (!individualRubrics.isEmpty()) {
             for (Student student : groupMembers) {
                 boolean individualComplete = checkRubricsComplete(
@@ -182,7 +198,6 @@ public class LecturerAssessmentService {
                     return false;
                 }
                 
-                // ✅ FIXED: Only check comments if they are actually configured
                 List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
                 boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
                 
@@ -240,7 +255,7 @@ public class LecturerAssessmentService {
                 student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
             .stream()
             .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-            .filter(c -> c.getRubricId() == null) // Only general assessment-level comments
+            .filter(c -> c.getRubricId() == null) 
             .collect(Collectors.toList());
         
         if (comments.size() < requiredCount) {
@@ -336,7 +351,6 @@ public class LecturerAssessmentService {
         }
         
         for (Student student : targetStudents) {
-            // Delete existing marks for this rubric type
             List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
                     student, student, assessment).stream()
                 .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
@@ -347,7 +361,6 @@ public class LecturerAssessmentService {
                 markRepository.deleteAll(existingMarks);
             }
             
-            // Delete existing assessment-level comments
             List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
                     lecturerId,
                     AssessmentComment.EvaluatorType.LECTURER,
@@ -361,7 +374,6 @@ public class LecturerAssessmentService {
                 assessmentCommentRepository.deleteAll(existingComments);
             }
             
-            // Save new marks
             List<Mark> newMarks = new ArrayList<>();
             for (Map.Entry<String, String> entry : scores.entrySet()) {
                 String key = entry.getKey();
@@ -425,7 +437,6 @@ public class LecturerAssessmentService {
                 markRepository.saveAll(newMarks);
             }
             
-            // Save assessment-level comments
             if (comments != null && !comments.isEmpty()) {
                 List<String> commentLabels = rubricType.equalsIgnoreCase("Group Assessment") ?
                     assessment.getGroupCommentLabels() :
@@ -443,7 +454,7 @@ public class LecturerAssessmentService {
                         comment.setEvaluatorName(lecturerName);
                         comment.setEvaluatedStudent(student);
                         comment.setAssessment(assessment);
-                        comment.setCommentText(commentEntry.getValue().trim());
+                        comment.setCommentText(HtmlSanitizerUtil.sanitize(commentEntry.getValue().trim()));
                         comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
                         comment.setCommentIndex(commentEntry.getKey());
                         comment.setRubricAssessmentType(rubricType);
@@ -470,7 +481,6 @@ public class LecturerAssessmentService {
                 }
             }
             
-            // Save rubric-specific comments
             if (rubricComments != null && !rubricComments.isEmpty()) {
                 for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                     Long rubricId = rubricEntry.getKey();
@@ -505,7 +515,7 @@ public class LecturerAssessmentService {
                         comment.setEvaluatorName(lecturerName);
                         comment.setEvaluatedStudent(student);
                         comment.setAssessment(assessment);
-                        comment.setCommentText(commentText.trim());
+                        comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
                         comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
                         comment.setCommentIndex(commentIndex);
                         comment.setRubricAssessmentType(rubricType);

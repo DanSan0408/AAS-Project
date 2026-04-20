@@ -1,20 +1,15 @@
-/* =======================================================
-   STUDENT ASSESSMENTS - IRON BURGUNDY & GOLD THEME
-   Matches student_comments.css style guide
-   ======================================================= */
-
 :root {
-    --student-primary: #7A1E2D;    /* Iron Burgundy */
-    --student-secondary: #3F3F46;  /* Graphite Grey */
-    --student-accent: #F8A617;     /* Gold */
-    --student-background: #F4F2EE; /* Light Sand Grey */
-    --student-success: #4CAF7D;    /* Green */
-    --student-text: #FAFAFA;       /* Off White */
-    --student-text-dark: #2B2B2B;  /* Dark Text */
-    --student-surface: #FFFFFF;    /* White */
-    --student-border: #D4D1CC;     /* Muted Sand */
-    --student-hover: #EDEAE6;      /* Darker Sand for hovers */
-    --student-alert: #8B1E1E;      /* Dark Red */
+    --student-primary: #7A1E2D;    
+    --student-secondary: #3F3F46;  
+    --student-accent: #F8A617;     
+    --student-background: #F4F2EE; 
+    --student-success: #4CAF7D;    
+    --student-text: #FAFAFA;       
+    --student-text-dark: #2B2B2B;  
+    --student-surface: #FFFFFF;    
+    --student-border: #D4D1CC;    
+    --student-hover: #EDEAE6;  
+    --student-alert: #8B1E1E;  
 }
 
 * { box-sizing: border-box; }
@@ -27,12 +22,34 @@ body {
     color: var(--student-text-dark);
 }
 
-/* ==================== LAYOUT ==================== */
 .main-content {
-    margin-left: 270px; /* Matches Sidebar width */
+    margin-left: 270px; 
     padding: 40px;
     min-height: 100vh;
     background-color: var(--student-background);
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    .content-container { gap: 20px; }
+    .header-container { flex-direction: column; margin-bottom: 20px; }
+    .header-container img { max-width: 120px; }
+    .header-container h1 { font-size: 1.5rem; text-align: center; }
+    .group-section, .assessments-section { padding: 20px; }
+    .group-section h2, .assessments-section h2 { font-size: 1.3em; margin-bottom: 15px; }
+    .members-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .member-card { padding: 10px; flex-direction: column; text-align: center; }
+    .assessment-block { padding: 15px; }
 }
 
 .content-container {
@@ -44,7 +61,6 @@ body {
     gap: 30px;
 }
 
-/* ==================== HEADER ==================== */
 .header-container {
     display: flex;
     align-items: center;
@@ -66,12 +82,11 @@ body {
     font-weight: 700; 
 }
 
-/* ==================== SECTIONS (CARDS) ==================== */
 .group-section, .assessments-section {
     background-color: var(--student-surface);
     border-radius: 12px;
     padding: 30px;
-    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.1); /* Burgundy Tint Shadow */
+    box-shadow: 0 4px 15px rgba(122, 30, 45, 0.1); 
     border: 1px solid var(--student-border);
 }
 
@@ -85,7 +100,6 @@ body {
     font-weight: 700;
 }
 
-/* ==================== MEMBER CARDS ==================== */
 .members-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -129,7 +143,6 @@ body {
     text-transform: uppercase;
 }
 
-/* ==================== ASSESSMENT BLOCKS ==================== */
 .assessment-block {
     background-color: var(--student-surface);
     border: 1px solid var(--student-border);
@@ -167,13 +180,12 @@ body {
 
 .marks-badge strong { color: var(--student-primary); }
 
-/* Deadline Info */
 .deadline-info {
     display: flex;
     align-items: center;
     gap: 15px;
     padding: 15px;
-    background-color: #FFFDF9; /* Very light gold tint */
+    background-color: #FFFDF9; 
     border-radius: 8px;
     margin-bottom: 25px;
     border: 1px solid var(--student-border);
@@ -195,7 +207,6 @@ body {
     margin-left: auto;
 }
 
-/* ==================== EVALUATION CARDS ==================== */
 .evaluation-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -219,7 +230,6 @@ body {
     flex-direction: column;
 }
 
-/* Specific Card Styling */
 .evaluation-card.self-assessment { border-top: 4px solid var(--student-accent); }
 .evaluation-card.peer-assessment { border-top: 4px solid var(--student-secondary); }
 .evaluation-card.team-assessment { border-top: 4px solid var(--student-primary); }
@@ -239,7 +249,6 @@ body {
     color: var(--student-text-dark);
 }
 
-/* Badges */
 .assessment-type-badge {
     padding: 4px 10px;
     border-radius: 4px;
@@ -250,7 +259,6 @@ body {
 .assessment-type-badge.peer { background-color: var(--student-secondary); color: var(--student-text); }
 .assessment-type-badge.team { background-color: var(--student-primary); color: var(--student-text); }
 
-/* Member Rows inside Cards */
 .member-eval {
     display: flex;
     justify-content: space-between;
@@ -279,7 +287,6 @@ body {
 .btn-peer { background-color: var(--student-secondary); color: var(--student-text); }
 .btn-peer:hover { background-color: #2B2B2B; }
 
-/* Team Button */
 .evaluation-card.team-assessment .btn-evaluate {
     width: 100%;
     justify-content: center;
@@ -290,7 +297,6 @@ body {
 }
 .evaluation-card.team-assessment .btn-evaluate:hover { background-color: #5C1621; }
 
-/* Alerts */
 .alert {
     padding: 15px;
     border-radius: 8px;

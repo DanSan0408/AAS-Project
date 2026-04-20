@@ -1,7 +1,3 @@
-/* =======================================================
-   ASSIGN LECTURERS - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -29,10 +25,9 @@ body.assign-lecturer-page {
     min-height: 100vh;
 }
 
-/* ==================== LAYOUT ==================== */
 body.assign-lecturer-page .main-content {
     margin-left: 270px !important;
-    padding: 40px 40px 100px 40px !important; /* Bottom padding for floating footer */
+    padding: 40px 40px 100px 40px !important; 
     flex-grow: 1 !important;
     background-color: var(--color-background) !important;
     display: flex !important;
@@ -40,7 +35,6 @@ body.assign-lecturer-page .main-content {
     align-items: center !important;
 }
 
-/* ==================== HEADER ==================== */
 body.assign-lecturer-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -80,7 +74,6 @@ body.assign-lecturer-page .page-header p {
     color: #666 !important;
 }
 
-/* ==================== GROUP CARDS ==================== */
 body.assign-lecturer-page .groups-container {
     width: 100% !important;
     max-width: 1000px !important;
@@ -145,7 +138,6 @@ body.assign-lecturer-page .students-list strong {
     margin-right: 5px !important;
 }
 
-/* ==================== LECTURER INPUTS ==================== */
 body.assign-lecturer-page .lecturer-section label {
     display: block !important;
     font-weight: 600 !important;
@@ -204,24 +196,20 @@ body.assign-lecturer-page .btn-link-add:hover {
     text-decoration: underline !important;
 }
 
-/* ==================== FLOATING BUTTON CONTAINER ==================== */
 body.assign-lecturer-page .button-container {
     position: fixed !important;
     bottom: 20px !important;
     
-    /* Stretch Logic */
-    left: 290px !important;  /* Sidebar (270) + Gap (20) */
+    left: 290px !important;
     right: 20px !important;
     width: auto !important;
     
-    /* Styling */
     background-color: var(--color-surface) !important;
     padding: 15px 30px !important;
     border-radius: 12px !important;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid var(--color-border) !important;
     
-    /* Center Buttons */
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -246,7 +234,6 @@ body.assign-lecturer-page .btn-primary:hover { background-color: var(--color-pri
 body.assign-lecturer-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
 body.assign-lecturer-page .btn-secondary:hover { background-color: #27272A !important; }
 
-/* ==================== ALERTS ==================== */
 body.assign-lecturer-page .alert {
     padding: 15px !important;
     border-radius: 8px !important;
@@ -258,7 +245,6 @@ body.assign-lecturer-page .alert {
 body.assign-lecturer-page .alert-success { background-color: #d1fae5 !important; color: #065f46 !important; border-color: var(--color-success) !important; }
 body.assign-lecturer-page .alert-danger { background-color: #fee2e2 !important; color: #991b1b !important; border-color: var(--color-alert) !important; }
 
-/* Responsive */
 @media (max-width: 1000px) {
     body.assign-lecturer-page .main-content { margin-left: 0 !important; padding: 20px !important; }
     

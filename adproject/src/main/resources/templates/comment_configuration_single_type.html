@@ -51,8 +51,8 @@
         </div>
     </div>
     
-    <script th:inline="javascript">
-        // Load existing configuration
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
         const configType = /*[[${configType}]]*/ 'group';
         const existingLabels = /*[[${configType == 'group' ? assessment.groupCommentLabels : assessment.individualCommentLabels}]]*/ [];
         const existingMinLengths = /*[[${configType == 'group' ? assessment.groupCommentMinLengths : assessment.individualCommentMinLengths}]]*/ [];
@@ -69,7 +69,7 @@
             div.innerHTML = `
                 <div class="comment-header">
                     <span class="badge">Q<span class="comment-num">${commentCounter}</span></span>
-                    <button type="button" class="btn-icon-remove" onclick="removeComment(this)"><i class="fas fa-times"></i></button>
+                    <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
                 </div>
                 
                 <div class="form-group">
@@ -102,14 +102,6 @@
             renumber();
         }
         
-        function removeComment(btn) {
-            btn.closest('.comment-card').remove();
-            renumber();
-            if(document.querySelectorAll('.comment-card').length === 0) {
-                document.getElementById('emptyState').style.display = 'block';
-            }
-        }
-        
         function renumber() {
             let i = 1;
             document.querySelectorAll('.comment-num').forEach(span => span.textContent = i++);
@@ -128,6 +120,17 @@
             }
             
             document.getElementById('addCommentBtn').addEventListener('click', () => addComment('', 20, true));
+
+            document.getElementById('commentsContainer').addEventListener('click', function(event) {
+                const removeBtn = event.target.closest('[data-action="remove-comment-item"]');
+                if (removeBtn) {
+                    removeBtn.closest('.comment-card').remove();
+                    renumber();
+                    if(document.querySelectorAll('.comment-card').length === 0) {
+                        document.getElementById('emptyState').style.display = 'block';
+                    }
+                }
+            });
         });
     </script>
 </body>

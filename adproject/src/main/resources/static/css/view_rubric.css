@@ -1,7 +1,3 @@
-/* =======================================================
-   VIEW RUBRIC - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -20,7 +16,6 @@
     --color-purple-light: #f3e5f5;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -39,7 +34,6 @@ body.view-rubric-page {
     min-height: 100vh;
 }
 
-/* ==================== LAYOUT ==================== */
 body.view-rubric-page .main-content {
     margin-left: 270px !important;
     padding: 40px !important;
@@ -50,7 +44,6 @@ body.view-rubric-page .main-content {
     align-items: center !important;
 }
 
-/* ==================== HEADER ==================== */
 body.view-rubric-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -96,7 +89,6 @@ body.view-rubric-page .header-actions {
     gap: 10px !important;
 }
 
-/* ==================== ASSESSMENT SUMMARY ==================== */
 body.view-rubric-page .assessment-summary {
     background-color: var(--color-surface) !important;
     padding: 30px !important;
@@ -170,7 +162,6 @@ body.view-rubric-page .clo-value { font-weight: 700 !important; }
 
 body.view-rubric-page .text-muted { color: var(--color-secondary) !important; opacity: 0.7 !important; }
 
-/* ==================== BLOCKS ==================== */
 body.view-rubric-page .assessment-block {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -230,7 +221,6 @@ body.view-rubric-page .empty-actions {
     margin-top: 20px !important;
 }
 
-/* ==================== CONTENT SECTIONS ==================== */
 body.view-rubric-page .content-section {
     margin-bottom: 40px !important;
 }
@@ -248,7 +238,6 @@ body.view-rubric-page .section-label {
     margin-bottom: 20px !important;
 }
 
-/* ==================== RUBRIC CARDS ==================== */
 body.view-rubric-page .rubric-card {
     border: 1px solid var(--color-border) !important;
     border-radius: 10px !important;
@@ -292,7 +281,6 @@ body.view-rubric-page .meta-badge {
     border: 1px solid var(--color-border) !important;
 }
 
-/* ==================== SUB-RUBRICS ==================== */
 body.view-rubric-page .sub-rubric-section {
     margin-top: 20px !important;
     padding: 15px !important;
@@ -323,7 +311,6 @@ body.view-rubric-page .sub-marks {
     font-weight: 700 !important;
 }
 
-/* ==================== RATINGS ==================== */
 body.view-rubric-page .direct-ratings {
     margin-top: 20px !important;
 }
@@ -374,7 +361,6 @@ body.view-rubric-page .rating-desc {
     line-height: 1.4 !important;
 }
 
-/* ==================== COMMENTS SECTIONS ==================== */
 body.view-rubric-page .rubric-comments-box,
 body.view-rubric-page .assessment-comments-section {
     background-color: var(--color-purple-light) !important;
@@ -429,7 +415,6 @@ body.view-rubric-page .summary-value {
     font-weight: 700 !important;
 }
 
-/* ==================== COMMENT ITEMS ==================== */
 body.view-rubric-page .comment-item,
 body.view-rubric-page .comment-row {
     background-color: white !important;
@@ -501,7 +486,6 @@ body.view-rubric-page .q-content {
     flex-grow: 1 !important;
 }
 
-/* ==================== EMPTY STATES ==================== */
 body.view-rubric-page .empty-comments {
     text-align: center !important;
     padding: 40px 20px !important;
@@ -527,7 +511,6 @@ body.view-rubric-page .text-hint {
     opacity: 0.7 !important;
 }
 
-/* ==================== CONFIGURE BUTTON CONTAINER ==================== */
 body.view-rubric-page .configure-btn-container {
     text-align: center !important;
     margin-top: 20px !important;
@@ -535,7 +518,6 @@ body.view-rubric-page .configure-btn-container {
     border-top: 2px dashed var(--color-border) !important;
 }
 
-/* ==================== BUTTONS ==================== */
 body.view-rubric-page .btn {
     padding: 10px 20px !important;
     border-radius: 6px !important;
@@ -595,7 +577,6 @@ body.view-rubric-page .add-btn-container {
     margin-top: 20px !important; 
 }
 
-/* ==================== REORDER BUTTONS ==================== */
 body.view-rubric-page .rubric-actions,
 body.view-rubric-page .block-reorder-controls {
     display: flex !important;
@@ -658,7 +639,6 @@ body.view-rubric-page .rubric-reorder-btn:disabled {
     cursor: not-allowed !important;
 }
 
-/* ==================== ALERTS ==================== */
 body.view-rubric-page .alert {
     padding: 15px 20px !important;
     border-radius: 8px !important;
@@ -682,7 +662,6 @@ body.view-rubric-page .alert-danger {
     border-color: var(--color-alert) !important;
 }
 
-/* ==================== EMPTY STATE STYLES ==================== */
 body.view-rubric-page .empty-state-container {
     display: flex !important;
     flex-direction: column !important;
@@ -761,7 +740,6 @@ body.view-rubric-page .empty-subsection .btn {
     font-size: 0.95rem !important;
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
     body.view-rubric-page .main-content { 
         margin-left: 0 !important; 

@@ -1,4 +1,4 @@
-package com.capstone.adproject.repositories;
+    package com.capstone.adproject.repositories;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +17,9 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
 
     List<Assessment> findByTitle(String title);
 
+    @Query("SELECT DISTINCT a FROM Assessment a LEFT JOIN FETCH a.rubrics WHERE a.course.id = :courseId")
+    List<Assessment> findAllWithRubricsByCourseId(@Param("courseId") Long courseId);
+    
     @Query("SELECT DISTINCT a FROM Assessment a " +
           "LEFT JOIN FETCH a.rubrics r " +
           "LEFT JOIN FETCH r.subRubrics sr " +
@@ -24,36 +27,21 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
           "WHERE a.id = :id")
     Optional<Assessment> findByIdWithFullRubricDetails(@Param("id") Long id);
     
-    // ========== CLEANUP METHODS FOR ASSESSMENT DELETION ==========
-    
-    /**
-     * Delete all calculated results for an assessment
-     */
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM calculated_results WHERE assessment_id = :assessmentId", nativeQuery = true)
     void deleteCalculatedResultsByAssessmentId(@Param("assessmentId") Long assessmentId);
     
-    /**
-     * Delete all assessment comments for an assessment
-     */
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM assessment_comments WHERE assessment_id = :assessmentId", nativeQuery = true)
     void deleteCommentsByAssessmentId(@Param("assessmentId") Long assessmentId);
     
-    /**
-     * Delete all lecturer group assignments for an assessment
-     */
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM lecturer_group_assignment WHERE assessment_id = :assessmentId", nativeQuery = true)
     void deleteLecturerAssignmentsByAssessmentId(@Param("assessmentId") Long assessmentId);
     
-    /**
-     * Delete all deadlines for an assessment
-     * ✅ FIXED: Using 'assessmentId' (camelCase) to match actual database column
-     */
     @Modifying
     @Transactional
     @Query(value = "DELETE FROM deadlines WHERE assessmentId = :assessmentId", nativeQuery = true)

@@ -1,16 +1,3 @@
-/* 
- * UTM CAS - Critical Loading Styles
- * 
- * IMPORTANT: This file MUST be loaded FIRST in every HTML page
- * to prevent white flash during page load.
- * 
- * Usage in HTML:
- * <link rel="stylesheet" href="/css/critical.css">
- * 
- * Place this BEFORE any other CSS files.
- */
-
-/* Prevent white flash - Set background immediately */
 html {
     background: url('/images/utmbg.png') center center / cover no-repeat fixed;
     margin: 0;
@@ -18,7 +5,6 @@ html {
     min-height: 100vh;
 }
 
-/* Background overlay */
 html::before {
     content: '';
     position: fixed;
@@ -31,23 +17,36 @@ html::before {
     pointer-events: none;
 }
 
-/* Transparent body to show html background */
+:root {
+    --breakpoint-phone: 480px;
+    --breakpoint-tablet: 768px;
+    --breakpoint-laptop: 1024px;
+    --container-max: 1280px;
+    --space-xs: clamp(0.25rem, 0.2rem + 0.2vw, 0.5rem);
+    --space-sm: clamp(0.5rem, 0.45rem + 0.3vw, 0.75rem);
+    --space-md: clamp(0.75rem, 0.6rem + 0.5vw, 1.25rem);
+    --space-lg: clamp(1rem, 0.85rem + 0.8vw, 1.75rem);
+    --space-xl: clamp(1.5rem, 1.1rem + 1.4vw, 2.5rem);
+    --text-sm: clamp(0.85rem, 0.8rem + 0.2vw, 0.95rem);
+    --text-md: clamp(0.95rem, 0.9rem + 0.3vw, 1.05rem);
+    --text-lg: clamp(1.15rem, 1rem + 0.8vw, 1.6rem);
+}
+
 body {
     background: transparent;
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    overflow: hidden !important; /* Prevent scrolling during load */
+    overflow-x: hidden;
+    overflow: hidden !important; 
 }
 
-/* CRITICAL: Force hide ALL content except loading screen by default */
 body > *:not(#loading-screen):not(script) {
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
 }
 
-/* CRITICAL: Force loading screen to be visible and on top ALWAYS */
 #loading-screen {
     display: flex !important;
     position: fixed !important;
@@ -63,7 +62,6 @@ body > *:not(#loading-screen):not(script) {
     pointer-events: auto !important;
 }
 
-/* Only show content when body has 'loaded' class */
 body.loaded > *:not(#loading-screen):not(script) {
     opacity: 1 !important;
     visibility: visible !important;
@@ -71,19 +69,16 @@ body.loaded > *:not(#loading-screen):not(script) {
     transition: opacity 0.5s ease;
 }
 
-/* Smooth fade out when loading completes */
 body.loaded #loading-screen.fade-out {
     opacity: 0 !important;
     visibility: hidden !important;
     transition: opacity 0.6s ease, visibility 0s linear 0.6s;
 }
 
-/* Allow scrolling when loaded */
 body.loaded {
     overflow: auto !important;
 }
 
-/* Additional safeguard for page-content class */
 .page-content {
     opacity: 0 !important;
     visibility: hidden !important;
@@ -93,4 +88,167 @@ body.loaded .page-content {
     opacity: 1 !important;
     visibility: visible !important;
     transition: opacity 0.5s ease;
+}
+
+/* Shared responsive helpers for templates and fragments. */
+.container-fluid-responsive {
+    width: min(100% - (2 * var(--space-md)), var(--container-max));
+    margin-inline: auto;
+}
+
+.responsive-grid {
+    display: grid;
+    gap: var(--space-md);
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+}
+
+.responsive-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.action-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll table {
+    min-width: 680px;
+}
+
+@media (max-width: 768px) {
+    .table-scroll table {
+        min-width: 560px;
+    }
+}
+
+/* ============================================================================
+ * ACCESSIBILITY FOUNDATIONS (Phase 6: Keyboard Focus + Touch Targets)
+ * ============================================================================ */
+
+/* Keyboard Focus Visibility - Enhanced outline for all interactive elements */
+:focus-visible {
+    outline: 3px solid #4A90E2;
+    outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid #4A90E2;
+    outline-offset: 2px;
+}
+
+/* Remove default outline and let focus-visible handle it */
+:focus {
+    outline: none;
+}
+
+/* Touch Target Minimum Size - 44x44px per WCAG Level AAA recommendations */
+button,
+a.btn,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+a[role="link"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Prevent horizontal scroll except in intentional containers */
+html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+body:not(.overall-data-page) {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+body:not(.overall-data-page) .main-content,
+.container,
+.container-fluid {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+body:not(.overall-data-page) .main-content,
+body:not(.overall-data-page) .page-content,
+body:not(.overall-data-page) .content-container,
+body:not(.overall-data-page) .header,
+body:not(.overall-data-page) .header-container,
+body:not(.overall-data-page) .card,
+body:not(.overall-data-page) .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+body:not(.overall-data-page) img,
+body:not(.overall-data-page) svg,
+body:not(.overall-data-page) video,
+body:not(.overall-data-page) canvas,
+body:not(.overall-data-page) iframe {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 1279px) {
+    body:not(.overall-data-page) .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100vw;
+        padding-inline: 12px;
+    }
+
+    body:not(.overall-data-page) table {
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    body:not(.overall-data-page) th,
+    body:not(.overall-data-page) td {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    body:not(.overall-data-page) .table-responsive {
+        overflow-x: hidden;
+    }
+}
+
+/* Text Readability Baseline */
+@media (max-width: 480px) {
+    body {
+        font-size: 16px; /* Prevents iOS auto-zoom on input focus */
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px; /* Critical for iOS to not auto-zoom */
+    }
+
+    label {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
 }

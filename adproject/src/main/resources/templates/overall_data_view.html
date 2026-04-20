@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Overall Assessment Data</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/overall_data.css}">
@@ -25,7 +26,7 @@
                         <i class="fas fa-edit"></i> Edit Grades
                     </a>
                     <a th:href="@{/admin/data-views}" class="btn btn-back"><i class="fas fa-arrow-left"></i> Back</a>
-                    <button onclick="window.print()" class="btn btn-print"><i class="fas fa-print"></i> Print</button>
+                    <button data-action="print-page" class="btn btn-print"><i class="fas fa-print"></i> Print</button>
                 </div>
             </div>
             
@@ -34,7 +35,6 @@
                     <thead>
                         <tr>
                             <th rowspan="2" class="sticky-col first-col">Team Name</th>
-                            <!-- ✅ CHANGED: Column header from "Student Name" to "Student Email" -->
                             <th rowspan="2" class="sticky-col second-col">Student Email</th>
                             <th rowspan="2" class="sticky-col third-col">Factor</th>
                             <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
@@ -70,7 +70,6 @@
                         <tr th:each="student : ${students}">
                             <th:block th:with="data=${studentOverallData[student.id]}">
                                 <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
-                                <!-- ✅ CHANGED: Display email instead of username -->
                                 <td class="sticky-col second-col" th:text="${student.email}"></td>
                                 
                                 <td class="sticky-col third-col">
@@ -122,6 +121,8 @@
             </div>
         </div>
     </div>
+    
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
     
 </body>
 

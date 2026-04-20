@@ -1,12 +1,3 @@
-/* =======================================================
-    MANAGE USERS - BASE STYLES
-    Primary: Deep Maroon #4A0018
-    Secondary: Graphite Grey #3F3F46
-    Accent: Gold #F8A617
-    Background: Light Sand Grey #F4F2EE
-   ======================================================= */
-
-/* ==================== ROOT VARIABLES ==================== */
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -28,11 +19,10 @@
     --color-info: #3B82F6;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
-/* ==================== LAYOUT ==================== */
+
 body.manage-users-page {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background-color: var(--color-background);
@@ -51,7 +41,6 @@ body.manage-users-page .main-content {
     background-color: var(--color-background) !important;
 }
 
-/* ==================== HEADER ==================== */
 body.manage-users-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -74,7 +63,6 @@ body.manage-users-page .header-container h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== CARD CONTAINER ==================== */
 body.manage-users-page .card {
     background-color: var(--color-surface) !important;
     padding: 40px !important;
@@ -116,7 +104,6 @@ body.manage-users-page .card-header h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== USER EDITING CONTAINER ==================== */
 body.manage-users-page .user-editing-container {
     display: flex !important;
     gap: 30px !important;
@@ -177,7 +164,6 @@ body.manage-users-page .user-editing-main h2 {
     font-size: 1.8em !important;
 }
 
-/* ==================== USER SELECTION (Manage Users Home) ==================== */
 body.manage-users-page .user-selection {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
@@ -215,7 +201,6 @@ body.manage-users-page .user-selection a.btn-primary:hover {
     box-shadow: 0 8px 20px rgba(74, 0, 24, 0.35) !important;
 }
 
-/* ==================== FORM STYLES ==================== */
 body.manage-users-page .add-form-container {
     background-color: var(--color-background) !important;
     padding: 28px !important;
@@ -290,7 +275,6 @@ body.manage-users-page .add-form-container button[type="submit"]:hover {
     box-shadow: 0 6px 16px rgba(74, 0, 24, 0.3) !important;
 }
 
-/* ==================== TABLE STYLES ==================== */
 body.manage-users-page table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -300,6 +284,16 @@ body.manage-users-page table {
     overflow: hidden !important;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
     border: 1px solid var(--color-border) !important;
+}
+
+body.manage-users-page .table-scroll {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+body.manage-users-page .table-scroll table {
+    min-width: 700px !important;
 }
 
 body.manage-users-page thead {
@@ -338,7 +332,6 @@ body.manage-users-page tbody tr:last-child td {
     border-bottom: none !important;
 }
 
-/* ==================== TABLE ACTIONS ==================== */
 body.manage-users-page .table-actions {
     display: flex !important;
     gap: 10px !important;
@@ -373,7 +366,17 @@ body.manage-users-page .action-button.delete:hover {
     background-color: #7F1D1D !important;
 }
 
-/* ==================== ALERT MESSAGES ==================== */
+body.manage-users-page .action-button.promote {
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%) !important;
+    color: var(--color-secondary-dark) !important;
+    border: 1px solid var(--color-accent-dark) !important;
+}
+
+body.manage-users-page .action-button.promote:hover {
+    background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-accent) 100%) !important;
+    box-shadow: 0 4px 12px rgba(248, 166, 23, 0.4) !important;
+}
+
 body.manage-users-page .alert {
     padding: 16px 20px !important;
     border-radius: 8px !important;
@@ -406,7 +409,6 @@ body.manage-users-page .alert-warning {
     border-color: var(--color-warning) !important;
 }
 
-/* ==================== CONFIRMATION BUTTONS ==================== */
 body.manage-users-page .btn-confirm {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
     color: var(--color-text) !important;
@@ -430,7 +432,6 @@ body.manage-users-page .glow-effect {
     }
 }
 
-/* ==================== HEADER ACTIONS ==================== */
 body.manage-users-page .header-actions {
     display: flex !important;
     justify-content: space-between !important;
@@ -448,7 +449,6 @@ body.manage-users-page .header-actions h3 {
     font-size: 1.3em !important;
 }
 
-/* Checkbox Styles */
 body.manage-users-page td input[type="checkbox"], 
 body.manage-users-page th input[type="checkbox"] {
     transform: scale(1.3) !important;
@@ -456,7 +456,6 @@ body.manage-users-page th input[type="checkbox"] {
     accent-color: var(--color-primary) !important;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
 @media (max-width: 1000px) {
     body.manage-users-page .main-content {
         margin-left: 0 !important;
@@ -475,20 +474,51 @@ body.manage-users-page th input[type="checkbox"] {
 }
 
 @media (max-width: 768px) {
+    body.manage-users-page .main-content {
+        margin-top: 56px !important;
+        padding: 16px !important;
+    }
+
     body.manage-users-page .card {
-        padding: 24px !important;
+        padding: 16px !important;
+    }
+
+    body.manage-users-page .header-container {
+        flex-direction: column !important;
+        gap: 8px !important;
+        text-align: center !important;
+    }
+
+    body.manage-users-page .header-container img {
+        max-width: 140px !important;
     }
     
     body.manage-users-page .user-selection {
         grid-template-columns: 1fr !important;
+    }
+
+    body.manage-users-page .header-actions {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
     }
     
     body.manage-users-page .table-actions {
         flex-direction: column !important;
         gap: 6px !important;
     }
+
+    body.manage-users-page .table-actions .action-button {
+        width: 100% !important;
+        text-align: center !important;
+    }
     
     body.manage-users-page .header-container h1 {
-        font-size: 2rem !important;
+        font-size: 1.7rem !important;
+    }
+
+    body.manage-users-page th,
+    body.manage-users-page td {
+        padding: 12px !important;
     }
 }

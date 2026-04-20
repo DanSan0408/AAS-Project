@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+</head>
+<body class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>Super Admin Dashboard</h2>
+            <div class="user-info">
+                Welcome, <span th:text="${superAdminUsername}">Super Admin</span>!
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            <div th:if="${successMessage}" class="alert alert-success" role="alert">
+                <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                <span th:text="${errorMessage}"></span>
+            </div>
+
+            <!-- Role Switching Section -->
+            <div class="role-switch-section">
+                <h4>Switch Your Role</h4>
+                <p class="role-info">As a Super Admin, you have three roles. Click below to switch and manage your assigned course.</p>
+                <div>
+                    <a href="/admin/home" class="btn btn-info role-button">
+                        Switch to Admin View
+                    </a>
+                    <a href="/lecturer/home" class="btn btn-warning role-button">
+                        Switch to Lecturer View
+                    </a>
+                </div>
+            </div>
+
+            <!-- Global Management Section -->
+            <div>
+                <h4>Global Management (Super Admin Only)</h4>
+                <p class="text-muted mb-3">These features are exclusive to your Super Admin role:</p>
+                
+                <div class="card-deck">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Manage Courses</h5>
+                            <p class="card-text">Create, edit, and delete courses in the system.</p>
+                            <a th:href="@{/superadmin/manage-courses}" class="btn btn-primary">Go to Course Management</a>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Invite Admin</h5>
+                            <p class="card-text">Send invitations to new administrators for specific courses.</p>
+                            <a th:href="@{/superadmin/invite-admin}" class="btn btn-success">Invite New Admin</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Statistics Section -->
+               <div class="course-overview-section">
+                   <h4>Course Overview & Statistics</h4>
+                   <p>Summary of all courses in the system:</p>
+
+                <div class="course-overview-table-wrapper" th:if="${courseStatistics != null && courseStatistics.size() > 0}">
+                    <table class="course-overview-table">
+                        <thead>
+                            <tr>
+                                <th>Course</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Students</th>
+                                <th>Lecturers</th>
+                                <th>Admins</th>
+                                <th>Admin Emails</th>
+                                <th>Assessments</th>
+                                <th>Groups</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="courseStats : ${courseStatistics}">
+                                <td th:text="${courseStats.courseName}">Course Name</td>
+                                <td th:text="${courseStats.courseCode}">CSC001</td>
+                                <td th:text="${courseStats.description}">Course Description</td>
+                                <td th:text="${courseStats.studentCount}">0</td>
+                                <td th:text="${courseStats.lecturerCount}">0</td>
+                                <td th:text="${courseStats.adminCount}">0</td>
+                                <td>
+                                    <span th:if="${courseStats.adminEmails != null && !courseStats.adminEmails.isEmpty()}"
+                                          th:text="${#strings.listJoin(courseStats.adminEmails, ', ')}">admin@example.com</span>
+                                    <span th:if="${courseStats.adminEmails == null || courseStats.adminEmails.isEmpty()}" class="text-muted">No admin assigned</span>
+                                </td>
+                                <td th:text="${courseStats.assessmentCount}">0</td>
+                                <td th:text="${courseStats.groupCount}">0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div th:if="${courseStatistics == null || courseStatistics.size() == 0}" class="alert alert-info">
+                    No courses available yet. Create your first course using the Course Management feature.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

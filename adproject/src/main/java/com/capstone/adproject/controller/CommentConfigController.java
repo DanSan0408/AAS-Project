@@ -2,6 +2,7 @@ package com.capstone.adproject.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CourseScopeService;
 
 @Controller
 @RequestMapping("/admin/comment-config")
@@ -29,31 +30,53 @@ public class CommentConfigController {
     
     @Autowired
     private AssessmentRepository assessmentRepository;
+
+    @Autowired
+    private CourseScopeService courseScopeService;
     
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof Admin) {
-            return ((Admin) authentication.getPrincipal()).getUsername();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
         }
-        return "Admin";
+        return "";
     }
 
-    /**
-     * ✅ NEW: Show type-specific comment configuration page
-     * @param assessmentId The assessment ID
-     * @param type "group" or "individual"
-     */
+    private Set<Long> getManagedCourseIdsForCurrentUser() {
+        return courseScopeService.getActiveCourseIdsForCurrentUser();
+    }
+
+    private boolean ownsAssessment(Assessment assessment) {
+        return assessment != null
+            && assessment.getCourse() != null
+            && assessment.getCourse().getId() != null
+            && getManagedCourseIdsForCurrentUser().contains(assessment.getCourse().getId());
+    }
+
+    private Assessment getAuthorizedAssessment(Long assessmentId) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        if (!ownsAssessment(assessment)) {
+            throw new RuntimeException("Unauthorized assessment access");
+        }
+        return assessment;
+    }
+
     @GetMapping("/{assessmentId}/{type}")
     public String showTypeSpecificConfig(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
             Model model,
             RedirectAttributes redirectAttributes) {
         
-        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-                .orElseThrow(() -> new RuntimeException("Assessment not found"));
-        
-        // Validate type parameter
+        Assessment assessment;
+        try {
+            assessment = getAuthorizedAssessment(assessmentId);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/admin/home";
+        }
+
         if (!"group".equalsIgnoreCase(type) && !"individual".equalsIgnoreCase(type)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Invalid comment type");
             return "redirect:/admin/home";
@@ -75,20 +98,22 @@ public class CommentConfigController {
         
         return "comment_configuration_single_type";
     }
-    
-    /**
-     * ✅ NEW: Show edit form for a single comment question
-     */
+
     @GetMapping("/{assessmentId}/{type}/edit/{index}")
     public String showEditSingleComment(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
-            @PathVariable int index,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
+            @PathVariable("index") int index,
             Model model,
             RedirectAttributes redirectAttributes) {
         
-        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-                .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        Assessment assessment;
+        try {
+            assessment = getAuthorizedAssessment(assessmentId);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/admin/home";
+        }
         
         String label = "";
         Integer minLength = 20;
@@ -101,8 +126,10 @@ public class CommentConfigController {
             
             if (index >= 0 && index < labels.size()) {
                 label = labels.get(index);
-                minLength = (index < minLengths.size()) ? minLengths.get(index) : 20;
-                isAnonymous = (index < anonymousFlags.size()) ? anonymousFlags.get(index) : true;
+                Integer configuredMinLength = (index < minLengths.size()) ? minLengths.get(index) : null;
+                Boolean configuredAnonymous = (index < anonymousFlags.size()) ? anonymousFlags.get(index) : null;
+                minLength = configuredMinLength != null ? configuredMinLength : 20;
+                isAnonymous = configuredAnonymous != null ? configuredAnonymous : true;
             }
         } else if ("individual".equalsIgnoreCase(type)) {
             List<String> labels = assessment.getIndividualCommentLabels();
@@ -111,8 +138,10 @@ public class CommentConfigController {
             
             if (index >= 0 && index < labels.size()) {
                 label = labels.get(index);
-                minLength = (index < minLengths.size()) ? minLengths.get(index) : 20;
-                isAnonymous = (index < anonymousFlags.size()) ? anonymousFlags.get(index) : true;
+                Integer configuredMinLength = (index < minLengths.size()) ? minLengths.get(index) : null;
+                Boolean configuredAnonymous = (index < anonymousFlags.size()) ? anonymousFlags.get(index) : null;
+                minLength = configuredMinLength != null ? configuredMinLength : 20;
+                isAnonymous = configuredAnonymous != null ? configuredAnonymous : true;
             }
         }
         
@@ -126,23 +155,19 @@ public class CommentConfigController {
         
         return "edit_single_comment";
     }
-    
-    /**
-     * ✅ NEW: Save single comment question edit
-     */
+
     @PostMapping("/{assessmentId}/{type}/edit/{index}/save")
     public String saveSingleCommentEdit(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
-            @PathVariable int index,
-            @RequestParam String label,
-            @RequestParam Integer minLength,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
+            @PathVariable("index") int index,
+            @RequestParam("label") String label,
+            @RequestParam("minLength") Integer minLength,
             @RequestParam(value = "isAnonymous", defaultValue = "false") Boolean isAnonymous,
             RedirectAttributes redirectAttributes) {
         
         try {
-            Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-                    .orElseThrow(() -> new RuntimeException("Assessment not found"));
+            Assessment assessment = getAuthorizedAssessment(assessmentId);
             
             if ("group".equalsIgnoreCase(type)) {
                 List<String> labels = new ArrayList<>(assessment.getGroupCommentLabels());
@@ -151,8 +176,7 @@ public class CommentConfigController {
                 
                 if (index >= 0 && index < labels.size()) {
                     labels.set(index, label.trim());
-                    
-                    // Ensure lists are same size
+
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
                     
@@ -170,8 +194,7 @@ public class CommentConfigController {
                 
                 if (index >= 0 && index < labels.size()) {
                     labels.set(index, label.trim());
-                    
-                    // Ensure lists are same size
+
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
                     
@@ -184,7 +207,9 @@ public class CommentConfigController {
                 }
             }
             
-            assessmentRepository.save(assessment);
+            if (assessment != null) {
+                assessmentRepository.save(assessment);
+            }
             
             redirectAttributes.addFlashAttribute("successMessage", "Comment question updated successfully!");
             
@@ -194,20 +219,16 @@ public class CommentConfigController {
         
         return "redirect:/admin/home";
     }
-    
-    /**
-     * ✅ UPDATED: Delete a single comment question (now redirects to admin home)
-     */
+
     @PostMapping("/{assessmentId}/delete-comment")
     public String deleteComment(
-            @PathVariable Long assessmentId,
-            @RequestParam String type,
-            @RequestParam int index,
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("type") String type,
+            @RequestParam("index") int index,
             RedirectAttributes redirectAttributes) {
         
         try {
-            Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-                    .orElseThrow(() -> new RuntimeException("Assessment not found"));
+            Assessment assessment = getAuthorizedAssessment(assessmentId);
             
             if ("group".equalsIgnoreCase(type)) {
                 List<String> labels = new ArrayList<>(assessment.getGroupCommentLabels());
@@ -241,7 +262,9 @@ public class CommentConfigController {
                 }
             }
             
-            assessmentRepository.save(assessment);
+            if (assessment != null) {
+                assessmentRepository.save(assessment);
+            }
             
             redirectAttributes.addFlashAttribute("successMessage", "Comment question deleted successfully!");
             
@@ -252,21 +275,17 @@ public class CommentConfigController {
         return "redirect:/admin/home";
     }
     
-    /**
-     * ✅ UPDATED: Save type-specific comment configuration
-     */
     @PostMapping("/{assessmentId}/{type}/save")
     public String saveTypeSpecificConfig(
-            @PathVariable Long assessmentId,
-            @PathVariable String type,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("type") String type,
             @RequestParam(value = "commentLabels", required = false) List<String> commentLabels,
             @RequestParam(value = "commentMinLengths", required = false) List<Integer> commentMinLengths,
             @RequestParam(value = "commentAnonymous", required = false) List<String> commentAnonymousFlags,
             RedirectAttributes redirectAttributes) {
         
         try {
-            Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-                    .orElseThrow(() -> new RuntimeException("Assessment not found"));
+            Assessment assessment = getAuthorizedAssessment(assessmentId);
             
             List<String> processedLabels = new ArrayList<>();
             List<Integer> processedMinLengths = new ArrayList<>();
@@ -312,7 +331,9 @@ public class CommentConfigController {
                 assessment.setIndividualCommentAnonymousFlags(processedAnonymousFlags);
             }
             
-            assessmentRepository.save(assessment);
+            if (assessment != null) {
+                assessmentRepository.save(assessment);
+            }
             
             String successMsg = type.substring(0, 1).toUpperCase() + type.substring(1) + 
                                " comment configuration saved successfully! " + processedLabels.size() + " question(s).";
@@ -321,7 +342,6 @@ public class CommentConfigController {
             return "redirect:/admin/home";
             
         } catch (Exception e) {
-            e.printStackTrace();
             redirectAttributes.addFlashAttribute("errorMessage", 
                 "Error saving comment configuration: " + e.getMessage());
             return "redirect:/admin/comment-config/" + assessmentId + "/" + type;

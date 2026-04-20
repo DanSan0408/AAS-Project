@@ -20,10 +20,8 @@ public class StudentResultOverride {
     @JoinColumn(name = "student_id", unique = true)
     private Student student;
 
-    // Stores the admin's preferred factor (if null, use calculated)
     private Double overriddenFactor;
 
-    // Stores the admin's preferred grand total (if null, use calculated)
     private Double overriddenGrandTotal;
 
     public StudentResultOverride() {}

@@ -16,10 +16,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
+import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
+import org.hibernate.annotations.Filter;
+
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
+@Table(name = "assessment", indexes = {
+    @Index(name = "idx_assessment_course", columnList = "course_id")
+})
+
 public class Assessment {
 
     @Id
@@ -28,118 +39,69 @@ public class Assessment {
 
     private String title;
 
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
+
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rubric> rubrics = new ArrayList<>();
     
-    // ✅ Block ordering fields for controlling Individual vs Group display order
     @Column(name = "individual_order")
     private Integer individualOrder = 0;
     
     @Column(name = "group_order")
     private Integer groupOrder = 1;
 
-    
-    
-    // ========== COMMENT CONFIGURATION FIELDS - SEPARATED BY ASSESSMENT TYPE ==========
-    
-    // ===== GROUP ASSESSMENT COMMENTS =====
-    
-    /**
-     * Number of comment fields for GROUP assessments
-     */
     @Column(name = "group_comment_count")
     private Integer groupCommentCount = 0;
-    
-    /**
-     * DEPRECATED: Use getGroupCommentMinLength(index) for per-question settings
-     * Kept for backward compatibility
-     */
+ 
     @Column(name = "group_comment_min_length")
     private Integer groupCommentMinLength = 20;
-    
-    /**
-     * DEPRECATED: Use isGroupCommentAnonymous(index) for per-question settings
-     * Kept for backward compatibility
-     */
+
     @Column(name = "group_comments_anonymous")
     private Boolean groupCommentsAnonymous = true;
-    
-    /**
-     * Labels/prompts for GROUP assessment comment fields
-     */
+   
     @ElementCollection
     @Column(name = "label", length = 500)
     private List<String> groupCommentLabels = new ArrayList<>();
     
-    /**
-     * ✅ NEW: Per-question minimum character lengths for GROUP comments (JSON array)
-     */
     @Column(name = "group_comment_min_lengths", columnDefinition = "TEXT")
     private String groupCommentMinLengthsJson;
-    
-    /**
-     * ✅ NEW: Per-question anonymity flags for GROUP comments (JSON array)
-     */
+   
     @Column(name = "group_comment_anonymous_flags", columnDefinition = "TEXT")
     private String groupCommentAnonymousFlagsJson;
-    
-    
-    // ===== INDIVIDUAL ASSESSMENT COMMENTS =====
-    
-    /**
-     * Number of comment fields for INDIVIDUAL assessments
-     */
+  
     @Column(name = "individual_comment_count")
     private Integer individualCommentCount = 0;
     
-    /**
-     * DEPRECATED: Use getIndividualCommentMinLength(index) for per-question settings
-     * Kept for backward compatibility
-     */
     @Column(name = "individual_comment_min_length")
     private Integer individualCommentMinLength = 20;
-    
-    /**
-     * DEPRECATED: Use isIndividualCommentAnonymous(index) for per-question settings
-     * Kept for backward compatibility
-     */
+   
     @Column(name = "individual_comments_anonymous")
     private Boolean individualCommentsAnonymous = true;
     
-    /**
-     * Labels/prompts for INDIVIDUAL assessment comment fields
-     */
     @ElementCollection
     @Column(name = "label", length = 500)
     private List<String> individualCommentLabels = new ArrayList<>();
     
-    /**
-     * ✅ NEW: Per-question minimum character lengths for INDIVIDUAL comments (JSON array)
-     */
     @Column(name = "individual_comment_min_lengths", columnDefinition = "TEXT")
     private String individualCommentMinLengthsJson;
     
-    /**
-     * ✅ NEW: Per-question anonymity flags for INDIVIDUAL comments (JSON array)
-     */
     @Column(name = "individual_comment_anonymous_flags", columnDefinition = "TEXT")
     private String individualCommentAnonymousFlagsJson;
-    
-    
-    // ========== JSON MAPPER FOR SERIALIZATION ==========
     
     @Transient
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    
-    // ========== BASIC GETTERS AND SETTERS ==========
-    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-    
+
+    public Course getCourse() { return course; }
+    public void setCourse(Course course) { this.course = course; }
+
     public List<Rubric> getRubrics() { 
         if (rubrics == null) { 
             rubrics = new ArrayList<>(); 
@@ -151,15 +113,11 @@ public class Assessment {
         this.rubrics = rubrics; 
     }
     
-    // ✅ Block ordering getters/setters
     public Integer getIndividualOrder() { return individualOrder; }
     public void setIndividualOrder(Integer individualOrder) { this.individualOrder = individualOrder; }
     
     public Integer getGroupOrder() { return groupOrder; }
     public void setGroupOrder(Integer groupOrder) { this.groupOrder = groupOrder; }
-    
-    
-    // ========== GROUP ASSESSMENT COMMENT GETTERS/SETTERS ==========
     
     public Integer getGroupCommentCount() {
         return groupCommentCount != null ? groupCommentCount : 0;
@@ -186,19 +144,14 @@ public class Assessment {
         }
         return groupCommentLabels.get(index);
     }
-    
-    // ✅ NEW: Per-question minimum lengths for GROUP comments
-    
-    /**
-     * Get list of minimum lengths for all group comment questions
-     */
+   
     public List<Integer> getGroupCommentMinLengths() {
         if (groupCommentMinLengthsJson == null || groupCommentMinLengthsJson.trim().isEmpty()) {
-            // Return default list with same length as labels
+            
             List<Integer> defaults = new ArrayList<>();
             int count = groupCommentLabels != null ? groupCommentLabels.size() : 0;
             for (int i = 0; i < count; i++) {
-                defaults.add(20); // default 20 chars
+                defaults.add(20); 
             }
             return defaults;
         }
@@ -210,9 +163,6 @@ public class Assessment {
         }
     }
     
-    /**
-     * Set list of minimum lengths for all group comment questions
-     */
     public void setGroupCommentMinLengths(List<Integer> minLengths) {
         try {
             this.groupCommentMinLengthsJson = objectMapper.writeValueAsString(minLengths);
@@ -222,29 +172,21 @@ public class Assessment {
         }
     }
     
-    /**
-     * Get minimum length for a specific group comment question by index
-     */
     public Integer getGroupCommentMinLength(int index) {
         List<Integer> minLengths = getGroupCommentMinLengths();
         if (index >= 0 && index < minLengths.size()) {
             return minLengths.get(index);
         }
-        return 20; // default
+        return 20;
     }
     
-    // ✅ NEW: Per-question anonymity flags for GROUP comments
-    
-    /**
-     * Get list of anonymity flags for all group comment questions
-     */
     public List<Boolean> getGroupCommentAnonymousFlags() {
         if (groupCommentAnonymousFlagsJson == null || groupCommentAnonymousFlagsJson.trim().isEmpty()) {
-            // Return default list with same length as labels
+            
             List<Boolean> defaults = new ArrayList<>();
             int count = groupCommentLabels != null ? groupCommentLabels.size() : 0;
             for (int i = 0; i < count; i++) {
-                defaults.add(true); // default anonymous
+                defaults.add(true);
             }
             return defaults;
         }
@@ -256,9 +198,6 @@ public class Assessment {
         }
     }
     
-    /**
-     * Set list of anonymity flags for all group comment questions
-     */
     public void setGroupCommentAnonymousFlags(List<Boolean> anonymousFlags) {
         try {
             this.groupCommentAnonymousFlagsJson = objectMapper.writeValueAsString(anonymousFlags);
@@ -268,53 +207,33 @@ public class Assessment {
         }
     }
     
-    /**
-     * Check if a specific group comment question is anonymous by index
-     */
     public Boolean isGroupCommentAnonymous(int index) {
         List<Boolean> flags = getGroupCommentAnonymousFlags();
         if (index >= 0 && index < flags.size()) {
             return flags.get(index);
         }
-        return true; // default anonymous
+        return true; 
     }
     
-    // ✅ BACKWARD COMPATIBILITY: Old methods delegate to first question
-    
-    /**
-     * @deprecated Use getGroupCommentMinLength(index) for per-question settings
-     */
     @Deprecated
     public Integer getGroupCommentMinLength() {
         return getGroupCommentMinLength(0);
     }
     
-    /**
-     * @deprecated Use setGroupCommentMinLengths(List) for per-question settings
-     */
     @Deprecated
     public void setGroupCommentMinLength(Integer groupCommentMinLength) {
         this.groupCommentMinLength = groupCommentMinLength;
     }
-    
-    /**
-     * @deprecated Use isGroupCommentAnonymous(index) for per-question settings
-     */
+   
     @Deprecated
     public Boolean getGroupCommentsAnonymous() {
         return isGroupCommentAnonymous(0);
     }
     
-    /**
-     * @deprecated Use setGroupCommentAnonymousFlags(List) for per-question settings
-     */
     @Deprecated
     public void setGroupCommentsAnonymous(Boolean groupCommentsAnonymous) {
         this.groupCommentsAnonymous = groupCommentsAnonymous;
     }
-    
-    
-    // ========== INDIVIDUAL ASSESSMENT COMMENT GETTERS/SETTERS ==========
     
     public Integer getIndividualCommentCount() {
         return individualCommentCount != null ? individualCommentCount : 0;
@@ -345,18 +264,13 @@ public class Assessment {
         return individualCommentLabels.get(index);
     }
     
-    // ✅ NEW: Per-question minimum lengths for INDIVIDUAL comments
-    
-    /**
-     * Get list of minimum lengths for all individual comment questions
-     */
     public List<Integer> getIndividualCommentMinLengths() {
         if (individualCommentMinLengthsJson == null || individualCommentMinLengthsJson.trim().isEmpty()) {
-            // Return default list with same length as labels
+           
             List<Integer> defaults = new ArrayList<>();
             int count = individualCommentLabels != null ? individualCommentLabels.size() : 0;
             for (int i = 0; i < count; i++) {
-                defaults.add(20); // default 20 chars
+                defaults.add(20); 
             }
             return defaults;
         }
@@ -368,9 +282,6 @@ public class Assessment {
         }
     }
     
-    /**
-     * Set list of minimum lengths for all individual comment questions
-     */
     public void setIndividualCommentMinLengths(List<Integer> minLengths) {
         try {
             this.individualCommentMinLengthsJson = objectMapper.writeValueAsString(minLengths);
@@ -380,29 +291,21 @@ public class Assessment {
         }
     }
     
-    /**
-     * Get minimum length for a specific individual comment question by index
-     */
     public Integer getIndividualCommentMinLength(int index) {
         List<Integer> minLengths = getIndividualCommentMinLengths();
         if (index >= 0 && index < minLengths.size()) {
             return minLengths.get(index);
         }
-        return 20; // default
+        return 20; 
     }
     
-    // ✅ NEW: Per-question anonymity flags for INDIVIDUAL comments
-    
-    /**
-     * Get list of anonymity flags for all individual comment questions
-     */
     public List<Boolean> getIndividualCommentAnonymousFlags() {
         if (individualCommentAnonymousFlagsJson == null || individualCommentAnonymousFlagsJson.trim().isEmpty()) {
-            // Return default list with same length as labels
+           
             List<Boolean> defaults = new ArrayList<>();
             int count = individualCommentLabels != null ? individualCommentLabels.size() : 0;
             for (int i = 0; i < count; i++) {
-                defaults.add(true); // default anonymous
+                defaults.add(true); 
             }
             return defaults;
         }
@@ -414,9 +317,6 @@ public class Assessment {
         }
     }
     
-    /**
-     * Set list of anonymity flags for all individual comment questions
-     */
     public void setIndividualCommentAnonymousFlags(List<Boolean> anonymousFlags) {
         try {
             this.individualCommentAnonymousFlagsJson = objectMapper.writeValueAsString(anonymousFlags);
@@ -426,57 +326,34 @@ public class Assessment {
         }
     }
     
-    /**
-     * Check if a specific individual comment question is anonymous by index
-     */
     public Boolean isIndividualCommentAnonymous(int index) {
         List<Boolean> flags = getIndividualCommentAnonymousFlags();
         if (index >= 0 && index < flags.size()) {
             return flags.get(index);
         }
-        return true; // default anonymous
+        return true; 
     }
     
-    // ✅ BACKWARD COMPATIBILITY: Old methods delegate to first question
-    
-    /**
-     * @deprecated Use getIndividualCommentMinLength(index) for per-question settings
-     */
     @Deprecated
     public Integer getIndividualCommentMinLength() {
         return getIndividualCommentMinLength(0);
     }
     
-    /**
-     * @deprecated Use setIndividualCommentMinLengths(List) for per-question settings
-     */
     @Deprecated
     public void setIndividualCommentMinLength(Integer individualCommentMinLength) {
         this.individualCommentMinLength = individualCommentMinLength;
     }
-    
-    /**
-     * @deprecated Use isIndividualCommentAnonymous(index) for per-question settings
-     */
+
     @Deprecated
     public Boolean getIndividualCommentsAnonymous() {
         return isIndividualCommentAnonymous(0);
     }
     
-    /**
-     * @deprecated Use setIndividualCommentAnonymousFlags(List) for per-question settings
-     */
     @Deprecated
     public void setIndividualCommentsAnonymous(Boolean individualCommentsAnonymous) {
         this.individualCommentsAnonymous = individualCommentsAnonymous;
     }
     
-    
-    // ========== HELPER METHODS ==========
-    
-    /**
-     * Get comment count based on assessment type
-     */
     public Integer getCommentCountForType(String assessmentType) {
         if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
             return getGroupCommentCount();
@@ -485,10 +362,6 @@ public class Assessment {
         }
     }
     
-    /**
-     * Get comment min length based on assessment type and index
-     * ✅ UPDATED: Now supports per-question min lengths
-     */
     public Integer getCommentMinLengthForType(String assessmentType, int index) {
         if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
             return getGroupCommentMinLength(index);
@@ -497,18 +370,11 @@ public class Assessment {
         }
     }
     
-    /**
-     * @deprecated Use getCommentMinLengthForType(String, int) for per-question settings
-     */
     @Deprecated
     public Integer getCommentMinLengthForType(String assessmentType) {
         return getCommentMinLengthForType(assessmentType, 0);
     }
     
-    /**
-     * Get comments anonymous setting based on assessment type and index
-     * ✅ UPDATED: Now supports per-question anonymity
-     */
     public Boolean getCommentsAnonymousForType(String assessmentType, int index) {
         if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
             return isGroupCommentAnonymous(index);
@@ -517,17 +383,11 @@ public class Assessment {
         }
     }
     
-    /**
-     * @deprecated Use getCommentsAnonymousForType(String, int) for per-question settings
-     */
     @Deprecated
     public Boolean getCommentsAnonymousForType(String assessmentType) {
         return getCommentsAnonymousForType(assessmentType, 0);
     }
     
-    /**
-     * Get comment label based on assessment type and index
-     */
     public String getCommentLabelForType(String assessmentType, int index) {
         if (assessmentType != null && assessmentType.toLowerCase().contains("group")) {
             return getGroupCommentLabel(index);
@@ -536,9 +396,6 @@ public class Assessment {
         }
     }
 
-    
-    // ========== MARKS CALCULATION ==========
-    
     @Transient
     private double totalMarks;
 
@@ -570,9 +427,6 @@ public class Assessment {
     public void setCloMarks(Map<Integer, Double> cloMarks) {
         this.cloMarks = cloMarks;
     }
-    
-    
-    // ========== RUBRIC MANAGEMENT ==========
     
     public void addRubric(Rubric rubric) {
         if (this.rubrics == null) {
