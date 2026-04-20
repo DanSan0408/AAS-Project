@@ -36,7 +36,7 @@
                     
                     <div class="form-group">
                         <label>Rubric Name *</label>
-                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Collaboration & Teamwork" required>
+                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Collaboration & Teamwork" required maxlength="10000">
                     </div>
                     
                     <div class="form-group">
@@ -64,13 +64,13 @@
                         <div th:each="sub, sStat : ${rubric.subRubrics}" class="sub-rubric-card">
                             <div class="form-group">
                                 <label>Criterion <span th:text="${sStat.count}"></span> Name</label>
-                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required maxlength="10000">
                             </div>
                             <div class="ratings-section">
                                 <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
                                     <div th:each="rat, ratStat : ${sub.ratings}" class="rating-card" style="margin:0; padding:10px; background:#fff9e6;">
                                         <label style="font-size:0.8em;">Rating <span th:text="${ratStat.count}"></span></label>
-                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required maxlength="10000">
                                         <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
                                     </div>
                                 </div>
@@ -84,7 +84,7 @@
                         <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
                             <div th:each="rat, ratStat : ${rubric.ratings}" class="rating-card" style="margin:0; padding:10px; background:#e8f5e9;">
                                 <label style="font-size:0.8em;">Level <span th:text="${ratStat.count}"></span></label>
-                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required maxlength="10000">
                                 <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
                             </div>
                         </div>
@@ -110,7 +110,7 @@
                     
                     <div class="form-group">
                         <label>Rubric Name *</label>
-                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Critical Thinking" required>
+                        <input type="text" th:field="*{rubrics[__${rStat.index}__].name}" placeholder="e.g. Critical Thinking" required maxlength="10000">
                     </div>
                     
                     <div class="form-group">
@@ -138,13 +138,13 @@
                         <div th:each="sub, sStat : ${rubric.subRubrics}" class="sub-rubric-card">
                             <div class="form-group">
                                 <label>Criterion <span th:text="${sStat.count}"></span> Name</label>
-                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].name}" required maxlength="10000">
                             </div>
                             <div class="ratings-section">
                                 <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
                                     <div th:each="rat, ratStat : ${sub.ratings}" class="rating-card" style="margin:0; padding:10px; background:#fff9e6;">
                                         <label style="font-size:0.8em;">Rating <span th:text="${ratStat.count}"></span></label>
-                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                        <input type="text" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required maxlength="10000">
                                         <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].subRubrics[__${sStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
                                     </div>
                                 </div>
@@ -158,7 +158,7 @@
                         <div class="rating-row" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:15px;">
                             <div th:each="rat, ratStat : ${rubric.ratings}" class="rating-card" style="margin:0; padding:10px; background:#e8f5e9;">
                                 <label style="font-size:0.8em;">Level <span th:text="${ratStat.count}"></span></label>
-                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required>
+                                <input type="text" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].name}" placeholder="Name" required maxlength="10000">
                                 <input type="number" step="0.5" th:field="*{rubrics[__${rStat.index}__].ratings[__${ratStat.index}__].marks}" placeholder="Marks" style="margin-top:5px;" required>
                             </div>
                         </div>

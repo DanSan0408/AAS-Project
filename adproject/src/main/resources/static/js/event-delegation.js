@@ -28,6 +28,29 @@
     });
 
     /**
+     * --- Prevent Double Submissions ---
+     * Disables submit buttons after form submission to prevent accidental double-submissions.
+     * Usage: Add to any form that processes data on the server.
+     * Works with forms that have data-action="prevent-double-submit" or all forms by default
+     */
+    document.addEventListener('submit', event => {
+        const form = event.target.closest('form');
+        if (form && !event.defaultPrevented) {
+            // Find all submit buttons and disable them
+            const submitButtons = form.querySelectorAll('button[type="submit"]');
+            submitButtons.forEach(button => {
+                button.disabled = true;
+                button.classList.add('disabled');
+                // Optionally change the button text to indicate processing
+                if (button.dataset.loadingText) {
+                    button.dataset.originalText = button.textContent;
+                    button.textContent = button.dataset.loadingText;
+                }
+            });
+        }
+    });
+
+    /**
      * Handles any link with data-action="confirm-link".
      * Usage: <a href="..." data-action="confirm-link" data-confirm-message="Are you sure?">
      */
