@@ -481,9 +481,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         }
 
         String anchor = blockType.equalsIgnoreCase("Group") ? "group-block" : "individual-block";
-        redirectAttributes.addFlashAttribute("focusBlock", anchor);
-
-        return "redirect:/rubrics/view/" + assessmentId;
+        return "redirect:/rubrics/view/" + assessmentId + "#" + anchor;
     }
 
     @PostMapping("/rubric/{rubricId}/move")
@@ -500,9 +498,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 
             rubricService.moveRubric(rubricId, direction);
 
-            redirectAttributes.addFlashAttribute("focusRubricId", rubricId);
-
-            return "redirect:/rubrics/view/" + assessmentId;
+            return "redirect:/rubrics/view/" + assessmentId + "#rubric-" + rubricId;
 
         } catch (Exception e) {
             return "redirect:/rubrics/manage";
