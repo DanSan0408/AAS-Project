@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "deadlines", indexes = {
-    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessment_id, assessor_type")
+    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessmentId, assessorType")
 })
 
 public class Deadline {

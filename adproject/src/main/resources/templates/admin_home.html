@@ -137,7 +137,8 @@
                                             <div class="comment-item-actions">
                                                 <a th:href="@{/admin/comment-config/{id}/group/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                    <span>Edit</span>
                                                 </a> <form
                                                     th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
                                                     method="post" style="display: inline;"
@@ -146,7 +147,8 @@
                                                     <input type="hidden" name="type" value="group"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash-can"></i>
+                                                        <span>Delete</span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -220,7 +222,8 @@
                                             <div class="comment-item-actions">
                                                 <a th:href="@{/admin/comment-config/{id}/individual/edit/{index}(id=${assessment.id}, index=${iterStat.index})}" 
                                                 class="btn-sm btn-edit">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="fas fa-pen-to-square"></i>
+                                                    <span>Edit</span>
                                                 </a> <form
                                                     th:action="@{/admin/comment-config/{id}/delete-comment(id=${assessment.id})}"
                                                     method="post" style="display: inline;"
@@ -229,7 +232,8 @@
                                                     <input type="hidden" name="type" value="individual"/>
                                                     <input type="hidden" name="index" th:value="${iterStat.index}"/>
                                                     <button type="submit" class="btn-sm btn-delete">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash-can"></i>
+                                                        <span>Delete</span>
                                                     </button>
                                                 </form>
                                             </div>

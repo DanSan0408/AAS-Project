@@ -52,7 +52,7 @@
                 </div>
             </div>
             
-            <div id="rubricModeSection" style="display: none;">
+            <div id="rubricModeSection" th:style="${assignmentMode == 'RUBRIC'} ? 'display:block;' : 'display:none;'">
                 <h3>Assign by Rubric (Applies to all groups)</h3>
                 <div class="table-responsive mb-4" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
@@ -85,7 +85,7 @@
                 </div>
             </div>
             
-            <div id="groupModeSection" style="display: none;">
+            <div id="groupModeSection" th:style="${assignmentMode == 'GROUP'} ? 'display:block;' : 'display:none;'">
                 <div class="groups-container">
                     <div th:each="group : ${allGroups}" class="group-assignment-card">
                         <div class="group-header">
@@ -151,69 +151,6 @@
     </div>
 
 <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
-    <script th:inline="javascript" th:attr="nonce=${cspNonce}">
-        document.addEventListener('DOMContentLoaded', function() {
-            const allLecturers = /*[[${allLecturers}]]*/ [];
-
-            // --- Page Specific Logic for admin_assign_lecturers.html ---
-
-            // Handle Assignment Mode Toggle
-            const assignmentModeRadios = document.querySelectorAll('input[name="assignmentMode"]');
-            const rubricSection = document.getElementById('rubricModeSection');
-            const groupSection = document.getElementById('groupModeSection');
-
-            const toggleMode = () => {
-                const mode = document.querySelector('input[name="assignmentMode"]:checked').value;
-                if (mode === 'RUBRIC') {
-                    rubricSection.style.display = 'block';
-                    groupSection.style.display = 'none';
-                    rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
-                    groupSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
-                } else {
-                    rubricSection.style.display = 'none';
-                    groupSection.style.display = 'block';
-                    rubricSection.querySelectorAll('input, select').forEach(el => el.disabled = true);
-                    groupSection.querySelectorAll('input, select').forEach(el => el.disabled = false);
-                }
-            };
-
-            assignmentModeRadios.forEach(radio => radio.addEventListener('change', toggleMode));
-            toggleMode(); // Initial call
-
-            // Handle Add/Remove Lecturer Fields via Event Delegation
-            document.body.addEventListener('click', function(event) {
-                const addBtn = event.target.closest('[data-action="add-lecturer-field"]');
-                if (addBtn) {
-                    const groupId = addBtn.dataset.groupId;
-                    const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
-                    const newIndex = container.querySelectorAll('.lecturer-row').length;
-                    const newField = document.createElement('div');
-                    newField.className = 'lecturer-row';
-                    newField.innerHTML = `
-                        <select name="group_${groupId}_lecturer_${newIndex}" class="form-select">
-                            <option value="none">-- Select Lecturer --</option>
-                            ${allLecturers.map(lec => `<option value="${lec.id}">${lec.email}</option>`).join('')}
-                        </select>
-                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    container.appendChild(newField);
-                }
-
-                const removeBtn = event.target.closest('[data-action="remove-lecturer-field"]');
-                if (removeBtn) {
-                    const field = removeBtn.closest('.lecturer-row');
-                    const container = field.parentElement;
-                    if (container.querySelectorAll('.lecturer-row').length > 1) {
-                        field.remove();
-                    } else {
-                        const select = field.querySelector('select');
-                        if (select) select.value = 'none';
-                    }
-                }
-            });
-        });
-    </script>
+<script th:src="@{/js/admin-assign-lecturers.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
 </html>
