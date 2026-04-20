@@ -375,19 +375,18 @@ public Rubric saveRubric(Rubric formRubric) {
         return rubricRepository.save(existingRubric);
         
     } else {
-        if (formRubric.getDisplayOrder() == null) {
-            Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
-            
-            String assessmentType = formRubric.getAssessmentTypes();
-            long maxOrder = assessment.getRubrics().stream()
-                .filter(r -> assessmentType.equals(r.getAssessmentTypes()))
-                .mapToInt(r -> r.getDisplayOrder() != null ? r.getDisplayOrder() : 0)
-                .max()
-                .orElse(-1);
-            
-            formRubric.setDisplayOrder((int) maxOrder + 1);
-        }
+        // Always append new rubrics to the end of their assessment type bucket.
+        Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+            .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
+
+        String newRubricType = formRubric.getAssessmentTypes();
+        long maxOrder = assessment.getRubrics().stream()
+            .filter(r -> Objects.equals(normalizeAssessmentType(r.getAssessmentTypes()), normalizeAssessmentType(newRubricType)))
+            .mapToInt(r -> r.getDisplayOrder() != null ? r.getDisplayOrder() : 0)
+            .max()
+            .orElse(-1);
+
+        formRubric.setDisplayOrder((int) maxOrder + 1);
         
         if (formRubric.getSubRubrics() != null) {
             for (SubRubric subRubric : formRubric.getSubRubrics()) {
@@ -410,15 +409,19 @@ public Rubric saveRubric(Rubric formRubric) {
         }
         
         if (formRubric.getAssessment() != null && formRubric.getAssessment().getId() != null) {
-            Assessment assessment = assessmentRepository.findById(formRubric.getAssessment().getId())
+            Assessment attachedAssessment = assessmentRepository.findById(formRubric.getAssessment().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Parent Assessment not found."));
-            formRubric.setAssessment(assessment); 
+            formRubric.setAssessment(attachedAssessment); 
         }
 
         autoCalculateSubRubricMarks(formRubric);
 
         return rubricRepository.save(formRubric);
     }
+}
+
+private String normalizeAssessmentType(String assessmentType) {
+    return isBlank(assessmentType) ? "Uncategorized" : assessmentType;
 }
 
 private void autoCalculateSubRubricMarks(Rubric rubric) {
