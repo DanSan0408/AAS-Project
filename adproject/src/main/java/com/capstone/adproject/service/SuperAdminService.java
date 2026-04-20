@@ -266,11 +266,11 @@ public class SuperAdminService {
 
     @Transactional
     public void inviteAdmin(String email, String name, Long courseId) {
-        Optional<Course> courseOptional = courseRepository.findById(courseId);
-        if (courseOptional.isEmpty()) {
-            throw new IllegalArgumentException("Course not found with ID: " + courseId);
+        Course course = null;
+        if (courseId != null) {
+            course = courseRepository.findById(courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
         }
-        Course course = courseOptional.get();
 
         // Check if a lecturer with this email already exists
         Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(email);
@@ -293,10 +293,14 @@ public class SuperAdminService {
             newAdmin.setRoles("ROLE_LECTURER,ROLE_ADMIN"); // New admin is also a lecturer
             emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", "http://localhost:8080/reset_password?token=" + newAdmin.getResetPasswordToken()); // Placeholder URL
         }
-        newAdmin.setCourse(course); // Legacy fallback
+
+        if (course != null) {
+            newAdmin.setCourse(course); // Legacy fallback
+        }
+
         Lecturer savedAdmin = lecturerRepository.save(newAdmin);
 
-        if (!adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(savedAdmin.getId(), course.getId())) {
+        if (course != null && !adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(savedAdmin.getId(), course.getId())) {
             AdminCourseAssignment assignment = new AdminCourseAssignment();
             assignment.setLecturer(savedAdmin);
             assignment.setCourse(course);
