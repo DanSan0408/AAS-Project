@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,9 @@ public class SuperAdminService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final CourseStatisticsService courseStatisticsService;
+
+    @Value("${app.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -225,6 +229,37 @@ public class SuperAdminService {
         return managedCoursesMap;
     }
 
+    @Transactional
+    public void deleteAdminById(Long adminId, String currentSuperAdminIdentity) {
+        Lecturer admin = lecturerRepository.findById(adminId)
+                .orElseThrow(() -> new IllegalArgumentException("Admin user not found."));
+
+        String roles = admin.getRoles() == null ? "" : admin.getRoles();
+        if (!roles.contains("ROLE_ADMIN")) {
+            throw new IllegalArgumentException("Selected user is not an admin.");
+        }
+
+        if (roles.contains("ROLE_SUPER_ADMIN") || superAdminRepository.findByEmail(admin.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Super admin accounts cannot be deleted from this page.");
+        }
+
+        if (currentSuperAdminIdentity != null && !currentSuperAdminIdentity.isBlank()) {
+            String identity = currentSuperAdminIdentity.trim();
+            boolean deletingCurrentUser = identity.equalsIgnoreCase(admin.getEmail())
+                    || (admin.getUsername() != null && identity.equalsIgnoreCase(admin.getUsername()));
+            if (deletingCurrentUser) {
+                throw new IllegalArgumentException("You cannot delete your own account.");
+            }
+        }
+
+        adminCourseAssignmentRepository.deleteByLecturerId(adminId);
+        lecturerRepository.unlinkFromGroups(adminId);
+        lecturerRepository.deleteGroupAssignments(adminId);
+        lecturerRepository.deleteMarksGiven(adminId);
+        lecturerRepository.deleteCommentsByLecturer(adminId);
+        lecturerRepository.delete(admin);
+    }
+
     /**
      * Get statistics for a specific course
      * @param courseId The course ID
@@ -236,6 +271,13 @@ public class SuperAdminService {
             return courseStatisticsService.getCourseStatistics(courseOpt.get());
         }
         return Map.of();
+    }
+
+    private String buildResetPasswordLink(String token) {
+        String normalizedBaseUrl = publicBaseUrl.endsWith("/")
+                ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1)
+                : publicBaseUrl;
+        return normalizedBaseUrl + "/reset_password?token=" + token;
     }
 
     @Transactional
@@ -290,8 +332,8 @@ public class SuperAdminService {
             newAdmin.setPassword(passwordEncoder.encode(tempPassword));
             newAdmin.setIsTempPassword(true);
             newAdmin.setResetPasswordToken(UUID.randomUUID().toString());
-            newAdmin.setRoles("ROLE_LECTURER,ROLE_ADMIN"); // New admin is also a lecturer
-            emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", "http://localhost:8080/reset_password?token=" + newAdmin.getResetPasswordToken()); // Placeholder URL
+            newAdmin.setRoles("ROLE_ADMIN"); // Lecturer role is added later via self-service action
+            emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", buildResetPasswordLink(newAdmin.getResetPasswordToken()));
         }
 
         if (course != null) {
