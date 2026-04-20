@@ -67,23 +67,21 @@
             groupOrder=${assessment.groupOrder != null ? assessment.groupOrder : 1},
             showIndividualFirst=${individualOrder < groupOrder},
             groupRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Group Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Group Assessment') : null},
-            individualRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Individual Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Individual Assessment') : null},
-            hasGroupContent=${groupRubrics != null || (assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels))},
-            hasIndividualContent=${individualRubrics != null || (assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels))}">
+            individualRubrics=${groupedRubrics != null && groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').containsKey('Individual Assessment') ? groupedRubrics.get('ASSESSMENT_GROUPING').get('Individual Assessment') : null}">
             
             <th:block th:if="${showIndividualFirst}">
-                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
-                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+                <th:block th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+                <th:block th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
             </th:block>
             
             <th:block th:unless="${showIndividualFirst}">
-                <th:block th:if="${hasGroupContent}" th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
-                <th:block th:if="${hasIndividualContent}" th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
+                <th:block th:insert="~{:: group-block(groupRubrics=${groupRubrics})}"></th:block>
+                <th:block th:insert="~{:: individual-block(individualRubrics=${individualRubrics})}"></th:block>
             </th:block>
             
         </th:block>
         
-        <div th:if="${(groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
+        <div th:if="${false and (groupedRubrics == null || groupedRubrics.isEmpty() || (groupedRubrics.containsKey('ASSESSMENT_GROUPING') && groupedRubrics.get('ASSESSMENT_GROUPING').isEmpty())) && 
                       (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels)) && 
                       (assessment.individualCommentLabels == null || #lists.isEmpty(assessment.individualCommentLabels))}" 
              class="empty-state-container">
