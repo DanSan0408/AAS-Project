@@ -125,7 +125,10 @@ public class SuperAdminController {
 
     @GetMapping("/invite-admin")
     public String inviteAdminForm(Model model) {
+        var admins = superAdminService.getAllAdminLecturers();
         model.addAttribute("courses", superAdminService.getAllCourses());
+        model.addAttribute("admins", admins);
+        model.addAttribute("adminManagedCoursesMap", superAdminService.getAdminManagedCoursesMap(admins));
         model.addAttribute("superAdminUsername", getLoggedInUsername());
         return "invite_admin"; // A new template for inviting admins
     }
@@ -135,8 +138,23 @@ public class SuperAdminController {
                               @RequestParam String name,
                               @RequestParam(required = false) Long courseId,
                               RedirectAttributes redirectAttributes) {
-        superAdminService.inviteAdmin(email, name, courseId);
-        redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
+        try {
+            superAdminService.inviteAdmin(email, name, courseId);
+            redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error inviting admin: " + e.getMessage());
+        }
+        return "redirect:/superadmin/invite-admin";
+    }
+
+    @PostMapping("/admins/delete/{id}")
+    public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
+        try {
+            superAdminService.deleteAdminById(id, getLoggedInUsername());
+            redirectAttributes.addFlashAttribute("successMessage", "Admin deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting admin: " + e.getMessage());
+        }
         return "redirect:/superadmin/invite-admin";
     }
 }
