@@ -1,5 +1,7 @@
 package com.capstone.adproject.controller;
 
+import java.util.Optional;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -15,7 +17,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.SuperAdminService;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/superadmin")
@@ -130,7 +131,10 @@ public class SuperAdminController {
     }
 
     @PostMapping("/invite-admin")
-    public String inviteAdmin(@RequestParam String email, @RequestParam String name, @RequestParam Long courseId, RedirectAttributes redirectAttributes) {
+    public String inviteAdmin(@RequestParam String email,
+                              @RequestParam String name,
+                              @RequestParam(required = false) Long courseId,
+                              RedirectAttributes redirectAttributes) {
         superAdminService.inviteAdmin(email, name, courseId);
         redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
         return "redirect:/superadmin/invite-admin";
