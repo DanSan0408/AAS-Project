@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         card.innerHTML = `
             <button type="button" class="remove-btn remove-sub-rubric-btn" title="Remove sub-rubric" aria-label="Remove sub-rubric"><span class="rf-icon rf-icon-close" aria-hidden="true"></span></button>
             <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
-            <div class="form-group"><label>Sub-Rubric Name</label><input type="text" name="subRubrics[${subRubricIndex}].name" class="sub-rubric-name"></div>
+            <div class="form-group"><label>Sub-Rubric Name</label><input type="text" name="subRubrics[${subRubricIndex}].name" class="sub-rubric-name" maxlength="10000"></div>
             <div class="form-group"><label>Description</label><textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea></div>
             <div class="form-group"><label>Marks (Auto-calculated)</label><input type="number" step="0.01" name="subRubrics[${subRubricIndex}].marks" readonly class="sub-rubric-marks-auto" data-subindex="${subRubricIndex}" value="0"></div>
             <div class="ratings-section"><h4>Ratings</h4><div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
             card.innerHTML = `
                 <button type="button" class="remove-btn remove-direct-rating-btn" title="Remove direct rating" aria-label="Remove direct rating"><span class="rf-icon rf-icon-close" aria-hidden="true"></span></button>
                 <div class="rating-row form-grid">
-                    <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="ratings[${directRatingIndex}].name" required></div>
+                    <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="ratings[${directRatingIndex}].name" required maxlength="10000"></div>
                     <div class="form-group col-fixed"><label>Marks *</label><input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="direct-rating-marks"></div>
                 </div>
                 <div class="form-group"><label>Description</label><textarea rows="2" name="ratings[${directRatingIndex}].description"></textarea></div>
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function () {
             card.innerHTML = `
                 <button type="button" class="remove-btn remove-rating-btn" title="Remove rating" aria-label="Remove rating"><span class="rf-icon rf-icon-close" aria-hidden="true"></span></button>
                 <div class="rating-row form-grid">
-                    <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="subRubrics[${subIndex}].ratings[${ratingIndex}].name" required></div>
+                    <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="subRubrics[${subIndex}].ratings[${ratingIndex}].name" required maxlength="10000"></div>
                     <div class="form-group col-fixed"><label>Marks</label><input type="number" step="0.01" name="subRubrics[${subIndex}].ratings[${ratingIndex}].marks" class="rating-marks sub-rating-marks" data-subindex="${subIndex}"></div>
                 </div>
                 <div class="form-group"><label>Description</label><textarea rows="1" name="subRubrics[${subIndex}].ratings[${ratingIndex}].description"></textarea></div>

@@ -17,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "rubric")
@@ -26,6 +27,8 @@ public class Rubric {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name", length = 10000)
+    @Size(max = 10000, message = "Rubric name must be at most 10000 characters")
     private String name;
     private String description;
     private BigDecimal marks;

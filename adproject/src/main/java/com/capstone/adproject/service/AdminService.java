@@ -62,6 +62,9 @@ private EmailService emailService;
         throw new RuntimeException("Email is required");
     }
 
+        String normalizedEmail = student.getEmail().trim().toLowerCase();
+        student.setEmail(normalizedEmail);
+
     if (student.getId() != null) {
         Student existingStudent = studentRepository.findById(student.getId())
             .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -86,14 +89,14 @@ private EmailService emailService;
         Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
         
-        Optional<Admin> existingAdmin = adminRepository.findByEmail(student.getEmail());
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(normalizedEmail);
         if (existingAdmin.isPresent()) {
             existingPassword = existingAdmin.get().getPassword();
             isTemp = false;
             resetToken = existingAdmin.get().getResetPasswordToken();
         }
         
-        Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(student.getEmail());
+        Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
         if (existingLecturer.isPresent()) {
             existingPassword = existingLecturer.get().getPassword();
             isTemp = existingLecturer.get().getIsTempPassword();
@@ -114,7 +117,8 @@ private EmailService emailService;
         }
         
         if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
-            student.setUsername(student.getEmail().split("@")[0]);
+            String baseUsername = normalizedEmail.split("@")[0];
+            student.setUsername(generateUniqueStudentUsername(baseUsername));
         }
         studentRepository.save(student);
         return; 
@@ -166,6 +170,9 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         throw new RuntimeException("Email is required");
     }
 
+    String normalizedEmail = lecturer.getEmail().trim().toLowerCase();
+    lecturer.setEmail(normalizedEmail);
+
     if (lecturer.getId() != null) {
         Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
@@ -187,7 +194,7 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
         
-        Optional<Admin> existingAdmin = adminRepository.findByEmail(lecturer.getEmail());
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(normalizedEmail);
         if (existingAdmin.isPresent()) {
             existingPassword = existingAdmin.get().getPassword();
             isTemp = false;
@@ -209,7 +216,8 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         }
         
         if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
-            lecturer.setUsername(lecturer.getEmail().split("@")[0]);
+            String baseUsername = normalizedEmail.split("@")[0];
+            lecturer.setUsername(generateUniqueLecturerUsername(baseUsername));
         }
         lecturerRepository.save(lecturer);
         return;
@@ -226,7 +234,7 @@ public int bulkAddStudents(String emailsText, HttpServletRequest request) {
     for (String email : emails) {
         String trimmedEmail = email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
-            if (studentRepository.findByEmail(trimmedEmail).isEmpty()) {
+            if (checkStudentEmailDuplicate(trimmedEmail, null) == null) {
                 Student student = new Student();
                 student.setEmail(trimmedEmail);
                 saveStudent(student, request);
@@ -244,7 +252,7 @@ public int bulkAddLecturers(String emailsText, HttpServletRequest request) {
     for (String email : emails) {
         String trimmedEmail = email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
-            if (lecturerRepository.findByEmail(trimmedEmail).isEmpty()) {
+            if (checkLecturerEmailDuplicate(trimmedEmail, null) == null) {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setEmail(trimmedEmail);
                 saveLecturer(lecturer, request);
@@ -260,18 +268,42 @@ public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) 
     }
     
     String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-    List<Student> allStudents = studentRepository.findAll();
+    Optional<Long> activeCourseId = getActiveCourseId();
+    if (activeCourseId.isEmpty()) return null;
     
-    for (Student student : allStudents) {
+    List<Student> studentsInCourse = studentRepository.findByCourseId(activeCourseId.get());
+    for (Student student : studentsInCourse) {
         if (studentIdToExclude != null && student.getId().equals(studentIdToExclude)) continue;
         if (student.getEmail() != null) {
             String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered as a Student.";
+                return "This student is already enrolled in this course.";
             }
         }
     }
     return null;
+}
+
+private String generateUniqueStudentUsername(String baseUsername) {
+    String sanitizedBase = (baseUsername == null || baseUsername.isBlank()) ? "student" : baseUsername.trim().toLowerCase();
+    String candidate = sanitizedBase;
+    int suffix = 1;
+    while (studentRepository.findByUsername(candidate).isPresent()) {
+        candidate = sanitizedBase + suffix;
+        suffix++;
+    }
+    return candidate;
+}
+
+private String generateUniqueLecturerUsername(String baseUsername) {
+    String sanitizedBase = (baseUsername == null || baseUsername.isBlank()) ? "lecturer" : baseUsername.trim().toLowerCase();
+    String candidate = sanitizedBase;
+    int suffix = 1;
+    while (lecturerRepository.findByUsernameIgnoreCase(candidate).isPresent()) {
+        candidate = sanitizedBase + suffix;
+        suffix++;
+    }
+    return candidate;
 }
 
 private Optional<Long> getActiveCourseId() {
@@ -284,14 +316,16 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
     
     String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-    List<Lecturer> allLecturers = lecturerRepository.findAll();
+    Optional<Long> activeCourseId = getActiveCourseId();
+    if (activeCourseId.isEmpty()) return null;
     
-    for (Lecturer lecturer : allLecturers) {
+    List<Lecturer> lecturersInCourse = lecturerRepository.findByCourseId(activeCourseId.get());
+    for (Lecturer lecturer : lecturersInCourse) {
         if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
         if (lecturer.getEmail() != null) {
             String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered as a Lecturer.";
+                return "This lecturer is already enrolled in this course.";
             }
         }
     }

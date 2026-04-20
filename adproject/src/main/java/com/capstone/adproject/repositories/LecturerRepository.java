@@ -17,6 +17,7 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     Optional<Lecturer> findByUsernameIgnoreCase(String username);
 
     Optional<Lecturer> findByEmail(String email);
+    Optional<Lecturer> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
     Optional<Lecturer> findByEmailIgnoreCase(String email);
 
     Optional<Lecturer> findByResetPasswordToken(String resetPasswordToken);
