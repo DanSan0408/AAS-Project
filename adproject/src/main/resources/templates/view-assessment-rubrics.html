@@ -154,7 +154,7 @@
                 
                 <div th:if="${groupRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
+                    <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:id="|rubric-${rubric.id}|" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
                                 <h3 th:text="${rubric.name}">Rubric Name</h3>
@@ -351,7 +351,7 @@
                 
                 <div th:if="${individualRubrics != null}" class="content-section">
                     <div class="section-label">Rubrics</div>
-                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:attr="data-rubric-id=${rubric.id}">
+                    <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:id="|rubric-${rubric.id}|" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
                             <div class="rubric-info">
                                 <h3 th:text="${rubric.name}">Name</h3>
@@ -532,47 +532,22 @@
     <script  th:attr="nonce=${cspNonce}" th:inline="javascript">
     
     document.addEventListener('DOMContentLoaded', function() {
-        const focusRubricId = /*[[${focusRubricId}]]*/ null;
-        const focusBlock = /*[[${focusBlock}]]*/ null;
-        
-        if (focusRubricId) {
-            const rubricCard = document.querySelector(`[data-rubric-id="${focusRubricId}"]`);
-            
-            if (rubricCard) {
-                requestAnimationFrame(() => {
-                    const rect = rubricCard.getBoundingClientRect();
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const targetPosition = rect.top + scrollTop - 20;
-                    
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'auto'
-                    });
-                    
-                    rubricCard.style.transition = 'background-color 0.3s ease';
-                    rubricCard.style.backgroundColor = '#fff3cd';
-                    
-                    setTimeout(() => {
-                        rubricCard.style.backgroundColor = '';
-                    }, 1000);
-                });
-            }
-        } else if (focusBlock) {
-            const block = document.getElementById(focusBlock);
-            
-            if (block) {
-                requestAnimationFrame(() => {
-                    const rect = block.getBoundingClientRect();
-                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                    const targetPosition = rect.top + scrollTop - 20;
-                    
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'auto'
-                    });
-                });
-            }
+        const hash = window.location.hash;
+        if (!hash || !hash.startsWith('#rubric-')) {
+            return;
         }
+
+        const rubricCard = document.querySelector(hash);
+        if (!rubricCard) {
+            return;
+        }
+
+        rubricCard.style.transition = 'background-color 0.3s ease';
+        rubricCard.style.backgroundColor = '#fff3cd';
+
+        setTimeout(() => {
+            rubricCard.style.backgroundColor = '';
+        }, 1000);
     });
     
     </script>
