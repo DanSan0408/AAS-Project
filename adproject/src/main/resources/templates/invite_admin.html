@@ -51,6 +51,42 @@
                     </form>
                 </div>
             </div>
+
+            <div class="card form-card" style="margin-top: 20px;">
+                <div class="card-body">
+                    <h3>Manage Existing Admins</h3>
+                    <p style="margin-bottom: 12px; color: #666;">Delete invited admin accounts from here.</p>
+                    <div th:if="${#lists.isEmpty(admins)}">No admin accounts found.</div>
+                    <table th:if="${not #lists.isEmpty(admins)}" class="table table-striped" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; padding: 8px;">Email</th>
+                                <th style="text-align: left; padding: 8px;">Name</th>
+                                <th style="text-align: left; padding: 8px;">Assigned Courses</th>
+                                <th style="text-align: left; padding: 8px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="admin : ${admins}">
+                                <td style="padding: 8px;" th:text="${admin.email}">admin@example.com</td>
+                                <td style="padding: 8px;" th:text="${admin.username != null and !#strings.isEmpty(admin.username) ? admin.username : '-'}">-</td>
+                                <td style="padding: 8px;">
+                                    <span th:if="${#lists.isEmpty(adminManagedCoursesMap[admin.id])}">No course assigned</span>
+                                    <span th:if="${not #lists.isEmpty(adminManagedCoursesMap[admin.id])}" th:text="${#strings.listJoin(adminManagedCoursesMap[admin.id].![courseCode], ', ')}">CSE101</span>
+                                </td>
+                                <td style="padding: 8px;">
+                                    <form th:action="@{/superadmin/admins/delete/{id}(id=${admin.id})}" method="post"
+                                          th:if="${admin.email != superAdminUsername}"
+                                          onsubmit="return confirm('Delete this admin account? This action cannot be undone.');">
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                    <span th:if="${admin.email == superAdminUsername}" style="color: #999;">Current account</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </body>
