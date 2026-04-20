@@ -783,7 +783,18 @@ public class AdminController {
 
     @GetMapping("/manage-courses")
     public String manageCourses(Model model) {
-        model.addAttribute("courses", getManagedCoursesForCurrentAdmin());
+        List<Course> uniqueManagedCourses = getManagedCoursesForCurrentAdmin().stream()
+            .filter(course -> course != null && course.getId() != null)
+            .collect(Collectors.toMap(
+                Course::getId,
+                Function.identity(),
+                (existing, duplicate) -> existing,
+                LinkedHashMap::new))
+            .values()
+            .stream()
+            .collect(Collectors.toList());
+
+        model.addAttribute("courses", uniqueManagedCourses);
         model.addAttribute("newCourse", new Course());
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "admin_manage_courses";
