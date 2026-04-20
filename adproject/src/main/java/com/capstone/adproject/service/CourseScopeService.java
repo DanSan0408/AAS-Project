@@ -96,7 +96,7 @@ public class CourseScopeService {
             })
             .orElse(new ArrayList<>());
 
-        return sortCourses(managed);
+        return sortCourses(deduplicateById(managed));
     }
 
     public Set<Long> getManagedCourseIdsForCurrentUser() {
