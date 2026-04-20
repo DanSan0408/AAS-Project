@@ -35,6 +35,66 @@
                         <i class="fas fa-comments"></i>
                         <p>No comment questions defined yet.</p>
                     </div>
+
+                    <div th:if="${configType == 'group'}">
+                        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
+                            <div class="comment-header">
+                                <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
+                                <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Question Prompt</label>
+                                <textarea name="commentLabels" required placeholder="e.g. What were the strengths?" th:text="${label}"></textarea>
+                            </div>
+
+                            <div class="settings-row">
+                                <div class="form-group setting-input">
+                                    <label>Min Characters</label>
+                                    <input type="number" name="commentMinLengths" th:value="${assessment.getGroupCommentMinLength(iterStat.index)}" min="10" max="500">
+                                </div>
+
+                                <div class="form-group setting-check">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isGroupCommentAnonymous(iterStat.index)}">
+                                        <span class="toggle-text">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${configType == 'individual'}">
+                        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
+                            <div class="comment-header">
+                                <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
+                                <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Question Prompt</label>
+                                <textarea name="commentLabels" required placeholder="e.g. What were the strengths?" th:text="${label}"></textarea>
+                            </div>
+
+                            <div class="settings-row">
+                                <div class="form-group setting-input">
+                                    <label>Min Characters</label>
+                                    <input type="number" name="commentMinLengths" th:value="${assessment.getIndividualCommentMinLength(iterStat.index)}" min="10" max="500">
+                                </div>
+
+                                <div class="form-group setting-check">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isIndividualCommentAnonymous(iterStat.index)}">
+                                        <span class="toggle-text">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="add-action">
@@ -52,86 +112,6 @@
     </div>
     
     <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
-    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
-        const configType = /*[[${configType}]]*/ 'group';
-        const existingLabels = /*[[${configType == 'group' ? assessment.groupCommentLabels : assessment.individualCommentLabels}]]*/ [];
-        const existingMinLengths = /*[[${configType == 'group' ? assessment.groupCommentMinLengths : assessment.individualCommentMinLengths}]]*/ [];
-        const existingAnonymousFlags = /*[[${configType == 'group' ? assessment.groupCommentAnonymousFlags : assessment.individualCommentAnonymousFlags}]]*/ [];
-        
-        let commentCounter = 0;
-        
-        function createCommentItem(label = '', minLength = 20, anonymous = true) {
-            commentCounter++;
-            const div = document.createElement('div');
-            div.className = 'comment-card';
-            div.setAttribute('data-id', commentCounter);
-            
-            div.innerHTML = `
-                <div class="comment-header">
-                    <span class="badge">Q<span class="comment-num">${commentCounter}</span></span>
-                    <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
-                </div>
-                
-                <div class="form-group">
-                    <label>Question Prompt</label>
-                    <textarea name="commentLabels" required placeholder="e.g. What were the strengths?">${label}</textarea>
-                </div>
-                
-                <div class="settings-row">
-                    <div class="form-group setting-input">
-                        <label>Min Characters</label>
-                        <input type="number" name="commentMinLengths" value="${minLength}" min="10" max="500">
-                    </div>
-                    
-                    <div class="form-group setting-check">
-                        <label class="toggle-label">
-                            <input type="checkbox" name="commentAnonymous" value="true" ${anonymous ? 'checked' : ''}>
-                            <span class="toggle-text">
-                                <i class="fas fa-user-secret"></i> Anonymous
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            `;
-            return div;
-        }
-        
-        function addComment(label, min, anon) {
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('commentsContainer').appendChild(createCommentItem(label, min, anon));
-            renumber();
-        }
-        
-        function renumber() {
-            let i = 1;
-            document.querySelectorAll('.comment-num').forEach(span => span.textContent = i++);
-            commentCounter = i - 1;
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            if (existingLabels && existingLabels.length > 0) {
-                existingLabels.forEach((label, index) => {
-                    const min = existingMinLengths[index] || 20;
-                    const anon = existingAnonymousFlags[index] !== false;
-                    addComment(label, min, anon);
-                });
-            } else {
-                document.getElementById('emptyState').style.display = 'block';
-            }
-            
-            document.getElementById('addCommentBtn').addEventListener('click', () => addComment('', 20, true));
-
-            document.getElementById('commentsContainer').addEventListener('click', function(event) {
-                const removeBtn = event.target.closest('[data-action="remove-comment-item"]');
-                if (removeBtn) {
-                    removeBtn.closest('.comment-card').remove();
-                    renumber();
-                    if(document.querySelectorAll('.comment-card').length === 0) {
-                        document.getElementById('emptyState').style.display = 'block';
-                    }
-                }
-            });
-        });
-    </script>
+    <script th:src="@{/js/comment-config.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
 </html>

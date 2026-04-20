@@ -64,7 +64,7 @@
                 <!-- ✅ CHANGED: Removed required and asterisk from Rubric Name -->
                 <div class="form-group">
                     <label>Rubric Name</label>
-                    <input type="text" th:field="*{name}" placeholder="e.g. Presentation Skills">
+                    <input type="text" th:field="*{name}" placeholder="e.g. Presentation Skills" maxlength="10000">
                 </div>
                 
                 <div class="form-group">
@@ -117,7 +117,7 @@
                             <!-- ✅ CHANGED: Removed required and asterisk from Sub-Rubric Name -->
                             <div class="form-group">
                                 <label>Sub-Rubric Name</label>
-                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].name}" class="sub-rubric-name">
+                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].name}" class="sub-rubric-name" maxlength="10000">
                             </div>
                             
                             <div class="form-group">
@@ -143,7 +143,7 @@
                                         <div class="rating-row form-grid">
                                             <div class="form-group col-grow">
                                                 <label>Rating Name *</label>
-                                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].name}" required>
+                                                <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].name}" required maxlength="10000">
                                             </div>
                                             <div class="form-group col-fixed">
                                                 <label>Marks</label>
@@ -178,7 +178,7 @@
                             <div class="rating-row form-grid">
                                 <div class="form-group col-grow">
                                     <label>Rating Name *</label>
-                                    <input type="text" th:field="*{ratings[__${ratingIterStat.index}__].name}" required>
+                                    <input type="text" th:field="*{ratings[__${ratingIterStat.index}__].name}" required maxlength="10000">
                                 </div>
                                 <div class="form-group col-fixed">
                                     <label>Marks *</label>
