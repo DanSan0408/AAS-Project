@@ -1,41 +1,67 @@
-/* =======================================================
-   STUDENT SIDEBAR - IRON BURGUNDY & GOLD THEME
-   Primary: #7A1E2D | Secondary: #3F3F46 | BG: #F4F2EE
-   ======================================================= */
-
 :root {
-    --student-primary: #7A1E2D;      /* Iron Burgundy */
-    --student-primary-light: #9A2B3E; /* Lighter Burgundy for gradients */
-    --student-secondary: #3F3F46;    /* Graphite Grey */
-    --student-accent: #F8A617;       /* Gold */
-    --student-background: #F4F2EE;   /* Light Sand Grey */
-    --student-text: #FAFAFA;         /* Off White */
-    --student-text-dark: #2B2B2B;    /* Dark Text */
-    --student-border: #D4D1CC;       /* Muted Sand */
-    --student-alert: #8B1E1E;        /* Dark Red */
+    --student-primary: #7A1E2D;  
+    --student-primary-light: #9A2B3E; 
+    --student-secondary: #3F3F46;   
+    --student-accent: #F8A617;       
+    --student-background: #F4F2EE;   
+    --student-text: #FAFAFA;         
+    --student-text-dark: #2B2B2B;    
+    --student-border: #D4D1CC;       
+    --student-alert: #8B1E1E;        
 }
 
-/* ==================== SIDEBAR CONTAINER ==================== */
 .sidebar {
     position: fixed;
     top: 15px;
     left: 15px;
     width: 240px;
     height: calc(100vh - 30px);
-    /* Gradient from White to Light Sand */
     background: linear-gradient(180deg, #FFFFFF 0%, #F4F2EE 100%);
     color: var(--student-text-dark);
     padding: 0;
-    box-shadow: 0 4px 20px rgba(122, 30, 45, 0.15); /* Burgundy shadow tint */
+    box-shadow: 0 4px 20px rgba(122, 30, 45, 0.15); 
     border-radius: 16px;
     border: 1px solid rgba(122, 30, 45, 0.1);
-    z-index: 1000;
+    z-index: 1300;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    transition: transform 0.25s ease;
 }
 
-/* Custom Scrollbar */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1301;
+    border: 0;
+    border-radius: 10px;
+    background: var(--student-primary);
+    color: var(--student-text);
+    padding: 10px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(19, 19, 24, 0.45);
+    pointer-events: none;
+}
+
+body.sidebar-open {
+    overflow: hidden;
+}
+
 .sidebar::-webkit-scrollbar {
     width: 5px;
 }
@@ -50,12 +76,10 @@
     background: var(--student-primary-light);
 }
 
-/* ==================== LOGO SECTION ==================== */
 .sidebar .logo {
     text-align: center;
     padding: 30px 20px 25px;
     margin-bottom: 20px;
-    /* Burgundy Gradient */
     background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-light) 100%);
     border-radius: 16px 16px 0 0;
 }
@@ -70,12 +94,10 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* ==================== USER PROFILE SECTION ==================== */
 .sidebar .user-profile {
     text-align: center;
     padding: 16px 20px;
     margin: 0 15px 20px;
-    /* Graphite Grey Background for Contrast */
     background: var(--student-primary);
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(63, 63, 70, 0.2);
@@ -83,14 +105,13 @@
 
 .sidebar .user-profile span,
 .sidebar .user-profile p {
-    color: var(--student-text); /* Off White */
+    color: var(--student-text); 
     font-size: 14px;
     font-weight: 600;
     margin: 0;
     word-break: break-word;
 }
 
-/* ==================== MENU LIST ==================== */
 .sidebar .menu-list {
     list-style: none;
     padding: 0 15px;
@@ -103,13 +124,12 @@
     margin-bottom: 8px;
 }
 
-/* Menu Links */
 .sidebar .menu-list li a {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    color: var(--student-secondary); /* Graphite Text */
+    color: var(--student-secondary); 
     text-decoration: none;
     font-size: 15px;
     font-weight: 500;
@@ -118,7 +138,6 @@
     position: relative;
 }
 
-/* Hover Effect - Uses Gold tint */
 .sidebar .menu-list li a:hover {
     background: linear-gradient(90deg, rgba(248, 166, 23, 0.15) 0%, transparent 100%);
     color: var(--student-primary);
@@ -126,10 +145,9 @@
     padding-left: 20px;
 }
 
-/* Active Link - Uses Iron Burgundy Gradient */
 .sidebar .menu-list li a.active {
     background: linear-gradient(135deg, var(--student-primary) 0%, var(--student-primary-light) 100%);
-    color: var(--student-text); /* Off White */
+    color: var(--student-text);
     font-weight: 700;
     box-shadow: 0 4px 12px rgba(122, 30, 45, 0.25);
 }
@@ -139,7 +157,6 @@
     padding-left: 16px;
 }
 
-/* ==================== LOGOUT SECTION ==================== */
 .sidebar .menu-list li:last-child {
     margin-top: auto;
     margin-bottom: 20px;
@@ -152,7 +169,6 @@
     padding: 0;
 }
 
-/* Logout Button */
 .sidebar .menu-list li form button {
     display: flex;
     align-items: center;
@@ -177,19 +193,36 @@
     padding-left: 20px;
 }
 
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 768px) {
+@media (max-width: 1279px) {
+    .sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .sidebar {
-        top: 10px;
-        left: 10px;
-        width: calc(100% - 20px);
-        height: auto;
-        max-height: 90vh;
-        border-radius: 12px;
+        top: 0;
+        left: 0;
+        width: 85vw;
+        max-width: 420px;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+        transform: translateX(-105%);
     }
 
     .sidebar .logo h2 {
         font-size: 24px;
         letter-spacing: 3px;
+    }
+
+    body.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    body.sidebar-open .sidebar-overlay {
+        display: block;
+        pointer-events: auto;
     }
 }

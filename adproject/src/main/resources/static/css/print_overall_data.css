@@ -1,9 +1,5 @@
-/* ========================================
-   FINAL CORRECTED PRINT STYLESHEET
-   ======================================== */
-
 @media print {
-    /* 1. Page Setup */
+
     @page {
         size: A4 landscape;
         margin: 5mm;
@@ -15,11 +11,10 @@
         background: white !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        zoom: 60%; /* Adjust this if text is too small/big */
+        zoom: 60%; 
         width: 100%;
     }
 
-    /* 2. Hide UI Elements ONLY (Fixed: Removed .sticky-col from here) */
     .admin-sidebar, 
     .action-buttons, 
     .btn, 
@@ -28,7 +23,6 @@
         display: none !important;
     }
 
-    /* 3. Reset Layout Wrappers */
     .main-content, .overall-container, .table-wrapper {
         margin: 0 !important;
         padding: 0 !important;
@@ -38,7 +32,6 @@
         overflow: visible !important;
     }
 
-    /* 4. Table Logic */
     .overall-table {
         width: 100% !important;
         table-layout: auto;
@@ -58,31 +51,28 @@
         line-height: 1.1;
     }
 
-    /* 5. FIX: Reset Sticky Columns so they are visible but not sticky */
     .sticky-col {
-        position: relative !important; /* Relative is safer than static for z-index */
+        position: relative !important; 
         display: table-cell !important;
         overflow: visible !important;
         box-shadow: none !important;
-        z-index: 10 !important; /* Ensure it sits above background */
+        z-index: 10 !important; 
         opacity: 1 !important;
         visibility: visible !important;
     }
 
     .overall-table th.sticky-col {
         color: white !important;
-        background-color: #7A1E2D !important; /* Red header bg */
+        background-color: #7A1E2D !important; 
         -webkit-print-color-adjust: exact; 
         print-color-adjust: exact;
     }
 
-    /* Body Cells: Force them BLACK and transparent/grey background */
     .overall-table td.sticky-col {
-        color: #000000 !important; /* Force Black Text */
+        color: #000000 !important; 
         text-shadow: none !important;
     }
 
-    /* 6. Vertical Header Rotation for Data Columns (Saves Width) */
     .clo-header, 
     .clo-weighted-header, 
     .total-header, 
@@ -97,9 +87,6 @@
         padding: 5px 2px !important;
     }
 
-    /* 7. Specific Column Widths (The Missing Columns) */
-    
-    /* Team Name */
     .first-col {
         width: 60px !important;
         max-width: 60px !important;
@@ -108,17 +95,15 @@
         text-align: left !important;
     }
     
-    /* Ensure the body cell specifically has the grey background */
     td.first-col {
         background-color: #f9f9f9 !important; 
     }
 
-    /* Student Email */
     .second-col {
-        width: 100px !important; /* Slightly wider to prevent cutoff */
+        width: 100px !important; 
         max-width: 100px !important;
         white-space: normal !important;
-        word-break: break-all !important; /* Force wrap even mid-word */
+        word-break: break-all !important; 
         text-align: left !important;
         font-size: 7pt !important;
         line-height: 1.1 !important;
@@ -128,7 +113,6 @@
         background-color: #f9f9f9 !important;
     }
 
-    /* Factor */
     .third-col {
         width: 35px !important;
     }
@@ -138,7 +122,6 @@
         color: black !important;
     }
 
-    /* Capped */
     .fourth-col {
         width: 35px !important;
     }
@@ -148,17 +131,14 @@
         color: black !important;
     }
 
-    /* Factor Badges inside the columns */
     .factor-badge {
-        color: #000 !important; /* Ensure badge text is black */
+        color: #000 !important; 
         border: 1px solid #ccc;
     }
     
-    /* Exceptions for colored badges */
     .factor-zero { color: white !important; background-color: #E74C3C !important; }
     .factor-capped { color: white !important; background-color: #F39C12 !important; }
 
-    /* 8. Colors */
     .assessment-header { background-color: #F8A617 !important; color: black !important; }
     .clo-header, .clo-weighted-header { background-color: #4CAF7D !important; color: white !important; }
     .grand-total-header { background-color: #8B1E1E !important; color: white !important; }
@@ -169,8 +149,6 @@
 
 @media print {
     
-    /* 1. Kill Sticky Positioning Globally */
-    /* This stops the browser from trying to float these columns */
     .sticky-col, 
     .first-col, 
     .second-col, 
@@ -186,46 +164,38 @@
         float: none !important;
     }
 
-    /* 2. Force Cell Visibility & Color */
     .overall-table tbody tr td.sticky-col,
     .overall-table tbody tr td.first-col,
     .overall-table tbody tr td.second-col,
     .overall-table tbody tr td.third-col,
     .overall-table tbody tr td.fourth-col {
-        /* Force Text Black */
+        
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
         
-        /* Ensure background doesn't cover text */
         background-color: transparent !important;
         background: transparent !important;
         
-        /* Layout resets */
         display: table-cell !important;
         visibility: visible !important;
         opacity: 1 !important;
         overflow: visible !important;
         
-        /* Reset any text indenting that might push text out */
         text-indent: 0 !important;
         padding: 2px !important;
     }
 
-    /* 3. Force Inner Content (Spans/Badges) Visibility */
-    /* Often text is hidden because it's inside a span */
     .sticky-col span,
     .sticky-col div,
     .factor-badge,
     .capped-indicator {
         visibility: visible !important;
         display: inline-block !important;
-        color: #000000 !important; /* Force black text */
+        color: #000000 !important; 
         opacity: 1 !important;
         position: static !important;
     }
 
-    /* 4. Exceptions for the colored badges (Factor/Capped) */
-    /* We re-apply the background color but ensure text is white/black as needed */
     .factor-zero {
         background-color: #E74C3C !important;
         color: white !important;
@@ -239,13 +209,8 @@
     }
 }
 
-/* =======================================================
-   FIX FOR INVISIBLE FACTOR & CAPPED DATA
-   Paste at the VERY bottom of print_overall_data.css
-   ======================================================= */
-
 @media print {
-    /* 1. Target the specific columns to ensure container is visible */
+    
     .third-col, 
     .fourth-col {
         width: 35px !important;
@@ -253,13 +218,11 @@
         z-index: 9999 !important;
     }
 
-    /* 2. Force the Badge SPAN to be visible */
     .factor-badge {
         display: inline-block !important;
         visibility: visible !important;
         opacity: 1 !important;
         
-        /* SAFE PRINT STYLE: Black text with a border (High Contrast) */
         color: #000000 !important;
         background-color: transparent !important;
         border: 1px solid #000 !important;
@@ -269,26 +232,21 @@
         font-weight: bold !important;
         font-size: 7pt !important;
         
-        /* Override any white text settings */
         -webkit-text-fill-color: #000000 !important;
     }
 
-    /* 3. Handle the "Zero" and "Capped" specific cases */
-    /* We change them to transparent background with colored text for print safety */
-    
     .factor-zero {
-        color: #E74C3C !important; /* Red Text instead of Red BG */
+        color: #E74C3C !important; 
         background-color: transparent !important;
         border-color: #E74C3C !important;
     }
 
     .factor-capped {
-        color: #D35400 !important; /* Orange Text instead of Orange BG */
+        color: #D35400 !important;
         background-color: transparent !important;
         border-color: #D35400 !important;
     }
 
-    /* 4. Ensure the "Capped" icon/text below is also visible */
     .capped-indicator {
         display: block !important;
         visibility: visible !important;
@@ -296,7 +254,6 @@
         font-size: 6pt !important;
     }
     
-    /* 5. Force the cell content to not be hidden */
     td.third-col span,
     td.fourth-col span {
         visibility: visible !important;

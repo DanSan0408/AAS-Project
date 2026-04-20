@@ -1,8 +1,3 @@
-/* =======================================================
-   GROUP EDIT - Professional Maroon Theme
-   Matched with Manage Users Page Consistency
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -17,7 +12,6 @@
     --color-hover: #F9FAFB;
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
     box-sizing: border-box;
 }
@@ -40,7 +34,6 @@ body.group-edit-page .main-content {
     max-height: 100vh !important;
 }
 
-/* ==================== HEADER (Matched) ==================== */
 body.group-edit-page .header-container {
     display: flex !important;
     align-items: center !important;
@@ -64,7 +57,6 @@ body.group-edit-page .header-container h1 {
     font-weight: 700 !important;
 }
 
-/* ==================== CARD STYLES (Matched) ==================== */
 body.group-edit-page .card {
     background-color: var(--color-surface) !important;
     padding: 40px !important;
@@ -92,7 +84,6 @@ body.group-edit-page .card-header h1 {
     display: inline-block !important;
 }
 
-/* ==================== USER EDITING CONTAINER (Matched) ==================== */
 body.group-edit-page .user-editing-container {
     display: flex !important;
     gap: 30px !important;
@@ -101,7 +92,6 @@ body.group-edit-page .user-editing-container {
     min-height: 600px !important;
 }
 
-/* Sidebar - Button Style */
 body.group-edit-page .user-editing-sidebar {
     background-color: var(--color-surface) !important;
     padding: 16px !important;
@@ -141,7 +131,6 @@ body.group-edit-page .user-editing-sidebar a.active {
     box-shadow: 0 2px 8px rgba(74, 0, 24, 0.2) !important;
 }
 
-/* Main Content Area */
 body.group-edit-page .user-editing-main {
     flex-grow: 1 !important;
     background-color: var(--color-surface) !important;
@@ -153,7 +142,6 @@ body.group-edit-page .user-editing-main {
     flex-direction: column !important;
 }
 
-/* Internal Title */
 body.group-edit-page .user-editing-main h2 {
     color: var(--color-primary) !important;
     border-bottom: 3px solid var(--color-primary) !important;
@@ -164,7 +152,6 @@ body.group-edit-page .user-editing-main h2 {
     font-size: 1.8em !important;
 }
 
-/* ==================== ALERTS ==================== */
 body.group-edit-page .alert {
     padding: 16px 20px !important;
     border-radius: 8px !important;
@@ -186,18 +173,17 @@ body.group-edit-page .alert-danger {
     border-color: var(--color-alert) !important;
 }
 
-/* ==================== CONTENT LAYOUT (Split View) ==================== */
 body.group-edit-page .content-layout {
     display: flex !important;
     gap: 20px !important;
-    margin-top: 0 !important; /* Adjusted since it's inside .user-editing-main */
+    margin-top: 0 !important; 
     flex-wrap: wrap !important;
     align-items: stretch !important;
 }
 
 body.group-edit-page .form-panel,
 body.group-edit-page .member-panel {
-    flex: 1 1 45% !important; /* Ensure they share space properly */
+    flex: 1 1 45% !important; 
     min-width: 350px !important;
     background-color: var(--color-surface) !important;
     padding: 20px !important;
@@ -219,7 +205,6 @@ body.group-edit-page .member-panel h3 {
     font-size: 1.3em !important;
 }
 
-/* Form Elements */
 body.group-edit-page .form-group {
     margin-bottom: 18px !important;
     display: flex !important;
@@ -260,7 +245,6 @@ body.group-edit-page hr {
     margin: 24px 0 !important;
 }
 
-/* Buttons */
 body.group-edit-page .btn {
     padding: 12px 20px !important;
     border: none !important;
@@ -309,7 +293,6 @@ body.group-edit-page .btn-secondary:hover {
     transform: translateY(-2px) !important;
 }
 
-/* Table Styling */
 body.group-edit-page .student-table {
     width: 100% !important;
     border-collapse: collapse !important;
@@ -319,6 +302,12 @@ body.group-edit-page .student-table {
     box-shadow: 0 2px 8px rgba(74, 0, 24, 0.08) !important;
     border-radius: 8px !important;
     overflow: hidden !important;
+}
+
+body.group-edit-page .student-table-wrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
 }
 
 body.group-edit-page .student-table th,
@@ -361,7 +350,6 @@ body.group-edit-page .student-table input[type="checkbox"] {
     accent-color: var(--color-primary) !important;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
     body.group-edit-page .content-layout {
         flex-direction: column !important;
@@ -385,5 +373,31 @@ body.group-edit-page .student-table input[type="checkbox"] {
         width: 100% !important;
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    body.group-edit-page .student-table {
+        min-width: 620px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    body.group-edit-page .main-content {
+        padding: 12px !important;
+    }
+
+    body.group-edit-page .card {
+        padding: 18px !important;
+    }
+
+    body.group-edit-page .card-header h1 {
+        font-size: 1.5rem !important;
+    }
+
+    body.group-edit-page .user-editing-main {
+        padding: 14px !important;
+    }
+
+    body.group-edit-page .user-editing-main h2 {
+        font-size: 1.25rem !important;
     }
 }

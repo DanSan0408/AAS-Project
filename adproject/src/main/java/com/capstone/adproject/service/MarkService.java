@@ -23,49 +23,32 @@ public class MarkService {
     @Autowired
     private MarkRepository markRepository;
     
-    /**
-     * Save a single mark
-     */
     @Transactional
     public Mark saveMark(Mark mark) {
         return markRepository.save(mark);
     }
     
-    /**
-     * Save multiple marks at once
-     */
     @Transactional
     public List<Mark> saveAllMarks(List<Mark> marks) {
         return markRepository.saveAll(marks);
     }
     
-    /**
-     * Get all marks for an evaluator and assessment
-     */
     public List<Mark> getMarksByEvaluatorAndAssessment(Student evaluator, Assessment assessment) {
         return markRepository.findByEvaluatorStudentAndAssessment(evaluator, assessment);
     }
     
-    /**
-     * Get marks for a specific student evaluation
-     */
     public List<Mark> getMarksForStudentEvaluation(Student evaluator, Student evaluated, Assessment assessment) {
         return markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(evaluator, evaluated, assessment);
     }
     
-    /**
-     * Submit peer assessment for a team member
-     */
     @Transactional
     public void submitPeerAssessment(Student evaluator, Student evaluated, Assessment assessment, 
                                      Map<Long, Long> rubricRatings, Map<Long, String> comments) {
         
-        // Delete existing draft marks if any
         List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
                 evaluator, evaluated, assessment);
         markRepository.deleteAll(existingMarks);
         
-        // Create new marks
         List<Mark> marks = new ArrayList<>();
         
         for (Map.Entry<Long, Long> entry : rubricRatings.entrySet()) {
@@ -81,7 +64,6 @@ public class MarkService {
             mark.setStatus(Mark.SubmissionStatus.SUBMITTED);
             mark.setSubmittedAt(LocalDateTime.now());
             
-            // Set comments if provided
             if (comments != null && comments.containsKey(rubricId)) {
                 mark.setComments(comments.get(rubricId));
             }
@@ -92,26 +74,17 @@ public class MarkService {
         markRepository.saveAll(marks);
     }
     
-    /**
-     * Check if evaluator has completed assessments for all team members
-     */
     public boolean hasCompletedAllPeerAssessments(Student evaluator, Assessment assessment, List<Student> teamMembers) {
         long completedCount = markRepository.countDistinctEvaluatedStudentsByEvaluatorAndAssessmentAndStatus(
                 evaluator, assessment, Mark.SubmissionStatus.SUBMITTED);
         return completedCount >= teamMembers.size();
     }
     
-    /**
-     * Calculate total marks for a student
-     */
     public Double calculateTotalMarks(Student student, Assessment assessment) {
         Double total = markRepository.calculateTotalMarksForStudent(student, assessment);
         return total != null ? total : 0.0;
     }
     
-    /**
-     * Calculate CLO marks breakdown
-     */
     public Map<Integer, Double> calculateCloMarks(Student student, Assessment assessment) {
         List<Object[]> results = markRepository.calculateCloMarksForStudent(student, assessment);
         Map<Integer, Double> cloMarks = new HashMap<>();
@@ -125,13 +98,9 @@ public class MarkService {
         return cloMarks;
     }
     
-    /**
-     * Get assessment progress for a student
-     */
     public Map<String, Object> getAssessmentProgress(Student evaluator, Assessment assessment, List<Student> teamMembers) {
         Map<String, Object> progress = new HashMap<>();
         
-        // Count completed assessments
         long completedCount = markRepository.countDistinctEvaluatedStudentsByEvaluatorAndAssessmentAndStatus(
                 evaluator, assessment, Mark.SubmissionStatus.SUBMITTED);
         
@@ -140,7 +109,6 @@ public class MarkService {
         progress.put("remainingAssessments", teamMembers.size() - completedCount);
         progress.put("percentageComplete", (completedCount * 100.0) / teamMembers.size());
         
-        // Get list of evaluated and unevaluated members
         List<Mark> submittedMarks = markRepository.findByEvaluatorStudentAndAssessmentAndStatus(
                 evaluator, assessment, Mark.SubmissionStatus.SUBMITTED);
         
@@ -162,9 +130,6 @@ public class MarkService {
         return progress;
     }
     
-    /**
-     * Finalize all submitted marks (convert from SUBMITTED to FINAL)
-     */
     @Transactional
     public void finalizeMarks(Assessment assessment) {
         List<Mark> submittedMarks = markRepository.findByAssessmentAndStatus(assessment, Mark.SubmissionStatus.SUBMITTED);

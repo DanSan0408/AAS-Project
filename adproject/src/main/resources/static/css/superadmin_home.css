@@ -1,0 +1,704 @@
+/*
+ * Super Admin Dashboard Styles
+ * Aligned with Admin palette:
+ * Primary: Deep Maroon #4A0018
+ * Secondary: Graphite Grey #3F3F46
+ * Accent: Gold #F8A617
+ */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-text: #FAFAFA;
+    --color-primary-light: #6B0025;
+    --color-primary-dark: #2D000E;
+    --color-secondary-light: #52525B;
+    --color-secondary-dark: #27272A;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+    --color-warning: #F59E0B;
+    --color-info: #3B82F6;
+    --color-danger: #8B1E1E;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Main Content Layout */
+body {
+    background-color: var(--color-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-secondary);
+    margin: 0;
+    padding: 0;
+}
+
+body.superadmin-page {
+    background-color: var(--color-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-secondary);
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+body.superadmin-page .main-content {
+    flex-grow: 1 !important;
+    padding: 30px 40px !important;
+    margin-left: 270px !important;
+    min-height: 100vh !important;
+    background-color: var(--color-background) !important;
+    width: auto !important;
+}
+
+body.superadmin-page .sidebar {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 250px;
+    height: calc(100vh - 30px);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(74, 0, 24, 0.12);
+    z-index: 1300;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    transition: transform 0.25s ease;
+}
+
+body.superadmin-page .sidebar-header {
+    padding: 24px 18px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: #fff;
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+}
+
+body.superadmin-page .sidebar-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+body.superadmin-page .sidebar-header p {
+    margin: 6px 0 0;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+body.superadmin-page .components {
+    list-style: none;
+    padding: 14px;
+    margin: 0;
+}
+
+body.superadmin-page .components li a,
+body.superadmin-page .logout-btn {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--color-secondary);
+    background: transparent;
+    border: 0;
+    font-weight: 600;
+    text-align: left;
+}
+
+body.superadmin-page .components li a:hover,
+body.superadmin-page .logout-btn:hover {
+    background: rgba(74, 0, 24, 0.08);
+    color: var(--color-primary);
+}
+
+body.superadmin-page .sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1301;
+    border: 0;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: #fff;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+}
+
+body.superadmin-page .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(19, 19, 24, 0.45);
+    pointer-events: none;
+}
+
+body.superadmin-page.sidebar-open {
+    overflow: hidden;
+}
+
+/* Course Overview Section */
+.course-overview-section {
+    margin-top: 30px;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 30px 40px;
+    margin-left: 270px;
+    min-height: 100vh;
+    background-color: var(--color-background);
+}
+
+/* Header Styling */
+.header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.user-info {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Role Switch Section */
+.role-switch-section {
+    background: var(--color-surface);
+    border-left: 5px solid var(--color-primary);
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.role-switch-section:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.role-switch-section h4 {
+    color: var(--color-primary);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+}
+
+.role-switch-section p {
+    color: var(--color-secondary);
+    font-size: 14px;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.role-button {
+    margin: 8px 8px 8px 0;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.role-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Management Section */
+div > h4 {
+    color: var(--color-primary-dark);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+div > p {
+    color: var(--color-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+/* Card Styling */
+.card {
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(74, 0, 24, 0.12);
+    border-color: var(--color-primary-light);
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-title {
+    color: var(--color-primary);
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.card-text {
+    color: var(--color-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.25);
+}
+
+.btn {
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    min-height: 38px;
+    padding: 8px 14px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary {
+    background: var(--color-secondary);
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: var(--color-secondary-dark);
+}
+
+.btn-info {
+    background: var(--color-info);
+    color: #fff;
+}
+
+.btn-info:hover {
+    background: #2563eb;
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-success {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: white;
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background: #047857;
+    border-color: #047857;
+}
+
+.btn-info {
+    background: var(--color-info);
+    border-color: var(--color-info);
+    color: white;
+    font-weight: 600;
+}
+
+.btn-info:hover {
+    background: #0369a1;
+    border-color: #0369a1;
+}
+
+/* Course Statistics Grid */
+.card-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.border-left-primary {
+    border-left: 5px solid var(--color-primary) !important;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 12px;
+}
+
+.stat-item.text-left {
+    text-align: left;
+}
+
+.inline-stat {
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.stat-item h6 {
+    color: var(--color-primary);
+    font-weight: 700;
+    margin: 8px 0;
+    font-size: 24px;
+}
+
+.stat-item small {
+    color: #999;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Course overview table */
+.course-overview-table-wrapper {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 5px solid var(--color-primary);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+    overflow-x: auto;
+}
+
+.course-overview-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+}
+
+.course-overview-table th,
+.course-overview-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.92rem;
+}
+
+.course-overview-table th {
+    background: #f8fafc;
+    color: var(--color-primary-dark);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.course-overview-table tbody tr:hover {
+    background: var(--color-hover);
+}
+
+.course-overview-table td:nth-child(1),
+.course-overview-table td:nth-child(2) {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.course-overview-table td:nth-child(4),
+.course-overview-table td:nth-child(5),
+.course-overview-table td:nth-child(6),
+.course-overview-table td:nth-child(8),
+.course-overview-table td:nth-child(9) {
+    text-align: center;
+    font-weight: 700;
+}
+
+/* Alert Styling */
+.alert {
+    border-radius: 8px;
+    border: 1px solid;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background: #ecfdf5;
+    border-color: #d1fae5;
+    color: #065f46;
+}
+
+.alert-danger {
+    background: #fef2f2;
+    border-color: #fee2e2;
+    color: #7f1d1d;
+}
+
+.alert-info {
+    background: #f5f3ff;
+    border-color: #e9d5ff;
+    color: var(--color-primary);
+}
+
+/* Utility classes used by templates without Bootstrap */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.text-muted {
+    color: #6b7280;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -10px;
+    margin-right: -10px;
+}
+
+.col-md-6,
+.col-6,
+.col-12 {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.col-md-6,
+.col-12 {
+    width: 100%;
+}
+
+.col-6 {
+    width: 50%;
+}
+
+/* Reusable form styles for invite/edit pages */
+body.superadmin-page .form-group {
+    margin-bottom: 16px;
+}
+
+body.superadmin-page .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-secondary-dark);
+    font-weight: 600;
+}
+
+body.superadmin-page .form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    font-size: 0.95rem;
+    color: var(--color-secondary-dark);
+    background: #fff;
+}
+
+body.superadmin-page .form-control:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.12);
+}
+
+body.superadmin-page .form-card {
+    border: 1px solid var(--color-border);
+    border-left: 5px solid var(--color-primary);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+}
+
+body.superadmin-page .form-card .card-body {
+    padding: 24px;
+}
+
+body.superadmin-page .form-card h3 {
+    margin: 0 0 18px;
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+body.superadmin-page .form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+body.superadmin-page .section-label {
+    font-size: 0.82rem;
+    color: #71717a;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+body.superadmin-page .logout-form {
+    display: inline;
+}
+
+/* Responsive Design */
+@media (max-width: 1279px) {
+    body.superadmin-page .sidebar-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.superadmin-page .sidebar {
+        top: 0;
+        left: 0;
+        width: 85vw;
+        max-width: 420px;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        transform: translateX(-105%);
+    }
+
+    body.superadmin-page.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    body.superadmin-page.sidebar-open .sidebar-overlay {
+        display: block;
+        pointer-events: auto;
+    }
+
+    body.superadmin-page .main-content,
+    body.superadmin-page.main-content,
+    .main-content {
+        margin-left: 0 !important;
+        padding: 20px !important;
+        margin-top: 56px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .card-deck {
+        grid-template-columns: 1fr;
+    }
+
+    .role-button {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Sidebar Role Divider Styling */
+.role-divider {
+    border-top: 2px solid var(--color-border);
+    margin: 10px 0;
+    padding: 10px 0;
+}
+
+.role-divider strong {
+    font-size: 0.85rem;
+    color: #999;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-switch-link {
+    font-size: 0.9rem;
+    padding-left: 1.5rem;
+}
+
+.role-switch-link a {
+    transition: all 0.2s ease;
+}
+
+.role-switch-link a:hover {
+    color: var(--color-primary) !important;
+}

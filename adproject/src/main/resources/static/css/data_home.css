@@ -1,9 +1,6 @@
-/* =======================================================
-   DATA HOME - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
+    --color-primary-light: #6B0025;
     --color-secondary: #3F3F46;
     --color-background: #F4F2EE;
     --color-surface: #FFFFFF;
@@ -26,7 +23,6 @@ body {
     min-height: 100vh;
 }
 
-/* ==================== LAYOUT ==================== */
 .main-content {
     margin-left: 270px !important;
     padding: 40px !important;
@@ -37,7 +33,6 @@ body {
     align-items: center !important;
 }
 
-/* ==================== HEADER ==================== */
 .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -51,13 +46,11 @@ body {
 .header-container img { max-width: 200px !important; height: auto !important; }
 .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
-/* ==================== DATA VIEW CONTAINER ==================== */
 .data-view-container {
     width: 100% !important;
     max-width: 1000px !important;
 }
 
-/* Overall Card */
 .overall-card {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -82,7 +75,6 @@ body {
     margin: 0 !important;
 }
 
-/* Section Header */
 .section-header {
     text-align: center !important;
     margin-bottom: 30px !important;
@@ -99,7 +91,6 @@ body {
     font-size: 1rem !important;
 }
 
-/* Assessment Grid */
 .assessment-grid {
     display: grid !important;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
@@ -167,7 +158,6 @@ body {
     text-align: center !important;
 }
 
-/* Buttons */
 .btn {
     padding: 10px 20px !important;
     border-radius: 6px !important;
@@ -185,7 +175,6 @@ body {
 .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; width: 100% !important; }
 .btn-secondary:hover { background-color: #27272A !important; }
 
-/* Empty State */
 .empty-state {
     text-align: center !important;
     padding: 50px !important;
@@ -198,9 +187,29 @@ body {
 .empty-state i { font-size: 3rem !important; margin-bottom: 15px !important; opacity: 0.5 !important; }
 .empty-state h3 { margin-bottom: 10px !important; color: var(--color-primary) !important; }
 
-/* Responsive */
 @media (max-width: 900px) {
     .main-content { margin-left: 0 !important; padding: 20px !important; }
     .overall-card { flex-direction: column !important; text-align: center !important; gap: 20px !important; }
     .assessment-grid { grid-template-columns: 1fr !important; }
+
+    .header-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 10px !important;
+    }
+
+    .header-container h1 {
+        font-size: 2rem !important;
+    }
+
+    .card-action,
+    .card-action .btn {
+        width: 100% !important;
+    }
+
+    .card-header h3 {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: initial !important;
+    }
 }

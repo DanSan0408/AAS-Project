@@ -2,10 +2,22 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle}">Rubric Form</title>
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Mobile optimization for deeply nested form cards */
+        @media (max-width: 768px) {
+            .card { padding: 15px 10px !important; }
+            .section-container { padding: 15px 10px !important; margin-left: 0 !important; margin-right: 0 !important; }
+            .sub-rubric-card, .rating-card, .comment-card { padding: 12px 10px !important; }
+            .form-grid { display: flex; flex-direction: column; gap: 10px; }
+            .col-fixed, .col-grow { width: 100% !important; }
+        }
+    </style>
 </head>
 <body class="rubric-form-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -15,20 +27,39 @@
             <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
             <h1>UTM AAS</h1>
         </div>
-        
-        <div class="card">
+
+        <div class="page-header" style="margin-bottom: 20px;">
+            <h1 th:text="${pageTitle} + ' for ' + ${rubric.assessment.title}" style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Add New Rubric</h1>
+            <p class="text-muted" style="margin-top: 5px;">Configure the rubric structure below.</p>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 20px;">
+            <p th:text="${errorMessage}" style="margin:0;"></p>
+        </div>
+
+        <div class="card" style="box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden;">
             <div id="submission-message"></div>
 
-            <h1 th:text="${pageTitle} + ' for ' + ${rubric.assessment.title}">Add New Rubric</h1>
-            
-            <div th:if="${errorMessage}" class="alert alert-error">
-                <p th:text="${errorMessage}"></p>
-            </div>
-
-            <form id="rubricForm" th:action="${formAction}" th:object="${rubric}" method="post">
+            <form id="rubricForm" th:action="${formAction}" th:object="${rubric}" method="post"
+                th:attr="data-subrubric-count=${rubric.subRubrics != null ? rubric.subRubrics.size() : 0}, data-direct-rating-count=${rubric.ratings != null ? rubric.ratings.size() : 0}, data-comment-count=${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}, data-template-api-url=@{/rubrics/templates/api/}">
                 <input type="hidden" th:field="*{id}" />
                 <input type="hidden" th:field="*{assessment}" />
                 <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
+
+                <!-- ⚡ Template Injector UI -->
+                <div th:if="${availableTemplates != null and !availableTemplates.empty}" class="form-group template-injector-card">
+                    <label class="template-injector-title"><i class="fas fa-magic"></i> Auto-Build from Blueprint</label>
+                    <div class="template-injector-controls" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <select id="templateSelect" class="template-select">
+                            <option value="">-- Select a Blueprint --</option>
+                            <option th:each="template : ${availableTemplates}" th:value="${template.id}" th:text="${template.name}"></option>
+                        </select>
+                        <button type="button" id="applyTemplateBtn" class="btn template-apply-btn">
+                            <i class="fas fa-bolt"></i> Apply
+                        </button>
+                    </div>
+                    <small class="template-injector-help">This will instantly generate the empty rubric structure.</small>
+                </div>
 
                 <!-- ✅ CHANGED: Removed required and asterisk from Rubric Name -->
                 <div class="form-group">
@@ -52,7 +83,7 @@
                     </select>
                 </div>
 
-                <div class="rating-row">
+                <div class="rating-row form-grid">
                     <div class="form-group col-grow">
                         <label>Total Marks *</label>
                         <input type="number" id="rubricMarks" step="0.01" th:field="*{marks}" required>
@@ -72,15 +103,15 @@
                 </div>
 
                 <div class="section-container section-blue">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2>Sub-Rubrics</h2>
-                        <button type="button" id="addSubRubricBtn" class="btn btn-add">+ Add Sub-Rubric</button>
+                        <button type="button" id="addSubRubricBtn" class="btn btn-add"><i class="fas fa-plus"></i> Add Sub-Rubric</button>
                     </div>
                     <p class="info-text">Sub-rubrics allow you to break down this rubric into smaller components.</p>
                     
                     <div id="sub-rubrics-container">
                         <div th:each="subRubric, subIterStat : *{subRubrics}" class="sub-rubric-card">
-                            <button type="button" class="remove-btn remove-sub-rubric-btn">Remove Sub-Rubric</button>
+                            <button type="button" class="remove-btn remove-sub-rubric-btn" title="Remove sub-rubric" aria-label="Remove sub-rubric"><i class="fas fa-times"></i></button>
                             <input type="hidden" th:field="*{subRubrics[__${subIterStat.index}__].id}" />
                             
                             <!-- ✅ CHANGED: Removed required and asterisk from Sub-Rubric Name -->
@@ -106,10 +137,10 @@
                                 </div>
                                 <div class="sub-ratings-container" th:attr="data-subindex=${subIterStat.index}">
                                     <div th:each="rating, ratingIterStat : ${subRubric.ratings}" class="rating-card">
-                                        <button type="button" class="remove-btn remove-rating-btn">Remove</button>
+                                        <button type="button" class="remove-btn remove-rating-btn" title="Remove rating" aria-label="Remove rating"><i class="fas fa-times"></i></button>
                                         <input type="hidden" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].id}" />
                                         
-                                        <div class="rating-row">
+                                        <div class="rating-row form-grid">
                                             <div class="form-group col-grow">
                                                 <label>Rating Name *</label>
                                                 <input type="text" th:field="*{subRubrics[__${subIterStat.index}__].ratings[__${ratingIterStat.index}__].name}" required>
@@ -126,7 +157,7 @@
                                     </div>
                                 </div>
                                 <!-- ✅ Button moved here (below container) -->
-                                <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" th:attr="data-subindex=${subIterStat.index}" style="margin-top: 10px; width: 100%;">+ Add Rating</button>
+                                <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" th:attr="data-subindex=${subIterStat.index}" style="margin-top: 10px; width: 100%;"><i class="fas fa-plus"></i> Add Rating</button>
                             </div>
                         </div>
                     </div>
@@ -134,17 +165,17 @@
 
                 <!-- ✅ CHANGED: Moved "Add Direct Rating" button below container -->
                 <div class="section-container section-green">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
                     </div>
                     <p class="info-text">Use direct ratings when you don't need sub-rubrics.</p>
                     
                     <div id="direct-ratings-container">
                         <div th:each="rating, ratingIterStat : *{ratings}" class="rating-card">
-                            <button type="button" class="remove-btn remove-direct-rating-btn">Remove</button>
+                            <button type="button" class="remove-btn remove-direct-rating-btn" title="Remove direct rating" aria-label="Remove direct rating"><i class="fas fa-times"></i></button>
                             <input type="hidden" th:field="*{ratings[__${ratingIterStat.index}__].id}" />
                             
-                            <div class="rating-row">
+                            <div class="rating-row form-grid">
                                 <div class="form-group col-grow">
                                     <label>Rating Name *</label>
                                     <input type="text" th:field="*{ratings[__${ratingIterStat.index}__].name}" required>
@@ -163,26 +194,26 @@
                     </div>
                     
                     <!-- ✅ Button moved here (below container) -->
-                    <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important; margin-top: 15px; width: 100%;">+ Add Direct Rating</button>
+                    <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important; margin-top: 15px; width: 100%;"><i class="fas fa-plus"></i> Add Direct Rating</button>
                 </div>
                 
                 <!-- ✅ CHANGED: Moved "Add Comment Question" button below containers -->
                 <div class="section-container section-purple">
-                    <div class="section-header">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
                     </div>
                     <p class="info-text">Add optional comment questions specific to this rubric only.</p>
                     
                     <div id="rubric-comments-container">
                         <div th:each="commentLabel, iterStat : *{rubricCommentLabels}" class="comment-card" th:attr="data-comment-index=${iterStat.index}">
-                            <button type="button" class="remove-btn remove-rubric-comment-btn">Remove</button>
+                            <button type="button" class="remove-btn remove-rubric-comment-btn" title="Remove comment" aria-label="Remove comment"><i class="fas fa-times"></i></button>
                             
                             <div class="form-group">
                                 <label>Comment Question #<span class="comment-number" th:text="${iterStat.index + 1}">1</span></label>
                                 <textarea th:name="'rubricCommentLabels[' + ${iterStat.index} + ']'" th:text="${commentLabel}" rows="2" style="width: 100%;"></textarea>
                             </div>
                             
-                            <div class="rating-row">
+                            <div class="rating-row form-grid">
                                 <div class="form-group col-grow">
                                     <label>Min Length</label>
                                     <input type="number" th:name="'rubricCommentMinLengths[' + ${iterStat.index} + ']'" th:value="${rubric.rubricCommentMinLengths != null and iterStat.index < rubric.rubricCommentMinLengths.size() ? rubric.rubricCommentMinLengths[iterStat.index] : 20}" min="10" max="500">
@@ -202,18 +233,18 @@
                     </div>
                     
                     <!-- ✅ Button moved here (below containers) -->
-                    <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;">+ Add Comment Question</button>
+                    <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;"><i class="fas fa-plus"></i> Add Comment Question</button>
                 </div>
                 
-                <div class="button-container">
-                    <a th:href="@{/rubrics/view/{id}(id=${rubric.assessment.id})}" class="btn btn-danger">Cancel</a>
-                    <button type="submit" id="submitButton" class="btn btn-primary">Save Rubric</button>
+                <div class="button-container action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                    <a th:href="@{/rubrics/view/{id}(id=${rubric.assessment.id})}" class="btn btn-danger"><i class="fas fa-times"></i> Cancel</a>
+                    <button type="submit" id="submitButton" class="btn btn-primary"><i class="fas fa-save"></i> Save Rubric</button>
                 </div>
             </form>
         </div>
     </div>
 
-<script th:inline="javascript">
+<script th:remove="all">
 /*<![CDATA[*/
     document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('sub-rubrics-container');
@@ -222,68 +253,38 @@
         const rubricCommentsEmpty = document.getElementById('rubric-comments-empty');
         const rubricMarksInput = document.getElementById('rubricMarks');
         const cloMarksInput = document.getElementById('cloMarks');
-        const messageBox = document.getElementById('submission-message');
         const rubricForm = document.getElementById('rubricForm');
         
-        // 1. Initialize counters using standard expression inlining (This is safe)
         let subRubricIndex = /*[[${rubric.subRubrics != null ? rubric.subRubrics.size() : 0}]]*/ 0;
         let directRatingIndex = /*[[${rubric.ratings != null ? rubric.ratings.size() : 0}]]*/ 0;
         let rubricCommentIndex = /*[[${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}]]*/ 0;
         
-        // 2. Initialize Rating Indices by scanning the DOM instead of using Thymeleaf loops
         let subRubricRatingIndices = {};
-        
         const existingSubRubrics = document.querySelectorAll('.sub-rubric-card');
         existingSubRubrics.forEach((card, index) => {
             const ratingsCount = card.querySelectorAll('.rating-card').length;
             subRubricRatingIndices[index] = ratingsCount;
         });
 
-        // Sync CLO Marks
         if(rubricMarksInput) {
             rubricMarksInput.addEventListener('input', function() {
                 if(cloMarksInput) cloMarksInput.value = this.value;
             });
         }
 
-        // Add Sub-Rubric
         const addSubBtn = document.getElementById('addSubRubricBtn');
         if (addSubBtn) {
             addSubBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
                 card.className = 'sub-rubric-card';
-                // ✅ CHANGED: Removed required and "required" asterisk from name field
                 card.innerHTML = `
-                    <button type="button" class="remove-btn remove-sub-rubric-btn"><i class="fas fa-times"></i></button>
+                    <button type="button" class="remove-btn remove-sub-rubric-btn"><i class="fas fa-times"></i> Remove Sub-Rubric</button>
                     <input type="hidden" name="subRubrics[${subRubricIndex}].id" value="" />
-                    
-                    <div class="sub-rubric-header">
-                        <span class="badge badge-sub">New Sub-Rubric</span>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" name="subRubrics[${subRubricIndex}].name" class="sub-rubric-name" placeholder="Sub-component name">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea>
-                    </div>
-
-                    <div class="form-group readonly-group">
-                        <label>Marks (Auto-calculated)</label>
-                        <input type="number" step="0.01" name="subRubrics[${subRubricIndex}].marks" readonly class="sub-rubric-marks-auto" data-subindex="${subRubricIndex}" value="0">
-                        <small><i class="fas fa-calculator"></i> Max value from ratings below</small>
-                    </div>
-                    
-                    <div class="ratings-section">
-                        <div class="ratings-header">
-                            <h4>Ratings</h4>
-                        </div>
-                        <div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
-                        <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}" style="margin-top: 10px; width: 100%;">+ Add Rating</button>
-                    </div>
+                    <div class="form-group"><label>Sub-Rubric Name</label><input type="text" name="subRubrics[${subRubricIndex}].name" class="sub-rubric-name"></div>
+                    <div class="form-group"><label>Description</label><textarea rows="2" name="subRubrics[${subRubricIndex}].description"></textarea></div>
+                    <div class="form-group"><label>Marks (Auto-calculated)</label><input type="number" step="0.01" name="subRubrics[${subRubricIndex}].marks" readonly class="sub-rubric-marks-auto" data-subindex="${subRubricIndex}" value="0"></div>
+                    <div class="ratings-section"><h4>Ratings</h4><div class="sub-ratings-container" data-subindex="${subRubricIndex}"></div>
+                    <button type="button" class="btn btn-sm btn-secondary add-sub-rating-btn" data-subindex="${subRubricIndex}" style="margin-top: 10px; width: 100%;"><i class="fas fa-plus"></i> Add Rating</button></div>
                 `;
                 container.appendChild(card);
                 subRubricRatingIndices[subRubricIndex] = 0;
@@ -291,202 +292,187 @@
             });
         }
 
-        // Add Rating to Sub-Rubric
         document.addEventListener('click', function(e) {
             if (e.target.closest('.add-sub-rating-btn')) {
                 const btn = e.target.closest('.add-sub-rating-btn');
                 const subIndex = btn.getAttribute('data-subindex');
-                const ratingsContainer = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
+                const ratingsCont = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
+                const rIdx = subRubricRatingIndices[subIndex] || 0;
                 
-                if (typeof subRubricRatingIndices[subIndex] === 'undefined') subRubricRatingIndices[subIndex] = 0;
-                const ratingIndex = subRubricRatingIndices[subIndex];
-                
-                const ratingCard = document.createElement('div');
-                ratingCard.className = 'rating-card';
-                ratingCard.innerHTML = `
-                    <button type="button" class="remove-btn remove-rating-btn"><i class="fas fa-times"></i></button>
-                    <input type="hidden" name="subRubrics[${subIndex}].ratings[${ratingIndex}].id" value="" />
-                    
-                    <div class="rating-row">
-                        <div class="form-group col-grow">
-                            <label>Name</label>
-                            <input type="text" name="subRubrics[${subIndex}].ratings[${ratingIndex}].name" required placeholder="Rating Level">
-                        </div>
-                        <div class="form-group col-fixed">
-                            <label>Marks</label>
-                            <input type="number" step="0.01" name="subRubrics[${subIndex}].ratings[${ratingIndex}].marks" class="rating-marks sub-rating-marks" data-subindex="${subIndex}">
-                        </div>
+                const card = document.createElement('div');
+                card.className = 'rating-card';
+                card.innerHTML = `
+                    <button type="button" class="remove-btn remove-rating-btn"><i class="fas fa-times"></i> Remove</button>
+                    <div class="rating-row form-grid">
+                        <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="subRubrics[${subIndex}].ratings[${rIdx}].name" required></div>
+                        <div class="form-group col-fixed"><label>Marks</label><input type="number" step="0.01" name="subRubrics[${subIndex}].ratings[${rIdx}].marks" class="rating-marks sub-rating-marks" data-subindex="${subIndex}"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea rows="1" name="subRubrics[${subIndex}].ratings[${ratingIndex}].description"></textarea>
-                    </div>
+                    <div class="form-group"><label>Description</label><textarea rows="1" name="subRubrics[${subIndex}].ratings[${rIdx}].description"></textarea></div>
                 `;
-                ratingsContainer.appendChild(ratingCard);
+                ratingsCont.appendChild(card);
                 subRubricRatingIndices[subIndex]++;
             }
         });
 
-        // Add Direct Rating
         const addDirectBtn = document.getElementById('addDirectRatingBtn');
         if (addDirectBtn) {
             addDirectBtn.addEventListener('click', function() {
                 const card = document.createElement('div');
-                card.className = 'rating-card direct-rating-card';
-                // ✅ CHANGED: Removed "required" asterisk from Rating Name
+                card.className = 'rating-card';
                 card.innerHTML = `
-                    <button type="button" class="remove-btn remove-direct-rating-btn"><i class="fas fa-times"></i></button>
-                    <input type="hidden" name="ratings[${directRatingIndex}].id" value="" />
-                    
-                    <div class="rating-row">
-                        <div class="form-group col-grow">
-                            <label>Rating Name <span class="required">*</span></label>
-                            <input type="text" name="ratings[${directRatingIndex}].name" required placeholder="e.g. Good">
-                        </div>
-                        <div class="form-group col-fixed">
-                            <label>Marks <span class="required">*</span></label>
-                            <input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="direct-rating-marks">
-                        </div>
+                    <button type="button" class="remove-btn remove-direct-rating-btn"><i class="fas fa-times"></i> Remove</button>
+                    <div class="rating-row form-grid">
+                        <div class="form-group col-grow"><label>Rating Name *</label><input type="text" name="ratings[${directRatingIndex}].name" required></div>
+                        <div class="form-group col-fixed"><label>Marks *</label><input type="number" step="0.01" name="ratings[${directRatingIndex}].marks" required class="direct-rating-marks"></div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        <textarea rows="2" name="ratings[${directRatingIndex}].description"></textarea>
-                    </div>
+                    <div class="form-group"><label>Description</label><textarea rows="2" name="ratings[${directRatingIndex}].description"></textarea></div>
                 `;
                 directRatingsContainer.appendChild(card);
                 directRatingIndex++;
             });
         }
         
-        // Add Rubric Comment
         const addCommentBtn = document.getElementById('addRubricCommentBtn');
         if (addCommentBtn) {
             addCommentBtn.addEventListener('click', function() {
                 if (rubricCommentsEmpty) rubricCommentsEmpty.style.display = 'none';
-                
                 const card = document.createElement('div');
                 card.className = 'comment-card';
-                card.setAttribute('data-comment-index', rubricCommentIndex);
                 card.innerHTML = `
-                    <button type="button" class="remove-btn remove-rubric-comment-btn"><i class="fas fa-times"></i></button>
-                    <div class="comment-header">
-                        <span class="badge badge-purple">Question <span class="comment-number">${rubricCommentIndex + 1}</span></span>
-                    </div>
-                    <div class="form-group">
-                        <label>Question Text</label>
-                        <textarea name="rubricCommentLabels[${rubricCommentIndex}]" rows="2" placeholder="e.g., What specific improvements would you suggest?"></textarea>
-                    </div>
-                    <div class="comment-settings">
-                        <div class="form-group setting-input">
-                            <label>Min Length</label>
-                            <input type="number" name="rubricCommentMinLengths[${rubricCommentIndex}]" min="10" max="500" value="20">
-                        </div>
-                        <div class="form-group setting-check">
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="rubricCommentAnonymousFlags[${rubricCommentIndex}]" value="true" class="anonymous-checkbox" data-index="${rubricCommentIndex}">
-                                <span><i class="fas fa-user-secret"></i> Anonymous</span>
-                            </label>
-                        </div>
+                    <button type="button" class="remove-btn remove-rubric-comment-btn"><i class="fas fa-times"></i> Remove</button>
+                    <div class="form-group"><label>Comment Question</label><textarea name="rubricCommentLabels[${rubricCommentIndex}]" rows="2"></textarea></div>
+                    <div class="rating-row form-grid">
+                        <div class="form-group col-grow"><label>Min Length</label><input type="number" name="rubricCommentMinLengths[${rubricCommentIndex}]" value="20"></div>
+                        <div class="form-group col-grow" style="padding-top:25px;"><label><input type="checkbox" name="rubricCommentAnonymousFlags[${rubricCommentIndex}]" value="true"> Anonymous</label></div>
                     </div>
                 `;
                 rubricCommentsContainer.appendChild(card);
                 rubricCommentIndex++;
-                renumberRubricComments();
-            });
-        }
-        
-        function renumberRubricComments() {
-            if(!rubricCommentsContainer) return;
-            const comments = rubricCommentsContainer.querySelectorAll('.comment-card');
-            comments.forEach((card, index) => {
-                const numberSpan = card.querySelector('.comment-number');
-                if (numberSpan) numberSpan.textContent = index + 1;
-                
-                const textarea = card.querySelector('textarea[name^="rubricCommentLabels"]');
-                if(textarea) textarea.name = `rubricCommentLabels[${index}]`;
-
-                const minLen = card.querySelector('input[name^="rubricCommentMinLengths"]');
-                if(minLen) minLen.name = `rubricCommentMinLengths[${index}]`;
-
-                const anon = card.querySelector('input[name^="rubricCommentAnonymousFlags"]');
-                if(anon) anon.name = `rubricCommentAnonymousFlags[${index}]`;
             });
         }
 
-        // Auto-calc logic
         function updateSubRubricMarks(subIndex) {
-            const ratingsContainer = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
-            if (!ratingsContainer) return;
-            
-            const ratingInputs = ratingsContainer.querySelectorAll('.sub-rating-marks');
+            const cont = document.querySelector(`.sub-ratings-container[data-subindex="${subIndex}"]`);
+            if (!cont) return;
             let maxMark = 0;
-            
-            ratingInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                if (value > maxMark) maxMark = value;
+            cont.querySelectorAll('.sub-rating-marks').forEach(i => {
+                const val = parseFloat(i.value) || 0;
+                if (val > maxMark) maxMark = val;
             });
-            
-            const subRubricMarksInput = document.querySelector(`.sub-rubric-marks-auto[data-subindex="${subIndex}"]`);
-            if (subRubricMarksInput) subRubricMarksInput.value = maxMark.toFixed(2);
+            const out = document.querySelector(`.sub-rubric-marks-auto[data-subindex="${subIndex}"]`);
+            if (out) out.value = maxMark.toFixed(2);
         }
 
-        // Event Delegation for remove and input
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-sub-rubric-btn')) {
-                e.target.closest('.sub-rubric-card').remove();
-            }
+            if (e.target.closest('.remove-sub-rubric-btn')) e.target.closest('.sub-rubric-card').remove();
             if (e.target.closest('.remove-rating-btn')) {
                 const card = e.target.closest('.rating-card');
-                const container = card.closest('.sub-ratings-container');
+                const cont = card.closest('.sub-ratings-container');
                 card.remove();
-                if(container) updateSubRubricMarks(container.getAttribute('data-subindex'));
+                if(cont) updateSubRubricMarks(cont.getAttribute('data-subindex'));
             }
-            if (e.target.closest('.remove-direct-rating-btn')) {
-                e.target.closest('.rating-card').remove();
-            }
-            if (e.target.closest('.remove-rubric-comment-btn')) {
-                e.target.closest('.comment-card').remove();
-                renumberRubricComments();
-                if (rubricCommentsContainer && rubricCommentsContainer.children.length === 0 && rubricCommentsEmpty) {
-                    rubricCommentsEmpty.style.display = 'block';
-                }
-            }
+            if (e.target.closest('.remove-direct-rating-btn')) e.target.closest('.rating-card').remove();
+            if (e.target.closest('.remove-rubric-comment-btn')) e.target.closest('.comment-card').remove();
         });
 
         document.addEventListener('input', function(e) {
             if (e.target.classList.contains('sub-rating-marks')) {
-                const subIndex = e.target.getAttribute('data-subindex');
-                updateSubRubricMarks(subIndex);
+                updateSubRubricMarks(e.target.getAttribute('data-subindex'));
             }
         });
 
-        // Duplicate check handling
-        const duplicateFound = /*[[${duplicateFound}]]*/ false;
-        if (duplicateFound) {
-            const confirmedInput = document.getElementById('duplicateConfirmed');
-            const submitButton = document.getElementById('submitButton');
-
-            if(submitButton) {
-                submitButton.textContent = 'Confirm Duplicate Save';
-                submitButton.classList.remove('btn-primary');
-                submitButton.classList.add('btn-confirm-save', 'glow-effect');
-
-                submitButton.addEventListener('click', function(event) {
-                    event.preventDefault(); 
-                    const rubricNameInput = document.querySelector('input[name="name"]');
-                    const rubricName = rubricNameInput ? rubricNameInput.value : "Unknown";
-                    
-                    const confirmed = confirm("WARNING: A Rubric with the name '" + rubricName + "' already exists. Do you really want to save this duplicate?");
-                    if (confirmed) {
-                        confirmedInput.value = 'true';
-                        rubricForm.submit();
+        // ⚡ The Magic Injector Logic
+        const applyTemplateBtn = document.getElementById('applyTemplateBtn');
+        if (applyTemplateBtn) {
+            applyTemplateBtn.addEventListener('click', function() {
+                const templateId = document.getElementById('templateSelect').value;
+                if (!templateId) {
+                    alert('Please select a blueprint first.');
+                    return;
+                }
+                
+                if (subRubricIndex > 0 || directRatingIndex > 0) {
+                    if (!confirm('Applying a blueprint will not clear existing rows, but will append new ones. Continue?')) {
+                        return;
                     }
-                });
-            }
+                }
+                
+                const apiUrl = /*[[@{/rubrics/templates/api/}]]*/ '/rubrics/templates/api/';
+                
+                fetch(apiUrl + templateId)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(text => {
+                        if (!text) return;
+                        let data;
+                        try {
+                            data = JSON.parse(text);
+                            // In case it was double-stringified in the database
+                            if (typeof data === 'string') {
+                                data = JSON.parse(data);
+                            }
+                        } catch(e) {
+                            console.error('Error parsing blueprint JSON:', e);
+                            alert('Blueprint data is corrupted or invalid format.');
+                            return;
+                        }
+                        
+                        let bp = data;
+                        
+                        // Graceful backward compatibility mapping
+                        if (data.rubrics && data.rubrics.length > 0) {
+                            let first = data.rubrics[0];
+                            bp = {
+                                subRubrics: Array.from({length: first.subRubricsCount || 0}).map(() => ({ratingsCount: first.ratingsCount || 0})),
+                                directRatingsCount: (first.subRubricsCount === 0) ? (first.ratingsCount || 0) : 0,
+                                commentsCount: first.commentsCount || 0
+                            };
+                        }
+                        
+                        // 1. Inflate Sub-Rubrics
+                        if (bp.subRubrics) {
+                            bp.subRubrics.forEach(sr => {
+                                const currentSubIndex = subRubricIndex;
+                                if (addSubBtn) addSubBtn.click();
+                                
+                                setTimeout(() => {
+                                    const ratingBtn = document.querySelector(`.add-sub-rating-btn[data-subindex="${currentSubIndex}"]`);
+                                    if (ratingBtn) {
+                                        for (let j = 0; j < (sr.ratingsCount || 0); j++) {
+                                            ratingBtn.click();
+                                        }
+                                    }
+                                }, 20); // Small delay allows DOM to fully register new nodes
+                            });
+                        }
+                        
+                        // 2. Inflate Direct Ratings
+                        for (let i = 0; i < (bp.directRatingsCount || 0); i++) {
+                            if (addDirectBtn) addDirectBtn.click();
+                        }
+                        
+                        // 3. Inflate Rubric Comments
+                        for (let i = 0; i < (bp.commentsCount || 0); i++) {
+                            if (addCommentBtn) addCommentBtn.click();
+                        }
+                        
+                        setTimeout(() => {
+                            alert('Template Applied successfully!');
+                        }, 100);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching template:', error);
+                        alert('Failed to load blueprint data.');
+                    });
+            });
         }
     });
 /*]]>*/
 </script>
+
+<script th:src="@{/js/rubric-form.js}"></script>
+<script th:src="@{/js/loading.js}"></script>
 </body>
 </html>

@@ -8,37 +8,28 @@ import java.util.Map;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Student;
 
-/**
- * DTO for student's data in a specific assessment
- */
+
 public class StudentAssessmentDataDto {
     
     private Student student;
     private Assessment assessment;
-    private Double factor; // For peer/self assessments
+    private Double factor;
     
-    // Map of rubricId -> RubricCalculationDto
     private Map<Long, RubricCalculationDto> rubricCalculations = new HashMap<>();
     
-    // CLO-based sums
-    private Map<Integer, Double> cloSums = new HashMap<>(); // SClonMrm - All rubrics raw
-    private Map<Integer, Double> cloWeightedSums = new HashMap<>(); // SClonWrm - Combined weighted
+    private Map<Integer, Double> cloSums = new HashMap<>(); 
+    private Map<Integer, Double> cloWeightedSums = new HashMap<>(); 
     
-    // NEW: Separated CLO sums for display
-    private Map<Integer, Double> cloWeightedSumsGroupOnly = new HashMap<>(); // Only Group Assessment rubrics weighted
-    private Map<Integer, Double> cloSumsIndividualOnly = new HashMap<>(); // Only Individual Assessment rubrics raw
+    private Map<Integer, Double> cloWeightedSumsGroupOnly = new HashMap<>(); 
+    private Map<Integer, Double> cloSumsIndividualOnly = new HashMap<>(); 
     
-    // Total marks for this assessment
-    private Double totalMarks = 0.0; // T
+    private Double totalMarks = 0.0; 
     
-    // Comments
     private List<String> groupComments = new ArrayList<>();
     private List<String> individualComments = new ArrayList<>();
     
-    private Double totalUnweightedMarks; // Total of Raw Marks
-    private Double totalWeightedMarks;   // Total of Weighted Marks
-    
-    // Getters and Setters
+    private Double totalUnweightedMarks; 
+    private Double totalWeightedMarks; 
     
     public Student getStudent() {
         return student;
@@ -87,8 +78,6 @@ public class StudentAssessmentDataDto {
     public void setCloWeightedSums(Map<Integer, Double> cloWeightedSums) {
         this.cloWeightedSums = cloWeightedSums;
     }
-    
-    // NEW GETTERS/SETTERS FOR SEPARATED SUMS
     
     public Map<Integer, Double> getCloWeightedSumsGroupOnly() {
         return cloWeightedSumsGroupOnly;

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -32,7 +33,9 @@ public class Rubric {
     private Double cloMarks;
     private String assessmentTypes;
     
-    // ✅ NEW: Display order for reordering rubrics within their assessment type
+    @Column(name = "assessment_type")
+    private String assessmentType;
+    
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
@@ -46,30 +49,21 @@ public class Rubric {
     @OneToMany(mappedBy = "rubric", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Rating> ratings = new ArrayList<>();
 
-    // ========== NEW: INDIVIDUAL RUBRIC COMMENT CONFIGURATION ==========
-    
-    /**
-     * Labels/prompts for rubric-specific comment fields
-     */
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_labels", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_label", length = 500)
     private List<String> rubricCommentLabels = new ArrayList<>();
     
-    /**
-     * Minimum character lengths for each comment question (one per question)
-     */
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_min_lengths", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_min_length")
     private List<Integer> rubricCommentMinLengths = new ArrayList<>();
     
-    /**
-     * Anonymity settings for each comment question (one per question)
-     */
     @ElementCollection
+    @CollectionTable(name = "rubric_comment_anonymous_flags", joinColumns = @JoinColumn(name = "rubric_id"))
     @Column(name = "comment_anonymous")
     private List<Boolean> rubricCommentAnonymousFlags = new ArrayList<>();
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -85,7 +79,6 @@ public class Rubric {
     public Assessment getAssessment() { return assessment; }
     public void setAssessment(Assessment assessment) { this.assessment = assessment; }
     
-    // ✅ NEW: Display order getter/setter
     public Integer getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
     
@@ -139,8 +132,9 @@ public class Rubric {
     
     public String getAssessmentTypes() { return assessmentTypes; }
     public void setAssessmentTypes(String assessmentTypes) { this.assessmentTypes = assessmentTypes; }
-
-    // ===== RUBRIC-SPECIFIC COMMENT GETTERS/SETTERS =====
+    
+    public String getAssessmentType() { return assessmentType; }
+    public void setAssessmentType(String assessmentType) { this.assessmentType = assessmentType; }
     
     public List<String> getRubricCommentLabels() {
         if (rubricCommentLabels == null) {
@@ -188,7 +182,7 @@ public class Rubric {
     
     public Integer getRubricCommentMinLength(int index) {
         if (rubricCommentMinLengths == null || index >= rubricCommentMinLengths.size()) {
-            return 20; // Default
+            return 20; 
         }
         return rubricCommentMinLengths.get(index);
     }
@@ -247,10 +241,8 @@ public class Rubric {
         return total;
     }
     
-    // Deprecated - kept for backward compatibility
     @Deprecated
     public Boolean getCommentsAnonymous() {
-        // Return true if ANY comment is anonymous
         if (rubricCommentAnonymousFlags != null && !rubricCommentAnonymousFlags.isEmpty()) {
             return rubricCommentAnonymousFlags.stream().anyMatch(flag -> flag != null && flag);
         }
@@ -259,12 +251,11 @@ public class Rubric {
     
     @Deprecated
     public void setCommentsAnonymous(Boolean commentsAnonymous) {
-        // This is now handled per-comment
+        
     }
     
     @Deprecated
     public Integer getRubricCommentMinLength() {
-        // Return the first min length or default
         if (rubricCommentMinLengths != null && !rubricCommentMinLengths.isEmpty()) {
             return rubricCommentMinLengths.get(0);
         }
@@ -273,11 +264,10 @@ public class Rubric {
     
     @Deprecated
     public void setRubricCommentMinLength(Integer minLength) {
-        // This is now handled per-comment
+        
     }
     
     @Deprecated
     public void setRubricCommentCount(Integer count) {
-        // Count is now automatically derived from labels list
     }
 }

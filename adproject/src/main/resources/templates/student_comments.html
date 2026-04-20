@@ -21,7 +21,6 @@
         
         <div class="content-container comments-container">
             
-            <!-- Statistics Summary -->
             <div class="stats-summary">
                 <div class="stat-card">
                     <div class="stat-number" th:text="${totalComments}">0</div>
@@ -41,7 +40,6 @@
                 </div>
             </div>
             
-            <!-- Comments by Assessment -->
             <div th:if="${commentsByAssessment != null and !commentsByAssessment.isEmpty()}">
                 
                 <div th:each="assessmentEntry : ${commentsByAssessment}" class="assessment-comments-block">
@@ -50,10 +48,8 @@
                         <span th:text="${assessmentEntry.key}">Assessment Name</span>
                     </h2>
                     
-                    <!-- Horizontal Grid Layout: All Comments -->
                     <div class="comments-grid">
                         
-                        <!-- Self Comments -->
                         <th:block th:if="${assessmentEntry.value['self'] != null and !assessmentEntry.value['self'].isEmpty()}">
                             <div th:each="comment : ${assessmentEntry.value['self']}" 
                                  th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
@@ -79,7 +75,6 @@
                             </div>
                         </th:block>
                         
-                        <!-- Team Comments -->
                         <th:block th:if="${assessmentEntry.value['team'] != null and !assessmentEntry.value['team'].isEmpty()}">
                             <div th:each="comment : ${assessmentEntry.value['team']}" 
                                  th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
@@ -105,7 +100,6 @@
                             </div>
                         </th:block>
                         
-                        <!-- Peer Comments -->
                         <th:block th:if="${assessmentEntry.value['peer'] != null and !assessmentEntry.value['peer'].isEmpty()}">
                             <div th:each="comment : ${assessmentEntry.value['peer']}" 
                                  th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
@@ -135,7 +129,6 @@
                             </div>
                         </th:block>
                         
-                        <!-- Lecturer Comments -->
                         <th:block th:if="${assessmentEntry.value['lecturer'] != null and !assessmentEntry.value['lecturer'].isEmpty()}">
                             <div th:each="comment : ${assessmentEntry.value['lecturer']}" 
                                  th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
@@ -165,7 +158,6 @@
                             </div>
                         </th:block>
                         
-                        <!-- Supervisor Comments -->
                         <th:block th:if="${assessmentEntry.value['supervisor'] != null and !assessmentEntry.value['supervisor'].isEmpty()}">
                             <div th:each="comment : ${assessmentEntry.value['supervisor']}" 
                                  th:class="${comment.rubricId != null ? 'comment-card rubric-comment' : 'comment-card'}">
@@ -199,7 +191,6 @@
                 </div>
             </div>
             
-            <!-- No Comments Message -->
             <div th:if="${commentsByAssessment == null or commentsByAssessment.isEmpty()}" class="no-comments">
                 <i class="fas fa-comments"></i>
                 <h2>No Comments Yet</h2>

@@ -17,48 +17,23 @@ import com.capstone.adproject.model.LecturerGroupAssignment;
 @Repository
 public interface LecturerGroupAssignmentRepository extends JpaRepository<LecturerGroupAssignment, Long> {
     
-    /**
-     * Find all assignments for a specific assessment
-     */
     List<LecturerGroupAssignment> findByAssessment(Assessment assessment);
     
-    /**
-     * Find all assignments for a specific group
-     */
     List<LecturerGroupAssignment> findByGroup(Group group);
     
-    /**
-     * Find all assignments for a specific lecturer
-     */
     List<LecturerGroupAssignment> findByLecturer(Lecturer lecturer);
     
-    /**
-     * Find assignments for a specific assessment and group
-     */
     List<LecturerGroupAssignment> findByAssessmentAndGroup(Assessment assessment, Group group);
     
-    /**
-     * Check if an assignment exists
-     */
     boolean existsByAssessmentAndGroupAndLecturer(Assessment assessment, Group group, Lecturer lecturer);
     
-    
-    /**
-     * Delete all assignments for an assessment
-     */
     @Modifying
     @Transactional
     void deleteByAssessment(Assessment assessment);
     
-    /**
-     * ✅ NEW: Find all assessments assigned to a lecturer
-     */
     @Query("SELECT DISTINCT lga.assessment FROM LecturerGroupAssignment lga WHERE lga.lecturer = :lecturer")
     List<Assessment> findAssessmentsByLecturer(@Param("lecturer") Lecturer lecturer);
     
-    /**
-     * ✅ NEW: Find all groups assigned to a lecturer for a specific assessment
-     */
     @Query("SELECT lga.group FROM LecturerGroupAssignment lga " +
            "WHERE lga.lecturer = :lecturer AND lga.assessment = :assessment")
     List<Group> findGroupsByLecturerAndAssessment(
@@ -66,9 +41,6 @@ public interface LecturerGroupAssignmentRepository extends JpaRepository<Lecture
         @Param("assessment") Assessment assessment
     );
     
-    /**
-     * Find assignments by lecturer and assessment
-     */
     @Query("SELECT lga FROM LecturerGroupAssignment lga " +
            "WHERE lga.lecturer = :lecturer AND lga.assessment = :assessment")
     List<LecturerGroupAssignment> findByLecturerAndAssessment(

@@ -2,6 +2,7 @@ package com.capstone.adproject.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,19 +11,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
+import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Group;
-import com.capstone.adproject.model.IndustrialSupervisor;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.GroupRepository;
-import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.util.PasswordGenerator;
-import com.capstone.adproject.util.PasswordGenerator;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.UUID;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -31,106 +30,143 @@ public class AdminService {
 
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
-    private final IndustrialSupervisorRepository industrialSupervisorRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdminRepository adminRepository;
+    private final CourseScopeService courseScopeService;
 
     @Autowired
     public AdminService(
             StudentRepository studentRepository, 
             LecturerRepository lecturerRepository, 
-            IndustrialSupervisorRepository industrialSupervisorRepository, 
             GroupRepository groupRepository, 
             PasswordEncoder passwordEncoder,
-            LecturerGroupAssignmentRepository assignmentRepository) {
+            LecturerGroupAssignmentRepository assignmentRepository,
+            AdminRepository adminRepository,
+            CourseScopeService courseScopeService) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
-        this.industrialSupervisorRepository = industrialSupervisorRepository;
         this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
         this.assignmentRepository = assignmentRepository;
+        this.adminRepository = adminRepository;
+        this.courseScopeService = courseScopeService;
     }
 
     @Autowired
 private EmailService emailService;
 
     public void saveStudent(Student student, HttpServletRequest request) {
-    // Validate email is provided
     if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
     }
 
     if (student.getId() != null) {
-        // ========== UPDATE EXISTING USER ==========
         Student existingStudent = studentRepository.findById(student.getId())
             .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        // Keep existing password and flags
         student.setPassword(existingStudent.getPassword());
         student.setIsTempPassword(existingStudent.getIsTempPassword());
-        student.setUsername(existingStudent.getUsername()); // Preserve old username
+        student.setUsername(existingStudent.getUsername()); 
         student.setResetPasswordToken(existingStudent.getResetPasswordToken());
+        student.setCourse(existingStudent.getCourse());
         
-        // Update email if changed
         if (!existingStudent.getEmail().equals(student.getEmail())) {
-            // Email changed - you could optionally send notification here
             student.setEmail(student.getEmail());
         }
         
     } else {
-        // ========== CREATE NEW USER ==========
-        // Generate secure random password
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        student.setPassword(passwordEncoder.encode(tempPassword));
-        student.setIsTempPassword(true);
-        student.setUsername(null); // No username for new users
-        
-        // Generate reset token for password change
+        Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected for student creation"));
+        student.setCourse(activeCourse);
+
+        // Check if user already exists in other tables to sync password
+        String existingPassword = null;
+        Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
-        student.setResetPasswordToken(resetToken);
         
-        // Save first to ensure it persists
-        Student savedStudent = studentRepository.save(student);
-        
-        // Build password reset link
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
-        }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        // Send welcome email with temporary password
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                student.getEmail(),
-                tempPassword,
-                "Student",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + student.getEmail());
-            e.printStackTrace();
-            // Continue anyway - user created, just email failed
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(student.getEmail());
+        if (existingAdmin.isPresent()) {
+            existingPassword = existingAdmin.get().getPassword();
+            isTemp = false;
+            resetToken = existingAdmin.get().getResetPasswordToken();
         }
         
-        return; // Exit early, already saved
+        Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(student.getEmail());
+        if (existingLecturer.isPresent()) {
+            existingPassword = existingLecturer.get().getPassword();
+            isTemp = existingLecturer.get().getIsTempPassword();
+            resetToken = existingLecturer.get().getResetPasswordToken();
+        }
+
+        if (existingPassword != null) {
+            student.setPassword(existingPassword);
+            student.setIsTempPassword(isTemp);
+            student.setResetPasswordToken(resetToken);
+        } else {
+            String tempPassword = PasswordGenerator.generateRandomPassword();
+            student.setPassword(passwordEncoder.encode(tempPassword));
+            student.setIsTempPassword(true);
+            student.setResetPasswordToken(resetToken);
+            
+            sendWelcomeEmail(student.getEmail(), tempPassword, "Student", resetToken, request);
+        }
+        
+        if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+            student.setUsername(student.getEmail().split("@")[0]);
+        }
+        studentRepository.save(student);
+        return; 
     }
     
-    // Save updated user
     studentRepository.save(student);
 }
 
-/**
- * ✅ UPDATED: Save lecturer - EMAIL ONLY, auto-generate password for new users
- */
+private Optional<Course> resolveCurrentAdminCourse() {
+    Course activeCourse = courseScopeService.getActiveCourseForCurrentUser();
+    if (activeCourse != null && activeCourse.getId() != null) {
+        return Optional.of(activeCourse);
+    }
+
+    List<Course> managed = courseScopeService.getManagedCoursesForCurrentUser();
+    if (!managed.isEmpty()) {
+        return Optional.of(managed.get(0));
+    }
+
+    return Optional.empty();
+}
+
+public Optional<Course> getCurrentAdminCourse() {
+    return resolveCurrentAdminCourse();
+}
+
+private void sendWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
+    String applicationUrl = request.getScheme() + "://" + request.getServerName();
+    if (request.getServerPort() != 80 && request.getServerPort() != 443) {
+        applicationUrl += ":" + request.getServerPort();
+    }
+    String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+    
+    try {
+        emailService.sendWelcomeEmailWithPassword(
+            email,
+            tempPassword,
+            role,
+            resetLink
+        );
+    } catch (Exception e) {
+        System.err.println("Failed to send welcome email to: " + email);
+        e.printStackTrace();
+    }
+}
+
 public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
     if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
     }
 
     if (lecturer.getId() != null) {
-        // UPDATE
         Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
         
@@ -138,106 +174,88 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
         lecturer.setUsername(existingLecturer.getUsername());
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
+        lecturer.setRoles(existingLecturer.getRoles()); // Preserve existing roles
+        lecturer.setCourse(existingLecturer.getCourse());
         
     } else {
-        // CREATE
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        lecturer.setPassword(passwordEncoder.encode(tempPassword));
-        lecturer.setIsTempPassword(true);
-        lecturer.setUsername(null);
-        
+        Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected for lecturer creation"));
+        lecturer.setCourse(activeCourse);
+
+        // Check if user already exists in other tables to sync password
+        String existingPassword = null;
+        Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
-        lecturer.setResetPasswordToken(resetToken);
         
-        Lecturer savedLecturer = lecturerRepository.save(lecturer);
-        
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
+        Optional<Admin> existingAdmin = adminRepository.findByEmail(lecturer.getEmail());
+        if (existingAdmin.isPresent()) {
+            existingPassword = existingAdmin.get().getPassword();
+            isTemp = false;
+            resetToken = existingAdmin.get().getResetPasswordToken();
         }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                lecturer.getEmail(),
-                tempPassword,
-                "Lecturer",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + lecturer.getEmail());
-            e.printStackTrace();
+
+        if (existingPassword != null) {
+            lecturer.setPassword(existingPassword);
+            lecturer.setIsTempPassword(isTemp);
+            lecturer.setResetPasswordToken(resetToken);
+        } else {
+            String tempPassword = PasswordGenerator.generateRandomPassword();
+            lecturer.setPassword(passwordEncoder.encode(tempPassword));
+            lecturer.setIsTempPassword(true);
+            lecturer.setResetPasswordToken(resetToken);
+            lecturer.setRoles("ROLE_LECTURER"); // Default role for new lecturer
+            
+            sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Lecturer", resetToken, request);
         }
         
+        if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
+            lecturer.setUsername(lecturer.getEmail().split("@")[0]);
+        }
+        lecturerRepository.save(lecturer);
         return;
     }
     
     lecturerRepository.save(lecturer);
 }
 
-/**
- * ✅ UPDATED: Save industrial supervisor - EMAIL ONLY, auto-generate password
- */
-public void saveIndustrialSupervisor(IndustrialSupervisor supervisor, HttpServletRequest request) {
-    if (supervisor.getEmail() == null || supervisor.getEmail().trim().isEmpty()) {
-        throw new RuntimeException("Email is required");
-    }
 
-    if (supervisor.getId() != null) {
-        // UPDATE
-        IndustrialSupervisor existing = industrialSupervisorRepository.findById(supervisor.getId())
-            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-        
-        supervisor.setPassword(existing.getPassword());
-        supervisor.setIsTempPassword(existing.getIsTempPassword());
-        supervisor.setUsername(existing.getUsername());
-        supervisor.setResetPasswordToken(existing.getResetPasswordToken());
-        
-    } else {
-        // CREATE
-        String tempPassword = PasswordGenerator.generateRandomPassword();
-        supervisor.setPassword(passwordEncoder.encode(tempPassword));
-        supervisor.setIsTempPassword(true);
-        supervisor.setUsername(null);
-        
-        String resetToken = UUID.randomUUID().toString();
-        supervisor.setResetPasswordToken(resetToken);
-        
-        IndustrialSupervisor saved = industrialSupervisorRepository.save(supervisor);
-        
-        String applicationUrl = request.getScheme() + "://" + request.getServerName();
-        if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-            applicationUrl += ":" + request.getServerPort();
+@Transactional
+public int bulkAddStudents(String emailsText, HttpServletRequest request) {
+    String[] emails = emailsText.split("[,\\n\\r]+");
+    int count = 0;
+    for (String email : emails) {
+        String trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail.isEmpty()) {
+            if (studentRepository.findByEmail(trimmedEmail).isEmpty()) {
+                Student student = new Student();
+                student.setEmail(trimmedEmail);
+                saveStudent(student, request);
+                count++;
+            }
         }
-        String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
-        
-        try {
-            emailService.sendWelcomeEmailWithPassword(
-                supervisor.getEmail(),
-                tempPassword,
-                "Industrial Supervisor",
-                resetLink
-            );
-        } catch (Exception e) {
-            System.err.println("Failed to send welcome email to: " + supervisor.getEmail());
-            e.printStackTrace();
-        }
-        
-        return;
     }
-    
-    industrialSupervisorRepository.save(supervisor);
+    return count;
 }
 
-// ==========================================
-// 🔍 UPDATED DUPLICATE CHECKERS - EMAIL ONLY
-// ==========================================
+@Transactional
+public int bulkAddLecturers(String emailsText, HttpServletRequest request) {
+    String[] emails = emailsText.split("[,\\n\\r]+");
+    int count = 0;
+    for (String email : emails) {
+        String trimmedEmail = email.trim().toLowerCase();
+        if (!trimmedEmail.isEmpty()) {
+            if (lecturerRepository.findByEmail(trimmedEmail).isEmpty()) {
+                Lecturer lecturer = new Lecturer();
+                lecturer.setEmail(trimmedEmail);
+                saveLecturer(lecturer, request);
+                count++;
+            }
+        }
+    }
+    return count;
+}
 
-/**
- * ✅ UPDATED: Check student email duplicate (removed username checking)
- */
-public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
-    if (email == null || email.trim().isEmpty()) {
+public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {    if (email == null || email.trim().isEmpty()) {
         return "Email is required";
     }
     
@@ -249,16 +267,17 @@ public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) 
         if (student.getEmail() != null) {
             String existingNormalized = student.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
+                return "Email '" + email + "' is already registered as a Student.";
             }
         }
     }
     return null;
 }
 
-/**
- * ✅ UPDATED: Check lecturer email duplicate
- */
+private Optional<Long> getActiveCourseId() {
+    return Optional.ofNullable(courseScopeService.getActiveCourseIdForCurrentUser());
+}
+
 public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude) {
     if (email == null || email.trim().isEmpty()) {
         return "Email is required";
@@ -272,58 +291,28 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         if (lecturer.getEmail() != null) {
             String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
+                return "Email '" + email + "' is already registered as a Lecturer.";
             }
         }
     }
     return null;
 }
-
-/**
- * ✅ UPDATED: Check supervisor email duplicate
- */
-public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExclude) {
-    if (email == null || email.trim().isEmpty()) {
-        return "Email is required";
-    }
-    
-    String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
-    List<IndustrialSupervisor> allSupervisors = industrialSupervisorRepository.findAll();
-    
-    for (IndustrialSupervisor supervisor : allSupervisors) {
-        if (supervisorIdToExclude != null && supervisor.getId().equals(supervisorIdToExclude)) continue;
-        if (supervisor.getEmail() != null) {
-            String existingNormalized = supervisor.getEmail().replaceAll("\\s+", "").toLowerCase();
-            if (existingNormalized.equals(normalizedEmail)) {
-                return "Email '" + email + "' is already registered";
-            }
-        }
-    }
-    return null;
-}
-
-    // ==========================================
-    // 🗑️ DELETE METHODS (Safe & Transactional)
-    // ==========================================
 
     @Transactional
     public void deleteStudentById(Long id) {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Student not found"));
         
-        // 1. Remove from Group 
         if (student.getGroup() != null) {
             removeStudentFromGroup(id);
         }
 
-        // 2. Cleanup dependencies
         studentRepository.deleteCalculatedResultsByStudentId(id);
         studentRepository.deleteCommentsByStudentId(id);
         studentRepository.deleteMarksReceivedByStudent(id);
         studentRepository.deleteMarksGivenByStudent(id);
         studentRepository.deleteOverridesByStudent(id);
 
-        // 3. Delete Student
         studentRepository.delete(student);
     }
 
@@ -332,38 +321,15 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         Lecturer lecturer = lecturerRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
-        // 1. Unlink from Groups (set academic_supervisor_id = NULL)
         lecturerRepository.unlinkFromGroups(id);
 
-        // 2. Delete assignments (LecturerGroupAssignment)
         lecturerRepository.deleteGroupAssignments(id);
 
-        // 3. Delete Marks given by this lecturer
         lecturerRepository.deleteMarksGiven(id);
         
-        // 4. Delete comments given by this lecturer
         lecturerRepository.deleteCommentsByLecturer(id);
 
-        // 5. Delete Lecturer
         lecturerRepository.delete(lecturer);
-    }
-
-    @Transactional
-    public void deleteIndustrialSupervisorById(Long id) {
-        IndustrialSupervisor supervisor = industrialSupervisorRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Supervisor not found"));
-
-        // 1. Unlink from Groups (set industrial_supervisor_id = NULL)
-        industrialSupervisorRepository.unlinkFromGroups(id);
-
-        // 2. Delete Marks given by this supervisor
-        industrialSupervisorRepository.deleteMarksGiven(id);
-        
-        // 3. Delete comments given by this supervisor
-        industrialSupervisorRepository.deleteCommentsBySupervisor(id);
-
-        // 4. Delete Supervisor
-        industrialSupervisorRepository.delete(supervisor);
     }
 
     @Transactional
@@ -382,20 +348,11 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         }
     }
 
-    @Transactional
-    public void deleteIndustrialSupervisorsByIds(List<Long> ids) {
-        if (ids == null) return;
-        for (Long id : ids) {
-            deleteIndustrialSupervisorById(id);
-        }
-    }
-
-    // ==========================================
-    // 👥 GROUP MANAGEMENT
-    // ==========================================
 
     public List<Student> getStudentsWithoutGroup() {
-        return studentRepository.findByGroupIsNull();
+        return getActiveCourseId()
+            .map(studentRepository::findByCourseIdAndGroupIsNull)
+            .orElse(List.of());
     }
     
     public List<Student> getStudentsByGroup(Group group) {
@@ -403,7 +360,9 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
     }
     
     public List<Group> getAllGroups() {
-        return groupRepository.findAll();
+        return getActiveCourseId()
+            .map(groupRepository::findByCourseId)
+            .orElse(List.of());
     }
     
     public Optional<Group> findGroupById(Long id) {
@@ -413,18 +372,43 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
     @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
         Group newGroup = new Group();
-        newGroup.setGroupName(dto.getGroupName());
+        String groupName = dto.getGroupName();
+        if (groupName == null || groupName.trim().isEmpty()) {
+            groupName = "Random Group " + java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        }
+        newGroup.setGroupName(groupName);
+        resolveCurrentAdminCourse().ifPresent(newGroup::setCourse);
 
-        lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
-        industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+        if (dto.getAcademicSupervisorId() != null) {
+            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
+        }
+        if (dto.getIndustrialSupervisorId() != null) {
+            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+        }
 
         Group savedGroup = groupRepository.save(newGroup);
 
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
 
+            if (newGroup.getCourse() == null) {
+                studentsToAssign.stream()
+                        .map(Student::getCourse)
+                        .filter(c -> c != null)
+                        .findFirst()
+                        .ifPresent(newGroup::setCourse);
+            }
+
+            groupRepository.save(savedGroup);
+
             for (Student student : studentsToAssign) {
                 student.setGroup(savedGroup);
+                if (student.getCourse() == null && savedGroup.getCourse() != null) {
+                    student.setCourse(savedGroup.getCourse());
+                }
+                if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+                    student.setUsername(student.getEmail() != null ? student.getEmail().split("@")[0] : "student" + student.getId());
+                }
             }
             studentRepository.saveAll(studentsToAssign);
 
@@ -441,6 +425,10 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         Group existingGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
+        if (existingGroup.getCourse() == null) {
+            resolveCurrentAdminCourse().ifPresent(existingGroup::setCourse);
+        }
+
         existingGroup.setGroupName(dto.getGroupName());
         
         if (dto.getAcademicSupervisorId() != null) {
@@ -450,7 +438,7 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         }
         
         if (dto.getIndustrialSupervisorId() != null) {
-            industrialSupervisorRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
         } else {
             existingGroup.setIndustrialSupervisor(null);
         }
@@ -462,7 +450,12 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
             
             List<Student> studentsToSave = newStudentsToAssign.stream()
                 .filter(student -> student.getGroup() == null)
-                .peek(student -> student.setGroup(existingGroup))
+                .peek(student -> {
+                    student.setGroup(existingGroup);
+                    if (student.getCourse() == null && existingGroup.getCourse() != null) {
+                        student.setCourse(existingGroup.getCourse());
+                    }
+                })
                 .toList();
             
             studentRepository.saveAll(studentsToSave);
@@ -507,21 +500,18 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         groupRepository.delete(groupToDelete);
     }
 
-    // ==========================================
-    // 🔍 SEARCH & HELPERS
-    // ==========================================
-
     public List<Student> getAllStudents() {
-        return studentRepository.findAllWithGroupEagerly();
+        return getActiveCourseId()
+            .map(studentRepository::findAllWithGroupEagerlyByCourseId)
+            .orElse(List.of());
     }
 
     public List<Lecturer> getAllLecturers() {
-        return lecturerRepository.findAll();
+        return getActiveCourseId()
+            .map(lecturerRepository::findByCourseId)
+            .orElse(List.of());
     }
 
-    public List<IndustrialSupervisor> getAllIndustrialSupervisors() {
-        return industrialSupervisorRepository.findAll();
-    }
 
     public Optional<Student> findStudentById(Long id) {
         return studentRepository.findById(id);
@@ -531,22 +521,23 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
         return lecturerRepository.findById(id);
     }
 
-    public Optional<IndustrialSupervisor> findIndustrialSupervisorById(Long id) {
-        return industrialSupervisorRepository.findById(id);
-    }
 
     public List<Student> searchStudentsWithoutGroup(String searchTerm) {
         if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            return studentRepository.findByGroupIsNullAndUsernameContainingIgnoreCase(searchTerm);
+            return getStudentsWithoutGroup().stream()
+                .filter(student -> student.getUsername() != null
+                    && student.getUsername().toLowerCase().contains(searchTerm.toLowerCase()))
+                .toList();
         }
-        return studentRepository.findByGroupIsNull(); 
+        return getStudentsWithoutGroup(); 
     }
 
     public GroupAssignmentDto generateSingleRandomGroup() {
-        List<Student> availableStudents = studentRepository.findByGroupIsNull();
+        List<Student> availableStudents = getStudentsWithoutGroup();
         
         GroupAssignmentDto dto = new GroupAssignmentDto();
-        dto.setGroupName("Random Group (Ready to Edit)");
+        String uniqueId = java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+        dto.setGroupName("Random Group " + uniqueId);
         
         List<Long> studentIds = availableStudents.stream()
                                                  .map(Student::getId)
@@ -566,6 +557,48 @@ public String checkSupervisorEmailDuplicate(String email, Long supervisorIdToExc
     }
 
     public long getAvailableStudentsCount() {
-        return studentRepository.countByGroupIsNull(); 
+        return getActiveCourseId()
+            .map(studentRepository::countByCourseIdAndGroupIsNull)
+            .orElse(0L); 
+    }
+
+    public Optional<Admin> findAdminByEmail(String email) {
+        return adminRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public void addRole(String email, String targetRole, HttpServletRequest request) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Email is required for role assignation");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        if ("LECTURER".equalsIgnoreCase(targetRole)) {
+            Optional<Lecturer> existingLecturerOpt = lecturerRepository.findByEmail(normalizedEmail);
+            Lecturer lecturerToUpdate;
+            if (existingLecturerOpt.isPresent()) {
+                lecturerToUpdate = existingLecturerOpt.get();
+                String currentRoles = lecturerToUpdate.getRoles() != null ? lecturerToUpdate.getRoles() : "";
+                if (!currentRoles.contains("ROLE_LECTURER")) {
+                    lecturerToUpdate.setRoles(currentRoles.isEmpty() ? "ROLE_LECTURER" : currentRoles + ",ROLE_LECTURER");
+                }
+            } else {
+                lecturerToUpdate = new Lecturer();
+                lecturerToUpdate.setEmail(normalizedEmail);
+                lecturerToUpdate.setRoles("ROLE_LECTURER");
+                // Password and temp password will be handled by saveLecturer
+            }
+            saveLecturer(lecturerToUpdate, request);
+        } else {
+            throw new RuntimeException("Invalid target role: " + targetRole + ". Only LECTURER role is supported.");
+        }
+    }
+
+    public List<Lecturer> searchLecturers(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return lecturerRepository.findAll();
+        }
+        return lecturerRepository.findByEmailContainingIgnoreCase(query);
     }
 }

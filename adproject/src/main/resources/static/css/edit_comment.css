@@ -1,7 +1,3 @@
-/* =======================================================
-   EDIT COMMENT - Professional Maroon Theme
-   ======================================================= */
-
 :root {
     --color-primary: #4A0018;
     --color-secondary: #3F3F46;
@@ -29,7 +25,7 @@ body.edit-comment-page {
 
 body.edit-comment-page .main-content {
     margin-left: 270px !important;
-    padding: 40px 40px 100px 40px !important; /* Bottom padding for footer */
+    padding: 40px 40px 100px 40px !important; 
     flex-grow: 1 !important;
     background-color: var(--color-background) !important;
     display: flex !important;
@@ -37,7 +33,6 @@ body.edit-comment-page .main-content {
     align-items: center !important;
 }
 
-/* Header */
 body.edit-comment-page .header-container {
     display: flex !important;
     flex-direction: row !important;
@@ -53,12 +48,37 @@ body.edit-comment-page .header-container h1 { margin: 0 !important; color: var(-
 
 body.edit-comment-page .page-header {
     text-align: center !important;
-    margin-bottom: 30px !important;
-    width: 100% !important;
-    max-width: 800px !important;
 }
 
-body.edit-comment-page .page-header h1 {
+@media (max-width: 768px) {
+    body.edit-comment-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 60px 15px !important;
+    }
+    
+    body.edit-comment-page .header-container {
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+    
+    body.edit-comment-page .header-container img { 
+        max-width: 120px !important; 
+    }
+    
+    body.edit-comment-page .header-container h1 { 
+        font-size: 1.5rem !important; 
+    }
+    
+    body.edit-comment-page .card {
+        padding: 20px;
+    }
+    
+    body.edit-comment-page .settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+body.edit-comment-page .page-header {
     color: var(--color-primary) !important;
     font-size: 2rem !important;
     margin-bottom: 10px !important;
@@ -72,7 +92,6 @@ body.edit-comment-page .page-header p {
     font-size: 1.1rem !important;
 }
 
-/* Card */
 body.edit-comment-page .card {
     background-color: var(--color-surface) !important;
     border-radius: 12px !important;
@@ -83,7 +102,6 @@ body.edit-comment-page .card {
     padding: 30px !important;
 }
 
-/* Form Styles */
 body.edit-comment-page .comment-edit-box {
     padding: 20px !important;
     background-color: #f9fafb !important;
@@ -159,34 +177,30 @@ body.edit-comment-page .checkbox-label input {
     accent-color: var(--color-primary) !important;
 }
 
-/* ==================== FLOATING ACTION BUTTONS (Updated) ==================== */
 body.edit-comment-page .button-container {
     position: fixed !important;
     bottom: 20px !important;
     
-    /* Stretch Logic */
-    left: 290px !important;  /* Sidebar (270) + Gap (20) */
+    left: 290px !important;  
     right: 20px !important;
     width: auto !important;
     
-    /* Styling */
     background-color: var(--color-surface) !important;
     padding: 15px 30px !important;
     border-radius: 12px !important;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid var(--color-border) !important;
     
-    /* Centering */
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important; /* Centers buttons in the box */
+    justify-content: center !important; 
     gap: 20px !important;
     z-index: 1000 !important;
     margin: 0 !important;
 }
 
 body.edit-comment-page .btn {
-    padding: 10px 30px !important; /* Slightly wider buttons */
+    padding: 10px 30px !important; 
     border-radius: 6px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
@@ -201,7 +215,6 @@ body.edit-comment-page .btn:hover { transform: translateY(-2px) !important; }
 body.edit-comment-page .btn-primary { background-color: var(--color-primary) !important; color: white !important; }
 body.edit-comment-page .btn-secondary { background-color: var(--color-secondary) !important; color: white !important; }
 
-/* Alerts */
 body.edit-comment-page .alert {
     padding: 15px !important;
     border-radius: 8px !important;

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Home</title>
     <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/student_home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -65,13 +66,13 @@
             <div class="deadline-section">
                 <h2>DEADLINES</h2>
                 <div class="deadline-list">
-                    <div th:if="${allDeadlines == null or #lists.isEmpty(allDeadlines)}" 
+                    <div th:if="${deadlines == null or #lists.isEmpty(deadlines)}" 
                          style="text-align: center; padding: 20px; color: #6B6B6B;">
                         <i class="fas fa-calendar-times" style="font-size: 2em; margin-bottom: 10px;"></i>
                         <p>No deadlines available</p>
                     </div>
                     
-                    <div th:each="deadline : ${allDeadlines}" 
+                    <div th:each="deadline : ${deadlines}" 
                          class="deadline-item"
                          th:classappend="${deadline.assessorType == 'STUDENT' ? 'student-deadline' : 
                                          (deadline.assessorType == 'LECTURER' ? 'lecturer-deadline' : 

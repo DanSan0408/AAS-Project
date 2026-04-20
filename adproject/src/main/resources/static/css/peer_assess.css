@@ -1,41 +1,30 @@
-/* =======================================================
-   PEER ASSESSMENT FORM - IRON BURGUNDY & GOLD THEME
-   Refined Layout & Fixed Sidebar Text Color
-   ======================================================= */
-
 :root {
-    /* Primary Colors */
-    --student-primary: #7A1E2D;    /* Iron Burgundy */
-    --student-secondary: #3F3F46;  /* Graphite Grey */
-    --student-accent: #F8A617;     /* Gold */
-    --student-background: #F4F2EE; /* Light Sand Grey */
+    --student-primary: #7A1E2D;    
+    --student-secondary: #3F3F46;  
+    --student-accent: #F8A617;     
+    --student-background: #F4F2EE; 
     
-    /* Functional Colors - ALIGNED WITH student_comments.css */
-    --student-text: #FAFAFA;       /* Off White (Used for Sidebar/Dark Backgrounds) */
-    --student-text-dark: #2B2B2B;  /* Dark Text (Used for Main Content) */
+    --student-text: #FAFAFA;       
+    --student-text-dark: #2B2B2B;  
     
-    --student-surface: #FFFFFF;    /* White */
-    --student-border: #D4D1CC;     /* Muted Sand */
-    --student-hover: #EDEAE6;      /* Slightly darker sand */
-    --student-alert: #8B1E1E;      /* Dark Red */
-    --student-success: #4CAF7D;    /* Green */
+    --student-surface: #FFFFFF;    
+    --student-border: #D4D1CC;     
+    --student-hover: #EDEAE6;      
+    --student-alert: #8B1E1E;      
+    --student-success: #4CAF7D;    
 }
 
-/* Global Reset */
 * { box-sizing: border-box; }
 
-/* ==================== BODY & LAYOUT ==================== */
 body {
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--student-background);
     
-    /* CRITICAL: Use dark text variable for the main page body */
     color: var(--student-text-dark); 
     
     margin: 0;
     padding: 0;
     
-    /* Flex layout to support the fixed sidebar correctly */
     display: flex;
     min-height: 100vh;
 }
@@ -48,7 +37,27 @@ body {
     min-height: 100vh;
 }
 
-/* Centered Form Container */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 0;
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+    }
+    .content-container { gap: 20px; }
+    .header-container { flex-direction: column; margin-bottom: 20px; }
+    .header-container img { max-width: 120px; }
+    .header-container h1 { font-size: 1.5rem; text-align: center; }
+    .assessment-info { padding: 20px; }
+    .assessment-info h2 { font-size: 1.3em; margin-bottom: 15px; }
+    .evaluation-info { flex-direction: column; gap: 15px; font-size: 1em; }
+}
+
 .content-container {
     max-width: 1200px; 
     margin: 0 auto;
@@ -58,7 +67,6 @@ body {
     gap: 30px;
 }
 
-/* ==================== HEADER ==================== */
 .header-container {
     display: flex;
     align-items: center;
@@ -80,7 +88,6 @@ body {
     font-weight: 700;
 }
 
-/* ==================== INFO CARDS ==================== */
 .assessment-info {
     background-color: var(--student-surface);
     padding: 30px;
@@ -114,7 +121,7 @@ body {
 
 .self-badge {
     background-color: var(--student-accent);
-    color: var(--student-text-dark); /* Dark text on Gold background */
+    color: var(--student-text-dark); 
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 0.85em;
@@ -122,7 +129,6 @@ body {
     margin-left: 8px;
 }
 
-/* ==================== NOTICES ==================== */
 .notices-container {
     display: grid;
     grid-template-columns: 1fr;
@@ -140,7 +146,7 @@ body {
 }
 
 .re-evaluation-notice {
-    background-color: #FFF8E1; /* Light Gold */
+    background-color: #FFF8E1; 
     border: 1px solid var(--student-accent);
     color: #92400E;
 }
@@ -151,7 +157,7 @@ body {
 }
 
 .deadline-warning {
-    background-color: #FDEDED; /* Light Red */
+    background-color: #FDEDED; 
     border: 1px solid #FABDBD;
     color: var(--student-alert);
 }
@@ -170,7 +176,6 @@ body {
     margin: 0;
 }
 
-/* ==================== RUBRIC SECTIONS ==================== */
 .rubric-section {
     background-color: var(--student-surface);
     border-radius: 12px;
@@ -221,7 +226,7 @@ body {
 
 .clo-badge {
     background-color: var(--student-secondary);
-    color: white; /* White text on dark grey */
+    color: white; 
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.85em;
@@ -230,14 +235,13 @@ body {
 
 .marks-badge {
     background-color: var(--student-accent);
-    color: var(--student-text-dark); /* Dark text on Gold */
+    color: var(--student-text-dark); 
     padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.85em;
     font-weight: 700;
 }
 
-/* ==================== SUB RUBRICS & RATINGS ==================== */
 .sub-rubric-item {
     background-color: #FAFAFA;
     padding: 25px;
@@ -287,12 +291,11 @@ body {
     box-shadow: 0 6px 16px rgba(122, 30, 45, 0.1);
 }
 
-/* Selected State */
 .rating-option input[type="radio"]:checked + .rating-label,
 .rating-option.selected .rating-label {
     background-color: var(--student-primary);
     border-color: var(--student-primary);
-    color: white; /* White text on Burgundy */
+    color: white; 
     box-shadow: 0 4px 15px rgba(122, 30, 45, 0.3);
 }
 
@@ -318,14 +321,12 @@ body {
     margin: 0;
 }
 
-/* Text color fixes for selected state */
 .rating-option.selected .rating-marks { 
     background: var(--student-accent); 
-    color: var(--student-text-dark); /* Dark text on Gold badge */
+    color: var(--student-text-dark); 
 }
 .rating-option.selected .rating-description { color: #FAFAFA; }
 
-/* ==================== COMMENTS SECTION ==================== */
 .comments-container {
     background-color: var(--student-surface);
     padding: 35px;
@@ -359,7 +360,7 @@ body {
     resize: vertical;
     transition: border-color 0.3s, box-shadow 0.3s;
     background-color: var(--student-hover);
-    color: var(--student-text-dark); /* Ensure text is dark */
+    color: var(--student-text-dark); 
 }
 
 .comment-textarea:focus {
@@ -369,7 +370,6 @@ body {
     box-shadow: 0 0 0 4px rgba(122, 30, 45, 0.1);
 }
 
-/* Rubric Comments */
 .rubric-comment-textarea {
     width: 100%;
     padding: 15px;
@@ -378,7 +378,7 @@ body {
     font-family: inherit;
     min-height: 100px;
     background-color: var(--student-hover);
-    color: var(--student-text-dark); /* Ensure text is dark */
+    color: var(--student-text-dark); 
     resize: vertical;
 }
 
@@ -388,7 +388,6 @@ body {
     background-color: var(--student-surface);
 }
 
-/* ==================== BUTTONS ==================== */
 .form-actions {
     display: flex;
     justify-content: center;
@@ -429,7 +428,6 @@ body {
     box-shadow: 0 6px 20px rgba(122, 30, 45, 0.3);
 }
 
-/* ==================== MODAL ==================== */
 .modal-overlay {
     background-color: rgba(63, 63, 70, 0.85);
     backdrop-filter: blur(4px);
@@ -520,7 +518,6 @@ body {
     box-shadow: 0 6px 16px rgba(122, 30, 45, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 900px) {
     .main-content { margin-left: 0; padding: 20px; }
     .content-container { padding: 0 10px; }

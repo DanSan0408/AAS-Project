@@ -1,0 +1,35 @@
+# ==========================================
+# Gemini Code Assist Exclusion List
+# ==========================================
+
+# 1. Compiled Build Folders (Massive Token Burners!)
+target/
+build/
+.gradle/
+
+# 2. IDE & System Configurations
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+*.iml
+.DS_Store
+
+# 3. Compiled Java Binaries
+*.class
+*.jar
+*.war
+
+# 4. Logs and Databases
+*.log
+logs/
+*.sql
+*.sqlite
+*.db
+
+# 5. Version Control
+.git/
+
+# 6. Frontend Dependencies (If you ever add React/Angular later)
+node_modules/

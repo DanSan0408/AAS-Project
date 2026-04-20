@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Deadline;
+import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 
@@ -25,27 +28,26 @@ public class LecturerController {
     
     private final AssessmentService assessmentService; 
     private final DeadlineService deadlineService;
+    private final LecturerRepository lecturerRepository;
 
     @Autowired
-    public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService) {
+    public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService,
+            LecturerRepository lecturerRepository) {
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
+        this.lecturerRepository = lecturerRepository;
     }
     
     @GetMapping("/home")
-    public String lecturerHome(Model model) {
+    public String lecturerHome(Model model, Authentication authentication) {
         
-        // --- DEFINE UTILITY FUNCTIONS ---
         Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
 
-        // Simplified grouping - only Rubric components grouped by Assessment Type
-        // Uses dummy outer map key to maintain template compatibility
         Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
              
             Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
             final String DUMMY_KEY = "ASSESSMENT_GROUPING"; 
             
-            // 1. Get all Rubric components
             Stream<Object> combinedComponents = Stream.empty();
             if (assessment.getRubrics() != null) {
                 combinedComponents = assessment.getRubrics().stream().map(r -> (Object)r);
@@ -53,7 +55,6 @@ public class LecturerController {
             
             List<Object> components = combinedComponents.collect(Collectors.toList());
 
-            // 2. Group components by Assessment Type (inner map)
             Map<String, List<Object>> byAssessType = components.stream()
                 .collect(Collectors.groupingBy(c -> {
                     if (c instanceof Rubric) {
@@ -62,21 +63,31 @@ public class LecturerController {
                     return "Unknown";
                 }, LinkedHashMap::new, Collectors.toList()));
 
-            // 3. Wrap in an outer map with a dummy key
             finalGroup.put(DUMMY_KEY, byAssessType);
 
             return finalGroup;
         };
 
-        // --- FETCH DATA ---
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
+        Long courseId = lecturerRepository.findByEmail(authentication.getName())
+            .or(() -> lecturerRepository.findByUsername(authentication.getName()))
+            .map(Lecturer::getCourse)
+            .map(c -> c != null ? c.getId() : null)
+            .orElse(null);
+
+        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
+            .filter(a -> courseId != null && a.getCourse() != null && courseId.equals(a.getCourse().getId()))
+            .collect(Collectors.toList());
         model.addAttribute("allAssessments", allAssessments);
         
-        // ✅ CHANGED: Use "allDeadlines" instead of "deadlines" to match template
+        long nowMillis = System.currentTimeMillis();
         List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        List<Deadline> filteredDeadlines = allDeadlines.stream()
+            .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
+            .collect(Collectors.toList());
         model.addAttribute("allDeadlines", allDeadlines);
+        model.addAttribute("deadlines", filteredDeadlines);
 
-        // --- EXPOSE UTILITY FUNCTIONS ---
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
         model.addAttribute("isRubricType", isRubricType);
         

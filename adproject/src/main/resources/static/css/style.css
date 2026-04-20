@@ -1,8 +1,4 @@
-/* ==========================================================
- 	1. BASE LAYOUT & TYPOGRAPHY
- 	========================================================== */
 :root {
-    /* Define primary colors for consistency if needed */
     --primary-blue: #3498db;
     --dark-bg: #152238;
     --darker-bg: #192841;
@@ -15,7 +11,6 @@
     --date-highlight: #f1c40f;
 	--white-content: #ffff;
 	
-	/* Sidebar Dimensions */
     --sidebar-width: 260px;
 }
 
@@ -26,27 +21,23 @@ body {
  	padding: 0;
  	display: flex;
  	color: var(--text-light);
+	overflow-x: hidden;
 }
 
-/* ==========================================================
- 	MAIN CONTENT AREA - Only for non-admin pages
- 	========================================================== */
-
-/* These styles will be overridden by admin_home.css for admin pages */
 .main-content:not(.admin-main-content) {
  	flex-grow: 1;
- 	margin-left: 260px; 
- 	padding: 40px;
+	margin-left: var(--sidebar-width);
+	padding: clamp(16px, 2vw, 40px);
  	background-color: var(--dark-bg); 
  	display: flex;
  	justify-content: flex-start;
  	align-items: flex-start;
  	flex-direction: column;
  	min-height: 100vh; 
- 	width: calc(100% - 260px); 
+	width: calc(100% - var(--sidebar-width));
+    box-sizing: border-box;
 }
 
-/* Header styles - Only for non-admin pages */
 body:not(.admin-page) .header {
  	width: 100%; 
  	display: flex;
@@ -72,7 +63,6 @@ body:not(.admin-page) .header-container h1 {
  	margin: 0;
 }
 
-/* Fallback/Unused container styles */
 .content-container {
  	display: flex;
  	justify-content: space-between;
@@ -89,11 +79,6 @@ body:not(.admin-page) .header-container h1 {
  	margin-left: 0;
 }
 
-/* ==========================================================
- 	2. CONTENT LAYOUT (Side-by-Side) - Only for non-admin pages
- 	========================================================== */
-
-/* These will be overridden by admin_home.css */
 body:not(.admin-page) .content-flex-container {
  	display: flex;
  	gap: 30px; 
@@ -131,7 +116,6 @@ body:not(.admin-page) .deadline-list {
  	padding-right: 15px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 1000px) {
  	.content-flex-container {
  		flex-direction: column; 
@@ -148,11 +132,41 @@ body:not(.admin-page) .deadline-list {
  	}
 }
 
-/* ==========================================================
- 	3. ASSESSMENT CARD STYLES (Grouping)
- 	========================================================== */
+@media (max-width: 1024px) {
+	.main-content:not(.admin-main-content) {
+		padding: clamp(14px, 2.5vw, 24px);
+	}
 
-/* Assessment Box (Wraps everything for one assessment) */
+	body:not(.admin-page) .header-container img {
+		width: clamp(120px, 24vw, 180px);
+	}
+
+	body:not(.admin-page) .header-container h1 {
+		font-size: clamp(1.4rem, 2.8vw, 2.1rem);
+	}
+}
+
+@media (max-width: 1279px) {
+	.main-content:not(.admin-main-content) {
+		margin-left: 0;
+		width: 100%;
+		padding: 16px;
+	}
+
+	body:not(.admin-page) .header {
+		margin-top: 56px;
+	}
+
+	body:not(.admin-page) .header-container {
+		gap: 10px;
+	}
+
+	body:not(.admin-page) .rubric-section,
+	body:not(.admin-page) .deadline-section {
+		padding: 16px;
+	}
+}
+
 body:not(.admin-page) .assessment-box {
  	border: 2px solid #3499db; 
  	padding: 20px;
@@ -176,7 +190,6 @@ body:not(.admin-page) .total-marks {
  	margin-bottom: 20px;
 }
 
-/* Total Marks Colors */
 body:not(.admin-page) .total-marks p {
  	color: var(--accent-green); 
  	font-weight: bold;
@@ -188,18 +201,12 @@ body:not(.admin-page) .total-marks div p {
  	font-weight: normal;
 }
 
-/* Button container styling */
 .assessment-header-buttons {
     display: inline-flex;
     gap: 10px;
     align-items: center;
 }
 
-/* ==========================================================
- 	4. BUTTONS & DEADLINES
- 	========================================================== */
-
-/* General Action Buttons */
 .rubric-action-btn {
  	padding: 5px 10px;
  	border-radius: 5px;
@@ -240,7 +247,6 @@ body:not(.admin-page) .add-rubric-button:hover {
  	background-color: var(--accent-green);
 }
 
-/* --- EVALUATION TYPE GROUP (Outer Group) --- */
 .eval-type-group {
  	margin-top: 20px;
  	padding-left: 15px;
@@ -260,7 +266,6 @@ body:not(.admin-page) .add-rubric-button:hover {
  	padding-bottom: 5px;
 }
 
-/* --- ASSESSMENT TYPE GROUP (Inner Group) --- */
 body:not(.admin-page) .assess-type-group {
     margin: 20px 0;
     padding: 15px;
@@ -278,7 +283,6 @@ body:not(.admin-page) .assess-type-group h5 {
     border-bottom: 2px solid var(--darker-bg);
 }
 
-/* --- INDIVIDUAL RUBRIC/CRITERIA BOX --- */
 body:not(.admin-page) .rubric-assessment {
     padding: 15px;
     border-radius: 8px;
@@ -313,10 +317,6 @@ body:not(.admin-page) .rubric-details span {
 body:not(.admin-page) .rubric-details strong {
     color: var(--text-light);
 }
-
-/* ==========================================================
- 	5. USER MANAGEMENT STYLES
- 	========================================================== */
 
 .card {
  	background-color: var(--darker-bg); 
@@ -379,7 +379,6 @@ body:not(.admin-page) .rubric-details strong {
  	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* User Management Form Styles */
 .add-form-container {
  	background-color: var(--mid-tone-bg); 
  	padding: 20px;
@@ -434,7 +433,6 @@ body:not(.admin-page) .rubric-details strong {
  	background-color: #27ae60;
 }
 
-/* Table Styles */
 table {
  	width: 100%;
  	border-collapse: collapse;
@@ -490,7 +488,6 @@ tbody tr:hover {
  	opacity: 0.9;
 }
 
-/* Alert Messages */
 .alert {
  	padding: 15px;
  	margin-bottom: 20px;
@@ -510,7 +507,6 @@ tbody tr:hover {
  	border: 1px solid var(--accent-green);
 }
 
-/* Group Assignment Specific */
 .content-layout {
  	display: flex;
  	gap: 20px;
@@ -537,7 +533,6 @@ tbody tr:hover {
  	gap: 15px;
 }
 
-/* Group List Table */
 .group-table th, .group-table td {
  	padding: 10px;
 }
@@ -567,7 +562,6 @@ tbody tr:hover {
  	cursor: pointer;
 }
 
-/* Group Preview Page Styles */
 .add-student-container {
  	background-color: var(--mid-tone-bg); 
  	padding: 15px;
@@ -611,7 +605,6 @@ tbody tr:hover {
  	font-size: 0.8em;
 }
 
-/* Apply dark-theme input styling to select elements */
 .add-form-container select {
  	width: 100%;
  	padding: 10px;
@@ -622,7 +615,6 @@ tbody tr:hover {
  	box-sizing: border-box;
 }
 
-/* Style for the radio button group */
 .radio-group label {
  	font-weight: normal;
  	margin-left: 5px;
@@ -636,10 +628,6 @@ tbody tr:hover {
  	height: auto;
  	margin-right: 5px;
 }
-
-/* ==========================================================
- 	6. RESPONSIVE DESIGN
- 	========================================================== */
 
 @media (max-width: 768px) {
  	.main-content {

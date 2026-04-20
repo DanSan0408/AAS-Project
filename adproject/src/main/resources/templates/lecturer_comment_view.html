@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Comments</title>
+    
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #F4F2EE; margin: 0; }
+        .main-content { margin-left: 270px; padding: 40px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        .header-container { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; width: 100%; }
+        .header-container img { max-width: 200px; height: auto; }
+        .header-container h1 { margin: 0; color: #4A0018; font-size: 2.5rem; font-weight: 700; }
+        
+        .page-content { padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; border: 1px solid #E5E7EB; }
+        .page-content h2 { color: #4A0018; border-bottom: 3px solid #4A0018; padding-bottom: 10px; margin-bottom: 5px; text-align: center; }
+        .page-content h5.text-muted { text-align: center; color: #6b7280; margin-top: 0; margin-bottom: 25px; font-weight: normal; }
+        
+        .btn-secondary { background-color: #3F3F46; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; border: none; cursor: pointer; display: inline-block; font-weight: 600; transition: filter 0.2s; }
+        .btn-secondary:hover { filter: brightness(110%); }
+        
+        .group-card { border: 1px solid #E5E7EB; padding: 20px; margin-bottom: 30px; border-radius: 8px; background-color: #f8f9fa; }
+        .group-title { border-bottom: 2px solid #F8A617; padding-bottom: 10px; margin-bottom: 20px; color: #4A0018; margin-top: 0; }
+        
+        .student-card { border: 1px solid #dee2e6; padding: 15px; margin-bottom: 15px; border-radius: 6px; background-color: #ffffff; }
+        .student-title { border-bottom: 1px solid #e9ecef; padding-bottom: 8px; margin-bottom: 10px; color: #27ae60; font-size: 1.1em; }
+        
+        .comment-section { margin-bottom: 10px; }
+        .comment-section h6 { color: #4A0018; border-bottom: 1px solid #E5E7EB; padding-bottom: 5px; margin-bottom: 10px; font-size: 1em; }
+        
+        .comment-text { margin-left: 15px; margin-bottom: 5px; font-style: italic; color: #4b5563; background-color: #fcfcfc; border-left: 3px solid #F8A617; padding: 8px 12px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .row { display: flex; flex-wrap: wrap; margin-right: -10px; margin-left: -10px; }
+        .col-md-6 { flex: 0 0 50%; max-width: 50%; padding-right: 10px; padding-left: 10px; box-sizing: border-box; }
+        @media (max-width: 768px) { .col-md-6 { flex: 0 0 100%; max-width: 100%; } }
+        @media (max-width: 1000px) {
+            .main-content { margin-left: 0; padding: 20px; }
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            .header-container h1 { font-size: 2rem; }
+            .page-content { padding: 20px; }
+        }
+
+        @media (max-width: 640px) {
+            .page-content h2 { font-size: 1.4rem; }
+            .group-card { padding: 14px; }
+            .student-card { padding: 12px; }
+            .comment-text { margin-left: 0; }
+            .btn-secondary { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body class="lecturer-page">
+
+    <div class="sidebar" th:replace="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+
+        <div class="page-content">
+            <h2>Comments for Supervised Groups</h2>
+            <h5 class="text-muted">Assessment: <span th:text="${assessment.title}"></span></h5>
+            
+            <div th:if="${errorMessage}" class="alert alert-danger" style="color: #e74c3c; padding: 15px; background-color: #f2dede; border-color: #ebccd1; border-radius: 4px; margin-bottom: 20px;">
+                <p class="mb-0" th:text="${errorMessage}"></p>
+            </div>
+
+            <div th:if="${#maps.isEmpty(commentsByGroupAndStudent)}" class="alert alert-info" style="color: #31708f; padding: 15px; background-color: #d9edf7; border-color: #bce8f1; border-radius: 4px; margin-bottom: 20px;">
+                <p class="mb-0">No comments found for any of your supervised groups in this assessment.</p>
+            </div>
+            
+            <div th:each="groupEntry : ${commentsByGroupAndStudent}" class="group-card shadow-sm">
+                <h3 class="group-title"><i class="fas fa-users"></i> Group: <span th:text="${groupEntry.key.groupName}"></span></h3>
+                
+                <div th:each="studentEntry : ${groupEntry.value}" class="student-card shadow-sm">
+                    <h4 class="student-title"><i class="fas fa-user-graduate"></i> Student: <span th:text="${studentEntry.key.email}"></span></h4>
+                    
+                    <div class="row">
+                        <!-- Group Assessment Comments for this student -->
+                        <div class="col-md-6 comment-section">
+                            <h6>Group Assessment Comments Received</h6>
+                            <div th:if="${#lists.isEmpty(studentEntry.value.groupComments)}">
+                                <p class="text-muted small mt-2">No group comments received yet.</p>
+                            </div>
+                            <div th:each="comment : ${studentEntry.value.groupComments}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
+                        </div>
+                        
+                        <!-- Individual Assessment Comments for this student -->
+                        <div class="col-md-6 comment-section">
+                            <h6>Individual Assessment Comments Received</h6>
+                            <div th:if="${#lists.isEmpty(studentEntry.value.individualComments)}">
+                                <p class="text-muted small mt-2">No individual comments received yet.</p>
+                            </div>
+                            <div th:each="comment : ${studentEntry.value.individualComments}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <br>
+            <a th:href="@{'/lecturer/comments/view/assessments'}" class="btn btn-secondary mt-3 mb-5">Back to Assessments</a>
+        </div>
+    </div>
+</body>
+</html>
