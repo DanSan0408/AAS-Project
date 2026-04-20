@@ -44,6 +44,7 @@
                 th:attr="data-subrubric-count=${rubric.subRubrics != null ? rubric.subRubrics.size() : 0}, data-direct-rating-count=${rubric.ratings != null ? rubric.ratings.size() : 0}, data-comment-count=${rubric.rubricCommentLabels != null ? rubric.rubricCommentLabels.size() : 0}, data-template-api-url=@{/rubrics/templates/api/}">
                 <input type="hidden" th:field="*{id}" />
                 <input type="hidden" th:field="*{assessment}" />
+                <input type="hidden" th:field="*{displayOrder}" />
                 <input type="hidden" name="duplicateConfirmed" id="duplicateConfirmed" value="false" /> 
 
                 <!-- ⚡ Template Injector UI -->
