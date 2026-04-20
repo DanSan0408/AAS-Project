@@ -13,6 +13,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -25,9 +26,9 @@ import lombok.NoArgsConstructor;
 @Table(name = "student", indexes = {
     @Index(name = "idx_student_course", columnList = "course_id"),
     @Index(name = "idx_student_group", columnList = "group_id"),
-    @Index(name = "idx_student_email", columnList = "email", unique = true),
+    @Index(name = "idx_student_email_course", columnList = "email,course_id", unique = true),
     @Index(name = "idx_student_username", columnList = "username", unique = true)
-})
+}, uniqueConstraints = @UniqueConstraint(name = "uk_student_email_course", columnNames = {"email", "course_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -50,7 +51,7 @@ public class Student {
 
     @NotBlank
     @Email
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
     
     private String resetPasswordToken;

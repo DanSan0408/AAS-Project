@@ -134,8 +134,16 @@ public class SuperAdminService {
             course.setDescription(course.getDescription().trim());
         }
 
-        // Idempotent create: if same course code already exists, reuse it instead of inserting duplicates.
-        if (course.getId() == null && course.getCourseCode() != null && !course.getCourseCode().isBlank()) {
+        // Validate required fields
+        if (course.getCourseName() == null || course.getCourseName().isBlank()) {
+            throw new IllegalArgumentException("Course name is required.");
+        }
+        if (course.getCourseCode() == null || course.getCourseCode().isBlank()) {
+            throw new IllegalArgumentException("Course code is required.");
+        }
+
+        // Idempotent create: if same course code already exists for NEW courses, reuse it instead of inserting duplicates.
+        if (course.getId() == null) {
             Optional<Course> existing = courseRepository.findByCourseCodeIgnoreCase(course.getCourseCode());
             if (existing.isPresent()) {
                 return existing.get();
@@ -172,7 +180,7 @@ public class SuperAdminService {
             .setParameter("courseId", id)
             .executeUpdate();
 
-        entityManager.createNativeQuery("UPDATE `Assessment` SET course_id = NULL WHERE course_id = :courseId")
+        entityManager.createNativeQuery("UPDATE `assessment` SET course_id = NULL WHERE course_id = :courseId")
             .setParameter("courseId", id)
             .executeUpdate();
 

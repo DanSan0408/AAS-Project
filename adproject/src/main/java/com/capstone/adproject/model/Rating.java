@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "rating")
@@ -20,6 +21,8 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name", length = 10000)
+    @Size(max = 10000, message = "Rating name must be at most 10000 characters")
     private String name; 
 
     @Column(name = "description", columnDefinition = "TEXT")

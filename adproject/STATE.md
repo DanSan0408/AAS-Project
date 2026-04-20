@@ -1,6 +1,56 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-16 (IH)
+**Last Updated**: 2026-04-20 (IH)
+
+---
+
+## Current Status: Course Management Bug Fixes (April 20, 2026)
+**Status**: FIXED
+
+### Issues Resolved
+1. **Course Deletion Failure**: Fixed JDBC exception when deleting courses
+   - **Root Cause**: SQL query used `Assessment` (capital A) but MySQL table is `assessment` (lowercase)
+   - **Fix**: Changed query in `SuperAdminService.deleteCourse()` line 177 from `UPDATE \`Assessment\`` to `UPDATE \`assessment\``
+   - **Impact**: Course deletion now works correctly with all cascading updates
+
+2. **Duplicate Course Creation**: Improved idempotent course creation logic
+   - **Root Cause**: Missing validation and weak duplicate detection logic
+   - **Fixes Applied**:
+     - Added mandatory field validation (course name and code required and non-blank)
+     - Improved duplicate detection to always check for existing courses with same code on creation
+     - Strengthened `findByCourseCodeIgnoreCase` check to work even with edge cases
+   - **File Modified**: `SuperAdminService.java` - `saveCourse()` method
+
+3. **Double Form Submissions**: Added client-side protection against accidental double submissions
+   - **Fix**: Enhanced `event-delegation.js` with automatic form button disabling on submission
+   - **Behavior**: When a form is submitted, all submit buttons are disabled to prevent multiple clicks
+   - **Impact**: Applies to all forms including course creation forms in both SuperAdmin and Admin interfaces
+4. **Multi-Course Student/Lecturer Enrollment**: Fixed issue preventing same user from being added to multiple courses
+    - **Root Cause**: Email field had a global `unique = true` constraint, preventing same email across different courses
+    - **Fixes Applied**:
+       - Changed email unique constraint from global to composite (email + course_id) in both `Student.java` and `Lecturer.java` entities
+       - Updated duplicate check logic in `AdminService` to only verify uniqueness within the current course, not globally
+       - `checkStudentEmailDuplicate()` and `checkLecturerEmailDuplicate()` now use `findByCourseId()` to check only current course
+    - **Behavior**: Same user (email) can now be added to multiple different courses. If already in the same course, shows "already enrolled" message.
+    - **Files Modified**: 
+       - `Student.java` - Changed email constraint to composite (email, course_id)
+       - `Lecturer.java` - Changed email constraint to composite (email, course_id)
+       - `AdminService.java` - Updated duplicate check methods to be course-scoped
+
+
+### Files Modified
+- [SuperAdminService.java](src/main/java/com/capstone/adproject/service/SuperAdminService.java) - Fixed table name case and improved validation
+- [event-delegation.js](src/main/resources/static/js/event-delegation.js) - Added double-submit prevention
+- [Student.java](src/main/java/com/capstone/adproject/model/Student.java) - Composite email+course_id constraint
+- [Lecturer.java](src/main/java/com/capstone/adproject/model/Lecturer.java) - Composite email+course_id constraint
+- [AdminService.java](src/main/java/com/capstone/adproject/service/AdminService.java) - Course-scoped duplicate checks
+
+### Testing Recommendations
+1. Test course deletion with existing assessments
+2. Try rapid double-clicks on course add/delete buttons
+3. Verify courses are not duplicated in database after adding
+4. Add adam@gmail.com to Course 1, then add same adam@gmail.com to Course 2 - should succeed
+5. Try adding adam@gmail.com again to Course 1 - should show "already enrolled" message
 
 ---
 
