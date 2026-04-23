@@ -51,6 +51,36 @@
 
             <div class="card manage-course-card">
                 <div class="card-body">
+                    <h4 class="card-title">Invite Existing Admin to Your Course</h4>
+                    <p class="text-muted" style="margin-bottom: 12px;">Only courses you created are eligible for invitation.</p>
+
+                    <form th:if="${creatorOwnedCourses != null and !creatorOwnedCourses.isEmpty()}"
+                          th:action="@{/admin/courses/invite-admin}" method="post">
+                        <div class="form-group">
+                            <label for="inviteAdminEmail">Admin Email</label>
+                            <input type="email" id="inviteAdminEmail" name="adminEmail" class="form-control"
+                                   placeholder="existing-admin@email.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="inviteCourseId">Course</label>
+                            <select id="inviteCourseId" name="courseId" class="form-control" required>
+                                <option value="" selected disabled>Select a course</option>
+                                <option th:each="course : ${creatorOwnedCourses}"
+                                        th:value="${course.id}"
+                                        th:text="${course.courseCode + ' - ' + course.courseName}"></option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Invite Admin</button>
+                    </form>
+
+                    <div th:if="${creatorOwnedCourses == null or creatorOwnedCourses.isEmpty()}" class="text-muted">
+                        You do not have any courses created by your account yet.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card manage-course-card">
+                <div class="card-body">
                     <h4 class="card-title">Existing Courses</h4>
                     <div class="table-responsive">
                         <table class="table table-striped">
@@ -60,6 +90,7 @@
                                     <th>Course Name</th>
                                     <th>Course Code</th>
                                     <th>Description</th>
+                                    <th>Invite Co-Admin</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -69,6 +100,19 @@
                                     <td th:text="${course.courseName}"></td>
                                     <td th:text="${course.courseCode}"></td>
                                     <td th:text="${course.description}"></td>
+                                    <td>
+                                        <form th:if="${creatableInviteCourseIds != null and creatableInviteCourseIds.contains(course.id)}"
+                                              th:action="@{/admin/courses/invite-admin}" method="post"
+                                              class="inline-action" style="display:flex; gap:8px; align-items:center;">
+                                            <input type="hidden" name="courseId" th:value="${course.id}">
+                                            <input type="email" name="adminEmail" class="form-control"
+                                                   placeholder="existing-admin@email.com" required
+                                                   style="min-width:220px;">
+                                            <button type="submit" class="btn btn-sm btn-primary">Invite</button>
+                                        </form>
+                                        <span th:if="${creatableInviteCourseIds == null or !creatableInviteCourseIds.contains(course.id)}"
+                                              class="text-muted">Only course creator can invite</span>
+                                    </td>
                                     <td>
                                         <div class="table-actions">
                                             <a th:href="@{/admin/courses/edit/{id}(id=${course.id})}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i> Edit</a>
@@ -82,7 +126,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${courses == null || courses.isEmpty()}">
-                                    <td colspan="5" class="text-center text-muted">No courses available.</td>
+                                    <td colspan="6" class="text-center text-muted">No courses available.</td>
                                 </tr>
                             </tbody>
                         </table>
