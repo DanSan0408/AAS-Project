@@ -974,8 +974,54 @@ public class AdminController {
             .filter(this::isCourseCreatedByCurrentAdmin)
             .collect(Collectors.toList());
 
+        Map<Long, Course> managedCourseById = uniqueManagedCourses.stream()
+            .collect(Collectors.toMap(Course::getId, Function.identity()));
+
+        Map<Long, List<String>> courseCoAdminsMap = new LinkedHashMap<>();
+        uniqueManagedCourses.forEach(course -> courseCoAdminsMap.put(course.getId(), new ArrayList<>()));
+
+        List<Lecturer> allAdminLecturers = superAdminService.getAllAdminLecturers();
+        Map<Long, List<Course>> adminManagedCoursesMap = superAdminService.getAdminManagedCoursesMap(allAdminLecturers);
+
+        for (Lecturer adminLecturer : allAdminLecturers) {
+            if (adminLecturer == null || adminLecturer.getId() == null) {
+                continue;
+            }
+
+            String coAdminLabel;
+            if (adminLecturer.getUsername() != null && !adminLecturer.getUsername().isBlank()) {
+                coAdminLabel = adminLecturer.getUsername() + " (" + adminLecturer.getEmail() + ")";
+            } else {
+                coAdminLabel = adminLecturer.getEmail();
+            }
+
+            List<Course> managedByAdmin = adminManagedCoursesMap.getOrDefault(adminLecturer.getId(), List.of());
+            for (Course managedCourse : managedByAdmin) {
+                if (managedCourse == null || managedCourse.getId() == null) {
+                    continue;
+                }
+
+                Course course = managedCourseById.get(managedCourse.getId());
+                if (course == null) {
+                    continue;
+                }
+
+                if (course.getCreatedBy() != null
+                        && course.getCreatedBy().getId() != null
+                        && course.getCreatedBy().getId().equals(adminLecturer.getId())) {
+                    continue;
+                }
+
+                List<String> coAdmins = courseCoAdminsMap.get(course.getId());
+                if (coAdmins != null && !coAdmins.contains(coAdminLabel)) {
+                    coAdmins.add(coAdminLabel);
+                }
+            }
+        }
+
         model.addAttribute("courses", uniqueManagedCourses);
         model.addAttribute("creatorOwnedCourses", creatorOwnedCourses);
+        model.addAttribute("courseCoAdminsMap", courseCoAdminsMap);
         model.addAttribute("creatableInviteCourseIds", creatorOwnedCourses.stream()
             .map(Course::getId)
             .collect(Collectors.toSet()));

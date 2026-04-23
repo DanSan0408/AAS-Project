@@ -90,6 +90,7 @@
                                     <th>Course Name</th>
                                     <th>Course Code</th>
                                     <th>Description</th>
+                                    <th>Co-Admins</th>
                                     <th>Invite Co-Admin</th>
                                     <th>Actions</th>
                                 </tr>
@@ -100,6 +101,12 @@
                                     <td th:text="${course.courseName}"></td>
                                     <td th:text="${course.courseCode}"></td>
                                     <td th:text="${course.description}"></td>
+                                    <td>
+                                        <span th:if="${courseCoAdminsMap == null or #lists.isEmpty(courseCoAdminsMap[course.id])}"
+                                            class="text-muted">No co-admins</span>
+                                        <span th:if="${courseCoAdminsMap != null and !#lists.isEmpty(courseCoAdminsMap[course.id])}"
+                                            th:text="${#strings.listJoin(courseCoAdminsMap[course.id], ', ')}"></span>
+                                    </td>
                                     <td>
                                         <form th:if="${creatableInviteCourseIds != null and creatableInviteCourseIds.contains(course.id)}"
                                               th:action="@{/admin/courses/invite-admin}" method="post"
@@ -126,7 +133,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${courses == null || courses.isEmpty()}">
-                                    <td colspan="6" class="text-center text-muted">No courses available.</td>
+                                    <td colspan="7" class="text-center text-muted">No courses available.</td>
                                 </tr>
                             </tbody>
                         </table>
