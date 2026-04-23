@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -142,6 +143,29 @@ public class AdminController {
 
     private boolean isManagedCourseId(Long courseId) {
         return courseScopeService.isManagedCourseId(courseId);
+    }
+
+    private boolean isCourseCreatedByCurrentAdmin(Course course) {
+        if (course == null || course.getId() == null) {
+            return false;
+        }
+
+        // Legacy data fallback: older courses may not have createdBy set.
+        if (course.getCreatedBy() == null) {
+            return isManagedCourseId(course.getId());
+        }
+
+        String loggedInIdentity = getLoggedInUsername();
+        if (loggedInIdentity == null || loggedInIdentity.isBlank()) {
+            return false;
+        }
+
+        String normalizedIdentity = loggedInIdentity.trim().toLowerCase(Locale.ROOT);
+        String createdByEmail = course.getCreatedBy().getEmail();
+        String createdByUsername = course.getCreatedBy().getUsername();
+
+        return (createdByEmail != null && createdByEmail.trim().toLowerCase(Locale.ROOT).equals(normalizedIdentity))
+            || (createdByUsername != null && createdByUsername.trim().toLowerCase(Locale.ROOT).equals(normalizedIdentity));
     }
 
     private boolean ownsStudent(Student student) {
@@ -946,10 +970,37 @@ public class AdminController {
             .stream()
             .collect(Collectors.toList());
 
+        List<Course> creatorOwnedCourses = uniqueManagedCourses.stream()
+            .filter(this::isCourseCreatedByCurrentAdmin)
+            .collect(Collectors.toList());
+
         model.addAttribute("courses", uniqueManagedCourses);
+        model.addAttribute("creatorOwnedCourses", creatorOwnedCourses);
+        model.addAttribute("creatableInviteCourseIds", creatorOwnedCourses.stream()
+            .map(Course::getId)
+            .collect(Collectors.toSet()));
         model.addAttribute("newCourse", new Course());
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "admin_manage_courses";
+    }
+
+    @PostMapping("/courses/invite-admin")
+    public String inviteExistingAdminToCourse(
+            @RequestParam("courseId") Long courseId,
+            @RequestParam("adminEmail") String adminEmail,
+            RedirectAttributes redirectAttributes) {
+        try {
+            if (!isManagedCourseId(courseId)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to manage this course.");
+                return "redirect:/admin/manage-courses";
+            }
+
+            superAdminService.inviteExistingAdminToCreatedCourse(getLoggedInUsername(), adminEmail, courseId);
+            redirectAttributes.addFlashAttribute("successMessage", "Admin invited successfully to this course.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error inviting admin: " + e.getMessage());
+        }
+        return "redirect:/admin/manage-courses";
     }
 
     @PostMapping("/courses/add")
