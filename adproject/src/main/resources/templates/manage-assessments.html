@@ -132,6 +132,13 @@
                                         <i class="fas fa-user-tie"></i>
                                     </a>
 
+                                                <a th:href="@{/admin/student-assignments/{id}(id=${assessment.id})}"
+                                                    class="btn btn-sm btn-lecturer"
+                                                    style="background-color: #16a085; border-color: #16a085;"
+                                                    title="Assign Students">
+                                                     <i class="fas fa-user-graduate"></i>
+                                                </a>
+
                                     <a th:href="@{/admin/assessment/assign/{id}(id=${assessment.id})}" 
                                        class="btn btn-sm btn-assign"
                                        title="Assign Dates">

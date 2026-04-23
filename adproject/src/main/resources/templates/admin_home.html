@@ -64,6 +64,12 @@
                                    style="background-color: #e67e22; display: inline-block;">
                                     <i class="fas fa-user-tie"></i> Assign Lecturers
                                 </a>
+
+                                          <a th:href="@{/admin/student-assignments/{id}(id=${assessment.id})}"
+                                              class="add-rubric-button"
+                                              style="background-color: #16a085; display: inline-block;">
+                                                <i class="fas fa-user-graduate"></i> Assign Students
+                                          </a>
                                 
                                 <a th:href="@{/admin/assessment/assign/{id}(id=${assessment.id})}" 
                                    class="add-rubric-button" 
@@ -324,8 +330,8 @@
                                       th:classappend="${'deadline-type-badge ' + 
                                           (deadline.assessorType == 'STUDENT' ? 'badge-student' : 
                                            deadline.assessorType == 'LECTURER' ? 'badge-lecturer' : 
-                                           deadline.assessorType == 'SUPERVISOR' ? 'badge-supervisor' : 'badge-general')}"
-                                      th:text="${deadline.assessorType}">
+                                           'badge-general')}"
+                                      th:text="${deadline.assessorType == 'SUPERVISOR' ? 'GENERAL' : deadline.assessorType}">
                                     STUDENT
                                 </span>
                                 <span th:unless="${deadline.assessorType != null}" 

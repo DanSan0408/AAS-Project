@@ -30,12 +30,11 @@ import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.LecturerRubricAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
-import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
-import com.capstone.adproject.repositories.RubricRepository;
+import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
 import com.capstone.adproject.service.RubricService;
@@ -51,8 +50,7 @@ public class LecturerAssessmentController {
     private final DeadlineService deadlineService;
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
-    private final RubricRepository rubricRepository;
-    private final AssessmentCommentRepository assessmentCommentRepository;
+    private final LecturerStudentAssignmentRepository studentAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final GroupRepository groupRepository;
 
@@ -62,8 +60,7 @@ public class LecturerAssessmentController {
             DeadlineService deadlineService,
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
-            RubricRepository rubricRepository,
-            AssessmentCommentRepository assessmentCommentRepository,
+            LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
             GroupRepository groupRepository) {
         this.lecturerAssessmentService = lecturerAssessmentService;
@@ -71,8 +68,7 @@ public class LecturerAssessmentController {
         this.deadlineService = deadlineService;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
-        this.rubricRepository = rubricRepository;
-        this.assessmentCommentRepository = assessmentCommentRepository;
+        this.studentAssignmentRepository = studentAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.groupRepository = groupRepository;
     }
@@ -99,10 +95,24 @@ public class LecturerAssessmentController {
         
         List<Assessment> assignedAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
         List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
+        List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer);
+        Set<Long> studentAssessmentIds = studentAssessments.stream()
+            .map(Assessment::getId)
+            .collect(Collectors.toSet());
         
         Set<Assessment> combinedAssessments = new HashSet<>(assignedAssessments);
         combinedAssessments.addAll(rubricAssessments);
+        combinedAssessments.addAll(studentAssessments);
         List<Assessment> uniqueAssessments = new ArrayList<>(combinedAssessments);
+
+        Map<Long, String> assessmentLaunchModes = new HashMap<>();
+        for (Assessment assessment : uniqueAssessments) {
+            if (studentAssessmentIds.contains(assessment.getId())) {
+                assessmentLaunchModes.put(assessment.getId(), "STUDENT");
+            } else {
+                assessmentLaunchModes.put(assessment.getId(), "GROUP");
+            }
+        }
         
         LocalDateTime now = LocalDateTime.now();
         List<Long> openAssessmentIds = uniqueAssessments.stream()
@@ -124,6 +134,7 @@ public class LecturerAssessmentController {
         
         model.addAttribute("assessments", uniqueAssessments);
         model.addAttribute("openAssessmentIds", openAssessmentIds);
+        model.addAttribute("assessmentLaunchModes", assessmentLaunchModes);
         
         return "lecturer_assessments";
     }
@@ -195,10 +206,69 @@ public class LecturerAssessmentController {
         return "lecturer_select_group";
     }
 
+    @GetMapping("/{assessmentId}/select-student")
+    public String showStudentSelection(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+
+        List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
+            assessmentId, "LECTURER");
+
+        if (lecturerDeadlines.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "This assessment has not been opened by the admin yet.");
+            return "redirect:/lecturer/assessments";
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        boolean isOpen = lecturerDeadlines.stream()
+            .anyMatch(d -> {
+                LocalDateTime openDate = d.getOpenDate() != null ?
+                    d.getOpenDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() :
+                    LocalDateTime.MIN;
+                LocalDateTime endDate = d.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                return now.isAfter(openDate) && now.isBefore(endDate);
+            });
+
+        if (!isOpen) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "This assessment is not currently open for evaluation.");
+            return "redirect:/lecturer/assessments";
+        }
+
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
+
+        if (assignedStudents.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "You have no students assigned for this assessment.");
+            return "redirect:/lecturer/assessments";
+        }
+
+        Map<Long, String> studentEvaluationStatus = new HashMap<>();
+        for (Student student : assignedStudents) {
+            String status = lecturerAssessmentService.getStudentEvaluationStatus(
+                assessment, lecturer, student.getId());
+            studentEvaluationStatus.put(student.getId(), status);
+        }
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("assignedStudents", assignedStudents);
+        model.addAttribute("studentEvaluationStatus", studentEvaluationStatus);
+
+        return "lecturer_select_student";
+    }
+
     @GetMapping("/{assessmentId}/evaluate")
     public String showCombinedEvaluationForm(
             @PathVariable("assessmentId") Long assessmentId,
-            @RequestParam("groupId") Long groupId,
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "studentId", required = false) Long studentId,
             @RequestParam(value = "confirmReevaluation", required = false) Boolean confirmReevaluation,
             Model model,
             Authentication authentication,
@@ -206,6 +276,100 @@ public class LecturerAssessmentController {
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         Lecturer lecturer = getCurrentLecturer(authentication);
+
+        boolean isStudentTarget = studentId != null;
+        Group selectedGroup;
+        List<Student> targetStudents;
+        List<Rubric> groupRubrics;
+        List<Rubric> individualRubrics;
+        Map<String, Long> existingGroupMarks = new HashMap<>();
+        Map<Integer, String> existingGroupComments = new HashMap<>();
+        Map<Long, Map<String, Long>> existingIndividualMarks = new HashMap<>();
+        Map<Long, Map<Integer, String>> existingIndividualComments = new HashMap<>();
+        Map<Long, Map<Integer, String>> existingGroupRubricComments = new HashMap<>();
+        Map<Long, Map<Long, Map<Integer, String>>> existingIndividualRubricComments = new HashMap<>();
+
+        if (isStudentTarget) {
+            List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
+            Student selectedStudent = assignedStudents.stream()
+                .filter(student -> student.getId().equals(studentId))
+                .findFirst()
+                .orElse(null);
+
+            if (selectedStudent == null) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                    "You are not assigned to evaluate this student.");
+                return "redirect:/lecturer/assessments/" + assessmentId + "/select-student";
+            }
+
+            String evaluationStatus = lecturerAssessmentService.getStudentEvaluationStatus(
+                assessment, lecturer, studentId);
+
+            targetStudents = List.of(selectedStudent);
+            selectedGroup = new Group();
+            selectedGroup.setId(selectedStudent.getId());
+            selectedGroup.setGroupName(selectedStudent.getEmail());
+
+            groupRubrics = assessment.getRubrics().stream()
+                .filter(r -> r.getAssessmentTypes() != null &&
+                             r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+                .collect(Collectors.toList());
+
+            individualRubrics = assessment.getRubrics().stream()
+                .filter(r -> r.getAssessmentTypes() != null &&
+                             r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+                .collect(Collectors.toList());
+
+            if (!"not_started".equals(evaluationStatus) && !targetStudents.isEmpty()) {
+                Student sampleStudent = targetStudents.get(0);
+
+                existingGroupMarks = lecturerAssessmentService.getExistingMarks(
+                    assessment, lecturer, sampleStudent, "Group Assessment");
+                existingGroupComments = lecturerAssessmentService.getExistingComments(
+                    assessment, lecturer, sampleStudent, "Group Assessment");
+
+                for (Rubric rubric : groupRubrics) {
+                    if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
+                        Map<Integer, String> rubricComments = lecturerAssessmentService.getExistingRubricComments(
+                            assessment, lecturer, sampleStudent, rubric.getId());
+                        existingGroupRubricComments.put(rubric.getId(), rubricComments);
+                    }
+                }
+
+                Map<String, Long> studentMarks = lecturerAssessmentService.getExistingMarks(
+                    assessment, lecturer, sampleStudent, "Individual Assessment");
+                Map<Integer, String> studentComments = lecturerAssessmentService.getExistingComments(
+                    assessment, lecturer, sampleStudent, "Individual Assessment");
+                existingIndividualMarks.put(sampleStudent.getId(), studentMarks);
+                existingIndividualComments.put(sampleStudent.getId(), studentComments);
+
+                Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
+                for (Rubric rubric : individualRubrics) {
+                    if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
+                        Map<Integer, String> rubricComments = lecturerAssessmentService.getExistingRubricComments(
+                            assessment, lecturer, sampleStudent, rubric.getId());
+                        studentRubricComments.put(rubric.getId(), rubricComments);
+                    }
+                }
+                existingIndividualRubricComments.put(sampleStudent.getId(), studentRubricComments);
+            }
+
+            model.addAttribute("assessment", assessment);
+            model.addAttribute("selectedGroup", selectedGroup);
+            model.addAttribute("groupStudents", targetStudents);
+            model.addAttribute("groupRubrics", groupRubrics);
+            model.addAttribute("individualRubrics", individualRubrics);
+            model.addAttribute("existingGroupMarks", existingGroupMarks);
+            model.addAttribute("existingGroupComments", existingGroupComments);
+            model.addAttribute("existingIndividualMarks", existingIndividualMarks);
+            model.addAttribute("existingIndividualComments", existingIndividualComments);
+            model.addAttribute("existingGroupRubricComments", existingGroupRubricComments);
+            model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
+            model.addAttribute("isAssignedToGroup", true);
+            model.addAttribute("isStudentTarget", true);
+
+            return "lecturer_combined_evaluation_form";
+        }
 
         List<Group> assignedGroups = assignmentRepository.findGroupsByLecturerAndAssessment(lecturer, assessment);
 
@@ -216,67 +380,59 @@ public class LecturerAssessmentController {
             combinedGroups.addAll(allGroupsWithStudents);
             assignedGroups = new ArrayList<>(combinedGroups);
         }
-        
-        Group selectedGroup = assignedGroups.stream()
+
+        Group targetGroup = assignedGroups.stream()
             .filter(g -> g.getId().equals(groupId))
             .findFirst()
             .orElse(null);
-        
-        if (selectedGroup == null) {
-            redirectAttributes.addFlashAttribute("errorMessage", 
+
+        if (targetGroup == null) {
+            redirectAttributes.addFlashAttribute("errorMessage",
                 "You are not assigned to evaluate this group.");
             return "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
         }
 
         String evaluationStatus = lecturerAssessmentService.getGroupEvaluationStatus(
             assessment, lecturer, groupId);
-        
+
         boolean isComplete = "completed".equals(evaluationStatus);
 
         if (isComplete && (confirmReevaluation == null || !confirmReevaluation)) {
             model.addAttribute("assessment", assessment);
-            model.addAttribute("selectedGroup", selectedGroup);
+            model.addAttribute("selectedGroup", targetGroup);
             model.addAttribute("showReevaluationWarning", true);
             return "lecturer_reevaluation_warning_combined";
         }
-        
-        boolean isAssignedToGroup = assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, selectedGroup, lecturer);
-        
+
+        boolean isAssignedToGroup = assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, targetGroup, lecturer);
+
         List<LecturerRubricAssignment> rubricAssignments = rubricAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment);
         Set<Long> allowedRubricIds = rubricAssignments.stream()
             .map(a -> a.getRubric().getId())
             .collect(Collectors.toSet());
 
-        List<Rubric> groupRubrics = assessment.getRubrics().stream()
-            .filter(r -> r.getAssessmentTypes() != null && 
+        groupRubrics = assessment.getRubrics().stream()
+            .filter(r -> r.getAssessmentTypes() != null &&
                         r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
             .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
 
-        List<Rubric> individualRubrics = assessment.getRubrics().stream()
-            .filter(r -> r.getAssessmentTypes() != null && 
+        individualRubrics = assessment.getRubrics().stream()
+            .filter(r -> r.getAssessmentTypes() != null &&
                         r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
             .filter(r -> isAssignedToGroup || allowedRubricIds.contains(r.getId()))
             .collect(Collectors.toList());
 
-        List<Student> groupStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
+        targetStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
 
-        Map<String, Long> existingGroupMarks = new HashMap<>();
-        Map<Integer, String> existingGroupComments = new HashMap<>();
-        Map<Long, Map<String, Long>> existingIndividualMarks = new HashMap<>();
-        Map<Long, Map<Integer, String>> existingIndividualComments = new HashMap<>();
-        
-        Map<Long, Map<Integer, String>> existingGroupRubricComments = new HashMap<>();
-        Map<Long, Map<Long, Map<Integer, String>>> existingIndividualRubricComments = new HashMap<>();
-        
-        if (!"not_started".equals(evaluationStatus) && !groupStudents.isEmpty()) {
-            Student sampleStudent = groupStudents.get(0);
-            
+        if (!"not_started".equals(evaluationStatus) && !targetStudents.isEmpty()) {
+            Student sampleStudent = targetStudents.get(0);
+
             existingGroupMarks = lecturerAssessmentService.getExistingMarks(
                 assessment, lecturer, sampleStudent, "Group Assessment");
             existingGroupComments = lecturerAssessmentService.getExistingComments(
                 assessment, lecturer, sampleStudent, "Group Assessment");
-            
+
             for (Rubric rubric : groupRubrics) {
                 if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
                     Map<Integer, String> rubricComments = lecturerAssessmentService.getExistingRubricComments(
@@ -284,16 +440,16 @@ public class LecturerAssessmentController {
                     existingGroupRubricComments.put(rubric.getId(), rubricComments);
                 }
             }
-            
-            for (Student student : groupStudents) {
+
+            for (Student student : targetStudents) {
                 Map<String, Long> studentMarks = lecturerAssessmentService.getExistingMarks(
                     assessment, lecturer, student, "Individual Assessment");
                 Map<Integer, String> studentComments = lecturerAssessmentService.getExistingComments(
                     assessment, lecturer, student, "Individual Assessment");
-                
+
                 existingIndividualMarks.put(student.getId(), studentMarks);
                 existingIndividualComments.put(student.getId(), studentComments);
-                
+
                 Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
                 for (Rubric rubric : individualRubrics) {
                     if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
@@ -307,8 +463,8 @@ public class LecturerAssessmentController {
         }
 
         model.addAttribute("assessment", assessment);
-        model.addAttribute("selectedGroup", selectedGroup);
-        model.addAttribute("groupStudents", groupStudents);
+        model.addAttribute("selectedGroup", targetGroup);
+        model.addAttribute("groupStudents", targetStudents);
         model.addAttribute("groupRubrics", groupRubrics);
         model.addAttribute("individualRubrics", individualRubrics);
         model.addAttribute("existingGroupMarks", existingGroupMarks);
@@ -318,6 +474,7 @@ public class LecturerAssessmentController {
         model.addAttribute("existingGroupRubricComments", existingGroupRubricComments);
         model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
         model.addAttribute("isAssignedToGroup", isAssignedToGroup);
+        model.addAttribute("isStudentTarget", false);
 
         return "lecturer_combined_evaluation_form";
     }
@@ -325,7 +482,8 @@ public class LecturerAssessmentController {
     @PostMapping("/{assessmentId}/submit")
     public String submitCombinedEvaluation(
             @PathVariable("assessmentId") Long assessmentId,
-            @RequestParam("groupId") Long groupId,
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "studentId", required = false) Long studentId,
             @RequestParam Map<String, String> allParams,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -334,25 +492,152 @@ public class LecturerAssessmentController {
 
         try {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
+            boolean isStudentTarget = studentId != null;
+
+            if (isStudentTarget) {
+                List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
+                Student selectedStudent = assignedStudents.stream()
+                    .filter(student -> student.getId().equals(studentId))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+
+                Map<String, String> groupScores = allParams.entrySet().stream()
+                    .filter(entry -> entry.getKey().startsWith("group_subRubric_") ||
+                                    entry.getKey().startsWith("group_rubric_"))
+                    .filter(entry -> !entry.getKey().contains("_comment_"))
+                    .collect(Collectors.toMap(
+                        e -> e.getKey().substring(6),
+                        Map.Entry::getValue));
+
+                Map<Integer, String> groupComments = new HashMap<>();
+                for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                    if (entry.getKey().startsWith("group_comment_")) {
+                        try {
+                            int index = Integer.parseInt(entry.getKey().substring(14));
+                            groupComments.put(index, entry.getValue());
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+
+                Map<Long, Map<Integer, String>> groupRubricComments = new HashMap<>();
+                for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                    if (entry.getKey().startsWith("group_rubric_") && entry.getKey().contains("_comment_")) {
+                        try {
+                            String key = entry.getKey().substring(13);
+                            String[] parts = key.split("_comment_");
+                            if (parts.length == 2) {
+                                Long rubricId = Long.parseLong(parts[0]);
+                                Integer commentIndex = Integer.parseInt(parts[1]);
+
+                                groupRubricComments.computeIfAbsent(rubricId, k -> new HashMap<>())
+                                    .put(commentIndex, entry.getValue());
+                            }
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+
+                if (!groupScores.isEmpty() || !groupComments.isEmpty() || !groupRubricComments.isEmpty()) {
+                    lecturerAssessmentService.saveEvaluationScores(
+                        assessmentId,
+                        lecturer.getId(),
+                        lecturer.getEmail(),
+                        selectedStudent.getId(),
+                        false,
+                        "Group Assessment",
+                        groupScores,
+                        groupComments,
+                        groupRubricComments
+                    );
+                }
+
+                Map<String, String> studentScores = allParams.entrySet().stream()
+                    .filter(entry -> entry.getKey().startsWith("student_" + studentId + "_subRubric_") ||
+                                    entry.getKey().startsWith("student_" + studentId + "_rubric_"))
+                    .filter(entry -> !entry.getKey().contains("_comment_"))
+                    .collect(Collectors.toMap(
+                        e -> e.getKey().substring(("student_" + studentId + "_").length()),
+                        Map.Entry::getValue));
+
+                Map<Integer, String> studentComments = new HashMap<>();
+                String studentPrefix = "student_" + studentId + "_";
+                for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                    if (entry.getKey().startsWith(studentPrefix + "comment_")) {
+                        try {
+                            int index = Integer.parseInt(entry.getKey().substring((studentPrefix + "comment_").length()));
+                            studentComments.put(index, entry.getValue());
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+
+                Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
+                for (Map.Entry<String, String> entry : allParams.entrySet()) {
+                    if (entry.getKey().startsWith(studentPrefix + "rubric_") &&
+                        entry.getKey().contains("_comment_")) {
+                        try {
+                            String key = entry.getKey().substring(studentPrefix.length() + 7);
+                            String[] parts = key.split("_comment_");
+                            if (parts.length == 2) {
+                                Long rubricId = Long.parseLong(parts[0]);
+                                Integer commentIndex = Integer.parseInt(parts[1]);
+
+                                studentRubricComments.computeIfAbsent(rubricId, k -> new HashMap<>())
+                                    .put(commentIndex, entry.getValue());
+                            }
+                        } catch (NumberFormatException e) {
+                        }
+                    }
+                }
+
+                if (!studentScores.isEmpty() || !studentComments.isEmpty() || !studentRubricComments.isEmpty()) {
+                    lecturerAssessmentService.saveEvaluationScores(
+                        assessmentId,
+                        lecturer.getId(),
+                        lecturer.getEmail(),
+                        selectedStudent.getId(),
+                        false,
+                        "Individual Assessment",
+                        studentScores,
+                        studentComments,
+                        studentRubricComments
+                    );
+                }
+
+                boolean isComplete = lecturerAssessmentService.isStudentEvaluationComplete(
+                    assessment, lecturer, selectedStudent.getId());
+
+                if (isComplete) {
+                    redirectAttributes.addFlashAttribute("successMessage",
+                        "✓ Evaluation completed successfully for the selected student!");
+                } else {
+                    redirectAttributes.addFlashAttribute("successMessage",
+                        "✓ Progress saved! Your evaluation is incomplete. Please complete all rubrics and comments to finish.");
+                }
+
+                return "redirect:/lecturer/assessments/" + assessmentId + "/select-student";
+            }
+
             Group selectedGroup = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
             boolean isAssignedToGroup = assignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, selectedGroup, lecturer);
             boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
-            
+
             if (!isAssignedToGroup && !hasRubricAssignment) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Not authorized to evaluate this group.");
                 return "redirect:/lecturer/assessments";
             }
-            
+
             List<Student> groupStudents = lecturerAssessmentService.getStudentsByGroup(groupId);
-            
+
             Map<String, String> groupScores = allParams.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith("group_subRubric_") || 
+                .filter(entry -> entry.getKey().startsWith("group_subRubric_") ||
                                 entry.getKey().startsWith("group_rubric_"))
-                .filter(entry -> !entry.getKey().contains("_comment_")) 
+                .filter(entry -> !entry.getKey().contains("_comment_"))
                 .collect(Collectors.toMap(
                     e -> e.getKey().substring(6),
                     Map.Entry::getValue));
-            
+
             Map<Integer, String> groupComments = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("group_comment_")) {
@@ -360,30 +645,28 @@ public class LecturerAssessmentController {
                         int index = Integer.parseInt(entry.getKey().substring(14));
                         groupComments.put(index, entry.getValue());
                     } catch (NumberFormatException e) {
-                       
                     }
                 }
             }
-            
+
             Map<Long, Map<Integer, String>> groupRubricComments = new HashMap<>();
             for (Map.Entry<String, String> entry : allParams.entrySet()) {
                 if (entry.getKey().startsWith("group_rubric_") && entry.getKey().contains("_comment_")) {
                     try {
-                        String key = entry.getKey().substring(13); 
+                        String key = entry.getKey().substring(13);
                         String[] parts = key.split("_comment_");
                         if (parts.length == 2) {
                             Long rubricId = Long.parseLong(parts[0]);
                             Integer commentIndex = Integer.parseInt(parts[1]);
-                            
+
                             groupRubricComments.computeIfAbsent(rubricId, k -> new HashMap<>())
                                 .put(commentIndex, entry.getValue());
                         }
                     } catch (NumberFormatException e) {
-                      
                     }
                 }
             }
-            
+
             if (!groupScores.isEmpty() || !groupComments.isEmpty() || !groupRubricComments.isEmpty()) {
                 lecturerAssessmentService.saveEvaluationScores(
                     assessmentId,
@@ -397,18 +680,18 @@ public class LecturerAssessmentController {
                     groupRubricComments
                 );
             }
-            
+
             for (Student student : groupStudents) {
                 String studentPrefix = "student_" + student.getId() + "_";
-                
+
                 Map<String, String> studentScores = allParams.entrySet().stream()
-                    .filter(entry -> entry.getKey().startsWith(studentPrefix + "subRubric_") || 
+                    .filter(entry -> entry.getKey().startsWith(studentPrefix + "subRubric_") ||
                                     entry.getKey().startsWith(studentPrefix + "rubric_"))
-                    .filter(entry -> !entry.getKey().contains("_comment_")) 
+                    .filter(entry -> !entry.getKey().contains("_comment_"))
                     .collect(Collectors.toMap(
                         e -> e.getKey().substring(studentPrefix.length()),
                         Map.Entry::getValue));
-                
+
                 Map<Integer, String> studentComments = new HashMap<>();
                 for (Map.Entry<String, String> entry : allParams.entrySet()) {
                     if (entry.getKey().startsWith(studentPrefix + "comment_")) {
@@ -416,31 +699,29 @@ public class LecturerAssessmentController {
                             int index = Integer.parseInt(entry.getKey().substring((studentPrefix + "comment_").length()));
                             studentComments.put(index, entry.getValue());
                         } catch (NumberFormatException e) {
-                           
                         }
                     }
                 }
-                
+
                 Map<Long, Map<Integer, String>> studentRubricComments = new HashMap<>();
                 for (Map.Entry<String, String> entry : allParams.entrySet()) {
-                    if (entry.getKey().startsWith(studentPrefix + "rubric_") && 
+                    if (entry.getKey().startsWith(studentPrefix + "rubric_") &&
                         entry.getKey().contains("_comment_")) {
                         try {
-                            String key = entry.getKey().substring(studentPrefix.length() + 7); 
+                            String key = entry.getKey().substring(studentPrefix.length() + 7);
                             String[] parts = key.split("_comment_");
                             if (parts.length == 2) {
                                 Long rubricId = Long.parseLong(parts[0]);
                                 Integer commentIndex = Integer.parseInt(parts[1]);
-                                
+
                                 studentRubricComments.computeIfAbsent(rubricId, k -> new HashMap<>())
                                     .put(commentIndex, entry.getValue());
                             }
                         } catch (NumberFormatException e) {
-                           
                         }
                     }
                 }
-                
+
                 if (!studentScores.isEmpty() || !studentComments.isEmpty() || !studentRubricComments.isEmpty()) {
                     lecturerAssessmentService.saveEvaluationScores(
                         assessmentId,
@@ -458,12 +739,12 @@ public class LecturerAssessmentController {
 
             boolean isComplete = lecturerAssessmentService.isGroupEvaluationComplete(
                 assessment, lecturer, groupId);
-            
+
             if (isComplete) {
-                redirectAttributes.addFlashAttribute("successMessage", 
+                redirectAttributes.addFlashAttribute("successMessage",
                     "✓ Evaluation completed successfully for all students in the group!");
             } else {
-                redirectAttributes.addFlashAttribute("successMessage", 
+                redirectAttributes.addFlashAttribute("successMessage",
                     "✓ Progress saved! Your evaluation is incomplete. Please complete all rubrics and comments to finish.");
             }
             
@@ -472,9 +753,14 @@ public class LecturerAssessmentController {
             redirectAttributes.addFlashAttribute("errorMessage", 
                 "Error saving evaluation: " + e.getMessage());
             
-            return "redirect:/lecturer/assessments/" + assessmentId + "/evaluate?groupId=" + groupId;
+            String redirectUrl = studentId != null
+                ? "redirect:/lecturer/assessments/" + assessmentId + "/evaluate?studentId=" + studentId
+                : "redirect:/lecturer/assessments/" + assessmentId + "/evaluate?groupId=" + groupId;
+            return redirectUrl;
         }
 
-        return "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
+        return studentId != null
+            ? "redirect:/lecturer/assessments/" + assessmentId + "/select-student"
+            : "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
     }
 }

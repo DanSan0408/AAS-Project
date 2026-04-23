@@ -45,12 +45,16 @@ import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.LecturerGroupAssignment;
 import com.capstone.adproject.model.LecturerRubricAssignment;
+import com.capstone.adproject.model.LecturerStudentAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentAssessmentAssignment;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentAssessmentAssignmentRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
@@ -78,7 +82,9 @@ public class AdminController {
     private final GroupRepository groupRepository;
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
+    private final LecturerStudentAssignmentRepository studentAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
     private final EmailService emailService;
 
     //constructor
@@ -92,7 +98,9 @@ public class AdminController {
             GroupRepository groupRepository,
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
+            LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository,
             CustomUserDetailsService userDetailsService,
             EmailService emailService) {
         this.adminService = adminService;
@@ -104,7 +112,9 @@ public class AdminController {
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
+        this.studentAssignmentRepository = studentAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
+        this.studentAssessmentAssignmentRepository = studentAssessmentAssignmentRepository;
         this.userDetailsService = userDetailsService;
         this.emailService = emailService;
     }
@@ -135,10 +145,7 @@ public class AdminController {
     }
 
     private boolean ownsStudent(Student student) {
-        return student != null
-            && student.getCourse() != null
-            && student.getCourse().getId() != null
-            && courseScopeService.isActiveCourseId(student.getCourse().getId());
+        return adminService.isStudentInActiveCourse(student);
     }
 
     private boolean ownsLecturer(Lecturer lecturer) {
@@ -299,7 +306,9 @@ public class AdminController {
         model.addAttribute("isRubricType", rubricChecker);
 
         long nowMillis = System.currentTimeMillis();
-        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        List<Deadline> allDeadlines = activeCourseId == null
+            ? List.of()
+            : deadlineService.getDeadlinesByCourseId(activeCourseId);
         model.addAttribute("allAssessments", allAssessments);
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("allDeadlines", allDeadlines);
@@ -337,63 +346,153 @@ public class AdminController {
             return "redirect:/admin/home";
         }
         
-        //fetch all groups and all lecturers
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Group> allGroups = activeCourseId == null
             ? List.of()
             : groupRepository.findAllWithStudentsByCourseId(activeCourseId);
-        
-        List<Lecturer> allLecturers = lecturerRepository.findAll();
-        
-        //fetch assignments
-        List<LecturerGroupAssignment> existingAssignments = 
-            assignmentRepository.findByAssessment(assessment);
-        
-            //create map to track which lecturers are assigned to which group
-        Map<Long, List<Lecturer>> groupLecturerMap = new java.util.HashMap<>();
+        List<Student> allStudents = adminService.getAllStudents();
+        List<Lecturer> allLecturers = adminService.getAllLecturers();
 
-        //loop through every group to findd it assigned lecturer
+        List<LecturerGroupAssignment> existingAssignments = assignmentRepository.findByAssessment(assessment);
+        List<LecturerRubricAssignment> existingRubricAssignments = rubricAssignmentRepository.findByAssessment(assessment);
+        List<LecturerStudentAssignment> existingStudentAssignments = studentAssignmentRepository.findByAssessment(assessment);
+
+        Map<Long, List<Lecturer>> groupLecturerMap = new java.util.HashMap<>();
         for (Group group : allGroups) {
             List<Lecturer> assignedLecturers = existingAssignments.stream()
-                .filter(a -> a.getGroup().getId().equals(group.getId()))
+                .filter(a -> a.getGroup() != null && a.getGroup().getId().equals(group.getId()))
                 .map(LecturerGroupAssignment::getLecturer)
                 .collect(Collectors.toList());
             groupLecturerMap.put(group.getId(), assignedLecturers);
         }
-        
-        //fetch rubric assignments
-        List<LecturerRubricAssignment> existingRubricAssignments = 
-            rubricAssignmentRepository.findByAssessment(assessment);
-            
+
         Map<Long, List<Lecturer>> rubricLecturerMap = new java.util.HashMap<>();
         if (assessment.getRubrics() != null) {
             for (Rubric rubric : assessment.getRubrics()) {
                 List<Lecturer> assignedLecturers = existingRubricAssignments.stream()
-                    .filter(a -> a.getRubric().getId().equals(rubric.getId()))
+                    .filter(a -> a.getRubric() != null && a.getRubric().getId().equals(rubric.getId()))
                     .map(LecturerRubricAssignment::getLecturer)
                     .collect(Collectors.toList());
                 rubricLecturerMap.put(rubric.getId(), assignedLecturers);
             }
         }
-        
-        String assignmentMode = "GROUP";
-        if (!existingRubricAssignments.isEmpty()) {
-            assignmentMode = "RUBRIC";
-            groupLecturerMap.clear(); // Enforce mutual exclusivity in the view
-        } else {
-            rubricLecturerMap.clear(); // Enforce mutual exclusivity in the view
+
+        Map<Long, List<Lecturer>> studentLecturerMap = new java.util.HashMap<>();
+        for (Student student : allStudents) {
+            List<Lecturer> assignedLecturers = existingStudentAssignments.stream()
+                .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
+                .map(LecturerStudentAssignment::getLecturer)
+                .collect(Collectors.toList());
+            studentLecturerMap.put(student.getId(), assignedLecturers);
         }
+
+        String assignmentMode = "GROUP";
+        if (!existingStudentAssignments.isEmpty()) {
+            assignmentMode = "STUDENT";
+            groupLecturerMap.clear();
+            rubricLecturerMap.clear();
+        } else if (!existingRubricAssignments.isEmpty()) {
+            assignmentMode = "RUBRIC";
+            groupLecturerMap.clear();
+            studentLecturerMap.clear();
+        } else {
+            rubricLecturerMap.clear();
+            studentLecturerMap.clear();
+        }
+
         model.addAttribute("assignmentMode", assignmentMode);
-        
-        //gabung all data to the model
         model.addAttribute("assessment", assessment);
         model.addAttribute("allGroups", allGroups);
+        model.addAttribute("allStudents", allStudents);
         model.addAttribute("allLecturers", allLecturers);
         model.addAttribute("groupLecturerMap", groupLecturerMap);
         model.addAttribute("rubricLecturerMap", rubricLecturerMap);
+        model.addAttribute("studentLecturerMap", studentLecturerMap);
         model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "admin_assign_lecturers";
+    }
+
+    @GetMapping("/student-assignments/{assessmentId}")
+    @Transactional
+    public String showStudentAssignmentPage(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (assessment == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
+            return "redirect:/admin/home";
+        }
+        if (!ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to access this assessment.");
+            return "redirect:/admin/home";
+        }
+
+        List<Student> allStudents = adminService.getAllStudents();
+        Set<Long> assignedStudentIds = studentAssessmentAssignmentRepository.findByAssessment(assessment).stream()
+            .map(StudentAssessmentAssignment::getStudent)
+            .filter(s -> s != null && s.getId() != null)
+            .map(Student::getId)
+            .collect(Collectors.toSet());
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("allStudents", allStudents);
+        model.addAttribute("assignedStudentIds", assignedStudentIds);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+
+        return "admin_assign_students";
+    }
+
+    @PostMapping("/student-assignments/{assessmentId}/save")
+    @Transactional
+    public String saveStudentAssignments(
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam(value = "studentIds", required = false) List<Long> studentIds,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Assessment assessment = rubricService.findAssessmentById(assessmentId);
+            if (assessment == null) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found");
+                return "redirect:/admin/home";
+            }
+            if (!ownsAssessment(assessment)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to modify this assessment.");
+                return "redirect:/admin/home";
+            }
+
+            studentAssessmentAssignmentRepository.deleteByAssessment(assessment);
+            studentAssessmentAssignmentRepository.flush();
+
+            if (studentIds != null && !studentIds.isEmpty()) {
+                List<StudentAssessmentAssignment> assignmentsToSave = new ArrayList<>();
+
+                for (Long studentId : new HashSet<>(studentIds)) {
+                    Student student = adminService.findStudentById(studentId)
+                        .orElseThrow(() -> new RuntimeException("Student not found: " + studentId));
+                    if (!ownsStudent(student)) {
+                        throw new RuntimeException("Unauthorized student access: " + studentId);
+                    }
+
+                    StudentAssessmentAssignment assignment = new StudentAssessmentAssignment();
+                    assignment.setAssessment(assessment);
+                    assignment.setStudent(student);
+                    assignmentsToSave.add(assignment);
+                }
+
+                studentAssessmentAssignmentRepository.saveAll(assignmentsToSave);
+            }
+
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Student assignments saved successfully for " + assessment.getTitle() + "!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Error saving student assignments: " + e.getMessage());
+            return "redirect:/admin/student-assignments/" + assessmentId;
+        }
+
+        return "redirect:/rubrics/view/" + assessmentId;
     }
 
     //save lecturer assignments
@@ -426,6 +525,11 @@ public class AdminController {
                     previouslyAssignedEmails.add(a.getLecturer().getEmail());
                 }
             });
+            studentAssignmentRepository.findByAssessment(assessment).forEach(a -> {
+                if (a.getLecturer() != null && a.getLecturer().getEmail() != null) {
+                    previouslyAssignedEmails.add(a.getLecturer().getEmail());
+                }
+            });
             
             // Delete old assignment existing untuk assessment
             assignmentRepository.deleteByAssessment(assessment);
@@ -434,10 +538,14 @@ public class AdminController {
             // Delete old rubric assignment existing untuk assessment
             rubricAssignmentRepository.deleteByAssessment(assessment);
             rubricAssignmentRepository.flush();
+
+            studentAssignmentRepository.deleteByAssessment(assessment);
+            studentAssignmentRepository.flush();
             
             // Temporary map to figure out which lecturers belong to which groups based on the form data.
             Map<Long, List<Long>> groupLecturerAssignments = new java.util.HashMap<>();
             Map<Long, List<Long>> rubricLecturerAssignments = new java.util.HashMap<>();
+            Map<Long, List<Long>> studentLecturerAssignments = new java.util.HashMap<>();
             
             String assignmentMode = allParams.getOrDefault("assignmentMode", "GROUP");
             Set<String> currentlyAssignedEmails = new HashSet<>();
@@ -470,6 +578,19 @@ public class AdminController {
                     
                     rubricLecturerAssignments
                         .computeIfAbsent(rubricId, k -> new ArrayList<>())
+                        .add(lecturerId);
+                }
+                else if ("STUDENT".equals(assignmentMode) && key.startsWith("student_") && key.contains("_lecturer_")) {
+                    if (value == null || value.trim().isEmpty() || value.equals("none")) {
+                        continue;
+                    }
+
+                    String[] parts = key.split("_");
+                    Long studentId = Long.valueOf(parts[1]);
+                    Long lecturerId = Long.valueOf(value);
+
+                    studentLecturerAssignments
+                        .computeIfAbsent(studentId, k -> new ArrayList<>())
                         .add(lecturerId);
                 }
             }
@@ -532,6 +653,37 @@ public class AdminController {
                 
                 rubricAssignmentRepository.saveAll(rubricAssignments);
             }
+
+            if ("STUDENT".equals(assignmentMode)) {
+                List<LecturerStudentAssignment> studentAssignments = new ArrayList<>();
+                for (Map.Entry<Long, List<Long>> entry : studentLecturerAssignments.entrySet()) {
+                    Long studentId = entry.getKey();
+                    Student student = adminService.findStudentById(studentId)
+                        .orElseThrow(() -> new RuntimeException("Student not found: " + studentId));
+                    if (!ownsStudent(student)) {
+                        throw new RuntimeException("Unauthorized student access: " + studentId);
+                    }
+
+                    for (Long lecturerId : entry.getValue()) {
+                        Lecturer lecturer = lecturerRepository.findById(lecturerId)
+                            .orElseThrow(() -> new RuntimeException("Lecturer not found: " + lecturerId));
+                        if (!ownsLecturer(lecturer)) {
+                            throw new RuntimeException("Unauthorized lecturer access: " + lecturerId);
+                        }
+
+                        if (!studentAssignmentRepository.existsByAssessmentAndStudentAndLecturer(assessment, student, lecturer)) {
+                            LecturerStudentAssignment assignment = new LecturerStudentAssignment();
+                            assignment.setAssessment(assessment);
+                            assignment.setStudent(student);
+                            assignment.setLecturer(lecturer);
+                            studentAssignments.add(assignment);
+                        }
+                        if (lecturer.getEmail() != null) currentlyAssignedEmails.add(lecturer.getEmail());
+                    }
+                }
+
+                studentAssignmentRepository.saveAll(studentAssignments);
+            }
             
             Set<String> newlyAssignedEmails = new HashSet<>(currentlyAssignedEmails);
             newlyAssignedEmails.removeAll(previouslyAssignedEmails);
@@ -542,7 +694,7 @@ public class AdminController {
                 long nowMillis = System.currentTimeMillis();
                 for (Deadline d : deadlines) {
                     String type = d.getAssessorType();
-                    if (type == null || "LECTURER".equalsIgnoreCase(type) || "SUPERVISOR".equalsIgnoreCase(type)) {
+                    if (type == null || "LECTURER".equalsIgnoreCase(type) || "GENERAL".equalsIgnoreCase(type) || "SUPERVISOR".equalsIgnoreCase(type)) {
                         long open = d.getOpenDate() != null ? d.getOpenDate().getTime() : 0;
                         long close = d.getDate() != null ? d.getDate().getTime() + 86399999L : Long.MAX_VALUE;
                         if (nowMillis >= open && nowMillis <= close) {
@@ -814,19 +966,16 @@ public class AdminController {
         }
         
         try {
-            Optional<Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
-            if (currentLecturer.isPresent()) {
-                course.setCreatedBy(currentLecturer.get());
-            }
+            String username = getLoggedInUsername();
+            Lecturer lecturer = superAdminService.ensureAdminAssignable(username);
+            course.setCreatedBy(lecturer);
             
             Course savedCourse = superAdminService.saveCourse(course);
 
-            if (currentLecturer.isPresent()) {
-                superAdminService.assignAdminToCourse(currentLecturer.get().getId(), savedCourse.getId());
-                redirectAttributes.addFlashAttribute("successMessage", "Course added and assigned to you successfully!");
-            } else {
-                redirectAttributes.addFlashAttribute("successMessage", "Course added successfully, but could not auto-assign because your lecturer profile was not found.");
-            }
+            // Auto-assign admin to the course they created
+            superAdminService.assignAdminToCourse(lecturer.getId(), savedCourse.getId());
+            
+            redirectAttributes.addFlashAttribute("successMessage", "Course added successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error adding course: " + e.getMessage());
         }
@@ -1237,7 +1386,7 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("assessment", assessmentOpt.get());
         model.addAttribute("assignmentDto", dto);
-        model.addAttribute("assessorTypes", List.of("STUDENT", "LECTURER", "SUPERVISOR")); 
+        model.addAttribute("assessorTypes", List.of("STUDENT", "LECTURER", "GENERAL")); 
         
         return "assign_assessment";
     }
@@ -1268,6 +1417,12 @@ public String assignAssessment(
          return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
     }
 
+    Long courseId = assessmentOpt.get().getCourse() != null ? assessmentOpt.get().getCourse().getId() : null;
+    if (courseId == null) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Assessment must belong to a course before assigning a deadline.");
+        return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+    }
+
     // Business Logic Validation: Ensure Open Date is before End Date
     if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null && dto.getEndDate() != null) {
         if (!dto.getOpenDate().before(dto.getEndDate())) {
@@ -1296,6 +1451,8 @@ public String assignAssessment(
         deadline.setAssessmentId(dto.getAssessmentId());
         deadline.setAssessorType(dto.getAssessorType());
     }
+
+    deadline.setCourseId(courseId);
     
     deadline.setTitle(dto.getTitle());
     deadline.setDate(dto.getEndDate());

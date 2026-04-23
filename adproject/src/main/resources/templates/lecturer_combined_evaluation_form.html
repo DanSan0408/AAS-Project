@@ -25,12 +25,15 @@
                     <h2 th:text="${assessment.title}">Assessment Title</h2>
                     <div class="target-info">
                         <h3 class="evaluating-target">
-                            Evaluating Group: <span th:text="${selectedGroup.groupName}">Group Name</span>
+                            <span th:if="${isStudentTarget != null and isStudentTarget}">Evaluating Student: </span>
+                            <span th:unless="${isStudentTarget != null and isStudentTarget}">Evaluating Group: </span>
+                            <span th:text="${selectedGroup.groupName}">Group Name</span>
                         </h3>
                     </div>
                     
                     <div class="students-list">
-                        <strong>📋 Group Members:</strong>
+                        <strong th:if="${isStudentTarget != null and isStudentTarget}">📋 Selected Student:</strong>
+                        <strong th:unless="${isStudentTarget != null and isStudentTarget}">📋 Group Members:</strong>
                         <ul>
                             <li th:each="student : ${groupStudents}" th:text="${student.email}">Student</li>
                         </ul>
@@ -40,7 +43,8 @@
                 <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
                 <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post">
-                    <input type="hidden" name="groupId" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" th:if="${isStudentTarget == null or !isStudentTarget}" name="groupId" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" th:if="${isStudentTarget != null and isStudentTarget}" name="studentId" th:value="${selectedGroup.id}"/>
 
                     <div th:if="${groupRubrics != null and !groupRubrics.isEmpty()}">
                         <div class="section-divider">
@@ -280,7 +284,7 @@
                     </div>
 
                     <div class="form-actions" style="margin-top: 40px;">
-                        <a th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
+                        <a th:href="${isStudentTarget != null and isStudentTarget ? '/lecturer/assessments/' + assessment.id + '/select-student' : '/lecturer/assessments/' + assessment.id + '/select-group'}" 
                            class="btn btn-cancel">Cancel</a>
                         <button type="submit" class="btn btn-submit">💾 Save Progress</button>
                     </div>

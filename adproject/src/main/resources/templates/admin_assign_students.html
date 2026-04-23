@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Students - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_lecturers.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="assign-lecturer-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+            <h1>UTM AAS</h1>
+        </div>
+
+        <div class="page-header">
+            <h1>Assign Students</h1>
+            <h2 th:text="${assessment.title}">Assessment Title</h2>
+            <p>Select students who are allowed to assess this assessment when it is open.</p>
+
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+
+        <form th:action="@{/admin/student-assignments/{id}/save(id=${assessment.id})}" method="post">
+            <div class="card mb-4" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">Students In Current Course</h3>
+                <p style="margin: 0 0 15px 0; color: #666;">Only selected students can access this assessment page while it is open.</p>
+
+                <div th:if="${#lists.isEmpty(allStudents)}" style="padding: 16px; background: #f8f9fa; border-radius: 8px; color: #666;">
+                    No students found in this course.
+                </div>
+
+                <div th:unless="${#lists.isEmpty(allStudents)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+                    <label th:each="student : ${allStudents}"
+                           style="display: flex; align-items: center; gap: 10px; border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; background: #fff; cursor: pointer;">
+                        <input type="checkbox"
+                               name="studentIds"
+                               th:value="${student.id}"
+                               th:checked="${assignedStudentIds.contains(student.id)}">
+                        <span style="display: flex; flex-direction: column; min-width: 0;">
+                            <strong th:text="${student.email}" style="word-break: break-word;">student@email.com</strong>
+                            <small th:text="${student.group != null ? student.group.groupName : 'No Group'}" style="color: #666;">No Group</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary" style="background: #f7941d; border-color: #f7941d;">
+                    <i class="fas fa-save"></i> Save Student Assignments
+                </button>
+                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -49,14 +49,14 @@
                 </div>
             </div>
 
-            <div th:if="${group}" class="assessments-section card">
+            <div class="assessments-section card">
                 <h2>📋 Available Assessments</h2>
                 
                 <div th:if="${#lists.isEmpty(assessments)}" class="no-assessments">
                     <i class="fas fa-inbox"></i>
-                    <p>No peer or self assessments are currently open.</p>
+                    <p>No assigned assessments are currently open.</p>
                     <p style="font-size: 0.9em; color: #7F8C8D;">
-                        Assessments will appear here once your administrator opens them. Check back later or contact your administrator for more information.
+                        Assessments will appear here once your administrator opens them and assigns you to them. Check back later or contact your administrator for more information.
                     </p>
                 </div>
 
@@ -145,14 +145,14 @@
                             
                             <div class="evaluation-card team-assessment">
                                 <div class="evaluation-header">
-                                    <h5>Team Evaluation</h5>
+                                    <h5>Groupmate Evaluation</h5>
                                     <span class="assessment-type-badge team">TEAM</span>
                                 </div>
                                 <div class="evaluation-body">
-                                    <p>Evaluate your team's overall performance using Group Assessment rubrics. All team members will receive the same marks.</p>
+                                    <p>Evaluate your fellow groupmates using Group Assessment rubrics. Your submitted marks and comments will be applied to each groupmate, not to yourself.</p>
                                     <a th:href="@{/student/assessment/{assessmentId}/team-evaluate(assessmentId=${assessment.id})}" 
                                        class="btn btn-evaluate">
-                                        <i class="fas fa-users"></i> Evaluate Team
+                                        <i class="fas fa-users"></i> Evaluate Groupmates
                                     </a>
                                 </div>
                             </div>

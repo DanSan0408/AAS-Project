@@ -5,8 +5,9 @@
         const assignmentModeRadios = document.querySelectorAll('input[name="assignmentMode"]');
         const rubricSection = document.getElementById('rubricModeSection');
         const groupSection = document.getElementById('groupModeSection');
+        const studentSection = document.getElementById('studentModeSection');
 
-        if (!assignmentModeRadios.length || !rubricSection || !groupSection) {
+        if (!assignmentModeRadios.length || !rubricSection || !groupSection || !studentSection) {
             return;
         }
 
@@ -23,6 +24,7 @@
 
             setSectionState(rubricSection, mode === 'RUBRIC');
             setSectionState(groupSection, mode === 'GROUP');
+            setSectionState(studentSection, mode === 'STUDENT');
         };
 
         assignmentModeRadios.forEach(radio => radio.addEventListener('change', toggleMode));
@@ -32,7 +34,11 @@
             const addBtn = event.target.closest('[data-action="add-lecturer-field"]');
             if (addBtn) {
                 const groupId = addBtn.dataset.groupId;
-                const container = document.querySelector(`.lecturer-assignments-container[data-group-id="${groupId}"]`);
+                const studentId = addBtn.dataset.studentId;
+                const containerSelector = groupId
+                    ? `.lecturer-assignments-container[data-group-id="${groupId}"]`
+                    : `.lecturer-assignments-container[data-student-id="${studentId}"]`;
+                const container = document.querySelector(containerSelector);
                 if (!container) {
                     return;
                 }
@@ -46,7 +52,9 @@
                 const newField = document.createElement('div');
                 newField.className = 'lecturer-row';
                 const newSelect = templateSelect.cloneNode(true);
-                newSelect.name = `group_${groupId}_lecturer_${newIndex}`;
+                newSelect.name = groupId
+                    ? `group_${groupId}_lecturer_${newIndex}`
+                    : `student_${studentId}_lecturer_${newIndex}`;
                 newSelect.value = 'none';
 
                 const removeButton = document.createElement('button');
@@ -54,7 +62,8 @@
                 removeButton.className = 'btn-icon-remove';
                 removeButton.dataset.action = 'remove-lecturer-field';
                 removeButton.title = 'Remove Lecturer';
-                removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                removeButton.setAttribute('aria-label', 'Remove Lecturer');
+                removeButton.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4V5h-4Zm-3 2v13h10V7Zm2 2h2v9H9Zm4 0h2v9h-2Z"/></svg>';
 
                 newField.appendChild(newSelect);
                 newField.appendChild(removeButton);
