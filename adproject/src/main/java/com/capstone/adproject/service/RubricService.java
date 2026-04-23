@@ -297,6 +297,8 @@ public void deleteAssessment(Long id){
         
         System.out.println("Step 4: Deleting lecturer assignments...");
         assessmentRepository.deleteLecturerAssignmentsByAssessmentId(id);
+        assessmentRepository.deleteLecturerStudentAssignmentsByAssessmentId(id);
+        assessmentRepository.deleteStudentAssignmentsByAssessmentId(id);
         assessmentRepository.flush();
         
         System.out.println("Step 5: Deleting deadlines...");

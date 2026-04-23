@@ -37,6 +37,10 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     void deleteGroupAssignments(@Param("lecturerId") Long lecturerId);
 
     @Modifying
+    @Query("DELETE FROM LecturerStudentAssignment lsa WHERE lsa.lecturer.id = :lecturerId")
+    void deleteStudentAssignments(@Param("lecturerId") Long lecturerId);
+
+    @Modifying
     @Query("DELETE FROM Mark m WHERE m.lecturer.id = :lecturerId")
     void deleteMarksGiven(@Param("lecturerId") Long lecturerId);
 

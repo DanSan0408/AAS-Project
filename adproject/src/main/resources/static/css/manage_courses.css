@@ -134,6 +134,45 @@ body.superadmin-page .empty-state {
     font-style: italic;
 }
 
+body.superadmin-page .danger-reset-card {
+    border-color: #fecaca;
+    background: #fff5f5;
+}
+
+body.superadmin-page .danger-reset-card h3 {
+    color: #991b1b;
+    border-bottom-color: #fecaca;
+}
+
+body.superadmin-page .danger-reset-text {
+    color: #7f1d1d;
+    margin-bottom: 14px;
+}
+
+body.superadmin-page .danger-reset-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+body.superadmin-page .danger-reset-form label {
+    color: #7f1d1d;
+    font-weight: 600;
+}
+
+body.superadmin-page .danger-reset-form input {
+    width: 100%;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+body.superadmin-page .danger-reset-form input:focus {
+    outline: none;
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
 @media (max-width: 900px) {
     body.superadmin-page .course-card .card-body {
         padding: 18px;

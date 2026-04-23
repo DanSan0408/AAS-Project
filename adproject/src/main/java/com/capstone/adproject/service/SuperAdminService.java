@@ -8,15 +8,18 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.capstone.adproject.model.Admin;
 import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.SuperAdmin;
 import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
+import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.SuperAdminRepository;
@@ -30,11 +33,13 @@ public class SuperAdminService {
 
     private final CourseRepository courseRepository;
     private final LecturerRepository lecturerRepository;
+    private final AdminRepository adminRepository;
     private final SuperAdminRepository superAdminRepository;
     private final AdminCourseAssignmentRepository adminCourseAssignmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final CourseStatisticsService courseStatisticsService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${app.public-base-url:http://localhost:8080}")
     private String publicBaseUrl;
@@ -43,16 +48,20 @@ public class SuperAdminService {
     private EntityManager entityManager;
 
     public SuperAdminService(CourseRepository courseRepository, LecturerRepository lecturerRepository,
+            AdminRepository adminRepository,
             SuperAdminRepository superAdminRepository,
             AdminCourseAssignmentRepository adminCourseAssignmentRepository,
-            PasswordEncoder passwordEncoder, EmailService emailService, CourseStatisticsService courseStatisticsService) {
+            PasswordEncoder passwordEncoder, EmailService emailService, CourseStatisticsService courseStatisticsService,
+            JdbcTemplate jdbcTemplate) {
         this.courseRepository = courseRepository;
         this.lecturerRepository = lecturerRepository;
+        this.adminRepository = adminRepository;
         this.superAdminRepository = superAdminRepository;
         this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.courseStatisticsService = courseStatisticsService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public List<Course> getAllCourses() {
@@ -115,6 +124,50 @@ public class SuperAdminService {
         lecturerRepository.save(lecturer);
     }
 
+    @Transactional
+    public Lecturer ensureAdminAssignable(String adminEmail) {
+        if (adminEmail == null || adminEmail.isBlank()) {
+            throw new IllegalArgumentException("Admin email is required.");
+        }
+
+        Optional<Admin> adminOpt = adminRepository.findByEmail(adminEmail);
+        Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(adminEmail);
+
+        String sourcePassword = adminOpt.map(Admin::getPassword)
+                .or(() -> superAdminOpt.map(SuperAdmin::getPassword))
+                .orElseThrow(() -> new IllegalArgumentException("Admin user not found."));
+
+        Lecturer lecturer = lecturerRepository.findByEmail(adminEmail).orElseGet(() -> {
+            Lecturer created = new Lecturer();
+            created.setEmail(adminEmail);
+            created.setIsTempPassword(false);
+            return created;
+        });
+
+        if (lecturer.getPassword() == null || lecturer.getPassword().isBlank()) {
+            lecturer.setPassword(sourcePassword);
+        }
+
+        String roles = lecturer.getRoles() == null ? "" : lecturer.getRoles();
+        if (!roles.contains("ROLE_ADMIN")) {
+            roles = roles.isBlank() ? "ROLE_ADMIN" : roles + ",ROLE_ADMIN";
+        }
+        lecturer.setRoles(roles);
+
+        if (lecturer.getUsername() == null || lecturer.getUsername().isBlank()) {
+            String preferred = adminOpt.map(Admin::getUsername)
+                    .or(() -> superAdminOpt.map(SuperAdmin::getUsername))
+                    .orElse(adminEmail);
+            if (preferred != null && !preferred.isBlank() && lecturerRepository.findByUsername(preferred).isEmpty()) {
+                lecturer.setUsername(preferred);
+            } else {
+                lecturer.setUsername(adminEmail);
+            }
+        }
+
+        return lecturerRepository.save(lecturer);
+    }
+
     public Optional<Course> getCourseById(Long id) {
         return courseRepository.findById(id);
     }
@@ -165,6 +218,10 @@ public class SuperAdminService {
 
         // Detach all known references before deleting the course row.
         entityManager.createNativeQuery("DELETE FROM `admin_course_assignment` WHERE course_id = :courseId")
+            .setParameter("courseId", id)
+            .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM `student_course_assignment` WHERE course_id = :courseId")
             .setParameter("courseId", id)
             .executeUpdate();
 
@@ -356,5 +413,44 @@ public class SuperAdminService {
             assignment.setCourse(course);
             adminCourseAssignmentRepository.save(assignment);
         }
+    }
+
+    @Transactional
+    public void resetToSuperAdminOnly() {
+        if (jdbcTemplate == null) {
+            throw new IllegalStateException("Database reset is unavailable: JdbcTemplate not configured.");
+        }
+
+        jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
+        try {
+            deleteTableRows("calculated_results");
+            deleteTableRows("student_result_overrides");
+            deleteTableRows("marks");
+            deleteTableRows("assessment_comments");
+            deleteTableRows("lecturer_rubric_assignments");
+            deleteTableRows("lecturer_group_assignment");
+            deleteTableRows("lecturer_student_assignment");
+            deleteTableRows("student_assessment_assignment");
+            deleteTableRows("admin_course_assignment");
+            deleteTableRows("student_course_assignment");
+            deleteTableRows("deadlines");
+            deleteTableRows("rating");
+            deleteTableRows("sub_rubric");
+            deleteTableRows("rubric");
+            deleteTableRows("assessment");
+            deleteTableRows("student");
+            deleteTableRows("project_group");
+            deleteTableRows("rubric_templates");
+            deleteTableRows("industrial_supervisor");
+            deleteTableRows("admin");
+            deleteTableRows("lecturer");
+            deleteTableRows("courses");
+        } finally {
+            jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 1");
+        }
+    }
+
+    private void deleteTableRows(String tableName) {
+        jdbcTemplate.execute("DELETE FROM `" + tableName + "`");
     }
 }

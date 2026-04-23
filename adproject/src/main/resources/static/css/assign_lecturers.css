@@ -82,6 +82,18 @@ body.assign-lecturer-page .groups-container {
     gap: 25px !important;
 }
 
+body.assign-lecturer-page .student-mode-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    max-width: 100% !important;
+}
+
+body.assign-lecturer-page .student-mode-container .group-assignment-card {
+    width: 100% !important;
+    max-width: 760px !important;
+}
+
 body.assign-lecturer-page .group-assignment-card {
     background-color: var(--color-surface) !important;
     border-radius: 10px !important;
@@ -176,6 +188,19 @@ body.assign-lecturer-page .btn-icon-remove {
 body.assign-lecturer-page .btn-icon-remove:hover {
     background-color: var(--color-alert) !important;
     color: white !important;
+}
+
+body.assign-lecturer-page .btn-icon-remove i {
+    font-size: 0.95rem !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+}
+
+body.assign-lecturer-page .btn-icon-remove svg {
+    width: 16px !important;
+    height: 16px !important;
+    display: block !important;
+    pointer-events: none !important;
 }
 
 body.assign-lecturer-page .btn-link-add {

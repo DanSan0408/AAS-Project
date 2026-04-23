@@ -1,8 +1,6 @@
 package com.capstone.adproject.model;
 
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,8 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
-@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
+@Filter(name = "courseScopeFilter", condition = "(course_id = :activeCourseId OR EXISTS (SELECT 1 FROM student_course_assignment sca WHERE sca.student_id = id AND sca.course_id = :activeCourseId) OR EXISTS (SELECT 1 FROM project_group pg WHERE pg.id = group_id AND pg.course_id = :activeCourseId))")
 @Entity
 @Table(name = "student", indexes = {
     @Index(name = "idx_student_course", columnList = "course_id"),
