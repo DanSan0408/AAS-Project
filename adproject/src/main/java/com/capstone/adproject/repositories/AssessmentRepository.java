@@ -41,6 +41,16 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
     @Transactional
     @Query(value = "DELETE FROM lecturer_group_assignment WHERE assessment_id = :assessmentId", nativeQuery = true)
     void deleteLecturerAssignmentsByAssessmentId(@Param("assessmentId") Long assessmentId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM lecturer_student_assignment WHERE assessment_id = :assessmentId", nativeQuery = true)
+    void deleteLecturerStudentAssignmentsByAssessmentId(@Param("assessmentId") Long assessmentId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM student_assessment_assignment WHERE assessment_id = :assessmentId", nativeQuery = true)
+    void deleteStudentAssignmentsByAssessmentId(@Param("assessmentId") Long assessmentId);
     
     @Modifying
     @Transactional

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Student - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_select.css}">
+</head>
+<body class="lecturer-page">
+
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="selection-container">
+                <div class="dashboard-header">
+                    <h2 th:text="${assessment.title}">Assessment Title</h2>
+                    <p class="subtitle">Select a student below to begin or continue your evaluation.</p>
+                </div>
+
+                <div class="alert-container">
+                    <div th:if="${errorMessage}" class="alert alert-error">
+                        <span class="icon">✖</span> <span th:text="${errorMessage}">Error</span>
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <span class="icon">✓</span> <span th:text="${successMessage}">Success</span>
+                    </div>
+                </div>
+
+                <div class="groups-grid">
+                    <div th:each="student : ${assignedStudents}" class="group-card">
+
+                        <div class="card-top">
+                            <h3 th:text="${student.email}">Student Email</h3>
+
+                            <div class="status-indicator">
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}"
+                                      class="badge badge-completed">Completed</span>
+
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}"
+                                      class="badge badge-progress">In Progress</span>
+
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}"
+                                      class="badge badge-pending">Not Started</span>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="members-section">
+                                <label>Group</label>
+                                <div class="member-list">
+                                    <span class="member-name" th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, studentId=${student.id})}"
+                               class="btn-action">
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}">Review Evaluation</span>
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}">Continue</span>
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}">Start Evaluation</span>
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

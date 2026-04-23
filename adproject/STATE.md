@@ -1,8 +1,51 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-20 (IH)
+**Last Updated**: 2026-04-21 (IH)
 
 ---
+
+## Current Status: Lecturer Student Assignation Mode
+**Status**: IMPLEMENTED (PENDING FINAL RUNTIME VERIFICATION)
+
+## Current Status: Clean-Slate Recovery + Course Isolation Hardening (April 22, 2026)
+**Status**: IMPLEMENTED
+
+### Summary
+- Added a super-admin-only clean-slate reset action to wipe all operational data while preserving super admin account(s) in `super_admin`.
+- Hardened student course scoping so shared students are visible only when linked by legacy `student.course_id`, explicit `student_course_assignment`, or group-course membership.
+- Added explicit `courseId` ownership to deadlines so deadline visibility/duplicate checks are now isolated per active course.
+
+### Files Modified
+- `SuperAdminService.java` - Added transactional `resetToSuperAdminOnly()` hard reset method
+- `SuperAdminController.java` - Added `/superadmin/reset-data` confirmation endpoint
+- `manage_courses.html` / `manage_courses.css` - Added guarded “System Clean Slate” form UI
+- `Student.java` - Added strict `courseScopeFilter` with enrollment and group fallback
+- `Deadline.java` - Added `courseId` field + index
+- `DeadlineRepository.java` / `DeadlineService.java` - Added course-scoped deadline APIs
+- `DeadlineController.java` / `AdminController.java` / `LecturerController.java` / `StudentController.java` - Updated to use course-scoped deadline loading/ownership checks
+
+### Operational Note
+- Reset requires typing exact confirmation text:
+   `WIPE_EVERYTHING_EXCEPT_SUPER_ADMIN`
+
+### Summary
+Added a third lecturer assignment path that assigns lecturers by student instead of by group or rubric. The new mode persists its own assignment rows, appears in the admin assignment UI, and routes lecturers to a student-selection flow before evaluation.
+
+Latest update:
+- Refined student-mode assignment UI layout to center cards for better readability.
+- Replaced remove-lecturer icons with inline SVG trash icons (template + dynamically added rows) so icons render reliably even when external icon fonts are unavailable.
+
+### Files Touched
+- `LecturerStudentAssignment.java` - new assignment entity
+- `LecturerStudentAssignmentRepository.java` - assignment lookups and cleanup
+- `AdminController.java` / `admin_assign_lecturers.html` / `admin-assign-lecturers.js` - student-mode assignment UI and save flow
+- `LecturerAssessmentController.java` / `LecturerAssessmentService.java` - student-selection and student-target evaluation support
+- `lecturer_select_student.html` - new student selection page
+- `lecturer_combined_evaluation_form.html` - shared form now supports student targets
+
+### Validation Note
+- Source wiring is in place and frontend files for assignment UI validated with no syntax errors.
+- Full end-to-end runtime verification remains pending; latest local app run attempt ended with exit code 1 and should be rechecked with logs in the next validation pass.
 
 ## Current Status: Course Management Bug Fixes (April 20, 2026)
 **Status**: FIXED

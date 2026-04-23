@@ -27,11 +27,13 @@ import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AssessmentRepository;
-import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
 import com.capstone.adproject.repositories.RubricRepository;
+import com.capstone.adproject.repositories.StudentAssessmentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.service.AssessmentCommentService;
 import com.capstone.adproject.service.AssessmentService;
@@ -67,35 +69,59 @@ public class StudentController {
     private AssessmentCommentService commentService;
     
     @Autowired
-    private GroupRepository groupRepository;
-    
-    @Autowired
     private MarkRepository markRepository;
+
+    @Autowired
+    private StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
+
+    @Autowired
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
+
+    private Long resolveCurrentCourseId(Student student) {
+        if (student == null) {
+            return null;
+        }
+
+        if (student.getCourse() != null && student.getCourse().getId() != null) {
+            return student.getCourse().getId();
+        }
+
+        if (student.getGroup() != null && student.getGroup().getCourse() != null && student.getGroup().getCourse().getId() != null) {
+            return student.getGroup().getCourse().getId();
+        }
+
+        List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
+        for (StudentCourseAssignment assignment : assignments) {
+            if (assignment != null && assignment.getCourse() != null && assignment.getCourse().getId() != null) {
+                return assignment.getCourse().getId();
+            }
+        }
+
+        return null;
+    }
     
     private boolean isAssessmentOpen(Assessment assessment, String assessorType) {
-        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-            assessment.getId(), assessorType
-        );
-        
-        if (deadlines.isEmpty()) {
-            return false;
-        }
-        
+        return isAssessmentOpenForTypes(assessment, assessorType, "GENERAL", "SUPERVISOR");
+    }
+
+    private boolean isAssessmentOpenForTypes(Assessment assessment, String... assessorTypes) {
         long nowMillis = System.currentTimeMillis();
-        
-        for (Deadline deadline : deadlines) {
-            long openMillis = 0;
-            if (deadline.getOpenDate() != null) {
-                openMillis = deadline.getOpenDate().getTime();
-            }
-            
-            long closeMillis = deadline.getDate().getTime() + 86399999L;
-            
-            if (nowMillis >= openMillis && nowMillis <= closeMillis) {
-                return true;
+
+        for (String assessorType : assessorTypes) {
+            List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
+                assessment.getId(), assessorType
+            );
+
+            for (Deadline deadline : deadlines) {
+                long openMillis = deadline.getOpenDate() != null ? deadline.getOpenDate().getTime() : 0L;
+                long closeMillis = deadline.getDate().getTime() + 86399999L;
+
+                if (nowMillis >= openMillis && nowMillis <= closeMillis) {
+                    return true;
+                }
             }
         }
-        
+
         return false;
     }
     
@@ -104,6 +130,20 @@ public class StudentController {
             assessment.getId(), assessorType
         );
         return deadlines.isEmpty() ? null : deadlines.get(0);
+    }
+
+    private boolean isStudentAssignedToAssessment(Student student, Assessment assessment) {
+        return studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student);
+    }
+
+    private List<Student> getGroupmates(Student student) {
+        if (student == null || student.getGroup() == null || student.getId() == null) {
+            return List.of();
+        }
+
+        return studentRepository.findByGroup(student.getGroup()).stream()
+            .filter(member -> member != null && member.getId() != null && !student.getId().equals(member.getId()))
+            .collect(Collectors.toList());
     }
 
     private Map<Long, Map<Integer, String>> extractRubricComments(Map<String, String> formData, String prefix) {
@@ -164,14 +204,17 @@ public class StudentController {
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
             .orElseThrow(() -> new RuntimeException("Student not found"));
-        Long currentCourseId = currentStudent.getCourse() != null ? currentStudent.getCourse().getId() : null;
+        Long currentCourseId = resolveCurrentCourseId(currentStudent);
         
         List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
             .filter(a -> currentCourseId != null
                 && a.getCourse() != null
                 && currentCourseId.equals(a.getCourse().getId()))
+            .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
             .collect(Collectors.toList());
-        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        List<Deadline> allDeadlines = currentCourseId == null
+            ? List.of()
+            : deadlineService.getDeadlinesByCourseId(currentCourseId);
         long nowMillis = System.currentTimeMillis();
         List<Deadline> studentDeadlines = allDeadlines.stream()
             .filter(d -> {
@@ -184,7 +227,6 @@ public class StudentController {
                     || "GENERAL".equals(normalizedType)
                     || "ALL".equals(normalizedType);
             })
-            .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         
@@ -232,19 +274,13 @@ public class StudentController {
         Student currentStudent = studentRepository.findByEmail(emailOrUsername)
             .or(() -> studentRepository.findByUsername(emailOrUsername))
             .orElseThrow(() -> new RuntimeException("Student not found"));
-        Long currentCourseId = currentStudent.getCourse() != null ? currentStudent.getCourse().getId() : null;
-        
-        if (currentStudent.getGroup() == null) {
-            if (!model.containsAttribute("error")) {
-                model.addAttribute("error", "You are not assigned to any group yet.");
-            }
-            return "student_assessments";
-        }
+        Long currentCourseId = resolveCurrentCourseId(currentStudent);
         
         List<Assessment> assessments = assessmentRepository.findAll().stream()
             .filter(a -> currentCourseId != null
                 && a.getCourse() != null
                 && currentCourseId.equals(a.getCourse().getId()))
+            .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
             .collect(Collectors.toList());
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
@@ -261,8 +297,10 @@ public class StudentController {
         model.addAttribute("assessments", peerSelfAssessments);
         model.addAttribute("currentStudent", currentStudent);
         model.addAttribute("group", currentStudent.getGroup());
-        
-        List<Student> teamMembers = studentRepository.findByGroup(currentStudent.getGroup());
+
+        List<Student> teamMembers = currentStudent.getGroup() == null
+            ? List.of()
+            : studentRepository.findByGroup(currentStudent.getGroup());
         model.addAttribute("teamMembers", teamMembers);
         
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
@@ -301,6 +339,11 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment is not currently open for evaluation.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
     
@@ -406,6 +449,11 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     if (!isAssessmentOpen(assessment, "STUDENT")) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment has been closed. Submissions are no longer accepted.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
     
@@ -528,27 +576,32 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 Rating rating = ratingRepository.findById(ratingId)
                         .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
                 
+                Rubric resolvedParentRubric = parentRubric;
+                if (resolvedParentRubric == null) {
+                    throw new RuntimeException("Parent rubric not found for subRubric: " + subRubricId);
+                }
+
                 Mark mark = new Mark();
                 mark.setEvaluatorStudent(evaluator);
                 mark.setEvaluatedStudent(evaluatedStudent);
                 mark.setAssessment(assessment);
-                mark.setRubric(parentRubric);
+                mark.setRubric(resolvedParentRubric);
                 mark.setSubRubric(subRubric);
                 mark.setRating(rating);
                 mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
-                mark.setClo(parentRubric.getClo());
+                mark.setClo(resolvedParentRubric.getClo() != null ? resolvedParentRubric.getClo() : Integer.valueOf(0));
                 
-                if (parentRubric.getMarks() != null && 
-                    parentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                if (resolvedParentRubric.getMarks() != null && 
+                    resolvedParentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
                     subRubric.getMarks() != null && 
                     subRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
-                    parentRubric.getCloMarks() != null) {
+                    resolvedParentRubric.getCloMarks() != null) {
                     
                     double subRubricProportion = subRubric.getMarks()
-                        .divide(parentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                        .divide(resolvedParentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
                         .doubleValue();
                     
-                    double cloMarksForSubRubric = parentRubric.getCloMarks() * subRubricProportion;
+                    double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
                     
                     double achievementProportion = rating.getMarks()
                         .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
@@ -667,11 +720,19 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
             "This assessment is not currently open for evaluation.");
         return "redirect:/student/assessments";
     }
-    
-    if (evaluator.getGroup() == null) {
-        redirectAttributes.addFlashAttribute("error", "You must be in a group to submit team evaluation.");
+
+    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
+    
+    List<Student> groupmates = getGroupmates(evaluator);
+    if (groupmates.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student to submit team evaluation.");
+        return "redirect:/student/assessments";
+    }
+
+    Student referencePeer = groupmates.get(0);
     
     List<Rubric> groupRubrics = assessment.getRubrics().stream()
         .filter(r -> r.getAssessmentTypes() != null && 
@@ -685,7 +746,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     }
     
     List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
-        evaluator, evaluator, assessment).stream()
+        evaluator, referencePeer, assessment).stream()
         .filter(m -> "Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
         .collect(Collectors.toList());
     
@@ -694,7 +755,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     List<AssessmentComment> existingComments = commentService.getExistingComments(
         evaluator.getId(),
         AssessmentComment.EvaluatorType.STUDENT,
-        evaluator,
+        referencePeer,
         assessment
     ).stream()
     .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
@@ -708,7 +769,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
             List<AssessmentComment> rubricCommentsList = commentService.getExistingComments(
                 evaluator.getId(),
                 AssessmentComment.EvaluatorType.STUDENT,
-                evaluator,
+                referencePeer,
                 assessment
             ).stream()
             .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubric.getId()))
@@ -732,7 +793,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     model.addAttribute("assessment", assessment);
     model.addAttribute("rubrics", groupRubrics);
     model.addAttribute("evaluator", evaluator);
-    model.addAttribute("evaluatedStudent", evaluator);
+    model.addAttribute("evaluatedStudent", referencePeer);
     model.addAttribute("existingRubricMarks", existingRubricMarksMap);
     model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
     model.addAttribute("existingComments", existingComments);
@@ -770,13 +831,17 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
             "This assessment has been closed. Submissions are no longer accepted.");
         return "redirect:/student/assessments";
     }
-    
-    if (evaluator.getGroup() == null) {
-        redirectAttributes.addFlashAttribute("error", "You must be in a group.");
+
+    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
     
-    List<Student> groupMembers = studentRepository.findByGroup(evaluator.getGroup());
+    List<Student> groupmates = getGroupmates(evaluator);
+    if (groupmates.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student.");
+        return "redirect:/student/assessments";
+    }
     
     List<String> commentTexts = new ArrayList<>();
     List<String> commentLabels = assessment.getGroupCommentLabels();
@@ -806,9 +871,9 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     
     Map<Long, Map<Integer, String>> rubricComments = extractRubricComments(formData, "");
     
-    for (Student member : groupMembers) {
+    for (Student member : groupmates) {
         List<Mark> existingMarks = markRepository
-            .findByEvaluatorStudentAndEvaluatedStudentAndAssessment(member, member, assessment).stream()
+            .findByEvaluatorStudentAndEvaluatedStudentAndAssessment(evaluator, member, assessment).stream()
             .filter(m -> "Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
             .collect(Collectors.toList());
         
@@ -817,7 +882,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
         
         List<AssessmentComment> existingRubricComments = commentService.getExistingComments(
-            member.getId(),
+            evaluator.getId(),
             AssessmentComment.EvaluatorType.STUDENT,
             member,
             assessment
@@ -830,7 +895,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         }
     }
     
-    for (Student member : groupMembers) {
+    for (Student member : groupmates) {
         List<Mark> marks = new ArrayList<>();
         
         for (Map.Entry<String, String> entry : formData.entrySet()) {
@@ -853,7 +918,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                             .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
                     
                     Mark mark = new Mark();
-                    mark.setEvaluatorStudent(member);
+                    mark.setEvaluatorStudent(evaluator);
                     mark.setEvaluatedStudent(member);
                     mark.setAssessment(assessment);
                     mark.setRubric(rubric);
@@ -890,31 +955,37 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     if (subRubric == null) {
                         throw new RuntimeException("SubRubric not found: " + subRubricId);
                     }
+
+                    if (parentRubric == null) {
+                        throw new RuntimeException("Parent rubric not found for subRubric: " + subRubricId);
+                    }
                     
                     Rating rating = ratingRepository.findById(ratingId)
                             .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
                     
+                    Rubric resolvedParentRubric = parentRubric;
+
                     Mark mark = new Mark();
-                    mark.setEvaluatorStudent(member);
+                    mark.setEvaluatorStudent(evaluator);
                     mark.setEvaluatedStudent(member);
                     mark.setAssessment(assessment);
-                    mark.setRubric(parentRubric);
+                    mark.setRubric(resolvedParentRubric);
                     mark.setSubRubric(subRubric);
                     mark.setRating(rating);
                     mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
-                    mark.setClo(parentRubric.getClo());
+                    mark.setClo(resolvedParentRubric.getClo() != null ? resolvedParentRubric.getClo() : Integer.valueOf(0));
                     
-                    if (parentRubric.getMarks() != null && 
-                        parentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                    if (resolvedParentRubric.getMarks() != null && 
+                        resolvedParentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
                         subRubric.getMarks() != null && 
                         subRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
-                        parentRubric.getCloMarks() != null) {
+                        resolvedParentRubric.getCloMarks() != null) {
                         
                         double subRubricProportion = subRubric.getMarks()
-                            .divide(parentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                            .divide(resolvedParentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
                             .doubleValue();
                         
-                        double cloMarksForSubRubric = parentRubric.getCloMarks() * subRubricProportion;
+                        double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
                         
                         double achievementProportion = rating.getMarks()
                             .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
@@ -939,16 +1010,14 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         if (!marks.isEmpty()) {
             markService.saveAllMarks(marks);
         }
-    }
-    
-    if (!commentTexts.isEmpty()) {
-        for (Student member : groupMembers) {
-            commentService.submitTeamComments(member, assessment, commentTexts);
+
+        if (!commentTexts.isEmpty()) {
+            commentService.submitPeerComments(evaluator, member, assessment, commentTexts);
         }
     }
-    
+
     if (!rubricComments.isEmpty()) {
-        for (Student member : groupMembers) {
+        for (Student member : groupmates) {
             for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                 Long rubricId = rubricEntry.getKey();
                 Map<Integer, String> comments = rubricEntry.getValue();
@@ -965,9 +1034,9 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     }
                     
                     AssessmentComment comment = new AssessmentComment();
-                    comment.setEvaluatorId(member.getId());
+                    comment.setEvaluatorId(evaluator.getId());
                     comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-                    comment.setEvaluatorName(member.getEmail());
+                    comment.setEvaluatorName(evaluator.getEmail());
                     comment.setEvaluatedStudent(member);
                     comment.setAssessment(assessment);
                     comment.setCommentText(commentText.trim());
@@ -980,9 +1049,15 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
                     
                     if (isAnonymous) {
-                        comment.setAnonymousIdentifier("You (Team Evaluation)");
+                        comment.setAnonymousIdentifier(commentService.getRubricAnonymousIdentifier(
+                            member,
+                            evaluator.getId(),
+                            assessment,
+                            rubricId,
+                            commentIndex
+                        ));
                     } else {
-                        comment.setAnonymousIdentifier(member.getEmail());
+                        comment.setAnonymousIdentifier(evaluator.getEmail());
                     }
                     
                     commentService.saveComment(comment);
@@ -992,7 +1067,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     }
     
     redirectAttributes.addFlashAttribute("success", 
-        "Team evaluation submitted successfully! All group members received the same marks.");
+        "Team evaluation submitted successfully! All groupmates received the same marks.");
     return "redirect:/student/assessments";
 }
     

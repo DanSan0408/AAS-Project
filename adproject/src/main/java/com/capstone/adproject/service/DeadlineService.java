@@ -3,7 +3,6 @@ package com.capstone.adproject.service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.model.Deadline;
@@ -14,13 +13,19 @@ public class DeadlineService {
 
     private final DeadlineRepository deadlineRepository;
 
-    @Autowired
     public DeadlineService(DeadlineRepository deadlineRepository) {
         this.deadlineRepository = deadlineRepository;
     }
 
     public List<Deadline> getAllDeadlines() {
         return deadlineRepository.findAll();
+    }
+
+    public List<Deadline> getDeadlinesByCourseId(Long courseId) {
+        if (courseId == null) {
+            return List.of();
+        }
+        return deadlineRepository.findByCourseId(courseId);
     }
 
     public Optional<Deadline> getDeadlineById(Long id) {
@@ -43,14 +48,14 @@ public class DeadlineService {
         return deadlineRepository.findByTitle(title);
     }
     
-    public boolean isTitleDuplicateIgnoringWhitespace(String title, Long deadlineIdToExclude) {
-        if (title == null || title.trim().isEmpty()) {
+    public boolean isTitleDuplicateIgnoringWhitespace(String title, Long deadlineIdToExclude, Long courseId) {
+        if (title == null || title.trim().isEmpty() || courseId == null) {
             return false;
         }
         
         String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
         
-        List<Deadline> allDeadlines = deadlineRepository.findAll();
+        List<Deadline> allDeadlines = deadlineRepository.findByCourseId(courseId);
         
         for (Deadline deadline : allDeadlines) {
             

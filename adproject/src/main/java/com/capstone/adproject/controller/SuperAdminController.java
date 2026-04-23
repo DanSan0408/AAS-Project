@@ -1,7 +1,5 @@
 package com.capstone.adproject.controller;
 
-import java.util.Optional;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -15,19 +13,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Course;
-import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.service.SuperAdminService;
 
 @Controller
 @RequestMapping("/superadmin")
 public class SuperAdminController {
 
-    private final SuperAdminService superAdminService;
-    private final LecturerRepository lecturerRepository;
+    private static final String RESET_CONFIRMATION_TEXT = "WIPE_EVERYTHING_EXCEPT_SUPER_ADMIN";
 
-    public SuperAdminController(SuperAdminService superAdminService, LecturerRepository lecturerRepository) {
+    private final SuperAdminService superAdminService;
+
+    public SuperAdminController(SuperAdminService superAdminService) {
         this.superAdminService = superAdminService;
-        this.lecturerRepository = lecturerRepository;
     }
 
     private String getLoggedInUsername() {
@@ -76,12 +74,14 @@ public class SuperAdminController {
     @PostMapping("/courses/add")
     public String addCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
         try {
-            Optional<com.capstone.adproject.model.Lecturer> currentLecturer = lecturerRepository.findByEmail(getLoggedInUsername());
-            if (currentLecturer.isPresent()) {
-                course.setCreatedBy(currentLecturer.get());
-            }
-
-            superAdminService.saveCourse(course);
+            String username = getLoggedInUsername();
+            Lecturer lecturer = superAdminService.ensureAdminAssignable(username);
+            course.setCreatedBy(lecturer);
+            Course savedCourse = superAdminService.saveCourse(course);
+            
+            // Auto-assign super admin to the course they created
+            superAdminService.assignAdminToCourse(lecturer.getId(), savedCourse.getId());
+            
             redirectAttributes.addFlashAttribute("successMessage", "Course added successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error adding course: " + e.getMessage());
@@ -156,5 +156,26 @@ public class SuperAdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting admin: " + e.getMessage());
         }
         return "redirect:/superadmin/invite-admin";
+    }
+
+    @PostMapping("/reset-data")
+    public String resetData(
+            @RequestParam("confirmationText") String confirmationText,
+            RedirectAttributes redirectAttributes) {
+        if (confirmationText == null || !RESET_CONFIRMATION_TEXT.equals(confirmationText.trim())) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Reset aborted. Please type the exact confirmation text: " + RESET_CONFIRMATION_TEXT);
+            return "redirect:/superadmin/manage-courses";
+        }
+
+        try {
+            superAdminService.resetToSuperAdminOnly();
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "System reset complete. All data has been wiped except super admin account(s).");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Reset failed: " + e.getMessage());
+        }
+
+        return "redirect:/superadmin/manage-courses";
     }
 }

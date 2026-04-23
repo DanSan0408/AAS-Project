@@ -71,7 +71,13 @@
                         </ul>
                     </div>
 
-                    <a th:if="${openAssessmentIds.contains(assessment.id)}"
+                    <a th:if="${openAssessmentIds.contains(assessment.id) and assessmentLaunchModes.get(assessment.id) == 'STUDENT'}"
+                       th:href="@{/lecturer/assessments/{id}/select-student(id=${assessment.id})}" 
+                       class="btn-evaluate">
+                        Start Assessment
+                    </a>
+
+                    <a th:if="${openAssessmentIds.contains(assessment.id) and assessmentLaunchModes.get(assessment.id) != 'STUDENT'}"
                        th:href="@{/lecturer/assessments/{id}/select-group(id=${assessment.id})}" 
                        class="btn-evaluate">
                         Start Assessment

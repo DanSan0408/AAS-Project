@@ -80,7 +80,9 @@ public class LecturerController {
         model.addAttribute("allAssessments", allAssessments);
         
         long nowMillis = System.currentTimeMillis();
-        List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+        List<Deadline> allDeadlines = courseId == null
+            ? List.of()
+            : deadlineService.getDeadlinesByCourseId(courseId);
         List<Deadline> filteredDeadlines = allDeadlines.stream()
             .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)

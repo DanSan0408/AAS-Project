@@ -1,6 +1,7 @@
 package com.capstone.adproject.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,7 +18,7 @@ public class StudentResultOverride {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "student_id", unique = true)
+    @JoinColumn(name = "student_id", unique = true, foreignKey = @ForeignKey(name = "fk_student_result_overrides_student"))
     private Student student;
 
     private Double overriddenFactor;
