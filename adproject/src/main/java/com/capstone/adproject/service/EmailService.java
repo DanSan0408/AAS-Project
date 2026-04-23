@@ -27,7 +27,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); 
 
-            helper.setFrom("noreply@yourdomain.com"); 
+            helper.setFrom("admin@eduinnovax.com"); 
             helper.setTo(userEmail);
             helper.setSubject("Password Reset Request");
             
@@ -63,7 +63,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("noreply@yourdomain.com");
+            helper.setFrom("admin@eduinnovax.com");
             helper.setTo(userEmail);
             helper.setSubject("Welcome to UTM CAS - Your Account Has Been Created");
 
@@ -106,7 +106,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("noreply@yourdomain.com");
+            helper.setFrom("admin@eduinnovax.com");
             helper.setTo(userEmail);
             helper.setSubject(subject);
 
@@ -150,7 +150,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("noreply@yourdomain.com");
+            helper.setFrom("admin@eduinnovax.com");
             helper.setTo(userEmail);
             helper.setSubject(subject);
 
