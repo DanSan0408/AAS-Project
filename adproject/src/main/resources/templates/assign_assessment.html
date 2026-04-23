@@ -90,26 +90,6 @@
         </div>
     </div>
     
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const scheduledGroup = document.getElementById('scheduledOpenDateGroup');
-            const openScheduled = document.getElementById('openScheduled');
-            const openInstant = document.getElementById('openInstant');
-
-            function toggleDateInput() {
-                if (openScheduled.checked) {
-                    scheduledGroup.classList.add('visible');
-                } else {
-                    scheduledGroup.classList.remove('visible');
-                    const openDateInput = document.getElementById('openDate');
-                    if (openDateInput) openDateInput.value = '';
-                }
-            }
-
-            toggleDateInput(); 
-            openScheduled.addEventListener('change', toggleDateInput);
-            openInstant.addEventListener('change', toggleDateInput);
-        });
-    </script>
+    <script th:src="@{/js/assign-assessment.js}"></script>
 </body>
 </html>

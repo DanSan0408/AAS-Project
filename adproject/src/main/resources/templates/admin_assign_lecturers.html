@@ -18,9 +18,9 @@
         </div>
         
         <div class="page-header">
-            <h1>Assign Lecturers to Groups</h1>
+            <h1>Assign Lecturers</h1>
             <h2 th:text="${assessment.title}">Assessment Title</h2>
-            <p>Assign one or more lecturers to evaluate each group. Lecturers will evaluate both group and individual rubrics.</p>
+            <p>Choose whether lecturers are assigned by group, rubric, or student. The selected mode applies to the whole assessment.</p>
             
             <div th:if="${successMessage}" class="alert alert-success">
                 <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
@@ -47,6 +47,13 @@
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Rubrics</strong>
                             <span style="color: #666; font-size: 0.9em;">Lecturers evaluate specific rubrics for all groups</span>
+                        </div>
+                    </label>
+                    <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
+                        <input type="radio" name="assignmentMode" value="STUDENT" th:checked="${assignmentMode == 'STUDENT'}">
+                        <div style="display: inline-block; margin-left: 10px;">
+                            <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Students</strong>
+                            <span style="color: #666; font-size: 0.9em;">Lecturers evaluate all rubrics for selected students</span>
                         </div>
                     </label>
                 </div>
@@ -114,8 +121,8 @@
                                                         th:selected="${lec.id == lecturer.id}">
                                                     Lecturer Email
                                                 </option>
-                                        </select> <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
-                                                <i class="fas fa-times"></i>
+                                        </select> <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer" aria-label="Remove Lecturer">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4V5h-4Zm-3 2v13h10V7Zm2 2h2v9H9Zm4 0h2v9h-2Z"/></svg>
                                             </button>
                                         </div>
                                     </div>
@@ -128,13 +135,71 @@
                                                     th:text="${lec.email}">
                                                 Lecturer Email
                                             </option> </select>
-                                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer">
-                                            <i class="fas fa-times"></i>
+                                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer" aria-label="Remove Lecturer">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4V5h-4Zm-3 2v13h10V7Zm2 2h2v9H9Zm4 0h2v9h-2Z"/></svg>
                                         </button>
                                     </div>
                                 </div>
                                 
                                 <button type="button" class="btn-link-add" data-action="add-lecturer-field" th:data-group-id="${group.id}">
+                                    <i class="fas fa-plus-circle"></i> Add Another Lecturer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="studentModeSection" th:style="${assignmentMode == 'STUDENT'} ? 'display:block;' : 'display:none;'">
+                <div class="groups-container student-mode-container">
+                    <div th:each="student : ${allStudents}" class="group-assignment-card">
+                        <div class="group-header">
+                            <h3><i class="fas fa-user"></i> <span th:text="${student.email}">Student Email</span></h3>
+                            <span class="student-count-badge" th:text="${student.group != null ? student.group.groupName : 'No Group'}">No Group</span>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="students-list">
+                                <strong>Group:</strong>
+                                <span th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
+                            </div>
+
+                            <div class="lecturer-section">
+                                <label>Assigned Lecturers:</label>
+                                <div class="lecturer-assignments-container" th:data-student-id="${student.id}">
+                                    <div th:if="${studentLecturerMap.get(student.id) != null and !studentLecturerMap.get(student.id).isEmpty()}">
+                                        <div th:each="lecturer, iterStat : ${studentLecturerMap.get(student.id)}" class="lecturer-row">
+                                            <select th:name="'student_' + ${student.id} + '_lecturer_' + ${iterStat.index}" class="form-select">
+                                                <option value="none">-- Select Lecturer --</option>
+                                                <option th:each="lec : ${allLecturers}"
+                                                        th:value="${lec.id}"
+                                                        th:text="${lec.email}"
+                                                        th:selected="${lec.id == lecturer.id}">
+                                                    Lecturer Email
+                                                </option>
+                                            </select>
+                                            <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer" aria-label="Remove Lecturer">
+                                                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4V5h-4Zm-3 2v13h10V7Zm2 2h2v9H9Zm4 0h2v9h-2Z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div th:if="${studentLecturerMap.get(student.id) == null or studentLecturerMap.get(student.id).isEmpty()}" class="lecturer-row">
+                                        <select th:name="'student_' + ${student.id} + '_lecturer_0'" class="form-select">
+                                            <option value="none">-- Select Lecturer --</option>
+                                            <option th:each="lec : ${allLecturers}"
+                                                    th:value="${lec.id}"
+                                                    th:text="${lec.email}">
+                                                Lecturer Email
+                                            </option>
+                                        </select>
+                                        <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer" aria-label="Remove Lecturer">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4V5h-4Zm-3 2v13h10V7Zm2 2h2v9H9Zm4 0h2v9h-2Z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button type="button" class="btn-link-add" data-action="add-lecturer-field" th:data-student-id="${student.id}">
                                     <i class="fas fa-plus-circle"></i> Add Another Lecturer
                                 </button>
                             </div>

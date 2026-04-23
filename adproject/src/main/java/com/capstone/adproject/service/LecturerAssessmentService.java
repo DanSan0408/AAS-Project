@@ -133,6 +133,28 @@ public class LecturerAssessmentService {
         return isComplete ? "completed" : "in_progress";
     }
 
+    public String getStudentEvaluationStatus(Assessment assessment, Lecturer lecturer, Long studentId) {
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            return "not_started";
+        }
+
+        List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+            student, student, assessment);
+
+        List<Mark> lecturerMarks = existingMarks.stream()
+            .filter(m -> m.getComments() != null &&
+                        m.getComments().startsWith("LECTURER:" + lecturer.getId()))
+            .collect(Collectors.toList());
+
+        if (lecturerMarks.isEmpty()) {
+            return "not_started";
+        }
+
+        boolean isComplete = isStudentEvaluationComplete(assessment, lecturer, studentId);
+        return isComplete ? "completed" : "in_progress";
+    }
+
     public boolean isGroupEvaluationComplete(Assessment assessment, Lecturer lecturer, Long groupId) {
         List<Student> groupMembers = studentRepository.findByGroupId(groupId);
         if (groupMembers.isEmpty()) {
@@ -221,6 +243,83 @@ public class LecturerAssessmentService {
         }
         
         return true;
+    }
+
+    public boolean isStudentEvaluationComplete(Assessment assessment, Lecturer lecturer, Long studentId) {
+        Student student = studentRepository.findById(studentId).orElse(null);
+        if (student == null) {
+            return false;
+        }
+
+        List<Rubric> groupRubrics = assessment.getRubrics().stream()
+            .filter(r -> r.getAssessmentTypes() != null &&
+                        r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+            .collect(Collectors.toList());
+
+        List<Rubric> individualRubrics = assessment.getRubrics().stream()
+            .filter(r -> r.getAssessmentTypes() != null &&
+                        r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+            .collect(Collectors.toList());
+
+        if (!groupRubrics.isEmpty()) {
+            boolean groupComplete = checkRubricsComplete(
+                assessment, lecturer, student, groupRubrics, "Group Assessment");
+
+            if (!groupComplete) {
+                return false;
+            }
+
+            List<String> groupCommentLabels = assessment.getGroupCommentLabels();
+            boolean hasGroupComments = groupCommentLabels != null && !groupCommentLabels.isEmpty();
+
+            if (hasGroupComments) {
+                int requiredGroupComments = assessment.getGroupCommentCount() != null ?
+                    assessment.getGroupCommentCount() : 0;
+                int groupCommentMinLength = assessment.getGroupCommentMinLength() != null ?
+                    assessment.getGroupCommentMinLength() : 0;
+
+                if (requiredGroupComments > 0 && groupCommentMinLength > 0) {
+                    boolean groupCommentsComplete = checkCommentsComplete(
+                        assessment, lecturer, student, "Group Assessment",
+                        requiredGroupComments, groupCommentMinLength);
+
+                    if (!groupCommentsComplete) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        if (!individualRubrics.isEmpty()) {
+            boolean individualComplete = checkRubricsComplete(
+                assessment, lecturer, student, individualRubrics, "Individual Assessment");
+
+            if (!individualComplete) {
+                return false;
+            }
+
+            List<String> individualCommentLabels = assessment.getIndividualCommentLabels();
+            boolean hasIndividualComments = individualCommentLabels != null && !individualCommentLabels.isEmpty();
+
+            if (hasIndividualComments) {
+                int requiredIndividualComments = assessment.getIndividualCommentCount() != null ?
+                    assessment.getIndividualCommentCount() : 0;
+                int individualCommentMinLength = assessment.getIndividualCommentMinLength() != null ?
+                    assessment.getIndividualCommentMinLength() : 0;
+
+                if (requiredIndividualComments > 0 && individualCommentMinLength > 0) {
+                    boolean individualCommentsComplete = checkCommentsComplete(
+                        assessment, lecturer, student, "Individual Assessment",
+                        requiredIndividualComments, individualCommentMinLength);
+
+                    if (!individualCommentsComplete) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return !groupRubrics.isEmpty() || !individualRubrics.isEmpty();
     }
 
     private boolean checkRubricsComplete(Assessment assessment, Lecturer lecturer, 

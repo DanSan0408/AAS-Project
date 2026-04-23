@@ -99,10 +99,9 @@ public class CustomUserDetailsService implements UserDetailsService {
             if (!authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
             }
-            if (password == null) {
-                password = admin.get().getPassword();
-                email = admin.get().getEmail() != null ? admin.get().getEmail() : admin.get().getUsername();
-            }
+            // Admin credential should take precedence when account exists in multiple tables.
+            password = admin.get().getPassword();
+            email = admin.get().getEmail() != null ? admin.get().getEmail() : admin.get().getUsername();
         }
 
         if (password == null) {

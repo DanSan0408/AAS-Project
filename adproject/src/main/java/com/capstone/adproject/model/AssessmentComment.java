@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,7 +27,7 @@ public class AssessmentComment {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "evaluated_student_id", nullable = false)
+    @JoinColumn(name = "evaluated_student_id", nullable = false, foreignKey = @ForeignKey(name = "fk_assessment_comments_evaluated_student"))
     private Student evaluatedStudent;
 
     @Column(name = "evaluator_id", nullable = false)

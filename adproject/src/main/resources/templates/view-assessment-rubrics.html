@@ -25,6 +25,9 @@
                 <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-lecturer">
                     <i class="fas fa-user-tie"></i> Lecturer Assignments
                 </a>
+                <a th:href="@{/admin/student-assignments/{id}(id=${assessment.id})}" class="btn btn-lecturer" style="background-color: #16a085; border-color: #16a085;">
+                    <i class="fas fa-user-graduate"></i> Student Assignments
+                </a>
                 <a th:href="@{/rubrics/manage}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to List
                 </a>

@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.DeadlineService;
@@ -52,6 +51,12 @@ public String saveDeadline(
     @ModelAttribute Deadline deadline, 
     @RequestParam(value = "confirmDuplicate", required = false, defaultValue = "false") boolean confirmDuplicate, 
     RedirectAttributes redirectAttributes) {
+
+    Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+    if (activeCourseId == null) {
+        redirectAttributes.addFlashAttribute("errorMessage", "No active course selected.");
+        return "redirect:/admin/home";
+    }
     
     String title = deadline.getTitle() != null ? deadline.getTitle().trim() : "";
     
@@ -61,16 +66,17 @@ public String saveDeadline(
     }
     
     if (deadline.getAssessmentId() != null) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
-        if (activeCourseId == null || (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId()))) {
+        if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to add a deadline to this assessment.");
             return "redirect:/admin/home";
         }
     }
 
+    deadline.setCourseId(activeCourseId);
+
     if (!confirmDuplicate) {
-        boolean isDuplicate = deadlineService.isTitleDuplicateIgnoringWhitespace(title, deadline.getId());
+        boolean isDuplicate = deadlineService.isTitleDuplicateIgnoringWhitespace(title, deadline.getId(), activeCourseId);
         
         if (isDuplicate) {
             // Find the existing deadline with similar title for display
@@ -91,7 +97,10 @@ public String saveDeadline(
 
 private String findExistingTitleIgnoringWhitespace(String title, Long excludeId) {
     String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
-    List<Deadline> allDeadlines = deadlineService.getAllDeadlines();
+    Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+    List<Deadline> allDeadlines = activeCourseId == null
+        ? List.of()
+        : deadlineService.getDeadlinesByCourseId(activeCourseId);
     
     for (Deadline deadline : allDeadlines) {
         if (excludeId != null && deadline.getId().equals(excludeId)) {
@@ -111,10 +120,13 @@ private String findExistingTitleIgnoringWhitespace(String title, Long excludeId)
         Optional<Deadline> deadlineOptional = deadlineService.getDeadlineById(id);
         if (deadlineOptional.isPresent()) {
             Deadline deadline = deadlineOptional.get();
+            Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+            if (activeCourseId == null || deadline.getCourseId() == null || !activeCourseId.equals(deadline.getCourseId())) {
+                return "redirect:/admin/home";
+            }
             if (deadline.getAssessmentId() != null) {
-                Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
                 Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
-                if (activeCourseId == null || (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId()))) {
+                if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {
                     return "redirect:/admin/home";
                 }
             }
@@ -127,14 +139,19 @@ private String findExistingTitleIgnoringWhitespace(String title, Long excludeId)
 
     @PostMapping("/update")
     public String updateDeadline(@ModelAttribute Deadline deadline, RedirectAttributes redirectAttributes) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId == null || (deadline.getCourseId() != null && !activeCourseId.equals(deadline.getCourseId()))) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to update this deadline.");
+            return "redirect:/admin/home";
+        }
         if (deadline.getAssessmentId() != null) {
-            Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
             Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
-            if (activeCourseId == null || (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId()))) {
+            if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to update this deadline.");
                 return "redirect:/admin/home";
             }
         }
+        deadline.setCourseId(activeCourseId);
         deadlineService.save(deadline);
         redirectAttributes.addFlashAttribute("successMessage", "Deadline updated successfully!");
         return "redirect:/admin/home";
@@ -145,10 +162,14 @@ public String deleteDeadline(@PathVariable("id") Long id, RedirectAttributes red
         Optional<Deadline> deadlineOptional = deadlineService.getDeadlineById(id);
         if (deadlineOptional.isPresent()) {
             Deadline deadline = deadlineOptional.get();
+            Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+            if (activeCourseId == null || deadline.getCourseId() == null || !activeCourseId.equals(deadline.getCourseId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to delete this deadline.");
+                return "redirect:/admin/home";
+            }
             if (deadline.getAssessmentId() != null) {
-                Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
                 Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
-                if (activeCourseId == null || (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId()))) {
+                if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {
                     redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to delete this deadline.");
                     return "redirect:/admin/home";
                 }

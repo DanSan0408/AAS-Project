@@ -11,7 +11,8 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "deadlines", indexes = {
-    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessmentId, assessorType")
+    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessmentId, assessorType"),
+    @Index(name = "idx_deadline_course", columnList = "courseId")
 })
 
 public class Deadline {
@@ -23,6 +24,7 @@ public class Deadline {
     private Long assessmentId; 
 private String assessorType; 
 private Date openDate;
+private Long courseId;
 
     public Long getId() {
         return id;
@@ -70,5 +72,13 @@ public Date getOpenDate() {
 
 public void setOpenDate(Date openDate) {
     this.openDate = openDate;
+}
+
+public Long getCourseId() {
+    return courseId;
+}
+
+public void setCourseId(Long courseId) {
+    this.courseId = courseId;
 }
 }
