@@ -2,6 +2,7 @@ package com.capstone.adproject.service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -413,6 +414,86 @@ public class SuperAdminService {
             assignment.setCourse(course);
             adminCourseAssignmentRepository.save(assignment);
         }
+    }
+
+    @Transactional
+    public void inviteExistingAdminToCreatedCourse(String inviterIdentity, String invitedAdminEmail, Long courseId) {
+        if (inviterIdentity == null || inviterIdentity.isBlank()) {
+            throw new IllegalArgumentException("Invalid inviter account.");
+        }
+        if (invitedAdminEmail == null || invitedAdminEmail.isBlank()) {
+            throw new IllegalArgumentException("Invited admin email is required.");
+        }
+        if (courseId == null) {
+            throw new IllegalArgumentException("Course is required.");
+        }
+
+        Lecturer inviter = resolveLecturerByIdentity(inviterIdentity)
+                .orElseThrow(() -> new IllegalArgumentException("Inviter admin account not found."));
+        if (inviter.getRoles() == null || !inviter.getRoles().contains("ROLE_ADMIN")) {
+            throw new IllegalArgumentException("Only admins can invite co-admins.");
+        }
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found."));
+
+        if (course.getCreatedBy() == null || course.getCreatedBy().getId() == null) {
+            // Legacy fallback: if creator metadata is missing, allow a managing admin to claim ownership.
+            if (!adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(inviter.getId(), course.getId())) {
+                throw new IllegalArgumentException("Only the admin who created this course can invite co-admins.");
+            }
+            course.setCreatedBy(inviter);
+            courseRepository.save(course);
+        } else if (!course.getCreatedBy().getId().equals(inviter.getId())) {
+            throw new IllegalArgumentException("Only the admin who created this course can invite co-admins.");
+        }
+
+        String normalizedEmail = invitedAdminEmail.trim().toLowerCase(Locale.ROOT);
+
+        boolean existsAsAdminAccount = adminRepository.findByEmail(normalizedEmail).isPresent()
+                || superAdminRepository.findByEmail(normalizedEmail).isPresent();
+
+        Lecturer invitedLecturer = lecturerRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        boolean existsAsAdminLecturer = invitedLecturer != null
+                && invitedLecturer.getRoles() != null
+                && invitedLecturer.getRoles().contains("ROLE_ADMIN");
+
+        if (!existsAsAdminAccount && !existsAsAdminLecturer) {
+            throw new IllegalArgumentException("Invited user must be an existing admin account.");
+        }
+
+        Lecturer invitedAdmin = invitedLecturer;
+        if (invitedAdmin == null) {
+            invitedAdmin = ensureAdminAssignable(normalizedEmail);
+        }
+
+        if (invitedAdmin.getRoles() == null || !invitedAdmin.getRoles().contains("ROLE_ADMIN")) {
+            throw new IllegalArgumentException("Invited user is not an admin.");
+        }
+
+        if (!adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(invitedAdmin.getId(), course.getId())) {
+            AdminCourseAssignment assignment = new AdminCourseAssignment();
+            assignment.setLecturer(invitedAdmin);
+            assignment.setCourse(course);
+            adminCourseAssignmentRepository.save(assignment);
+        }
+
+        if (invitedAdmin.getCourse() == null) {
+            invitedAdmin.setCourse(course);
+            lecturerRepository.save(invitedAdmin);
+        }
+    }
+
+    private Optional<Lecturer> resolveLecturerByIdentity(String identity) {
+        if (identity == null || identity.isBlank()) {
+            return Optional.empty();
+        }
+
+        String normalized = identity.trim();
+        return lecturerRepository.findByEmailIgnoreCase(normalized)
+                .or(() -> lecturerRepository.findByUsernameIgnoreCase(normalized))
+                .or(() -> lecturerRepository.findByEmail(normalized))
+                .or(() -> lecturerRepository.findByUsername(normalized));
     }
 
     @Transactional
