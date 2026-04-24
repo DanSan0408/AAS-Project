@@ -78,11 +78,10 @@
                                                 <form th:id="'deleteForm_' + ${group.id}" 
                                                       th:action="@{/admin/group/delete/{id}(id=${group.id})}" 
                                                       method="post" 
+                                                      data-action="confirm-submit"
+                                                      th:attr="data-confirm-message='Are you sure you want to permanently delete the group: ' + ${group.groupName} + '? This will unassign all students.'"
                                                       style="display: inline-block;">
-                                                    <button type="button" class="btn-delete"
-                                                            data-action="confirm-delete-group"
-                                                            th:data-group-name="${group.groupName}"
-                                                            th:data-group-id="${group.id}">
+                                                    <button type="submit" class="btn-delete">
                                                         Delete
                                                     </button>
                                                 </form>
