@@ -1638,9 +1638,13 @@ public String assignAssessment(
 
 
     @PostMapping("/bulk-add-lecturers")
-    public String bulkAddLecturers(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public String bulkAddLecturers(
+            @RequestParam(name = "emails", required = false) List<String> emails,
+            @RequestParam(name = "usernames", required = false) List<String> usernames,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
         try {
-            int count = adminService.bulkAddLecturers(emailsText, request);
+            int count = adminService.bulkAddLecturers(emails, usernames, request);
             redirectAttributes.addFlashAttribute("successMessage", count + " lecturers successfully added!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
@@ -1649,9 +1653,13 @@ public String assignAssessment(
     }
 
     @PostMapping("/bulk-add-students")
-    public String bulkAddStudents(@RequestParam("emailsText") String emailsText, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public String bulkAddStudents(
+            @RequestParam(name = "emails", required = false) List<String> emails,
+            @RequestParam(name = "usernames", required = false) List<String> usernames,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
         try {
-            int count = adminService.bulkAddStudents(emailsText, request);
+            int count = adminService.bulkAddStudents(emails, usernames, request);
             redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
