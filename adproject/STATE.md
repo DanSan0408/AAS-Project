@@ -4,6 +4,24 @@
 
 ---
 
+## Current Status: User Name Edit + Bulk Tabular Add (April 24, 2026)
+**Status**: IMPLEMENTED
+
+### Summary
+- Fixed Admin update flow so student/lecturer name (username) can now be edited when updating existing users.
+- Preserved fallback behavior: when username is left blank, system auto-generates unique username from email prefix.
+- Refactored bulk add backend to accept structured parallel arrays (`emails`, `usernames`) instead of raw textarea parsing.
+- Replaced bulk textarea UI with tabular row-based entry for students and lecturers.
+- Added Excel-paste support in bulk tables (column 1 email, column 2 username).
+- Added optional SQL helper script to backfill NULL usernames for legacy data.
+
+### Files Modified/Created
+- `AdminService.java` - update-username fix and structured bulk add methods
+- `AdminController.java` - structured bulk add endpoint signatures
+- `manage_students.html` - editable username input + tabular bulk add + paste support
+- `manage_lecturers.html` - editable username input + tabular bulk add + paste support
+- `migration_fill_null_usernames.sql` - optional backfill script for NULL usernames
+
 ## Current Status: Lecturer Student Assignation Mode
 **Status**: IMPLEMENTED (PENDING FINAL RUNTIME VERIFICATION)
 
