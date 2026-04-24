@@ -31,6 +31,16 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public class AdminService {
 
+    private static class BulkUserInput {
+        private final String email;
+        private final String username;
+
+        private BulkUserInput(String email, String username) {
+            this.email = email;
+            this.username = username;
+        }
+    }
+
     private final StudentRepository studentRepository;
     private final LecturerRepository lecturerRepository;
     private final LecturerGroupAssignmentRepository assignmentRepository;
@@ -75,9 +85,9 @@ private EmailService emailService;
         Student existingStudent = studentRepository.findById(student.getId())
             .orElseThrow(() -> new RuntimeException("Student not found"));
         
+        String submittedUsername = student.getUsername();
         student.setPassword(existingStudent.getPassword());
         student.setIsTempPassword(existingStudent.getIsTempPassword());
-        student.setUsername(existingStudent.getUsername()); 
         student.setResetPasswordToken(existingStudent.getResetPasswordToken());
         student.setCourse(existingStudent.getCourse());
         
@@ -85,9 +95,15 @@ private EmailService emailService;
             student.setEmail(student.getEmail());
         }
 
-        if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
-            String baseUsername = normalizedEmail.split("@")[0];
-            student.setUsername(generateUniqueStudentUsername(baseUsername));
+        if (submittedUsername == null || submittedUsername.trim().isEmpty()) {
+            if (existingStudent.getUsername() == null || existingStudent.getUsername().trim().isEmpty()) {
+                String baseUsername = normalizedEmail.split("@")[0];
+                student.setUsername(generateUniqueStudentUsername(baseUsername));
+            } else {
+                student.setUsername(existingStudent.getUsername());
+            }
+        } else {
+            student.setUsername(submittedUsername.trim());
         }
 
         resolveCurrentAdminCourse().ifPresent(course -> ensureStudentEnrollment(existingStudent, course));
@@ -216,12 +232,23 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
         
+        String submittedUsername = lecturer.getUsername();
         lecturer.setPassword(existingLecturer.getPassword());
         lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
-        lecturer.setUsername(existingLecturer.getUsername());
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
         lecturer.setRoles(existingLecturer.getRoles()); // Preserve existing roles
         lecturer.setCourse(existingLecturer.getCourse());
+
+        if (submittedUsername == null || submittedUsername.trim().isEmpty()) {
+            if (existingLecturer.getUsername() == null || existingLecturer.getUsername().trim().isEmpty()) {
+                String baseUsername = normalizedEmail.split("@")[0];
+                lecturer.setUsername(generateUniqueLecturerUsername(baseUsername));
+            } else {
+                lecturer.setUsername(existingLecturer.getUsername());
+            }
+        } else {
+            lecturer.setUsername(submittedUsername.trim());
+        }
         
     } else {
         Course activeCourse = resolveCurrentAdminCourse()
@@ -244,6 +271,9 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             lecturer.setPassword(existingPassword);
             lecturer.setIsTempPassword(isTemp);
             lecturer.setResetPasswordToken(resetToken);
+            if (lecturer.getRoles() == null || lecturer.getRoles().trim().isEmpty()) {
+                lecturer.setRoles("ROLE_LECTURER");
+            }
         } else {
             String tempPassword = PasswordGenerator.generateRandomPassword();
             lecturer.setPassword(passwordEncoder.encode(tempPassword));
@@ -267,15 +297,18 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
 
 
 @Transactional
-public int bulkAddStudents(String emailsText, HttpServletRequest request) {
-    String[] emails = emailsText.split("[,\\n\\r]+");
+public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServletRequest request) {
+    List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
-    for (String email : emails) {
-        String trimmedEmail = email.trim().toLowerCase();
+    for (BulkUserInput user : users) {
+        String trimmedEmail = user.email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
             if (checkStudentEmailDuplicate(trimmedEmail, null) == null) {
                 Student student = new Student();
                 student.setEmail(trimmedEmail);
+                if (user.username != null && !user.username.trim().isEmpty()) {
+                    student.setUsername(user.username.trim());
+                }
                 saveStudent(student, request);
                 count++;
             }
@@ -285,21 +318,40 @@ public int bulkAddStudents(String emailsText, HttpServletRequest request) {
 }
 
 @Transactional
-public int bulkAddLecturers(String emailsText, HttpServletRequest request) {
-    String[] emails = emailsText.split("[,\\n\\r]+");
+public int bulkAddLecturers(List<String> emails, List<String> usernames, HttpServletRequest request) {
+    List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
-    for (String email : emails) {
-        String trimmedEmail = email.trim().toLowerCase();
+    for (BulkUserInput user : users) {
+        String trimmedEmail = user.email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
             if (checkLecturerEmailDuplicate(trimmedEmail, null) == null) {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setEmail(trimmedEmail);
+                if (user.username != null && !user.username.trim().isEmpty()) {
+                    lecturer.setUsername(user.username.trim());
+                }
                 saveLecturer(lecturer, request);
                 count++;
             }
         }
     }
     return count;
+}
+
+private List<BulkUserInput> buildBulkInputs(List<String> emails, List<String> usernames) {
+    List<String> safeEmails = emails == null ? java.util.Collections.emptyList() : emails;
+    List<String> safeUsernames = usernames == null ? java.util.Collections.emptyList() : usernames;
+    int emailCount = safeEmails.size();
+    int usernameCount = safeUsernames.size();
+    int max = Math.max(emailCount, usernameCount);
+
+    List<BulkUserInput> rows = new java.util.ArrayList<>();
+    for (int i = 0; i < max; i++) {
+        String email = i < emailCount && safeEmails.get(i) != null ? safeEmails.get(i) : "";
+        String username = i < usernameCount && safeUsernames.get(i) != null ? safeUsernames.get(i) : "";
+        rows.add(new BulkUserInput(email, username));
+    }
+    return rows;
 }
 
 public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {    if (email == null || email.trim().isEmpty()) {

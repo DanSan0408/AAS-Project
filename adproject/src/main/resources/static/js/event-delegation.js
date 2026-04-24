@@ -7,6 +7,169 @@
 (function() {
     'use strict';
 
+    function createBulkRow(type, email, username) {
+        const row = document.createElement('tr');
+
+        const emailCell = document.createElement('td');
+        emailCell.style.padding = '8px';
+        emailCell.style.borderBottom = '1px solid #eee';
+
+        const emailInput = document.createElement('input');
+        emailInput.type = 'email';
+        emailInput.name = 'emails';
+        emailInput.className = 'bulk-email';
+        emailInput.placeholder = type + '@example.com';
+        emailInput.value = email || '';
+        emailInput.style.width = '100%';
+        emailInput.style.padding = '8px';
+        emailInput.style.border = '1px solid #ddd';
+        emailInput.style.borderRadius = '6px';
+        emailCell.appendChild(emailInput);
+
+        const usernameCell = document.createElement('td');
+        usernameCell.style.padding = '8px';
+        usernameCell.style.borderBottom = '1px solid #eee';
+
+        const usernameInput = document.createElement('input');
+        usernameInput.type = 'text';
+        usernameInput.name = 'usernames';
+        usernameInput.className = 'bulk-username';
+        usernameInput.placeholder = 'Optional';
+        usernameInput.value = username || '';
+        usernameInput.style.width = '100%';
+        usernameInput.style.padding = '8px';
+        usernameInput.style.border = '1px solid #ddd';
+        usernameInput.style.borderRadius = '6px';
+        usernameCell.appendChild(usernameInput);
+
+        const actionCell = document.createElement('td');
+        actionCell.style.padding = '8px';
+        actionCell.style.borderBottom = '1px solid #eee';
+        actionCell.style.textAlign = 'center';
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'action-button delete remove-bulk-row';
+        removeButton.style.padding = '6px 10px';
+        removeButton.textContent = 'Remove';
+        actionCell.appendChild(removeButton);
+
+        row.appendChild(emailCell);
+        row.appendChild(usernameCell);
+        row.appendChild(actionCell);
+        return row;
+    }
+
+    function initBulkTable(config) {
+        const form = document.getElementById(config.formId);
+        const tbody = document.getElementById(config.tbodyId);
+        const addBtn = document.getElementById(config.addButtonId);
+        if (!form || !tbody || !addBtn) {
+            return;
+        }
+
+        function addRow(email, username) {
+            tbody.appendChild(createBulkRow(config.typeLabel, email, username));
+        }
+
+        if (!tbody.querySelector('tr')) {
+            addRow('', '');
+        }
+
+        addBtn.addEventListener('click', function() {
+            addRow('', '');
+        });
+
+        tbody.addEventListener('click', function(event) {
+            const button = event.target.closest('.remove-bulk-row');
+            if (!button) {
+                return;
+            }
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length <= 1) {
+                const emailInput = rows[0].querySelector('.bulk-email');
+                const usernameInput = rows[0].querySelector('.bulk-username');
+                if (emailInput) emailInput.value = '';
+                if (usernameInput) usernameInput.value = '';
+                return;
+            }
+            const row = button.closest('tr');
+            if (row) {
+                row.remove();
+            }
+        });
+
+        tbody.addEventListener('paste', function(event) {
+            const target = event.target;
+            if (!target || !target.classList || (!target.classList.contains('bulk-email') && !target.classList.contains('bulk-username'))) {
+                return;
+            }
+
+            const clipboard = event.clipboardData || window.clipboardData;
+            if (!clipboard) {
+                return;
+            }
+
+            const text = clipboard.getData('text');
+            if (!text || (text.indexOf('\t') === -1 && text.indexOf('\n') === -1 && text.indexOf('\r') === -1)) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const row = target.closest('tr');
+            const existingRows = Array.from(tbody.querySelectorAll('tr'));
+            const startIndex = Math.max(existingRows.indexOf(row), 0);
+            const lines = text.replace(/\r/g, '\n').split('\n').filter(function(line) {
+                return line.trim() !== '';
+            });
+
+            while (tbody.querySelectorAll('tr').length < startIndex + lines.length) {
+                addRow('', '');
+            }
+
+            lines.forEach(function(line, offset) {
+                const columns = line.split('\t');
+                const targetRow = tbody.querySelectorAll('tr')[startIndex + offset];
+                const emailInput = targetRow.querySelector('.bulk-email');
+                const usernameInput = targetRow.querySelector('.bulk-username');
+                if (emailInput) {
+                    emailInput.value = (columns[0] || '').trim();
+                }
+                if (usernameInput) {
+                    usernameInput.value = (columns[1] || '').trim();
+                }
+            });
+        });
+
+        form.addEventListener('submit', function(event) {
+            const emailInputs = Array.from(tbody.querySelectorAll('.bulk-email'));
+            const hasAnyEmail = emailInputs.some(function(input) {
+                return input.value.trim() !== '';
+            });
+            if (!hasAnyEmail) {
+                event.preventDefault();
+                alert('Please provide at least one email address.');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initBulkTable({
+            formId: 'bulkStudentsForm',
+            tbodyId: 'bulkStudentsRows',
+            addButtonId: 'addStudentRowBtn',
+            typeLabel: 'student'
+        });
+
+        initBulkTable({
+            formId: 'bulkLecturersForm',
+            tbodyId: 'bulkLecturersRows',
+            addButtonId: 'addLecturerRowBtn',
+            typeLabel: 'lecturer'
+        });
+    });
+
     // =========================================================================
     // == GENERIC EVENT HANDLERS (Can be used on any page)
     // =========================================================================
