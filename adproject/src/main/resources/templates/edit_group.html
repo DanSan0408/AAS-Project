@@ -60,7 +60,7 @@
                                         <option value="">-- Select Lecturer --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
-                                                th:text="${lecturer.email}"
+                                                th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
                                                 th:selected="${groupAssignmentDto.academicSupervisorId != null and lecturer.id == groupAssignmentDto.academicSupervisorId}">Lecturer Email</option>
                                     </select>
                                 </div>
@@ -78,7 +78,7 @@
                                         <option value="">-- Select Lecturer --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
-                                                th:text="${lecturer.email}"
+                                                th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
                                                 th:selected="${groupAssignmentDto.industrialSupervisorId != null and lecturer.id == groupAssignmentDto.industrialSupervisorId}">Lecturer Email</option>
                                     </select>
                                 </div>
@@ -94,7 +94,7 @@
                                         <thead>
                                             <tr>
                                                 <th style="width: 10%;">Select</th>
-                                                <th>Student Email</th>
+                                                <th>Student Name</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -102,7 +102,7 @@
                                                 <td>
                                                     <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
                                                 </td>
-                                                <td th:text="${student.email}">Student Email</td>
+                                                <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -126,14 +126,14 @@
                                     <thead>
                                         <tr>
                                             <th>Student ID</th>
-                                            <th>Email</th>
+                                        <th>Student Name</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="student : ${studentsInGroup}">
                                             <td th:text="${student.id}">101</td>
-                                            <td th:text="${student.email}">Student Email</td>
+                                        <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</td>
                                             <td>
                                                 <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger" 
                                                    data-action="confirm-link" 
@@ -184,7 +184,7 @@
                     lecturers.forEach(lecturer => {
                         const resultItem = document.createElement('div');
                         resultItem.className = 'search-result-item';
-                        resultItem.textContent = lecturer.email;
+                        resultItem.textContent = lecturer.username ? lecturer.username : lecturer.email;
                         resultItem.addEventListener('click', () => {
                             selectElement.value = lecturer.id;
                             searchInput.value = '';
