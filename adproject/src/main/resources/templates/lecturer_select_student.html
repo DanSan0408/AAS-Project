@@ -35,42 +35,37 @@
                     </div>
                 </div>
 
-                <div class="groups-grid">
-                    <div th:each="student : ${assignedStudents}" class="group-card">
+                <div class="students-list" style="margin-top: 20px; display: flex; flex-direction: column;">
+                    <div th:each="student : ${assignedStudents}" class="list-item-card" th:attr="data-name=${student.username != null and !student.username.isEmpty() ? student.username : student.email}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
 
-                        <div class="card-top">
-                            <h3 th:text="${student.email}">Student Email</h3>
-
-                            <div class="status-indicator">
-                                <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}"
-                                      class="badge badge-completed">Completed</span>
-
-                                <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}"
-                                      class="badge badge-progress">In Progress</span>
-
-                                <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}"
-                                      class="badge badge-pending">Not Started</span>
+                        <div class="list-item-info" style="flex: 1; min-width: 250px;">
+                            <h3 th:text="${student.username != null and !student.username.isEmpty() ? student.username : student.email}" style="margin: 0 0 8px 0; color: #4A0018; font-size: 1.1rem;">Student Name</h3>
+                            <div style="color: #6B7280; font-size: 0.95rem;">
+                                <span style="font-weight: 500;">Group:</span> 
+                                <span th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
                             </div>
                         </div>
 
-                        <div class="card-body">
-                            <div class="members-section">
-                                <label>Group</label>
-                                <div class="member-list">
-                                    <span class="member-name" th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
-                                </div>
-                            </div>
+                        <div class="list-item-status" style="width: 150px; text-align: center;">
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}" class="badge badge-completed">Completed</span>
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}" class="badge badge-progress">In Progress</span>
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}" class="badge badge-pending">Not Started</span>
                         </div>
 
-                        <div class="card-footer">
+                        <div class="list-item-action" style="width: 200px; text-align: right;">
                             <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, studentId=${student.id})}"
-                               class="btn-action">
+                               class="btn-action" 
+                               style="position: static; display: block; text-align: center; width: 100%; box-sizing: border-box; border-radius: 6px; margin: 0;">
                                 <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}">Review Evaluation</span>
                                 <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}">Continue</span>
                                 <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}">Start Evaluation</span>
                             </a>
                         </div>
 
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(assignedStudents)}" style="text-align: center; padding: 40px; color: #6B7280; background: white; border-radius: 8px; border: 1px solid #E5E7EB;">
+                        <p style="margin: 0; font-size: 1.1rem;">No students assigned.</p>
                     </div>
                 </div>
             </div>

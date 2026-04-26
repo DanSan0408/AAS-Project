@@ -82,7 +82,7 @@
                                                    th:id="'rubric_' + ${rubric.id} + '_lecturer_' + ${lecturer.id}"
                                                    th:checked="${rubricLecturerMap.get(rubric.id) != null and rubricLecturerMap.get(rubric.id).contains(lecturer)}"
                                                    style="margin-right: 8px;">
-                                            <label th:for="'rubric_' + ${rubric.id} + '_lecturer_' + ${lecturer.id}" th:text="${lecturer.email}" style="margin: 0; cursor: pointer; word-break: break-all;"></label>
+                                    <label th:for="'rubric_' + ${rubric.id} + '_lecturer_' + ${lecturer.id}" th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}" style="margin: 0; cursor: pointer; word-break: break-all;"></label>
                                         </div>
                                     </div>
                                 </td>
@@ -104,7 +104,7 @@
                             <div class="students-list" th:if="${group.students != null and !group.students.isEmpty()}">
                                 <strong>Members:</strong>
                                 <span th:each="student, iterStat : ${group.students}">
-                                    <span th:text="${student.email}">Student Email</span><span th:if="${!iterStat.last}">, </span>
+                                    <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</span><span th:if="${!iterStat.last}">, </span>
                                 </span>
                             </div>
                             
@@ -117,7 +117,7 @@
                                                 <option value="none">-- Select Lecturer --</option>
                                                 <option th:each="lec : ${allLecturers}" 
                                                         th:value="${lec.id}" 
-                                                        th:text="${lec.email}"
+                                                th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}"
                                                         th:selected="${lec.id == lecturer.id}">
                                                     Lecturer Email
                                                 </option>
@@ -132,7 +132,7 @@
                                             <option value="none">-- Select Lecturer --</option>
                                             <option th:each="lec : ${allLecturers}" 
                                                     th:value="${lec.id}" 
-                                                    th:text="${lec.email}">
+                                            th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}">
                                                 Lecturer Email
                                             </option> </select>
                                         <button type="button" class="btn-icon-remove" data-action="remove-lecturer-field" title="Remove Lecturer" aria-label="Remove Lecturer">
@@ -154,7 +154,7 @@
                 <div class="groups-container student-mode-container">
                     <div th:each="student : ${allStudents}" class="group-assignment-card">
                         <div class="group-header">
-                            <h3><i class="fas fa-user"></i> <span th:text="${student.email}">Student Email</span></h3>
+                        <h3><i class="fas fa-user"></i> <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</span></h3>
                             <span class="student-count-badge" th:text="${student.group != null ? student.group.groupName : 'No Group'}">No Group</span>
                         </div>
 
@@ -173,7 +173,7 @@
                                                 <option value="none">-- Select Lecturer --</option>
                                                 <option th:each="lec : ${allLecturers}"
                                                         th:value="${lec.id}"
-                                                        th:text="${lec.email}"
+                                                    th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}"
                                                         th:selected="${lec.id == lecturer.id}">
                                                     Lecturer Email
                                                 </option>
@@ -189,7 +189,7 @@
                                             <option value="none">-- Select Lecturer --</option>
                                             <option th:each="lec : ${allLecturers}"
                                                     th:value="${lec.id}"
-                                                    th:text="${lec.email}">
+                                                th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}">
                                                 Lecturer Email
                                             </option>
                                         </select>
