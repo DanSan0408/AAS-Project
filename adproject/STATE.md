@@ -1,6 +1,20 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-24 (IH)
+**Last Updated**: 2026-04-26 (IH)
+
+---
+
+## Current Status: Lecturer Evaluation Form Submission Validation
+**Status**: IMPLEMENTED
+
+### Summary
+- Enhanced the combined evaluation form (`lecturer_combined_evaluation_form.html`) to distinctly separate "Save Progress" and "Submit Evaluation" actions.
+- Implemented native HTML5 validation (`required` and `minlength` attributes) for the "Submit Evaluation" flow. This ensures all rubrics are graded and mandatory comments meet minimum lengths before an evaluation can be submitted.
+- Added the `formnovalidate` attribute to the "Save Progress" button so lecturers can safely save partial evaluations without triggering browser validation blockers.
+- Dynamically updated comment labels to show "(Required for submission)" if a minimum length is configured, otherwise displaying "(Optional)".
+
+### Files Modified
+- `lecturer_combined_evaluation_form.html` - Added HTML5 validation logic, formnovalidate attribute, and updated label UI.
 
 ---
 

@@ -504,7 +504,6 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
             removeStudentFromGroup(id);
         }
 
-        studentRepository.deleteCalculatedResultsByStudentId(id);
         studentRepository.deleteCommentsByStudentId(id);
         studentRepository.deleteMarksReceivedByStudent(id);
         studentRepository.deleteMarksGivenByStudent(id);
