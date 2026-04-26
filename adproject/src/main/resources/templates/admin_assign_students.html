@@ -47,7 +47,7 @@
                                th:value="${student.id}"
                                th:checked="${assignedStudentIds.contains(student.id)}">
                         <span style="display: flex; flex-direction: column; min-width: 0;">
-                            <strong th:text="${student.email}" style="word-break: break-word;">student@email.com</strong>
+                    <strong th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}" style="word-break: break-word;">Student Name</strong>
                             <small th:text="${student.group != null ? student.group.groupName : 'No Group'}" style="color: #666;">No Group</small>
                         </span>
                     </label>

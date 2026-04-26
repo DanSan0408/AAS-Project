@@ -1,11 +1,12 @@
 package com.capstone.adproject.controller;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Lecturer;
-import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 
@@ -29,50 +32,78 @@ public class LecturerController {
     private final AssessmentService assessmentService; 
     private final DeadlineService deadlineService;
     private final LecturerRepository lecturerRepository;
+    private final LecturerGroupAssignmentRepository assignmentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final LecturerStudentAssignmentRepository studentAssignmentRepository;
 
     @Autowired
     public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService,
-            LecturerRepository lecturerRepository) {
+            LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository assignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            LecturerStudentAssignmentRepository studentAssignmentRepository) {
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
         this.lecturerRepository = lecturerRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
+        this.studentAssignmentRepository = studentAssignmentRepository;
     }
     
     @GetMapping("/home")
     public String lecturerHome(Model model, Authentication authentication) {
         
-        Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
-
-        Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
-             
-            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
-            final String DUMMY_KEY = "ASSESSMENT_GROUPING"; 
-            
-            Stream<Object> combinedComponents = Stream.empty();
-            if (assessment.getRubrics() != null) {
-                combinedComponents = assessment.getRubrics().stream().map(r -> (Object)r);
-            }
-            
-            List<Object> components = combinedComponents.collect(Collectors.toList());
-
-            Map<String, List<Object>> byAssessType = components.stream()
-                .collect(Collectors.groupingBy(c -> {
-                    if (c instanceof Rubric) {
-                        return ((Rubric) c).getAssessmentTypes(); 
-                    }
-                    return "Unknown";
-                }, LinkedHashMap::new, Collectors.toList()));
-
-            finalGroup.put(DUMMY_KEY, byAssessType);
-
-            return finalGroup;
-        };
-
-        Long courseId = lecturerRepository.findByEmail(authentication.getName())
+        Lecturer lecturer = lecturerRepository.findByEmail(authentication.getName())
             .or(() -> lecturerRepository.findByUsername(authentication.getName()))
-            .map(Lecturer::getCourse)
-            .map(c -> c != null ? c.getId() : null)
             .orElse(null);
+            
+        Long courseId = lecturer != null && lecturer.getCourse() != null ? lecturer.getCourse().getId() : null;
+
+        Set<Assessment> combinedAssessments = new HashSet<>();
+        Map<Long, String> assessmentLaunchModes = new HashMap<>();
+        Map<Long, List<String>> assessmentTargets = new HashMap<>();
+        
+        if (lecturer != null) {
+            List<Assessment> groupAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
+            List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
+            List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer);
+            
+            combinedAssessments.addAll(groupAssessments);
+            combinedAssessments.addAll(rubricAssessments);
+            combinedAssessments.addAll(studentAssessments);
+            
+            Set<Long> studentAssessmentIds = studentAssessments.stream().map(Assessment::getId).collect(Collectors.toSet());
+            Set<Long> rubricAssessmentIds = rubricAssessments.stream().map(Assessment::getId).collect(Collectors.toSet());
+
+            for (Assessment assessment : combinedAssessments) {
+                if (studentAssessmentIds.contains(assessment.getId())) {
+                    assessmentLaunchModes.put(assessment.getId(), "STUDENT");
+                    List<String> targets = studentAssignmentRepository.findByAssessment(assessment).stream()
+                        .filter(a -> a.getLecturer() != null && a.getLecturer().getId().equals(lecturer.getId()))
+                        .map(a -> a.getStudent() != null ? 
+                            (a.getStudent().getUsername() != null && !a.getStudent().getUsername().trim().isEmpty() 
+                                ? a.getStudent().getUsername() : a.getStudent().getEmail()) 
+                            : "Unknown Student")
+                        .collect(Collectors.toList());
+                    assessmentTargets.put(assessment.getId(), targets);
+                } else if (rubricAssessmentIds.contains(assessment.getId())) {
+                    assessmentLaunchModes.put(assessment.getId(), "GROUP");
+                    assessmentTargets.put(assessment.getId(), List.of("All Groups (Rubric Mode)"));
+                } else {
+                    assessmentLaunchModes.put(assessment.getId(), "GROUP");
+                    List<String> targets = assignmentRepository.findByAssessment(assessment).stream()
+                        .filter(a -> a.getLecturer() != null && a.getLecturer().getId().equals(lecturer.getId()))
+                        .map(a -> a.getGroup() != null ? a.getGroup().getGroupName() : "Unknown Group")
+                        .collect(Collectors.toList());
+                    assessmentTargets.put(assessment.getId(), targets);
+                }
+            }
+        }
+        
+        List<Assessment> pendingTasks = new ArrayList<>(combinedAssessments);
+        model.addAttribute("pendingTasks", pendingTasks);
+        model.addAttribute("assessmentLaunchModes", assessmentLaunchModes);
+        model.addAttribute("assessmentTargets", assessmentTargets);
 
         List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
             .filter(a -> courseId != null && a.getCourse() != null && courseId.equals(a.getCourse().getId()))
@@ -89,9 +120,6 @@ public class LecturerController {
             .collect(Collectors.toList());
         model.addAttribute("allDeadlines", allDeadlines);
         model.addAttribute("deadlines", filteredDeadlines);
-
-        model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
-        model.addAttribute("isRubricType", isRubricType);
         
         return "lecturer_home";
     }

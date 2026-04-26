@@ -67,7 +67,7 @@
                                             <td>
                                                 <ul th:if="${group.groupSize > 0}" class="student-list">
                                                     <th:block th:each="student : ${allStudents}">
-                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${student.email}">Student Email</li>
+                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</li>
                                                     </th:block>
                                                 </ul>
                                                 <span th:unless="${group.groupSize > 0}" style="font-style: italic; color: #95a5a6;">None</span>
@@ -109,8 +109,8 @@
                                         </div>
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" class="form-group">
-                                            <label for="studentSearch">Search Student Email:</label>
-                                            <input type="text" id="studentSearch" placeholder="Search by email..." style="width: 100%;">
+                                            <label for="studentSearch">Search Student:</label>
+                                            <input type="text" id="studentSearch" placeholder="Search by name or email..." style="width: 100%;">
                                         </div>
                                         
                                         <div th:unless="${availableStudents.isEmpty()}" id="studentCarouselContainer">
@@ -127,7 +127,7 @@
                                                         <thead>
                                                             <tr>
                                                                 <th style="width: 10%;">Select</th>
-                                                                <th>Student Email</th>
+                                                                <th>Student Name</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -135,7 +135,7 @@
                                                                 <td>
                                                                     <input type="checkbox" name="selectedStudentIds" th:value="${student.id}" />
                                                                 </td>
-                                                                <td th:text="${student.email}" class="student-email">Student Email</td>
+                                                                <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}" class="student-email">Student Name</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -160,7 +160,7 @@
                                                 <option value="">-- Select Lecturer --</option>
                                                 <option th:each="lecturer : ${availableLecturers}"
                                                         th:value="${lecturer.id}"
-                                                        th:text="${lecturer.email}">Lecturer Email</option>
+                                                    th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}">Lecturer Name</option>
                                             </select>
                                         </div>
 
@@ -177,7 +177,7 @@
                                                 <option value="">-- Select Lecturer --</option>
                                                 <option th:each="lecturer : ${availableLecturers}"
                                                         th:value="${lecturer.id}"
-                                                        th:text="${lecturer.email}">Lecturer Email</option>
+                                                    th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}">Lecturer Name</option>
                                             </select>
                                         </div>
 
@@ -413,7 +413,7 @@
             lecturers.forEach(lecturer => {
                 const resultItem = document.createElement('div');
                 resultItem.className = 'search-result-item';
-                resultItem.textContent = lecturer.email;
+                    resultItem.textContent = lecturer.username ? lecturer.username : lecturer.email;
                 resultItem.onclick = () => {
                     // Set the select value
                     selectElement.value = lecturer.id;
