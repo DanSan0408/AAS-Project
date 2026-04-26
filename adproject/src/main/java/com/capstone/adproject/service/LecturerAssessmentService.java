@@ -338,7 +338,8 @@ public class LecturerAssessmentService {
         for (Rubric rubric : rubrics) {
             if (rubric.getSubRubrics() != null && !rubric.getSubRubrics().isEmpty()) {
                 requiredEvaluations += rubric.getSubRubrics().size();
-            } else if (rubric.getRatings() != null && !rubric.getRatings().isEmpty()) {
+            }
+            if (rubric.getRatings() != null && !rubric.getRatings().isEmpty()) {
                 requiredEvaluations += 1;
             }
         }
