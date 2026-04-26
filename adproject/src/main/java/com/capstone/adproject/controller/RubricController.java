@@ -234,6 +234,25 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         return "view-assessment-rubrics";
     }
 
+    @PostMapping("/assessment/{assessmentId}/extra-notes")
+    public String saveAssessmentExtraNotes(
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("extraNotes") String extraNotes,
+            RedirectAttributes redirectAttributes) {
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this assessment.");
+            return "redirect:/rubrics/manage";
+        }
+
+        String sanitized = HtmlSanitizerUtil.sanitize(extraNotes == null ? "" : extraNotes.trim());
+        assessment.setExtraNotes(sanitized.isBlank() ? null : sanitized);
+        rubricService.saveAssessment(assessment);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Extra notes updated successfully.");
+        return "redirect:/rubrics/view/" + assessmentId;
+    }
+
     @GetMapping("/assessment/{id}/fill")
     public String showBulkFillForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
         Assessment assessment = rubricService.findAssessmentById(id);

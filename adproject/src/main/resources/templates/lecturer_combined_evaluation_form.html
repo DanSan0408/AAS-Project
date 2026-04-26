@@ -41,6 +41,22 @@
         .form-actions .btn-cancel {
             margin-right: auto;
         }
+        .assessment-extra-notes {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #d1fae5;
+            border-left: 4px solid #10b981;
+            background: #ecfdf5;
+            color: #1f2937;
+            white-space: pre-line;
+        }
+        .assessment-extra-notes-title {
+            display: block;
+            margin-bottom: 6px;
+            color: #065f46;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="lecturer-page">
@@ -73,6 +89,14 @@
                         <ul>
                             <li th:each="student : ${groupStudents}" th:text="${student.email}">Student</li>
                         </ul>
+                    </div>
+
+                    <div class="assessment-extra-notes"
+                         th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}">
+                        <span class="assessment-extra-notes-title">
+                            <i class="fas fa-note-sticky"></i> Admin Notes
+                        </span>
+                        <span th:text="${assessment.extraNotes}">Extra notes</span>
                     </div>
                 </div>
 
