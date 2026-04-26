@@ -1185,6 +1185,12 @@ public String saveStudent(
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this student.");
                 return "redirect:/admin/manage-students";
             }
+            
+            Student existingStudent = existingStudentOpt.get();
+            existingStudent.setEmail(student.getEmail());
+            existingStudent.setUsername(student.getUsername());
+            // Merge the form object into the fetched entity to prevent overwriting other fields with null
+            student = existingStudent;
         } else {
             // Phase 4: Mutation Guarding - Force new students into the active course, ignoring any payload manipulation
             student.setCourse(courseScopeService.getActiveCourseForCurrentUser());
@@ -1268,6 +1274,12 @@ public String saveLecturer(
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this lecturer.");
                 return "redirect:/admin/manage-lecturers";
             }
+            
+            Lecturer existingLecturer = existingLecturerOpt.get();
+            existingLecturer.setEmail(lecturer.getEmail());
+            existingLecturer.setUsername(lecturer.getUsername());
+            // Merge the form object into the fetched entity to prevent overwriting other fields with null
+            lecturer = existingLecturer;
         } else {
             // Phase 4: Mutation Guarding - Force new lecturers into the active course
             lecturer.setCourse(courseScopeService.getActiveCourseForCurrentUser());

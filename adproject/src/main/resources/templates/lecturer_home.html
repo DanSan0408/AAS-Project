@@ -23,48 +23,50 @@
         <div class="content-flex-container">
             
             <div class="rubric-section">
-                <h2>RUBRIC</h2>
+                <h2>PENDING TASKS</h2>
                 <div class="rubric-list">
 
-                    <div th:each="assessment : ${allAssessments}" class="assessment-box">
+                    <div th:each="task : ${pendingTasks}" class="assessment-box">
                         
                         <div class="assessment-header">
-                            <h3 th:text="${'Assessment: ' + assessment.title}">Assessment: Presentation 1 Assessment</h3>
+                            <h3 th:text="${task.title}">Assessment Title</h3>
                         </div>
                         
-                        <div class="total-marks">
+                        <div class="task-details">
                             <p>
-                                Total Assessment Marks:
-                                <span th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">4.00</span>
+                                <strong>Course:</strong> <span th:text="${task.course != null ? task.course.courseCode : 'N/A'}">Course</span>
                             </p>
-                            <div th:each="clo : ${assessment.cloMarks}">
-                                <p th:text="${'Total CLO ' + clo.key + ' Marks: ' + #numbers.formatDecimal(clo.value, 1, 2)}">Total CLO 2 Marks: 1.00</p>
+                            <p class="task-mode">
+                                <strong>Mode:</strong> 
+                                <span th:if="${assessmentLaunchModes.get(task.id) == 'STUDENT'}" class="badge badge-mode-student">By Student</span>
+                                <span th:if="${assessmentLaunchModes.get(task.id) == 'GROUP'}" class="badge badge-mode-group">By Group</span>
+                            </p>
+                            <div class="targets-container">
+                                <strong class="targets-title">Targets to Assess:</strong>
+                                <ul class="targets-list">
+                                    <li th:each="target : ${assessmentTargets.get(task.id)}" th:text="${target}">Student/Group Name</li>
+                                </ul>
                             </div>
                         </div>
 
-                        <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">
-                        
-                            <div th:each="evalTypeEntry : ${groupedComponents}">
-                                
-                                <div th:each="assessTypeEntry : ${evalTypeEntry.value}" class="assess-type-group">
-                                    <h5 th:text="${'Assessment Type: ' + assessTypeEntry.key}">Assessment Type: Individual Assessment</h5>
-                                    
-                                    <div th:each="component : ${assessTypeEntry.value}" class="rubric-assessment">
-                                        
-                                        <h6 th:text="${component.name}">Market Survey</h6> 
-                                        <div class="rubric-details">
-                                            <p>Type: <span>Likert Scale</span></p>
-                                            <p>Assessment Type: <span th:text="${component.assessmentTypes}">Individual Assessment</span></p>
-                                            <p>CLO: <span th:text="${component.clo}">2</span></p>
-                                            <p>CLO Marks: <span th:text="${#numbers.formatDecimal(component.cloMarks, 1, 1)}">1.0</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </th:block>
+                        <div class="task-actions">
+                            <a th:if="${assessmentLaunchModes.get(task.id) == 'STUDENT'}"
+                               th:href="@{/lecturer/assessments/{id}/select-student(id=${task.id})}" class="btn btn-start-evaluation">
+                                Start Evaluation
+                            </a>
+                            <a th:if="${assessmentLaunchModes.get(task.id) == 'GROUP'}"
+                               th:href="@{/lecturer/assessments/{id}/select-group(id=${task.id})}" class="btn btn-start-evaluation">
+                                Start Evaluation
+                            </a>
+                        </div>
                         
                     </div>
                     
+                    <div th:if="${#lists.isEmpty(pendingTasks)}" class="empty-tasks-state">
+                        <i class="fas fa-check-circle"></i>
+                        <p>You have no pending assessment tasks at the moment.</p>
+                    </div>
+
                 </div>
             </div>
 

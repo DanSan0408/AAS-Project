@@ -1,6 +1,37 @@
 # Project State Documentation
 
-**Last Updated**: 2026-04-21 (IH)
+**Last Updated**: 2026-04-24 (IH)
+
+---
+
+## Current Status: Lecturer Dashboard Task-Oriented Refactor (April 24, 2026)
+**Status**: IMPLEMENTED
+
+### Summary
+- Refactored the Lecturer Dashboard (`lecturer_home.html`) from a passive rubric viewer into an actionable "Pending Tasks" to-do list.
+- Aggregated assignment data in `LecturerController` across all three assignment modes (Group, Rubric, Student) to surface the correct target names (e.g., student/group names) directly on the task cards.
+- Added dynamic "Start Evaluation" routing to immediately direct lecturers to either the `select-group` or `select-student` flow based on how they were assigned to the assessment.
+- Extracted all dashboard HTML inline styling into `lecturer.css`.
+- Aligned the dashboard color palette with the green Lecturer subsystem theme, and resolved CSS variable inheritance conflicts that caused button/badge text to render black instead of white.
+
+### Files Modified
+- `LecturerController.java` - Added distinct task aggregation, mode detection, and target name resolution.
+- `lecturer_home.html` - Replaced nested rubric loops with a responsive grid of task cards.
+- `lecturer.css` - Extracted and parameterized task card, badge, and button styles using `:root` variables.
+
+---
+
+## Current Status: Lecturer Student Selection UI Updates (April 24, 2026)
+**Status**: IMPLEMENTED
+
+### Summary
+- Reformatted the student selection interface (`lecturer_select_student.html`) from a card grid to a cleaner list layout.
+- Updated student display to prioritize `username` over `email` to improve readability.
+- Fixed alphabetical sorting by enforcing a robust backend-side sort in `LecturerAssessmentController` to guarantee reliable ordering by username (or email fallback) before the page renders.
+
+### Files Modified
+- `LecturerAssessmentController.java` - Added guaranteed backend alphabetical sorting.
+- `lecturer_select_student.html` - Implemented list layout, standard inline button styling, and username priority display.
 
 ---
 

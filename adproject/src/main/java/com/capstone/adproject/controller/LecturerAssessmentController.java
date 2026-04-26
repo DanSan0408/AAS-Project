@@ -242,7 +242,14 @@ public class LecturerAssessmentController {
         }
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
-        List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
+        List<Student> assignedStudents = new ArrayList<>(studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment));
+
+        // Sort alphabetically by username (fallback to email)
+        assignedStudents.sort((s1, s2) -> {
+            String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername().trim() : (s1.getEmail() != null ? s1.getEmail() : "");
+            String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername().trim() : (s2.getEmail() != null ? s2.getEmail() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
 
         if (assignedStudents.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage",

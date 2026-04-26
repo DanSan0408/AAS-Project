@@ -253,6 +253,104 @@ body.lecturer-page .rubric-details span {
     color: var(--lecturer-primary) !important;
 }
 
+body.lecturer-page .task-details {
+    margin: 15px 0 !important;
+}
+
+body.lecturer-page .task-details p {
+    margin-bottom: 8px !important;
+}
+
+body.lecturer-page .task-mode {
+    margin-top: 8px !important;
+}
+
+body.lecturer-page .badge-mode-student {
+    background-color: var(--lecturer-primary-light) !important;
+    color: #FFFFFF !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.85em !important;
+    font-weight: 700 !important;
+}
+
+body.lecturer-page .badge-mode-group {
+    background-color: var(--lecturer-secondary-light) !important;
+    color: #FFFFFF !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+    font-size: 0.85em !important;
+    font-weight: 700 !important;
+}
+
+body.lecturer-page .targets-container {
+    margin-top: 12px !important;
+    background-color: var(--lecturer-hover) !important;
+    padding: 12px 15px !important;
+    border-radius: 8px !important;
+    border-left: 4px solid var(--lecturer-accent) !important;
+}
+
+body.lecturer-page .targets-title {
+    color: var(--lecturer-primary) !important;
+    font-size: 0.9em !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
+}
+
+body.lecturer-page .targets-list {
+    margin: 8px 0 0 20px !important;
+    padding: 0 !important;
+    color: var(--lecturer-secondary) !important;
+    font-size: 0.95em !important;
+}
+
+body.lecturer-page .targets-list li {
+    margin-bottom: 4px !important;
+}
+
+body.lecturer-page .task-actions {
+    margin-top: 20px !important;
+}
+
+body.lecturer-page .btn-start-evaluation {
+    text-decoration: none !important;
+    padding: 10px 18px !important;
+    background-color: var(--lecturer-primary-light) !important;
+    color: #FFFFFF !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    display: inline-block !important;
+    transition: background-color 0.2s !important;
+    border: none !important;
+}
+
+body.lecturer-page .btn-start-evaluation:hover {
+    background-color: var(--lecturer-primary-dark) !important;
+    color: #FFFFFF !important;
+    text-decoration: none !important;
+}
+
+body.lecturer-page .empty-tasks-state {
+    text-align: center !important;
+    padding: 30px !important;
+    color: var(--lecturer-secondary) !important;
+    background: var(--lecturer-surface) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--lecturer-border) !important;
+}
+
+body.lecturer-page .empty-tasks-state i {
+    font-size: 2.5em !important;
+    margin-bottom: 15px !important;
+    color: var(--lecturer-success) !important;
+}
+
+body.lecturer-page .empty-tasks-state p {
+    font-size: 1.1em !important;
+    margin: 0 !important;
+}
+
 body.lecturer-page .deadline-list {
     display: flex !important;
     flex-direction: column !important;
