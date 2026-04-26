@@ -177,7 +177,7 @@
                                             </tr>
                                         </th:block>
                                         
-                                        <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
+                                        <th:block th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}">
                                             <tr class="sub-rubric-row">
                                                 <td>
                                                     <div class="sub-name">Direct Rating</div>
@@ -300,7 +300,7 @@
                                             </tr>
                                         </th:block>
                                         
-                                        <th:block th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}">
+                                        <th:block th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}">
                                             <tr class="sub-rubric-row">
                                                 <td>
                                                     <div class="sub-name">Direct Rating</div>
