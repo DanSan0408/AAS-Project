@@ -279,9 +279,6 @@ public void deleteAssessment(Long id){
     System.out.println("=== DELETING ASSESSMENT: " + assessment.getTitle() + " (ID: " + id + ") ===");
     
     try {
-        System.out.println("Step 1: Deleting calculated results...");
-        assessmentRepository.deleteCalculatedResultsByAssessmentId(id);
-        assessmentRepository.flush();
         
         System.out.println("Step 2: Deleting assessment comments...");
         assessmentRepository.deleteCommentsByAssessmentId(id);
