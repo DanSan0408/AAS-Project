@@ -504,7 +504,6 @@ public class SuperAdminService {
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
         try {
-            deleteTableRows("calculated_results");
             deleteTableRows("student_result_overrides");
             deleteTableRows("marks");
             deleteTableRows("assessment_comments");

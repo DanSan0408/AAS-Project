@@ -6,6 +6,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+    <style>
+        .validation-error-highlight {
+            border: 2px solid #e74c3c !important;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: rgba(231, 76, 60, 0.05);
+            transition: all 0.3s ease;
+        }
+        textarea.validation-error-highlight {
+            padding: 10px 15px;
+        }
+        .btn-save-progress {
+            background-color: #6B7280;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .btn-save-progress:hover {
+            background-color: #4B5563;
+        }
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .form-actions .btn-cancel {
+            margin-right: auto;
+        }
+    </style>
 </head>
 <body class="lecturer-page">
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
@@ -74,7 +110,8 @@
                                                th:id="'group_rating_' + ${subRubric.id} + '_' + ${rating.id}"
                                                th:name="'group_subRubric_' + ${subRubric.id}"
                                                th:value="${rating.id}"
-                                               th:checked="${existingGroupMarks != null and existingGroupMarks.get('subRubric_' + subRubric.id) == rating.id}"/>
+                                               th:checked="${existingGroupMarks != null and existingGroupMarks.get('subRubric_' + subRubric.id) == rating.id}"
+                                               required/>
                                         <label th:for="'group_rating_' + ${subRubric.id} + '_' + ${rating.id}">
                                             <strong th:text="${rating.name}">Rating</strong>
                                             <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
@@ -92,7 +129,8 @@
                                                th:id="'group_rating_rubric_' + ${rubric.id} + '_' + ${rating.id}"
                                                th:name="'group_rubric_' + ${rubric.id}"
                                                th:value="${rating.id}"
-                                               th:checked="${existingGroupMarks != null and existingGroupMarks.get('rubric_' + rubric.id) == rating.id}"/>
+                                               th:checked="${existingGroupMarks != null and existingGroupMarks.get('rubric_' + rubric.id) == rating.id}"
+                                               required/>
                                         <label th:for="'group_rating_rubric_' + ${rubric.id} + '_' + ${rating.id}">
                                             <strong th:text="${rating.name}">Rating</strong>
                                             <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
@@ -113,13 +151,15 @@
                                     th:attr="data-min-length=${rubric.getRubricCommentMinLength(i)}">
                                     <label th:for="'group_rubric_' + ${rubric.id} + '_comment_' + ${i}">
                                         <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
-                                        <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                        <span style="color: #95a5a6; font-weight: normal;" th:text="${rubric.getRubricCommentMinLength(i) > 0 ? '(Required for submission)' : '(Optional)'}"> (Optional)</span>
                                     </label>
                                     <textarea 
                                         th:id="'group_rubric_' + ${rubric.id} + '_comment_' + ${i}"
                                         th:name="'group_rubric_' + ${rubric.id} + '_comment_' + ${i}"
                                         th:text="${existingGroupRubricComments != null and existingGroupRubricComments.get(rubric.id) != null ? existingGroupRubricComments.get(rubric.id).get(i) : ''}"
-                                        placeholder="Enter your feedback here..."></textarea>
+                                        placeholder="Enter your feedback here..."
+                                        th:required="${rubric.getRubricCommentMinLength(i) > 0}"
+                                        th:minlength="${rubric.getRubricCommentMinLength(i) > 0 ? rubric.getRubricCommentMinLength(i) : null}"></textarea>
                                     <div class="rubric-comment-hint">
                                         Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
                                     </div>
@@ -144,14 +184,16 @@
                                      th:attr="data-min-length=${assessment.getGroupCommentMinLength(i)}">
                                     <label class="comment-label" th:for="'group_comment_' + ${i}">
                                         <span th:text="${commentLabels[i]}">Comment</span>
-                                        <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                        <span style="color: #95a5a6; font-weight: normal;" th:text="${assessment.getGroupCommentMinLength(i) > 0 ? '(Required for submission)' : '(Optional)'}"> (Optional)</span>
                                     </label>
                                     <textarea 
                                         class="comment-textarea"
                                         th:id="'group_comment_' + ${i}"
                                         th:name="'group_comment_' + ${i}"
                                         th:text="${existingGroupComments != null and i < #lists.size(existingGroupComments) ? existingGroupComments.get(i) : ''}"
-                                        placeholder="Enter your feedback here..."></textarea>
+                                        placeholder="Enter your feedback here..."
+                                        th:required="${assessment.getGroupCommentMinLength(i) > 0}"
+                                        th:minlength="${assessment.getGroupCommentMinLength(i) > 0 ? assessment.getGroupCommentMinLength(i) : null}"></textarea>
                                     <div class="comment-hint">
                                         Suggested minimum: <span th:text="${assessment.getGroupCommentMinLength(i)}">20</span> characters
                                     </div>
@@ -196,7 +238,8 @@
                                                    th:id="'student_' + ${student.id} + '_rating_' + ${subRubric.id} + '_' + ${rating.id}"
                                                    th:name="'student_' + ${student.id} + '_subRubric_' + ${subRubric.id}"
                                                    th:value="${rating.id}"
-                                                   th:checked="${existingIndividualMarks.get(student.id) != null and existingIndividualMarks.get(student.id).get('subRubric_' + subRubric.id) == rating.id}"/>
+                                                   th:checked="${existingIndividualMarks.get(student.id) != null and existingIndividualMarks.get(student.id).get('subRubric_' + subRubric.id) == rating.id}"
+                                                   required/>
                                             <label th:for="'student_' + ${student.id} + '_rating_' + ${subRubric.id} + '_' + ${rating.id}">
                                                 <strong th:text="${rating.name}">Rating</strong>
                                                 <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
@@ -214,7 +257,8 @@
                                                    th:id="'student_' + ${student.id} + '_rating_rubric_' + ${rubric.id} + '_' + ${rating.id}"
                                                    th:name="'student_' + ${student.id} + '_rubric_' + ${rubric.id}"
                                                    th:value="${rating.id}"
-                                                   th:checked="${existingIndividualMarks.get(student.id) != null and existingIndividualMarks.get(student.id).get('rubric_' + rubric.id) == rating.id}"/>
+                                                   th:checked="${existingIndividualMarks.get(student.id) != null and existingIndividualMarks.get(student.id).get('rubric_' + rubric.id) == rating.id}"
+                                                   required/>
                                             <label th:for="'student_' + ${student.id} + '_rating_rubric_' + ${rubric.id} + '_' + ${rating.id}">
                                                 <strong th:text="${rating.name}">Rating</strong>
                                                 <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
@@ -235,13 +279,15 @@
                                         th:attr="data-min-length=${rubric.getRubricCommentMinLength(i)}">
                                         <label th:for="'student_' + ${student.id} + '_rubric_' + ${rubric.id} + '_comment_' + ${i}">
                                             <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
-                                            <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                        <span style="color: #95a5a6; font-weight: normal;" th:text="${rubric.getRubricCommentMinLength(i) > 0 ? '(Required for submission)' : '(Optional)'}"> (Optional)</span>
                                         </label>
                                         <textarea 
                                             th:id="'student_' + ${student.id} + '_rubric_' + ${rubric.id} + '_comment_' + ${i}"
                                             th:name="'student_' + ${student.id} + '_rubric_' + ${rubric.id} + '_comment_' + ${i}"
                                             th:text="${existingIndividualRubricComments != null and existingIndividualRubricComments.get(student.id) != null and existingIndividualRubricComments.get(student.id).get(rubric.id) != null ? existingIndividualRubricComments.get(student.id).get(rubric.id).get(i) : ''}"
-                                            placeholder="Enter your feedback here..."></textarea>
+                                            placeholder="Enter your feedback here..."
+                                            th:required="${rubric.getRubricCommentMinLength(i) > 0}"
+                                            th:minlength="${rubric.getRubricCommentMinLength(i) > 0 ? rubric.getRubricCommentMinLength(i) : null}"></textarea>
                                         <div class="rubric-comment-hint">
                                             Suggested minimum: <span th:text="${rubric.getRubricCommentMinLength(i)}">20</span> characters
                                         </div>
@@ -266,14 +312,16 @@
                                          th:attr="data-min-length=${assessment.getIndividualCommentMinLength(i)}">
                                         <label class="comment-label" th:for="'student_' + ${student.id} + '_comment_' + ${i}">
                                             <span th:text="${commentLabels[i]}">Comment</span>
-                                            <span style="color: #95a5a6; font-weight: normal;"> (Optional)</span>
+                                        <span style="color: #95a5a6; font-weight: normal;" th:text="${assessment.getIndividualCommentMinLength(i) > 0 ? '(Required for submission)' : '(Optional)'}"> (Optional)</span>
                                         </label>
                                         <textarea 
                                             class="comment-textarea"
                                             th:id="'student_' + ${student.id} + '_comment_' + ${i}"
                                             th:name="'student_' + ${student.id} + '_comment_' + ${i}"
                                             th:text="${existingIndividualComments.get(student.id) != null and i < #lists.size(existingIndividualComments.get(student.id)) ? existingIndividualComments.get(student.id).get(i) : ''}"
-                                            placeholder="Enter your feedback here..."></textarea>
+                                            placeholder="Enter your feedback here..."
+                                            th:required="${assessment.getIndividualCommentMinLength(i) > 0}"
+                                            th:minlength="${assessment.getIndividualCommentMinLength(i) > 0 ? assessment.getIndividualCommentMinLength(i) : null}"></textarea>
                                         <div class="comment-hint">
                                             Suggested minimum: <span th:text="${assessment.getIndividualCommentMinLength(i)}">20</span> characters
                                         </div>
@@ -286,7 +334,8 @@
                     <div class="form-actions" style="margin-top: 40px;">
                         <a th:href="${isStudentTarget != null and isStudentTarget ? '/lecturer/assessments/' + assessment.id + '/select-student' : '/lecturer/assessments/' + assessment.id + '/select-group'}" 
                            class="btn btn-cancel">Cancel</a>
-                        <button type="submit" class="btn btn-submit">💾 Save Progress</button>
+                        <button type="submit" name="action" value="save" class="btn-save-progress" formnovalidate>💾 Save Progress</button>
+                        <button type="submit" id="submitEvalBtn" name="action" value="submit" class="btn btn-submit">✅ Submit Evaluation</button>
                     </div>
                 </form>
             </div>
@@ -356,8 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            console.log('📤 Form submitted - validation is visual only, allowing save');
-            
+            console.log('📤 Form submitted');
         });
     }
 });
