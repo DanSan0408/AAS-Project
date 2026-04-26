@@ -117,8 +117,12 @@ public class LecturerAssessmentController {
         LocalDateTime now = LocalDateTime.now();
         List<Long> openAssessmentIds = uniqueAssessments.stream()
             .filter(assessment -> {
-                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-                    assessment.getId(), "LECTURER");
+                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                    .filter(d -> d.getAssessorType() == null 
+                              || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                              || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                              || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                    .collect(Collectors.toList());
                 
                 return deadlines.stream().anyMatch(d -> {
                     LocalDateTime openDate = d.getOpenDate() != null ? 
@@ -148,8 +152,12 @@ public class LecturerAssessmentController {
 
         Lecturer lecturer = getCurrentLecturer(authentication);
         
-        List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-            assessmentId, "LECTURER");
+        List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentId(assessmentId).stream()
+            .filter(d -> d.getAssessorType() == null 
+                      || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                      || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                      || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+            .collect(Collectors.toList());
         
         if (lecturerDeadlines.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", 
@@ -215,8 +223,12 @@ public class LecturerAssessmentController {
 
         Lecturer lecturer = getCurrentLecturer(authentication);
 
-        List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-            assessmentId, "LECTURER");
+        List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentId(assessmentId).stream()
+            .filter(d -> d.getAssessorType() == null 
+                      || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                      || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                      || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+            .collect(Collectors.toList());
 
         if (lecturerDeadlines.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage",
