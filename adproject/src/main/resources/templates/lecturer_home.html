@@ -47,6 +47,13 @@
                                     <li th:each="target : ${assessmentTargets.get(task.id)}" th:text="${target}">Student/Group Name</li>
                                 </ul>
                             </div>
+                            <div th:if="${task.extraNotes != null and !#strings.isEmpty(#strings.trim(task.extraNotes))}"
+                                 style="margin-top: 14px; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5;">
+                                <strong style="display: block; margin-bottom: 4px; color: #065f46;">
+                                    <i class="fas fa-note-sticky"></i> Admin Notes
+                                </strong>
+                                <div th:text="${task.extraNotes}" style="white-space: pre-line; color: #1f2937;">Admin notes</div>
+                            </div>
                         </div>
 
                         <div class="task-actions">

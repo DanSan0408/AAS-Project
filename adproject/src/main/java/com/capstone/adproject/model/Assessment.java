@@ -39,6 +39,9 @@ public class Assessment {
 
     private String title;
 
+    @Column(name = "extra_notes", columnDefinition = "TEXT")
+    private String extraNotes;
+
     @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;
@@ -98,6 +101,9 @@ public class Assessment {
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
+
+    public String getExtraNotes() { return extraNotes; }
+    public void setExtraNotes(String extraNotes) { this.extraNotes = extraNotes; }
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
