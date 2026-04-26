@@ -108,22 +108,18 @@
 
                     <div th:if="${groupRubrics != null and !groupRubrics.isEmpty()}">
                         <div class="section-divider">
-                            <h2>👥 Part 1: Group Assessment</h2>
+                            <h2>👥 Group Assessment</h2>
                             <p style="color: white; margin: 10px 0 0 0;">All students in the group will receive the same marks for these rubrics</p>
                         </div>
 
                         <div th:each="rubric : ${groupRubrics}" class="rubric-section">
                             <div class="rubric-header">
                                 <div class="rubric-title" th:text="${rubric.name}">Rubric Name</div>
-                                <div class="rubric-marks">
-                                    Total Marks: <strong th:text="${rubric.marks}">0</strong>
-                                </div>
                             </div>
 
                             <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-card">
                                 <div class="sub-rubric-title">
                                     <span th:text="${subRubric.name}">Sub-Rubric Name</span>
-                                    <span class="sub-rubric-marks">(Marks: <span th:text="${subRubric.marks}">0</span>)</span>
                                 </div>
                                 
                                 <div th:if="${subRubric.description}" class="sub-rubric-description" th:text="${subRubric.description}"></div>
@@ -140,13 +136,15 @@
                                             <strong th:text="${rating.name}">Rating</strong>
                                             <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
                                         </label>
-                                        <span class="rating-marks" th:text="${rating.marks} + ' marks'">0 marks</span>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div th:if="${(rubric.subRubrics == null or rubric.subRubrics.isEmpty()) and rubric.ratings != null}" 
+                            <div th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}" 
                                  class="sub-rubric-card">
+                                <div class="sub-rubric-title" th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}">
+                                    <span>Overall Rating</span>
+                                </div>
                                 <div class="rating-options">
                                     <div th:each="rating : ${rubric.ratings}" class="rating-option">
                                         <input type="radio" 
@@ -159,7 +157,6 @@
                                             <strong th:text="${rating.name}">Rating</strong>
                                             <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
                                         </label>
-                                        <span class="rating-marks" th:text="${rating.marks} + ' marks'">0 marks</span>
                                     </div>
                                 </div>
                             </div>
@@ -198,9 +195,6 @@
                             <div th:if="${hasComments}" class="comments-section">
                                 <div class="comments-header">
                                     <h3>Group Assessment Comments</h3>
-                                    <p style="font-size: 0.9em; color: #95a5a6;">
-                                        Optional: You can save and continue later
-                                    </p>
                                 </div>
 
                                 <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" 
@@ -228,7 +222,7 @@
 
                     <div th:if="${individualRubrics != null and !individualRubrics.isEmpty()}">
                         <div class="section-divider">
-                            <h2>👤 Part 2: Individual Assessment</h2>
+                            <h2>👤 Individual Assessment</h2>
                             <p style="color: white; margin: 10px 0 0 0;">Evaluate each student individually</p>
                         </div>
 
@@ -243,15 +237,11 @@
                             <div th:each="rubric : ${individualRubrics}" class="rubric-section">
                                 <div class="rubric-header">
                                     <div class="rubric-title" th:text="${rubric.name}">Rubric Name</div>
-                                    <div class="rubric-marks">
-                                        Total Marks: <strong th:text="${rubric.marks}">0</strong>
-                                    </div>
                                 </div>
 
                                 <div th:each="subRubric : ${rubric.subRubrics}" class="sub-rubric-card">
                                     <div class="sub-rubric-title">
                                         <span th:text="${subRubric.name}">Sub-Rubric Name</span>
-                                        <span class="sub-rubric-marks">(Marks: <span th:text="${subRubric.marks}">0</span>)</span>
                                     </div>
                                     
                                     <div th:if="${subRubric.description}" class="sub-rubric-description" th:text="${subRubric.description}"></div>
@@ -268,13 +258,15 @@
                                                 <strong th:text="${rating.name}">Rating</strong>
                                                 <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
                                             </label>
-                                            <span class="rating-marks" th:text="${rating.marks} + ' marks'">0 marks</span>
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div th:if="${(rubric.subRubrics == null or rubric.subRubrics.isEmpty()) and rubric.ratings != null}" 
+                                <div th:if="${rubric.ratings != null and !rubric.ratings.isEmpty()}" 
                                      class="sub-rubric-card">
+                                    <div class="sub-rubric-title" th:if="${rubric.subRubrics != null and !rubric.subRubrics.isEmpty()}">
+                                        <span>Overall Rating</span>
+                                    </div>
                                     <div class="rating-options">
                                         <div th:each="rating : ${rubric.ratings}" class="rating-option">
                                             <input type="radio" 
@@ -287,7 +279,6 @@
                                                 <strong th:text="${rating.name}">Rating</strong>
                                                 <span th:if="${rating.description}" th:text="' - ' + ${rating.description}"></span>
                                             </label>
-                                            <span class="rating-marks" th:text="${rating.marks} + ' marks'">0 marks</span>
                                         </div>
                                     </div>
                                 </div>
@@ -326,9 +317,6 @@
                                 <div th:if="${hasComments}" class="comments-section">
                                     <div class="comments-header">
                                         <h3>Individual Assessment Comments</h3>
-                                        <p style="font-size: 0.9em; color: #95a5a6;">
-                                            Optional: You can save and continue later
-                                        </p>
                                     </div>
 
                                     <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" 

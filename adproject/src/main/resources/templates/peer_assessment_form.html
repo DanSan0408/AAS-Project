@@ -159,7 +159,7 @@
                                 </div>
                             </div>
                             
-                            <div th:if="${(rubric.subRubrics == null or #lists.isEmpty(rubric.subRubrics)) and rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}"
+                            <div th:if="${rubric.ratings != null and !#lists.isEmpty(rubric.ratings)}"
                                  class="direct-ratings-container">
                                 <h4 style="color: #7A1E2D; margin-top: 15px; margin-bottom: 10px;">
                                     <i class="fas fa-star"></i> Rating Options
