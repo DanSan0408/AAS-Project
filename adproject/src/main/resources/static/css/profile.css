@@ -1,0 +1,207 @@
+/* Profile Page Styling - Shared Dashboard Shell */
+
+:root {
+    --color-primary: #4A0018;
+    --color-primary-light: #6B0025;
+    --color-background: #F4F2EE;
+    --color-secondary: #3F3F46;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-accent: #F8A617;
+    --color-success: #059669;
+    --color-danger: #B91C1C;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body.profile-page {
+    background-color: var(--color-background);
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-secondary);
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+body.profile-page .main-content {
+    flex-grow: 1;
+    padding: 30px 40px;
+    margin-left: 270px;
+    min-height: 100vh;
+    background-color: var(--color-background);
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+body.profile-page .header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    padding: 20px 30px;
+    margin-bottom: 40px;
+    margin-left: 0;
+    margin-right: 0;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15);
+    border-radius: 16px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body.profile-page .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+body.profile-page .header-container img {
+    height: 55px;
+    width: auto;
+    max-width: 200px;
+    filter: brightness(0) invert(1);
+}
+
+body.profile-page .header-container h1 {
+    color: #FFFFFF;
+    font-size: 2.2rem;
+    margin: 0;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.profile-container {
+    width: min(680px, 100%);
+    margin: 0 auto;
+    background: var(--color-surface);
+    padding: 40px;
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid var(--color-primary);
+}
+
+.profile-header h2 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: 1.75rem;
+}
+
+.alert {
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    color: #065F46;
+    background-color: #D1FAE5;
+    border-color: var(--color-success);
+}
+
+.alert-danger {
+    color: #7F1D1D;
+    background-color: #FEE2E2;
+    border-color: var(--color-danger);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--color-secondary);
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #FFFFFF;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(248, 166, 23, 0.2);
+    outline: none;
+}
+
+.form-group input[disabled] {
+    background-color: #F8F9FA;
+    color: #6B7280;
+    cursor: not-allowed;
+}
+
+.field-help {
+    color: #6B7280;
+    margin-top: 4px;
+    display: block;
+    font-size: 0.92rem;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #FFFFFF;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    font-weight: 600;
+    margin-top: 15px;
+    transition: filter 0.2s, transform 0.2s;
+}
+
+.btn-primary:hover {
+    filter: brightness(110%);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 1279px) {
+    body.profile-page .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 1000px) {
+    body.profile-page .header-container {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    body.profile-page .header-container h1 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .profile-container {
+        padding: 25px 20px;
+    }
+
+    .profile-header h2 {
+        font-size: 1.4rem;
+    }
+}

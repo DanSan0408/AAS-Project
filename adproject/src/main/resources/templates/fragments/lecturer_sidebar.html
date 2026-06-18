@@ -42,6 +42,9 @@
             <li class="sidebar-item">
                 <a class="sidebar-link" th:href="@{/lecturer/comments/view/assessments}"><span>View Comments</span></a>
             </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link" th:href="@{/profile}"><span>My Profile</span></a>
+            </li>
             <li class="sidebar-item" sec:authorize="hasRole('ROLE_ADMIN')">
                 <a th:href="@{/admin/home}" class="sidebar-link"><span>Switch to Admin</span></a>
             </li>

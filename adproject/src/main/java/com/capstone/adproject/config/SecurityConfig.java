@@ -135,12 +135,12 @@ public class SecurityConfig {
             )
             .headers(headers -> headers
                 .contentSecurityPolicy(csp -> {
-                    String policy = "default-src 'self'; " +
-                                    "script-src 'self' 'nonce-{nonce}'; " +
-                                    "style-src 'self' 'unsafe-inline'; " + // Temporarily allow inline styles to focus on scripts
-                                    "img-src 'self' data:; " +
-                                    "font-src 'self'; " +
-                                    "connect-src 'self'; " +
+                    String policy = "default-src 'self' https:; " +
+                                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; " +
+                                    "style-src 'self' 'unsafe-inline' https:; " + 
+                                    "img-src 'self' data: https:; " +
+                                    "font-src 'self' data: https:; " +
+                                    "connect-src 'self' https:; " +
                                     "frame-src 'none'; object-src 'none'; " +
                                     "report-uri /csp-violations;";
                     csp.policyDirectives(policy);
