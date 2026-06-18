@@ -1,0 +1,28 @@
+2026-06-18 18:41:41.897 INFO  c.k.k.c.l.logback.LogbackConfigurator    - Logback default configuration initialized from: C:\Users\ihsan\.katalon\packages\KS-11.2.1\configuration\org.eclipse.osgi\152\0\.cp\resources\logback\logback-execution.xml
+2026-06-18 18:41:41.904 INFO  c.k.k.c.l.logback.LogbackConfigurator    - Logback custom configuration initialized from: C:\Users\ihsan\git\AAS-Project\Include\config\log.properties
+2026-06-18 18:41:43.269 INFO  c.k.katalon.core.main.TestSuiteExecutor  - START Test Suites/TS-01
+2026-06-18 18:41:43.440 INFO  c.k.katalon.core.main.TestSuiteExecutor  - userFullName = DANIAL IHSAN BIN MOHD NADHIR AMJ
+2026-06-18 18:41:43.443 INFO  c.k.katalon.core.main.TestSuiteExecutor  - projectName = AAS-Project
+2026-06-18 18:41:43.444 INFO  c.k.katalon.core.main.TestSuiteExecutor  - hostName = ihsan - DESKTOP-M8R7TRL
+2026-06-18 18:41:43.445 INFO  c.k.katalon.core.main.TestSuiteExecutor  - os = Windows 11 64bit
+2026-06-18 18:41:43.448 INFO  c.k.katalon.core.main.TestSuiteExecutor  - hostAddress = 169.254.83.107
+2026-06-18 18:41:43.449 INFO  c.k.katalon.core.main.TestSuiteExecutor  - katalonVersion = 11.2.1.0
+2026-06-18 18:41:43.742 INFO  c.k.katalon.core.main.TestCaseExecutor   - --------------------
+2026-06-18 18:41:43.743 INFO  c.k.katalon.core.main.TestCaseExecutor   - START Test Cases/TC01
+2026-06-18 18:41:44.638 DEBUG testcase.TC01                            - 1: openBrowser(null)
+2026-06-18 18:41:45.326 INFO  c.k.k.core.webui.driver.DriverFactory    - Starting 'Chrome' driver
+2026-06-18 18:41:45.420 INFO  c.k.k.core.webui.driver.DriverFactory    - Action delay is set to 0 milliseconds
+2026-06-18 18:41:48.682 INFO  c.k.k.core.webui.driver.DriverFactory    - sessionId = 7af53a3b0be310568d39efe40ac75152
+2026-06-18 18:41:48.685 INFO  c.k.k.core.webui.driver.DriverFactory    - browser = Chrome 149.0.7827.116
+2026-06-18 18:41:48.686 INFO  c.k.k.core.webui.driver.DriverFactory    - platform = Windows 11
+2026-06-18 18:41:48.688 INFO  c.k.k.core.webui.driver.DriverFactory    - seleniumVersion = 4.39.0
+2026-06-18 18:41:48.706 INFO  c.k.k.core.webui.driver.DriverFactory    - proxyInformation = ProxyInformation { proxyOption=NO_PROXY, proxyServerType=HTTP, username=, password=********, proxyServerAddress=, proxyServerPort=0, executionList="", isApplyToDesiredCapabilities=true }
+2026-06-18 18:41:48.793 DEBUG testcase.TC01                            - 2: navigateToUrl("https://www.eduinnovax.com/login")
+2026-06-18 18:41:49.330 DEBUG testcase.TC01                            - 3: setText(findTestObject("Page_Login - UTM AAS/input_your.emailexample.com"), "san.dan0408@gmail.com")
+2026-06-18 18:41:50.633 DEBUG testcase.TC01                            - 4: setEncryptedText(findTestObject("Page_Login - UTM AAS/input_Enter your password"), "iGDxf8hSRT4=")
+2026-06-18 18:41:51.153 DEBUG testcase.TC01                            - 5: click(findTestObject("Page_Login - UTM AAS/span_Remember me"))
+2026-06-18 18:41:51.640 DEBUG testcase.TC01                            - 6: click(findTestObject("Page_Login - UTM AAS/button_Login"))
+2026-06-18 18:41:52.800 INFO  c.k.katalon.core.main.TestCaseExecutor   - END Test Cases/TC01
+2026-06-18 18:41:53.196 INFO  c.k.katalon.core.main.TestSuiteExecutor  - --------------------
+2026-06-18 18:41:53.197 INFO  c.k.katalon.core.main.TestSuiteExecutor  - END Test Suites/TS-01
+2026-06-18 18:41:53.197 INFO  c.k.katalon.core.main.TestSuiteExecutor  - ====================
