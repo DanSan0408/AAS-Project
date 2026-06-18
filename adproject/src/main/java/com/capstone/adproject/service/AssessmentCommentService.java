@@ -118,7 +118,7 @@ public class AssessmentCommentService {
                 evaluatedStudent,
                 assessment).stream()
                 .filter(c -> c.getRubricAssessmentType() == null || 
-                             "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                             !"Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
                 .filter(c -> c.getRubricId() == null) 
                 .collect(Collectors.toList());
         
@@ -160,7 +160,7 @@ public class AssessmentCommentService {
         List<AssessmentComment> existingComments = commentRepository.findSelfCommentsForStudentInAssessment(
                 student, assessment, student.getId()).stream()
                 .filter(c -> c.getRubricAssessmentType() == null || 
-                             "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                             !"Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
                 .filter(c -> c.getRubricId() == null) 
                 .collect(Collectors.toList());
         
@@ -445,7 +445,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
                     member,
                     assessment).stream()
                     .filter(c -> c.getRubricAssessmentType() == null || 
-                                 "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                                 !"Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
                     .filter(c -> c.getRubricId() == null) 
                     .collect(Collectors.toList());
             

@@ -1,6 +1,67 @@
 # Project State Documentation
 
+**Last Updated**: 2026-06-18 (IH)
+
+---
+
+## Current Status: Admin Progress Tracking Dashboard
+**Status**: COMPLETE
+
+### Summary
+- Implemented a new dashboard for Admins to monitor the evaluation progress of lecturers and students for any given assessment.
+- Admins first select an assessment from a list.
+- The progress page displays two separate tables for lecturers and students, showing their completion status (`Not Started`, `In Progress`, `Completed`), a progress bar, and assigned targets.
+- The backend logic is encapsulated in a new `ProgressTrackingService` which correctly identifies the assignment mode (Group, Rubric, or Student) for lecturers and calculates completion based on submitted marks.
+- Aligned frontend templates (`admin_progress_tracking_select.html`, `admin_progress_tracking_view.html`) with the global UTM AAS responsive design system. Extracted and normalized CSS into `admin_progress_tracking.css` (implementing standard fonts, cards, and mobile-friendly tables) and integrated `loading.js` to fix page visibility issues.
+
+### Files Modified/Created
+- **New**: `ProgressTrackingService.java`, `admin_progress_tracking_select.html`, `admin_progress_tracking_view.html`, `admin_progress_tracking.css`
+- **Modified**: `AdminController.java` (added endpoints), `fragments/sidebar.html` (added nav link), `STATE.md`
+
 **Last Updated**: 2026-04-26 (IH)
+
+---
+
+## Current Status: Conditional Extra Notes Visibility
+**Status**: IMPLEMENTED
+
+### Summary
+- The "Extra Notes" sections on the **View Assessment Rubrics** page are now conditionally displayed.
+- "Extra Notes for Lecturers" only appears if the assessment has active lecturer assignments.
+- "Extra Notes for Students" only appears if the assessment has active student assignments.
+- Displays a helpful disclaimer prompting the Admin to assign a lecturer or student if neither are assigned yet.
+
+### Files Modified
+- `RubricController.java`, `view-assessment-rubrics.html`
+
+## Current Status: User Profile Feature
+**Status**: IMPLEMENTED
+
+### Summary
+- Added a shared `/profile` endpoint to allow all authenticated users (Student, Lecturer, Admin, Super Admin) to view and edit their profiles.
+- Users can view their email (read-only) and update their `username` (name).
+- Created a responsive `profile.html` template that dynamically includes the correct sidebar based on the user's role, with styling matching the application's global UTM maroon and gold visual identity (`profile.css`).
+- Updated `ProfileController` to handle the role-based fetching and updating logic, including proper `@Transactional` context and explicitly handling the `Admin` role via `AdminRepository`.
+
+### Files Modified/Created
+- **New**: `ProfileController.java`, `profile.html`, `profile.css`
+- **Modified**: `STATE.md`
+
+---
+
+## Current Status: Mixed Rubric Types Visibility Fix (April 26, 2026)
+**Status**: FIXED
+
+### Summary
+- Resolved an issue where direct ratings were incorrectly hidden during evaluation if a rubric also contained sub-rubrics.
+- Removed the mutually exclusive rendering logic (`th:if="${rubric.subRubrics == null or rubric.subRubrics.isEmpty()}"`) in both lecturer and peer evaluation forms, as well as the assessment data view.
+- Updated the progress tracking logic in `LecturerAssessmentService` to accurately count both components towards the required evaluations total when both exist in a single rubric.
+
+### Files Modified
+- `lecturer_combined_evaluation_form.html` - Allowed rendering of direct ratings alongside sub-rubrics.
+- `peer_assessment_form.html` - Allowed rendering of direct ratings alongside sub-rubrics.
+- `assessment_data_view.html` - Fixed data view rendering to display both direct ratings and sub-rubrics properly.
+- `LecturerAssessmentService.java` - Updated `requiredEvaluations` counter to include both sub-rubrics and direct ratings.
 
 ---
 

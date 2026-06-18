@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracking - View Progress</title>
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/admin_progress_tracking.css}">
+</head>
+<body class="progress-page">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo">
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+        
+        <div class="container-responsive">
+            <div class="action-bar" style="margin-bottom: 1.5rem;">
+                <a th:href="@{/admin/progress-tracking}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Assessment List
+                </a>
+            </div>
+            
+            <div class="page-header">
+                <h1>Progress: <span th:text="${assessment.title}">Title</span></h1>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 class="card-title">
+                    <i class="fas fa-chalkboard-teacher"></i> Lecturer Progress 
+                    (<span th:text="${lecturerProgress.assignmentMode}"></span> Mode)
+                </h2>
+                
+                <div class="table-responsive">
+                    <table th:if="${not #lists.isEmpty(lecturerProgress.progressList)}">
+                        <thead>
+                            <tr>
+                                <th>Lecturer</th>
+                                <th>Assigned Target</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="prog : ${lecturerProgress.progressList}">
+                                <td data-label="Lecturer" th:text="${prog.lecturerName}" style="font-weight: 500;">Name</td>
+                                <td data-label="Assigned Target" th:text="${prog.assignedTarget}">Target</td>
+                                <td data-label="Status">
+                                    <span class="status-badge" 
+                                          th:classappend="${prog.status == 'Completed' ? 'status-completed' : (prog.status == 'In Progress' ? 'status-progress' : 'status-pending')}"
+                                          th:text="${prog.status}">Status</span>
+                                </td>
+                                <td data-label="Progress">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="progress-bar-container" style="flex-grow: 1;">
+                                            <div class="progress-bar" th:style="'width: ' + ${prog.progress} + '%'"></div>
+                                        </div>
+                                        <span style="font-size: 0.85em; font-weight: bold; width: 40px; text-align: right;" th:text="${prog.progress} + '%'"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${#lists.isEmpty(lecturerProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No lecturers assigned to this assessment.</p>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-user-graduate"></i> Student Peer Evaluation Progress
+                </h2>
+                <div class="table-responsive">
+                    <table th:if="${not #lists.isEmpty(studentProgress.progressList)}">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Assigned Peers</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="prog : ${studentProgress.progressList}">
+                                <td data-label="Student" th:text="${prog.studentName}" style="font-weight: 500;">Name</td>
+                                <td data-label="Assigned Peers" th:text="${prog.assignedTarget}">Target</td>
+                                <td data-label="Status">
+                                    <span class="status-badge" 
+                                          th:classappend="${prog.status == 'Completed' ? 'status-completed' : (prog.status == 'In Progress' ? 'status-progress' : 'status-pending')}"
+                                          th:text="${prog.status}">Status</span>
+                                </td>
+                                <td data-label="Progress">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div class="progress-bar-container" style="flex-grow: 1;">
+                                            <div class="progress-bar" th:style="'width: ' + ${prog.progress} + '%'"></div>
+                                        </div>
+                                        <span style="font-size: 0.85em; font-weight: bold; width: 40px; text-align: right;" th:text="${prog.progress} + '%'"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p th:if="${#lists.isEmpty(studentProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No students assigned to peer evaluation.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/loading.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+</body>
+</html>

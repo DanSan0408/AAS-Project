@@ -42,6 +42,9 @@ public class Assessment {
     @Column(name = "extra_notes", columnDefinition = "TEXT")
     private String extraNotes;
 
+    @Column(name = "extra_notes_for_student", columnDefinition = "TEXT")
+    private String extraNotesForStudent;
+
     @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;
@@ -104,6 +107,9 @@ public class Assessment {
 
     public String getExtraNotes() { return extraNotes; }
     public void setExtraNotes(String extraNotes) { this.extraNotes = extraNotes; }
+
+    public String getExtraNotesForStudent() { return extraNotesForStudent; }
+    public void setExtraNotesForStudent(String extraNotesForStudent) { this.extraNotesForStudent = extraNotesForStudent; }
 
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
