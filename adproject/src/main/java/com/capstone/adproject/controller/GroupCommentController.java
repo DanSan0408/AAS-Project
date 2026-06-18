@@ -87,6 +87,25 @@ public class GroupCommentController {
             }
         });
 
+        // Add assessments for courses where the lecturer supervises a group
+        List<Group> supervisedGroups = groupRepository.findAll().stream()
+            .filter(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
+                         (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())))
+            .collect(Collectors.toList());
+
+        Set<Long> supervisedCourseIds = supervisedGroups.stream()
+            .map(g -> g.getCourse() != null ? g.getCourse().getId() : null)
+            .filter(id -> id != null)
+            .collect(Collectors.toSet());
+
+        if (!supervisedCourseIds.isEmpty()) {
+            assessmentService.findAllAssessmentsWithRubrics().forEach(assessment -> {
+                if (assessment.getCourse() != null && supervisedCourseIds.contains(assessment.getCourse().getId())) {
+                    assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
+                }
+            });
+        }
+
         return assignedAssessmentsById.values().stream().collect(Collectors.toList());
     }
 
@@ -96,7 +115,17 @@ public class GroupCommentController {
             .isEmpty();
         boolean hasRubricAssignment = lecturerRubricAssignmentRepository
             .existsByLecturerAndAssessment(lecturer, assessment);
-        return hasGroupAssignment || hasRubricAssignment;
+            
+        boolean isSupervisor = false;
+        if (assessment.getCourse() != null) {
+            isSupervisor = groupRepository.findAll().stream()
+                .anyMatch(g -> g.getCourse() != null && 
+                               g.getCourse().getId().equals(assessment.getCourse().getId()) &&
+                               ((g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
+                                (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId()))));
+        }
+
+        return hasGroupAssignment || hasRubricAssignment || isSupervisor;
     }
 
     private Set<Long> getManagedCourseIdsForAdmin(String adminEmail) {

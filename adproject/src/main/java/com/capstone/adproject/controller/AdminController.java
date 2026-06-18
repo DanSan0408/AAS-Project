@@ -62,8 +62,11 @@ import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.CustomUserDetailsService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.EmailService;
+import com.capstone.adproject.service.ProgressTrackingService;
 import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.SuperAdminService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -86,6 +89,7 @@ public class AdminController {
     private final LecturerStudentAssignmentRepository studentAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
+    private final ProgressTrackingService progressTrackingService;
     private final EmailService emailService;
 
     //constructor
@@ -102,6 +106,7 @@ public class AdminController {
             LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
             StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository,
+            ProgressTrackingService progressTrackingService,
             CustomUserDetailsService userDetailsService,
             EmailService emailService) {
         this.adminService = adminService;
@@ -116,6 +121,7 @@ public class AdminController {
         this.studentAssignmentRepository = studentAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.studentAssessmentAssignmentRepository = studentAssessmentAssignmentRepository;
+        this.progressTrackingService = progressTrackingService;
         this.userDetailsService = userDetailsService;
         this.emailService = emailService;
     }
@@ -267,7 +273,7 @@ public class AdminController {
             }
             
             redirectAttributes.addFlashAttribute("successMessage", "User " + email + " successfully assigned " + targetRole + " role!");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             System.err.println("DEBUG: Role assignation error: " + e.getMessage());
             redirectAttributes.addFlashAttribute("errorMessage", "Role assignation failed: " + e.getMessage());
         }
@@ -352,6 +358,41 @@ public class AdminController {
         return "admin_home";
     }
 
+    @GetMapping("/progress-tracking")
+    public String selectAssessmentForProgressTracking(Model model) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Assessment> assessments = activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        model.addAttribute("assessments", assessments);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        return "admin_progress_tracking_select";
+    }
+
+    @GetMapping("/progress-tracking/{assessmentId}")
+    public String viewProgressTracking(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
+            .orElse(null);
+
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found or you are not authorized to view it.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        Map<String, Object> lecturerProgress = progressTrackingService.getLecturerProgress(assessment);
+        Map<String, Object> studentProgress = progressTrackingService.getStudentProgress(assessment);
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("lecturerProgress", lecturerProgress);
+        model.addAttribute("studentProgress", studentProgress);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+
+        return "admin_progress_tracking_view";
+    }
 
     @GetMapping("/lecturer-assignments/{assessmentId}")
     @Transactional
@@ -1426,13 +1467,16 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         singleRandomGroup.setSelectedStudentIds(studentIds);
 
         Map<Long, Student> studentLookupMap = adminService.getAllStudents().stream()
-            .collect(Collectors.toMap(Student::getId, Function.identity()));
+            .collect(Collectors.toMap(Student::getId, Function.identity(), (existing, replacement) -> existing));
         
         // Add the comma-separated string for easier template processing
         String selectedStudentIdsStr = studentIds.stream()
             .map(String::valueOf)
             .collect(Collectors.joining(","));
         
+        List<Student> studentsInGroup = new ArrayList<>(unassignedStudents.subList(0, actualGroupSize));
+        List<Student> remainingUnassigned = new ArrayList<>(unassignedStudents.subList(actualGroupSize, unassignedStudents.size()));
+
         model.addAttribute("randomGroupPreview", singleRandomGroup); 
         model.addAttribute("selectedStudentIdsStr", selectedStudentIdsStr);
         model.addAttribute("availableStudentsCount", availableStudentsCount);
@@ -1440,8 +1484,11 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         model.addAttribute("actualGroupSize", actualGroupSize);
         model.addAttribute("remainingStudents", availableStudentsCount - actualGroupSize);
         model.addAttribute("studentLookupMap", studentLookupMap); 
-        model.addAttribute("availableStudentsForAdd", unassignedStudents); 
+        model.addAttribute("availableStudentsForAdd", remainingUnassigned); 
+        model.addAttribute("availableStudents", remainingUnassigned); 
+        model.addAttribute("studentsInGroup", studentsInGroup); 
         model.addAttribute("availableLecturers", adminService.getAllLecturers());
+        model.addAttribute("adminUsername", getLoggedInUsername());
         
         return "group_assignment_preview"; 
     }
@@ -1582,7 +1629,7 @@ public String assignAssessment(
 
         redirectAttributes.addFlashAttribute("successMessage", 
             "Assessment " + dto.getTitle() + " " + action + " successfully for " + dto.getAssessorType() + "s. Open Date: " + openDateStr);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
         redirectAttributes.addFlashAttribute("errorMessage", "Error assigning assessment: " + e.getMessage());
         return "redirect:/admin/assessment/assign/" + dto.getAssessmentId(); 
     }

@@ -21,6 +21,10 @@ import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.SubRubric;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentAssessmentAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.RubricService;
@@ -35,15 +39,27 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
     private final CourseScopeService courseScopeService;
     private final SuperAdminService superAdminService;
     private final RubricTemplateService rubricTemplateService;
+    private final LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository;
+    private final LecturerRubricAssignmentRepository lecturerRubricAssignmentRepository;
+    private final LecturerStudentAssignmentRepository lecturerStudentAssignmentRepository;
+    private final StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
 
     public RubricController(RubricService rubricService, AssessmentService assessmentService,
             CourseScopeService courseScopeService, SuperAdminService superAdminService,
-            RubricTemplateService rubricTemplateService) {
+            RubricTemplateService rubricTemplateService,
+            LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository,
+            LecturerRubricAssignmentRepository lecturerRubricAssignmentRepository,
+            LecturerStudentAssignmentRepository lecturerStudentAssignmentRepository,
+            StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository) {
         this.rubricService = rubricService;
         this.assessmentService = assessmentService;
         this.courseScopeService = courseScopeService;
         this.superAdminService = superAdminService;
         this.rubricTemplateService = rubricTemplateService;
+        this.lecturerGroupAssignmentRepository = lecturerGroupAssignmentRepository;
+        this.lecturerRubricAssignmentRepository = lecturerRubricAssignmentRepository;
+        this.lecturerStudentAssignmentRepository = lecturerStudentAssignmentRepository;
+        this.studentAssessmentAssignmentRepository = studentAssessmentAssignmentRepository;
     }
 
     private boolean ownsAssessment(Assessment assessment) {
@@ -228,6 +244,13 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 
         groupedRubrics.put(DUMMY_KEY, innerGroup);
 
+        boolean hasLecturerAssignments = !lecturerGroupAssignmentRepository.findByAssessment(assessment).isEmpty() ||
+                                         !lecturerRubricAssignmentRepository.findByAssessment(assessment).isEmpty() ||
+                                         !lecturerStudentAssignmentRepository.findByAssessment(assessment).isEmpty();
+        boolean hasStudentAssignments = !studentAssessmentAssignmentRepository.findByAssessment(assessment).isEmpty();
+
+        model.addAttribute("hasLecturerAssignments", hasLecturerAssignments);
+        model.addAttribute("hasStudentAssignments", hasStudentAssignments);
         model.addAttribute("assessment", assessment);
         model.addAttribute("groupedRubrics", groupedRubrics);
 
@@ -250,6 +273,25 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         rubricService.saveAssessment(assessment);
 
         redirectAttributes.addFlashAttribute("successMessage", "Extra notes updated successfully.");
+        return "redirect:/rubrics/view/" + assessmentId;
+    }
+
+    @PostMapping("/assessment/{assessmentId}/extra-notes-for-student")
+    public String saveAssessmentExtraNotesForStudent(
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("extraNotesForStudent") String extraNotesForStudent,
+            RedirectAttributes redirectAttributes) {
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this assessment.");
+            return "redirect:/rubrics/manage";
+        }
+
+        String sanitized = HtmlSanitizerUtil.sanitize(extraNotesForStudent == null ? "" : extraNotesForStudent.trim());
+        assessment.setExtraNotesForStudent(sanitized.isBlank() ? null : sanitized);
+        rubricService.saveAssessment(assessment);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Extra notes for students updated successfully.");
         return "redirect:/rubrics/view/" + assessmentId;
     }
 

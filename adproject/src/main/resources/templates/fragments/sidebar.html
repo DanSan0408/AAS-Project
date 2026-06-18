@@ -35,12 +35,16 @@
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-users"><span>Manage Users</span></a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-courses"><span>Manage Courses</span></a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/rubrics/manage"><span>Manage Assessments</span></a></li>
+            <li><a th:href="@{/admin/progress-tracking}" class="sidebar-link">Progress Tracking</a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
             <!-- Consistent View Comments Link -->
             <li class="sidebar-item">
                 <a class="sidebar-link" th:href="@{/admin/comments/view/assessments}">
                     <span>View Comments</span>
                 </a>
+            </li>
+            <li class="sidebar-item">
+                <a class="sidebar-link" th:href="@{/profile}"><span>My Profile</span></a>
             </li>
             <li class="sidebar-item" sec:authorize="hasRole('ROLE_LECTURER')">
                 <a th:href="@{/lecturer/home}" class="sidebar-link"><span>Switch to Lecturer</span></a>
@@ -54,6 +58,7 @@
                     <button type="submit" class="sidebar-link logout-btn"><span>Logout</span></button>
                 </form>
             </li>
+            
         </ul>
     </div>
 
@@ -61,4 +66,3 @@
     </th:block>
 </body>
 </html>
-
