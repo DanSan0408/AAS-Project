@@ -97,6 +97,14 @@
                             <p th:text="${assessment.extraNotes}" style="margin: 0; white-space: pre-line; color: #1f2937;">Extra notes</p>
                         </div>
 
+                        <div th:if="${assessment.extraNotesForStudent != null and !#strings.isEmpty(#strings.trim(assessment.extraNotesForStudent))}"
+                             style="margin: 15px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid #ccfbf1; border-left: 4px solid #16a085; background: #f0fdfa;">
+                            <h6 style="margin: 0 0 8px 0; color: #0f766e; font-size: 0.95rem; font-weight: 700;">
+                                <i class="fas fa-note-sticky"></i> Extra Notes For Students
+                            </h6>
+                            <p th:text="${assessment.extraNotesForStudent}" style="margin: 0; white-space: pre-line; color: #1f2937;"></p>
+                        </div>
+
                         <th:block th:with="
                             groupedComponents=${groupAssessmentComponents.apply(assessment)},
                             groupRubrics=${groupedComponents != null && !groupedComponents.isEmpty() && groupedComponents.values().iterator().next().containsKey('Group Assessment') ? groupedComponents.values().iterator().next().get('Group Assessment') : null},

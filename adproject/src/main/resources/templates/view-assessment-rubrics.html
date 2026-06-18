@@ -64,7 +64,18 @@
             </div>
         </div>
 
-        <div class="assessment-summary">
+        <div class="assessment-summary" th:if="${!hasLecturerAssignments and !hasStudentAssignments}">
+            <div class="summary-header" style="border-bottom: none !important; padding-bottom: 0 !important;">
+                <h3><i class="fas fa-note-sticky"></i> Extra Notes</h3>
+            </div>
+            <div style="margin-top: 16px; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 12px 14px;">
+                <div style="color: #92400e; font-size: 0.95rem;">
+                    <i class="fas fa-info-circle"></i> Please <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" style="color: #b45309; text-decoration: underline; font-weight: 600;">assign a lecturer</a> or a <a th:href="@{/admin/student-assignments/{id}(id=${assessment.id})}" style="color: #b45309; text-decoration: underline; font-weight: 600;">student</a> to this assessment first to configure extra notes.
+                </div>
+            </div>
+        </div>
+
+        <div class="assessment-summary" th:if="${hasLecturerAssignments}">
             <div class="summary-header" style="border-bottom: none !important; padding-bottom: 0 !important;">
                 <h3><i class="fas fa-note-sticky"></i> Extra Notes For Lecturers</h3>
             </div>
@@ -87,6 +98,32 @@
                  style="margin-top: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 12px 14px;">
                 <div style="font-weight: 700; color: #1f2937; margin-bottom: 6px;">Current Note</div>
                 <div th:text="${assessment.extraNotes}" style="white-space: pre-line; color: #374151;"></div>
+            </div>
+        </div>
+
+        <div class="assessment-summary" th:if="${hasStudentAssignments and !hasLecturerAssignments}">
+            <div class="summary-header" style="border-bottom: none !important; padding-bottom: 0 !important;">
+                <h3><i class="fas fa-note-sticky"></i> Extra Notes For Students</h3>
+            </div>
+            <form th:action="@{/rubrics/assessment/{id}/extra-notes-for-student(id=${assessment.id})}" method="post" style="display: flex; flex-direction: column; gap: 12px;">
+                <textarea name="extraNotesForStudent"
+                          rows="5"
+                          maxlength="2000"
+                          placeholder="Add additional instructions or reminders for students..."
+                          style="width: 100%; border: 1px solid #d1d5db; border-radius: 10px; padding: 12px; font-size: 0.95rem; resize: vertical;"
+                          th:text="${assessment.extraNotesForStudent}"></textarea>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <small style="color: #6b7280;">This note will be visible on student assessment dashboards/forms.</small>
+                    <button type="submit" class="btn btn-primary" style="background-color: #16a085; border-color: #16a085;">
+                        <i class="fas fa-save"></i> Save Student Notes
+                    </button>
+                </div>
+            </form>
+
+            <div th:if="${assessment.extraNotesForStudent != null and !#strings.isEmpty(#strings.trim(assessment.extraNotesForStudent))}"
+                 style="margin-top: 16px; background: #f9fafb; border: 1px solid #e5e7eb; border-left: 4px solid #16a085; border-radius: 8px; padding: 12px 14px;">
+                <div style="font-weight: 700; color: #1f2937; margin-bottom: 6px;">Current Note</div>
+                <div th:text="${assessment.extraNotesForStudent}" style="white-space: pre-line; color: #374151;"></div>
             </div>
         </div>
 

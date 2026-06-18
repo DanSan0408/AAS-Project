@@ -287,7 +287,9 @@ public class StudentController {
         for (Assessment assessment : assessments) {
             List<Rubric> rubrics = assessment.getRubrics();
             
-            boolean hasComponents = !rubrics.isEmpty(); 
+            boolean hasComponents = !rubrics.isEmpty() || 
+                                    (assessment.getIndividualCommentLabels() != null && !assessment.getIndividualCommentLabels().isEmpty()) ||
+                                    (assessment.getGroupCommentLabels() != null && !assessment.getGroupCommentLabels().isEmpty());
             
             if (hasComponents && isAssessmentOpen(assessment, "STUDENT")) {
                 peerSelfAssessments.add(assessment);
@@ -350,21 +352,21 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
     
-    if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
-        !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
-        redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
-        return "redirect:/student/assessments";
+    if (!evaluator.getId().equals(evaluatedStudent.getId())) {
+        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
+            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+            redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
+            return "redirect:/student/assessments";
+        }
     }
     
     List<Rubric> assessmentRubrics = assessment.getRubrics().stream()
         .filter(r -> r.getAssessmentTypes() != null && 
-                     r.getAssessmentTypes().equalsIgnoreCase("Individual Assessment"))
+                     !r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
         .collect(Collectors.toList());
     
     List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment).stream()
-        .filter(m -> "Individual Assessment".equalsIgnoreCase(m.getAssessmentType()) ||
-                     "Peer Assessment".equalsIgnoreCase(m.getAssessmentType()) ||
-                     "Self Assessment".equalsIgnoreCase(m.getAssessmentType()))
+        .filter(m -> !"Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
         .collect(Collectors.toList());
     boolean hasExistingEvaluation = !existingMarks.isEmpty();
     
@@ -375,7 +377,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
         assessment
     ).stream()
     .filter(c -> c.getRubricAssessmentType() == null || 
-                 "Individual Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                 !c.getRubricAssessmentType().equalsIgnoreCase("Group Assessment"))
     .filter(c -> c.getRubricId() == null) 
     .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
     .collect(Collectors.toList());
@@ -460,6 +462,14 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
     
+    if (!evaluator.getId().equals(evaluatedStudent.getId())) {
+        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
+            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+            redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
+            return "redirect:/student/assessments";
+        }
+    }
+    
     List<String> commentTexts = new ArrayList<>();
     List<String> commentLabels = assessment.getIndividualCommentLabels();
     
@@ -490,9 +500,7 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     
     // Delete existing marks
     List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment).stream()
-        .filter(m -> "Individual Assessment".equalsIgnoreCase(m.getAssessmentType()) ||
-                     "Peer Assessment".equalsIgnoreCase(m.getAssessmentType()) ||
-                     "Self Assessment".equalsIgnoreCase(m.getAssessmentType()))
+        .filter(m -> !"Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
         .collect(Collectors.toList());
     if (!existingMarks.isEmpty()) {
         markRepository.deleteAll(existingMarks);
@@ -623,7 +631,10 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         }
     }
     
-    if (marks.isEmpty()) {
+    boolean hasRubrics = assessment.getRubrics().stream()
+        .anyMatch(r -> r.getAssessmentTypes() != null && !r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"));
+        
+    if (hasRubrics && marks.isEmpty()) {
         redirectAttributes.addFlashAttribute("error", 
             "Please select at least one rating before submitting!");
         return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
