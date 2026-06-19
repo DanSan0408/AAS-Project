@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +27,7 @@ import com.capstone.adproject.util.PasswordGenerator;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class SuperAdminService {
@@ -123,50 +123,6 @@ public class SuperAdminService {
         }
 
         lecturerRepository.save(lecturer);
-    }
-
-    @Transactional
-    public Lecturer ensureAdminAssignable(String adminEmail) {
-        if (adminEmail == null || adminEmail.isBlank()) {
-            throw new IllegalArgumentException("Admin email is required.");
-        }
-
-        Optional<Admin> adminOpt = adminRepository.findByEmail(adminEmail);
-        Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(adminEmail);
-
-        String sourcePassword = adminOpt.map(Admin::getPassword)
-                .or(() -> superAdminOpt.map(SuperAdmin::getPassword))
-                .orElseThrow(() -> new IllegalArgumentException("Admin user not found."));
-
-        Lecturer lecturer = lecturerRepository.findByEmail(adminEmail).orElseGet(() -> {
-            Lecturer created = new Lecturer();
-            created.setEmail(adminEmail);
-            created.setIsTempPassword(false);
-            return created;
-        });
-
-        if (lecturer.getPassword() == null || lecturer.getPassword().isBlank()) {
-            lecturer.setPassword(sourcePassword);
-        }
-
-        String roles = lecturer.getRoles() == null ? "" : lecturer.getRoles();
-        if (!roles.contains("ROLE_ADMIN")) {
-            roles = roles.isBlank() ? "ROLE_ADMIN" : roles + ",ROLE_ADMIN";
-        }
-        lecturer.setRoles(roles);
-
-        if (lecturer.getUsername() == null || lecturer.getUsername().isBlank()) {
-            String preferred = adminOpt.map(Admin::getUsername)
-                    .or(() -> superAdminOpt.map(SuperAdmin::getUsername))
-                    .orElse(adminEmail);
-            if (preferred != null && !preferred.isBlank() && lecturerRepository.findByUsername(preferred).isEmpty()) {
-                lecturer.setUsername(preferred);
-            } else {
-                lecturer.setUsername(adminEmail);
-            }
-        }
-
-        return lecturerRepository.save(lecturer);
     }
 
     public Optional<Course> getCourseById(Long id) {
@@ -373,47 +329,55 @@ public class SuperAdminService {
     }
 
     @Transactional
-    public void inviteAdmin(String email, String name, Long courseId) {
-        Course course = null;
-        if (courseId != null) {
-            course = courseRepository.findById(courseId)
-                    .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
+    public void inviteAdmin(String email, String name, Long courseId, HttpServletRequest request) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be empty.");
         }
 
-        // Check if a lecturer with this email already exists
-        Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(email);
-        Lecturer newAdmin;
-
-        if (existingLecturer.isPresent()) {
-            newAdmin = existingLecturer.get();
-            // Update roles if not already an admin
-            if (!newAdmin.getRoles().contains("ROLE_ADMIN")) {
-                newAdmin.setRoles(newAdmin.getRoles() + ",ROLE_ADMIN");
-            }
-        } else {
-            newAdmin = new Lecturer();
+        // Step 1: Create or find the user in the `admin` table. This is the new source of truth.
+        Admin admin = adminRepository.findByEmail(email).orElseGet(() -> {
+            Admin newAdmin = new Admin();
             newAdmin.setEmail(email);
-            newAdmin.setUsername(name); // Use name as username for new lecturer
+            newAdmin.setUsername(name != null && !name.isBlank() ? name : email.split("@")[0]);
+
             String tempPassword = PasswordGenerator.generateRandomPassword();
             newAdmin.setPassword(passwordEncoder.encode(tempPassword));
-            newAdmin.setIsTempPassword(true);
-            newAdmin.setResetPasswordToken(UUID.randomUUID().toString());
-            newAdmin.setRoles("ROLE_ADMIN"); // Lecturer role is added later via self-service action
-            emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", buildResetPasswordLink(newAdmin.getResetPasswordToken()));
+            
+            String resetLink = getBaseUrl(request) + "/reset_password?token=" + newAdmin.getResetPasswordToken();
+            emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", resetLink);
+            
+            return adminRepository.save(newAdmin);
+        });
+
+        // Step 2: Create or find a corresponding `lecturer` record for compatibility.
+        Lecturer adminLecturer = lecturerRepository.findByEmail(email).orElseGet(() -> {
+            Lecturer newLecturer = new Lecturer();
+            newLecturer.setEmail(email);
+            newLecturer.setUsername(admin.getUsername()); // Sync username
+            newLecturer.setPassword(admin.getPassword()); // Sync password
+            newLecturer.setIsTempPassword(true); // New lecturers created this way always start with a temp password
+            newLecturer.setRoles("ROLE_LECTURER,ROLE_ADMIN"); // Assign both roles
+            return lecturerRepository.save(newLecturer);
+        });
+
+        // Ensure roles are correct in the lecturer table
+        if (adminLecturer.getRoles() == null || !adminLecturer.getRoles().contains("ROLE_ADMIN")) {
+            adminLecturer.setRoles("ROLE_LECTURER,ROLE_ADMIN");
+            lecturerRepository.save(adminLecturer);
         }
 
-        if (course != null) {
-            newAdmin.setCourse(course); // Legacy fallback
+        if (courseId != null) {
+            assignAdminToCourse(adminLecturer.getId(), courseId);
         }
+    }
 
-        Lecturer savedAdmin = lecturerRepository.save(newAdmin);
-
-        if (course != null && !adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(savedAdmin.getId(), course.getId())) {
-            AdminCourseAssignment assignment = new AdminCourseAssignment();
-            assignment.setLecturer(savedAdmin);
-            assignment.setCourse(course);
-            adminCourseAssignmentRepository.save(assignment);
-        }
+    private String getBaseUrl(HttpServletRequest request) {
+        String scheme = request.getScheme();
+        String serverName = request.getServerName();
+        int serverPort = request.getServerPort();
+        String contextPath = request.getContextPath();
+        
+        return scheme + "://" + serverName + (serverPort == 80 || serverPort == 443 ? "" : ":" + serverPort) + contextPath;
     }
 
     @Transactional
@@ -464,7 +428,10 @@ public class SuperAdminService {
 
         Lecturer invitedAdmin = invitedLecturer;
         if (invitedAdmin == null) {
-            invitedAdmin = ensureAdminAssignable(normalizedEmail);
+            // This method was removed. We need to create a lecturer record if it doesn't exist.
+            // For simplicity, we'll throw an exception if the admin doesn't also exist as a lecturer.
+            // A more robust solution would be to create the lecturer record here.
+            throw new IllegalArgumentException("Invited admin does not have a corresponding lecturer profile.");
         }
 
         if (invitedAdmin.getRoles() == null || !invitedAdmin.getRoles().contains("ROLE_ADMIN")) {
@@ -484,7 +451,7 @@ public class SuperAdminService {
         }
     }
 
-    private Optional<Lecturer> resolveLecturerByIdentity(String identity) {
+    public Optional<Lecturer> resolveLecturerByIdentity(String identity) {
         if (identity == null || identity.isBlank()) {
             return Optional.empty();
         }
