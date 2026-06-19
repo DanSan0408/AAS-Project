@@ -1,5 +1,6 @@
 package com.capstone.adproject.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -24,6 +25,14 @@ public class StudentAssessmentAssignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "self_assessment")
+    private Boolean selfAssessment = false;
+
+    @Column(name = "peer_assessment")
+    private Boolean peerAssessment = false;
+
+    @Column(name = "group_assessment")
+    private Boolean groupAssessment = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assessment_id", nullable = false)
@@ -55,5 +64,29 @@ public class StudentAssessmentAssignment {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public Boolean getSelfAssessment() {
+        return selfAssessment;
+    }
+
+    public void setSelfAssessment(Boolean selfAssessment) {
+        this.selfAssessment = selfAssessment;
+    }
+
+    public Boolean getPeerAssessment() {
+        return peerAssessment;
+    }
+
+    public void setPeerAssessment(Boolean peerAssessment) {
+        this.peerAssessment = peerAssessment;
+    }
+
+    public Boolean getGroupAssessment() {
+        return groupAssessment;
+    }
+
+    public void setGroupAssessment(Boolean groupAssessment) {
+        this.groupAssessment = groupAssessment;
     }
 }

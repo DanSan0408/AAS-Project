@@ -27,6 +27,7 @@ import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentAssessmentAssignment;
 import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
@@ -134,6 +135,15 @@ public class StudentController {
 
     private boolean isStudentAssignedToAssessment(Student student, Assessment assessment) {
         return studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student);
+    }
+
+    private StudentAssessmentAssignment getAssignmentForStudent(Student student, Assessment assessment) {
+        if (assessment == null || student == null) return null;
+        List<StudentAssessmentAssignment> assignments = studentAssessmentAssignmentRepository.findByAssessment(assessment);
+        return assignments.stream()
+            .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
+            .findFirst()
+            .orElse(null);
     }
 
     private List<Student> getGroupmates(Student student) {
@@ -244,6 +254,9 @@ public class StudentController {
         
         Map<Long, Boolean> assessmentAccessMap = new HashMap<>();
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
+        Map<Long, Boolean> selfAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
         for (Assessment assessment : allAssessments) {
             boolean isOpen = isAssessmentOpen(assessment, "STUDENT");
             assessmentAccessMap.put(assessment.getId(), isOpen);
@@ -251,6 +264,13 @@ public class StudentController {
             Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
             if (deadline != null) {
                 assessmentDeadlineMap.put(assessment.getId(), deadline);
+            }
+            
+            StudentAssessmentAssignment assignment = getAssignmentForStudent(currentStudent, assessment);
+            if (assignment != null) {
+                selfAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getSelfAssessment()));
+                peerAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getPeerAssessment()));
+                groupAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getGroupAssessment()));
             }
         }
         
@@ -261,6 +281,9 @@ public class StudentController {
         model.addAttribute("hasGroup", hasGroup);
         model.addAttribute("assessmentAccessMap", assessmentAccessMap);
         model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
+        model.addAttribute("selfAssessmentMap", selfAssessmentMap);
+        model.addAttribute("peerAssessmentMap", peerAssessmentMap);
+        model.addAttribute("groupAssessmentMap", groupAssessmentMap);
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
         model.addAttribute("isRubricType", isRubricType);
         
@@ -306,13 +329,26 @@ public class StudentController {
         model.addAttribute("teamMembers", teamMembers);
         
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
+        Map<Long, Boolean> selfAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
         for (Assessment assessment : peerSelfAssessments) {
             Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
             if (deadline != null) {
                 assessmentDeadlineMap.put(assessment.getId(), deadline);
             }
+            
+            StudentAssessmentAssignment assignment = getAssignmentForStudent(currentStudent, assessment);
+            if (assignment != null) {
+                selfAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getSelfAssessment()));
+                peerAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getPeerAssessment()));
+                groupAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getGroupAssessment()));
+            }
         }
         model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
+        model.addAttribute("selfAssessmentMap", selfAssessmentMap);
+        model.addAttribute("peerAssessmentMap", peerAssessmentMap);
+        model.addAttribute("groupAssessmentMap", groupAssessmentMap);
         
         return "student_assessments";
     }
@@ -344,13 +380,24 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
         redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
     
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+            
+    boolean isSelfAssessmentCheck = evaluator.getId().equals(evaluatedStudent.getId());
+    if (isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getSelfAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform self-assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getPeerAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform peer assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
     
     if (!evaluator.getId().equals(evaluatedStudent.getId())) {
         if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
@@ -454,13 +501,24 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
         redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
         return "redirect:/student/assessments";
     }
     
     Student evaluatedStudent = studentRepository.findById(studentId)
             .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+            
+    boolean isSelfAssessmentCheck = evaluator.getId().equals(evaluatedStudent.getId());
+    if (isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getSelfAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform self-assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getPeerAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform peer assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
     
     if (!evaluator.getId().equals(evaluatedStudent.getId())) {
         if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
@@ -732,8 +790,13 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
         redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!Boolean.TRUE.equals(assignment.getGroupAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform team/group assessment for this assessment.");
         return "redirect:/student/assessments";
     }
     
@@ -843,8 +906,13 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isStudentAssignedToAssessment(evaluator, assessment)) {
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
         redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!Boolean.TRUE.equals(assignment.getGroupAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform team/group assessment for this assessment.");
         return "redirect:/student/assessments";
     }
     
