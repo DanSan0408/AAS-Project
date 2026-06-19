@@ -1,0 +1,10 @@
+Suite/Test/Step Name,Browser,Description,Tag,Start time,End time,Duration,Status
+TS-01,Chrome 149.0.7827.116,Authentication & Profile Management,,18-06-2026 18:41:43,18-06-2026 18:41:53,9.814s,PASSED
+,,,,,,,
+Test Cases/TC01,Chrome 149.0.7827.116,User Login With Valid Credentials,,18-06-2026 18:41:43,18-06-2026 18:41:52,9.057s,PASSED
+openBrowser(null),Chrome 149.0.7827.116,,,18-06-2026 18:41:44,18-06-2026 18:41:48,4.155s,PASSED
+"navigateToUrl(""https://www.eduinnovax.com/login"")",Chrome 149.0.7827.116,,,18-06-2026 18:41:48,18-06-2026 18:41:49,0.536s,PASSED
+"setText(findTestObject(""Page_Login - UTM AAS/input_your.emailexample.com""), ""san.dan0408@gmail.com"")",Chrome 149.0.7827.116,,,18-06-2026 18:41:49,18-06-2026 18:41:50,1.303s,PASSED
+"setEncryptedText(findTestObject(""Page_Login - UTM AAS/input_Enter your password""), ""iGDxf8hSRT4="")",Chrome 149.0.7827.116,,,18-06-2026 18:41:50,18-06-2026 18:41:51,0.518s,PASSED
+"click(findTestObject(""Page_Login - UTM AAS/span_Remember me""))",Chrome 149.0.7827.116,,,18-06-2026 18:41:51,18-06-2026 18:41:51,0.486s,PASSED
+"click(findTestObject(""Page_Login - UTM AAS/button_Login""))",Chrome 149.0.7827.116,,,18-06-2026 18:41:51,18-06-2026 18:41:52,1.154s,PASSED
