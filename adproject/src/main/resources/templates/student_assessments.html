@@ -100,63 +100,72 @@
                             </span>
                         </div>
 
-                        <div class="evaluation-grid">
-                            <h4>Evaluate Your Team Members:</h4>
-                            
-                            <div class="evaluation-card self-assessment">
-                                <div class="evaluation-header">
-                                    <h5>Self Assessment</h5>
-                                    <span class="assessment-type-badge self">SELF</span>
-                                </div>
-                                <div class="evaluation-body">
-                                    <div class="member-eval">
-                                        <span class="member-name">
-                                            <i class="fas fa-user"></i> 
-                                            <span th:text="${currentStudent.email}">Your Email</span>
-                                        </span>
-                                        <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${currentStudent.id})}" 
-                                           class="btn btn-evaluate btn-self">
-                                            <i class="fas fa-edit"></i> Evaluate Yourself
-                                        </a>
+                        <th:block th:with="
+                            hasGroupRubric=${assessment.rubrics != null and !assessment.rubrics.isEmpty() and assessment.rubrics.^[assessmentTypes == 'Group Assessment'] != null},
+                            hasGroupComments=${assessment.groupCommentLabels != null and !assessment.groupCommentLabels.isEmpty()},
+                            hasIndivRubric=${assessment.rubrics != null and !assessment.rubrics.isEmpty() and assessment.rubrics.^[assessmentTypes == 'Individual Assessment'] != null},
+                            hasIndivComments=${assessment.individualCommentLabels != null and !assessment.individualCommentLabels.isEmpty()},
+                            hasGroupContent=${hasGroupRubric or hasGroupComments},
+                            hasIndivContent=${hasIndivRubric or hasIndivComments}
+                        ">
+                            <div class="evaluation-grid">
+                                <h4>Evaluate Your Team Members:</h4>
+                                
+                                <div class="evaluation-card self-assessment" th:if="${selfAssessmentMap.get(assessment.id) and hasIndivContent}">
+                                    <div class="evaluation-header">
+                                        <h5>Self Assessment</h5>
+                                        <span class="assessment-type-badge self">SELF</span>
+                                    </div>
+                                    <div class="evaluation-body">
+                                        <div class="member-eval">
+                                            <span class="member-name">
+                                                <i class="fas fa-user"></i> 
+                                                <span th:text="${currentStudent.email}">Your Email</span>
+                                            </span>
+                                            <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${currentStudent.id})}" 
+                                               class="btn btn-evaluate btn-self">
+                                                <i class="fas fa-edit"></i> Evaluate Yourself
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="evaluation-card peer-assessment">
-                                <div class="evaluation-header">
-                                    <h5>Peer Assessments</h5>
-                                    <span class="assessment-type-badge peer">PEER</span>
+                                <div class="evaluation-card peer-assessment" th:if="${peerAssessmentMap.get(assessment.id) and hasIndivContent}">
+                                    <div class="evaluation-header">
+                                        <h5>Peer Assessments</h5>
+                                        <span class="assessment-type-badge peer">PEER</span>
+                                    </div>
+                                    <div class="evaluation-body">
+                                        <div th:each="member : ${teamMembers}" 
+                                             th:if="${member.id != currentStudent.id}"
+                                             class="member-eval">
+                                            <span class="member-name">
+                                                <i class="fas fa-user"></i> 
+                                                <span th:text="${member.email}">Member Email</span>
+                                            </span>
+                                            <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${member.id})}" 
+                                               class="btn btn-evaluate btn-peer">
+                                                <i class="fas fa-user-edit"></i> Evaluate
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="evaluation-body">
-                                    <div th:each="member : ${teamMembers}" 
-                                         th:if="${member.id != currentStudent.id}"
-                                         class="member-eval">
-                                        <span class="member-name">
-                                            <i class="fas fa-user"></i> 
-                                            <span th:text="${member.email}">Member Email</span>
-                                        </span>
-                                        <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${member.id})}" 
-                                           class="btn btn-evaluate btn-peer">
-                                            <i class="fas fa-user-edit"></i> Evaluate
+                                
+                                <div class="evaluation-card team-assessment" th:if="${groupAssessmentMap.get(assessment.id) and hasGroupContent}">
+                                    <div class="evaluation-header">
+                                        <h5>Groupmate Evaluation</h5>
+                                        <span class="assessment-type-badge team">TEAM</span>
+                                    </div>
+                                    <div class="evaluation-body">
+                                        <p>Evaluate your fellow groupmates using Group Assessment rubrics. Your submitted marks and comments will be applied to each groupmate, not to yourself.</p>
+                                        <a th:href="@{/student/assessment/{assessmentId}/team-evaluate(assessmentId=${assessment.id})}" 
+                                           class="btn btn-evaluate">
+                                            <i class="fas fa-users"></i> Evaluate Groupmates
                                         </a>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="evaluation-card team-assessment">
-                                <div class="evaluation-header">
-                                    <h5>Groupmate Evaluation</h5>
-                                    <span class="assessment-type-badge team">TEAM</span>
-                                </div>
-                                <div class="evaluation-body">
-                                    <p>Evaluate your fellow groupmates using Group Assessment rubrics. Your submitted marks and comments will be applied to each groupmate, not to yourself.</p>
-                                    <a th:href="@{/student/assessment/{assessmentId}/team-evaluate(assessmentId=${assessment.id})}" 
-                                       class="btn btn-evaluate">
-                                        <i class="fas fa-users"></i> Evaluate Groupmates
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        </th:block>
                     </div>
                 </div>
             </div>

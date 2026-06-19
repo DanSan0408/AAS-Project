@@ -878,4 +878,23 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         }
         return lecturerRepository.findByEmailContainingIgnoreCase(query);
     }
+    
+    @Transactional
+    public void ensureAdminUserExists(Lecturer lecturer) {
+        if (lecturer == null || lecturer.getEmail() == null || lecturer.getEmail().isBlank()) {
+            return;
+        }
+
+        String normalizedEmail = lecturer.getEmail().trim().toLowerCase();
+
+        // Check if an admin record already exists. If not, create one.
+        adminRepository.findByEmail(normalizedEmail).orElseGet(() -> {
+            Admin newAdmin = new Admin();
+            newAdmin.setEmail(normalizedEmail);
+            newAdmin.setUsername(lecturer.getUsername());
+            newAdmin.setPassword(lecturer.getPassword()); // Sync password
+            newAdmin.setResetPasswordToken(lecturer.getResetPasswordToken());
+            return adminRepository.save(newAdmin);
+        });
+    }
 }

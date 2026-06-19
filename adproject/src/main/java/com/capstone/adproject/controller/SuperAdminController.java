@@ -16,6 +16,8 @@ import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.service.SuperAdminService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @Controller
 @RequestMapping("/superadmin")
 public class SuperAdminController {
@@ -75,7 +77,9 @@ public class SuperAdminController {
     public String addCourse(@ModelAttribute Course course, RedirectAttributes redirectAttributes) {
         try {
             String username = getLoggedInUsername();
-            Lecturer lecturer = superAdminService.ensureAdminAssignable(username);
+            // The ensureAdminAssignable method was removed. We now find the lecturer record directly.
+            Lecturer lecturer = superAdminService.resolveLecturerByIdentity(username)
+                .orElseThrow(() -> new IllegalStateException("Could not find a lecturer profile for the current super admin."));
             course.setCreatedBy(lecturer);
             Course savedCourse = superAdminService.saveCourse(course);
             
@@ -137,9 +141,10 @@ public class SuperAdminController {
     public String inviteAdmin(@RequestParam String email,
                               @RequestParam String name,
                               @RequestParam(required = false) Long courseId,
+                              HttpServletRequest request,
                               RedirectAttributes redirectAttributes) {
         try {
-            superAdminService.inviteAdmin(email, name, courseId);
+            superAdminService.inviteAdmin(email, name, courseId, request);
             redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error inviting admin: " + e.getMessage());
