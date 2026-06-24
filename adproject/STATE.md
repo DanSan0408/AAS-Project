@@ -4,6 +4,23 @@
 
 ---
 
+## Current Status: Granular Student Assessment Assignment
+**Status**: IMPLEMENTED
+
+### Summary
+- Upgraded the student assessment assignment feature to allow granular permission control.
+- Admins can now explicitly assign Self-Assessment, Peer Assessment, and Group Assessment boundaries for each student rather than granting blanket access to the entire assessment.
+- Updated the backend entity (`StudentAssessmentAssignment`) with distinct boolean flags (`selfAssessment`, `peerAssessment`, `groupAssessment`).
+- The Student Dashboard (`student_assessments.html`) conditionally renders evaluation cards (Self, Peer, Team) based on both the student's specific permissions and the presence of corresponding rubric/comment configurations in the assessment.
+- Hardened `StudentController` endpoints to strictly enforce these assignment boundaries during both evaluation rendering and final form submission.
+
+### Files Modified
+- `StudentAssessmentAssignment.java`
+- `AdminController.java`, `admin_assign_students.html`
+- `StudentController.java`, `student_assessments.html`
+
+---
+
 ## Current Status: Admin Progress Tracking Dashboard
 **Status**: COMPLETE
 

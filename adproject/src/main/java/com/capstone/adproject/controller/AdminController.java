@@ -67,8 +67,6 @@ import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.SuperAdminService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -496,15 +494,28 @@ public class AdminController {
         }
 
         List<Student> allStudents = adminService.getAllStudents();
-        Set<Long> assignedStudentIds = studentAssessmentAssignmentRepository.findByAssessment(assessment).stream()
-            .map(StudentAssessmentAssignment::getStudent)
-            .filter(s -> s != null && s.getId() != null)
-            .map(Student::getId)
+        List<StudentAssessmentAssignment> assignments = studentAssessmentAssignmentRepository.findByAssessment(assessment);
+
+        Set<Long> selfAssignedStudentIds = assignments.stream()
+            .filter(a -> a.getStudent() != null && a.getStudent().getId() != null && Boolean.TRUE.equals(a.getSelfAssessment()))
+            .map(a -> a.getStudent().getId())
+            .collect(Collectors.toSet());
+            
+        Set<Long> peerAssignedStudentIds = assignments.stream()
+            .filter(a -> a.getStudent() != null && a.getStudent().getId() != null && Boolean.TRUE.equals(a.getPeerAssessment()))
+            .map(a -> a.getStudent().getId())
+            .collect(Collectors.toSet());
+
+        Set<Long> groupAssignedStudentIds = assignments.stream()
+            .filter(a -> a.getStudent() != null && a.getStudent().getId() != null && Boolean.TRUE.equals(a.getGroupAssessment()))
+            .map(a -> a.getStudent().getId())
             .collect(Collectors.toSet());
 
         model.addAttribute("assessment", assessment);
         model.addAttribute("allStudents", allStudents);
-        model.addAttribute("assignedStudentIds", assignedStudentIds);
+        model.addAttribute("selfAssignedStudentIds", selfAssignedStudentIds);
+        model.addAttribute("peerAssignedStudentIds", peerAssignedStudentIds);
+        model.addAttribute("groupAssignedStudentIds", groupAssignedStudentIds);
         model.addAttribute("adminUsername", getLoggedInUsername());
 
         return "admin_assign_students";
@@ -514,7 +525,9 @@ public class AdminController {
     @Transactional
     public String saveStudentAssignments(
             @PathVariable("assessmentId") Long assessmentId,
-            @RequestParam(value = "studentIds", required = false) List<Long> studentIds,
+            @RequestParam(value = "selfStudentIds", required = false) List<Long> selfStudentIds,
+            @RequestParam(value = "peerStudentIds", required = false) List<Long> peerStudentIds,
+            @RequestParam(value = "groupStudentIds", required = false) List<Long> groupStudentIds,
             RedirectAttributes redirectAttributes) {
         try {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
@@ -530,10 +543,15 @@ public class AdminController {
             studentAssessmentAssignmentRepository.deleteByAssessment(assessment);
             studentAssessmentAssignmentRepository.flush();
 
-            if (studentIds != null && !studentIds.isEmpty()) {
+            Set<Long> allIds = new HashSet<>();
+            if (selfStudentIds != null) allIds.addAll(selfStudentIds);
+            if (peerStudentIds != null) allIds.addAll(peerStudentIds);
+            if (groupStudentIds != null) allIds.addAll(groupStudentIds);
+
+            if (!allIds.isEmpty()) {
                 List<StudentAssessmentAssignment> assignmentsToSave = new ArrayList<>();
 
-                for (Long studentId : new HashSet<>(studentIds)) {
+                for (Long studentId : allIds) {
                     Student student = adminService.findStudentById(studentId)
                         .orElseThrow(() -> new RuntimeException("Student not found: " + studentId));
                     if (!ownsStudent(student)) {
@@ -543,6 +561,9 @@ public class AdminController {
                     StudentAssessmentAssignment assignment = new StudentAssessmentAssignment();
                     assignment.setAssessment(assessment);
                     assignment.setStudent(student);
+                    assignment.setSelfAssessment(selfStudentIds != null && selfStudentIds.contains(studentId));
+                    assignment.setPeerAssessment(peerStudentIds != null && peerStudentIds.contains(studentId));
+                    assignment.setGroupAssessment(groupStudentIds != null && groupStudentIds.contains(studentId));
                     assignmentsToSave.add(assignment);
                 }
 
@@ -1105,7 +1126,9 @@ public class AdminController {
         
         try {
             String username = getLoggedInUsername();
-            Lecturer lecturer = superAdminService.ensureAdminAssignable(username);
+            // The ensureAdminAssignable method was removed. We now find the lecturer record directly.
+            Lecturer lecturer = superAdminService.resolveLecturerByIdentity(username)
+                .orElseThrow(() -> new IllegalStateException("Could not find a lecturer profile for the current admin."));
             course.setCreatedBy(lecturer);
             
             Course savedCourse = superAdminService.saveCourse(course);
@@ -1340,6 +1363,12 @@ public String saveLecturer(
             }
         }
         
+        // If the lecturer has an admin role, ensure they exist in the admin table too.
+        if (lecturer.getRoles() != null && lecturer.getRoles().contains("ROLE_ADMIN")) {
+            // This method will find an existing admin or create a new one if not present.
+            adminService.ensureAdminUserExists(lecturer);
+        }
+
         adminService.saveLecturer(lecturer, request);
         
         if (isUpdate) {
