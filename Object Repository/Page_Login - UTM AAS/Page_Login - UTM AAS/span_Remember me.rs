@@ -3,19 +3,15 @@
    <description></description>
    <name>span_Remember me</name>
    <tag></tag>
-   <elementGuidId>8eabac97-72aa-42b6-8c72-bb7aee05b84d</elementGuidId>
+   <elementGuidId>dee658bf-e4ef-4807-aed8-fc9576dc385f</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[(text() = 'Remember me' or . = 'Remember me')]</value>
+         <key>XPATH</key>
+         <value>//span</value>
       </entry>
       <entry>
          <key>CSS</key>
          <value>span</value>
-      </entry>
-      <entry>
-         <key>XPATH</key>
-         <value>//span</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
@@ -33,7 +29,7 @@
       <name>tag</name>
       <type>Main</type>
       <value>span</value>
-      <webElementGuid>e2e6ea18-1650-4f6e-b310-c39540434989</webElementGuid>
+      <webElementGuid>dd5005d0-e73d-4bc7-ad51-a6332e64146a</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
@@ -41,7 +37,7 @@
       <name>text</name>
       <type>Main</type>
       <value>Remember me</value>
-      <webElementGuid>fb70bfd2-c3cf-48ec-afcb-64fd4df637ef</webElementGuid>
+      <webElementGuid>06a91fbe-2020-4dcc-9b8b-2f81d6a07177</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
@@ -49,7 +45,7 @@
       <name>parent</name>
       <type>Main</type>
       <value>md5.v1-ca0085844b5d46d487a38777c3ec404b</value>
-      <webElementGuid>640436ea-bb67-4141-88dd-38da62be8830</webElementGuid>
+      <webElementGuid>4329ef9d-e0b0-4747-8b9d-04b775d381f9</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
@@ -57,7 +53,7 @@
       <name>xpath</name>
       <type>Main</type>
       <value>//span</value>
-      <webElementGuid>ce4c785f-b09b-4fb3-825e-20c4805498f6</webElementGuid>
+      <webElementGuid>b39567f2-575b-4deb-b49b-5992b54e337e</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
@@ -65,7 +61,7 @@
       <name>xpath:attributes</name>
       <type>Main</type>
       <value>//span</value>
-      <webElementGuid>de234812-8898-4f9c-ba95-e8e1279f2287</webElementGuid>
+      <webElementGuid>b5d7fc1c-ce00-423f-892d-aa229988e288</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
@@ -73,6 +69,6 @@
       <name>xpath:customAttributes</name>
       <type>Main</type>
       <value>//span[(text() = 'Remember me' or . = 'Remember me')]</value>
-      <webElementGuid>312e2aa8-2200-4dab-8a03-943821c4d34f</webElementGuid>
+      <webElementGuid>dc947371-494b-4546-906c-6ff9ab3af7ce</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>

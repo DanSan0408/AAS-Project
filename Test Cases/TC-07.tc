@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Admin Interactive Dashboard</description>
+   <name>TC-07</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>132b961c-6525-4189-9e30-f9b8ecef2a21</testCaseGuid>
+</TestCaseEntity>

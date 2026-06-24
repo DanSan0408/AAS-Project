@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Create Assessment Rubric with Sub-Rubrics and Ratings</description>
+   <name>TC-11</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>1dd93223-daf9-4489-a724-0aa95a9aba77</testCaseGuid>
+</TestCaseEntity>

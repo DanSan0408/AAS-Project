@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>User Profile Management</description>
+   <name>TC-05</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>791bab0b-9a45-48d6-b9d4-fabd4179a999</testCaseGuid>
+</TestCaseEntity>
