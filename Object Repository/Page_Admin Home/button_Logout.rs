@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WebElementEntity>
    <description></description>
-   <name>button_Login</name>
+   <name>button_Logout</name>
    <tag></tag>
-   <elementGuidId>b8c09dfc-9edc-4d3e-ac01-232ecee917ad</elementGuidId>
+   <elementGuidId>c3e8ddcf-7db7-4bc7-bd4c-2e49e941a6d6</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
+         <key>XPATH</key>
+         <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' logout-btn ')]</value>
       </entry>
       <entry>
          <key>CSS</key>
-         <value>.auth-btn</value>
+         <value>.logout-btn</value>
       </entry>
       <entry>
-         <key>XPATH</key>
-         <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
+         <key>BASIC</key>
+         <value>//*[@type = 'submit' and (text() = 'Logout' or . = 'Logout')]</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
    <smartLocatorCollection>
       <entry>
          <key>SMART_LOCATOR</key>
-         <value>internal:role=button[name=&quot;Login&quot;i]</value>
+         <value>internal:role=button[name=&quot;Logout&quot;i]</value>
       </entry>
    </smartLocatorCollection>
    <smartLocatorEnabled>false</smartLocatorEnabled>
@@ -33,7 +33,7 @@
       <name>tag</name>
       <type>Main</type>
       <value>button</value>
-      <webElementGuid>a96eb0ad-55c0-40f3-ac02-b04f2dd7770c</webElementGuid>
+      <webElementGuid>c8530832-8f1f-4a76-b040-c398e15816f9</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
@@ -41,54 +41,54 @@
       <name>type</name>
       <type>Main</type>
       <value>submit</value>
-      <webElementGuid>4499df18-cb5d-4f12-b96e-948e6daf0043</webElementGuid>
+      <webElementGuid>c2b6e870-57ff-4661-b9a5-ce45ac9fec41</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>class</name>
       <type>Main</type>
-      <value>auth-btn btn-primary-custom</value>
-      <webElementGuid>b11d0043-b4fb-40fd-995b-69a35f8c55da</webElementGuid>
+      <value>sidebar-link logout-btn</value>
+      <webElementGuid>7cf4c866-4c7b-42e3-be14-8b563b81b482</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
       <name>text</name>
       <type>Main</type>
-      <value>Login</value>
-      <webElementGuid>b84b7000-22cb-4f99-b57d-a9d1a05d246b</webElementGuid>
+      <value>Logout</value>
+      <webElementGuid>c092f949-777b-474d-8217-112f9966bc74</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>parent</name>
       <type>Main</type>
-      <value>md5.v1-facd85c7db671691b97df0c4a3d9810f</value>
-      <webElementGuid>43da5e37-bddb-4506-9855-e8c0d1ce2be8</webElementGuid>
+      <value>md5.v1-b221e2f3cf0648766a68130503ed5e75</value>
+      <webElementGuid>d7106a86-7232-41d2-9d09-1a597050f061</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>e1b1e9f4-d8b2-4442-ae56-f6e5f6f5ffd0</webElementGuid>
+      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' logout-btn ')]</value>
+      <webElementGuid>62dc6037-2e6a-4ce9-80be-b7cf1cabcef2</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:attributes</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>a2875500-cef8-4359-9b35-c2d50fc39db4</webElementGuid>
+      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' logout-btn ')]</value>
+      <webElementGuid>f074bc4a-0efe-40c6-8b64-d8ff8b7db11a</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:customAttributes</name>
       <type>Main</type>
-      <value>//button[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
-      <webElementGuid>71abe091-8b8e-4ba7-b8c5-38af2c93daa3</webElementGuid>
+      <value>//button[@type = 'submit' and (text() = 'Logout' or . = 'Logout')]</value>
+      <webElementGuid>28cffd30-d765-4d6f-b23f-627c7f33efc1</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>

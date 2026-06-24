@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Password Recovery (Forgot Password)</description>
+   <name>TC-04</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>a82afbf2-0dcc-402c-96e1-f4a6639a3802</testCaseGuid>
+</TestCaseEntity>
