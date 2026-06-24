@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Manual Group Assignment</description>
+   <name>TC-10</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>f0acb531-0193-4737-afa7-e093b011f5f0</testCaseGuid>
+</TestCaseEntity>

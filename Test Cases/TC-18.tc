@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>View Assessment Data and Overall Results</description>
+   <name>TC-18</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>78113cba-e594-4020-9a85-6df9d26eddd1</testCaseGuid>
+</TestCaseEntity>

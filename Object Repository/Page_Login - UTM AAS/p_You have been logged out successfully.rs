@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WebElementEntity>
    <description></description>
-   <name>span_Remember me</name>
+   <name>p_You have been logged out successfully</name>
    <tag></tag>
-   <elementGuidId>8eabac97-72aa-42b6-8c72-bb7aee05b84d</elementGuidId>
+   <elementGuidId>1f9532c7-9761-43d8-a0c4-fe2faa588515</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[(text() = 'Remember me' or . = 'Remember me')]</value>
+         <key>XPATH</key>
+         <value>//p</value>
       </entry>
       <entry>
          <key>CSS</key>
-         <value>span</value>
+         <value>p</value>
       </entry>
       <entry>
-         <key>XPATH</key>
-         <value>//span</value>
+         <key>BASIC</key>
+         <value>//*[(text() = 'You have been logged out successfully.' or . = 'You have been logged out successfully.')]</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
    <smartLocatorCollection>
       <entry>
          <key>SMART_LOCATOR</key>
-         <value>internal:text=&quot;Remember me&quot;i</value>
+         <value>internal:text=&quot;You have been logged out successfully.&quot;i</value>
       </entry>
    </smartLocatorCollection>
    <smartLocatorEnabled>false</smartLocatorEnabled>
@@ -32,47 +32,47 @@
       <matchCondition>equals</matchCondition>
       <name>tag</name>
       <type>Main</type>
-      <value>span</value>
-      <webElementGuid>e2e6ea18-1650-4f6e-b310-c39540434989</webElementGuid>
+      <value>p</value>
+      <webElementGuid>7653f456-cd65-4716-9dc8-4fd038eb83f3</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
       <name>text</name>
       <type>Main</type>
-      <value>Remember me</value>
-      <webElementGuid>fb70bfd2-c3cf-48ec-afcb-64fd4df637ef</webElementGuid>
+      <value>You have been logged out successfully.</value>
+      <webElementGuid>22aeb114-7f35-4e4a-97b1-0b18b59bea35</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>parent</name>
       <type>Main</type>
-      <value>md5.v1-ca0085844b5d46d487a38777c3ec404b</value>
-      <webElementGuid>640436ea-bb67-4141-88dd-38da62be8830</webElementGuid>
+      <value>md5.v1-1fde3fa9442d03ace9f8a7d69abc3cdd</value>
+      <webElementGuid>1d358b98-70be-4b25-a137-f50f6e9df186</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath</name>
       <type>Main</type>
-      <value>//span</value>
-      <webElementGuid>ce4c785f-b09b-4fb3-825e-20c4805498f6</webElementGuid>
+      <value>//p</value>
+      <webElementGuid>80859cde-6003-4de6-8de0-a63944efb356</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:attributes</name>
       <type>Main</type>
-      <value>//span</value>
-      <webElementGuid>de234812-8898-4f9c-ba95-e8e1279f2287</webElementGuid>
+      <value>//p</value>
+      <webElementGuid>305d2c44-7931-4e64-b648-dfcc07b9eb2b</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:customAttributes</name>
       <type>Main</type>
-      <value>//span[(text() = 'Remember me' or . = 'Remember me')]</value>
-      <webElementGuid>312e2aa8-2200-4dab-8a03-943821c4d34f</webElementGuid>
+      <value>//p[(text() = 'You have been logged out successfully.' or . = 'You have been logged out successfully.')]</value>
+      <webElementGuid>d73ec2a0-a768-4830-be9f-0df8d275b61f</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>

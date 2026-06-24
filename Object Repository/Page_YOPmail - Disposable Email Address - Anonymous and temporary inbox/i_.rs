@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WebElementEntity>
    <description></description>
-   <name>span_Remember me</name>
+   <name>i_</name>
    <tag></tag>
-   <elementGuidId>8eabac97-72aa-42b6-8c72-bb7aee05b84d</elementGuidId>
+   <elementGuidId>c5df9938-18eb-4517-a177-a914e253f6b6</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[(text() = 'Remember me' or . = 'Remember me')]</value>
+         <key>XPATH</key>
+         <value>//*[@onclick = '{if(chkl())go()}']//i</value>
       </entry>
       <entry>
          <key>CSS</key>
-         <value>span</value>
-      </entry>
-      <entry>
-         <key>XPATH</key>
-         <value>//span</value>
+         <value>[onclick=&quot;\{if\(chkl\(\)\)go\(\)\}&quot;] i</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
    <smartLocatorCollection>
       <entry>
          <key>SMART_LOCATOR</key>
-         <value>internal:text=&quot;Remember me&quot;i</value>
+         <value>internal:role=button[name=&quot;&quot;i]</value>
       </entry>
    </smartLocatorCollection>
    <smartLocatorEnabled>false</smartLocatorEnabled>
@@ -32,47 +28,55 @@
       <matchCondition>equals</matchCondition>
       <name>tag</name>
       <type>Main</type>
-      <value>span</value>
-      <webElementGuid>e2e6ea18-1650-4f6e-b310-c39540434989</webElementGuid>
+      <value>i</value>
+      <webElementGuid>8f2cfb20-5016-47d8-a503-140c60df3df6</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>class</name>
+      <type>Main</type>
+      <value>material-icons-outlined f36</value>
+      <webElementGuid>aad33b33-1350-4828-99d4-5a31568d1dc5</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
       <name>text</name>
       <type>Main</type>
-      <value>Remember me</value>
-      <webElementGuid>fb70bfd2-c3cf-48ec-afcb-64fd4df637ef</webElementGuid>
+      <value></value>
+      <webElementGuid>e566abcb-178a-4657-9378-58ddcefc8ee1</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>parent</name>
       <type>Main</type>
-      <value>md5.v1-ca0085844b5d46d487a38777c3ec404b</value>
-      <webElementGuid>640436ea-bb67-4141-88dd-38da62be8830</webElementGuid>
+      <value>md5.v1-0dee3ed8670662f9c8d22edf9cede612</value>
+      <webElementGuid>0da92f73-7705-418a-b69b-034937ebc5b4</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath</name>
       <type>Main</type>
-      <value>//span</value>
-      <webElementGuid>ce4c785f-b09b-4fb3-825e-20c4805498f6</webElementGuid>
+      <value>//*[@onclick = '{if(chkl())go()}']//i</value>
+      <webElementGuid>df05b163-775e-4d93-99e0-f7ce55b2721f</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:attributes</name>
       <type>Main</type>
-      <value>//span</value>
-      <webElementGuid>de234812-8898-4f9c-ba95-e8e1279f2287</webElementGuid>
+      <value>//*[@onclick = '{if(chkl())go()}']//i</value>
+      <webElementGuid>a43e82e9-c807-4b62-93a6-04cfebc438ad</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:customAttributes</name>
       <type>Main</type>
-      <value>//span[(text() = 'Remember me' or . = 'Remember me')]</value>
-      <webElementGuid>312e2aa8-2200-4dab-8a03-943821c4d34f</webElementGuid>
+      <value>//i[(text() = '' or . = '')]</value>
+      <webElementGuid>e4ea18de-e94f-4380-852d-f4ef6f8b68a6</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>
