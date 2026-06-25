@@ -129,6 +129,13 @@ public class SuperAdminService {
         return courseRepository.findById(id);
     }
 
+    public Optional<Course> getCourseByCode(String courseCode) {
+        if (courseCode == null || courseCode.isBlank()) {
+            return Optional.empty();
+        }
+        return courseRepository.findByCourseCodeIgnoreCase(courseCode.trim());
+    }
+
     public Course saveCourse(Course course) {
         if (course == null) {
             throw new IllegalArgumentException("Course is required.");
@@ -152,12 +159,10 @@ public class SuperAdminService {
             throw new IllegalArgumentException("Course code is required.");
         }
 
-        // Idempotent create: if same course code already exists for NEW courses, reuse it instead of inserting duplicates.
-        if (course.getId() == null) {
-            Optional<Course> existing = courseRepository.findByCourseCodeIgnoreCase(course.getCourseCode());
-            if (existing.isPresent()) {
-                return existing.get();
-            }
+        // Check if course code already exists
+        Optional<Course> existing = courseRepository.findByCourseCodeIgnoreCase(course.getCourseCode());
+        if (existing.isPresent() && (course.getId() == null || !existing.get().getId().equals(course.getId()))) {
+            throw new IllegalArgumentException("The course exists, and the course ID has already been used. Please assign a new course ID.");
         }
 
         return courseRepository.save(course);

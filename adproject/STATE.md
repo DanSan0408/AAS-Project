@@ -1,6 +1,72 @@
 # Project State Documentation
 
-**Last Updated**: 2026-06-18 (IH)
+**Last Updated**: 2026-06-25 (Antigravity)
+
+---
+
+## Current Status: Factor Display UI & Ratings Grouping Fixes
+**Status**: FIXED
+
+### Summary
+- Restored the maroon header background across all Admin Data View pages (`data_views_home.html`, `overall_data_view.html`, `factor_display.html`, `calculate_factor.html`) by wrapping the `header-container` inside a `.header` class.
+- Fixed a rendering bug in **Factor Display** (`factor_display.html`) where 4 teammates with multiple rubrics were being misrendered as multiple distinct teammate columns (e.g., 8 or 12 teammate columns).
+- Fixed the root cause of the teammate grouping duplication by updating `CalculateService.java` to explicitly group ratings by `Student.getId()` instead of the raw `Student` object, bypassing Lombok `@Data` equality issues on entities loaded across different sessions.
+- Corrected the layout clipping issue in `factor_display.html` where tables were getting cut off horizontally by applying `overflow-x: auto` to the container and restricting `min-width: 250px` to apply only to the `.filter-form select`.
+- Addressed an overflowing issue with the sidebar's course switcher dropdown by applying `box-sizing: border-box`, `max-width: 100%`, and `text-overflow: ellipsis`.
+- Refined the visual hierarchy by tweaking the sidebar item font weight from bold (700) to semi-bold (600).
+
+### Files Modified
+- `CalculateService.java`
+- `factor_display.html`, `data_views_home.html`, `overall_data_view.html`, `calculate_factor.html`
+- `admin_sidebar.css`, `factor_display.css`
+- `STATE.md`
+
+---
+
+## Current Status: Course Code Duplication Prevention & Real-time Validation
+**Status**: IMPLEMENTED
+
+### Summary
+- Resolved a bug where adding a course with a duplicate course code automatically assigned the current administrator to the existing course.
+- Added strict course duplication checks in `SuperAdminService.saveCourse(Course course)`. Saving/updating a course now throws an `IllegalArgumentException` with the message `"The course exists, and the course ID has already been used. Please assign a new course ID."` if the course code is already taken.
+- Exposed a REST check endpoint `/admin/courses/check-code` in `AdminController.java` to check for course code availability.
+- Created `course-validation.js` to dynamically check course code uniqueness using debounced calls (300ms) to the REST endpoint.
+- Added real-time visual border updates (emerald-green for available codes, red for duplicates) and inline validation messaging below the inputs in both the Course Add and Edit views (excluding the current course code while editing).
+- Added `SuperAdminServiceTest.java` unit tests to cover successful saves, duplicates detection, and validation logic.
+
+### Files Modified/Created
+- **New**: `course-validation.js`, `SuperAdminServiceTest.java`
+- **Modified**: `SuperAdminService.java`, `AdminController.java`, `manage_courses.css`, `admin_manage_courses.css`, `manage_courses.html`, `admin_manage_courses.html`, `edit_course.html`, `admin_edit_course.html`, `STATE.md`
+
+---
+
+## Current Status: Overall Data View and Overrides Course Scoping Fix
+**Status**: FIXED
+
+### Summary
+- Resolved an issue in the **Overall Data View** (`/admin/data-views/overall`) where it showed all students in the database regardless of the course context.
+- Scoped student results in `showOverallData` using `adminService.getAllStudents()`, which correctly filters students under the active course (handling direct course links, student course assignments, and group memberships). If there is no active course context, an empty list is displayed.
+- Scoped group and assessment lookups in the **Overrides Edit View** (`/admin/data-views/edit-overrides`) to use `groupRepository.findByCourseId(activeCourseId)` and `assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId)` instead of calling their global `findAll` methods.
+- Registered the database-level `CourseScopeInterceptor` globally in `WebMvcConfig.java` to enforce Hibernate `@Filter` rules (`courseScopeFilter`) on all admin contexts (`/admin/**`, `/rubrics/**`, and `/deadlines/**`), securing row-level access across the application.
+
+### Files Modified
+- `DataViewController.java`
+- `WebMvcConfig.java`
+- `STATE.md`
+
+---
+
+## Current Status: View Assessment Rubrics Button Presence Fix
+**Status**: FIXED
+
+### Summary
+- Resolved an issue on the **View Assessment Rubrics** page (`view-assessment-rubrics.html`) where the "Add Rubrics" button would go missing if an Admin added only comments and no rubrics.
+- Unconditionally render the Rubrics section container to preserve the "Add Rubric" button.
+- Introduced custom styled empty state placeholders for Group Rubrics and Individual Rubrics when they are empty, preventing visual clutter while keeping the action buttons easily accessible.
+
+### Files Modified
+- `view-assessment-rubrics.html`
+- `STATE.md`
 
 ---
 
