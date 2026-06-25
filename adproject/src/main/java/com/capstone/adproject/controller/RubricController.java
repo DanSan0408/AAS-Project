@@ -95,7 +95,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         Long assessmentId = assessment.getId();
         
         if (assessment.getTitle() != null) {
-            assessment.setTitle(HtmlSanitizerUtil.sanitize(assessment.getTitle()));
+            assessment.setTitle(HtmlSanitizerUtil.sanitizePlainText(assessment.getTitle()));
         }
 
         if (!duplicateConfirmed) {
@@ -268,7 +268,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
             return "redirect:/rubrics/manage";
         }
 
-        String sanitized = HtmlSanitizerUtil.sanitize(extraNotes == null ? "" : extraNotes.trim());
+        String sanitized = HtmlSanitizerUtil.sanitizePlainText(extraNotes == null ? "" : extraNotes.trim());
         assessment.setExtraNotes(sanitized.isBlank() ? null : sanitized);
         rubricService.saveAssessment(assessment);
 
@@ -287,7 +287,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
             return "redirect:/rubrics/manage";
         }
 
-        String sanitized = HtmlSanitizerUtil.sanitize(extraNotesForStudent == null ? "" : extraNotesForStudent.trim());
+        String sanitized = HtmlSanitizerUtil.sanitizePlainText(extraNotesForStudent == null ? "" : extraNotesForStudent.trim());
         assessment.setExtraNotesForStudent(sanitized.isBlank() ? null : sanitized);
         rubricService.saveAssessment(assessment);
 
@@ -412,7 +412,7 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         Long rubricId = rubric.getId();
         
         if (rubric.getName() != null) {
-            rubric.setName(HtmlSanitizerUtil.sanitize(rubric.getName()));
+            rubric.setName(HtmlSanitizerUtil.sanitizePlainText(rubric.getName()));
         }
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
