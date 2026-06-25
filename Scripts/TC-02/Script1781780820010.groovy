@@ -17,15 +17,3 @@ import com.kms.katalon.core.windows.keyword.WindowsBuiltinKeywords as Windows
 import internal.GlobalVariable as GlobalVariable
 import org.openqa.selenium.Keys as Keys
 
-WebUI.openBrowser(null)
-
-WebUI.navigateToUrl('https://www.eduinnovax.com/login')
-
-WebUI.setText(findTestObject('Page_Login - UTM AAS/input_your.emailexample.com'), 'san.dan0408@gmail.com')
-
-WebUI.setEncryptedText(findTestObject('Page_Login - UTM AAS/input_Enter your password'), 'iGDxf8hSRT4=')
-
-WebUI.click(findTestObject('Page_Login - UTM AAS/span_Remember me'))
-
-WebUI.click(findTestObject('Page_Login - UTM AAS/button_Login'))
-

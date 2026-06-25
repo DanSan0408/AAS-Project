@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WebElementEntity>
    <description></description>
-   <name>button_Login</name>
+   <name>input_remember-me</name>
    <tag></tag>
-   <elementGuidId>b8c09dfc-9edc-4d3e-ac01-232ecee917ad</elementGuidId>
+   <elementGuidId>e8b2d7d4-ffda-40d9-8784-895b9319c7ce</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
+         <key>XPATH</key>
+         <value>//*[@id = 'remember-me']</value>
       </entry>
       <entry>
          <key>CSS</key>
-         <value>.auth-btn</value>
+         <value>#remember-me</value>
       </entry>
       <entry>
-         <key>XPATH</key>
-         <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
+         <key>BASIC</key>
+         <value>//*[@type = 'checkbox' and @name = 'remember-me' and @id = 'remember-me']</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
    <smartLocatorCollection>
       <entry>
          <key>SMART_LOCATOR</key>
-         <value>internal:role=button[name=&quot;Login&quot;i]</value>
+         <value>internal:label=&quot;Remember me&quot;i</value>
       </entry>
    </smartLocatorCollection>
    <smartLocatorEnabled>false</smartLocatorEnabled>
@@ -32,63 +32,63 @@
       <matchCondition>equals</matchCondition>
       <name>tag</name>
       <type>Main</type>
-      <value>button</value>
-      <webElementGuid>a96eb0ad-55c0-40f3-ac02-b04f2dd7770c</webElementGuid>
+      <value>input</value>
+      <webElementGuid>ecb0f844-f88c-4db8-bb54-9fab6c5fa385</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
       <name>type</name>
       <type>Main</type>
-      <value>submit</value>
-      <webElementGuid>4499df18-cb5d-4f12-b96e-948e6daf0043</webElementGuid>
-   </webElementProperties>
-   <webElementProperties>
-      <isSelected>false</isSelected>
-      <matchCondition>equals</matchCondition>
-      <name>class</name>
-      <type>Main</type>
-      <value>auth-btn btn-primary-custom</value>
-      <webElementGuid>b11d0043-b4fb-40fd-995b-69a35f8c55da</webElementGuid>
+      <value>checkbox</value>
+      <webElementGuid>d5354229-4a25-4015-b949-0094ed4cb7eb</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
-      <name>text</name>
+      <name>name</name>
       <type>Main</type>
-      <value>Login</value>
-      <webElementGuid>b84b7000-22cb-4f99-b57d-a9d1a05d246b</webElementGuid>
+      <value>remember-me</value>
+      <webElementGuid>82b905c1-f367-4024-85e1-a8311a579acd</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>id</name>
+      <type>Main</type>
+      <value>remember-me</value>
+      <webElementGuid>512816e8-5420-4266-84fa-e65db07c1749</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>parent</name>
       <type>Main</type>
-      <value>md5.v1-facd85c7db671691b97df0c4a3d9810f</value>
-      <webElementGuid>43da5e37-bddb-4506-9855-e8c0d1ce2be8</webElementGuid>
+      <value>md5.v1-7f7af757a27ae0018dde48b5fb9ebd1c</value>
+      <webElementGuid>6b5cf0c7-b9c0-44ed-8159-4ddd23fe9092</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>e1b1e9f4-d8b2-4442-ae56-f6e5f6f5ffd0</webElementGuid>
+      <value>//*[@id = 'remember-me']</value>
+      <webElementGuid>3cb1e4d4-424b-4359-9e11-351965124be6</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:attributes</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>a2875500-cef8-4359-9b35-c2d50fc39db4</webElementGuid>
+      <value>//*[@id = 'remember-me']</value>
+      <webElementGuid>cc98f256-2f96-42f6-9ea3-ca151e5dcbf6</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:customAttributes</name>
       <type>Main</type>
-      <value>//button[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
-      <webElementGuid>71abe091-8b8e-4ba7-b8c5-38af2c93daa3</webElementGuid>
+      <value>//input[@type = 'checkbox' and @name = 'remember-me' and @id = 'remember-me']</value>
+      <webElementGuid>e4f9bef9-8436-4aa5-ac3d-454319e827ec</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>

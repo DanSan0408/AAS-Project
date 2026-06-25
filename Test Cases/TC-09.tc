@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Randomization Student Grouping</description>
+   <name>TC-09</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>29463bf3-be25-407c-867c-bbb23e9b496d</testCaseGuid>
+</TestCaseEntity>
