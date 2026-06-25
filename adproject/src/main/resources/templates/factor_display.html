@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factor Display</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/factor_display.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="factor-display-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
+                <h1>UTM AAS</h1>
+            </div>
+        </div>
+        
+        <div class="display-container">
+            <div class="page-header">
+                <h1>Factor Calculation Breakdown</h1>
+                <div class="header-actions">
+                    <a th:href="@{/admin/data-views}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Data Views
+                    </a>
+                </div>
+            </div>
+
+            <div class="card filter-section">
+                <form action="" method="get" class="filter-form">
+                    <div class="form-group">
+                        <label for="groupSelect"><i class="fas fa-users"></i> Select Group:</label>
+                        <select name="groupId" id="groupSelect" data-action="auto-submit-form">
+                            <option value="">-- Choose a Group --</option>
+                            <option th:each="g : ${groups}" 
+                                    th:value="${g.id}" 
+                                    th:text="${g.groupName}" 
+                                    th:selected="${g.id == selectedGroupId}"></option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div th:if="${selectedGroupId != null}" class="card table-card">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Assessment Title</th>
+                                <th>Received Ratings</th>
+                                <th>Indiv. Avg</th>
+                                <th>Group Avg</th>
+                                <th>Base Factor</th>
+                                <th>Calculated Total Factor</th>
+                                <th>Current Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${factorDetailsList == null or factorDetailsList.isEmpty()}">
+                                <td colspan="8" class="empty-state-table">
+                                    No students found in this group.
+                                </td>
+                            </tr>
+                            <th:block th:each="detail : ${factorDetailsList}">
+                                <tr th:if="${detail.breakdowns.isEmpty()}">
+                                    <td class="student-name" th:text="${detail.studentName}">Student Name</td>
+                                    <td colspan="5" class="empty-state-table">No peer assessments included</td>
+                                    <td class="fw-bold" th:text="${detail.finalCalculatedFactor}">0.00</td>
+                                    <td>
+                                        <span th:if="${detail.isOverridden}" class="badge badge-warning">
+                                            <i class="fas fa-edit"></i> Overridden: [[${#numbers.formatDecimal(detail.currentOverriddenFactor, 1, 2)}]]
+                                        </span>
+                                        <span th:unless="${detail.isOverridden}" class="badge badge-success">
+                                            <i class="fas fa-check-circle"></i> System: [[${#numbers.formatDecimal(detail.finalCalculatedFactor, 1, 2)}]]
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr th:each="bd, stat : ${detail.breakdowns}">
+                                    <td th:if="${stat.first}" th:rowspan="${detail.breakdowns.size()}" class="student-name" th:text="${detail.studentName}">Student Name</td>
+                                    <td th:text="${bd.assessmentTitle}">Assessment</td>
+                                    <td class="ratings-cell" style="padding: 0;">
+                                        <table class="nested-ratings-table" style="width: 100%; border-collapse: collapse;">
+                                            <thead th:if="${!bd.rawRatings.isEmpty()}">
+                                                <tr>
+                                                    <th th:each="rating, rStat : ${bd.rawRatings}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center; background: #f8f9fa; font-size: 0.8em; color: #64748b;">Teammate [[${rStat.count}]]</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td th:each="teammateRatings : ${bd.rawRatings}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center; font-weight: bold; color: #4A0018;">
+                                                        <div th:each="rating : ${teammateRatings}" th:text="${#numbers.formatDecimal(rating, 1, 2)}" style="margin-bottom: 2px;">0.00</div>
+                                                    </td>
+                                                    <td th:if="${bd.rawRatings.isEmpty()}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center;" class="text-muted">None</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                    <td th:text="${#numbers.formatDecimal(bd.averageRating, 1, 2)}">0.00</td>
+                                    <td th:text="${#numbers.formatDecimal(bd.groupAverage, 1, 2)}">0.00</td>
+                                    <td th:text="${#numbers.formatDecimal(bd.calculatedFactor, 1, 2)}">0.00</td>
+                                    <td th:if="${stat.first}" th:rowspan="${detail.breakdowns.size()}" class="fw-bold" th:text="${#numbers.formatDecimal(detail.finalCalculatedFactor, 1, 2)}">0.00</td>
+                                    <td th:if="${stat.first}" th:rowspan="${detail.breakdowns.size()}">
+                                        <span th:if="${detail.isOverridden}" class="badge badge-warning">
+                                            <i class="fas fa-edit"></i> Overridden: [[${#numbers.formatDecimal(detail.currentOverriddenFactor, 1, 2)}]]
+                                        </span>
+                                        <span th:unless="${detail.isOverridden}" class="badge badge-success">
+                                            <i class="fas fa-check-circle"></i> System: [[${#numbers.formatDecimal(detail.finalCalculatedFactor, 1, 2)}]]
+                                        </span>
+                                    </td>
+                                </tr>
+                            </th:block>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div th:if="${selectedGroupId != null and !allHistory.isEmpty()}" class="card table-card history-section" style="margin-top: 30px;">
+                <div class="card-header" style="padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #E5E7EB;">
+                    <h3 style="margin: 0; color: #4A0018;"><i class="fas fa-history"></i> Factor Override History</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table history-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Student</th>
+                                <th>Old Factor</th>
+                                <th>New Factor</th>
+                                <th>Changed By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="hist : ${allHistory}">
+                                <td th:text="${#temporals.format(hist.changedAt, 'dd-MMM-yyyy HH:mm')}">Date</td>
+                                <td class="student-name" th:text="${hist.student.username}">Student</td>
+                                <td th:text="${hist.oldFactor != null ? #numbers.formatDecimal(hist.oldFactor, 1, 2) : 'N/A'}">0.00</td>
+                                <td th:text="${hist.newFactor != null ? #numbers.formatDecimal(hist.newFactor, 1, 2) : 'N/A'}">0.00</td>
+                                <td th:text="${hist.changedBy}">Admin</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div th:if="${selectedGroupId == null}" class="empty-state">
+                <i class="fas fa-mouse-pointer"></i>
+                <h3>Select a group above to view factor breakdowns.</h3>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+</body>
+</html>

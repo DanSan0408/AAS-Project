@@ -22,16 +22,23 @@ import com.capstone.adproject.dto.AssessmentDataDto;
 import com.capstone.adproject.dto.RubricCalculationDto;
 import com.capstone.adproject.dto.StudentAssessmentDataDto;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Course;
+import com.capstone.adproject.model.FactorOverrideHistory;
+import com.capstone.adproject.model.FactorWeightage;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentResultOverride;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
+import com.capstone.adproject.repositories.FactorWeightageRepository;
+import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.StudentService;
+import com.capstone.adproject.service.AdminService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/admin/data-views")
@@ -67,23 +74,36 @@ public class DataViewController {
     private final AssessmentService assessmentService;
     private final StudentService studentService;
     private final CalculateService calculateService;
+    private final MarkRepository markRepository;
     private final GroupRepository groupRepository;
     private final StudentResultOverrideRepository overrideRepository;
     private final CourseScopeService courseScopeService;
+    private final AdminService adminService;
+    private final FactorWeightageRepository factorWeightageRepository;
+    private final com.capstone.adproject.repositories.FactorOverrideHistoryRepository factorOverrideHistoryRepository;
 
+    @Autowired
     public DataViewController(
             AssessmentService assessmentService,
-            StudentService studentService,
-            CalculateService calculateService,
+            MarkRepository markRepository,
             GroupRepository groupRepository,
+            StudentService studentService,
             StudentResultOverrideRepository overrideRepository,
-            CourseScopeService courseScopeService) {
+            CalculateService calculateService,
+            CourseScopeService courseScopeService,
+            AdminService adminService,
+            FactorWeightageRepository factorWeightageRepository,
+            com.capstone.adproject.repositories.FactorOverrideHistoryRepository factorOverrideHistoryRepository) {
         this.assessmentService = assessmentService;
-        this.studentService = studentService;
-        this.calculateService = calculateService;
+        this.markRepository = markRepository;
         this.groupRepository = groupRepository;
+        this.studentService = studentService;
         this.overrideRepository = overrideRepository;
+        this.calculateService = calculateService;
         this.courseScopeService = courseScopeService;
+        this.adminService = adminService;
+        this.factorWeightageRepository = factorWeightageRepository;
+        this.factorOverrideHistoryRepository = factorOverrideHistoryRepository;
     }
 
     private String getLoggedInUsername() {
@@ -96,6 +116,44 @@ public class DataViewController {
 
     private Set<Long> getManagedCourseIdsForCurrentUser() {
         return courseScopeService.getActiveCourseIdsForCurrentUser();
+    }
+    
+    @GetMapping("/factors")
+    public String showFactorDisplayPage(@RequestParam(required = false) Long groupId, Model model) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Group> groups = activeCourseId == null
+            ? List.of()
+            : groupRepository.findByCourseId(activeCourseId);
+        
+        model.addAttribute("groups", groups);
+        model.addAttribute("selectedGroupId", groupId);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        
+        List<com.capstone.adproject.dto.FactorDetailsDto> factorDetailsList = new ArrayList<>();
+        List<FactorOverrideHistory> allHistory = new ArrayList<>();
+        
+        if (groupId != null) {
+            Group group = groupRepository.findById(groupId).orElse(null);
+            if (group != null && ownsGroup(group)) {
+                List<Student> students = new ArrayList<>(group.getStudents());
+                students.sort((s1, s2) -> {
+                    String n1 = s1.getUsername() != null ? s1.getUsername() : "";
+                    String n2 = s2.getUsername() != null ? s2.getUsername() : "";
+                    return n1.compareToIgnoreCase(n2);
+                });
+                
+                for (Student student : students) {
+                    factorDetailsList.add(calculateService.getFactorDetailsForStudent(student));
+                }
+                
+                allHistory = factorOverrideHistoryRepository.findByStudentInOrderByChangedAtDesc(students);
+            }
+        }
+        
+        model.addAttribute("factorDetailsList", factorDetailsList);
+        model.addAttribute("allHistory", allHistory);
+        
+        return "factor_display";
     }
 
     private boolean ownsAssessment(Assessment assessment) {
@@ -135,7 +193,9 @@ public class DataViewController {
         List<Assessment> assessments = activeCourseId == null
             ? List.of()
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
-        List<Student> students = studentService.getAllStudents();
+        List<Student> students = activeCourseId == null
+            ? new ArrayList<>()
+            : new ArrayList<>(adminService.getAllStudents());
         
         students.sort((s1, s2) -> {
             String email1 = s1.getEmail() != null ? s1.getEmail() : "";
@@ -299,7 +359,10 @@ public class DataViewController {
             @RequestParam(required = false) Long groupId, 
             Model model) {
         
-        List<Group> groups = groupRepository.findAll();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Group> groups = activeCourseId == null
+            ? List.of()
+            : groupRepository.findByCourseId(activeCourseId);
         model.addAttribute("groups", groups);
         model.addAttribute("selectedGroupId", groupId);
         model.addAttribute("adminUsername", getLoggedInUsername());
@@ -318,7 +381,9 @@ public class DataViewController {
                     return email1.compareToIgnoreCase(email2);
                 });
                 
-                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubrics();
+                List<Assessment> assessments = activeCourseId == null
+                    ? List.of()
+                    : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
                 
                 for (Student student : students) {
                     Double currentFactor = 0.0;
@@ -347,14 +412,114 @@ public class DataViewController {
                     StudentResultOverride override = overrideRepository.findByStudent(student)
                         .orElse(new StudentResultOverride());
                     
+                    Double oldFactor = override.getOverriddenFactor();
+                    Double oldTotal = override.getOverriddenGrandTotal();
+                    
+                    // Only record history if something actually changed (or if it's new)
+                    boolean isNew = (override.getId() == null);
+                    boolean isChanged = isNew || 
+                                        !java.util.Objects.equals(oldFactor, update.getFactor()) || 
+                                        !java.util.Objects.equals(oldTotal, update.getGrandTotal());
+
                     override.setStudent(student);
                     override.setOverriddenFactor(update.getFactor());
                     override.setOverriddenGrandTotal(update.getGrandTotal());
                     
                     overrideRepository.save(override);
+                    
+                    if (isChanged) {
+                        FactorOverrideHistory history = new FactorOverrideHistory(
+                                student,
+                                oldFactor,
+                                update.getFactor(),
+                                oldTotal,
+                                update.getGrandTotal(),
+                                getLoggedInUsername(),
+                                java.time.LocalDateTime.now()
+                        );
+                        factorOverrideHistoryRepository.save(history);
+                    }
                 }
             }
         }
         return "redirect:/admin/data-views/edit-overrides?groupId=" + (groupId != null ? groupId : "");
+    }
+
+    @GetMapping("/calculate-factor")
+    public String showCalculateFactorPage(Model model) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Assessment> assessments = activeCourseId == null
+            ? List.of()
+            : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        
+        Map<Long, Double> currentWeightages = new HashMap<>();
+        if (activeCourseId != null) {
+            Course course = new Course();
+            course.setId(activeCourseId);
+            List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(course);
+            for (FactorWeightage fw : weightages) {
+                currentWeightages.put(fw.getAssessment().getId(), fw.getWeightage());
+            }
+        }
+        
+        model.addAttribute("assessments", assessments);
+        model.addAttribute("currentWeightages", currentWeightages);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        return "calculate_factor";
+    }
+
+    @PostMapping("/calculate-factor")
+    public String calculateFactor(@RequestParam Map<String, String> params, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId == null) return "redirect:/admin/data-views";
+        
+        Course dummyCourse = new Course();
+        dummyCourse.setId(activeCourseId);
+        
+        double totalWeight = 0.0;
+        for (String key : params.keySet()) {
+            if (key.startsWith("weight_")) {
+                String val = params.get(key);
+                if (val != null && !val.trim().isEmpty()) {
+                    try {
+                        double weight = Double.parseDouble(val);
+                        if (weight > 0) totalWeight += weight;
+                    } catch (NumberFormatException e) {
+                        // ignore
+                    }
+                }
+            }
+        }
+        
+        if (totalWeight > 0 && Math.abs(totalWeight - 100.0) >= 0.01) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Total weightage must be exactly 100%.");
+            return "redirect:/admin/data-views/calculate-factor";
+        }
+        
+        List<FactorWeightage> existing = factorWeightageRepository.findByCourse(dummyCourse);
+        factorWeightageRepository.deleteAll(existing);
+        
+        for (String key : params.keySet()) {
+            if (key.startsWith("weight_")) {
+                Long assessmentId = Long.parseLong(key.substring(7));
+                String val = params.get(key);
+                if (val != null && !val.trim().isEmpty()) {
+                    try {
+                        Double weight = Double.parseDouble(val);
+                        if (weight > 0) {
+                            Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+                            if (assessment != null && ownsAssessment(assessment)) {
+                                FactorWeightage fw = new FactorWeightage(assessment.getCourse(), assessment, weight);
+                                factorWeightageRepository.save(fw);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        // ignore invalid input
+                    }
+                }
+            }
+        }
+        
+        return "redirect:/admin/data-views/overall";
     }
 }

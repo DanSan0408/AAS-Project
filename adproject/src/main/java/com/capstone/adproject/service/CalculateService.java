@@ -27,6 +27,8 @@ import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
+import com.capstone.adproject.repositories.FactorWeightageRepository;
+import com.capstone.adproject.model.FactorWeightage;
 
 @Service
 public class CalculateService {
@@ -35,16 +37,19 @@ public class CalculateService {
     private final LecturerGroupAssignmentRepository lecturerAssignmentRepository;
     private final AssessmentCommentRepository commentRepository;
     private final StudentResultOverrideRepository overrideRepository;
+    private final FactorWeightageRepository factorWeightageRepository;
 
     public CalculateService(
             MarkRepository markRepository,
             LecturerGroupAssignmentRepository lecturerAssignmentRepository,
             AssessmentCommentRepository commentRepository,
-            StudentResultOverrideRepository overrideRepository) {
+            StudentResultOverrideRepository overrideRepository,
+            FactorWeightageRepository factorWeightageRepository) {
         this.markRepository = markRepository;
         this.lecturerAssignmentRepository = lecturerAssignmentRepository;
         this.commentRepository = commentRepository;
         this.overrideRepository = overrideRepository;
+        this.factorWeightageRepository = factorWeightageRepository;
     }
 
     public AssessmentDataDto calculateAssessmentData(Assessment assessment, List<Student> students) {
@@ -155,7 +160,141 @@ public class CalculateService {
         return round(grandTotal);
     }
 
+    public com.capstone.adproject.dto.FactorDetailsDto getFactorDetailsForStudent(Student student) {
+        com.capstone.adproject.dto.FactorDetailsDto dto = new com.capstone.adproject.dto.FactorDetailsDto();
+        dto.setStudentId(student.getId());
+        dto.setStudentName(student.getUsername());
+        dto.setStudentEmail(student.getEmail());
+        
+        List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(student.getCourse());
+        List<com.capstone.adproject.dto.AssessmentFactorBreakdown> breakdowns = new ArrayList<>();
+        
+        double finalFactor = 0.0;
+        
+        if (!weightages.isEmpty()) {
+            for (FactorWeightage fw : weightages) {
+                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, fw.getAssessment());
+                breakdown.setWeightage(fw.getWeightage());
+                finalFactor += breakdown.getCalculatedFactor() * (fw.getWeightage() / 100.0);
+                breakdowns.add(breakdown);
+            }
+            dto.setFinalCalculatedFactor(Math.round(finalFactor * 1000.0) / 1000.0);
+        } else {
+            List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
+            List<Mark> peerMarks = allMarks.stream()
+                .filter(m -> m.getEvaluatorStudent() != null)
+                .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
+                .filter(m -> m.getLecturer() == null)
+                .collect(Collectors.toList());
+            
+            if (!peerMarks.isEmpty()) {
+                Assessment peerAssessment = peerMarks.get(0).getAssessment();
+                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, peerAssessment);
+                breakdown.setWeightage(100.0);
+                breakdowns.add(breakdown);
+                dto.setFinalCalculatedFactor(breakdown.getCalculatedFactor());
+            } else {
+                dto.setFinalCalculatedFactor(0.0);
+            }
+        }
+        
+        dto.setBreakdowns(breakdowns);
+        
+        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+        if (overrideOpt.isPresent()) {
+            dto.setIsOverridden(true);
+            dto.setCurrentOverriddenFactor(overrideOpt.get().getOverriddenFactor());
+        } else {
+            dto.setIsOverridden(false);
+            dto.setCurrentOverriddenFactor(dto.getFinalCalculatedFactor());
+        }
+        
+        return dto;
+    }
+    
+    private com.capstone.adproject.dto.AssessmentFactorBreakdown calculateBreakdownFromPeerAssessment(Student student, Assessment peerAssessment) {
+        com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = new com.capstone.adproject.dto.AssessmentFactorBreakdown();
+        breakdown.setAssessmentId(peerAssessment.getId());
+        breakdown.setAssessmentTitle(peerAssessment.getTitle());
+        breakdown.setRawRatings(new ArrayList<>());
+        breakdown.setAverageRating(0.0);
+        breakdown.setGroupAverage(0.0);
+        breakdown.setCalculatedFactor(0.0);
+        
+        Group group = student.getGroup();
+        if (group == null || group.getStudents() == null || group.getStudents().isEmpty()) return breakdown;
+        
+        List<Student> groupMembers = new ArrayList<>(group.getStudents());
+        Map<Long, Double> individualAverages = new HashMap<>();
+        
+        for (Student member : groupMembers) {
+            List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(member, peerAssessment);
+            receivedMarks = receivedMarks.stream()
+                .filter(m -> m.getEvaluatorStudent() != null)
+                .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
+                .filter(m -> m.getLecturer() == null)
+                .collect(Collectors.toList());
+            
+            if (!receivedMarks.isEmpty()) {
+                Map<Long, List<Mark>> marksByEvaluator = receivedMarks.stream()
+                    .collect(Collectors.groupingBy(m -> m.getEvaluatorStudent().getId()));
+                
+                List<Double> allRatings = new ArrayList<>();
+                List<List<Double>> ratingsPerTeammate = new ArrayList<>();
+
+                for (Map.Entry<Long, List<Mark>> entry : marksByEvaluator.entrySet()) {
+                    List<Double> tRatings = entry.getValue().stream()
+                        .filter(m -> m.getRating() != null && m.getRating().getMarks() != null)
+                        .map(m -> m.getRating().getMarks().doubleValue())
+                        .collect(Collectors.toList());
+                    if (!tRatings.isEmpty()) {
+                        ratingsPerTeammate.add(tRatings);
+                        allRatings.addAll(tRatings);
+                    }
+                }
+
+                if (!allRatings.isEmpty()) {
+                    double sum = allRatings.stream().mapToDouble(Double::doubleValue).sum();
+                    individualAverages.put(member.getId(), sum / allRatings.size());
+                    
+                    if (member.getId().equals(student.getId())) {
+                        breakdown.setRawRatings(ratingsPerTeammate);
+                        breakdown.setAverageRating(sum / allRatings.size());
+                    }
+                }
+            } else {
+                individualAverages.put(member.getId(), 0.0);
+            }
+        }
+        
+        if (individualAverages.isEmpty()) return breakdown;
+        
+        double groupAverage = individualAverages.values().stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        if (groupAverage == 0) return breakdown;
+        breakdown.setGroupAverage(groupAverage);
+        
+        Double individualAverage = individualAverages.get(student.getId());
+        if (individualAverage == null) return breakdown;
+        
+        double factor = individualAverage / groupAverage;
+        double cappedFactor = Math.min(factor, 1.05);
+        breakdown.setCalculatedFactor(Math.round(cappedFactor * 1000.0) / 1000.0);
+        
+        return breakdown;
+    }
+
     public Double calculatePeerAssessmentFactorForStudent(Student student) {
+        List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(student.getCourse());
+        
+        if (!weightages.isEmpty()) {
+            double finalFactor = 0.0;
+            for (FactorWeightage fw : weightages) {
+                double factor = calculateStudentFactorFromPeerAssessment(student, fw.getAssessment());
+                finalFactor += factor * (fw.getWeightage() / 100.0);
+            }
+            return Math.round(finalFactor * 1000.0) / 1000.0;
+        }
+
         List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
         List<Mark> peerMarks = allMarks.stream()
             .filter(m -> m.getEvaluatorStudent() != null)
