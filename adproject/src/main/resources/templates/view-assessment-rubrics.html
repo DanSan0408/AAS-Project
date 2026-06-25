@@ -214,9 +214,9 @@
                 </div>
             </div>
             
-            <div class="block-content">
+            <div class="block-content" th:if="${(groupRubrics != null && !#lists.isEmpty(groupRubrics)) || (assessment.groupCommentLabels != null && !#lists.isEmpty(assessment.groupCommentLabels))}">
                 
-                <div th:if="${groupRubrics != null}" class="content-section">
+                <div class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${groupRubrics}" class="rubric-card" th:id="|rubric-${rubric.id}|" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
@@ -301,6 +301,12 @@
                         </div>
                     </div>
                     
+                    <div th:if="${groupRubrics == null || #lists.isEmpty(groupRubrics)}" class="empty-comments" style="margin-bottom: 20px;">
+                        <i class="fas fa-star" style="color: var(--color-info) !important; opacity: 0.3 !important; margin-bottom: 15px !important;"></i>
+                        <p>No group rubrics configured yet.</p>
+                        <p class="text-hint">Set up rubric criteria for group assessment grading.</p>
+                    </div>
+
                     <div class="add-btn-container">
                         <a th:href="@{/rubrics/add/{id}(id=${assessment.id})}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Group Rubric</a>
                     </div>
@@ -378,7 +384,7 @@
                 </div>
             </div>
             
-            <div th:if="${groupRubrics == null && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="block-empty">
+            <div th:if="${(groupRubrics == null || #lists.isEmpty(groupRubrics)) && (assessment.groupCommentLabels == null || #lists.isEmpty(assessment.groupCommentLabels))}" class="block-empty">
                 <i class="fas fa-users"></i>
                 <p>No content in Group Assessment yet.</p>
                 <div class="empty-actions">
@@ -411,9 +417,9 @@
                 </div>
             </div>
             
-            <div class="block-content">
+            <div class="block-content" th:if="${(individualRubrics != null && !#lists.isEmpty(individualRubrics)) || (assessment.individualCommentLabels != null && !#lists.isEmpty(assessment.individualCommentLabels))}">
                 
-                <div th:if="${individualRubrics != null}" class="content-section">
+                <div class="content-section">
                     <div class="section-label">Rubrics</div>
                     <div th:each="rubric, iterStat : ${individualRubrics}" class="rubric-card" th:id="|rubric-${rubric.id}|" th:attr="data-rubric-id=${rubric.id}">
                         <div class="rubric-card-header">
@@ -496,6 +502,12 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div th:if="${individualRubrics == null || #lists.isEmpty(individualRubrics)}" class="empty-comments" style="margin-bottom: 20px;">
+                        <i class="fas fa-star" style="color: var(--color-success) !important; opacity: 0.3 !important; margin-bottom: 15px !important;"></i>
+                        <p>No individual rubrics configured yet.</p>
+                        <p class="text-hint">Set up rubric criteria for individual assessment grading.</p>
                     </div>
                     
                     <div class="add-btn-container">

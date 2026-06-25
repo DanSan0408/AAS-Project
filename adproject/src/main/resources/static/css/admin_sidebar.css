@@ -154,6 +154,8 @@ body.sidebar-open {
 
 .sidebar .course-switcher-form select {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 9px 10px;
     border: 1px solid rgba(74, 0, 24, 0.2);
     border-radius: 8px;
@@ -161,6 +163,9 @@ body.sidebar-open {
     color: var(--admin-secondary-dark);
     background: #fff;
     outline: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .sidebar .course-switcher-form select:focus {
@@ -176,7 +181,7 @@ body.sidebar-open {
     color: var(--admin-secondary);
     text-decoration: none;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 10px;
     position: relative;

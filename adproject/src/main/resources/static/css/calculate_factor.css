@@ -1,0 +1,200 @@
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-background: #F4F2EE;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+    --color-hover: #F9FAFB;
+    --color-success: #059669;
+}
+
+* { box-sizing: border-box; }
+
+body.calculate-factor-page {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-background);
+    margin: 0;
+    padding: 0;
+    color: var(--color-secondary);
+    display: flex;
+    min-height: 100vh;
+}
+
+body.calculate-factor-page .main-content {
+    margin-left: 270px !important;
+    padding: 40px 40px 100px 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--color-background) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+}
+
+@media (max-width: 1024px) {
+    body.calculate-factor-page .main-content {
+        margin-left: 0 !important;
+        padding: 30px 20px 80px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body.calculate-factor-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px 80px 15px !important;
+    }
+    body.calculate-factor-page .header-container { flex-direction: column !important; }
+    body.calculate-factor-page .header-container img { max-width: 120px !important; }
+    body.calculate-factor-page .header-container h1 { font-size: 1.8rem !important; text-align: center !important; }
+    body.calculate-factor-page .page-header { flex-direction: column !important; align-items: flex-start !important; }
+    body.calculate-factor-page .page-header h1 { font-size: 1.4rem !important; }
+    body.calculate-factor-page .table-card { padding: 0 !important; }
+    body.calculate-factor-page .data-table { font-size: 0.9rem !important; }
+    body.calculate-factor-page th { padding: 10px !important; font-size: 0.85rem !important; }
+    body.calculate-factor-page td { padding: 10px !important; }
+    body.calculate-factor-page .inp-number { padding: 6px !important; }
+}
+
+body.calculate-factor-page .header-container {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    width: 100% !important;
+}
+
+body.calculate-factor-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.calculate-factor-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
+
+body.calculate-factor-page .calculate-container { width: 100% !important; max-width: 1000px !important; }
+
+body.calculate-factor-page .page-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+}
+
+body.calculate-factor-page .page-header h1 {
+    margin: 0 !important;
+    color: var(--color-primary) !important;
+    font-size: 1.8rem !important;
+}
+
+body.calculate-factor-page .card {
+    background-color: var(--color-surface) !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--color-border) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    padding: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+body.calculate-factor-page .info-section {
+    padding: 20px !important;
+    border-left: 5px solid var(--color-primary) !important;
+}
+
+body.calculate-factor-page .info-section p {
+    color: var(--color-secondary) !important;
+    font-size: 1rem !important;
+    margin-top: 0;
+    margin-bottom: 10px !important;
+}
+
+body.calculate-factor-page .table-card { padding: 0 !important; overflow: hidden !important; }
+body.calculate-factor-page .data-table { width: 100% !important; border-collapse: collapse !important; }
+
+body.calculate-factor-page th {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    padding: 15px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+}
+
+body.calculate-factor-page td {
+    padding: 15px !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    vertical-align: middle !important;
+}
+
+body.calculate-factor-page .assessment-name { font-weight: 600 !important; color: var(--color-primary) !important; }
+
+body.calculate-factor-page .inp-number {
+    width: 100% !important;
+    padding: 8px !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+}
+
+body.calculate-factor-page .inp-number:focus {
+    border-color: var(--color-primary) !important;
+    outline: none !important;
+    background-color: #fff5f5 !important;
+}
+
+body.calculate-factor-page .sticky-footer {
+    position: fixed !important;
+    bottom: 20px !important;      
+    left: 290px !important;        
+    right: 20px !important;       
+    width: auto !important;        
+    background-color: var(--color-surface) !important;
+    padding: 15px 30px !important;
+    border-radius: 12px !important; 
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid var(--color-border) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important; 
+    gap: 20px !important;
+    z-index: 1000 !important;
+    margin: 0 !important; 
+}
+
+@media (max-width: 1024px) {
+    body.calculate-factor-page .sticky-footer {
+        left: 20px !important;
+    }
+}
+
+body.calculate-factor-page .btn {
+    padding: 12px 30px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    text-decoration: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+}
+
+body.calculate-factor-page .btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+body.calculate-factor-page .btn-primary { 
+    background-color: var(--color-primary) !important; 
+    color: white !important; 
+}
+
+body.calculate-factor-page .btn-primary:hover {
+    background-color: #5A0020 !important;
+}
+
+body.calculate-factor-page .btn-secondary { 
+    background-color: var(--color-secondary) !important; 
+    color: white !important; 
+}
+
+body.calculate-factor-page .btn-secondary:hover {
+    background-color: #52525B !important;
+}

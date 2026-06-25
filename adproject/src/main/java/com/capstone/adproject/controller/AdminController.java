@@ -1198,6 +1198,23 @@ public class AdminController {
         return "redirect:/admin/manage-courses";
     }
 
+    @GetMapping("/courses/check-code")
+    @ResponseBody
+    public Map<String, Boolean> checkCourseCode(
+            @RequestParam("courseCode") String courseCode,
+            @RequestParam(value = "excludeId", required = false) Long excludeId) {
+        boolean exists = false;
+        if (courseCode != null && !courseCode.isBlank()) {
+            Optional<Course> existing = superAdminService.getCourseByCode(courseCode.trim());
+            if (existing.isPresent()) {
+                if (excludeId == null || !existing.get().getId().equals(excludeId)) {
+                    exists = true;
+                }
+            }
+        }
+        return Collections.singletonMap("exists", exists);
+    }
+
     @GetMapping("/manage-students")
 public String manageStudents(Model model, @ModelAttribute("student") Student student) {
     model.addAttribute("students", adminService.getAllStudents());

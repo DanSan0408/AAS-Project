@@ -63,6 +63,20 @@
     </div>
 
     <script th:src="@{/js/sidebar-toggle.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            var currentPath = window.location.pathname;
+            var links = document.querySelectorAll('.sidebar .menu-list li a.sidebar-link');
+            links.forEach(function(link) {
+                var href = link.getAttribute('href');
+                if (href && currentPath.startsWith(href) && href !== '/admin/home') {
+                    link.classList.add('active');
+                } else if (href === '/admin/home' && currentPath === '/admin/home') {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
     </th:block>
 </body>
 </html>

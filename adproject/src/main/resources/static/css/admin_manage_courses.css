@@ -273,3 +273,29 @@ body.admin-page .text-muted {
         min-width: 140px;
     }
 }
+
+/* Course Code Validation feedback styles */
+.valid-code {
+    border-color: #10b981 !important;
+    background-color: #ecfdf5 !important;
+}
+
+.invalid-code {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.feedback-text {
+    font-size: 0.85rem;
+    margin-top: 6px;
+    font-weight: 500;
+    display: block;
+}
+
+.feedback-text.valid {
+    color: #10b981;
+}
+
+.feedback-text.invalid {
+    color: #ef4444;
+}

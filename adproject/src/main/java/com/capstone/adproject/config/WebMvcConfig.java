@@ -10,18 +10,20 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
+    private final CourseScopeInterceptor courseScopeInterceptor;
 
     @Autowired
-    public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor) {
+    public WebMvcConfig(RateLimitInterceptor rateLimitInterceptor, CourseScopeInterceptor courseScopeInterceptor) {
         this.rateLimitInterceptor = rateLimitInterceptor;
+        this.courseScopeInterceptor = courseScopeInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/**"); // Apply rate limiting to all /api endpoints
-                // You can add more specific path patterns or exclude some paths, e.g.:
-                // .addPathPatterns("/login") // Apply to login endpoint
-                // .excludePathPatterns("/api/public/**"); // Exclude public API endpoints
+
+        registry.addInterceptor(courseScopeInterceptor)
+                .addPathPatterns("/admin/**", "/rubrics/**", "/deadlines/**"); // Enforce course scoping for admin contexts
     }
 }

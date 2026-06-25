@@ -1,22 +1,27 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Views - Select Assessment</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_home.css}">
     <link rel="stylesheet" th:href="@{/css/data_home.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+<body class="admin-page">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header-container">
-            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
-            <h1>UTM AAS</h1>
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo" />
+                <h1>UTM AAS</h1>
+            </div>
         </div>
-        
+
         <div class="data-view-container">
             <div class="card overall-card">
                 <div class="card-content">
@@ -28,49 +33,62 @@
                     </p>
                 </div>
                 <div class="card-action">
-                    <a th:href="@{/admin/data-views/overall}" class="btn btn-primary">
+                    <a th:href="@{/admin/data-views/overall}" class="btn btn-primary"
+                        style="margin-right: 10px; margin-bottom: 10px;">
                         <i class="fas fa-table"></i> View Overall Summary
+                    </a>
+                    <a th:href="@{/admin/data-views/factors}" class="btn btn-secondary"
+                        style="margin-right: 10px; margin-bottom: 10px;">
+                        <i class="fas fa-list-ol"></i> View Factor Display
+                    </a>
+                    <a th:href="@{/admin/data-views/calculate-factor}" class="btn btn-secondary"
+                        style="margin-bottom: 10px;">
+                        <i class="fas fa-calculator"></i> Configure Factor Calculation
                     </a>
                 </div>
             </div>
-            
+
             <div class="section-container">
                 <div class="section-header">
                     <h2><i class="fas fa-clipboard-list"></i> Individual Assessment Data</h2>
                     <p>Select an assessment to view detailed evaluation data with ratings and comments</p>
                 </div>
-                
+
                 <div th:if="${assessments != null and !#lists.isEmpty(assessments)}" class="assessment-grid">
                     <div th:each="assessment : ${assessments}" class="assessment-card">
                         <div class="card-header">
                             <h3 th:text="${assessment.title}">Assessment Title</h3>
                         </div>
-                        
+
                         <div class="card-body">
                             <div class="info-row">
                                 <span class="label"><i class="fas fa-list-ul"></i> Rubrics:</span>
-                                <span class="value" th:text="${assessment.rubrics != null ? assessment.rubrics.size() : 0}">0</span>
+                                <span class="value"
+                                    th:text="${assessment.rubrics != null ? assessment.rubrics.size() : 0}">0</span>
                             </div>
-                            
+
                             <div class="info-row">
                                 <span class="label"><i class="fas fa-star"></i> Total Marks:</span>
-                                <span class="value" th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
+                                <span class="value"
+                                    th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
                             </div>
-                            
-                            <div class="info-row" th:if="${assessment.cloMarks != null and !assessment.cloMarks.isEmpty()}">
+
+                            <div class="info-row"
+                                th:if="${assessment.cloMarks != null and !assessment.cloMarks.isEmpty()}">
                                 <span class="label"><i class="fas fa-graduation-cap"></i> CLOs Configured:</span>
                                 <span class="value" th:text="${assessment.cloMarks.size()}">0</span>
                             </div>
                         </div>
-                        
+
                         <div class="card-footer">
-                            <a th:href="@{/admin/data-views/assessment/{id}(id=${assessment.id})}" class="btn btn-secondary">
+                            <a th:href="@{/admin/data-views/assessment/{id}(id=${assessment.id})}"
+                                class="btn btn-secondary">
                                 <i class="fas fa-eye"></i> View Data
                             </a>
                         </div>
                     </div>
                 </div>
-                
+
                 <div th:if="${assessments == null or #lists.isEmpty(assessments)}" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <h3>No assessments available yet.</h3>
@@ -79,5 +97,9 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
 </body>
+
 </html>
