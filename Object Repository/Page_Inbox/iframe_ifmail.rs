@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <WebElementEntity>
    <description></description>
-   <name>button_Login</name>
+   <name>iframe_ifmail</name>
    <tag></tag>
-   <elementGuidId>b8c09dfc-9edc-4d3e-ac01-232ecee917ad</elementGuidId>
+   <elementGuidId>e6f70f53-2902-426a-a6c4-a1b04a78844c</elementGuidId>
    <selectorCollection>
       <entry>
-         <key>BASIC</key>
-         <value>//*[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
+         <key>XPATH</key>
+         <value>//*[@id = 'ifmail']</value>
       </entry>
       <entry>
          <key>CSS</key>
-         <value>.auth-btn</value>
-      </entry>
-      <entry>
-         <key>XPATH</key>
-         <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
+         <value>#ifmail</value>
       </entry>
    </selectorCollection>
    <selectorMethod>XPATH</selectorMethod>
    <smartLocatorCollection>
       <entry>
          <key>SMART_LOCATOR</key>
-         <value>internal:role=button[name=&quot;Login&quot;i]</value>
+         <value>iframe[name=&quot;ifmail&quot;]</value>
       </entry>
    </smartLocatorCollection>
    <smartLocatorEnabled>false</smartLocatorEnabled>
@@ -32,63 +28,71 @@
       <matchCondition>equals</matchCondition>
       <name>tag</name>
       <type>Main</type>
-      <value>button</value>
-      <webElementGuid>a96eb0ad-55c0-40f3-ac02-b04f2dd7770c</webElementGuid>
+      <value>iframe</value>
+      <webElementGuid>a5cce924-176d-4f86-8932-25dcab3f6382</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
-      <name>type</name>
+      <name>name</name>
       <type>Main</type>
-      <value>submit</value>
-      <webElementGuid>4499df18-cb5d-4f12-b96e-948e6daf0043</webElementGuid>
+      <value>ifmail</value>
+      <webElementGuid>d14953f5-239a-42a7-8bc7-32c5f5c0e350</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
-      <name>class</name>
+      <name>onload</name>
       <type>Main</type>
-      <value>auth-btn btn-primary-custom</value>
-      <webElementGuid>b11d0043-b4fb-40fd-995b-69a35f8c55da</webElementGuid>
+      <value>onloadifmail()</value>
+      <webElementGuid>8748aa3a-3c68-4dff-bb09-5ab663dc148a</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>true</isSelected>
       <matchCondition>equals</matchCondition>
-      <name>text</name>
+      <name>id</name>
       <type>Main</type>
-      <value>Login</value>
-      <webElementGuid>b84b7000-22cb-4f99-b57d-a9d1a05d246b</webElementGuid>
+      <value>ifmail</value>
+      <webElementGuid>15faaf6e-26c4-49da-8361-256850ea9d01</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>state</name>
+      <type>Main</type>
+      <value>hidden</value>
+      <webElementGuid>758cf9fa-2106-4216-93bf-a8f74a178432</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>parent</name>
       <type>Main</type>
-      <value>md5.v1-facd85c7db671691b97df0c4a3d9810f</value>
-      <webElementGuid>43da5e37-bddb-4506-9855-e8c0d1ce2be8</webElementGuid>
+      <value>md5.v1-3ef9878c9b460397e2109663283c957d</value>
+      <webElementGuid>a70a1995-6108-494c-acc0-3ca64237462d</webElementGuid>
    </webElementProperties>
    <webElementProperties>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>e1b1e9f4-d8b2-4442-ae56-f6e5f6f5ffd0</webElementGuid>
+      <value>//*[@id = 'ifmail']</value>
+      <webElementGuid>ea2c0395-1ea4-4ac4-ab11-0609256f8a50</webElementGuid>
    </webElementProperties>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:attributes</name>
       <type>Main</type>
-      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' auth-btn ')]</value>
-      <webElementGuid>a2875500-cef8-4359-9b35-c2d50fc39db4</webElementGuid>
+      <value>//*[@id = 'ifmail']</value>
+      <webElementGuid>125de110-c48c-4bae-91f3-500da2eb1fc3</webElementGuid>
    </webElementXpaths>
    <webElementXpaths>
       <isSelected>false</isSelected>
       <matchCondition>equals</matchCondition>
       <name>xpath:customAttributes</name>
       <type>Main</type>
-      <value>//button[@type = 'submit' and (text() = 'Login' or . = 'Login')]</value>
-      <webElementGuid>71abe091-8b8e-4ba7-b8c5-38af2c93daa3</webElementGuid>
+      <value>//iframe[@name = 'ifmail' and @id = 'ifmail']</value>
+      <webElementGuid>3ae6ccf2-136f-4c50-a912-1bbf7c0ac137</webElementGuid>
    </webElementXpaths>
 </WebElementEntity>
