@@ -47,7 +47,7 @@
                             <h6 style="margin: 0 0 8px 0; color: #0f766e; font-size: 0.95rem; font-weight: 700;">
                                 <i class="fas fa-note-sticky"></i> Special Instructions
                             </h6>
-                            <p th:text="${assessment.extraNotesForStudent}" style="margin: 0; white-space: pre-line; color: #1f2937;"></p>
+                            <p th:utext="${assessment.getExtraNotesForStudentLinkified()}" style="margin: 0; white-space: pre-line; color: #1f2937;"></p>
                         </div>
 
                         <th:block th:with="groupedComponents=${groupAssessmentComponents.apply(assessment)}">

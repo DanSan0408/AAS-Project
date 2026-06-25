@@ -27,7 +27,7 @@
                     <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
                          style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5; color: #1f2937; white-space: pre-line;">
                         <strong style="display: block; margin-bottom: 4px; color: #065f46;">Admin Notes</strong>
-                        <span th:text="${assessment.extraNotes}">Extra notes</span>
+                        <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
                     </div>
                 </div>
 

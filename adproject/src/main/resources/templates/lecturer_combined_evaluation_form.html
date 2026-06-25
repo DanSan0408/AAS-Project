@@ -96,7 +96,7 @@
                         <span class="assessment-extra-notes-title">
                             <i class="fas fa-note-sticky"></i> Admin Notes
                         </span>
-                        <span th:text="${assessment.extraNotes}">Extra notes</span>
+                        <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
                     </div>
                 </div>
 
