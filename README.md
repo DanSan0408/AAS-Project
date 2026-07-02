@@ -9,6 +9,16 @@ Welcome to the **Integrated External Assessment System**, a comprehensive, full-
 
 ---
 
+## ✨ Key Features
+
+* **Role-Based Access Control (RBAC):** Dedicated and secure portals tailored for Administrators, Lecturers, Students, and Industrial Supervisors.
+* **Assessment & Evaluation Management:** Streamlined tracking, grading, and evaluation workflows for academic capstone projects.
+* **Customizable Rubrics & Weightages:** Flexible configuration of assessment factors, breakdowns, and scoring weightages.
+* **Robust Security:** Secure authentication and authorization powered by Spring Security.
+* **Automated Notifications:** SMTP-integrated email alerts for seamless system communications.
+* **Responsive User Interface:** A clean, user-friendly frontend built with HTML5, CSS3, and Thymeleaf.
+
+---
 
 ## 💻 Tech Stack
 
@@ -118,10 +128,12 @@ If you'd like to contribute, please fork the repository and use a feature branch
 
 ---
 
-## 📞 Contact
+## 🤝 Contact
 
-**Danial Ihsan Bin Mohd Nadhir**  
-[LinkedIn](https://www.linkedin.com/in/danial-ihsan-mohd-nadhir-66635b3a8/) | [GitHub](https://github.com/DanSan0408) | [Email](mailto:san.dan0408@gmail.com)
+Thank you for checking out my project! If you're a recruiter or fellow developer with questions or feedback, feel free to reach out.
+
+- 💼 **LinkedIn:** [LinkedIn Profile](https://www.linkedin.com/in/danial-ihsan-mohd-nadhir-66635b3a8/)
+- 🐙 **GitHub:** [GitHub Profile](https://github.com/DanSan0408e)
+- ✉️ **Email:** san.dan0408@gmail.com
 
 ---
-*Thank you for reviewing my code! I look forward to connecting.*

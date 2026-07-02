@@ -198,3 +198,55 @@ body.calculate-factor-page .btn-secondary {
 body.calculate-factor-page .btn-secondary:hover {
     background-color: #52525B !important;
 }
+
+/* Radio Card Styles for Factor Contribution */
+body.calculate-factor-page .radio-card-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+}
+
+body.calculate-factor-page .radio-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 12px !important;
+    border: 2px solid var(--color-border) !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    background-color: white !important;
+    margin: 0 !important;
+}
+
+body.calculate-factor-page .radio-card:hover {
+    border-color: #cbd5e1 !important;
+    background-color: var(--color-hover) !important;
+}
+
+body.calculate-factor-page .radio-card input:checked + .radio-content strong {
+    color: var(--color-primary) !important;
+}
+
+body.calculate-factor-page .radio-card:has(input:checked) {
+    border-color: var(--color-primary) !important;
+    background-color: #fff5f5 !important;
+}
+
+body.calculate-factor-page .radio-card.compact .radio-content strong {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+}
+
+body.calculate-factor-page .radio-card input[type="radio"] {
+    margin: 0 !important;
+    cursor: pointer !important;
+}
+
+body.calculate-factor-page .radio-card:has(input:disabled) {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    background-color: #f1f5f9 !important;
+    border-color: var(--color-border) !important;
+}
+

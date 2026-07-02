@@ -74,12 +74,12 @@ public class CommentConfigController {
             assessment = getAuthorizedAssessment(assessmentId);
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
         }
 
         if (!"group".equalsIgnoreCase(type) && !"individual".equalsIgnoreCase(type)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Invalid comment type");
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
         }
         
         boolean hasGroupRubrics = assessment.getRubrics().stream()
@@ -112,7 +112,7 @@ public class CommentConfigController {
             assessment = getAuthorizedAssessment(assessmentId);
         } catch (RuntimeException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
         }
         
         String label = "";
@@ -216,8 +216,7 @@ public class CommentConfigController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating comment: " + e.getMessage());
         }
-        
-        return "redirect:/admin/home";
+        return "redirect:/rubrics/manage";
     }
 
     @PostMapping("/{assessmentId}/delete-comment")
@@ -271,8 +270,7 @@ public class CommentConfigController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting comment: " + e.getMessage());
         }
-        
-        return "redirect:/admin/home";
+        return "redirect:/rubrics/manage";
     }
     
     @PostMapping("/{assessmentId}/{type}/save")
@@ -339,7 +337,7 @@ public class CommentConfigController {
                                " comment configuration saved successfully! " + processedLabels.size() + " question(s).";
             
             redirectAttributes.addFlashAttribute("successMessage", successMsg);
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
             
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", 
