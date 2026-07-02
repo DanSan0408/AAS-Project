@@ -1,6 +1,8 @@
 package com.capstone.adproject.controller;
 
-import java.util.ArrayList;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -100,8 +102,51 @@ public class LecturerController {
             }
         }
         
-        List<Assessment> pendingTasks = new ArrayList<>(combinedAssessments);
+        LocalDateTime now = LocalDateTime.now();
+        List<Assessment> pendingTasks = combinedAssessments.stream().filter(assessment -> {
+            List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                .filter(d -> d.getAssessorType() == null 
+                          || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                          || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                          || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                .collect(Collectors.toList());
+            
+            if (deadlines.isEmpty()) {
+                return true;
+            }
+            
+            return deadlines.stream().anyMatch(d -> {
+                if (d.getDate() == null) return true;
+                LocalDateTime endDate = d.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                return now.isBefore(endDate);
+            });
+        }).collect(Collectors.toList());
+
+        List<Long> openAssessmentIds = pendingTasks.stream()
+            .filter(assessment -> {
+                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                    .filter(d -> d.getAssessorType() == null 
+                              || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                              || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                              || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                    .collect(Collectors.toList());
+                
+                return deadlines.stream().anyMatch(d -> {
+                    if (d.getDate() == null) return true;
+                    LocalDateTime openDate = d.getOpenDate() != null ? 
+                        d.getOpenDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : 
+                        LocalDateTime.MIN;
+                    LocalDateTime endDate = d.getDate().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    return now.isAfter(openDate) && now.isBefore(endDate);
+                });
+            })
+            .map(Assessment::getId)
+            .collect(Collectors.toList());
+
         model.addAttribute("pendingTasks", pendingTasks);
+        model.addAttribute("openAssessmentIds", openAssessmentIds);
         model.addAttribute("assessmentLaunchModes", assessmentLaunchModes);
         model.addAttribute("assessmentTargets", assessmentTargets);
 
@@ -115,7 +160,7 @@ public class LecturerController {
             ? List.of()
             : deadlineService.getDeadlinesByCourseId(courseId);
         List<Deadline> filteredDeadlines = allDeadlines.stream()
-            .filter(d -> d.getAssessmentId() == null || allAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> d.getAssessmentId() != null && combinedAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         model.addAttribute("allDeadlines", allDeadlines);

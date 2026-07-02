@@ -59,8 +59,8 @@
                                 <label>Team Members</label>
                                 <ul class="member-list">
                                     <li th:each="student : ${group.students}">
-                                        <span class="avatar-circle" th:text="${#strings.substring(student.email,0,1)}">U</span>
-                                        <span class="member-name" th:text="${student.email}">Student Email</span>
+                                        <span class="avatar-circle" th:text="${#strings.substring(student.username,0,1).toUpperCase()}">U</span>
+                                        <span class="member-name" th:text="${student.username}">Student Name</span>
                                     </li>
                                 </ul>
                             </div>

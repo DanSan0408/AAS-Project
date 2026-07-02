@@ -462,10 +462,24 @@ public class SuperAdminService {
         }
 
         String normalized = identity.trim();
-        return lecturerRepository.findByEmailIgnoreCase(normalized)
+        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmailIgnoreCase(normalized)
                 .or(() -> lecturerRepository.findByUsernameIgnoreCase(normalized))
                 .or(() -> lecturerRepository.findByEmail(normalized))
                 .or(() -> lecturerRepository.findByUsername(normalized));
+                
+        if (lecturerOpt.isEmpty()) {
+            try {
+                ensureSuperAdminAssignable(normalized);
+                return lecturerRepository.findByEmailIgnoreCase(normalized)
+                        .or(() -> lecturerRepository.findByUsernameIgnoreCase(normalized))
+                        .or(() -> lecturerRepository.findByEmail(normalized))
+                        .or(() -> lecturerRepository.findByUsername(normalized));
+            } catch (Exception e) {
+                // Not a super admin or missing from super admin table, ignore
+            }
+        }
+        
+        return lecturerOpt;
     }
 
     @Transactional

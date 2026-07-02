@@ -115,7 +115,27 @@ public class LecturerAssessmentController {
         }
         
         LocalDateTime now = LocalDateTime.now();
-        List<Long> openAssessmentIds = uniqueAssessments.stream()
+        List<Assessment> visibleAssessments = uniqueAssessments.stream().filter(assessment -> {
+            List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                .filter(d -> d.getAssessorType() == null 
+                          || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                          || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                          || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                .collect(Collectors.toList());
+            
+            if (deadlines.isEmpty()) {
+                return true;
+            }
+            
+            return deadlines.stream().anyMatch(d -> {
+                if (d.getDate() == null) return true;
+                LocalDateTime endDate = d.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                return now.isBefore(endDate.plusDays(3));
+            });
+        }).collect(Collectors.toList());
+
+        List<Long> openAssessmentIds = visibleAssessments.stream()
             .filter(assessment -> {
                 List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
                     .filter(d -> d.getAssessorType() == null 
@@ -125,6 +145,7 @@ public class LecturerAssessmentController {
                     .collect(Collectors.toList());
                 
                 return deadlines.stream().anyMatch(d -> {
+                    if (d.getDate() == null) return true;
                     LocalDateTime openDate = d.getOpenDate() != null ? 
                         d.getOpenDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : 
                         LocalDateTime.MIN;
@@ -136,7 +157,17 @@ public class LecturerAssessmentController {
             .map(Assessment::getId)
             .collect(Collectors.toList());
         
-        model.addAttribute("assessments", uniqueAssessments);
+        List<Assessment> sortedAssessments = visibleAssessments.stream()
+            .sorted((a1, a2) -> {
+                boolean isOpen1 = openAssessmentIds.contains(a1.getId());
+                boolean isOpen2 = openAssessmentIds.contains(a2.getId());
+                if (isOpen1 && !isOpen2) return -1;
+                if (!isOpen1 && isOpen2) return 1;
+                return 0;
+            })
+            .collect(Collectors.toList());
+
+        model.addAttribute("assessments", sortedAssessments);
         model.addAttribute("openAssessmentIds", openAssessmentIds);
         model.addAttribute("assessmentLaunchModes", assessmentLaunchModes);
         
@@ -188,7 +219,7 @@ public class LecturerAssessmentController {
         
         boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
         if (hasRubricAssignment) {
-            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudents();
+            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudentsByCourseId(assessment.getCourse().getId());
             Set<Group> combinedGroups = new HashSet<>(assignedGroups);
             combinedGroups.addAll(allGroupsWithStudents);
             assignedGroups = new ArrayList<>(combinedGroups);
@@ -394,7 +425,7 @@ public class LecturerAssessmentController {
 
         boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
         if (hasRubricAssignment) {
-            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudents();
+            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudentsByCourseId(assessment.getCourse().getId());
             Set<Group> combinedGroups = new HashSet<>(assignedGroups);
             combinedGroups.addAll(allGroupsWithStudents);
             assignedGroups = new ArrayList<>(combinedGroups);

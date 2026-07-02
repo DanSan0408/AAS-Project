@@ -1,8 +1,157 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-02 (Antigravity)
+**Last Updated**: 2026-07-03 (Antigravity)
 
 ---
+
+
+
+## Current Status: SuperAdmin Course Creation "Missing Lecturer Profile" Fix
+**Status**: COMPLETED
+
+### Summary
+- Fixed an `IllegalStateException` that occurred when a Super Admin attempted to create a new course.
+- **Root Cause**: The system attempted to link the newly created course to the current user's `Lecturer` profile. However, Super Admins often exist only in the `super_admin` table and don't natively have a corresponding `Lecturer` profile. A previous refactor bypassed the auto-creation of this profile.
+- **Fix**: Modified `resolveLecturerByIdentity` in `SuperAdminService` to act as a robust fallback. If the lecturer lookup fails, the system now automatically attempts to locate the identity in the `super_admin` table. If found, it dynamically auto-creates the missing `Lecturer` profile (and grants necessary roles) on the fly before returning it, allowing the course creation to proceed smoothly.
+
+### Files Modified
+- `SuperAdminService.java`
+- `STATE.md`
+
+---
+
+## Current Status: Alphabetical Sorting of Student Lists
+**Status**: COMPLETED
+
+### Summary
+- Implemented consistent alphabetical sorting for all student lists across the Admin, Lecturer, and Student subsystems.
+- Sorting logic consistently prioritizes the student's `username` (ignoring case) and falls back to `email` if the username is empty or missing.
+- **Admin Subsystem**: Added `sortStudentsAlphabetically` to `AdminService` and updated `mergeStudentsById` and `getStudentsByGroup`. Updated `DataViewController` to sort overall data, factor data, and comments by student names.
+- **Lecturer Subsystem**: Added `sortStudentsAlphabetically` to `LecturerAssessmentService`. Applied sorted lists for group continuous evaluation in `IndustrialSupervisorController` and `GroupCommentController`. `LecturerAssessmentController` was verified to already implement the correct sorting.
+- **Student Subsystem**: Added `sortStudentsAlphabetically` to `StudentController` and enforced sorting on `teamMembers` arrays and `getGroupmates()` helper for peer assessment selection and team views.
+
+### Files Modified
+- `AdminService.java`
+- `DataViewController.java`
+- `LecturerAssessmentService.java`
+- `GroupCommentController.java`
+- `IndustrialSupervisorController.java`
+- `StudentController.java`
+- `STATE.md`
+
+---
+
+## Current Status: Factor Calculation Style Consistency
+**Status**: COMPLETED
+
+### Summary
+- Updated `calculate_factor.html` to replace the "Contribution Type" `<select>` dropdown with a consistent `.radio-card-group` component.
+- Updated `calculate_factor.css` to include the compact radio card styling to match the `assign_assessment` page.
+- Adjusted JavaScript in `calculate_factor.html` to dynamically enable/disable the radio buttons when the assessment is included or excluded from calculation.
+
+### Files Modified
+- `calculate_factor.html`
+- `calculate_factor.css`
+- `STATE.md`
+
+---
+
+## Current Status: Progress Tracking Select Assessor Display
+**Status**: COMPLETED
+
+### Summary
+- Updated `ProgressTrackingService` to include a helper method `getAssessorTypes` which identifies if an assessment has Lecturer assignments, Student assignments, or Both based on assignment records.
+- Modified `AdminController` to inject these assessor types into the model for the `/progress-tracking` dashboard.
+- Updated `admin_progress_tracking_select.html` to display an "Assessed By: [Assessor Type]" row on the assessment cards for quick visibility.
+
+### Files Modified
+- `ProgressTrackingService.java`
+- `AdminController.java`
+- `admin_progress_tracking_select.html`
+- `STATE.md`
+
+---
+
+## Current Status: Assessment Deadline Redirection, Expiration, and Duplication Fixes
+**Status**: COMPLETED
+
+### Summary
+Resolved several issues related to Assessment Deadlines and Configurations on the Admin Dashboard:
+- **Redirection Logic**: Updated `AdminController` and `CommentConfigController` so that the admin is redirected back to the Manage Assessments page (`/rubrics/manage`) instead of `/admin/home` after assigning deadlines or configuring assessment comments.
+- **Deadline Visibility Expiration**: Refined the `deadlines` display logic in the `adminHome` method. It now strictly checks `nowMillis >= openDate` and `nowMillis <= closeDate`. Deadlines with exact closing times (from Assessment Assignments) now expire at that precise time, and only active deadlines are shown.
+- **Duplicate Deadline Prevention**: Modified the `assignAssessment` method to look up existing deadlines purely by `assessmentId` (ignoring `assessorType`). This ensures that only a single deadline record exists per assessment, automatically cleaning up duplicates that might have been created under different assessor types.
+
+### Files Modified
+- `src/main/java/com/capstone/adproject/controller/AdminController.java`
+- `src/main/java/com/capstone/adproject/controller/CommentConfigController.java`
+
+---
+
+## Current Status: Separate Date/Time Inputs & Sidebar Fix
+**Status**: COMPLETED
+
+### Summary
+- Separated the Assessment Assignment deadline picker from a single `datetime-local` input into distinct `<input type="date">` and `<input type="time">` fields for better usability.
+- Refactored `AssessmentAssignmentDto.java` to use Spring's native `java.time.LocalDate` and `java.time.LocalTime` bindings instead of `java.util.Date`, preventing timezone/formatting mismatch errors.
+- Updated `AdminController.java` to combine the new separated fields into a final `java.util.Date` object before saving to the database. The form now correctly initializes the deadline date to today and the time explicitly to `23:59`.
+- Added a `.split-inputs` CSS grid layout to `assign_assessment.css` for a clean side-by-side presentation.
+- **Bug Fix**: Scoped the form CSS selectors in `assign_assessment.css` explicitly to `.main-content`. Previously, global selectors like `body.assign-assessment-page select` were bleeding into the navigation fragment, breaking the layout of the sidebar's Course Switcher dropdown.
+
+### Files Modified
+- `assign_assessment.html`
+- `assign_assessment.css`
+- `AssessmentAssignmentDto.java`
+- `AdminController.java`
+- `STATE.md`
+
+---
+
+## Current Status: Assessment Deadline Visibility & Assignment Refactor
+**Status**: FIXED
+
+### Summary
+- Simplified the deadline assignment flow by removing the "Who will be the Assessor?" (`assessorType`) dropdown from `assign_assessment.html`.
+- Updated `AdminController` to automatically assign `GENERAL` to the internal DTO and bypassed validation for the removed frontend field.
+- Refactored `StudentController` and `LecturerController` dashboards to disregard `assessorType` entirely. The system now cross-references deadlines directly against the list of assessments the student or lecturer is explicitly assigned to, ensuring deadlines are only visible to the intended targets.
+- Updated `StudentController` `isAssessmentOpen` and `getAssessmentDeadline` methods to look up deadlines purely by `assessmentId` instead of both `assessmentId` and `assessorType`.
+
+### Files Modified
+- `assign_assessment.html`
+- `AdminController.java`
+- `StudentController.java`
+- `LecturerController.java`
+- `STATE.md`
+
+---
+
+## Current Status: Lecturer Selection View Student Name Display
+**Status**: FIXED
+
+### Summary
+- Updated `lecturer_select_group.html` to display the student's username instead of their email address when selecting a group for evaluation.
+- Updated `lecturer_select_student.html` to strictly display the student's username by removing the previous email fallback logic.
+
+### Files Modified
+- `lecturer_select_group.html`
+- `lecturer_select_student.html`
+- `STATE.md`
+
+---
+
+## Current Status: Closed Assessments Disappearance After 3 Days
+**Status**: IMPLEMENTED
+
+### Summary
+- Updated `LecturerAssessmentController.java` to filter out assessments from the "Assess Students" view that have been closed for more than 3 days. It now also sorts the assessments so that currently open ones are placed at the top, moving closed assessments to the bottom.
+- Updated `LecturerController.java` to filter out assessments from the "Pending Tasks" list on the Lecturer Home page immediately when they pass their deadline (removed the 3-day grace period here as per requirement).
+- On the "Assess Students" view, assessments that are closed but within the 3-day grace period continue to be shown at the bottom and correctly display an "Assessment Closed" state, disabling the evaluation buttons.
+
+### Files Modified
+- `LecturerAssessmentController.java`
+- `LecturerController.java`
+- `lecturer_home.html`
+- `STATE.md`
+
 
 ## Current Status: Factor Calculation Configuration Refactor & Bug Fixes
 **Status**: COMPLETED

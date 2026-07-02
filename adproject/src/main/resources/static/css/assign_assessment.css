@@ -91,18 +91,19 @@ body.assign-assessment-page .form-group {
     margin-bottom: 20px !important;
 }
 
-body.assign-assessment-page label {
+body.assign-assessment-page .main-content label {
     display: block !important;
     margin-bottom: 8px !important;
     font-weight: 600 !important;
     color: var(--color-secondary) !important;
 }
 
-body.assign-assessment-page .required { color: var(--color-alert) !important; }
+body.assign-assessment-page .main-content .required { color: var(--color-alert) !important; }
 
-body.assign-assessment-page input[type="text"],
-body.assign-assessment-page input[type="date"],
-body.assign-assessment-page select {
+body.assign-assessment-page .main-content input[type="text"],
+body.assign-assessment-page .main-content input[type="date"],
+body.assign-assessment-page .main-content input[type="time"],
+body.assign-assessment-page .main-content select {
     width: 100% !important;
     padding: 12px !important;
     border: 2px solid var(--color-border) !important;
@@ -112,13 +113,14 @@ body.assign-assessment-page select {
     background-color: white !important;
 }
 
-body.assign-assessment-page input:focus,
-body.assign-assessment-page select:focus {
+body.assign-assessment-page .main-content input:focus,
+body.assign-assessment-page .main-content select:focus {
     border-color: var(--color-primary) !important;
     outline: none !important;
 }
 
-body.assign-assessment-page .radio-options {
+body.assign-assessment-page .radio-options,
+body.assign-assessment-page .split-inputs {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 15px !important;
