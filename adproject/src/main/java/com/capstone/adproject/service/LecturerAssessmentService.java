@@ -98,14 +98,25 @@ public class LecturerAssessmentService {
         return groups;
     }
 
+    private List<Student> sortStudentsAlphabetically(List<Student> students) {
+        if (students == null) return new java.util.ArrayList<>();
+        return students.stream()
+                .sorted((s1, s2) -> {
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
+                })
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<Student> getAllStudents() {
-        return studentRepository.findAll();
+        return sortStudentsAlphabetically(studentRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<Student> getStudentsByGroup(Long groupId) {
-        return studentRepository.findByGroupId(groupId);
+        return sortStudentsAlphabetically(studentRepository.findByGroupId(groupId));
     }
 
     public String getGroupEvaluationStatus(Assessment assessment, Lecturer lecturer, Long groupId) {

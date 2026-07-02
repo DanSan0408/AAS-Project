@@ -272,7 +272,12 @@ public class GroupCommentController {
             redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access to another course's comments.");
             return "redirect:/" + role + "/comments/view/assessments";
         }
-        List<Student> students = group.getStudents();
+        List<Student> students = new java.util.ArrayList<>(group.getStudents());
+        students.sort((s1, s2) -> {
+            String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+            String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
         
         // Fetch comments using existing CalculateService which properly identifies Evaluators (Peer/Lecturer)
         Map<Long, Map<String, List<String>>> groupCommentsMap = new HashMap<>();
@@ -350,7 +355,13 @@ public class GroupCommentController {
 
         for (Group group : supervisedGroups) {
             Map<Student, Map<String, List<String>>> commentsByStudent = new LinkedHashMap<>();
-            for (Student student : group.getStudents()) {
+            List<Student> sortedStudents = new java.util.ArrayList<>(group.getStudents());
+            sortedStudents.sort((s1, s2) -> {
+                String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                return name1.compareToIgnoreCase(name2);
+            });
+            for (Student student : sortedStudents) {
                 Map<String, List<String>> studentComments = new HashMap<>();
                 studentComments.put("groupComments", calculateService.getGroupAssessmentComments(student, assessment).values().stream().flatMap(List::stream).collect(Collectors.toList()));
                 studentComments.put("individualComments", calculateService.getIndividualAssessmentComments(student, assessment).values().stream().flatMap(List::stream).collect(Collectors.toList()));

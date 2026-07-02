@@ -137,9 +137,9 @@ public class DataViewController {
             if (group != null && ownsGroup(group)) {
                 List<Student> students = new ArrayList<>(group.getStudents());
                 students.sort((s1, s2) -> {
-                    String n1 = s1.getUsername() != null ? s1.getUsername() : "";
-                    String n2 = s2.getUsername() != null ? s2.getUsername() : "";
-                    return n1.compareToIgnoreCase(n2);
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
                 });
                 
                 for (Student student : students) {
@@ -197,11 +197,7 @@ public class DataViewController {
             ? new ArrayList<>()
             : new ArrayList<>(adminService.getAllStudents());
         
-        students.sort((s1, s2) -> {
-            String email1 = s1.getEmail() != null ? s1.getEmail() : "";
-            String email2 = s2.getEmail() != null ? s2.getEmail() : "";
-            return email1.compareToIgnoreCase(email2);
-        });
+        // Students list is already sorted by AdminService.getAllStudents()
         
         Map<Long, Map<String, Object>> studentOverallData = new HashMap<>();
         
@@ -289,12 +285,12 @@ public class DataViewController {
         Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
         
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
-            List<Student> students = selectedGroup.getStudents();
+            List<Student> students = new ArrayList<>(selectedGroup.getStudents());
             
             students.sort((s1, s2) -> {
-                String email1 = s1.getEmail() != null ? s1.getEmail() : "";
-                String email2 = s2.getEmail() != null ? s2.getEmail() : "";
-                return email1.compareToIgnoreCase(email2);
+                String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                return name1.compareToIgnoreCase(name2);
             });
             
             assessmentData = calculateService.calculateAssessmentData(assessment, students);
@@ -373,12 +369,12 @@ public class DataViewController {
         if (groupId != null) {
             Group group = groupRepository.findById(groupId).orElse(null);
             if (group != null && ownsGroup(group)) {
-                students = group.getStudents();
+                students = new ArrayList<>(group.getStudents());
                 
                 students.sort((s1, s2) -> {
-                    String email1 = s1.getEmail() != null ? s1.getEmail() : "";
-                    String email2 = s2.getEmail() != null ? s2.getEmail() : "";
-                    return email1.compareToIgnoreCase(email2);
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
                 });
                 
                 List<Assessment> assessments = activeCourseId == null

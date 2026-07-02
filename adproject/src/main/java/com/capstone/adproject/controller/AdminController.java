@@ -342,7 +342,16 @@ public class AdminController {
         model.addAttribute("allDeadlines", allDeadlines);
         model.addAttribute("deadlines", allDeadlines.stream()
             .filter(d -> d.getAssessmentId() == null || managedAssessmentIds.contains(d.getAssessmentId()))
-            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
+            .filter(d -> {
+                if (d.getDate() == null) return false;
+                long close = d.getDate().getTime();
+                // If it's exactly midnight, assume it means the whole day and add 23:59:59
+                if (close % 86400000L == 0 || (d.getAssessmentId() == null)) {
+                    close += 86399999L;
+                }
+                long open = d.getOpenDate() != null ? d.getOpenDate().getTime() : 0;
+                return nowMillis >= open && nowMillis <= close;
+            })
             .collect(Collectors.toList()));
 
         model.addAttribute("managedCourses", managedCourses);
@@ -362,7 +371,14 @@ public class AdminController {
         List<Assessment> assessments = activeCourseId == null
             ? List.of()
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+            
+        Map<Long, String> assessorTypes = new java.util.HashMap<>();
+        for (Assessment assessment : assessments) {
+            assessorTypes.put(assessment.getId(), progressTrackingService.getAssessorTypes(assessment));
+        }
+            
         model.addAttribute("assessments", assessments);
+        model.addAttribute("assessorTypes", assessorTypes);
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "admin_progress_tracking_select";
     }
@@ -1573,22 +1589,24 @@ public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes red
         
         if (assessmentOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found.");
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
         }
         if (!ownsAssessment(assessmentOpt.get())) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to assign this assessment.");
-            return "redirect:/admin/home";
+            return "redirect:/rubrics/manage";
         }
 
         AssessmentAssignmentDto dto = new AssessmentAssignmentDto();
         dto.setAssessmentId(assessmentId);
         dto.setTitle(assessmentOpt.get().getTitle() + " - Assignment"); 
         dto.setOpenType("INSTANT");
+        
+        dto.setEndDateOnly(java.time.LocalDate.now());
+        dto.setEndTimeOnly(java.time.LocalTime.of(23, 59));
 
         model.addAttribute("adminUsername", getLoggedInUsername());
         model.addAttribute("assessment", assessmentOpt.get());
         model.addAttribute("assignmentDto", dto);
-        model.addAttribute("assessorTypes", List.of("STUDENT", "LECTURER", "GENERAL")); 
         
         return "assign_assessment";
     }
@@ -1611,12 +1629,23 @@ public String assignAssessment(
         : assessmentService.getAssessmentById(dto.getAssessmentId());
     if (assessmentOpt.isEmpty() || !ownsAssessment(assessmentOpt.get())) {
         redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to assign this assessment.");
-        return "redirect:/admin/home";
+        return "redirect:/rubrics/manage";
     }
     
-    if (dto.getAssessmentId() == null || dto.getAssessorType() == null || dto.getEndDate() == null || dto.getTitle() == null) {
-         redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Assessor Type, Title, and End Date are mandatory.");
+    dto.setAssessorType("GENERAL");
+
+    if (dto.getAssessmentId() == null || dto.getEndDateOnly() == null || dto.getTitle() == null) {
+         redirectAttributes.addFlashAttribute("errorMessage", "Missing required fields for assignment. Assessment ID, Title, and End Date are mandatory.");
          return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
+    }
+    
+    java.time.LocalTime endTime = dto.getEndTimeOnly() != null ? dto.getEndTimeOnly() : java.time.LocalTime.of(23, 59);
+    java.util.Date finalEndDate = java.util.Date.from(dto.getEndDateOnly().atTime(endTime).atZone(java.time.ZoneId.systemDefault()).toInstant());
+    
+    java.util.Date finalOpenDate = null;
+    if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDateOnly() != null) {
+        java.time.LocalTime openTime = dto.getOpenTimeOnly() != null ? dto.getOpenTimeOnly() : java.time.LocalTime.of(0, 0);
+        finalOpenDate = java.util.Date.from(dto.getOpenDateOnly().atTime(openTime).atZone(java.time.ZoneId.systemDefault()).toInstant());
     }
 
     Long courseId = assessmentOpt.get().getCourse() != null ? assessmentOpt.get().getCourse().getId() : null;
@@ -1626,16 +1655,15 @@ public String assignAssessment(
     }
 
     // Business Logic Validation: Ensure Open Date is before End Date
-    if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null && dto.getEndDate() != null) {
-        if (!dto.getOpenDate().before(dto.getEndDate())) {
+    if (finalOpenDate != null && finalEndDate != null) {
+        if (!finalOpenDate.before(finalEndDate)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Business Logic Error: The Open Date must be strictly before the End Date.");
             return "redirect:/admin/assessment/assign/" + dto.getAssessmentId();
         }
     }
 
-    List<Deadline> existingDeadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-        dto.getAssessmentId(), 
-        dto.getAssessorType()
+    List<Deadline> existingDeadlines = deadlineService.getDeadlinesByAssessmentId(
+        dto.getAssessmentId()
     );
     
     Deadline deadline;
@@ -1657,14 +1685,14 @@ public String assignAssessment(
     deadline.setCourseId(courseId);
     
     deadline.setTitle(dto.getTitle());
-    deadline.setDate(dto.getEndDate());
+    deadline.setDate(finalEndDate);
 
     if ("INSTANT".equalsIgnoreCase(dto.getOpenType())) {
-        deadline.setOpenDate(new Date()); 
-    } else if ("SCHEDULED".equalsIgnoreCase(dto.getOpenType()) && dto.getOpenDate() != null) {
-        deadline.setOpenDate(dto.getOpenDate());
+        deadline.setOpenDate(new java.util.Date()); 
+    } else if (finalOpenDate != null) {
+        deadline.setOpenDate(finalOpenDate);
     } else {
-        deadline.setOpenDate(new Date()); 
+        deadline.setOpenDate(new java.util.Date()); 
     }
 
     try {
@@ -1679,8 +1707,7 @@ public String assignAssessment(
         redirectAttributes.addFlashAttribute("errorMessage", "Error assigning assessment: " + e.getMessage());
         return "redirect:/admin/assessment/assign/" + dto.getAssessmentId(); 
     }
-    
-    return "redirect:/admin/home"; 
+    return "redirect:/rubrics/manage"; 
 }
 
     @PostMapping("/bulk-delete-students")

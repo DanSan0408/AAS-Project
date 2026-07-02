@@ -15,8 +15,17 @@ public class AssessmentAssignmentDto {
     private String title;
     private String assessorType;
     private String openType; 
-    private Date openDate;
-    private Date endDate; 
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
+    private java.time.LocalDate openDateOnly;
+    
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm")
+    private java.time.LocalTime openTimeOnly;
+    
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "yyyy-MM-dd")
+    private java.time.LocalDate endDateOnly; 
+    
+    @org.springframework.format.annotation.DateTimeFormat(pattern = "HH:mm")
+    private java.time.LocalTime endTimeOnly;
 
     public AssessmentAssignmentDto() {
     }
@@ -62,19 +71,35 @@ public class AssessmentAssignmentDto {
         this.openType = openType;
     }
 
-    public Date getOpenDate() {
-        return openDate;
+    public java.time.LocalDate getOpenDateOnly() {
+        return openDateOnly;
     }
 
-    public void setOpenDate(Date openDate) {
-        this.openDate = openDate;
+    public void setOpenDateOnly(java.time.LocalDate openDateOnly) {
+        this.openDateOnly = openDateOnly;
     }
 
-    public Date getEndDate() {
-        return endDate;
+    public java.time.LocalTime getOpenTimeOnly() {
+        return openTimeOnly;
     }
 
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
+    public void setOpenTimeOnly(java.time.LocalTime openTimeOnly) {
+        this.openTimeOnly = openTimeOnly;
+    }
+
+    public java.time.LocalDate getEndDateOnly() {
+        return endDateOnly;
+    }
+
+    public void setEndDateOnly(java.time.LocalDate endDateOnly) {
+        this.endDateOnly = endDateOnly;
+    }
+
+    public java.time.LocalTime getEndTimeOnly() {
+        return endTimeOnly;
+    }
+
+    public void setEndTimeOnly(java.time.LocalTime endTimeOnly) {
+        this.endTimeOnly = endTimeOnly;
     }
 }

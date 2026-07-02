@@ -164,4 +164,16 @@ public class ProgressTrackingService {
         result.put("progressList", progressList);
         return result;
     }
+
+    public String getAssessorTypes(Assessment assessment) {
+        boolean hasLecturer = !lecturerGroupAssignmentRepository.findByAssessment(assessment).isEmpty() ||
+                              !lecturerRubricAssignmentRepository.findByAssessment(assessment).isEmpty() ||
+                              !lecturerStudentAssignmentRepository.findByAssessment(assessment).isEmpty();
+        boolean hasStudent = !studentAssessmentAssignmentRepository.findByAssessment(assessment).isEmpty();
+
+        if (hasLecturer && hasStudent) return "Both";
+        if (hasLecturer) return "Lecturer";
+        if (hasStudent) return "Student";
+        return "None";
+    }
 }

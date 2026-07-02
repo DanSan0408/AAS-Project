@@ -101,35 +101,23 @@ public class StudentController {
         return null;
     }
     
-    private boolean isAssessmentOpen(Assessment assessment, String assessorType) {
-        return isAssessmentOpenForTypes(assessment, assessorType, "GENERAL", "SUPERVISOR");
-    }
-
-    private boolean isAssessmentOpenForTypes(Assessment assessment, String... assessorTypes) {
+    private boolean isAssessmentOpen(Assessment assessment) {
         long nowMillis = System.currentTimeMillis();
+        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId());
 
-        for (String assessorType : assessorTypes) {
-            List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-                assessment.getId(), assessorType
-            );
+        for (Deadline deadline : deadlines) {
+            long openMillis = deadline.getOpenDate() != null ? deadline.getOpenDate().getTime() : 0L;
+            long closeMillis = deadline.getDate().getTime() + 86399999L;
 
-            for (Deadline deadline : deadlines) {
-                long openMillis = deadline.getOpenDate() != null ? deadline.getOpenDate().getTime() : 0L;
-                long closeMillis = deadline.getDate().getTime() + 86399999L;
-
-                if (nowMillis >= openMillis && nowMillis <= closeMillis) {
-                    return true;
-                }
+            if (nowMillis >= openMillis && nowMillis <= closeMillis) {
+                return true;
             }
         }
-
         return false;
     }
     
-    private Deadline getAssessmentDeadline(Assessment assessment, String assessorType) {
-        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentIdAndAssessorType(
-            assessment.getId(), assessorType
-        );
+    private Deadline getAssessmentDeadline(Assessment assessment) {
+        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId());
         return deadlines.isEmpty() ? null : deadlines.get(0);
     }
 
@@ -151,9 +139,10 @@ public class StudentController {
             return List.of();
         }
 
-        return studentRepository.findByGroup(student.getGroup()).stream()
+        List<Student> groupmates = studentRepository.findByGroup(student.getGroup()).stream()
             .filter(member -> member != null && member.getId() != null && !student.getId().equals(member.getId()))
             .collect(Collectors.toList());
+        return sortStudentsAlphabetically(groupmates);
     }
 
     private Map<Long, Map<Integer, String>> extractRubricComments(Map<String, String> formData, String prefix) {
@@ -180,6 +169,17 @@ public class StudentController {
     return rubricComments;
 }
     
+    private List<Student> sortStudentsAlphabetically(List<Student> students) {
+        if (students == null) return new java.util.ArrayList<>();
+        return students.stream()
+                .sorted((s1, s2) -> {
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
+                })
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/home")
     public String studentHome(Model model, Principal principal) {
         
@@ -226,17 +226,9 @@ public class StudentController {
             ? List.of()
             : deadlineService.getDeadlinesByCourseId(currentCourseId);
         long nowMillis = System.currentTimeMillis();
+        List<Long> assignedAssessmentIds = allAssessments.stream().map(Assessment::getId).collect(Collectors.toList());
         List<Deadline> studentDeadlines = allDeadlines.stream()
-            .filter(d -> {
-                String assessorType = d.getAssessorType();
-                if (assessorType == null || assessorType.isBlank()) {
-                    return true;
-                }
-                String normalizedType = assessorType.trim().toUpperCase();
-                return "STUDENT".equals(normalizedType)
-                    || "GENERAL".equals(normalizedType)
-                    || "ALL".equals(normalizedType);
-            })
+            .filter(d -> d.getAssessmentId() != null && assignedAssessmentIds.contains(d.getAssessmentId()))
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         
@@ -245,7 +237,7 @@ public class StudentController {
         if (hasGroup) {
             Map<Long, Map<String, Object>> assessmentProgress = new HashMap<>();
             for (Assessment assessment : allAssessments) { 
-                List<Student> teamMembers = studentRepository.findByGroup(currentStudent.getGroup());
+                List<Student> teamMembers = sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
                 Map<String, Object> progress = markService.getAssessmentProgress(currentStudent, assessment, teamMembers);
                 assessmentProgress.put(assessment.getId(), progress);
             }
@@ -258,10 +250,10 @@ public class StudentController {
         Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
         Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
         for (Assessment assessment : allAssessments) {
-            boolean isOpen = isAssessmentOpen(assessment, "STUDENT");
+            boolean isOpen = isAssessmentOpen(assessment);
             assessmentAccessMap.put(assessment.getId(), isOpen);
             
-            Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
+            Deadline deadline = getAssessmentDeadline(assessment);
             if (deadline != null) {
                 assessmentDeadlineMap.put(assessment.getId(), deadline);
             }
@@ -314,7 +306,7 @@ public class StudentController {
                                     (assessment.getIndividualCommentLabels() != null && !assessment.getIndividualCommentLabels().isEmpty()) ||
                                     (assessment.getGroupCommentLabels() != null && !assessment.getGroupCommentLabels().isEmpty());
             
-            if (hasComponents && isAssessmentOpen(assessment, "STUDENT")) {
+            if (hasComponents && isAssessmentOpen(assessment)) {
                 peerSelfAssessments.add(assessment);
             }
         }
@@ -325,7 +317,7 @@ public class StudentController {
 
         List<Student> teamMembers = currentStudent.getGroup() == null
             ? List.of()
-            : studentRepository.findByGroup(currentStudent.getGroup());
+            : sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
         model.addAttribute("teamMembers", teamMembers);
         
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
@@ -333,7 +325,7 @@ public class StudentController {
         Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
         Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
         for (Assessment assessment : peerSelfAssessments) {
-            Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
+            Deadline deadline = getAssessmentDeadline(assessment);
             if (deadline != null) {
                 assessmentDeadlineMap.put(assessment.getId(), deadline);
             }
@@ -374,7 +366,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isAssessmentOpen(assessment, "STUDENT")) {
+    if (!isAssessmentOpen(assessment)) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment is not currently open for evaluation.");
         return "redirect:/student/assessments";
@@ -455,7 +447,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
             .filter(m -> m.getSubRubric() != null)
             .collect(Collectors.toMap(m -> m.getSubRubric().getId(), m -> m, (m1, m2) -> m1));
     
-    Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
+    Deadline deadline = getAssessmentDeadline(assessment);
     
     model.addAttribute("assessment", assessment);
     model.addAttribute("rubrics", assessmentRubrics);
@@ -495,7 +487,7 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isAssessmentOpen(assessment, "STUDENT")) {
+    if (!isAssessmentOpen(assessment)) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment has been closed. Submissions are no longer accepted.");
         return "redirect:/student/assessments";
@@ -784,7 +776,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isAssessmentOpen(assessment, "STUDENT")) {
+    if (!isAssessmentOpen(assessment)) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment is not currently open for evaluation.");
         return "redirect:/student/assessments";
@@ -862,7 +854,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
             .filter(m -> m.getSubRubric() != null)
             .collect(Collectors.toMap(m -> m.getSubRubric().getId(), m -> m, (m1, m2) -> m1));
     
-    Deadline deadline = getAssessmentDeadline(assessment, "STUDENT");
+    Deadline deadline = getAssessmentDeadline(assessment);
     
     model.addAttribute("assessment", assessment);
     model.addAttribute("rubrics", groupRubrics);
@@ -900,7 +892,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
 
-    if (!isAssessmentOpen(assessment, "STUDENT")) {
+    if (!isAssessmentOpen(assessment)) {
         redirectAttributes.addFlashAttribute("error", 
             "This assessment has been closed. Submissions are no longer accepted.");
         return "redirect:/student/assessments";

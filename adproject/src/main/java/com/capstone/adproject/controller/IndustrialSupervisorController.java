@@ -318,7 +318,13 @@ public class IndustrialSupervisorController {
         model.addAttribute("group", group);
         model.addAttribute("assessment", assessment);
         model.addAttribute("supervisor", supervisor);
-        model.addAttribute("students", group.getStudents());
+        List<Student> sortedStudents = new java.util.ArrayList<>(group.getStudents());
+        sortedStudents.sort((s1, s2) -> {
+            String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+            String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
+        model.addAttribute("students", sortedStudents);
         model.addAttribute("groupRubrics", groupRubrics);
         model.addAttribute("individualRubrics", individualRubrics);
         model.addAttribute("progress", progress);

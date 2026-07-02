@@ -473,6 +473,17 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         return studentCourseAssignmentRepository.existsByStudentIdAndCourseId(student.getId(), courseId);
     }
 
+    private List<Student> sortStudentsAlphabetically(List<Student> students) {
+        if (students == null) return new java.util.ArrayList<>();
+        return students.stream()
+                .sorted((s1, s2) -> {
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
+                })
+                .collect(Collectors.toList());
+    }
+
     private List<Student> mergeStudentsById(List<Student> primary, List<Student> secondary) {
         LinkedHashMap<Long, Student> merged = new LinkedHashMap<>();
 
@@ -492,7 +503,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
             }
         }
 
-        return new java.util.ArrayList<>(merged.values());
+        return sortStudentsAlphabetically(new java.util.ArrayList<>(merged.values()));
     }
 
     @Transactional
@@ -589,7 +600,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
     
     public List<Student> getStudentsByGroup(Group group) {
-        return studentRepository.findByGroup(group); 
+        return sortStudentsAlphabetically(studentRepository.findByGroup(group)); 
     }
     
     public List<Group> getAllGroups() {
