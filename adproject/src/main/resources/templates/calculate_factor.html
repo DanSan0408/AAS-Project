@@ -50,12 +50,13 @@
                                 <tr>
                                     <th style="width: 50px; text-align: center;">Include</th>
                                     <th>Assessment Title</th>
+                                    <th style="width: 250px;">Contribution Type</th>
                                     <th style="width: 250px;">Weightage (%) <small>(0-100)</small></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:if="${assessments == null or assessments.isEmpty()}">
-                                    <td colspan="3" style="text-align: center; padding: 30px; color: #7f8c8d;">
+                                    <td colspan="4" style="text-align: center; padding: 30px; color: #7f8c8d;">
                                         <i class="fas fa-folder-open" style="font-size: 24px; display: block; margin-bottom: 10px;"></i>
                                         No assessments found in this course.
                                     </td>
@@ -67,6 +68,14 @@
                                     </td>
                                     <td class="assessment-name">
                                         <label th:for="'check_' + ${assessment.id}" th:text="${assessment.title}" style="cursor: pointer; display: block; width: 100%;">Assessment Title</label>
+                                    </td>
+                                    <td>
+                                        <select class="form-control type-select" th:name="'type_' + ${assessment.id}" th:id="'type_' + ${assessment.id}"
+                                                th:disabled="${currentWeightages == null or !currentWeightages.containsKey(assessment.id)}">
+                                            <option value="BOTH" th:selected="${currentTypes == null or !currentTypes.containsKey(assessment.id) or currentTypes.get(assessment.id) == 'BOTH'}">Both Ratings</option>
+                                            <option value="INDIVIDUAL" th:selected="${currentTypes != null and currentTypes.containsKey(assessment.id) and currentTypes.get(assessment.id) == 'INDIVIDUAL'}">Individual Ratings Only</option>
+                                            <option value="GROUP" th:selected="${currentTypes != null and currentTypes.containsKey(assessment.id) and currentTypes.get(assessment.id) == 'GROUP'}">Group Ratings Only</option>
+                                        </select>
                                     </td>
                                     <td>
                                         <input type="number" step="0.01" min="0" max="100" class="inp-number weight-input"
@@ -136,12 +145,15 @@
                 cb.addEventListener('change', function() {
                     const id = this.id.replace('check_', '');
                     const input = document.getElementById('weight_' + id);
+                    const typeSelect = document.getElementById('type_' + id);
                     if (this.checked) {
                         input.disabled = false;
+                        if (typeSelect) typeSelect.disabled = false;
                         input.focus();
                     } else {
                         input.disabled = true;
                         input.value = '';
+                        if (typeSelect) typeSelect.disabled = true;
                     }
                     updateTotal();
                 });

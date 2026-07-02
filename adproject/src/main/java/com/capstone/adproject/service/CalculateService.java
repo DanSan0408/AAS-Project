@@ -93,13 +93,7 @@ public class CalculateService {
         if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenFactor() != null) {
             factor = overrideOpt.get().getOverriddenFactor();
         } else {
-            boolean hasGroupAssessment = assessment.getRubrics() != null && 
-            assessment.getRubrics().stream()
-                .anyMatch(r -> "Group Assessment".equalsIgnoreCase(r.getAssessmentTypes()));
-
-            if (hasGroupAssessment) {
-                factor = calculatePeerAssessmentFactorForStudent(student);
-            }
+            factor = calculatePeerAssessmentFactorForStudent(student);
         }
         
         dto.setFactor(factor);
@@ -173,7 +167,7 @@ public class CalculateService {
         
         if (!weightages.isEmpty()) {
             for (FactorWeightage fw : weightages) {
-                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, fw.getAssessment());
+                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, fw.getAssessment(), fw.getFactorContributionType());
                 breakdown.setWeightage(fw.getWeightage());
                 finalFactor += breakdown.getCalculatedFactor() * (fw.getWeightage() / 100.0);
                 breakdowns.add(breakdown);
@@ -189,7 +183,7 @@ public class CalculateService {
             
             if (!peerMarks.isEmpty()) {
                 Assessment peerAssessment = peerMarks.get(0).getAssessment();
-                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, peerAssessment);
+                com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, peerAssessment, "BOTH");
                 breakdown.setWeightage(100.0);
                 breakdowns.add(breakdown);
                 dto.setFinalCalculatedFactor(breakdown.getCalculatedFactor());
@@ -212,7 +206,7 @@ public class CalculateService {
         return dto;
     }
     
-    private com.capstone.adproject.dto.AssessmentFactorBreakdown calculateBreakdownFromPeerAssessment(Student student, Assessment peerAssessment) {
+    private com.capstone.adproject.dto.AssessmentFactorBreakdown calculateBreakdownFromPeerAssessment(Student student, Assessment peerAssessment, String factorContributionType) {
         com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = new com.capstone.adproject.dto.AssessmentFactorBreakdown();
         breakdown.setAssessmentId(peerAssessment.getId());
         breakdown.setAssessmentTitle(peerAssessment.getTitle());
@@ -233,6 +227,16 @@ public class CalculateService {
                 .filter(m -> m.getEvaluatorStudent() != null)
                 .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
                 .filter(m -> m.getLecturer() == null)
+                .filter(m -> {
+                    String type = factorContributionType;
+                    if ("INDIVIDUAL".equalsIgnoreCase(type)) {
+                        return m.getAssessmentType() != null && m.getAssessmentType().toLowerCase().contains("individual");
+                    }
+                    if ("GROUP".equalsIgnoreCase(type)) {
+                        return m.getAssessmentType() != null && m.getAssessmentType().toLowerCase().contains("group");
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
             
             if (!receivedMarks.isEmpty()) {
@@ -289,7 +293,7 @@ public class CalculateService {
         if (!weightages.isEmpty()) {
             double finalFactor = 0.0;
             for (FactorWeightage fw : weightages) {
-                double factor = calculateStudentFactorFromPeerAssessment(student, fw.getAssessment());
+                double factor = calculateStudentFactorFromPeerAssessment(student, fw.getAssessment(), fw.getFactorContributionType());
                 finalFactor += factor * (fw.getWeightage() / 100.0);
             }
             return Math.round(finalFactor * 1000.0) / 1000.0;
@@ -305,10 +309,10 @@ public class CalculateService {
         if (peerMarks.isEmpty()) return 0.0;
         
         Assessment peerAssessment = peerMarks.get(0).getAssessment();
-        return calculateStudentFactorFromPeerAssessment(student, peerAssessment);
+        return calculateStudentFactorFromPeerAssessment(student, peerAssessment, "BOTH");
     }
 
-    private Double calculateStudentFactorFromPeerAssessment(Student student, Assessment peerAssessment) {
+    private Double calculateStudentFactorFromPeerAssessment(Student student, Assessment peerAssessment, String factorContributionType) {
         Group group = student.getGroup();
         if (group == null || group.getStudents() == null || group.getStudents().isEmpty()) return 0.0;
         
@@ -321,6 +325,15 @@ public class CalculateService {
                 .filter(m -> m.getEvaluatorStudent() != null)
                 .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
                 .filter(m -> m.getLecturer() == null)
+                .filter(m -> {
+                    if ("INDIVIDUAL".equalsIgnoreCase(factorContributionType)) {
+                        return m.getAssessmentType() != null && m.getAssessmentType().toLowerCase().contains("individual");
+                    }
+                    if ("GROUP".equalsIgnoreCase(factorContributionType)) {
+                        return m.getAssessmentType() != null && m.getAssessmentType().toLowerCase().contains("group");
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
             
             if (!receivedMarks.isEmpty()) {

@@ -453,17 +453,20 @@ public class DataViewController {
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
         
         Map<Long, Double> currentWeightages = new HashMap<>();
+        Map<Long, String> currentTypes = new HashMap<>();
         if (activeCourseId != null) {
             Course course = new Course();
             course.setId(activeCourseId);
             List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(course);
             for (FactorWeightage fw : weightages) {
                 currentWeightages.put(fw.getAssessment().getId(), fw.getWeightage());
+                currentTypes.put(fw.getAssessment().getId(), fw.getFactorContributionType() != null ? fw.getFactorContributionType() : "BOTH");
             }
         }
         
         model.addAttribute("assessments", assessments);
         model.addAttribute("currentWeightages", currentWeightages);
+        model.addAttribute("currentTypes", currentTypes);
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "calculate_factor";
     }
@@ -503,6 +506,8 @@ public class DataViewController {
             if (key.startsWith("weight_")) {
                 Long assessmentId = Long.parseLong(key.substring(7));
                 String val = params.get(key);
+                String typeVal = params.get("type_" + assessmentId);
+                if (typeVal == null || typeVal.trim().isEmpty()) typeVal = "BOTH";
                 if (val != null && !val.trim().isEmpty()) {
                     try {
                         Double weight = Double.parseDouble(val);
@@ -510,6 +515,7 @@ public class DataViewController {
                             Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
                             if (assessment != null && ownsAssessment(assessment)) {
                                 FactorWeightage fw = new FactorWeightage(assessment.getCourse(), assessment, weight);
+                                fw.setFactorContributionType(typeVal);
                                 factorWeightageRepository.save(fw);
                             }
                         }
