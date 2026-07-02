@@ -1,6 +1,17 @@
 # Project State Documentation
 
-**Last Updated**: 2026-06-25 (Antigravity)
+**Last Updated**: 2026-07-02 (Antigravity)
+
+---
+
+## Current Status: Factor Calculation Configuration Refactor & Bug Fixes
+**Status**: COMPLETED
+
+### Summary
+- Moved the `factorContributionType` configuration ("Both Ratings", "Individual Ratings Only", "Group Ratings Only") completely out of the core `Assessment` and `Rubric` domain and into the `FactorWeightage` entity, correctly coupling it exclusively to the Factor Calculation feature.
+- Refactored `CalculateService.java` to read the contribution type dynamically from the `FactorWeightage` mapping rather than the `Assessment` entity. It filters marks before calculating factors to ensure that only the chosen type of peer assessment ratings (e.g. Individual vs. Group) influences the final student factor.
+- **Bug Fix**: Addressed a critical UI bug in `calculate_factor.html` where toggling an assessment's inclusion via a checkbox correctly enabled the "Weightage" field but mistakenly kept the "Contribution Type" dropdown disabled. This caused the browser to omit the contribution type in the POST payload, forcing the backend to fall back to calculating with `"BOTH"`. Checking the box now correctly enables both inputs, allowing configurations like "Group Ratings Only" to be properly saved and enforced by the engine.
+- **Bug Fix**: In `CalculateService.java`, removed the `hasGroupAssessment` short-circuit during `calculateStudentData()`. The factor calculation engine will now unconditionally fetch and apply the student's factor even if an assessment only possesses an Individual Rubric (since the admin can now explicitly configure the factor to be derived from individual rubrics).
 
 ---
 

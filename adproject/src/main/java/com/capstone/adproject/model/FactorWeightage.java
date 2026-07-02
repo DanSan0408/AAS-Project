@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Column;
 
 @Entity
 @Table(name = "factor_weightages")
@@ -26,6 +27,9 @@ public class FactorWeightage {
     private Assessment assessment;
 
     private Double weightage;
+
+    @Column(name = "factor_contribution_type")
+    private String factorContributionType = "BOTH";
 
     public FactorWeightage() {}
 
@@ -46,4 +50,7 @@ public class FactorWeightage {
 
     public Double getWeightage() { return weightage; }
     public void setWeightage(Double weightage) { this.weightage = weightage; }
+    
+    public String getFactorContributionType() { return factorContributionType; }
+    public void setFactorContributionType(String factorContributionType) { this.factorContributionType = factorContributionType; }
 }

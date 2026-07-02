@@ -1,896 +1,127 @@
+# 🎓 Integrated External Assessment System
 
-```
-Capstone Project System 2 - Main
-├─ adproject
-│  ├─ .mvn
-│  │  └─ wrapper
-│  │     └─ maven-wrapper.properties
-│  ├─ HELP.md
-│  ├─ mvnw
-│  ├─ mvnw.cmd
-│  ├─ pom.xml
-│  ├─ src
-│  │  ├─ main
-│  │  │  ├─ java
-│  │  │  │  └─ com
-│  │  │  │     └─ capstone
-│  │  │  │        └─ adproject
-│  │  │  │           ├─ AdprojectApplication.java
-│  │  │  │           ├─ config
-│  │  │  │           │  ├─ CustomAuthenticationSuccessHandler.java
-│  │  │  │           │  ├─ SecurityConfig.java
-│  │  │  │           │  └─ ThymeleafConfig.java
-│  │  │  │           ├─ controller
-│  │  │  │           │  ├─ AdminController.java
-│  │  │  │           │  ├─ AuthController.java
-│  │  │  │           │  ├─ CriteriaController.java
-│  │  │  │           │  ├─ DeadlineController.java
-│  │  │  │           │  ├─ IndustrialSupervisorController.java
-│  │  │  │           │  ├─ LecturerController.java
-│  │  │  │           │  ├─ LogoutController.java
-│  │  │  │           │  ├─ RubricController.java
-│  │  │  │           │  └─ StudentController.java
-│  │  │  │           ├─ dto
-│  │  │  │           │  ├─ GroupAssignmentDto.java
-│  │  │  │           │  └─ RandomizationInputDto.java
-│  │  │  │           ├─ model
-│  │  │  │           │  ├─ Admin.java
-│  │  │  │           │  ├─ Assessment.java
-│  │  │  │           │  ├─ Criteria.java
-│  │  │  │           │  ├─ CriteriaRating.java
-│  │  │  │           │  ├─ Deadline.java
-│  │  │  │           │  ├─ DeadlineListWrapper.java
-│  │  │  │           │  ├─ Group.java
-│  │  │  │           │  ├─ IndustrialSupervisor.java
-│  │  │  │           │  ├─ Lecturer.java
-│  │  │  │           │  ├─ Rating.java
-│  │  │  │           │  ├─ Rubric.java
-│  │  │  │           │  ├─ RubricCriteriaWrapper.java
-│  │  │  │           │  ├─ Student.java
-│  │  │  │           │  └─ SubRubric.java
-│  │  │  │           ├─ repositories
-│  │  │  │           │  ├─ AdminRepository.java
-│  │  │  │           │  ├─ AssessmentRepository.java
-│  │  │  │           │  ├─ CriteriaRepository.java
-│  │  │  │           │  ├─ DeadlineRepository.java
-│  │  │  │           │  ├─ GroupRepository.java
-│  │  │  │           │  ├─ IndustrialSupervisorRepository.java
-│  │  │  │           │  ├─ LecturerRepository.java
-│  │  │  │           │  ├─ RatingRepository.java
-│  │  │  │           │  ├─ RubricRepository.java
-│  │  │  │           │  ├─ StudentRepository.java
-│  │  │  │           │  ├─ SubRubricRepository.java
-│  │  │  │           │  └─ UserRepository.java
-│  │  │  │           └─ service
-│  │  │  │              ├─ AdminService.java
-│  │  │  │              ├─ AssessmentService.java
-│  │  │  │              ├─ CriteriaService.java
-│  │  │  │              ├─ CustomUserDetailsService.java
-│  │  │  │              ├─ DeadlineService.java
-│  │  │  │              ├─ EmailService.java
-│  │  │  │              ├─ RubricService.java
-│  │  │  │              └─ UserService.java
-│  │  │  └─ resources
-│  │  │     ├─ application.properties
-│  │  │     ├─ static
-│  │  │     │  ├─ css
-│  │  │     │  │  ├─ login.css
-│  │  │     │  │  ├─ manageUser.css
-│  │  │     │  │  ├─ rubric.css
-│  │  │     │  │  └─ style.css
-│  │  │     │  └─ images
-│  │  │     │     ├─ bulat_cas.png
-│  │  │     │     └─ utmlogo.png
-│  │  │     └─ templates
-│  │  │        ├─ admin_home.html
-│  │  │        ├─ criteria-form.html
-│  │  │        ├─ edit-deadline.html
-│  │  │        ├─ edit_group.html
-│  │  │        ├─ forgot_password_form.html
-│  │  │        ├─ fragments
-│  │  │        │  ├─ common_sidebar.html
-│  │  │        │  └─ sidebar.html
-│  │  │        ├─ group_assignment.html
-│  │  │        ├─ group_assignment_preview.html
-│  │  │        ├─ industrial_supervisor_home.html
-│  │  │        ├─ lecturer_home.html
-│  │  │        ├─ login.html
-│  │  │        ├─ manage-assessments.html
-│  │  │        ├─ manage_lecturers.html
-│  │  │        ├─ manage_students.html
-│  │  │        ├─ manage_supervisors.html
-│  │  │        ├─ manage_users.html
-│  │  │        ├─ reset_password_form.html
-│  │  │        ├─ rubric-form.html
-│  │  │        ├─ rubric_management.html
-│  │  │        ├─ startup.html
-│  │  │        ├─ student_home.html
-│  │  │        └─ view-assessment-rubrics.html
-│  │  └─ test
-│  │     └─ java
-│  │        └─ com
-│  │           └─ capstone
-│  │              └─ adproject
-│  │                 └─ AdprojectApplicationTests.java
-│  └─ target
-│     ├─ adproject-0.0.1-SNAPSHOT.jar
-│     ├─ adproject-0.0.1-SNAPSHOT.jar.original
-│     ├─ classes
-│     │  ├─ application.properties
-│     │  ├─ com
-│     │  │  └─ capstone
-│     │  │     └─ adproject
-│     │  │        ├─ AdprojectApplication.class
-│     │  │        ├─ config
-│     │  │        │  ├─ CustomAuthenticationSuccessHandler.class
-│     │  │        │  ├─ SecurityConfig.class
-│     │  │        │  └─ ThymeleafConfig.class
-│     │  │        ├─ controller
-│     │  │        │  ├─ AdminController.class
-│     │  │        │  ├─ AuthController.class
-│     │  │        │  ├─ CriteriaController.class
-│     │  │        │  ├─ DeadlineController.class
-│     │  │        │  ├─ IndustrialSupervisorController.class
-│     │  │        │  ├─ LecturerController.class
-│     │  │        │  ├─ LogoutController.class
-│     │  │        │  ├─ RubricController.class
-│     │  │        │  └─ StudentController.class
-│     │  │        ├─ dto
-│     │  │        │  ├─ GroupAssignmentDto.class
-│     │  │        │  └─ RandomizationInputDto.class
-│     │  │        ├─ model
-│     │  │        │  ├─ Admin.class
-│     │  │        │  ├─ Assessment.class
-│     │  │        │  ├─ Criteria.class
-│     │  │        │  ├─ CriteriaRating.class
-│     │  │        │  ├─ Deadline.class
-│     │  │        │  ├─ DeadlineListWrapper.class
-│     │  │        │  ├─ Group.class
-│     │  │        │  ├─ IndustrialSupervisor.class
-│     │  │        │  ├─ Lecturer.class
-│     │  │        │  ├─ Rating.class
-│     │  │        │  ├─ Rubric.class
-│     │  │        │  ├─ RubricCriteriaWrapper.class
-│     │  │        │  ├─ Student.class
-│     │  │        │  └─ SubRubric.class
-│     │  │        ├─ repositories
-│     │  │        │  ├─ AdminRepository.class
-│     │  │        │  ├─ AssessmentRepository.class
-│     │  │        │  ├─ CriteriaRepository.class
-│     │  │        │  ├─ DeadlineRepository.class
-│     │  │        │  ├─ GroupRepository.class
-│     │  │        │  ├─ IndustrialSupervisorRepository.class
-│     │  │        │  ├─ LecturerRepository.class
-│     │  │        │  ├─ RatingRepository.class
-│     │  │        │  ├─ RubricRepository.class
-│     │  │        │  ├─ StudentRepository.class
-│     │  │        │  ├─ SubRubricRepository.class
-│     │  │        │  └─ UserRepository.class
-│     │  │        └─ service
-│     │  │           ├─ AdminService.class
-│     │  │           ├─ AssessmentService.class
-│     │  │           ├─ CriteriaService.class
-│     │  │           ├─ CustomUserDetailsService.class
-│     │  │           ├─ DeadlineService.class
-│     │  │           ├─ EmailService.class
-│     │  │           ├─ RubricService.class
-│     │  │           └─ UserService.class
-│     │  ├─ static
-│     │  │  ├─ css
-│     │  │  │  ├─ login.css
-│     │  │  │  ├─ manageUser.css
-│     │  │  │  ├─ rubric.css
-│     │  │  │  └─ style.css
-│     │  │  └─ images
-│     │  │     ├─ bulat_cas.png
-│     │  │     └─ utmlogo.png
-│     │  └─ templates
-│     │     ├─ admin_home.html
-│     │     ├─ criteria-form.html
-│     │     ├─ edit-deadline.html
-│     │     ├─ edit_group.html
-│     │     ├─ forgot_password_form.html
-│     │     ├─ fragments
-│     │     │  ├─ common_sidebar.html
-│     │     │  └─ sidebar.html
-│     │     ├─ group_assignment.html
-│     │     ├─ group_assignment_preview.html
-│     │     ├─ industrial_supervisor_home.html
-│     │     ├─ lecturer_home.html
-│     │     ├─ login.html
-│     │     ├─ manage-assessments.html
-│     │     ├─ manage_lecturers.html
-│     │     ├─ manage_students.html
-│     │     ├─ manage_supervisors.html
-│     │     ├─ manage_users.html
-│     │     ├─ reset_password_form.html
-│     │     ├─ rubric-form.html
-│     │     ├─ rubric_management.html
-│     │     ├─ startup.html
-│     │     ├─ student_home.html
-│     │     └─ view-assessment-rubrics.html
-│     ├─ generated-sources
-│     │  └─ annotations
-│     ├─ generated-test-sources
-│     │  └─ test-annotations
-│     ├─ maven-archiver
-│     │  └─ pom.properties
-│     ├─ maven-status
-│     │  └─ maven-compiler-plugin
-│     │     ├─ compile
-│     │     │  └─ default-compile
-│     │     │     ├─ createdFiles.lst
-│     │     │     └─ inputFiles.lst
-│     │     └─ testCompile
-│     │        └─ default-testCompile
-│     │           ├─ createdFiles.lst
-│     │           └─ inputFiles.lst
-│     ├─ surefire-reports
-│     │  ├─ com.capstone.adproject.AdprojectApplicationTests.txt
-│     │  └─ TEST-com.capstone.adproject.AdprojectApplicationTests.xml
-│     └─ test-classes
-│        └─ com
-│           └─ capstone
-│              └─ adproject
-│                 └─ AdprojectApplicationTests.class
-└─ SQLQuery1.sql
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-brightgreen.svg)
+![Java](https://img.shields.io/badge/Java-17-orange.svg)
+![MySQL](https://img.shields.io/badge/MySQL-8.4-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Supported-blueviolet.svg)
 
-```
-```
-Capstone Project System 2 - Main
-├─ adproject
-│  ├─ .mvn
-│  │  └─ wrapper
-│  │     └─ maven-wrapper.properties
-│  ├─ HELP.md
-│  ├─ mvnw
-│  ├─ mvnw.cmd
-│  ├─ pom.xml
-│  ├─ src
-│  │  ├─ main
-│  │  │  ├─ java
-│  │  │  │  └─ com
-│  │  │  │     └─ capstone
-│  │  │  │        └─ adproject
-│  │  │  │           ├─ AdprojectApplication.java
-│  │  │  │           ├─ config
-│  │  │  │           │  ├─ CustomAuthenticationSuccessHandler.java
-│  │  │  │           │  ├─ SecurityConfig.java
-│  │  │  │           │  └─ ThymeleafConfig.java
-│  │  │  │           ├─ controller
-│  │  │  │           │  ├─ AdminController.java
-│  │  │  │           │  ├─ AuthController.java
-│  │  │  │           │  ├─ CriteriaController.java
-│  │  │  │           │  ├─ DeadlineController.java
-│  │  │  │           │  ├─ IndustrialSupervisorController.java
-│  │  │  │           │  ├─ LecturerController.java
-│  │  │  │           │  ├─ LogoutController.java
-│  │  │  │           │  ├─ RubricController.java
-│  │  │  │           │  └─ StudentController.java
-│  │  │  │           ├─ dto
-│  │  │  │           │  ├─ AssessmentAssignmentDto.java
-│  │  │  │           │  ├─ GroupAssignmentDto.java
-│  │  │  │           │  └─ RandomizationInputDto.java
-│  │  │  │           ├─ model
-│  │  │  │           │  ├─ Admin.java
-│  │  │  │           │  ├─ Assessment.java
-│  │  │  │           │  ├─ AssessmentComment.java
-│  │  │  │           │  ├─ Criteria.java
-│  │  │  │           │  ├─ CriteriaRating.java
-│  │  │  │           │  ├─ Deadline.java
-│  │  │  │           │  ├─ DeadlineListWrapper.java
-│  │  │  │           │  ├─ Group.java
-│  │  │  │           │  ├─ IndustrialSupervisor.java
-│  │  │  │           │  ├─ Lecturer.java
-│  │  │  │           │  ├─ Mark.java
-│  │  │  │           │  ├─ Rating.java
-│  │  │  │           │  ├─ Rubric.java
-│  │  │  │           │  ├─ RubricCriteriaWrapper.java
-│  │  │  │           │  ├─ Student.java
-│  │  │  │           │  └─ SubRubric.java
-│  │  │  │           ├─ repositories
-│  │  │  │           │  ├─ AdminRepository.java
-│  │  │  │           │  ├─ AssessmentCommentRepository.java
-│  │  │  │           │  ├─ AssessmentRepository.java
-│  │  │  │           │  ├─ CriteriaRepository.java
-│  │  │  │           │  ├─ DeadlineRepository.java
-│  │  │  │           │  ├─ GroupRepository.java
-│  │  │  │           │  ├─ IndustrialSupervisorRepository.java
-│  │  │  │           │  ├─ LecturerRepository.java
-│  │  │  │           │  ├─ MarkRepository.java
-│  │  │  │           │  ├─ RatingRepository.java
-│  │  │  │           │  ├─ RubricRepository.java
-│  │  │  │           │  ├─ StudentRepository.java
-│  │  │  │           │  ├─ SubRubricRepository.java
-│  │  │  │           │  └─ UserRepository.java
-│  │  │  │           └─ service
-│  │  │  │              ├─ AdminService.java
-│  │  │  │              ├─ AssessmentCommentService.java
-│  │  │  │              ├─ AssessmentService.java
-│  │  │  │              ├─ CriteriaService.java
-│  │  │  │              ├─ CustomUserDetailsService.java
-│  │  │  │              ├─ DeadlineService.java
-│  │  │  │              ├─ EmailService.java
-│  │  │  │              ├─ MarkService.java
-│  │  │  │              ├─ RubricService.java
-│  │  │  │              └─ UserService.java
-│  │  │  └─ resources
-│  │  │     ├─ application.properties
-│  │  │     ├─ static
-│  │  │     │  ├─ css
-│  │  │     │  │  ├─ login.css
-│  │  │     │  │  ├─ manageUser.css
-│  │  │     │  │  ├─ peer_assess.css
-│  │  │     │  │  ├─ rubric.css
-│  │  │     │  │  ├─ student.css
-│  │  │     │  │  ├─ student_assessments.css
-│  │  │     │  │  ├─ student_comments.css
-│  │  │     │  │  └─ style.css
-│  │  │     │  └─ images
-│  │  │     │     ├─ bulat_cas.png
-│  │  │     │     └─ utmlogo.png
-│  │  │     └─ templates
-│  │  │        ├─ admin_home.html
-│  │  │        ├─ assign_assessment.html
-│  │  │        ├─ criteria-form.html
-│  │  │        ├─ edit-deadline.html
-│  │  │        ├─ edit_group.html
-│  │  │        ├─ forgot_password_form.html
-│  │  │        ├─ fragments
-│  │  │        │  ├─ common_sidebar.html
-│  │  │        │  ├─ lecturer_sidebar.html
-│  │  │        │  ├─ sidebar.html
-│  │  │        │  └─ student_sidebar.html
-│  │  │        ├─ group_assignment.html
-│  │  │        ├─ group_assignment_preview.html
-│  │  │        ├─ industrial_supervisor_home.html
-│  │  │        ├─ lecturer_home.html
-│  │  │        ├─ login.html
-│  │  │        ├─ manage-assessments.html
-│  │  │        ├─ manage_lecturers.html
-│  │  │        ├─ manage_students.html
-│  │  │        ├─ manage_supervisors.html
-│  │  │        ├─ manage_users.html
-│  │  │        ├─ peer_assessment_form.html
-│  │  │        ├─ reset_password_form.html
-│  │  │        ├─ rubric-form.html
-│  │  │        ├─ rubric_management.html
-│  │  │        ├─ startup.html
-│  │  │        ├─ student_assessments.html
-│  │  │        ├─ student_comments.html
-│  │  │        ├─ student_home.html
-│  │  │        └─ view-assessment-rubrics.html
-│  │  └─ test
-│  │     └─ java
-│  │        └─ com
-│  │           └─ capstone
-│  │              └─ adproject
-│  │                 └─ AdprojectApplicationTests.java
-│  └─ target
-│     ├─ adproject-0.0.1-SNAPSHOT.jar
-│     ├─ adproject-0.0.1-SNAPSHOT.jar.original
-│     ├─ classes
-│     │  ├─ application.properties
-│     │  ├─ com
-│     │  │  └─ capstone
-│     │  │     └─ adproject
-│     │  │        ├─ AdprojectApplication.class
-│     │  │        ├─ config
-│     │  │        │  ├─ CustomAuthenticationSuccessHandler.class
-│     │  │        │  ├─ SecurityConfig.class
-│     │  │        │  └─ ThymeleafConfig.class
-│     │  │        ├─ controller
-│     │  │        │  ├─ AdminController.class
-│     │  │        │  ├─ AuthController.class
-│     │  │        │  ├─ CriteriaController.class
-│     │  │        │  ├─ DeadlineController.class
-│     │  │        │  ├─ IndustrialSupervisorController.class
-│     │  │        │  ├─ LecturerController.class
-│     │  │        │  ├─ LogoutController.class
-│     │  │        │  ├─ RubricController.class
-│     │  │        │  └─ StudentController.class
-│     │  │        ├─ dto
-│     │  │        │  ├─ AssessmentAssignmentDto.class
-│     │  │        │  ├─ GroupAssignmentDto.class
-│     │  │        │  └─ RandomizationInputDto.class
-│     │  │        ├─ model
-│     │  │        │  ├─ Admin.class
-│     │  │        │  ├─ Assessment.class
-│     │  │        │  ├─ AssessmentComment$CommentAssessmentType.class
-│     │  │        │  ├─ AssessmentComment$EvaluatorType.class
-│     │  │        │  ├─ AssessmentComment.class
-│     │  │        │  ├─ Criteria.class
-│     │  │        │  ├─ CriteriaRating.class
-│     │  │        │  ├─ Deadline.class
-│     │  │        │  ├─ DeadlineListWrapper.class
-│     │  │        │  ├─ Group.class
-│     │  │        │  ├─ IndustrialSupervisor.class
-│     │  │        │  ├─ Lecturer.class
-│     │  │        │  ├─ Mark$AssessmentType.class
-│     │  │        │  ├─ Mark$SubmissionStatus.class
-│     │  │        │  ├─ Mark.class
-│     │  │        │  ├─ Rating.class
-│     │  │        │  ├─ Rubric.class
-│     │  │        │  ├─ RubricCriteriaWrapper.class
-│     │  │        │  ├─ Student.class
-│     │  │        │  └─ SubRubric.class
-│     │  │        ├─ repositories
-│     │  │        │  ├─ AdminRepository.class
-│     │  │        │  ├─ AssessmentCommentRepository.class
-│     │  │        │  ├─ AssessmentRepository.class
-│     │  │        │  ├─ CriteriaRepository.class
-│     │  │        │  ├─ DeadlineRepository.class
-│     │  │        │  ├─ GroupRepository.class
-│     │  │        │  ├─ IndustrialSupervisorRepository.class
-│     │  │        │  ├─ LecturerRepository.class
-│     │  │        │  ├─ MarkRepository.class
-│     │  │        │  ├─ RatingRepository.class
-│     │  │        │  ├─ RubricRepository.class
-│     │  │        │  ├─ StudentRepository.class
-│     │  │        │  ├─ SubRubricRepository.class
-│     │  │        │  └─ UserRepository.class
-│     │  │        └─ service
-│     │  │           ├─ AdminService.class
-│     │  │           ├─ AssessmentCommentService.class
-│     │  │           ├─ AssessmentService.class
-│     │  │           ├─ CriteriaService.class
-│     │  │           ├─ CustomUserDetailsService.class
-│     │  │           ├─ DeadlineService.class
-│     │  │           ├─ EmailService.class
-│     │  │           ├─ MarkService.class
-│     │  │           ├─ RubricService.class
-│     │  │           └─ UserService.class
-│     │  ├─ static
-│     │  │  ├─ css
-│     │  │  │  ├─ login.css
-│     │  │  │  ├─ manageUser.css
-│     │  │  │  ├─ peer_assess.css
-│     │  │  │  ├─ rubric.css
-│     │  │  │  ├─ student.css
-│     │  │  │  ├─ student_assessments.css
-│     │  │  │  ├─ student_comments.css
-│     │  │  │  └─ style.css
-│     │  │  └─ images
-│     │  │     ├─ bulat_cas.png
-│     │  │     └─ utmlogo.png
-│     │  └─ templates
-│     │     ├─ admin_home.html
-│     │     ├─ assign_assessment.html
-│     │     ├─ criteria-form.html
-│     │     ├─ edit-deadline.html
-│     │     ├─ edit_group.html
-│     │     ├─ forgot_password_form.html
-│     │     ├─ fragments
-│     │     │  ├─ common_sidebar.html
-│     │     │  ├─ lecturer_sidebar.html
-│     │     │  ├─ sidebar.html
-│     │     │  └─ student_sidebar.html
-│     │     ├─ group_assignment.html
-│     │     ├─ group_assignment_preview.html
-│     │     ├─ industrial_supervisor_home.html
-│     │     ├─ lecturer_home.html
-│     │     ├─ login.html
-│     │     ├─ manage-assessments.html
-│     │     ├─ manage_lecturers.html
-│     │     ├─ manage_students.html
-│     │     ├─ manage_supervisors.html
-│     │     ├─ manage_users.html
-│     │     ├─ peer_assessment_form.html
-│     │     ├─ reset_password_form.html
-│     │     ├─ rubric-form.html
-│     │     ├─ rubric_management.html
-│     │     ├─ startup.html
-│     │     ├─ student_assessments.html
-│     │     ├─ student_comments.html
-│     │     ├─ student_home.html
-│     │     └─ view-assessment-rubrics.html
-│     ├─ generated-sources
-│     │  └─ annotations
-│     ├─ generated-test-sources
-│     │  └─ test-annotations
-│     ├─ maven-archiver
-│     │  └─ pom.properties
-│     ├─ maven-status
-│     │  └─ maven-compiler-plugin
-│     │     ├─ compile
-│     │     │  └─ default-compile
-│     │     │     ├─ createdFiles.lst
-│     │     │     └─ inputFiles.lst
-│     │     └─ testCompile
-│     │        └─ default-testCompile
-│     │           ├─ createdFiles.lst
-│     │           └─ inputFiles.lst
-│     ├─ surefire-reports
-│     │  ├─ com.capstone.adproject.AdprojectApplicationTests.txt
-│     │  └─ TEST-com.capstone.adproject.AdprojectApplicationTests.xml
-│     └─ test-classes
-│        └─ com
-│           └─ capstone
-│              └─ adproject
-│                 └─ AdprojectApplicationTests.class
-├─ README.md
-└─ SQLQuery1.sql
+Welcome to the **Integrated External Assessment System**, a comprehensive, full-stack web application designed to streamline the administration, evaluation, and tracking of academic capstone projects. Built with **Spring Boot** and **Java 17**, this robust platform provides targeted portals for Administrators, Lecturers, Students, and Industrial Supervisors.
 
-```
-```
-Capstone Project System 2 - Main
-├─ adproject
-│  ├─ .mvn
-│  │  └─ wrapper
-│  │     └─ maven-wrapper.properties
-│  ├─ HELP.md
-│  ├─ logs
-│  │  ├─ application.log
-│  │  ├─ application.log .2025-12-11.0.gz
-│  │  ├─ application.log .2025-12-12.0.gz
-│  │  ├─ application.log .2025-12-13.0.gz
-│  │  ├─ application.log .2025-12-14.0.gz
-│  │  ├─ application.log .2025-12-15.0.gz
-│  │  ├─ application.log .2025-12-16.0.gz
-│  │  └─ application.log .2025-12-17.0.gz
-│  ├─ mvnw
-│  ├─ mvnw.cmd
-│  ├─ pom.xml
-│  ├─ src
-│  │  ├─ main
-│  │  │  ├─ java
-│  │  │  │  └─ com
-│  │  │  │     └─ capstone
-│  │  │  │        └─ adproject
-│  │  │  │           ├─ AdprojectApplication.java
-│  │  │  │           ├─ config
-│  │  │  │           │  ├─ CustomAuthenticationSuccessHandler.java
-│  │  │  │           │  ├─ SecurityConfig.java
-│  │  │  │           │  └─ ThymeleafConfig.java
-│  │  │  │           ├─ controller
-│  │  │  │           │  ├─ AdminController.java
-│  │  │  │           │  ├─ AuthController.java
-│  │  │  │           │  ├─ CommentConfigController.java
-│  │  │  │           │  ├─ DataViewController.java
-│  │  │  │           │  ├─ DeadlineController.java
-│  │  │  │           │  ├─ IndustrialSupervisorController.java
-│  │  │  │           │  ├─ LecturerAssessmentController.java
-│  │  │  │           │  ├─ LecturerController.java
-│  │  │  │           │  ├─ LogoutController.java
-│  │  │  │           │  ├─ RubricController.java
-│  │  │  │           │  └─ StudentController.java
-│  │  │  │           ├─ dto
-│  │  │  │           │  ├─ AssessmentAssignmentDto.java
-│  │  │  │           │  ├─ AssessmentColumnDto.java
-│  │  │  │           │  ├─ AssessmentDataViewDto.java
-│  │  │  │           │  ├─ AssessmentResultDetails.java
-│  │  │  │           │  ├─ GroupAssignmentDto.java
-│  │  │  │           │  ├─ GroupFactorDto.java
-│  │  │  │           │  ├─ OverallDataViewDto.java
-│  │  │  │           │  ├─ OverallStudentRowDto.java
-│  │  │  │           │  ├─ RandomizationInputDto.java
-│  │  │  │           │  ├─ RubricCalculationDto.java
-│  │  │  │           │  ├─ RubricHeaderDto.java
-│  │  │  │           │  ├─ StudentAssessmentResultDto.java
-│  │  │  │           │  ├─ StudentFactorDto.java
-│  │  │  │           │  └─ StudentRowDto.java
-│  │  │  │           ├─ model
-│  │  │  │           │  ├─ Admin.java
-│  │  │  │           │  ├─ Assessment.java
-│  │  │  │           │  ├─ AssessmentComment.java
-│  │  │  │           │  ├─ CalculatedResult.java
-│  │  │  │           │  ├─ Deadline.java
-│  │  │  │           │  ├─ DeadlineListWrapper.java
-│  │  │  │           │  ├─ Group.java
-│  │  │  │           │  ├─ IndustrialSupervisor.java
-│  │  │  │           │  ├─ Lecturer.java
-│  │  │  │           │  ├─ LecturerGroupAssignment.java
-│  │  │  │           │  ├─ Mark.java
-│  │  │  │           │  ├─ Rating.java
-│  │  │  │           │  ├─ Rubric.java
-│  │  │  │           │  ├─ Student.java
-│  │  │  │           │  └─ SubRubric.java
-│  │  │  │           ├─ repositories
-│  │  │  │           │  ├─ AdminRepository.java
-│  │  │  │           │  ├─ AssessmentCommentRepository.java
-│  │  │  │           │  ├─ AssessmentRepository.java
-│  │  │  │           │  ├─ CalculatedResultRepository.java
-│  │  │  │           │  ├─ DeadlineRepository.java
-│  │  │  │           │  ├─ GroupRepository.java
-│  │  │  │           │  ├─ IndustrialSupervisorRepository.java
-│  │  │  │           │  ├─ LecturerGroupAssignmentRepository.java
-│  │  │  │           │  ├─ LecturerRepository.java
-│  │  │  │           │  ├─ MarkRepository.java
-│  │  │  │           │  ├─ RatingRepository.java
-│  │  │  │           │  ├─ RubricRepository.java
-│  │  │  │           │  ├─ StudentRepository.java
-│  │  │  │           │  ├─ SubRubricRepository.java
-│  │  │  │           │  └─ UserRepository.java
-│  │  │  │           └─ service
-│  │  │  │              ├─ AdminService.java
-│  │  │  │              ├─ AssessmentCalculationService.java
-│  │  │  │              ├─ AssessmentCommentService.java
-│  │  │  │              ├─ AssessmentService.java
-│  │  │  │              ├─ CalculatedResultPersistenceService.java
-│  │  │  │              ├─ CustomUserDetailsService.java
-│  │  │  │              ├─ DataViewService.java
-│  │  │  │              ├─ DeadlineService.java
-│  │  │  │              ├─ EmailService.java
-│  │  │  │              ├─ FactorCalculationService.java
-│  │  │  │              ├─ IndustrialSupervisorService.java
-│  │  │  │              ├─ LecturerAssessmentService.java
-│  │  │  │              ├─ MarkService.java
-│  │  │  │              ├─ RubricService.java
-│  │  │  │              └─ UserService.java
-│  │  │  └─ resources
-│  │  │     ├─ application.properties
-│  │  │     ├─ static
-│  │  │     │  ├─ css
-│  │  │     │  │  ├─ admin_home.css
-│  │  │     │  │  ├─ assign_assessment.css
-│  │  │     │  │  ├─ comment.css
-│  │  │     │  │  ├─ editdeadline.css
-│  │  │     │  │  ├─ group.css
-│  │  │     │  │  ├─ group_edit.css
-│  │  │     │  │  ├─ group_preview.css
-│  │  │     │  │  ├─ lecturer.css
-│  │  │     │  │  ├─ lecturer_assessments.css
-│  │  │     │  │  ├─ lecturer_assessments2.css
-│  │  │     │  │  ├─ lecturer_evaluation.css
-│  │  │     │  │  ├─ lecturer_rubric.css
-│  │  │     │  │  ├─ lecturer_select.css
-│  │  │     │  │  ├─ lecturer_warning.css
-│  │  │     │  │  ├─ login.css
-│  │  │     │  │  ├─ manageUser.css
-│  │  │     │  │  ├─ peer_assess.css
-│  │  │     │  │  ├─ rubric.css
-│  │  │     │  │  ├─ sidebar.css
-│  │  │     │  │  ├─ student.css
-│  │  │     │  │  ├─ student_assessments.css
-│  │  │     │  │  ├─ student_comments.css
-│  │  │     │  │  ├─ style.css
-│  │  │     │  │  ├─ supervisor.css
-│  │  │     │  │  └─ view_rubric.css
-│  │  │     │  └─ images
-│  │  │     │     ├─ bulat_cas.png
-│  │  │     │     └─ utmlogo.png
-│  │  │     └─ templates
-│  │  │        ├─ admin_assessment_data_view.html
-│  │  │        ├─ admin_assign_lecturers.html
-│  │  │        ├─ admin_data_views_index.html
-│  │  │        ├─ admin_data_views_menu.html
-│  │  │        ├─ admin_factor_view.html
-│  │  │        ├─ admin_home.html
-│  │  │        ├─ admin_overall_data_view.html
-│  │  │        ├─ assign_assessment.html
-│  │  │        ├─ comment_configuration_single_type.html
-│  │  │        ├─ edit-deadline.html
-│  │  │        ├─ edit_group.html
-│  │  │        ├─ edit_single_comment.html
-│  │  │        ├─ forgot_password_form.html
-│  │  │        ├─ fragments
-│  │  │        │  ├─ industrial_sidebar.html
-│  │  │        │  ├─ lecturer_sidebar.html
-│  │  │        │  ├─ sidebar.html
-│  │  │        │  └─ student_sidebar.html
-│  │  │        ├─ group_assignment.html
-│  │  │        ├─ group_assignment_preview.html
-│  │  │        ├─ industrial_supervisor_home.html
-│  │  │        ├─ lecturer_assessments.html
-│  │  │        ├─ lecturer_combined_evaluation_form.html
-│  │  │        ├─ lecturer_home.html
-│  │  │        ├─ lecturer_reevaluation_warning_combined.html
-│  │  │        ├─ lecturer_select_group.html
-│  │  │        ├─ login.html
-│  │  │        ├─ manage-assessments.html
-│  │  │        ├─ manage_lecturers.html
-│  │  │        ├─ manage_students.html
-│  │  │        ├─ manage_supervisors.html
-│  │  │        ├─ manage_users.html
-│  │  │        ├─ peer_assessment_form.html
-│  │  │        ├─ reset_password_form.html
-│  │  │        ├─ rubric-form.html
-│  │  │        ├─ startup.html
-│  │  │        ├─ student_assessments.html
-│  │  │        ├─ student_comments.html
-│  │  │        ├─ student_home.html
-│  │  │        ├─ supervisor_continuous_evaluation.html
-│  │  │        ├─ supervisor_evaluate_groups.html
-│  │  │        └─ view-assessment-rubrics.html
-│  │  └─ test
-│  │     └─ java
-│  │        └─ com
-│  │           └─ capstone
-│  │              └─ adproject
-│  │                 └─ AdprojectApplicationTests.java
-│  └─ target
-│     ├─ adproject-0.0.1-SNAPSHOT.jar
-│     ├─ adproject-0.0.1-SNAPSHOT.jar.original
-│     ├─ classes
-│     │  ├─ application.properties
-│     │  ├─ com
-│     │  │  └─ capstone
-│     │  │     └─ adproject
-│     │  │        ├─ AdprojectApplication.class
-│     │  │        ├─ config
-│     │  │        │  ├─ CustomAuthenticationSuccessHandler.class
-│     │  │        │  ├─ SecurityConfig.class
-│     │  │        │  └─ ThymeleafConfig.class
-│     │  │        ├─ controller
-│     │  │        │  ├─ AdminController.class
-│     │  │        │  ├─ AuthController.class
-│     │  │        │  ├─ CommentConfigController.class
-│     │  │        │  ├─ DataViewController.class
-│     │  │        │  ├─ DeadlineController.class
-│     │  │        │  ├─ IndustrialSupervisorController.class
-│     │  │        │  ├─ LecturerAssessmentController.class
-│     │  │        │  ├─ LecturerController.class
-│     │  │        │  ├─ LogoutController.class
-│     │  │        │  ├─ RubricController.class
-│     │  │        │  └─ StudentController.class
-│     │  │        ├─ dto
-│     │  │        │  ├─ AssessmentAssignmentDto.class
-│     │  │        │  ├─ AssessmentColumnDto.class
-│     │  │        │  ├─ AssessmentDataViewDto.class
-│     │  │        │  ├─ AssessmentResultDetails.class
-│     │  │        │  ├─ GroupAssignmentDto.class
-│     │  │        │  ├─ GroupFactorDto.class
-│     │  │        │  ├─ OverallDataViewDto.class
-│     │  │        │  ├─ OverallStudentRowDto.class
-│     │  │        │  ├─ RandomizationInputDto.class
-│     │  │        │  ├─ RubricCalculationDto.class
-│     │  │        │  ├─ RubricHeaderDto.class
-│     │  │        │  ├─ StudentAssessmentResultDto.class
-│     │  │        │  ├─ StudentFactorDto.class
-│     │  │        │  └─ StudentRowDto.class
-│     │  │        ├─ model
-│     │  │        │  ├─ Admin.class
-│     │  │        │  ├─ Assessment$1.class
-│     │  │        │  ├─ Assessment$2.class
-│     │  │        │  ├─ Assessment$3.class
-│     │  │        │  ├─ Assessment$4.class
-│     │  │        │  ├─ Assessment.class
-│     │  │        │  ├─ AssessmentComment$CommentAssessmentType.class
-│     │  │        │  ├─ AssessmentComment$EvaluatorType.class
-│     │  │        │  ├─ AssessmentComment.class
-│     │  │        │  ├─ CalculatedResult.class
-│     │  │        │  ├─ Deadline.class
-│     │  │        │  ├─ DeadlineListWrapper.class
-│     │  │        │  ├─ Group.class
-│     │  │        │  ├─ IndustrialSupervisor.class
-│     │  │        │  ├─ Lecturer.class
-│     │  │        │  ├─ LecturerGroupAssignment.class
-│     │  │        │  ├─ Mark$SubmissionStatus.class
-│     │  │        │  ├─ Mark.class
-│     │  │        │  ├─ Rating.class
-│     │  │        │  ├─ Rubric.class
-│     │  │        │  ├─ Student.class
-│     │  │        │  └─ SubRubric.class
-│     │  │        ├─ repositories
-│     │  │        │  ├─ AdminRepository.class
-│     │  │        │  ├─ AssessmentCommentRepository.class
-│     │  │        │  ├─ AssessmentRepository.class
-│     │  │        │  ├─ CalculatedResultRepository.class
-│     │  │        │  ├─ DeadlineRepository.class
-│     │  │        │  ├─ GroupRepository.class
-│     │  │        │  ├─ IndustrialSupervisorRepository.class
-│     │  │        │  ├─ LecturerGroupAssignmentRepository.class
-│     │  │        │  ├─ LecturerRepository.class
-│     │  │        │  ├─ MarkRepository.class
-│     │  │        │  ├─ RatingRepository.class
-│     │  │        │  ├─ RubricRepository.class
-│     │  │        │  ├─ StudentRepository.class
-│     │  │        │  ├─ SubRubricRepository.class
-│     │  │        │  └─ UserRepository.class
-│     │  │        └─ service
-│     │  │           ├─ AdminService.class
-│     │  │           ├─ AssessmentCalculationService.class
-│     │  │           ├─ AssessmentCommentService.class
-│     │  │           ├─ AssessmentService.class
-│     │  │           ├─ CalculatedResultPersistenceService.class
-│     │  │           ├─ CustomUserDetailsService.class
-│     │  │           ├─ DataViewService.class
-│     │  │           ├─ DeadlineService.class
-│     │  │           ├─ EmailService.class
-│     │  │           ├─ FactorCalculationService.class
-│     │  │           ├─ IndustrialSupervisorService.class
-│     │  │           ├─ LecturerAssessmentService.class
-│     │  │           ├─ MarkService.class
-│     │  │           ├─ RubricService.class
-│     │  │           └─ UserService.class
-│     │  ├─ static
-│     │  │  ├─ css
-│     │  │  │  ├─ admin_home.css
-│     │  │  │  ├─ assign_assessment.css
-│     │  │  │  ├─ comment.css
-│     │  │  │  ├─ editdeadline.css
-│     │  │  │  ├─ group.css
-│     │  │  │  ├─ group_edit.css
-│     │  │  │  ├─ group_preview.css
-│     │  │  │  ├─ lecturer.css
-│     │  │  │  ├─ lecturer_assessments.css
-│     │  │  │  ├─ lecturer_assessments2.css
-│     │  │  │  ├─ lecturer_evaluation.css
-│     │  │  │  ├─ lecturer_rubric.css
-│     │  │  │  ├─ lecturer_select.css
-│     │  │  │  ├─ lecturer_warning.css
-│     │  │  │  ├─ login.css
-│     │  │  │  ├─ manageUser.css
-│     │  │  │  ├─ peer_assess.css
-│     │  │  │  ├─ rubric.css
-│     │  │  │  ├─ sidebar.css
-│     │  │  │  ├─ student.css
-│     │  │  │  ├─ student_assessments.css
-│     │  │  │  ├─ student_comments.css
-│     │  │  │  ├─ style.css
-│     │  │  │  ├─ supervisor.css
-│     │  │  │  └─ view_rubric.css
-│     │  │  └─ images
-│     │  │     ├─ bulat_cas.png
-│     │  │     └─ utmlogo.png
-│     │  └─ templates
-│     │     ├─ admin_assessment_data_view.html
-│     │     ├─ admin_assign_lecturers.html
-│     │     ├─ admin_data_views_index.html
-│     │     ├─ admin_data_views_menu.html
-│     │     ├─ admin_factor_view.html
-│     │     ├─ admin_home.html
-│     │     ├─ admin_overall_data_view.html
-│     │     ├─ assign_assessment.html
-│     │     ├─ comment_configuration_single_type.html
-│     │     ├─ edit-deadline.html
-│     │     ├─ edit_group.html
-│     │     ├─ edit_single_comment.html
-│     │     ├─ forgot_password_form.html
-│     │     ├─ fragments
-│     │     │  ├─ industrial_sidebar.html
-│     │     │  ├─ lecturer_sidebar.html
-│     │     │  ├─ sidebar.html
-│     │     │  └─ student_sidebar.html
-│     │     ├─ group_assignment.html
-│     │     ├─ group_assignment_preview.html
-│     │     ├─ industrial_supervisor_home.html
-│     │     ├─ lecturer_assessments.html
-│     │     ├─ lecturer_combined_evaluation_form.html
-│     │     ├─ lecturer_home.html
-│     │     ├─ lecturer_reevaluation_warning_combined.html
-│     │     ├─ lecturer_select_group.html
-│     │     ├─ login.html
-│     │     ├─ manage-assessments.html
-│     │     ├─ manage_lecturers.html
-│     │     ├─ manage_students.html
-│     │     ├─ manage_supervisors.html
-│     │     ├─ manage_users.html
-│     │     ├─ peer_assessment_form.html
-│     │     ├─ reset_password_form.html
-│     │     ├─ rubric-form.html
-│     │     ├─ startup.html
-│     │     ├─ student_assessments.html
-│     │     ├─ student_comments.html
-│     │     ├─ student_home.html
-│     │     ├─ supervisor_continuous_evaluation.html
-│     │     ├─ supervisor_evaluate_groups.html
-│     │     └─ view-assessment-rubrics.html
-│     ├─ generated-sources
-│     │  └─ annotations
-│     ├─ generated-test-sources
-│     │  └─ test-annotations
-│     ├─ maven-archiver
-│     │  └─ pom.properties
-│     ├─ maven-status
-│     │  └─ maven-compiler-plugin
-│     │     ├─ compile
-│     │     │  └─ default-compile
-│     │     │     ├─ createdFiles.lst
-│     │     │     └─ inputFiles.lst
-│     │     └─ testCompile
-│     │        └─ default-testCompile
-│     │           ├─ createdFiles.lst
-│     │           └─ inputFiles.lst
-│     ├─ surefire-reports
-│     │  ├─ com.capstone.adproject.AdprojectApplicationTests.txt
-│     │  └─ TEST-com.capstone.adproject.AdprojectApplicationTests.xml
-│     └─ test-classes
-│        └─ com
-│           └─ capstone
-│              └─ adproject
-│                 └─ AdprojectApplicationTests.class
-├─ README.md
-└─ SQLQuery1.sql
+---
 
+
+## 💻 Tech Stack
+
+* **Backend:** Java 17, Spring Boot 3.5.4, Spring Security, Spring Data JPA, Hibernate.
+* **Frontend:** HTML5, CSS3, Thymeleaf (Server-side rendering).
+* **Database:** MySQL 8.4.
+* **Deployment & Containerization:** Docker, Docker Compose.
+* **Build Tool:** Maven.
+
+---
+
+## 🛠️ Getting Started
+
+Follow these instructions to get a copy of the project up and running on your local machine for development and testing purposes.
+
+### Prerequisites
+
+Ensure you have the following installed:
+* [Docker](https://www.docker.com/products/docker-desktop/) (Recommended for easy setup)
+* *Alternative (for manual setup):* [Java 17 JDK](https://adoptium.net/), [Maven](https://maven.apache.org/), and [MySQL 8.4](https://dev.mysql.com/downloads/mysql/)
+
+---
+
+### Option 1: Run with Docker (Recommended) 🐳
+
+The easiest way to get the application running is by using Docker Compose. This will automatically spin up the Spring Boot app and the MySQL database in linked containers.
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/your-username/AAS-Project-Main.git
+   cd AAS-Project-Main/adproject
+   ```
+
+2. **Configure Environment Variables:**
+   Copy the example environment file and configure your credentials (like `MYSQL_ROOT_PASSWORD`):
+   ```bash
+   cp .env.example .env
+   ```
+   *(Make sure to open `.env` and fill in any required passwords and email configurations if you wish to test the email features).*
+
+3. **Build and Run the Containers:**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+4. **Access the Application:**
+   Open your browser and navigate to: `http://localhost:8080`
+
+To stop the application, run: `docker-compose down`
+
+---
+
+### Option 2: Run Locally (Manual Setup) 💻
+
+If you prefer to run the application natively on your machine:
+
+1. **Set up the Database:**
+   * Open your local MySQL instance.
+   * Create a new database named `aas_db`.
+
+2. **Configure Application Properties:**
+   * Navigate to `adproject/src/main/resources/application.properties`.
+   * Update the `spring.datasource.password` and `spring.mail.*` properties with your local MySQL password and valid SMTP credentials.
+
+3. **Run the Application:**
+   * Open a terminal in the `adproject` directory.
+   * Use the Maven wrapper to start the app:
+     ```bash
+     # On Windows
+     mvnw.cmd spring-boot:run
+     
+     # On macOS/Linux
+     ./mvnw spring-boot:run
+     ```
+
+4. **Access the Application:**
+   Open your browser and navigate to: `http://localhost:8080`
+
+---
+
+## 📂 Project Structure Overview
+
+```text
+AAS-Project-Main/
+├── adproject/                  # Main Spring Boot Application Directory
+│   ├── src/main/java/          # Java Source Code (Controllers, Services, Models, Repositories)
+│   ├── src/main/resources/     # Application Properties, Thymeleaf Templates, Static Assets (CSS/JS)
+│   ├── Dockerfile              # Docker Configuration for the App
+│   ├── docker-compose.yml      # Multi-container Docker Setup
+│   └── pom.xml                 # Maven Dependencies
+└── README.md                   # Project Documentation
 ```
+
+*(Note: The codebase utilizes standard layered architecture: Controllers → Services → Repositories → DB).*
+
+---
+
+## 🤝 Contributing
+
+If you'd like to contribute, please fork the repository and use a feature branch. Pull requests are warmly welcome.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📞 Contact
+
+**Danial Ihsan Bin Mohd Nadhir**  
+[LinkedIn](https://www.linkedin.com/in/danial-ihsan-mohd-nadhir-66635b3a8/) | [GitHub](https://github.com/DanSan0408) | [Email](mailto:san.dan0408@gmail.com)
+
+---
+*Thank you for reviewing my code! I look forward to connecting.*
