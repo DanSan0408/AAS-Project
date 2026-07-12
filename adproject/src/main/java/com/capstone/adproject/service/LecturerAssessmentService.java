@@ -523,7 +523,8 @@ public class LecturerAssessmentService {
                             .divide(subRubric.getRubric().getMarks(), 4, RoundingMode.HALF_UP)
                             .doubleValue();
                         double cloMarksForSubRubric = subRubric.getRubric().getCloMarks() * subRubricProportion;
-                        double achievementProportion = rating.getMarks()
+                        java.math.BigDecimal ratingMarks = rating.getMarks() != null ? rating.getMarks() : java.math.BigDecimal.ZERO;
+                        double achievementProportion = ratingMarks
                             .divide(subRubric.getMarks(), 4, RoundingMode.HALF_UP)
                             .doubleValue();
                         mark.setCloMarks(cloMarksForSubRubric * achievementProportion);
