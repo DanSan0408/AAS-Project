@@ -661,7 +661,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                     
                     double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
                     
-                    double achievementProportion = rating.getMarks()
+                    java.math.BigDecimal ratingMarks = rating.getMarks() != null ? rating.getMarks() : java.math.BigDecimal.ZERO;
+                    double achievementProportion = ratingMarks
                         .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
                         .doubleValue();
                     
@@ -1058,7 +1059,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                         
                         double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
                         
-                        double achievementProportion = rating.getMarks()
+                        java.math.BigDecimal ratingMarks = rating.getMarks() != null ? rating.getMarks() : java.math.BigDecimal.ZERO;
+                        double achievementProportion = ratingMarks
                             .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
                             .doubleValue();
                         
