@@ -1,10 +1,44 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-03 (Antigravity)
+**Last Updated**: 2026-07-23 (Antigravity)
 
 ---
 
+## Current Status: Assessment Comments Unification & UI Enhancements
+**Status**: COMPLETED
 
+### Summary
+- **Unified Comments View**: Merged the previously divided Group Assessment and Individual Assessment comment sections into a single continuous list for a cleaner reading experience in both Admin (`comment_view.html`) and Lecturer (`lecturer_comment_view.html`) views.
+- **Dynamic Labeling**: Added a new service method `getAllAssessmentComments` in `CalculateService.java` that formats the question label dynamically by appending the rubric assessment type in brackets (e.g., `Question Label (Group Assessment Comments)`).
+- **Backend Filter Fix**: Removed an overly aggressive filter in `CalculateService.java` that was hiding peer/self-assessment comments if they were linked to a specific `rubricId`, ensuring all feedback is now correctly fetched and displayed.
+- **UI Typography**: Enlarged and bolded the main heading ("Assessment Comments Received") and the individual question labels to establish a clearer visual hierarchy and improve readability.
+
+### Files Modified
+- `CalculateService.java`
+- `GroupCommentController.java`
+- `DataViewController.java`
+- `comment_view.html`
+- `lecturer_comment_view.html`
+- `STATE.md`
+
+---
+
+## Current Status: Granular Progress Tracking (Lecturer & Student)
+**Status**: COMPLETED
+
+### Summary
+- Enhanced the **Admin Progress Tracking** dashboard to display granular progress for both Lecturers and Students.
+- **Lecturers**: Separated the evaluation progress into **Group Assessment Rubrics** and **Individual Assessment Rubrics**. Added robust backend checks in `LecturerAssessmentService` to precisely track how many targets (Groups or Students) have been fully evaluated for each rubric category.
+- **Students**: Separated progress into **Self Assessment**, **Peer Assessment**, and **Group Assessment** based on the specific permissions granted in `StudentAssessmentAssignment`. Progress bars accurately reflect the percentage of peers/groups evaluated.
+- **UI Updates**: Modified `admin_progress_tracking_view.html` to use a collapsible row design (using a chevron toggle button) to keep the main table clean while allowing admins to expand and inspect the granular breakdown of any assessor's progress.
+
+### Files Modified
+- `ProgressTrackingService.java`
+- `LecturerAssessmentService.java`
+- `admin_progress_tracking_view.html`
+- `STATE.md`
+
+---
 
 ## Current Status: SuperAdmin Course Creation "Missing Lecturer Profile" Fix
 **Status**: COMPLETED
