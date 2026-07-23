@@ -80,22 +80,19 @@
                     <h4 class="student-title"><i class="fas fa-user-graduate"></i> Student: <span th:text="${studentEntry.key.email}"></span></h4>
                     
                     <div class="row">
-                        <!-- Group Assessment Comments for this student -->
-                        <div class="col-md-6 comment-section">
-                            <h6>Group Assessment Comments Received</h6>
-                            <div th:if="${#lists.isEmpty(studentEntry.value.groupComments)}">
-                                <p class="text-muted small mt-2">No group comments received yet.</p>
+                        <!-- All Assessment Comments for this student -->
+                        <div class="col-12 comment-section" style="width: 100%; padding: 0 10px;">
+                            <h5 style="font-size: 1.5rem; font-weight: 700; color: #4A0018; margin-bottom: 20px; border-bottom: 2px solid #F8A617; padding-bottom: 10px;">Assessment Comments Received</h5>
+                            <div th:if="${#maps.isEmpty(studentEntry.value.allComments)}">
+                                <p class="text-muted small mt-2">No comments received yet.</p>
                             </div>
-                            <div th:each="comment : ${studentEntry.value.groupComments}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
-                        </div>
-                        
-                        <!-- Individual Assessment Comments for this student -->
-                        <div class="col-md-6 comment-section">
-                            <h6>Individual Assessment Comments Received</h6>
-                            <div th:if="${#lists.isEmpty(studentEntry.value.individualComments)}">
-                                <p class="text-muted small mt-2">No individual comments received yet.</p>
+                            <div th:each="questionEntry : ${studentEntry.value.allComments}" style="margin-bottom: 25px;">
+                                <h6 style="color: #4A0018; margin-top: 15px; font-weight: 700; font-size: 1.25rem; border-bottom: 2px dashed #E5E7EB; padding-bottom: 8px;" th:text="${questionEntry.key}">Question</h6>
+                                <div th:each="evaluatorEntry : ${questionEntry.value}">
+                                    <div class="evaluator-name" style="margin-top: 8px; font-weight: 600; color: #3F3F46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-circle"></i> <span th:text="${evaluatorEntry.key}"></span></div>
+                                    <div th:each="comment : ${evaluatorEntry.value}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
+                                </div>
                             </div>
-                            <div th:each="comment : ${studentEntry.value.individualComments}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
                         </div>
                     </div>
                 </div>

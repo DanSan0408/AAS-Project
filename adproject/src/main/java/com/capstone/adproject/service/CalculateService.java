@@ -768,44 +768,68 @@ public class CalculateService {
             .orElse(1.0);
     }
 
-    public Map<String, List<String>> getGroupAssessmentComments(Student student, Assessment assessment) {
-        Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+    public Map<String, Map<String, List<String>>> getGroupAssessmentComments(Student student, Assessment assessment) {
+        Map<String, Map<String, List<String>>> result = new java.util.LinkedHashMap<>();
         
         List<AssessmentComment> groupComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Group Assessment");
         
-        groupComments = groupComments.stream()
-            .filter(c -> c.getRubricId() == null)
-            .collect(Collectors.toList());
-        
         for (AssessmentComment comment : groupComments) {
+            String questionLabel = comment.getDisplayLabel();
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
             if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
-                result.computeIfAbsent(evaluatorName, k -> new ArrayList<>()).add(commentText);
+                result.computeIfAbsent(questionLabel, k -> new java.util.LinkedHashMap<>())
+                      .computeIfAbsent(evaluatorName, k -> new ArrayList<>())
+                      .add(commentText);
             }
         }
         
         return result;
     }
 
-    public Map<String, List<String>> getIndividualAssessmentComments(Student student, Assessment assessment) {
-        Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+    public Map<String, Map<String, List<String>>> getIndividualAssessmentComments(Student student, Assessment assessment) {
+        Map<String, Map<String, List<String>>> result = new java.util.LinkedHashMap<>();
         
         List<AssessmentComment> individualComments = commentRepository
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Individual Assessment");
         
-        individualComments = individualComments.stream()
-            .filter(c -> c.getRubricId() == null)
-            .collect(Collectors.toList());
-        
         for (AssessmentComment comment : individualComments) {
+            String questionLabel = comment.getDisplayLabel();
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
             if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
-                result.computeIfAbsent(evaluatorName, k -> new ArrayList<>()).add(commentText);
+                result.computeIfAbsent(questionLabel, k -> new java.util.LinkedHashMap<>())
+                      .computeIfAbsent(evaluatorName, k -> new ArrayList<>())
+                      .add(commentText);
+            }
+        }
+        
+        return result;
+    }
+
+    public Map<String, Map<String, List<String>>> getAllAssessmentComments(Student student, Assessment assessment) {
+        Map<String, Map<String, List<String>>> result = new java.util.LinkedHashMap<>();
+        
+        List<AssessmentComment> allComments = commentRepository.findByEvaluatedStudentAndAssessment(student, assessment);
+        
+        for (AssessmentComment comment : allComments) {
+            String baseLabel = comment.getDisplayLabel();
+            String type = comment.getRubricAssessmentType();
+            if (type == null || type.isEmpty()) {
+                type = "Rubric";
+            }
+            
+            String questionLabel = baseLabel + " (" + type + " Comments)";
+            String evaluatorName = comment.getDisplayName();
+            String commentText = comment.getCommentText();
+            
+            if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
+                result.computeIfAbsent(questionLabel, k -> new java.util.LinkedHashMap<>())
+                      .computeIfAbsent(evaluatorName, k -> new ArrayList<>())
+                      .add(commentText);
             }
         }
         

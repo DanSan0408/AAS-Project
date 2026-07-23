@@ -280,19 +280,16 @@ public class GroupCommentController {
         });
         
         // Fetch comments using existing CalculateService which properly identifies Evaluators (Peer/Lecturer)
-        Map<Long, Map<String, List<String>>> groupCommentsMap = new HashMap<>();
-        Map<Long, Map<String, List<String>>> individualCommentsMap = new HashMap<>();
+        Map<Long, Object> allCommentsMap = new HashMap<>();
 
         for (Student student : students) {
-            groupCommentsMap.put(student.getId(), calculateService.getGroupAssessmentComments(student, assessment));
-            individualCommentsMap.put(student.getId(), calculateService.getIndividualAssessmentComments(student, assessment));
+            allCommentsMap.put(student.getId(), calculateService.getAllAssessmentComments(student, assessment));
         }
 
         model.addAttribute("assessment", assessment);
         model.addAttribute("group", group);
         model.addAttribute("students", students);
-        model.addAttribute("groupCommentsMap", groupCommentsMap);
-        model.addAttribute("individualCommentsMap", individualCommentsMap);
+        model.addAttribute("allCommentsMap", allCommentsMap);
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", role);
         return "comment_view";
@@ -351,10 +348,10 @@ public class GroupCommentController {
         }
 
         // Prepare data structure for multiple groups and their students' comments
-        Map<Group, Map<Student, Map<String, List<String>>>> commentsByGroupAndStudent = new LinkedHashMap<>();
+        Map<Group, Map<Student, Map<String, Object>>> commentsByGroupAndStudent = new LinkedHashMap<>();
 
         for (Group group : supervisedGroups) {
-            Map<Student, Map<String, List<String>>> commentsByStudent = new LinkedHashMap<>();
+            Map<Student, Map<String, Object>> commentsByStudent = new LinkedHashMap<>();
             List<Student> sortedStudents = new java.util.ArrayList<>(group.getStudents());
             sortedStudents.sort((s1, s2) -> {
                 String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
@@ -362,9 +359,8 @@ public class GroupCommentController {
                 return name1.compareToIgnoreCase(name2);
             });
             for (Student student : sortedStudents) {
-                Map<String, List<String>> studentComments = new HashMap<>();
-                studentComments.put("groupComments", calculateService.getGroupAssessmentComments(student, assessment).values().stream().flatMap(List::stream).collect(Collectors.toList()));
-                studentComments.put("individualComments", calculateService.getIndividualAssessmentComments(student, assessment).values().stream().flatMap(List::stream).collect(Collectors.toList()));
+                Map<String, Object> studentComments = new HashMap<>();
+                studentComments.put("allComments", calculateService.getAllAssessmentComments(student, assessment));
                 commentsByStudent.put(student, studentComments);
             }
             commentsByGroupAndStudent.put(group, commentsByStudent);
