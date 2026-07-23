@@ -281,8 +281,8 @@ public class DataViewController {
         Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
         Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
 
-        Map<Long, Map<String, List<String>>> studentGroupComments = new HashMap<>();
-        Map<Long, Map<String, List<String>>> studentIndividualComments = new HashMap<>();
+        Map<Long, Object> studentGroupComments = new HashMap<>();
+        Map<Long, Object> studentIndividualComments = new HashMap<>();
         
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
             List<Student> students = new ArrayList<>(selectedGroup.getStudents());
