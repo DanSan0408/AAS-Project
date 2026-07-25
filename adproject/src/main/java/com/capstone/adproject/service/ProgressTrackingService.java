@@ -13,6 +13,7 @@ import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.LecturerGroupAssignment;
 import com.capstone.adproject.model.LecturerRubricAssignment;
 import com.capstone.adproject.model.LecturerStudentAssignment;
+import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentAssessmentAssignment;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
@@ -107,16 +108,62 @@ public class ProgressTrackingService {
                 .filter(a -> a.getLecturer() != null && a.getRubric() != null)
                 .collect(Collectors.groupingBy(LecturerRubricAssignment::getLecturer));
                 
+            List<Student> targetStudents = lecturerAssessmentService.getTargetStudentsForAssessment(assessment);
+                
             for (Map.Entry<Lecturer, List<LecturerRubricAssignment>> entry : byLecturer.entrySet()) {
                 Lecturer lecturer = entry.getKey();
-                int totalAssigned = entry.getValue().size();
-                int completed = 0;
+                List<Rubric> assignedRubrics = entry.getValue().stream()
+                    .map(LecturerRubricAssignment::getRubric)
+                    .filter(r -> r != null)
+                    .distinct()
+                    .collect(Collectors.toList());
+                
+                int totalAssignedRubrics = assignedRubrics.size();
+                int totalEvaluationsNeeded = totalAssignedRubrics * targetStudents.size();
+                int totalEvaluationsCompleted = 0;
+                
+                List<Map<String, Object>> rubricDetailsList = new ArrayList<>();
+                
+                for (Rubric rubric : assignedRubrics) {
+                    Map<String, Object> rubricDetail = new HashMap<>();
+                    rubricDetail.put("rubricName", rubric.getName() != null ? rubric.getName() : "Untitled Rubric");
+                    rubricDetail.put("assessmentType", rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Rubric");
+                    
+                    List<Map<String, Object>> studentStatusList = new ArrayList<>();
+                    int completedCountForRubric = 0;
+                    
+                    for (Student student : targetStudents) {
+                        Map<String, Object> studentProg = lecturerAssessmentService.getRubricProgressForStudent(assessment, lecturer, rubric, student);
+                        boolean isComplete = Boolean.TRUE.equals(studentProg.get("isComplete"));
+                        if (isComplete) {
+                            completedCountForRubric++;
+                        }
+                        
+                        Map<String, Object> studentInfo = new HashMap<>();
+                        studentInfo.put("studentName", student.getUsername() != null && !student.getUsername().trim().isEmpty() ? student.getUsername().trim() : (student.getEmail() != null ? student.getEmail() : "Unknown Student"));
+                        studentInfo.put("status", studentProg.get("status"));
+                        studentInfo.put("percentage", studentProg.get("percentage"));
+                        studentInfo.put("completed", studentProg.get("completed"));
+                        studentInfo.put("required", studentProg.get("required"));
+                        studentStatusList.add(studentInfo);
+                    }
+                    
+                    rubricDetail.put("students", studentStatusList);
+                    rubricDetail.put("completedCount", completedCountForRubric);
+                    rubricDetail.put("totalCount", targetStudents.size());
+                    rubricDetail.put("progress", targetStudents.isEmpty() ? 0 : (completedCountForRubric * 100 / targetStudents.size()));
+                    
+                    rubricDetailsList.add(rubricDetail);
+                    totalEvaluationsCompleted += completedCountForRubric;
+                }
                 
                 Map<String, Object> row = new HashMap<>();
-                row.put("lecturerName", lecturer.getUsername() != null ? lecturer.getUsername() : lecturer.getEmail());
-                row.put("assignedTarget", totalAssigned + " Rubrics");
-                row.put("status", "Pending / In Progress");
-                row.put("progress", (totalAssigned > 0 ? (completed * 100 / totalAssigned) : 0));
+                row.put("lecturerName", lecturer.getUsername() != null && !lecturer.getUsername().trim().isEmpty() ? lecturer.getUsername().trim() : lecturer.getEmail());
+                row.put("assignedTarget", totalAssignedRubrics + " Rubrics");
+                row.put("status", totalEvaluationsCompleted == 0 ? "Not Started" : (totalEvaluationsCompleted >= totalEvaluationsNeeded ? "Completed" : "In Progress"));
+                row.put("progress", totalEvaluationsNeeded > 0 ? (totalEvaluationsCompleted * 100 / totalEvaluationsNeeded) : 0);
+                row.put("assignedRubricDetails", rubricDetailsList);
+                
                 progressList.add(row);
             }
         } else {
@@ -182,7 +229,7 @@ public class ProgressTrackingService {
             int totalAssigned = selfTotal + peerTotal + groupTotal;
             
             List<Mark> submittedMarks = markRepository.findByEvaluatorStudentAndAssessmentAndStatus(
-                student, assessment, Mark.SubmissionStatus.SUBMITTED);
+                student, assessment, Mark.SubmissionStatus.FINAL);
                 
             long selfCompleted = submittedMarks.stream()
                 .filter(m -> "Self Assessment".equalsIgnoreCase(m.getAssessmentType()))

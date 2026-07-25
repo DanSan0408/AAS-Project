@@ -51,7 +51,7 @@
                             <th:block th:each="prog, stat : ${lecturerProgress.progressList}">
                                 <tr>
                                     <td data-label="Lecturer">
-                                        <button th:if="${lecturerProgress.assignmentMode != 'RUBRIC'}" class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: #4a5568; margin-right: 5px;" th:data-target="'#lecturer-details-' + ${stat.index}">
+                                        <button class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: #4a5568; margin-right: 5px;" th:data-target="'#lecturer-details-' + ${stat.index}">
                                             <i class="fas fa-chevron-right toggle-icon"></i>
                                         </button>
                                         <span th:text="${prog.lecturerName}" style="font-weight: 500;">Name</span>
@@ -71,10 +71,10 @@
                                         </div>
                                     </td>
                                 </tr>
-                                <tr th:if="${lecturerProgress.assignmentMode != 'RUBRIC'}" th:id="'lecturer-details-' + ${stat.index}" class="details-row" style="display: none; background-color: #f7fafc;">
+                                <tr th:id="'lecturer-details-' + ${stat.index}" class="details-row" style="display: none; background-color: #f7fafc;">
                                     <td colspan="4" style="padding: 1.5rem; border-top: 1px dashed #e2e8f0;">
                                         <h4 style="margin-top:0; font-size: 0.95rem; color: #4a5568; margin-bottom: 1rem;"><i class="fas fa-list-ul"></i> Granular Progress</h4>
-                                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                        <div th:if="${lecturerProgress.assignmentMode != 'RUBRIC'}" style="display: flex; flex-direction: column; gap: 1rem;">
                                             <div th:if="${lecturerProgress.hasGroupRubrics != null and lecturerProgress.hasGroupRubrics}">
                                                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
                                                     <strong style="font-size: 0.85rem; color: #2d3748;">Group Assessment Rubrics</strong>
@@ -92,6 +92,49 @@
                                                 <div class="progress-bar-container" style="width: 100%; height: 6px;">
                                                     <div class="progress-bar" style="background-color: #48bb78;" th:style="'width: ' + ${prog.individualProgress} + '%'"></div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                        <div th:if="${lecturerProgress.assignmentMode == 'RUBRIC'}" style="display: flex; flex-direction: column; gap: 1rem;">
+                                            <div th:each="rubricDetail : ${prog.assignedRubricDetails}" style="background: #ffffff; padding: 1.25rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        <strong style="font-size: 0.95rem; color: #2d3748;" th:text="${rubricDetail.rubricName}">Rubric Name</strong>
+                                                        <span style="font-size: 0.75rem; background: #ebf8ff; color: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-weight: 600;" th:text="${rubricDetail.assessmentType}">Type</span>
+                                                    </div>
+                                                    <span style="font-size: 0.85rem; font-weight: 700; color: #4a5568;" th:text="${rubricDetail.completedCount} + ' / ' + ${rubricDetail.totalCount} + ' (' + ${rubricDetail.progress} + '%)'">0 / 0 (0%)</span>
+                                                </div>
+                                                <div class="progress-bar-container" style="width: 100%; height: 6px; background-color: #edf2f7; border-radius: 3px; overflow: hidden; margin-bottom: 1rem;">
+                                                    <div class="progress-bar" style="background-color: #3182ce; height: 100%; border-radius: 3px; transition: width 0.3s ease;" th:style="'width: ' + ${rubricDetail.progress} + '%'"></div>
+                                                </div>
+                                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.75rem;">
+                                                    <div th:each="student : ${rubricDetail.students}" 
+                                                         style="padding: 0.75rem; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s ease;"
+                                                         th:styleappend="${student.status == 'Completed'} ? 'background-color: #f0fff4; border: 1px solid #c6f6d5;' : (${student.status == 'In Progress'} ? 'background-color: #ebf8ff; border: 1px solid #bee3f8;' : 'background-color: #fff5f5; border: 1px solid #fed7d7;')">
+                                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
+                                                            <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; color: #2d3748; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                                <i th:class="${student.status == 'Completed'} ? 'fas fa-check-circle' : (${student.status == 'In Progress'} ? 'fas fa-spinner fa-spin' : 'fas fa-clock')"
+                                                                   th:style="${student.status == 'Completed'} ? 'color: #38a169;' : (${student.status == 'In Progress'} ? 'color: #3182ce;' : 'color: #e53e3e;')"></i>
+                                                                <span th:text="${student.studentName}">Student Name</span>
+                                                            </div>
+                                                            <span style="font-size: 0.75rem; font-weight: 700; color: #4a5568;" th:text="${student.completed} + '/' + ${student.required}">0/0</span>
+                                                        </div>
+                                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                                            <div class="progress-bar-container" style="flex-grow: 1; height: 6px; background-color: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden;">
+                                                                <div class="progress-bar" 
+                                                                     th:style="'width: ' + ${student.percentage} + '%; height: 100%; border-radius: 3px; background-color: ' + (${student.status == 'Completed'} ? '#38a169' : (${student.status == 'In Progress'} ? '#3182ce' : '#e53e3e')) + ';'"></div>
+                                                            </div>
+                                                            <span style="font-size: 0.75rem; font-weight: 700; width: 35px; text-align: right;" 
+                                                                  th:styleappend="${student.status == 'Completed'} ? 'color: #22543d;' : (${student.status == 'In Progress'} ? 'color: #2b6cb0;' : 'color: #742a2a;')"
+                                                                  th:text="${student.percentage} + '%'">0%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div th:if="${#lists.isEmpty(rubricDetail.students)}" style="color: #a0aec0; font-size: 0.8rem; font-style: italic; grid-column: 1 / -1;">
+                                                        No students assigned to this assessment.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div th:if="${#lists.isEmpty(prog.assignedRubricDetails)}" style="color: #a0aec0; font-size: 0.85rem; font-style: italic;">
+                                                No rubrics assigned.
                                             </div>
                                         </div>
                                     </td>
