@@ -432,6 +432,103 @@ public class LecturerAssessmentService {
         return !groupRubrics.isEmpty() || !individualRubrics.isEmpty();
     }
 
+    @Transactional(readOnly = true)
+    public List<Student> getTargetStudentsForAssessment(Assessment assessment) {
+        if (assessment == null || assessment.getCourse() == null) {
+            return new ArrayList<>();
+        }
+        List<Group> courseGroups = groupRepository.findAllWithStudentsByCourseId(assessment.getCourse().getId());
+        List<Student> targetStudents = new ArrayList<>();
+        if (courseGroups != null && !courseGroups.isEmpty()) {
+            for (Group g : courseGroups) {
+                if (g.getStudents() != null) {
+                    targetStudents.addAll(g.getStudents());
+                }
+            }
+        }
+        if (targetStudents.isEmpty()) {
+            targetStudents = studentRepository.findByCourseId(assessment.getCourse().getId());
+        }
+        if (targetStudents == null) {
+            targetStudents = new ArrayList<>();
+        }
+        return sortStudentsAlphabetically(targetStudents.stream().distinct().collect(Collectors.toList()));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isRubricCompleteForStudent(Assessment assessment, Lecturer lecturer, Rubric rubric, Student student) {
+        Map<String, Object> prog = getRubricProgressForStudent(assessment, lecturer, rubric, student);
+        return Boolean.TRUE.equals(prog.get("isComplete"));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getRubricProgressForStudent(Assessment assessment, Lecturer lecturer, Rubric rubric, Student student) {
+        Map<String, Object> progress = new HashMap<>();
+        if (assessment == null || lecturer == null || rubric == null || student == null) {
+            progress.put("completed", 0);
+            progress.put("required", 0);
+            progress.put("percentage", 0);
+            progress.put("isComplete", false);
+            progress.put("status", "Not Started");
+            return progress;
+        }
+        
+        List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+            student, student, assessment);
+        
+        List<Mark> rubricMarks = marks.stream()
+            .filter(m -> m.getComments() != null && 
+                        m.getComments().startsWith("LECTURER:" + lecturer.getId()) &&
+                        m.getRubric() != null && 
+                        m.getRubric().getId().equals(rubric.getId()))
+            .collect(Collectors.toList());
+        
+        int requiredEvaluations = 0;
+        if (rubric.getSubRubrics() != null && !rubric.getSubRubrics().isEmpty()) {
+            requiredEvaluations = rubric.getSubRubrics().size();
+        } else if (rubric.getRatings() != null && !rubric.getRatings().isEmpty()) {
+            requiredEvaluations = 1;
+        }
+        
+        int completedEvaluations = Math.min(rubricMarks.size(), requiredEvaluations);
+        
+        int requiredComments = 0;
+        int completedComments = 0;
+        if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
+            requiredComments = rubric.getRubricCommentCount();
+            int minLength = rubric.getRubricCommentMinLength() != null ? rubric.getRubricCommentMinLength() : 0;
+            
+            List<AssessmentComment> comments = assessmentCommentRepository
+                .findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
+                    student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
+                .stream()
+                .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubric.getId()))
+                .collect(Collectors.toList());
+                
+            for (AssessmentComment comment : comments) {
+                if (comment.getCommentText() != null && comment.getCommentText().length() >= minLength) {
+                    completedComments++;
+                }
+            }
+            completedComments = Math.min(completedComments, requiredComments);
+        }
+        
+        int totalRequired = requiredEvaluations + requiredComments;
+        int totalCompleted = completedEvaluations + completedComments;
+        
+        boolean isComplete = (totalRequired > 0 && totalCompleted >= totalRequired) || (totalRequired == 0 && !rubricMarks.isEmpty());
+        int percentage = totalRequired > 0 ? (totalCompleted * 100 / totalRequired) : (!rubricMarks.isEmpty() ? 100 : 0);
+        
+        String status = totalCompleted == 0 ? "Not Started" : (isComplete ? "Completed" : "In Progress");
+        
+        progress.put("completed", totalCompleted);
+        progress.put("required", totalRequired);
+        progress.put("percentage", percentage);
+        progress.put("isComplete", isComplete);
+        progress.put("status", status);
+        return progress;
+    }
+
     private boolean checkRubricsComplete(Assessment assessment, Lecturer lecturer, 
                                          Student student, List<Rubric> rubrics, String rubricType) {
         List<Mark> marks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(

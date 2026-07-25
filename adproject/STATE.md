@@ -1,6 +1,31 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-23 (Antigravity)
+**Last Updated**: 2026-07-25 (Antigravity)
+
+---
+
+## Current Status: Global Username Display Refactor
+**Status**: COMPLETED
+
+### Summary
+- Replaced direct email display (`user.email`) with a safe username fallback across the Admin, Lecturer, and Student subsystems. 
+- The system now prioritizes displaying the user's `username` (Name) and safely falls back to displaying their `email` if the username is blank or not set.
+- This ensures consistency in how users are identified across data views, assignment tables, comment sections, and assessment forms.
+
+### Files Modified
+- `comment_view.html`
+- `assessment_data_view.html`
+- `comment_select_group.html`
+- `group_assignment.html`
+- `edit_overrides.html`
+- `overall_data_view.html`
+- `lecturer_comment_view.html`
+- `lecturer_combined_evaluation_form.html`
+- `supervisor_evaluate_groups.html`
+- `supervisor_continuous_evaluation.html`
+- `student_assessments.html`
+- `peer_assessment_form.html`
+- `STATE.md`
 
 ---
 
