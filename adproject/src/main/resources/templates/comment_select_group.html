@@ -136,8 +136,8 @@
                             <td th:text="${group.id}"></td>
                             <td th:text="${group.groupName}"></td>
                             <td th:text="${group.groupSize}"></td>
-                            <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.email : 'Unassigned'}"></td>
-                            <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.email : 'Unassigned'}"></td>
+                            <td th:text="${group.academicSupervisor != null ? (not #strings.isEmpty(group.academicSupervisor.username) ? group.academicSupervisor.username : group.academicSupervisor.email) : 'Unassigned'}"></td>
+                            <td th:text="${group.industrialSupervisor != null ? (not #strings.isEmpty(group.industrialSupervisor.username) ? group.industrialSupervisor.username : group.industrialSupervisor.email) : 'Unassigned'}"></td>
                             <td>
                                 <a th:href="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/group/' + ${group.id}}" class="btn btn-primary btn-sm">View Comments</a>
                             </td>

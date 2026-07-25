@@ -73,7 +73,7 @@
                         <tr th:each="student : ${students}">
                             <th:block th:with="data=${studentOverallData[student.id]}">
                                 <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
-                                <td class="sticky-col second-col" th:text="${student.email}"></td>
+                                <td class="sticky-col second-col" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}"></td>
                                 
                                 <td class="sticky-col third-col">
                                     <span class="factor-badge" 

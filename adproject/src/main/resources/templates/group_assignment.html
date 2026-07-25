@@ -62,8 +62,8 @@
                                         <tr th:each="group : ${allGroups}">
                                             <td th:text="${group.groupName}">Group Alpha</td>
                                             <td th:text="${group.groupSize}">0</td>
-                                            <td th:text="${group.academicSupervisor != null ? group.academicSupervisor.email : 'N/A'}">Lecturer Email</td>
-                                            <td th:text="${group.industrialSupervisor != null ? group.industrialSupervisor.email : 'N/A'}">Supervisor Email</td>
+                                            <td th:text="${group.academicSupervisor != null ? (not #strings.isEmpty(group.academicSupervisor.username) ? group.academicSupervisor.username : group.academicSupervisor.email) : 'N/A'}">Lecturer Name</td>
+                                            <td th:text="${group.industrialSupervisor != null ? (not #strings.isEmpty(group.industrialSupervisor.username) ? group.industrialSupervisor.username : group.industrialSupervisor.email) : 'N/A'}">Supervisor Name</td>
                                             <td>
                                                 <ul th:if="${group.groupSize > 0}" class="student-list">
                                                     <th:block th:each="student : ${allStudents}">

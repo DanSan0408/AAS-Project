@@ -59,7 +59,7 @@
                         <tbody>
                             <tr th:each="student, stat : ${students}">
                                 <td th:text="${student.username}" class="student-name">Name</td>
-                                <td th:text="${student.email}" class="student-email">Email</td> 
+                                <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}" class="student-email">Student Name</td> 
                                 
                                 <input type="hidden" th:field="*{updates[__${stat.index}__].studentId}" />
                                 
