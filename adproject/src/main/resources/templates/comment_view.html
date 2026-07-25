@@ -72,7 +72,7 @@
             </div>
             
             <div th:each="student : ${students}" class="student-card shadow-sm">
-                <h4 class="student-title" th:text="${student.email}">Student Name</h4>
+                <h4 class="student-title" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</h4>
                 
                 <div class="row">
                     <!-- All Assessment Comments -->

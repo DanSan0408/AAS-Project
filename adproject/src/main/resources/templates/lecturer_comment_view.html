@@ -77,7 +77,7 @@
                 <h3 class="group-title"><i class="fas fa-users"></i> Group: <span th:text="${groupEntry.key.groupName}"></span></h3>
                 
                 <div th:each="studentEntry : ${groupEntry.value}" class="student-card shadow-sm">
-                    <h4 class="student-title"><i class="fas fa-user-graduate"></i> Student: <span th:text="${studentEntry.key.email}"></span></h4>
+                    <h4 class="student-title"><i class="fas fa-user-graduate"></i> Student: <span th:text="${not #strings.isEmpty(studentEntry.key.username) ? studentEntry.key.username : studentEntry.key.email}"></span></h4>
                     
                     <div class="row">
                         <!-- All Assessment Comments for this student -->

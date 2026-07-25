@@ -87,7 +87,7 @@
                         <strong th:if="${isStudentTarget != null and isStudentTarget}">📋 Selected Student:</strong>
                         <strong th:unless="${isStudentTarget != null and isStudentTarget}">📋 Group Members:</strong>
                         <ul>
-                            <li th:each="student : ${groupStudents}" th:text="${student.email}">Student</li>
+                            <li th:each="student : ${groupStudents}" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student</li>
                         </ul>
                     </div>
 
@@ -230,7 +230,7 @@
                             <div class="student-header">
                                 <h3>
                                     Student <span th:text="${studentStat.index + 1}">1</span>: 
-                                    <span th:text="${student.email}">Student Email</span>
+                                    <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</span>
                                 </h3>
                             </div>
 

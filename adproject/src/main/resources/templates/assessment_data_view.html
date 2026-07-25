@@ -84,7 +84,7 @@
             <div th:if="${assessmentData.studentDataList != null and !assessmentData.studentDataList.isEmpty()}">
                 <div th:each="studentData : ${assessmentData.studentDataList}" class="student-card">
                     <div class="student-header">
-                        <h3 th:text="${studentData.student.email}">Student Email</h3>
+                        <h3 th:text="${not #strings.isEmpty(studentData.student.username) ? studentData.student.username : studentData.student.email}">Student Name</h3>
                         <div class="student-details">
                             <span th:if="${studentData.student.group != null}" class="detail-badge">Team: <span th:text="${studentData.student.group.groupName}">Team</span></span>
                             <span th:if="${studentData.factor != 1.0}" class="detail-badge warning">Factor: <span th:text="${#numbers.formatDecimal(studentData.factor, 1, 3)}">1.0</span></span>

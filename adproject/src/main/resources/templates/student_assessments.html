@@ -41,7 +41,7 @@
                                 <i class="fas fa-user-circle"></i>
                             </div>
                             <div class="member-info">
-                                <span class="member-name" th:text="${member.email}">Member Email</span>
+                                <span class="member-name" th:text="${not #strings.isEmpty(member.username) ? member.username : member.email}">Member Name</span>
                                 <span th:if="${member.id == currentStudent.id}" class="you-badge">(You)</span>
                             </div>
                         </div>
@@ -120,7 +120,7 @@
                                         <div class="member-eval">
                                             <span class="member-name">
                                                 <i class="fas fa-user"></i> 
-                                                <span th:text="${currentStudent.email}">Your Email</span>
+                                                <span th:text="${not #strings.isEmpty(currentStudent.username) ? currentStudent.username : currentStudent.email}">Your Name</span>
                                             </span>
                                             <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${currentStudent.id})}" 
                                                class="btn btn-evaluate btn-self">
@@ -141,7 +141,7 @@
                                              class="member-eval">
                                             <span class="member-name">
                                                 <i class="fas fa-user"></i> 
-                                                <span th:text="${member.email}">Member Email</span>
+                                                <span th:text="${not #strings.isEmpty(member.username) ? member.username : member.email}">Member Name</span>
                                             </span>
                                             <a th:href="@{/student/assessment/{assessmentId}/evaluate/{studentId}(assessmentId=${assessment.id}, studentId=${member.id})}" 
                                                class="btn btn-evaluate btn-peer">
