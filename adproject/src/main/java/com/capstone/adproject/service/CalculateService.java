@@ -668,8 +668,8 @@ public class CalculateService {
         return round3(sum / muSrmlnByEvaluator.size());
     }
 
-    public Map<String, List<String>> getEvaluatorCommentsForRubric(Student student, Assessment assessment, Rubric rubric) {
-        Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+    public Map<String, Map<String, List<String>>> getEvaluatorCommentsForRubric(Student student, Assessment assessment, Rubric rubric) {
+        Map<String, Map<String, List<String>>> result = new java.util.LinkedHashMap<>();
         
         List<AssessmentComment> rubricComments = 
             commentRepository.findByEvaluatedStudentAndAssessmentAndRubricId(student, assessment, rubric.getId());
@@ -687,11 +687,14 @@ public class CalculateService {
         }
         
         for (AssessmentComment comment : rubricComments) {
+            String questionLabel = comment.getDisplayLabel();
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
             if (evaluatorName != null && commentText != null && !commentText.trim().isEmpty()) {
-                result.computeIfAbsent(evaluatorName, k -> new ArrayList<>()).add(commentText);
+                result.computeIfAbsent(questionLabel, k -> new java.util.LinkedHashMap<>())
+                      .computeIfAbsent(evaluatorName, k -> new ArrayList<>())
+                      .add(commentText);
             }
         }
         

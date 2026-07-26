@@ -177,7 +177,9 @@ public class AssessmentComment {
             return commentLabel;
         }
         
-        if (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group")) {
+        if (rubricId != null) {
+            return "Rubric Comment " + (getCommentIndex() + 1);
+        } else if (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group")) {
             return "Group Comment " + (getCommentIndex() + 1);
         } else {
             return "Individual Comment " + (getCommentIndex() + 1);
