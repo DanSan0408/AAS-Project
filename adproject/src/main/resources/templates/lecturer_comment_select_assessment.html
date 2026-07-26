@@ -6,6 +6,7 @@
     <title>Select Assessment for Comments View</title>
     
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #F4F2EE; margin: 0; }
@@ -31,6 +32,25 @@
             .header-container h1 { font-size: 2rem; }
             .page-content { padding: 20px; }
             table { min-width: 560px; }
+        }
+
+        @media (max-width: 1279px) {
+            .main-content { margin-left: 0; padding: 20px; width: 100%; box-sizing: border-box; }
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            .header-container h1 { font-size: 2rem; }
+            .page-content { padding: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; width: 100%; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #E5E7EB; margin-bottom: 15px; border-radius: 8px; padding: 10px; }
+            td { border: none; border-bottom: 1px solid #eee; position: relative; padding-left: 50%; text-align: right; }
+            td:last-child { border-bottom: none; }
+            td:before { position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; font-weight: 600; text-align: left; }
+            td:nth-of-type(1):before { content: "Course Code"; }
+            td:nth-of-type(2):before { content: "Assessment Title"; }
+            td:nth-of-type(3):before { content: "Action"; }
         }
 
         @media (max-width: 640px) {

@@ -541,9 +541,11 @@ body.data-view-page .btn-secondary:hover {
     background-color: #52525B !important;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.data-view-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px !important;
     }
 

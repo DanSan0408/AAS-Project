@@ -60,16 +60,20 @@ body.edit-deadline-page .main-content {
     background-color: var(--color-background) !important;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.edit-deadline-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 30px 20px !important;
     }
 }
 
 @media (max-width: 768px) {
+    .main-content,
     body.edit-deadline-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px 15px !important;
     }
     body.edit-deadline-page .header-container { flex-direction: column !important; }
@@ -79,6 +83,9 @@ body.edit-deadline-page .main-content {
     body.edit-deadline-page .deadline-form-container h2 { font-size: 1.4em !important; }
     body.edit-deadline-page .info-badge { font-size: 0.75em !important; }
     body.edit-deadline-page .form-section input, body.edit-deadline-page .form-section select { font-size: 16px !important; }
+    body.edit-deadline-page .split-inputs { display: flex !important; flex-direction: column !important; gap: 15px !important; }
+    body.edit-deadline-page .button-group { flex-direction: column !important; }
+    body.edit-deadline-page .btn-primary, body.edit-deadline-page .btn-secondary { width: 100% !important; text-align: center !important; }
 }
 
 body.edit-deadline-page .deadline-form-container {

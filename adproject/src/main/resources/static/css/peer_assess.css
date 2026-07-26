@@ -518,9 +518,17 @@ body {
     box-shadow: 0 6px 16px rgba(122, 30, 45, 0.3);
 }
 
-@media (max-width: 900px) {
-    .main-content { margin-left: 0; padding: 20px; }
+@media (max-width: 1279px) {
+    .main-content,
+    body.student-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
     .content-container { padding: 0 10px; }
     .evaluation-info { flex-direction: column; gap: 10px; }
     .rating-options-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.student-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px !important; }
+    .modal-actions { flex-direction: column; }
+    .modal-btn { width: 100%; justify-content: center; }
 }

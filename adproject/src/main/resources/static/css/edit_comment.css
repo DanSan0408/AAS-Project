@@ -50,9 +50,20 @@ body.edit-comment-page .page-header {
     text-align: center !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.edit-comment-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
+        padding: 30px 20px 80px 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.edit-comment-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px 15px 60px 15px !important;
     }
     

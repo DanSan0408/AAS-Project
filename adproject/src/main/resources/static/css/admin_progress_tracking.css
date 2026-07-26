@@ -170,19 +170,27 @@ body.data-view-page {
 }
 
 @media (max-width: 1279px) {
-    .progress-page .main-content {
-        margin-left: 0;
-        width: 100%;
+    .progress-page .main-content,
+    .data-view-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
     }
 }
 
 @media (max-width: 768px) {
-    .progress-page .main-content { padding: 84px 15px 20px 15px; }
-    .progress-page .header-container { flex-direction: column; gap: 10px; text-align: center; }
-    .progress-page .header-container img { max-width: 140px; }
-    .progress-page .header-container h1 { font-size: 2rem; }
-    .progress-page .card { padding: 15px; }
-    .progress-page .btn { width: 100%; justify-content: center; }
+    .progress-page .main-content,
+    .data-view-page .main-content { padding: 84px 15px 20px 15px !important; }
+    .progress-page .header-container,
+    .data-view-page .header-container { flex-direction: column; gap: 10px; text-align: center; }
+    .progress-page .header-container img,
+    .data-view-page .header-container img { max-width: 140px; }
+    .progress-page .header-container h1,
+    .data-view-page .header-container h1 { font-size: 2rem; }
+    .progress-page .card,
+    .data-view-page .card { padding: 15px; }
+    .progress-page .btn,
+    .data-view-page .btn { width: 100%; justify-content: center; }
     
     .table-responsive table, .table-responsive thead, .table-responsive tbody,
     .table-responsive th, .table-responsive td, .table-responsive tr { display: block; width: 100%; }
@@ -197,5 +205,39 @@ body.data-view-page {
         font-weight: 600;
         color: #3F3F46;
         text-align: left;
+    }
+    .table-responsive tbody tr.details-row td {
+        display: block !important;
+        text-align: left !important;
+        padding: 15px !important;
+    }
+    .table-responsive tbody tr.details-row td::before {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-responsive tbody td {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        text-align: left !important;
+        padding: 10px 0 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .table-responsive tbody td::before {
+        margin-bottom: 6px !important;
+    }
+    .progress-bar-container {
+        width: 100% !important;
+    }
+    .progress-page .btn,
+    .data-view-page .btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 }

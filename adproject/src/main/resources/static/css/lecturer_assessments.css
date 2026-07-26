@@ -201,10 +201,21 @@ body.lecturer-page .no-assessments p {
     font-weight: 500;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.lecturer-page .main-content {
-        margin-left: 0;
-        padding: 20px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.lecturer-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
     }
 
     body.lecturer-page .assessment-card {

@@ -1,6 +1,64 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-25 (Antigravity)
+**Last Updated**: 2026-07-26 (Antigravity)
+
+---
+
+## Current Status: Base Factor Capping Separation & Calculation Verification
+**Status**: COMPLETED
+
+### Summary
+- Decoupled base factor calculation from the `1.05` capping logic in `CalculateService.java` and verified multi-assessment weighted factor calculations against real system output.
+- **Root Cause**: Previously, `calculateStudentFactorFromPeerAssessment` and `calculateBreakdownFromPeerAssessment` applied `Math.min(factor, 1.05)` immediately upon computing `individualAverage / groupAverage`. This caused the base factor to be automatically capped to `1.05` when stored in DTOs and displayed on data views (`overall_data_view.html`, `factor_display.html`).
+- **Fix**: Removed the `1.05` cap from the initial factor calculation methods so that the base factor remains unlimited and is displayed uncapped in the UI. When calculating weighted marks (`rawWeightedMark`) for Group Assessments in `calculateStudentAssessmentData`, explicit capping via `Math.min(factor, 1.05)` is now applied, ensuring grading calculations remain 100% accurate without restricting base factor visibility.
+- **Calculation Verification**: Verified that for a student with multiple peer assessments configured in the course (e.g., Test Assessment 2 with 20% weightage and Test Assessment 3 with 80% weightage), the system correctly calculates:
+  - **Uncapped Base Factor**: $\frac{\text{Indiv. Avg}}{\text{Group Avg}} = \frac{3.00}{2.75} = 1.09$ (raw, unlimited value shown without truncation).
+  - **Weighted Total Factor**: Composed via $\sum (\text{Base Factor}_i \times \text{Weight}_i)$. An unrated assessment (`0.00` factor at 20% weight) combined with an active assessment (`1.09` factor at 80% weight) correctly computes a final system factor of $(0.00 \times 0.20) + (1.0909 \times 0.80) = \mathbf{0.87}$.
+  - Verified that course administrators can dynamically re-weight or exclude assessments via **Configure Factor Calculation** (`calculate_factor.html`) without manual recalculation.
+
+### Files Modified
+- `CalculateService.java`
+- `STATE.md`
+
+---
+
+## Current Status: Comprehensive Responsive Design & Mobile Adaptation Remediation
+**Status**: COMPLETED
+
+### Summary
+- Implemented a universal feature-by-feature responsive design remediation across all 7 subsystems of the UTM AAS application to ensure a seamless, professional experience on desktops, tablets (`1279px`), and mobile phones down to compact screens like the **iPhone SE (`375px x 667px`)**.
+- **Universal Design Tokens & Patterns**: Standardized the breakpoint hierarchy across `critical.css`, `responsive-patterns.css`, and feature stylesheets. Enforced `1279px` as the standard transition breakpoint to override fixed sidebar margins (`margin-left: 0 !important; width: 100% !important;`).
+- **iPhone SE (`375px`) Alignment & Readability Guarantees**:
+  - Enforced `max-width: 100%; word-break: break-word; overflow-wrap: anywhere;` across all typography elements (`h1`-`h6`, `p`, `span`, `div`, `td`, `th`, `a`, `label`) in `critical.css` to prevent text truncation or horizontal overflow on narrow screens.
+  - Converted table card cell layouts (`.table-responsive td`) on screens `<= 480px` from side-by-side (`50%` padding) into vertically stacked flex columns where labels appear cleanly above values.
+  - Standardized mobile button groups (`.action-bar`, `.action-buttons`, `.button-group`, `.btn-group`) to stack vertically with `width: 100% !important; min-height: 44px !important;` to adhere to iOS minimum touch target dimensions and allow multi-word button labels to wrap cleanly.
+- **Feature Remediation Scope**:
+  - **Feature 1 (Progress Tracking Dashboard)**: Added tablet and mobile overrides to `admin_progress_tracking.css`, including specific mobile rules for `.details-row` expandable granular progress cards to prevent flex layout distortion. Verified `admin_progress_tracking_select.html` and `admin_progress_tracking_view.html`.
+  - **Feature 2 (Assessment Comments Unification)**: Updated `comment_config.css` and `comment_config.html`.
+  - **Feature 3 (Factor Calculation & Display)**: Updated stylesheets and injected responsive card patterns into `factor_display.html`, `calculate_factor.html`, `assessment_data_view.html`, `overall_data_view.html`, `edit_overrides.html`, and `data_views_home.html`.
+  - **Feature 4 (Course Leader Selection & Assessment Assignment)**: Updated stylesheets and added card adaptation to lecturer assignment and evaluation form templates.
+  - **Feature 5 (Assessment Deadlines & Separate Date/Time Inputs)**: Updated `assign_assessment.css` and `editdeadline.css` for mobile form stacking, and injected `responsive-patterns.css` into `assign_assessment.html`, `edit-deadline.html`, and `manage-assessments.html`.
+  - **Feature 6 (Assessment Extra Notes & View Rubrics)**: Enhanced media queries in `view_rubric.css` and injected `responsive-patterns.css` into `view-assessment-rubrics.html`.
+  - **Feature 7 (Course Duplication Prevention)**: Updated course management stylesheets and templates (`manage_courses.html`, `admin_manage_courses.html`, `edit_course.html`, `admin_edit_course.html`).
+
+### Files Modified
+- `critical.css`, `responsive-patterns.css`, `admin_progress_tracking.css`, `rubric.css`, `view_rubric.css`, `assign_assessment.css`, `editdeadline.css`, `lecturer_select.css`, `lecturer_evaluation.css`, `peer_assess.css`, `supervisor_form.css`, `student_assessments.css`, `lecturer_assessments.css`, `manage_courses.css`, `admin_manage_courses.css`
+- All associated feature templates in `src/main/resources/templates/`
+- `STATE.md`, `walkthrough.md`, `task.md`
+
+---
+
+## Current Status: Student Progress Tracking Status Mismatch Fix
+**Status**: COMPLETED
+
+### Summary
+- Resolved an issue on the **Admin Progress Tracking** dashboard where completed student evaluations (Self, Peer, and Group assessments) remained displayed as **"Not Started" (0%)**.
+- **Root Cause**: When students submit evaluations via `StudentController`, their marks are saved with `SubmissionStatus.FINAL`. However, `ProgressTrackingService.getStudentProgress(...)` was querying specifically for `SubmissionStatus.SUBMITTED`.
+- **Fix**: Updated line 232 of `ProgressTrackingService.java` to query for `Mark.SubmissionStatus.FINAL`. This isolated 1-word change accurately reflects completed student evaluations without disturbing `MarkService.java` or any existing grading workflows.
+
+### Files Modified
+- `ProgressTrackingService.java`
+- `STATE.md`
 
 ---
 

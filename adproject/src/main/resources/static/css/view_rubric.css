@@ -863,9 +863,11 @@ body.view-rubric-page i.fa-user-secret {
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 512'%3E%3Cpath fill='black' d='M320 32l128 64-64 32h-96l-64-32 96-64zM176 128l64 32v32h160v-32l64-32 64 32v64l-64 32v96c0 88.4-71.6 160-160 160S144 440.4 144 352v-96l-64-32v-64l96-32zm144 128a64 64 0 100 128 64 64 0 000-128z'/%3E%3C/svg%3E") !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.view-rubric-page .main-content { 
         margin-left: 0 !important; 
+        width: 100% !important;
         padding: 20px !important; 
     }
     
