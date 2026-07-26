@@ -8,13 +8,15 @@
 **Status**: COMPLETED
 
 ### Summary
-- Decoupled base factor calculation from the `1.05` capping logic in `CalculateService.java` and verified multi-assessment weighted factor calculations against real system output.
-- **Root Cause**: Previously, `calculateStudentFactorFromPeerAssessment` and `calculateBreakdownFromPeerAssessment` applied `Math.min(factor, 1.05)` immediately upon computing `individualAverage / groupAverage`. This caused the base factor to be automatically capped to `1.05` when stored in DTOs and displayed on data views (`overall_data_view.html`, `factor_display.html`).
-- **Fix**: Removed the `1.05` cap from the initial factor calculation methods so that the base factor remains unlimited and is displayed uncapped in the UI. When calculating weighted marks (`rawWeightedMark`) for Group Assessments in `calculateStudentAssessmentData`, explicit capping via `Math.min(factor, 1.05)` is now applied, ensuring grading calculations remain 100% accurate without restricting base factor visibility.
+- Decoupled base factor calculation from the `1.05` capping logic in `CalculateService.java` and unified peer factor calculations across data views.
+- **Root Cause**: Previously, `calculateStudentFactorFromPeerAssessment` and `calculateBreakdownFromPeerAssessment` applied `Math.min(factor, 1.05)` immediately upon computing `individualAverage / groupAverage`. This caused the base factor to be automatically capped to `1.05` when stored in DTOs and displayed on data views (`overall_data_view.html`, `factor_display.html`). In addition, architectural discrepancies between the two methods (such as including unrated `0.0` members in the group average denominator and dividing by total mark count instead of non-null rating count) caused slight differences in computed factors between Factor Display and Overall Data Summary (e.g., `1.60` vs. `1.58`).
+- **Fix**:
+  - Removed the `1.05` cap from initial base factor calculations so that individual breakdown base factors remain unlimited and are displayed uncapped in the UI.
+  - Standardized `calculateBreakdownFromPeerAssessment` and `calculateStudentFactorFromPeerAssessment` in `CalculateService.java` so both omit unrated students from the group average denominator and average only over valid, non-null ratings. This guarantees 100% mathematical consistency across Factor Display and Overall Data Summary.
+  - Capped the **Calculated Total Factor** (`finalCalculatedFactor`) in Factor Display (`getFactorDetailsForStudent`) at `1.05` (`Math.min(finalFactor, 1.05)`) so that total factor displays and status badges align with downstream weighted mark calculations.
 - **Calculation Verification**: Verified that for a student with multiple peer assessments configured in the course (e.g., Test Assessment 2 with 20% weightage and Test Assessment 3 with 80% weightage), the system correctly calculates:
   - **Uncapped Base Factor**: $\frac{\text{Indiv. Avg}}{\text{Group Avg}} = \frac{3.00}{2.75} = 1.09$ (raw, unlimited value shown without truncation).
-  - **Weighted Total Factor**: Composed via $\sum (\text{Base Factor}_i \times \text{Weight}_i)$. An unrated assessment (`0.00` factor at 20% weight) combined with an active assessment (`1.09` factor at 80% weight) correctly computes a final system factor of $(0.00 \times 0.20) + (1.0909 \times 0.80) = \mathbf{0.87}$.
-  - Verified that course administrators can dynamically re-weight or exclude assessments via **Configure Factor Calculation** (`calculate_factor.html`) without manual recalculation.
+  - **Weighted Total Factor**: Composed via $\sum (\text{Base Factor}_i \times \text{Weight}_i)$ and capped at `1.05` for total factor display and mark computation.
 
 ### Files Modified
 - `CalculateService.java`

@@ -173,7 +173,8 @@ public class CalculateService {
                 finalFactor += breakdown.getCalculatedFactor() * (fw.getWeightage() / 100.0);
                 breakdowns.add(breakdown);
             }
-            dto.setFinalCalculatedFactor(Math.round(finalFactor * 1000.0) / 1000.0);
+            double cappedTotal = Math.min(finalFactor, 1.05);
+            dto.setFinalCalculatedFactor(Math.round(cappedTotal * 1000.0) / 1000.0);
         } else {
             List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
             List<Mark> peerMarks = allMarks.stream()
@@ -187,7 +188,8 @@ public class CalculateService {
                 com.capstone.adproject.dto.AssessmentFactorBreakdown breakdown = calculateBreakdownFromPeerAssessment(student, peerAssessment, "BOTH");
                 breakdown.setWeightage(100.0);
                 breakdowns.add(breakdown);
-                dto.setFinalCalculatedFactor(breakdown.getCalculatedFactor());
+                double cappedTotal = Math.min(breakdown.getCalculatedFactor(), 1.05);
+                dto.setFinalCalculatedFactor(Math.round(cappedTotal * 1000.0) / 1000.0);
             } else {
                 dto.setFinalCalculatedFactor(0.0);
             }
@@ -267,8 +269,6 @@ public class CalculateService {
                         breakdown.setAverageRating(sum / allRatings.size());
                     }
                 }
-            } else {
-                individualAverages.put(member.getId(), 0.0);
             }
         }
         
@@ -340,7 +340,11 @@ public class CalculateService {
                 double sum = receivedMarks.stream()
                     .filter(m -> m.getRating() != null && m.getRating().getMarks() != null)
                     .mapToDouble(m -> m.getRating().getMarks().doubleValue()).sum();
-                individualAverages.put(member.getId(), sum / receivedMarks.size());
+                long validCount = receivedMarks.stream()
+                    .filter(m -> m.getRating() != null && m.getRating().getMarks() != null).count();
+                if (validCount > 0) {
+                    individualAverages.put(member.getId(), sum / validCount);
+                }
             }
         }
         
