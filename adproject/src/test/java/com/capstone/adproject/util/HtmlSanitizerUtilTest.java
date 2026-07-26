@@ -2,6 +2,7 @@ package com.capstone.adproject.util;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import com.capstone.adproject.model.AssessmentComment;
 
 public class HtmlSanitizerUtilTest {
 
@@ -27,6 +28,11 @@ public class HtmlSanitizerUtilTest {
         String expected4 = "Hello <b>World</b> & Friends";
         assertEquals(expected4, HtmlSanitizerUtil.sanitizePlainText(input4));
 
+        // Test equals sign and double quotes without double escaping
+        String input5 = "L/D ratio = 2, \"Table x.x\" and <script>alert(1)</script>";
+        String expected5 = "L/D ratio = 2, \"Table x.x\" and ";
+        assertEquals(expected5, HtmlSanitizerUtil.sanitizePlainText(input5));
+
         // Test null input
         assertNull(HtmlSanitizerUtil.sanitizePlainText(null));
     }
@@ -45,5 +51,13 @@ public class HtmlSanitizerUtilTest {
 
         // Test null input
         assertNull(HtmlSanitizerUtil.linkify(null));
+    }
+
+    @Test
+    public void testAssessmentCommentUnescapingOnRead() {
+        AssessmentComment comment = new AssessmentComment();
+        // Simulate legacy DB stored comment that was saved with old sanitize() (containing HTML entities)
+        comment.setCommentText("L/D ratio &#61; 2 and &#34;Table x.x&#34;");
+        assertEquals("L/D ratio = 2 and \"Table x.x\"", comment.getCommentText());
     }
 }

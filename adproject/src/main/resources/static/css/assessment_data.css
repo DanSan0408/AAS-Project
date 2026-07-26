@@ -31,6 +31,9 @@ body.data-view-page .main-content {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
+    width: calc(100% - 270px) !important;
+    max-width: calc(100% - 270px) !important;
+    box-sizing: border-box !important;
 }
 
 body.data-view-page .header-container {
@@ -48,7 +51,8 @@ body.data-view-page .header-container h1 { margin: 0 !important; color: var(--co
 
 body.data-view-page .data-container {
     width: 100% !important;
-    max-width: 1200px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 body.data-view-page .page-header {
@@ -226,12 +230,21 @@ body.data-view-page .detail-badge.warning {
 
 body.data-view-page .table-responsive {
     width: 100% !important;
-    overflow-x: auto !important;
+    max-width: 100% !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
 }
 
 body.data-view-page .data-table {
     width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
     border-collapse: collapse !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
 }
 
 body.data-view-page .data-table th {
@@ -242,6 +255,9 @@ body.data-view-page .data-table th {
     text-align: left !important;
     border-bottom: 2px solid var(--color-border) !important;
     font-size: 0.9rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
 }
 
 body.data-view-page .data-table td {
@@ -249,6 +265,9 @@ body.data-view-page .data-table td {
     border-bottom: 1px solid var(--color-border) !important;
     vertical-align: top !important;
     font-size: 0.95rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
 }
 
 body.data-view-page .text-center {
@@ -546,7 +565,9 @@ body.data-view-page .btn-secondary:hover {
     body.data-view-page .main-content {
         margin-left: 0 !important;
         width: 100% !important;
+        max-width: 100% !important;
         padding: 20px !important;
+        box-sizing: border-box !important;
     }
 
     body.data-view-page .header-container {
@@ -587,7 +608,8 @@ body.data-view-page .btn-secondary:hover {
 
 @media (max-width: 768px) {
     body.data-view-page .data-table {
-        min-width: 900px !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
     }
 
     body.data-view-page .summary-section {

@@ -28,6 +28,7 @@ import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.IndustrialSupervisorRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
 @Transactional
@@ -498,7 +499,7 @@ public class IndustrialSupervisorService {
             comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
             comment.setEvaluatorName(supervisor.getUsername());
             comment.setAssessment(assessment);
-            comment.setCommentText(commentText);
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
             comment.setCommentIndex(i);
             comment.setRubricAssessmentType(rubricAssessmentType);
@@ -590,7 +591,7 @@ public class IndustrialSupervisorService {
                 comment.setEvaluatorType(AssessmentComment.EvaluatorType.SUPERVISOR);
                 comment.setEvaluatorName(supervisor.getUsername());
                 comment.setAssessment(assessment);
-                comment.setCommentText(commentText.trim());
+                comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
                 comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SUPERVISOR_EVALUATION);
                 comment.setCommentIndex(commentIndex);
                 comment.setRubricAssessmentType(rubricAssessmentType);

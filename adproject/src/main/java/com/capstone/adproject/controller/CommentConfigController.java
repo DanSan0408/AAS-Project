@@ -20,6 +20,7 @@ import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.repositories.AssessmentRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CourseScopeService;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Controller
 @RequestMapping("/admin/comment-config")
@@ -175,7 +176,7 @@ public class CommentConfigController {
                 List<Boolean> anonymousFlags = new ArrayList<>(assessment.getGroupCommentAnonymousFlags());
                 
                 if (index >= 0 && index < labels.size()) {
-                    labels.set(index, label.trim());
+                    labels.set(index, HtmlSanitizerUtil.sanitizePlainText(label.trim()));
 
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
@@ -193,7 +194,7 @@ public class CommentConfigController {
                 List<Boolean> anonymousFlags = new ArrayList<>(assessment.getIndividualCommentAnonymousFlags());
                 
                 if (index >= 0 && index < labels.size()) {
-                    labels.set(index, label.trim());
+                    labels.set(index, HtmlSanitizerUtil.sanitizePlainText(label.trim()));
 
                     while (minLengths.size() <= index) minLengths.add(20);
                     while (anonymousFlags.size() <= index) anonymousFlags.add(true);
@@ -294,7 +295,7 @@ public class CommentConfigController {
                     String label = commentLabels.get(i);
                     if (label == null || label.trim().isEmpty()) continue;
                     
-                    processedLabels.add(label.trim());
+                    processedLabels.add(HtmlSanitizerUtil.sanitizePlainText(label.trim()));
                     
                     Integer minLength = 20;
                     if (commentMinLengths != null && i < commentMinLengths.size() && commentMinLengths.get(i) != null) {

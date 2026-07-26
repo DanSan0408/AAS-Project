@@ -40,6 +40,7 @@ import com.capstone.adproject.service.AssessmentCommentService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.MarkService;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Controller
 @RequestMapping("/student")
@@ -725,7 +726,7 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 comment.setEvaluatorName(evaluator.getEmail());
                 comment.setEvaluatedStudent(evaluatedStudent);
                 comment.setAssessment(assessment);
-                comment.setCommentText(commentText.trim());
+                comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
                 comment.setAssessmentType(isSelfAssessment ? 
                     AssessmentComment.CommentAssessmentType.SELF : 
                     AssessmentComment.CommentAssessmentType.PEER);
@@ -1112,7 +1113,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     comment.setEvaluatorName(evaluator.getEmail());
                     comment.setEvaluatedStudent(member);
                     comment.setAssessment(assessment);
-                    comment.setCommentText(commentText.trim());
+                    comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
                     comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
                     comment.setCommentIndex(commentIndex);
                     comment.setRubricAssessmentType("Group Assessment");

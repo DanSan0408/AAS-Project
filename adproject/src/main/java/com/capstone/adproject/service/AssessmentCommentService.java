@@ -31,7 +31,7 @@ public class AssessmentCommentService {
     @Transactional
     public AssessmentComment saveComment(AssessmentComment comment) {
         if (comment.getCommentText() != null) {
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(comment.getCommentText()));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(comment.getCommentText()));
         }
         return commentRepository.save(comment);
     }
@@ -139,7 +139,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(evaluatorName);
             comment.setEvaluatedStudent(evaluatedStudent);
             comment.setAssessment(assessment);
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
             comment.setAnonymousIdentifier(identifier);
             comment.setCommentIndex(i);
@@ -181,7 +181,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(student.getUsername());
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.SELF);
             comment.setAnonymousIdentifier("You (Self)");
             comment.setCommentIndex(i);
@@ -225,7 +225,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(student.getUsername());
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
             comment.setAnonymousIdentifier("You (Team Evaluation)");
             comment.setCommentIndex(i);
@@ -255,7 +255,7 @@ public class AssessmentCommentService {
         AssessmentComment comment;
         if (!existing.isEmpty()) {
             comment = existing.get(0);
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText));
         } else {
             comment = new AssessmentComment();
             comment.setEvaluatorId(lecturerId);
@@ -263,7 +263,7 @@ public class AssessmentCommentService {
             comment.setEvaluatorName(lecturerName);
             comment.setEvaluatedStudent(evaluatedStudent);
             comment.setAssessment(assessment);
-            comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText));
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText));
             comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
             comment.setCommentIndex(0);
             comment.setRubricAssessmentType(rubricType);
