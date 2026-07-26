@@ -202,7 +202,16 @@ body.assign-assessment-page .btn-primary:hover { background-color: #6B0025 !impo
 body.assign-assessment-page .btn-secondary { background-color: #94a3b8 !important; color: white !important; }
 body.assign-assessment-page .btn-secondary:hover { background-color: #64748b !important; }
 
-@media (max-width: 800px) {
-    body.assign-assessment-page .main-content { margin-left: 0 !important; padding: 20px !important; }
-    body.assign-assessment-page .radio-options { grid-template-columns: 1fr !important; }
+@media (max-width: 1279px) {
+    .main-content,
+    body.assign-assessment-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.assign-assessment-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px !important; }
+    body.assign-assessment-page .radio-options,
+    body.assign-assessment-page .split-inputs { grid-template-columns: 1fr !important; }
+    body.assign-assessment-page .form-actions { flex-direction: column; }
+    body.assign-assessment-page .btn { width: 100%; text-align: center; }
 }

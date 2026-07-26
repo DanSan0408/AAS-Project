@@ -583,10 +583,21 @@ body.supervisor-page .btn i {
     font-size: 1.1em;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1279px) {
+    .main-content,
     body.supervisor-page .main-content {
-        margin-left: 0;
-        padding: 20px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.supervisor-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
     }
     
     body.supervisor-page .evaluation-container {

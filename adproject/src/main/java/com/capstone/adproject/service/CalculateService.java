@@ -109,7 +109,8 @@ public class CalculateService {
                 Double maxRubricMark = rubric.getMarks() != null ? rubric.getMarks().doubleValue() : 0.0;
 
                 if (assessmentType != null && "Group Assessment".equalsIgnoreCase(assessmentType.trim()) && factor > 0) {
-                    double rawWeightedMark = factor * evaluatedMark;
+                    double cappedFactor = Math.min(factor, 1.05);
+                    double rawWeightedMark = cappedFactor * evaluatedMark;
                     rubricCalc.setWeightedRubricMark(round(Math.min(rawWeightedMark, maxRubricMark)));
                 } else {
                     rubricCalc.setWeightedRubricMark(round(Math.min(evaluatedMark, maxRubricMark)));
@@ -281,8 +282,7 @@ public class CalculateService {
         if (individualAverage == null) return breakdown;
         
         double factor = individualAverage / groupAverage;
-        double cappedFactor = Math.min(factor, 1.05);
-        breakdown.setCalculatedFactor(Math.round(cappedFactor * 1000.0) / 1000.0);
+        breakdown.setCalculatedFactor(Math.round(factor * 1000.0) / 1000.0);
         
         return breakdown;
     }
@@ -353,8 +353,7 @@ public class CalculateService {
         if (individualAverage == null) return 0.0;
         
         double factor = individualAverage / groupAverage;
-        double cappedFactor = Math.min(factor, 1.05);
-        return Math.round(cappedFactor * 1000.0) / 1000.0;
+        return Math.round(factor * 1000.0) / 1000.0;
     }
 
     private RubricCalculationDto calculateRubricData(Student student, Assessment assessment, Rubric rubric, List<Mark> allMarks) {

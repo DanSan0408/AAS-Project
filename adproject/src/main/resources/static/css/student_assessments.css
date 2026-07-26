@@ -308,7 +308,15 @@ body {
 .alert-danger { background-color: #FDEDED; color: var(--student-alert); border: 1px solid #FABDBD; }
 .alert-success { background-color: #EDF7ED; color: var(--student-success); border: 1px solid #C3E6CB; }
 
-@media (max-width: 900px) {
-    .main-content { margin-left: 0; padding: 20px; }
+@media (max-width: 1279px) {
+    .main-content,
+    body.student-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
     .evaluation-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .main-content,
+    body.student-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 15px !important; }
+    .member-eval { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .btn-evaluate { width: 100%; justify-content: center; }
 }

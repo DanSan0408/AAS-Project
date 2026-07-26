@@ -210,11 +210,20 @@ body.admin-page .text-muted {
     color: var(--color-secondary-light);
 }
 
+@media (max-width: 1279px) {
+    .main-content,
+    body.admin-page .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
 @media (max-width: 768px) {
     body.admin-page .manage-courses-container {
         margin-top: 12px;
     }
 
+    .main-content,
     body.admin-page .main-content {
         width: 100% !important;
         margin-left: 0 !important;

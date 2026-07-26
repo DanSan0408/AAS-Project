@@ -151,8 +151,10 @@ body.overall-data-page .legend-card { background-color: var(--color-surface) !im
 body.overall-data-page .legend-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; gap: 15px !important; font-size: 0.9rem !important; }
 
 @media (max-width: 1279px) {
+    .main-content,
     body.overall-data-page .main-content {
         margin-left: 0 !important;
+        width: 100% !important;
         padding: 20px !important;
         margin-top: 56px !important;
     }

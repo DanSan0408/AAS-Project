@@ -268,13 +268,20 @@ body.student-comments-page .no-comments h2 {
     margin-bottom: 10px !important;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1279px) {
+    body.student-comments-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
     body.student-comments-page .comments-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
 @media (max-width: 768px) {
+    body.student-comments-page .main-content {
+        padding: 84px 15px 20px 15px !important;
+    }
     body.student-comments-page .comments-grid {
         grid-template-columns: 1fr !important;
     }

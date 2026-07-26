@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Assessments & Rubrics</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/rubric.css}">
 </head>
 <body class="rubric-page">
@@ -80,12 +81,12 @@
                             <td colspan="4" style="text-align: center; padding: 20px; font-style: italic;">No assessments created yet.</td>
                         </tr>
                         <tr th:each="assessment : ${assessments}">
-                            <td th:text="${assessment.id}">1</td>
-                            <td th:text="${assessment.title}" style="font-weight: 600;">Final Year Project</td>
-                            <td style="text-align: center;">
+                            <td data-label="ID" th:text="${assessment.id}">1</td>
+                            <td data-label="Title" th:text="${assessment.title}" style="font-weight: 600;">Final Year Project</td>
+                            <td data-label="Status" style="text-align: center;">
                                 <span class="badge" style="background-color: #95a5a6; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">REGULAR</span>
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="action-buttons">
                                     <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" 
                                        class="btn btn-sm btn-view"
