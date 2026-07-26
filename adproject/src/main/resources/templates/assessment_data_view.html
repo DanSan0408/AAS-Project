@@ -166,9 +166,12 @@
                                                 
                                                 <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
                                                     <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
-                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
-                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        <div th:each="questionEntry : ${rubricDetails.evaluatorComments}" class="rubric-comment-group">
+                                                            <div class="rubric-comment-question" th:text="${questionEntry.key}">Question</div>
+                                                            <div th:each="evaluatorEntry : ${questionEntry.value}" class="rubric-evaluator-block">
+                                                                <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                                <div th:each="c : ${evaluatorEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
@@ -222,9 +225,12 @@
                                                 
                                                 <td class="border-left">
                                                     <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
-                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
-                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        <div th:each="questionEntry : ${rubricDetails.evaluatorComments}" class="rubric-comment-group">
+                                                            <div class="rubric-comment-question" th:text="${questionEntry.key}">Question</div>
+                                                            <div th:each="evaluatorEntry : ${questionEntry.value}" class="rubric-evaluator-block">
+                                                                <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                                <div th:each="c : ${evaluatorEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
@@ -289,9 +295,12 @@
                                                 
                                                 <td th:if="${subRubricStat.first}" th:attr="rowspan=${#lists.size(rubric.subRubrics)}" class="border-left">
                                                     <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
-                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
-                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        <div th:each="questionEntry : ${rubricDetails.evaluatorComments}" class="rubric-comment-group">
+                                                            <div class="rubric-comment-question" th:text="${questionEntry.key}">Question</div>
+                                                            <div th:each="evaluatorEntry : ${questionEntry.value}" class="rubric-evaluator-block">
+                                                                <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                                <div th:each="c : ${evaluatorEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
@@ -336,9 +345,12 @@
                                                 
                                                 <td class="border-left">
                                                     <div th:if="${rubricDetails != null and rubricDetails.evaluatorComments != null and !rubricDetails.evaluatorComments.isEmpty()}" class="comments-list">
-                                                        <div th:each="commentEntry : ${rubricDetails.evaluatorComments}">
-                                                            <strong th:text="${commentEntry.key}">Eval</strong>: 
-                                                            <div th:each="c : ${commentEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                        <div th:each="questionEntry : ${rubricDetails.evaluatorComments}" class="rubric-comment-group">
+                                                            <div class="rubric-comment-question" th:text="${questionEntry.key}">Question</div>
+                                                            <div th:each="evaluatorEntry : ${questionEntry.value}" class="rubric-evaluator-block">
+                                                                <strong th:text="${evaluatorEntry.key}">Eval</strong>: 
+                                                                <div th:each="c : ${evaluatorEntry.value}" class="comment-text" th:text="${c}">Comment</div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div th:if="${rubricDetails == null or rubricDetails.evaluatorComments == null or rubricDetails.evaluatorComments.isEmpty()}" class="no-comments">
@@ -365,10 +377,13 @@
                         <div th:if="${studentGroupComments.containsKey(studentData.student.id) and !studentGroupComments.get(studentData.student.id).isEmpty()}" 
                              class="comments-block group-comments">
                             <h4><i class="fas fa-users"></i> Group Assessment Comments</h4>
-                            <div th:each="commentEntry : ${studentGroupComments.get(studentData.student.id)}" class="comment-group">
-                                <div class="evaluator-name" th:text="${commentEntry.key}">Evaluator</div>
-                                <div th:each="comment : ${commentEntry.value}" class="comment-item">
-                                    <p th:text="${comment}">Comment text</p>
+                            <div th:each="questionEntry : ${studentGroupComments.get(studentData.student.id)}" class="comment-group">
+                                <div class="comment-question" th:text="${questionEntry.key}">Question</div>
+                                <div th:each="evaluatorEntry : ${questionEntry.value}" class="evaluator-comments-block">
+                                    <div class="evaluator-name"><i class="fas fa-user-circle"></i> <span th:text="${evaluatorEntry.key}">Evaluator</span></div>
+                                    <div th:each="comment : ${evaluatorEntry.value}" class="comment-item">
+                                        <p th:text="${comment}">Comment text</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -376,10 +391,13 @@
                         <div th:if="${studentIndividualComments.containsKey(studentData.student.id) and !studentIndividualComments.get(studentData.student.id).isEmpty()}" 
                              class="comments-block individual-comments">
                             <h4><i class="fas fa-user"></i> Individual Assessment Comments</h4>
-                            <div th:each="commentEntry : ${studentIndividualComments.get(studentData.student.id)}" class="comment-group">
-                                <div class="evaluator-name" th:text="${commentEntry.key}">Evaluator</div>
-                                <div th:each="comment : ${commentEntry.value}" class="comment-item">
-                                    <p th:text="${comment}">Comment text</p>
+                            <div th:each="questionEntry : ${studentIndividualComments.get(studentData.student.id)}" class="comment-group">
+                                <div class="comment-question" th:text="${questionEntry.key}">Question</div>
+                                <div th:each="evaluatorEntry : ${questionEntry.value}" class="evaluator-comments-block">
+                                    <div class="evaluator-name"><i class="fas fa-user-circle"></i> <span th:text="${evaluatorEntry.key}">Evaluator</span></div>
+                                    <div th:each="comment : ${evaluatorEntry.value}" class="comment-item">
+                                        <p th:text="${comment}">Comment text</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>

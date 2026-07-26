@@ -471,20 +471,42 @@ body.data-view-page .individual-comments h4 {
 
 body.data-view-page .comment-group {
     margin-bottom: 15px !important;
-    padding: 12px !important;
+    padding: 16px !important;
     background-color: #f9fafb !important;
-    border-radius: 6px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--color-border) !important;
 }
 
 body.data-view-page .comment-group:last-child {
     margin-bottom: 0 !important;
 }
 
-body.data-view-page .comment-group .evaluator-name {
+body.data-view-page .comment-group .comment-question {
     font-weight: 700 !important;
     color: var(--color-primary) !important;
+    margin-bottom: 12px !important;
+    font-size: 1.05rem !important;
+    border-bottom: 1px dashed var(--color-border) !important;
+    padding-bottom: 8px !important;
+}
+
+body.data-view-page .evaluator-comments-block {
+    margin-bottom: 12px !important;
+    margin-left: 8px !important;
+}
+
+body.data-view-page .evaluator-comments-block:last-child {
+    margin-bottom: 0 !important;
+}
+
+body.data-view-page .evaluator-comments-block .evaluator-name {
+    font-weight: 600 !important;
+    color: var(--color-secondary) !important;
     margin-bottom: 8px !important;
     font-size: 0.95rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
 }
 
 body.data-view-page .comment-group .comment-item {
@@ -504,6 +526,31 @@ body.data-view-page .comment-group .comment-item p {
     color: var(--color-secondary) !important;
     font-size: 0.9rem !important;
     line-height: 1.5 !important;
+}
+
+body.data-view-page .rubric-comment-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding-bottom: 6px !important;
+    border-bottom: 1px dashed var(--color-border) !important;
+}
+
+body.data-view-page .rubric-comment-group:last-child {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+}
+
+body.data-view-page .rubric-comment-question {
+    font-weight: 600 !important;
+    color: var(--color-primary) !important;
+    font-size: 0.9rem !important;
+    text-decoration: underline !important;
+}
+
+body.data-view-page .rubric-evaluator-block {
+    margin-left: 6px !important;
+    margin-bottom: 4px !important;
 }
 
 body.data-view-page .comment-text {
