@@ -431,14 +431,18 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 
         List<String> commentLabels = rubric.getRubricCommentLabels();
         if (commentLabels != null && !commentLabels.isEmpty()) {
+            List<String> sanitizedLabels = new ArrayList<>();
             List<Boolean> anonymousFlags = new ArrayList<>();
 
             for (int i = 0; i < commentLabels.size(); i++) {
+                String label = commentLabels.get(i);
+                sanitizedLabels.add(label != null ? HtmlSanitizerUtil.sanitizePlainText(label.trim()) : "");
                 String paramKey = "rubricCommentAnonymousFlags[" + i + "]";
                 boolean isChecked = allParams.containsKey(paramKey) && "true".equals(allParams.get(paramKey));
                 anonymousFlags.add(isChecked);
             }
 
+            rubric.setRubricCommentLabels(sanitizedLabels);
             rubric.setRubricCommentAnonymousFlags(anonymousFlags);
         }
 

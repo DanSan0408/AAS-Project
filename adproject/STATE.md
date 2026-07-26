@@ -1,6 +1,77 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-26 (Antigravity)
+**Last Updated**: 2026-07-27 (Antigravity)
+
+---
+
+## Current Status: Comment HTML Double-Escaping Bug Fix & XSS Sanitization Improvement
+**Status**: COMPLETED
+
+### Summary
+- Fixed the double-escaping issue where special characters in evaluation comments and comment questions (such as `=` appearing as `&#61;` and `"` appearing as `&#34;`) were displayed as literal HTML entities on data views while maintaining full XSS security.
+- **Root Cause**: When saving evaluation comments and rubric questions, service layers were calling `HtmlSanitizerUtil.sanitize()`. This method uses OWASP HTML Sanitizer to prevent XSS, but converts non-alphanumeric ASCII characters (`=`, `"`, `'`, `&`) into HTML entities (`&#61;`, `&#34;`). When these stored strings were subsequently rendered on frontend views using Thymeleaf's `th:text` attribute (which automatically escapes HTML variables for XSS protection), the ampersand `&` in the entities was escaped again to `&amp;`, resulting in the browser displaying literal strings like `&#61;` and `&#34;`.
+- **Fix**:
+  - Replaced `.sanitize()` calls across `LecturerAssessmentService` and `AssessmentCommentService` with `HtmlSanitizerUtil.sanitizePlainText()`, which strips unsafe HTML tags and unescapes entity codes so that `th:text` displays them cleanly without double escaping.
+  - Added `HtmlSanitizerUtil.sanitizePlainText()` to all comment saving endpoints in `IndustrialSupervisorService`, `StudentController` (peer/self/team evaluations), `CommentConfigController`, and `RubricController`.
+  - Updated `AssessmentComment.getCommentText()` to unescape HTML entities on read, ensuring legacy database entries with existing encoded entities automatically render cleanly on all views.
+  - Added unit tests in `HtmlSanitizerUtilTest`.
+
+### Files Modified
+- `AssessmentComment.java`
+- `LecturerAssessmentService.java`
+- `AssessmentCommentService.java`
+- `IndustrialSupervisorService.java`
+- `StudentController.java`
+- `CommentConfigController.java`
+- `RubricController.java`
+- `HtmlSanitizerUtilTest.java`
+- `STATE.md`
+
+---
+
+## Current Status: Factor Display View Full-Width Table & Horizontal Scroll Elimination
+**Status**: COMPLETED
+
+### Summary
+- Updated `factor_display.css` so that factor display tables (`factor_display.html`) display in full view without requiring horizontal scrolling.
+- **Root Cause**: The `.display-container` was capped at `max-width: 1200px`, constraining table widths on desktops. Additionally, the table wrappers (`.table-responsive` and `.data-table`) inherited `white-space: nowrap` from global responsive styles, forcing text in assessment titles, teammate rating lists, and status badges to stay on a single horizontal line and pushing table dimensions beyond card borders.
+- **Fix**:
+  - Replaced `max-width: 1200px` on `.display-container` with `max-width: 100%`, allowing factor display tables to expand to the full width of the main content area.
+  - Applied `white-space: normal; word-break: break-word; overflow-wrap: anywhere; table-layout: auto;` to `.table-responsive`, `.data-table`, `th`, and `td` elements, ensuring that teammate rating breakdowns, assessment titles, and override history columns wrap cleanly within the container without triggering horizontal scrollbars.
+
+### Files Modified
+- `factor_display.css`
+- `STATE.md`
+
+---
+
+## Current Status: Assessment Data View Full-Width Card & Horizontal Scroll Elimination
+**Status**: COMPLETED
+
+### Summary
+- Updated `assessment_data.css` so that student evaluation cards in the Assessment Data View (`assessment_data_view.html`) display in full view without requiring horizontal scrolling.
+- **Root Cause**: The `.data-container` was restricted to `max-width: 1200px`, which constrained student cards even on wider screens. Inside `.student-card`, `.table-responsive` inherited `white-space: nowrap` from global responsive patterns, forcing table cells (such as sub-rubric names, rating lists, marks, and rubric comments) to stay on single lines and pushing table widths beyond the card boundaries. Furthermore, mobile/tablet media queries enforced `min-width: 900px` on `.data-table`, forcing horizontal scrollbars.
+- **Fix**:
+  - Removed `max-width: 1200px` from `.data-container` (changing to `max-width: 100%`), allowing student cards to expand to the full width of the main content area.
+  - Overridden `white-space: nowrap` on `.table-responsive` and applied `white-space: normal; word-break: break-word; overflow-wrap: anywhere; table-layout: auto;` to `.data-table`, table headers, and table cells so text wraps cleanly inside column boundaries without overflowing horizontally.
+  - Replaced the hardcoded `min-width: 900px` mobile override with `min-width: 100%; max-width: 100%;`, ensuring tables fit inside the container across all screen sizes without horizontal scrollbars.
+
+### Files Modified
+- `assessment_data.css`
+- `STATE.md`
+
+---
+
+## Current Status: Factor Display 3-Decimal Rounding Alignment
+**Status**: COMPLETED
+
+### Summary
+- Aligned factor display formatting in the Factor Display view (`factor_display.html`) with the Overall Data Summary view by formatting all factor values to 3 decimal places (`#numbers.formatDecimal(..., 1, 3)`).
+- **Fix**: Updated Base Factor, Calculated Total Factor, Overridden Factor, System Factor badges, and Factor Override History columns in `factor_display.html` from 2 decimal places to 3 decimal places (e.g., `1.090`). Individual ratings and mark averages (`Indiv. Avg`, `Group Avg`) remain formatted to 2 decimal places as in Overall Data View.
+
+### Files Modified
+- `factor_display.html`
+- `STATE.md`
 
 ---
 

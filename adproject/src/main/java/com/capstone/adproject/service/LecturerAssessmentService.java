@@ -762,7 +762,7 @@ public class LecturerAssessmentService {
                         comment.setEvaluatorName(lecturerName);
                         comment.setEvaluatedStudent(student);
                         comment.setAssessment(assessment);
-                        comment.setCommentText(HtmlSanitizerUtil.sanitize(commentEntry.getValue().trim()));
+                        comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentEntry.getValue().trim()));
                         comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
                         comment.setCommentIndex(commentEntry.getKey());
                         comment.setRubricAssessmentType(rubricType);
@@ -823,7 +823,7 @@ public class LecturerAssessmentService {
                         comment.setEvaluatorName(lecturerName);
                         comment.setEvaluatedStudent(student);
                         comment.setAssessment(assessment);
-                        comment.setCommentText(HtmlSanitizerUtil.sanitize(commentText.trim()));
+                        comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
                         comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
                         comment.setCommentIndex(commentIndex);
                         comment.setRubricAssessmentType(rubricType);

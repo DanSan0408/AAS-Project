@@ -118,7 +118,9 @@ public class AssessmentComment {
     public Assessment getAssessment() { return assessment; }
     public void setAssessment(Assessment assessment) { this.assessment = assessment; }
 
-    public String getCommentText() { return commentText; }
+    public String getCommentText() { 
+        return commentText != null ? org.springframework.web.util.HtmlUtils.htmlUnescape(commentText) : null; 
+    }
     public void setCommentText(String commentText) { this.commentText = commentText; }
 
     public CommentAssessmentType getAssessmentType() { return assessmentType; }
