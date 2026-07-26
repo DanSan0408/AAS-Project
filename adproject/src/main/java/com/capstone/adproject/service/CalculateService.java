@@ -687,7 +687,7 @@ public class CalculateService {
         }
         
         for (AssessmentComment comment : rubricComments) {
-            String questionLabel = comment.getDisplayLabel();
+            String questionLabel = comment.getDisplayLabel(assessment, rubric);
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
@@ -781,7 +781,7 @@ public class CalculateService {
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Group Assessment");
         
         for (AssessmentComment comment : groupComments) {
-            String questionLabel = comment.getDisplayLabel();
+            String questionLabel = comment.getDisplayLabel(assessment);
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
@@ -802,7 +802,7 @@ public class CalculateService {
             .findByEvaluatedStudentAndAssessmentAndRubricAssessmentType(student, assessment, "Individual Assessment");
         
         for (AssessmentComment comment : individualComments) {
-            String questionLabel = comment.getDisplayLabel();
+            String questionLabel = comment.getDisplayLabel(assessment);
             String evaluatorName = comment.getDisplayName();
             String commentText = comment.getCommentText();
             
@@ -822,7 +822,7 @@ public class CalculateService {
         List<AssessmentComment> allComments = commentRepository.findByEvaluatedStudentAndAssessment(student, assessment);
         
         for (AssessmentComment comment : allComments) {
-            String baseLabel = comment.getDisplayLabel();
+            String baseLabel = comment.getDisplayLabel(assessment);
             String type = comment.getRubricAssessmentType();
             if (type == null || type.isEmpty()) {
                 type = "Rubric";

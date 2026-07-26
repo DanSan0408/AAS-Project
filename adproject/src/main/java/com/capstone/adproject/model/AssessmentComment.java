@@ -172,17 +172,69 @@ public class AssessmentComment {
         this.cachedDisplayName = displayName;
     }
     
-    public String getDisplayLabel() {
+    public String getDisplayLabel(Assessment liveAssessment, Rubric liveRubric) {
+        int idx = (commentIndex != null) ? commentIndex : 0;
+        Assessment targetAssessment = (liveAssessment != null) ? liveAssessment : this.assessment;
+
+        if (rubricId != null) {
+            Rubric targetRubric = liveRubric;
+            if (targetRubric == null && targetAssessment != null && targetAssessment.getRubrics() != null) {
+                for (Rubric r : targetAssessment.getRubrics()) {
+                    if (r.getId() != null && r.getId().equals(rubricId)) {
+                        targetRubric = r;
+                        break;
+                    }
+                }
+            }
+            if (targetRubric != null) {
+                String liveLabel = targetRubric.getRubricCommentLabel(idx);
+                if (liveLabel != null && !liveLabel.trim().isEmpty() && !liveLabel.startsWith("Rubric Comment ")) {
+                    return liveLabel;
+                }
+            }
+        }
+
+        if (rubricId == null && targetAssessment != null) {
+            boolean isGroup = (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group"))
+                           || assessmentType == CommentAssessmentType.TEAM;
+            if (isGroup) {
+                String liveLabel = targetAssessment.getGroupCommentLabel(idx);
+                if (liveLabel != null && !liveLabel.trim().isEmpty() && !liveLabel.startsWith("Group Comment ")) {
+                    return liveLabel;
+                }
+            } else {
+                String liveLabel = targetAssessment.getIndividualCommentLabel(idx);
+                if (liveLabel != null && !liveLabel.trim().isEmpty() && !liveLabel.startsWith("Individual Comment ")) {
+                    return liveLabel;
+                }
+            }
+        }
+
+        if (commentLabel != null && !commentLabel.trim().isEmpty() 
+            && !commentLabel.startsWith("Individual Comment ")
+            && !commentLabel.startsWith("Group Comment ")
+            && !commentLabel.startsWith("Rubric Comment ")) {
+            return commentLabel;
+        }
+
         if (commentLabel != null && !commentLabel.trim().isEmpty()) {
             return commentLabel;
         }
-        
+
         if (rubricId != null) {
-            return "Rubric Comment " + (getCommentIndex() + 1);
+            return "Rubric Comment " + (idx + 1);
         } else if (rubricAssessmentType != null && rubricAssessmentType.toLowerCase().contains("group")) {
-            return "Group Comment " + (getCommentIndex() + 1);
+            return "Group Comment " + (idx + 1);
         } else {
-            return "Individual Comment " + (getCommentIndex() + 1);
+            return "Individual Comment " + (idx + 1);
         }
+    }
+
+    public String getDisplayLabel(Assessment liveAssessment) {
+        return getDisplayLabel(liveAssessment, null);
+    }
+
+    public String getDisplayLabel() {
+        return getDisplayLabel(this.assessment, null);
     }
 }
