@@ -26,7 +26,7 @@
             <div class="user-editing-container">
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
-                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-lecturers">Assessors</a>
                     <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
@@ -64,7 +64,7 @@
                                         
                                         <td>
                                             <select name="academicSupervisorId" required>
-                                                <option value="">-- Select Lecturer --</option>
+                                                <option value="">-- Select Assessor --</option>
                                                 <option th:each="lecturer : ${availableLecturers}"
                                                         th:value="${lecturer.id}"
                                                     th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"></option>
@@ -73,7 +73,7 @@
                                         
                                         <td>
                                             <select name="industrialSupervisorId" required>
-                                                <option value="">-- Select Lecturer --</option>
+                                                <option value="">-- Select Assessor --</option>
                                                 <option th:each="lecturer : ${availableLecturers}"
                                                         th:value="${lecturer.id}"
                                                     th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"></option>

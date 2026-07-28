@@ -32,7 +32,7 @@
 
             <div class="card" style="margin-bottom: 2rem;">
                 <h2 class="card-title">
-                    <i class="fas fa-chalkboard-teacher"></i> Lecturer Progress 
+                    <i class="fas fa-chalkboard-teacher"></i> Assessor Progress 
                     (<span th:text="${lecturerProgress.assignmentMode}"></span> Mode)
                 </h2>
                 
@@ -40,7 +40,7 @@
                     <table th:if="${not #lists.isEmpty(lecturerProgress.progressList)}">
                         <thead>
                             <tr>
-                                <th>Lecturer</th>
+                                <th>Assessor</th>
                                 <th>Assigned Target</th>
                                 <th>Status</th>
                                 <th>Progress</th>
@@ -49,7 +49,7 @@
                         <tbody>
                             <th:block th:each="prog, stat : ${lecturerProgress.progressList}">
                                 <tr>
-                                    <td data-label="Lecturer">
+                                    <td data-label="Assessor">
                                         <button class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: #4a5568; margin-right: 5px;" th:data-target="'#lecturer-details-' + ${stat.index}">
                                             <i class="fas fa-chevron-right toggle-icon"></i>
                                         </button>
@@ -142,7 +142,7 @@
                         </tbody>
                     </table>
                 </div>
-                <p th:if="${#lists.isEmpty(lecturerProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No lecturers assigned to this assessment.</p>
+                <p th:if="${#lists.isEmpty(lecturerProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No assessors assigned to this assessment.</p>
             </div>
 
             <div class="card">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Home</title>
+    <title>Assessor Home</title>
     <link rel="stylesheet" th:href="@{/css/lecturer.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
@@ -106,9 +106,9 @@
                                                        (deadline.assessorType == 'LECTURER' ? 'badge-lecturer' : 
                                                        (deadline.assessorType == 'SUPERVISOR' ? 'badge-supervisor' : 'badge-general'))}"
                                       th:text="${deadline.assessorType == 'STUDENT' ? 'Students' : 
-                                               (deadline.assessorType == 'LECTURER' ? 'Lecturers' : 
+                                               (deadline.assessorType == 'LECTURER' ? 'Assessors' : 
                                                (deadline.assessorType == 'SUPERVISOR' ? 'Industrial Supervisors' : 'General'))}">
-                                    Lecturers
+                                    Assessors
                                 </span>
                             </p>
                             

@@ -281,7 +281,7 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             lecturer.setResetPasswordToken(resetToken);
             lecturer.setRoles("ROLE_LECTURER"); // Default role for new lecturer
             
-            sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Lecturer", resetToken, request);
+            sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Assessor", resetToken, request);
         }
         
         if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
@@ -449,7 +449,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         if (lecturer.getEmail() != null) {
             String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
-                return "This lecturer is already enrolled in this course.";
+                return "This assessor is already enrolled in this course.";
             }
         }
     }

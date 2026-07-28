@@ -67,13 +67,13 @@
                     <div th:each="evaluator : ${uniqueEvaluators}" class="evaluator-item">
                         <div class="evaluator-name">
                             <i class="fas" 
-                               th:classappend="${evaluator.value == 'Lecturer' ? 'fa-chalkboard-teacher' : (evaluator.value == 'Supervisor' ? 'fa-user-tie' : 'fa-user-graduate')}"></i>
+                               th:classappend="${evaluator.value == 'Lecturer' or evaluator.value == 'Assessor' ? 'fa-chalkboard-teacher' : (evaluator.value == 'Supervisor' ? 'fa-user-tie' : 'fa-user-graduate')}"></i>
                             <span th:text="${evaluator.key}">Name</span>
                         </div>
                         <div class="evaluator-role">
                             <span class="role-badge" 
-                                  th:classappend="${evaluator.value == 'Lecturer' ? 'badge-lecturer' : (evaluator.value == 'Supervisor' ? 'badge-supervisor' : 'badge-student')}"
-                                  th:text="${evaluator.value}">Role</span>
+                                  th:classappend="${evaluator.value == 'Lecturer' or evaluator.value == 'Assessor' ? 'badge-lecturer' : (evaluator.value == 'Supervisor' ? 'badge-supervisor' : 'badge-student')}"
+                                  th:text="${evaluator.value == 'Lecturer' ? 'Assessor' : evaluator.value}">Role</span>
                         </div>
                     </div>
                 </div>

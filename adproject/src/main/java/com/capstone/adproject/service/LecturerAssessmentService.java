@@ -779,7 +779,7 @@ public class LecturerAssessmentService {
                             assessment.isIndividualCommentAnonymous(commentIndex);
                         
                         if (isAnonymous != null && isAnonymous) {
-                            comment.setAnonymousIdentifier("Lecturer");
+                            comment.setAnonymousIdentifier("Assessor");
                         } else {
                             comment.setAnonymousIdentifier(lecturerName);
                         }
@@ -832,7 +832,7 @@ public class LecturerAssessmentService {
                         
                         Boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
                         if (isAnonymous != null && isAnonymous) {
-                            comment.setAnonymousIdentifier("Lecturer");
+                            comment.setAnonymousIdentifier("Assessor");
                         } else {
                             comment.setAnonymousIdentifier(lecturerName);
                         }

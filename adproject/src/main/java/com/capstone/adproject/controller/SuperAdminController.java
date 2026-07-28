@@ -79,7 +79,7 @@ public class SuperAdminController {
             String username = getLoggedInUsername();
             // The ensureAdminAssignable method was removed. We now find the lecturer record directly.
             Lecturer lecturer = superAdminService.resolveLecturerByIdentity(username)
-                .orElseThrow(() -> new IllegalStateException("Could not find a lecturer profile for the current super admin."));
+                .orElseThrow(() -> new IllegalStateException("Could not find an assessor profile for the current super admin."));
             course.setCreatedBy(lecturer);
             Course savedCourse = superAdminService.saveCourse(course);
             

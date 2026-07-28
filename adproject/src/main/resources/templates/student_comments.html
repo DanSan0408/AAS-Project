@@ -32,7 +32,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" th:text="${lecturerCommentCount}">0</div>
-                    <div class="stat-label">Lecturer Comments</div>
+                    <div class="stat-label">Assessor Comments</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" th:text="${supervisorCommentCount}">0</div>
@@ -142,8 +142,8 @@
                                 <div class="comment-header">
                                     <span class="evaluator-badge badge-lecturer">
                                         <i class="fas fa-graduation-cap"></i>
-                                        <span th:text="${comment.displayName}">Dr. Hakim</span>
-                                        <span th:if="${comment.displayName == 'Lecturer'}" 
+                                        <span th:text="${comment.displayName == 'Lecturer' ? 'Assessor' : comment.displayName}">Dr. Hakim</span>
+                                        <span th:if="${comment.displayName == 'Assessor' or comment.displayName == 'Lecturer'}" 
                                               class="anonymous-badge">
                                             <i class="fas fa-user-secret"></i> Anonymous
                                         </span>
@@ -153,7 +153,7 @@
                                 
                                 <span class="comment-label" th:if="${comment.commentLabel != null and !comment.commentLabel.isEmpty()}" th:text="${comment.commentLabel}">Comment Label</span>
                                 <div class="comment-text" th:text="${comment.commentText}">
-                                    Lecturer comment text here...
+                                    Assessor comment text here...
                                 </div>
                             </div>
                         </th:block>
@@ -195,7 +195,7 @@
                 <i class="fas fa-comments"></i>
                 <h2>No Comments Yet</h2>
                 <p>You haven't received any assessment comments yet.</p>
-                <p style="color: #6B6B6B;">Comments from peers, lecturers, and supervisors will appear here once evaluations are submitted.</p>
+                <p style="color: #6B6B6B;">Comments from peers, assessors, and supervisors will appear here once evaluations are submitted.</p>
             </div>
             
         </div>

@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 resultsDiv.innerHTML = '';
                 
                 if (lecturers.length === 0) {
-                    resultsDiv.innerHTML = '<div class="search-result-item">No lecturers found</div>';
+                    resultsDiv.innerHTML = '<div class="search-result-item">No assessors found</div>';
                     resultsDiv.style.display = 'block';
                     return;
                 }

@@ -25,7 +25,7 @@
             <div class="section-container">
                 <div class="section-header">
                     <h2><i class="fas fa-chart-line"></i> Assessment Progress Tracking</h2>
-                    <p>Select an assessment to view the evaluation progress of assigned lecturers and students.</p>
+                    <p>Select an assessment to view the evaluation progress of assigned assessors and students.</p>
                 </div>
                 
                 <div th:if="${assessments != null and !#lists.isEmpty(assessments)}" class="assessment-grid">
@@ -37,7 +37,7 @@
                         <div class="card-body">
                             <div class="info-row">
                                 <span class="label"><i class="fas fa-users"></i> Assessed By:</span>
-                                <span class="value" th:text="${assessorTypes.get(assessment.id) == 'Both' ? 'Lecturer &amp; Student' : assessorTypes.get(assessment.id)}">Both</span>
+                                <span class="value" th:text="${assessorTypes.get(assessment.id) == 'Both' ? 'Assessor &amp; Student' : (assessorTypes.get(assessment.id) == 'Lecturer' ? 'Assessor' : assessorTypes.get(assessment.id))}">Both</span>
                             </div>
                             <div class="info-row">
                                 <span class="label"><i class="fas fa-list-ul"></i> Rubrics:</span>

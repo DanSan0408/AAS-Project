@@ -23,7 +23,7 @@
             <p>Please select a user type or group action to configure.</p>
             <div class="user-selection">
                 <a href="/admin/manage-students">Students</a>
-                <a href="/admin/manage-lecturers">Lecturers</a>
+                <a href="/admin/manage-lecturers">Assessors</a>
                 <!--<a href="/admin/manage-supervisors">Industrial Supervisors</a>-->
                 <a href="/admin/group-assignment" class="btn btn-primary">Manage Groups & Assignments</a>
             </div>
@@ -36,7 +36,7 @@
                     <input type="hidden" name="targetRole" value="LECTURER" />
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                     <button type="submit" class="action-button promote" style="width: auto; padding: 12px 25px;">
-                        Add Lecturer Role to Yourself
+                        Add Assessor Role to Yourself
                     </button>
                 </form>
             </div>

@@ -525,14 +525,14 @@ public class CalculateService {
             if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
                 // Since we're removing industrial supervisors, treat supervisor marks as lecturer marks
                 // The supervisorId should now reference a lecturer ID
-                detail.put("evaluatorName", "Lecturer (Supervisor Role)");
-                detail.put("evaluatorType", "Lecturer");
+                detail.put("evaluatorName", "Assessor (Supervisor Role)");
+                detail.put("evaluatorType", "Assessor");
                 evaluatorKey = "lecturer_supervisor_" + mark.getSupervisorId();
                 
             } else if (mark.getLecturer() != null) {
                 evaluatorKey = "lecturer_" + mark.getLecturer().getId();
                 detail.put("evaluatorName", mark.getLecturer().getUsername());
-                detail.put("evaluatorType", "Lecturer");
+                detail.put("evaluatorType", "Assessor");
                 
             } else if (mark.getEvaluatorStudent() != null) {
                 evaluatorKey = "student_" + mark.getEvaluatorStudent().getId();
@@ -846,7 +846,7 @@ public class CalculateService {
         if (mark.getSupervisorId() != null && Boolean.TRUE.equals(mark.getIsSupervisorMark())) {
             // Since we're removing industrial supervisors, treat supervisor marks as lecturer marks
             // The supervisorId should now reference a lecturer ID
-            return "Lecturer (Supervisor Role)";
+            return "Assessor (Supervisor Role)";
         } else if (mark.getLecturer() != null) {
             return mark.getLecturer().getUsername();
         } else if (mark.getEvaluatorStudent() != null) {
