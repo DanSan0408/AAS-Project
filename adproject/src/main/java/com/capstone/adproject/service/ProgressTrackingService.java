@@ -283,7 +283,7 @@ public class ProgressTrackingService {
         boolean hasStudent = !studentAssessmentAssignmentRepository.findByAssessment(assessment).isEmpty();
 
         if (hasLecturer && hasStudent) return "Both";
-        if (hasLecturer) return "Lecturer";
+        if (hasLecturer) return "Assessor";
         if (hasStudent) return "Student";
         return "None";
     }

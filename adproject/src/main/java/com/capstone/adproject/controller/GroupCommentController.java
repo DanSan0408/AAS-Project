@@ -182,7 +182,7 @@ public class GroupCommentController {
             Optional<Lecturer> lecturerOpt = findLecturerByAuthName(auth.getName());
             if (lecturerOpt.isEmpty()) {
                 model.addAttribute("assessments", List.of());
-                model.addAttribute("errorMessage", "Lecturer profile not found.");
+                model.addAttribute("errorMessage", "Assessor profile not found.");
             } else {
                 model.addAttribute("assessments", findAssignedAssessmentsForLecturer(lecturerOpt.get()));
             }
@@ -229,7 +229,7 @@ public class GroupCommentController {
                 .or(() -> lecturerRepository.findByUsername(username));
             
             if (lecturerOpt.isEmpty()) {
-                redirectAttributes.addFlashAttribute("errorMessage", "Lecturer profile not found.");
+                redirectAttributes.addFlashAttribute("errorMessage", "Assessor profile not found.");
                 logger.warn("selectGroup: Lecturer profile not found for username: {}", username);
                 return "redirect:/";
             }
@@ -317,7 +317,7 @@ public class GroupCommentController {
         Optional<Lecturer> lecturerOpt = findLecturerByAuthName(username);
         
         if (lecturerOpt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Lecturer profile not found.");
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessor profile not found.");
             logger.warn("viewLecturerComments: Lecturer profile not found for username: {}", username);
             return "redirect:/";
         }

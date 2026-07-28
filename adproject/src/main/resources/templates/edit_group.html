@@ -25,7 +25,7 @@
             <div class="user-editing-container">
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
-                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-lecturers">Assessors</a>
                     <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment" class="active">Group Assignment</a>
                 </div>
@@ -50,19 +50,19 @@
 
                                 <hr/>
 
-                                <h3>Academic Supervisor (Lecturer)</h3>
+                                <h3>Academic Supervisor (Assessor)</h3>
                                 <div class="form-group">
-                                    <label for="academicSupervisorId">Lecturer:</label>
+                                    <label for="academicSupervisorId">Assessor:</label>
                                     <div class="search-container">
-                                        <input type="text" id="academicSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="academicSupervisorId">
+                                        <input type="text" id="academicSupervisorSearch" placeholder="Search assessor by email..." class="search-input" data-target-select="academicSupervisorId">
                                         <div id="academicSupervisorResults" class="search-results"></div>
                                     </div>
                                     <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
-                                        <option value="">-- Select Lecturer --</option>
+                                        <option value="">-- Select Assessor --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
-                                                th:selected="${groupAssignmentDto.academicSupervisorId != null and lecturer.id == groupAssignmentDto.academicSupervisorId}">Lecturer Email</option>
+                                                th:selected="${groupAssignmentDto.academicSupervisorId != null and lecturer.id == groupAssignmentDto.academicSupervisorId}">Assessor Email</option>
                                     </select>
                                 </div>
 
@@ -72,15 +72,15 @@
                                 <div class="form-group">
                                     <label for="industrialSupervisorId">Industrial Supervisor:</label>
                                     <div class="search-container">
-                                        <input type="text" id="industrialSupervisorSearch" placeholder="Search lecturer by email..." class="search-input" data-target-select="industrialSupervisorId">
+                                        <input type="text" id="industrialSupervisorSearch" placeholder="Search assessor by email..." class="search-input" data-target-select="industrialSupervisorId">
                                         <div id="industrialSupervisorResults" class="search-results"></div>
                                     </div>
                                     <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                        <option value="">-- Select Lecturer --</option>
+                                        <option value="">-- Select Assessor --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
-                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and lecturer.id == groupAssignmentDto.industrialSupervisorId}">Lecturer Email</option>
+                                                th:selected="${groupAssignmentDto.industrialSupervisorId != null and lecturer.id == groupAssignmentDto.industrialSupervisorId}">Assessor Email</option>
                                     </select>
                                 </div>
                                 
@@ -177,7 +177,7 @@
                     resultsDiv.innerHTML = '';
 
                     if (lecturers.length === 0) {
-                        resultsDiv.innerHTML = '<div class="search-result-item">No lecturers found</div>';
+                        resultsDiv.innerHTML = '<div class="search-result-item">No assessors found</div>';
                         resultsDiv.style.display = 'block';
                         return;
                     }
@@ -198,7 +198,7 @@
                     resultsDiv.style.display = 'block';
                 } catch (error) {
                     console.error('Error searching lecturers:', error);
-                    resultsDiv.innerHTML = '<div class="search-result-item error">Error searching lecturers</div>';
+                    resultsDiv.innerHTML = '<div class="search-result-item error">Error searching assessors</div>';
                     resultsDiv.style.display = 'block';
                 }
             }

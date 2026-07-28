@@ -1238,14 +1238,14 @@ public String viewMyComments(Model model, Principal principal) {
     if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER || 
         comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
         
-        if ("Lecturer".equals(anonymousId) || "Supervisor".equals(anonymousId)) {
-            comment.setDisplayName(anonymousId);
+        if ("Lecturer".equals(anonymousId) || "Assessor".equals(anonymousId) || "Supervisor".equals(anonymousId)) {
+            comment.setDisplayName("Lecturer".equals(anonymousId) ? "Assessor" : anonymousId);
             return;
         }
         
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
             comment.getEvaluatorName() : 
-            (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER ? "Lecturer" : "Supervisor"));
+            (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER ? "Assessor" : "Supervisor"));
         return;
     }
     
@@ -1266,7 +1266,7 @@ private void setRealName(AssessmentComment comment) {
         }
     } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
-            comment.getEvaluatorName() : "Lecturer");
+            comment.getEvaluatorName() : "Assessor");
     } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
         comment.setDisplayName(comment.getEvaluatorName() != null ? 
             comment.getEvaluatorName() : "Supervisor");

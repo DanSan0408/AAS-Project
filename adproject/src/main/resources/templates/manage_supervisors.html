@@ -27,7 +27,7 @@
             <div class="user-editing-container">
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students">Students</a>
-                    <a href="/admin/manage-lecturers">Lecturers</a>
+                    <a href="/admin/manage-lecturers">Assessors</a>
                     <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment">Group Assignment</a>
                 </div>
@@ -124,7 +124,7 @@
                                             <a th:href="@{/admin/edit-supervisor/{id}(id=${supervisor.id})}" class="action-button">Update</a>
                                             <button type="button" class="action-button promote" 
                                                     th:onclick="assignRole([[${supervisor.email}]], 'LECTURER')">
-                                                Add Lecturer Role
+                                                Add Assessor Role
                                             </button>
                                             <a th:href="@{/admin/delete-supervisor/{id}(id=${supervisor.id})}" 
                                             class="action-button delete"

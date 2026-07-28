@@ -4,6 +4,45 @@
 
 ---
 
+## Current Status: Universal Mobile & Tablet Responsive Layout Fix (375x667 Screen Support)
+**Status**: COMPLETED
+
+### Summary
+- Resolved an issue where the implementation of the standardized IAMS header and sidebars caused mobile screens (specifically down to compact viewports like **375x667 iPhone SE**) to become compressed to the left or pushed off-screen.
+- **Root Cause**: When standardizing header layouts and sidebars across subsystems, rules such as `margin-left: 270px !important;`, `width: calc(100% - 270px) !important;`, `display: flex !important;`, and logo `max-width: 200px !important;` were appended to the bottom of 46 stylesheets without corresponding mobile responsive media queries with `!important`. On screens `<= 1279px`, `.main-content` remained clamped to `calc(100% - 270px)` (~105px width on 375px screens) and pushed 270px to the right. Additionally, `.header-container` refused to stack vertically, causing the 200px logo and 2.2rem heading to overflow horizontally, forcing browsers to compress or shift the viewport to the left.
+- **Implementation**:
+  - Injected an authoritative, high-priority **Universal Mobile & Tablet Responsive Overrides** block at the end of 46 stylesheets (including `critical.css`, `responsive-patterns.css`, `style.css`, all 6 sidebar stylesheets, and 37 feature/dashboard stylesheets).
+  - **Tablet Transition (`<= 1279px`)**: Guaranteed that `.main-content` and `.content-container` reset to `margin-left: 0 !important; width: 100% !important; max-width: 100% !important; padding: 20px !important; box-sizing: border-box !important; overflow-x: hidden !important;`, ensuring the page fills the full viewport when sidebars collapse or toggle into off-canvas drawers.
+  - **Mobile Layout & Header Stacking (`<= 768px`)**: Enforced vertical flex stacking for `.header` and `.header-container` (`flex-direction: column !important; justify-content: center !important; align-items: center !important; gap: 12px !important; text-align: center !important;`). Scaled down logo images (`max-width: 140px !important;`) and headings (`font-size: 1.4rem !important; word-wrap: break-word !important; overflow-wrap: anywhere !important;`).
+  - **Small Mobile Adaptation (`<= 480px` / 375x667)**: Further refined padding (`padding: 12px 10px !important;`), logo scaling (`max-width: 120px !important;`), and heading font size (`font-size: 1.2rem !important;`), eliminating all horizontal overflow and left-compression across all user roles and subsystems.
+
+### Files Modified
+- `critical.css`, `responsive-patterns.css`, `style.css`
+- `admin_sidebar.css`, `superadmin_sidebar.css`, `lecturer_sidebar.css`, `student_sidebar.css`, `supervisor_sidebar.css`, `industrial_sidebar.css`
+- 37 subsystem and feature stylesheets in `src/main/resources/static/css/`
+- `STATE.md`
+
+---
+
+
+## Current Status: Rebranding "Lecturer" Terminology to "Assessor" in Display Strings & Backend Messages
+**Status**: COMPLETED
+
+### Summary
+- Rebranded display strings, UI labels, controller flash messages, and backend service display logic from "Lecturer" / "Lecturers" to **"Assessor"** / **"Assessors"** across the application.
+- **Implementation**:
+  - **Frontend JavaScript**: Updated search feedback in `group-assignment.js` (`"No assessors found"`) and dynamic button titles / aria-labels in `admin-assign-lecturers.js` (`"Remove Assessor"`).
+  - **Backend Services & Display Logic**: Updated `CalculateService.java` to output `"Assessor"` and `"Assessor (Supervisor Role)"` in evaluator details maps. Updated `ProgressTrackingService.java` to return `"Assessor"` as the assessor type string. Updated `LecturerAssessmentService.java` to default anonymous comment identifiers to `"Assessor"`. Updated `StudentController.java` to map evaluator badge display names to `"Assessor"`. Updated `AdminService.java` welcome email roles and enrollment messages.
+  - **Controller Flash Messages & UI Templates**: Updated error attributes in `GroupCommentController.java` and `SuperAdminController.java` (`"Assessor profile not found"`). Mapped legacy database comment records displaying `"Lecturer"` in `student_comments.html` to display as `"Assessor"`, and updated delete confirmation dialogs in `manage_lecturers.html`. Note: Internal Spring Security role identifiers (`ROLE_LECTURER`) and database table/schema names remain unchanged to preserve system security and relational integrity.
+
+### Files Modified
+- `group-assignment.js`, `admin-assign-lecturers.js`
+- `CalculateService.java`, `ProgressTrackingService.java`, `LecturerAssessmentService.java`, `StudentController.java`, `AdminService.java`
+- `GroupCommentController.java`, `SuperAdminController.java`
+- `manage_lecturers.html`, `student_comments.html`
+- `STATE.md`
+
+
 ## Current Status: Login & Password Reset UI Enhancements (Logo Visibility & Background)
 **Status**: COMPLETED
 
