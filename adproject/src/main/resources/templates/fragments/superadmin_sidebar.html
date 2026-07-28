@@ -9,11 +9,13 @@
     <button type="button" class="sidebar-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
     <div class="sidebar-overlay" aria-hidden="true"></div>
     <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>UTM CAS</h3>
-            <p>Super Admin</p>
+        <div class="logo">
+            <h2>IAMS</h2>
         </div>
-        <ul class="list-unstyled components">
+        <div class="user-profile">
+            <span sec:authentication="name">Super Admin</span>
+        </div>
+        <ul class="menu-list">
             <li>
                 <a th:href="@{/superadmin/home}">Dashboard</a>
             </li>
@@ -45,10 +47,9 @@
             </li>
             
             <!-- Logout -->
-            <li class="role-divider"></li>
-            <li>
+            <li class="logout-item">
                 <form th:action="@{/logout}" method="post" class="logout-form">
-                    <button type="submit" class="btn btn-link logout-btn">Logout</button>
+                    <button type="submit" class="logout-btn">Logout</button>
                 </form>
             </li>
         </ul>

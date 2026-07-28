@@ -17,8 +17,7 @@
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
-                <h1>UTM AAS</h1>
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
         
@@ -31,6 +30,7 @@
                     </a>
                     <a th:href="@{/admin/data-views}" class="btn btn-back"><i class="fas fa-arrow-left"></i> Back</a>
                     <button data-action="print-page" class="btn btn-print"><i class="fas fa-print"></i> Print</button>
+                    <a th:href="@{/admin/data-views/overall/export}" class="btn btn-export"><i class="fas fa-file-excel"></i> Export to Excel</a>
                 </div>
             </div>
             

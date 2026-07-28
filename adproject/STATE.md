@@ -1,6 +1,75 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-27 (Antigravity)
+**Last Updated**: 2026-07-28 (Antigravity)
+
+---
+
+## Current Status: Login & Password Reset UI Enhancements (Logo Visibility & Background)
+**Status**: COMPLETED
+
+### Summary
+- Updated the authentication flow pages (**Login**, **Forgot Password**, and **Reset Password**) to feature a prominent logo and a new background image.
+- **Implementation**:
+  - **Logo Visibility**: Doubled the size of `IAMS_logo2.png` in `login.css`, `forgot.css`, and `reset_password.css` by changing desktop `.logo` max-width from `120px` to `240px` (and mobile max-width from `140px` to `180px`), accompanied by a stronger drop shadow for better contrast and brand visibility.
+  - **Background Update**: Updated the background image across all authentication pages from `utmbg.png` to `backgroundKL.jpg`.
+
+### Files Modified
+- `login.css`, `forgot.css`, `reset_password.css`
+- `STATE.md`
+
+
+## Current Status: IAMS Rebranding & Subsystem UI/Color Consistency
+**Status**: COMPLETED
+
+### Summary
+- Rebranded the application from "UTM CAS" / "UTM AAS" to **IAMS** across all subsystem dashboards, sidebars, and forms, and ensured consistent header layouts and subsystem color themes when navigating across different roles.
+- **Implementation**:
+  - **System-Wide Rebranding**: Replaced old logo references (`utmlogo.png`, `logoUTM.png`) with the inverted white `IAMS_logo2.png` and updated brand text labels to "IAMS" across Super Admin, Student, and Industrial Supervisor views (`superadmin_home.html`, `manage_courses.html`, `invite_admin.html`, `edit_course.html`, `student_home.html`, `student_assessments.html`, `student_comments.html`, `peer_assessment_form.html`, `industrial_supervisor_home.html`, `supervisor_continuous_evaluation.html`, `supervisor_evaluate_groups.html`, `error.html`) and sidebar fragments (`superadmin_sidebar.html`, `student_sidebar.html`, `industrial_sidebar.html`).
+  - **Super Admin Sidebar Architecture**: Created a standalone stylesheet `superadmin_sidebar.css` that styles the Super Admin sidebar cleanly without restrictive `body.superadmin-page` selectors, and standardized `superadmin_sidebar.html` with `<ul class="menu-list">` navigation (including a direct link to **My Profile**).
+  - **Student Subsystem Header Consistency**: Updated `peer_assess.css`, `student_comments.css`, and `student_assessments.css` so that the **Peer Self Assessment Form**, **My Comments**, and **Assessments List** display the exact same maroon gradient card header box (`linear-gradient(135deg, var(--student-primary) 0%, #922838 100%)`) and inverted white logo as the student dashboard.
+  - **Profile Page Subsystem Color Consistency Fix**: Fixed an issue where accessing **My Profile** (`profile.html`) from Lecturer or Student subsystems immediately changed the page palette into the Admin maroon color (`#4A0018`) due to `profile.css` hardcoding `--color-primary`. Updated `profile.html` to append a dynamic role class to the body (`<body th:class="'profile-page role-' + (${role != null ? role.toLowerCase() : 'admin'})">`) and added role-based CSS variable overrides in `profile.css` (`.role-lecturer` using emerald green `#047857` and `.role-student` using crimson `#7A1E2D`), ensuring header gradients, underlines, text titles, and action buttons adapt seamlessly to the user's active subsystem palette.
+
+### Files Modified
+- `superadmin_sidebar.html`, `student_sidebar.html`, `industrial_sidebar.html`
+- `superadmin_sidebar.css` (new), `superadmin_home.css`, `peer_assess.css`, `student_comments.css`, `student_assessments.css`, `profile.css`
+- `superadmin_home.html`, `manage_courses.html`, `invite_admin.html`, `edit_course.html`, `profile.html`
+- `student_home.html`, `student_assessments.html`, `student_comments.html`, `peer_assessment_form.html`, `industrial_supervisor_home.html`, `supervisor_continuous_evaluation.html`, `supervisor_evaluate_groups.html`, `error.html`
+- `STATE.md`
+
+---
+
+## Current Status: Overall Assessment Data Excel/CSV Export
+**Status**: COMPLETED
+
+### Summary
+- Implemented an export functionality for the **Overall Assessment Data** view (`/admin/data-views/overall/export`) that generates a lightweight, Excel-compatible CSV file with a UTF-8 Byte Order Mark (BOM) so it opens natively and cleanly formatted in Microsoft Excel without requiring heavy external dependencies.
+- **Implementation**:
+  - Added `exportOverallDataToExcel()` endpoint in `DataViewController.java` returning `ResponseEntity<byte[]>` with `text/csv; charset=UTF-8` content type and `attachment; filename="Overall_Assessment_Data.csv"`.
+  - Refactored shared data computation between `showOverallData` and the export endpoint into a reusable `getOverallDataModelMap()` helper method, ensuring 100% data consistency (including active course scoping, alphabetical student sorting, uncapped/capped factor formatting, CLO score breakdown, and grade overrides).
+  - Formatted the export with two header rows exactly mirroring the HTML table structure: Row 1 aligns assessment titles over their corresponding CLO spans, and Row 2 details individual CLOs, weighted CLOs (`(W)`), and Raw/Weighted totals.
+  - Added an **"Export to Excel"** button styled with emerald green (`.btn-export`) in `overall_data_view.html` and `overall_data.css`, placing it next to the Print button in the action bar.
+
+### Files Modified
+- `DataViewController.java`
+- `overall_data_view.html`
+- `overall_data.css`
+- `STATE.md`
+
+
+## Current Status: Dynamic Assessment Comment Question Display Fix
+**Status**: COMPLETED
+
+### Summary
+- Fixed an issue where evaluation comment views (such as Assessment Data View and Admin Comments View) displayed generic labels like `"Individual Comment 1"` instead of the actual custom comment question configured for the assessment.
+- **Root Cause**: When evaluation comments were submitted, their `commentLabel` attribute was set to whatever string was returned at that exact moment (for example, if custom labels had not been configured yet, `"Individual Comment 1"` was permanently saved into the `comment_label` column of the database row). When rendering comment views, `AssessmentComment.getDisplayLabel()` statically returned whatever string was saved in the database row without checking if the Assessment currently has a custom comment question configured.
+- **Fix**:
+  - Updated `AssessmentComment.java` with overloaded `getDisplayLabel(Assessment liveAssessment, Rubric liveRubric)` and `getDisplayLabel(Assessment liveAssessment)` methods that dynamically check the live `Assessment` and `Rubric` objects first. Whenever comments are grouped for display, any real-time custom question label configured on the assessment (e.g., via `assessment.getIndividualCommentLabel(index)` or `assessment.getGroupCommentLabel(index)`) overrides older or generic stored database defaults like `"Individual Comment 1"`.
+  - Updated `CalculateService.java` (`getIndividualAssessmentComments`, `getGroupAssessmentComments`, `getEvaluatorCommentsForRubric`, and `getAllAssessmentComments`) to pass the live `Assessment` and `Rubric` objects when generating display labels.
+
+### Files Modified
+- `AssessmentComment.java`
+- `CalculateService.java`
+- `STATE.md`
 
 ---
 

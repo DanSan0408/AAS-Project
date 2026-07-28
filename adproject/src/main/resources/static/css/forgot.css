@@ -16,7 +16,7 @@
 }
 
 body {
-    background: url('/images/utmbg.png') center center / cover no-repeat fixed;
+    background: url('/images/backgroundKL.jpg') center center / cover no-repeat fixed;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -166,10 +166,10 @@ body {
 }
 
 .logo {
-    max-width: 120px;
+    max-width: 240px;
     height: auto;
-    margin: 0 auto 20px;
-    filter: drop-shadow(0 2px 8px rgba(92, 0, 31, 0.15));
+    margin: 0 auto 25px;
+    filter: drop-shadow(0 4px 12px rgba(92, 0, 31, 0.25));
 }
 
 .text-center {
@@ -201,6 +201,6 @@ body {
     }
     
     .logo {
-        max-width: 140px;
+        max-width: 180px;
     }
 }

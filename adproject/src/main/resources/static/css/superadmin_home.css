@@ -53,7 +53,10 @@ body.superadmin-page .main-content {
     margin-left: 270px !important;
     min-height: 100vh !important;
     background-color: var(--color-background) !important;
-    width: auto !important;
+    width: calc(100% - 270px) !important;
+    max-width: calc(100% - 270px) !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
 body.superadmin-page .sidebar {
@@ -161,26 +164,61 @@ body.superadmin-page.sidebar-open {
     margin-left: 270px;
     min-height: 100vh;
     background-color: var(--color-background);
+    width: calc(100% - 270px) !important;
+    max-width: calc(100% - 270px) !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
 /* Header Styling */
 .header {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-    color: white;
-    padding: 25px 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(74, 0, 24, 0.15);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 30px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
-.header h2 {
+.header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.header-container img {
+    max-width: 200px !important;
+    height: auto !important;
+    filter: brightness(0) invert(1) !important;
+}
+
+.page-header {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.page-header h1 {
+    color: var(--color-primary, #4A0018);
     margin: 0;
-    font-size: 28px;
+    font-size: 2rem;
     font-weight: 700;
-    letter-spacing: -0.5px;
+}
+
+.page-header p {
+    color: #666;
+    margin-top: 5px;
+    font-size: 1.05rem;
 }
 
 .user-info {

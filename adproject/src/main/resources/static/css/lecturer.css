@@ -35,7 +35,10 @@ body.lecturer-page .main-content {
     margin-left: 270px !important;
     min-height: 100vh !important;
     background-color: var(--lecturer-background) !important;
-    width: auto !important;
+    width: calc(100% - 270px) !important;
+    max-width: calc(100% - 270px) !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
 body.lecturer-page .header {
@@ -47,6 +50,8 @@ body.lecturer-page .header {
     box-shadow: 0 4px 16px rgba(4, 120, 87, 0.15) !important;
     border-radius: 16px !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -57,12 +62,14 @@ body.lecturer-page .header-container {
     align-items: center !important;
     justify-content: center !important;
     gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 body.lecturer-page .header-container img {
-    height: 55px !important;
-    width: auto !important;
     max-width: 200px !important;
+    height: auto !important;
     filter: brightness(0) invert(1) !important;
 }
 

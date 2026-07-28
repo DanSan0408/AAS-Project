@@ -17,9 +17,10 @@
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header-container">
-            <img th:src="@{/images/logoUTM.png}" alt="UTM Logo"/>
-            <h1>Setup Assessment Content</h1>
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
         </div>
 
         <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>

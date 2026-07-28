@@ -1,12 +1,18 @@
 package com.capstone.adproject.controller;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -189,6 +195,148 @@ public class DataViewController {
 
     @GetMapping("/overall")
     public String showOverallData(Model model) {
+        Map<String, Object> dataMap = getOverallDataModelMap();
+        model.addAllAttributes(dataMap);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        return "overall_data_view";
+    }
+
+    @GetMapping("/overall/export")
+    public ResponseEntity<byte[]> exportOverallDataToExcel() {
+        Map<String, Object> dataMap = getOverallDataModelMap();
+        @SuppressWarnings("unchecked")
+        List<Student> students = (List<Student>) dataMap.get("students");
+        @SuppressWarnings("unchecked")
+        List<Assessment> assessments = (List<Assessment>) dataMap.get("assessments");
+        @SuppressWarnings("unchecked")
+        Map<Long, Map<String, Object>> studentOverallData = (Map<Long, Map<String, Object>>) dataMap.get("studentOverallData");
+        @SuppressWarnings("unchecked")
+        Map<Long, Set<Integer>> assessmentCLOsWithGroupRubrics = (Map<Long, Set<Integer>>) dataMap.get("assessmentCLOsWithGroupRubrics");
+
+        StringBuilder csv = new StringBuilder();
+
+        // Row 1: Headers (Assessment Titles, etc.)
+        List<String> row1 = new ArrayList<>();
+        row1.add(escapeCsv("Team Name"));
+        row1.add(escapeCsv("Student Email"));
+        row1.add(escapeCsv("Factor"));
+        row1.add(escapeCsv("Capped (Max 1.05)"));
+
+        for (Assessment assessment : assessments) {
+            row1.add(escapeCsv(assessment.getTitle()));
+            Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessment.getId());
+            Set<Integer> cloKeys = assessment.getCloMarks() != null ? new TreeSet<>(assessment.getCloMarks().keySet()) : Collections.emptySet();
+            int cloCount = cloKeys.size();
+            int weightedCloCount = 0;
+            if (cloWithGroupSet != null) {
+                for (Integer cloKey : cloKeys) {
+                    if (cloWithGroupSet.contains(cloKey)) {
+                        weightedCloCount++;
+                    }
+                }
+            }
+            int extraColumns = cloCount + weightedCloCount + 2 - 1;
+            for (int i = 0; i < extraColumns; i++) {
+                row1.add("");
+            }
+        }
+        row1.add(escapeCsv("Grand Total (Gt)"));
+        row1.add(escapeCsv("Grade"));
+        csv.append(String.join(",", row1)).append("\r\n");
+
+        // Row 2: Sub-headers (CLOs, Totals)
+        List<String> row2 = new ArrayList<>();
+        row2.add(""); // Team Name
+        row2.add(""); // Student Email
+        row2.add(""); // Factor
+        row2.add(""); // Capped Factor
+
+        for (Assessment assessment : assessments) {
+            Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessment.getId());
+            Set<Integer> cloKeys = assessment.getCloMarks() != null ? new TreeSet<>(assessment.getCloMarks().keySet()) : Collections.emptySet();
+            for (Integer cloKey : cloKeys) {
+                row2.add(escapeCsv("CLO " + cloKey));
+            }
+            for (Integer cloKey : cloKeys) {
+                if (cloWithGroupSet != null && cloWithGroupSet.contains(cloKey)) {
+                    row2.add(escapeCsv("CLO " + cloKey + " (W)"));
+                }
+            }
+            row2.add(escapeCsv("Total (Raw)"));
+            row2.add(escapeCsv("Total (W)"));
+        }
+        row2.add(""); // Grand Total
+        row2.add(""); // Grade
+        csv.append(String.join(",", row2)).append("\r\n");
+
+        // Data rows
+        for (Student student : students) {
+            Map<String, Object> data = studentOverallData.get(student.getId());
+            List<String> row = new ArrayList<>();
+
+            row.add(escapeCsv((String) data.get("teamName")));
+            String displayName = student.getUsername() != null && !student.getUsername().isEmpty()
+                ? student.getUsername()
+                : student.getEmail();
+            row.add(escapeCsv(displayName));
+
+            Double factor = (Double) data.get("factor");
+            row.add(factor != null && factor > 0 ? String.format("%.3f", factor) : "0.000");
+            row.add(factor != null && factor >= 1.05 ? "1.050" : (factor != null && factor > 0 ? String.format("%.3f", factor) : "0.000"));
+
+            @SuppressWarnings("unchecked")
+            List<StudentAssessmentDataDto> assessmentDataList = (List<StudentAssessmentDataDto>) data.get("assessmentDataList");
+            if (assessmentDataList != null) {
+                for (StudentAssessmentDataDto assessmentData : assessmentDataList) {
+                    Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessmentData.getAssessment().getId());
+                    Map<Integer, Double> cloSums = assessmentData.getCloSums();
+                    Map<Integer, Double> cloWeightedSumsGroupOnly = assessmentData.getCloWeightedSumsGroupOnly();
+
+                    Set<Integer> cloKeys = assessmentData.getAssessment().getCloMarks() != null
+                        ? new TreeSet<>(assessmentData.getAssessment().getCloMarks().keySet())
+                        : Collections.emptySet();
+
+                    for (Integer cloKey : cloKeys) {
+                        Double val = cloSums != null ? cloSums.get(cloKey) : null;
+                        row.add(val != null ? String.format("%.2f", val) : "-");
+                    }
+                    for (Integer cloKey : cloKeys) {
+                        if (cloWithGroupSet != null && cloWithGroupSet.contains(cloKey)) {
+                            Double val = cloWeightedSumsGroupOnly != null ? cloWeightedSumsGroupOnly.get(cloKey) : null;
+                            row.add(val != null ? String.format("%.2f", val) : "-");
+                        }
+                    }
+
+                    Double totalRaw = assessmentData.getTotalUnweightedMarks();
+                    Double totalW = assessmentData.getTotalWeightedMarks();
+                    row.add(totalRaw != null ? String.format("%.2f", totalRaw) : "0.00");
+                    row.add(totalW != null ? String.format("%.2f", totalW) : "0.00");
+                }
+            }
+
+            Double grandTotal = (Double) data.get("grandTotal");
+            row.add(grandTotal != null ? String.format("%.2f", grandTotal) : "0.00");
+            row.add(escapeCsv((String) data.get("grade")));
+
+            csv.append(String.join(",", row)).append("\r\n");
+        }
+
+        byte[] bom = new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF };
+        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+        byte[] finalBytes = new byte[bom.length + csvBytes.length];
+        System.arraycopy(bom, 0, finalBytes, 0, bom.length);
+        System.arraycopy(csvBytes, 0, finalBytes, bom.length, csvBytes.length);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        headers.setContentDispositionFormData("attachment", "Overall_Assessment_Data.csv");
+
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(finalBytes);
+    }
+
+    private Map<String, Object> getOverallDataModelMap() {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Assessment> assessments = activeCourseId == null
             ? List.of()
@@ -197,10 +345,7 @@ public class DataViewController {
             ? new ArrayList<>()
             : new ArrayList<>(adminService.getAllStudents());
         
-        // Students list is already sorted by AdminService.getAllStudents()
-        
         Map<Long, Map<String, Object>> studentOverallData = new HashMap<>();
-        
         Map<Long, Set<Integer>> assessmentCLOsWithGroupRubrics = new HashMap<>();
         for (Assessment assessment : assessments) {
             assessmentCLOsWithGroupRubrics.put(assessment.getId(), calculateService.getCLOsWithGroupRubrics(assessment));
@@ -234,13 +379,23 @@ public class DataViewController {
             studentOverallData.put(student.getId(), data);
         }
         
-        model.addAttribute("students", students);
-        model.addAttribute("assessments", assessments);
-        model.addAttribute("studentOverallData", studentOverallData);
-        model.addAttribute("assessmentCLOsWithGroupRubrics", assessmentCLOsWithGroupRubrics);
-        model.addAttribute("adminUsername", getLoggedInUsername());
-        
-        return "overall_data_view";
+        Map<String, Object> result = new HashMap<>();
+        result.put("students", students);
+        result.put("assessments", assessments);
+        result.put("studentOverallData", studentOverallData);
+        result.put("assessmentCLOsWithGroupRubrics", assessmentCLOsWithGroupRubrics);
+        return result;
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) {
+            return "";
+        }
+        String str = value.toString();
+        if (str.contains(",") || str.contains("\"") || str.contains("\n") || str.contains("\r")) {
+            return "\"" + str.replace("\"", "\"\"") + "\"";
+        }
+        return str;
     }
 
     @GetMapping("/assessment/{assessmentId}")
