@@ -25,8 +25,11 @@ body.admin-page .manage-course-card .card-body {
 
 body.admin-page .main-content {
     width: calc(100% - 270px) !important;
+    max-width: calc(100% - 270px) !important;
     margin-left: 270px !important;
     margin-right: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
 }
 
 body.admin-page .manage-course-card .card-title {

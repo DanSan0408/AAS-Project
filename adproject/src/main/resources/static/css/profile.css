@@ -3,6 +3,7 @@
 :root {
     --color-primary: #4A0018;
     --color-primary-light: #6B0025;
+    --color-shadow: rgba(74, 0, 24, 0.15);
     --color-background: #F4F2EE;
     --color-secondary: #3F3F46;
     --color-surface: #FFFFFF;
@@ -10,6 +11,26 @@
     --color-accent: #F8A617;
     --color-success: #059669;
     --color-danger: #B91C1C;
+}
+
+/* Subsystem Color Consistency based on Role */
+body.profile-page.role-lecturer {
+    --color-primary: #047857;
+    --color-primary-light: #059669;
+    --color-shadow: rgba(4, 120, 87, 0.15);
+}
+
+body.profile-page.role-student {
+    --color-primary: #7A1E2D;
+    --color-primary-light: #922838;
+    --color-shadow: rgba(122, 30, 45, 0.15);
+}
+
+body.profile-page.role-admin,
+body.profile-page.role-super_admin {
+    --color-primary: #4A0018;
+    --color-primary-light: #6B0025;
+    --color-shadow: rgba(74, 0, 24, 0.15);
 }
 
 * {
@@ -43,7 +64,7 @@ body.profile-page .header {
     margin-bottom: 40px;
     margin-left: 0;
     margin-right: 0;
-    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15);
+    box-shadow: 0 4px 16px var(--color-shadow, rgba(74, 0, 24, 0.15));
     border-radius: 16px;
     width: 100%;
     display: flex;
@@ -59,9 +80,8 @@ body.profile-page .header-container {
 }
 
 body.profile-page .header-container img {
-    height: 55px;
-    width: auto;
     max-width: 200px;
+    height: auto;
     filter: brightness(0) invert(1);
 }
 

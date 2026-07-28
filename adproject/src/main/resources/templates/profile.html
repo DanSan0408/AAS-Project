@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile - UTM AAS</title>
+    <title>My Profile - IAMS</title>
     <link rel="stylesheet" th:href="@{/css/critical.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     
     <!-- Load correct sidebar CSS based on role -->
-    <link th:if="${role == 'SUPER_ADMIN'}" rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+    <link th:if="${role == 'SUPER_ADMIN'}" rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
     <link th:if="${role == 'ADMIN'}" rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link th:if="${role == 'LECTURER'}" rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link th:if="${role == 'STUDENT'}" rel="stylesheet" th:href="@{/css/student_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
 </head>
-<body class="profile-page">
+<body th:class="'profile-page role-' + (${role != null ? role.toLowerCase() : 'admin'})">
 
     <div th:if="${role == 'SUPER_ADMIN'}"><div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div></div>
     <div th:if="${role == 'ADMIN'}"><div th:replace="~{fragments/sidebar :: sidebar}"></div></div>
@@ -24,8 +24,7 @@
     <div class="main-content">
         <div class="header">
             <div class="header-container">
-                <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-                <h1>UTM AAS</h1>
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
         <div class="profile-container">

@@ -60,9 +60,8 @@ body.supervisor-page .header-container {
 }
 
 body.supervisor-page .header-container img {
-    height: 55px !important;
-    width: auto !important;
     max-width: 200px !important;
+    height: auto !important;
     filter: brightness(0) invert(1) !important;
 }
 

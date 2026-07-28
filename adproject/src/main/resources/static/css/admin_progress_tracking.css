@@ -33,28 +33,35 @@ body.data-view-page {
 }
 
 .progress-page .header {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto 30px auto;
+    background: linear-gradient(135deg, var(--admin-primary, #4A0018) 0%, var(--admin-primary-light, #6B0025) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 
 .progress-page .header-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .progress-page .header-container img {
-    max-width: 200px;
-    height: auto;
-}
-
-.progress-page .header-container h1 {
-    color: var(--color-primary);
-    margin: 0;
-    font-size: 2.5rem;
-    font-weight: 700;
+    max-width: 200px !important;
+    height: auto !important;
+    filter: brightness(0) invert(1) !important;
 }
 
 .progress-page .container-responsive {

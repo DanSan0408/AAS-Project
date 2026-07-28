@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
 </head>
 <body class="superadmin-page">
@@ -11,10 +12,14 @@
 
     <div class="main-content">
         <div class="header">
-            <h2>Super Admin Dashboard</h2>
-            <div class="user-info">
-                Welcome, <span th:text="${superAdminUsername}">Super Admin</span>!
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
+        </div>
+
+        <div class="page-header">
+            <h1>Super Admin Dashboard</h1>
+            <p>Welcome, <span th:text="${superAdminUsername}">Super Admin</span>!</p>
         </div>
 
         <div class="container mt-4">

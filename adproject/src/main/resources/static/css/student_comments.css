@@ -63,19 +63,37 @@ body.student-comments-page .content-container {
     width: 100% !important;
 }
 
+body.student-comments-page .header {
+    background: linear-gradient(135deg, var(--student-primary, #7A1E2D) 0%, #922838 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(122, 30, 45, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
 body.student-comments-page .header-container {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 20px !important;
-    margin-bottom: 30px !important;
     width: 100% !important;
 }
 
-body.student-comments-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.student-comments-page .header-container img {
+    max-width: 200px !important;
+    height: auto !important;
+    filter: brightness(0) invert(1) !important;
+}
+
 body.student-comments-page .header-container h1 { 
     margin: 0 !important; 
-    color: var(--student-primary) !important; 
+    color: white !important; 
     font-size: 2.2rem !important; 
     font-weight: 700 !important; 
 }

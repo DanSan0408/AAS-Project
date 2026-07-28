@@ -55,18 +55,37 @@ body.lecturer-page .rubric-section h2 {
     border-bottom: 3px solid var(--lecturer-primary) !important;
 }
 
+body.lecturer-page .header {
+    background: linear-gradient(135deg, var(--lecturer-primary) 0%, var(--lecturer-primary-light) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(4, 120, 87, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
 body.lecturer-page .header-container {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 20px !important;
-    margin-bottom: 30px !important;
+    margin-bottom: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 body.lecturer-page .header-container img { 
     max-width: 200px !important; 
     height: auto !important; 
+    filter: brightness(0) invert(1) !important;
 }
 
 body.lecturer-page .header-container h1 { 

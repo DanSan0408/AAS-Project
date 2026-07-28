@@ -36,17 +36,35 @@ body.data-view-page .main-content {
     box-sizing: border-box !important;
 }
 
+body.data-view-page .header {
+    background: linear-gradient(135deg, var(--color-primary, #4A0018) 0%, var(--color-primary-light, #6B0025) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
 body.data-view-page .header-container {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 20px !important;
-    margin-bottom: 30px !important;
+    margin-bottom: 0 !important;
     width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-body.data-view-page .header-container img { max-width: 200px !important; height: auto !important; }
+body.data-view-page .header-container img { max-width: 200px !important; height: auto !important; filter: brightness(0) invert(1) !important; }
 body.data-view-page .header-container h1 { margin: 0 !important; color: var(--color-primary) !important; font-size: 2.5rem !important; font-weight: 700 !important; }
 
 body.data-view-page .data-container {
