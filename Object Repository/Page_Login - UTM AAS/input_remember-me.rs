@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>input_remember-me</name>
+   <tag></tag>
+   <elementGuidId>e8b2d7d4-ffda-40d9-8784-895b9319c7ce</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>//*[@id = 'remember-me']</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value>#remember-me</value>
+      </entry>
+      <entry>
+         <key>BASIC</key>
+         <value>//*[@type = 'checkbox' and @name = 'remember-me' and @id = 'remember-me']</value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:label=&quot;Remember me&quot;i</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>input</value>
+      <webElementGuid>ecb0f844-f88c-4db8-bb54-9fab6c5fa385</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>type</name>
+      <type>Main</type>
+      <value>checkbox</value>
+      <webElementGuid>d5354229-4a25-4015-b949-0094ed4cb7eb</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>name</name>
+      <type>Main</type>
+      <value>remember-me</value>
+      <webElementGuid>82b905c1-f367-4024-85e1-a8311a579acd</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>id</name>
+      <type>Main</type>
+      <value>remember-me</value>
+      <webElementGuid>512816e8-5420-4266-84fa-e65db07c1749</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>parent</name>
+      <type>Main</type>
+      <value>md5.v1-7f7af757a27ae0018dde48b5fb9ebd1c</value>
+      <webElementGuid>6b5cf0c7-b9c0-44ed-8159-4ddd23fe9092</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>//*[@id = 'remember-me']</value>
+      <webElementGuid>3cb1e4d4-424b-4359-9e11-351965124be6</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:attributes</name>
+      <type>Main</type>
+      <value>//*[@id = 'remember-me']</value>
+      <webElementGuid>cc98f256-2f96-42f6-9ea3-ca151e5dcbf6</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//input[@type = 'checkbox' and @name = 'remember-me' and @id = 'remember-me']</value>
+      <webElementGuid>e4f9bef9-8436-4aa5-ac3d-454319e827ec</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Bulk User (Student And Lecturer) Addition</description>
+   <name>TC-08</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>e2f2d39d-0877-451f-b428-1d17645798ce</testCaseGuid>
+</TestCaseEntity>

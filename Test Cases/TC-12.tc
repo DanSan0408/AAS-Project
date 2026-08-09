@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Configure Rubric Direct Ratings</description>
+   <name>TC-12</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>ff5e1090-bbe9-45b4-b2c7-854bc6c9946a</testCaseGuid>
+</TestCaseEntity>

@@ -1,22 +1,29 @@
 package com.capstone.adproject.controller;
 
-import java.util.LinkedHashMap;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.capstone.adproject.model.Assessment;
-import com.capstone.adproject.model.Criteria;
 import com.capstone.adproject.model.Deadline;
-import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 
@@ -26,67 +33,138 @@ public class LecturerController {
     
     private final AssessmentService assessmentService; 
     private final DeadlineService deadlineService;
+    private final LecturerRepository lecturerRepository;
+    private final LecturerGroupAssignmentRepository assignmentRepository;
+    private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final LecturerStudentAssignmentRepository studentAssignmentRepository;
 
     @Autowired
-    public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService) {
+    public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService,
+            LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository assignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            LecturerStudentAssignmentRepository studentAssignmentRepository) {
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
+        this.lecturerRepository = lecturerRepository;
+        this.assignmentRepository = assignmentRepository;
+        this.rubricAssignmentRepository = rubricAssignmentRepository;
+        this.studentAssignmentRepository = studentAssignmentRepository;
     }
     
     @GetMapping("/home")
-    public String lecturerHome(Model model) {
+    public String lecturerHome(Model model, Authentication authentication) {
         
-        // --- DEFINE UTILITY FUNCTIONS (Same as StudentController) ---
-        Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
-
-        Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
+        Lecturer lecturer = lecturerRepository.findByEmail(authentication.getName())
+            .or(() -> lecturerRepository.findByUsername(authentication.getName()))
+            .orElse(null);
             
-            Stream<Object> combinedComponents = Stream.concat(
-                assessment.getRubrics().stream().map(r -> (Object)r),
-                assessment.getCriteria().stream().map(c -> (Object)c)
-            );
-            
-            List<Object> components = combinedComponents.collect(Collectors.toList());
+        Long courseId = lecturer != null && lecturer.getCourse() != null ? lecturer.getCourse().getId() : null;
 
-            Map<String, List<Object>> byEvalType = components.stream()
-                .collect(Collectors.groupingBy(c -> {
-                    if (c instanceof Rubric) {
-                        return ((Rubric) c).getEvaluationType();
-                    } else if (c instanceof Criteria) {
-                        return ((Criteria) c).getEvaluationType();
-                    }
-                    return "Unknown";
-                }, LinkedHashMap::new, Collectors.toList()));
-
-            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
+        Set<Assessment> combinedAssessments = new HashSet<>();
+        Map<Long, String> assessmentLaunchModes = new HashMap<>();
+        Map<Long, List<String>> assessmentTargets = new HashMap<>();
+        
+        if (lecturer != null) {
+            List<Assessment> groupAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
+            List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
+            List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer);
             
-            byEvalType.forEach((evalType, evalComponents) -> {
-                Map<String, List<Object>> byAssessType = evalComponents.stream()
-                    .collect(Collectors.groupingBy(c -> {
-                        if (c instanceof Rubric) {
-                            return ((Rubric) c).getAssessmentTypes();
-                        } else if (c instanceof Criteria) {
-                            return ((Criteria) c).getAssessmentTypes();
-                        }
-                        return "Unknown";
-                    }, LinkedHashMap::new, Collectors.toList()));
-                
-                finalGroup.put(evalType, byAssessType);
+            combinedAssessments.addAll(groupAssessments);
+            combinedAssessments.addAll(rubricAssessments);
+            combinedAssessments.addAll(studentAssessments);
+            
+            Set<Long> studentAssessmentIds = studentAssessments.stream().map(Assessment::getId).collect(Collectors.toSet());
+            Set<Long> rubricAssessmentIds = rubricAssessments.stream().map(Assessment::getId).collect(Collectors.toSet());
+
+            for (Assessment assessment : combinedAssessments) {
+                if (studentAssessmentIds.contains(assessment.getId())) {
+                    assessmentLaunchModes.put(assessment.getId(), "STUDENT");
+                    List<String> targets = studentAssignmentRepository.findByAssessment(assessment).stream()
+                        .filter(a -> a.getLecturer() != null && a.getLecturer().getId().equals(lecturer.getId()))
+                        .map(a -> a.getStudent() != null ? 
+                            (a.getStudent().getUsername() != null && !a.getStudent().getUsername().trim().isEmpty() 
+                                ? a.getStudent().getUsername() : a.getStudent().getEmail()) 
+                            : "Unknown Student")
+                        .collect(Collectors.toList());
+                    assessmentTargets.put(assessment.getId(), targets);
+                } else if (rubricAssessmentIds.contains(assessment.getId())) {
+                    assessmentLaunchModes.put(assessment.getId(), "GROUP");
+                    assessmentTargets.put(assessment.getId(), List.of("All Groups (Rubric Mode)"));
+                } else {
+                    assessmentLaunchModes.put(assessment.getId(), "GROUP");
+                    List<String> targets = assignmentRepository.findByAssessment(assessment).stream()
+                        .filter(a -> a.getLecturer() != null && a.getLecturer().getId().equals(lecturer.getId()))
+                        .map(a -> a.getGroup() != null ? a.getGroup().getGroupName() : "Unknown Group")
+                        .collect(Collectors.toList());
+                    assessmentTargets.put(assessment.getId(), targets);
+                }
+            }
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        List<Assessment> pendingTasks = combinedAssessments.stream().filter(assessment -> {
+            List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                .filter(d -> d.getAssessorType() == null 
+                          || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                          || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                          || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                .collect(Collectors.toList());
+            
+            if (deadlines.isEmpty()) {
+                return true;
+            }
+            
+            return deadlines.stream().anyMatch(d -> {
+                if (d.getDate() == null) return true;
+                LocalDateTime endDate = d.getDate().toInstant()
+                    .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                return now.isBefore(endDate);
             });
+        }).collect(Collectors.toList());
 
-            return finalGroup;
-        };
+        List<Long> openAssessmentIds = pendingTasks.stream()
+            .filter(assessment -> {
+                List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId()).stream()
+                    .filter(d -> d.getAssessorType() == null 
+                              || "LECTURER".equalsIgnoreCase(d.getAssessorType()) 
+                              || "GENERAL".equalsIgnoreCase(d.getAssessorType()) 
+                              || "SUPERVISOR".equalsIgnoreCase(d.getAssessorType()))
+                    .collect(Collectors.toList());
+                
+                return deadlines.stream().anyMatch(d -> {
+                    if (d.getDate() == null) return true;
+                    LocalDateTime openDate = d.getOpenDate() != null ? 
+                        d.getOpenDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : 
+                        LocalDateTime.MIN;
+                    LocalDateTime endDate = d.getDate().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                    return now.isAfter(openDate) && now.isBefore(endDate);
+                });
+            })
+            .map(Assessment::getId)
+            .collect(Collectors.toList());
 
-        // --- FETCH DATA ---
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
+        model.addAttribute("pendingTasks", pendingTasks);
+        model.addAttribute("openAssessmentIds", openAssessmentIds);
+        model.addAttribute("assessmentLaunchModes", assessmentLaunchModes);
+        model.addAttribute("assessmentTargets", assessmentTargets);
+
+        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
+            .filter(a -> courseId != null && a.getCourse() != null && courseId.equals(a.getCourse().getId()))
+            .collect(Collectors.toList());
         model.addAttribute("allAssessments", allAssessments);
         
-        List<Deadline> deadlines = deadlineService.getAllDeadlines();
-        model.addAttribute("deadlines", deadlines);
-
-        // --- EXPOSE UTILITY FUNCTIONS ---
-        model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
-        model.addAttribute("isRubricType", isRubricType);
+        long nowMillis = System.currentTimeMillis();
+        List<Deadline> allDeadlines = courseId == null
+            ? List.of()
+            : deadlineService.getDeadlinesByCourseId(courseId);
+        List<Deadline> filteredDeadlines = allDeadlines.stream()
+            .filter(d -> d.getAssessmentId() != null && combinedAssessments.stream().anyMatch(a -> a.getId().equals(d.getAssessmentId())))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
+            .collect(Collectors.toList());
+        model.addAttribute("allDeadlines", allDeadlines);
+        model.addAttribute("deadlines", filteredDeadlines);
         
         return "lecturer_home";
     }

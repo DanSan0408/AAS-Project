@@ -1,0 +1,9 @@
+# Spring Boot Token Blockers
+target/
+build/
+.gradle/
+.idea/
+.vscode/
+*.class
+*.jar
+*.log

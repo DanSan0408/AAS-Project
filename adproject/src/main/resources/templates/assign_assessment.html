@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Assessment</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_assessment.css}">
+</head>
+<body class="assign-assessment-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Assign Deadlines</h1>
+            </div>
+            
+            <div class="card-body">
+                <h2 class="assessment-title">
+                    <span class="label">Assessment:</span>
+                    <span class="value" th:text="${assessment.title}">Assessment Title</span>
+                </h2>
+
+                <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+                    <span th:text="${errorMessage}">Error Message</span>
+                </div>
+
+                <form th:action="@{/admin/assessment/assign}" th:object="${assignmentDto}" method="post">
+                    <input type="hidden" th:field="*{assessmentId}" />
+                    <input type="hidden" th:field="*{deadlineId}" /> 
+
+                    <div class="form-group">
+                        <label for="title">Assignment Title (for Deadlines List) <span class="required">*</span></label>
+                        <input type="text" id="title" th:field="*{title}" required placeholder="e.g., Final Submission"/>
+                    </div>
+
+                        <input type="hidden" th:field="*{assessorType}" id="assessorType" value="GENERAL" />
+
+                    <hr/>
+                    
+                    <div class="form-group">
+                        <label>Assessment Opening Time</label>
+                        <div class="radio-options">
+                            <label class="radio-card">
+                                <input type="radio" th:field="*{openType}" value="INSTANT" id="openInstant" checked/>
+                                <div class="radio-content">
+                                    <strong>Open Instantly</strong>
+                                    <span>Students can access immediately after saving.</span>
+                                </div>
+                            </label>
+                            
+                            <label class="radio-card">
+                                <input type="radio" th:field="*{openType}" value="SCHEDULED" id="openScheduled"/>
+                                <div class="radio-content">
+                                    <strong>Scheduled Date</strong>
+                                    <span>Set a specific future date to open.</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="scheduledOpenDateGroup">
+                        <label>Scheduled Open Date & Time</label>
+                        <div class="split-inputs">
+                            <div>
+                                <input type="date" th:field="*{openDateOnly}" id="openDateOnly" />
+                            </div>
+                            <div>
+                                <input type="time" th:field="*{openTimeOnly}" id="openTimeOnly" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Deadline (Closing Date & Time) <span class="required">*</span></label>
+                        <div class="split-inputs">
+                            <div>
+                                <input type="date" th:field="*{endDateOnly}" id="endDateOnly" required/>
+                            </div>
+                            <div>
+                                <input type="time" th:field="*{endTimeOnly}" id="endTimeOnly" required/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a th:href="@{/admin/home}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Assignment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/assign-assessment.js}"></script>
+</body>
+</html>

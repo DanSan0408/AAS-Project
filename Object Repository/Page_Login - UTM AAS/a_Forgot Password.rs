@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>a_Forgot Password</name>
+   <tag></tag>
+   <elementGuidId>06d09791-6129-42ab-bf20-4e778025a2dc</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' forgot-password-link ')]</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value>.forgot-password-link</value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:role=link[name=&quot;Forgot Password?&quot;i]</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>a</value>
+      <webElementGuid>191cbeea-8796-484c-a44c-84d1c59b4caf</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>href</name>
+      <type>Main</type>
+      <value>/forgot_password</value>
+      <webElementGuid>0d734451-2871-42b2-b14d-df842575290e</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>class</name>
+      <type>Main</type>
+      <value>forgot-password-link</value>
+      <webElementGuid>21f7617c-1cb9-4b6d-baec-92beceb7043c</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>text</name>
+      <type>Main</type>
+      <value>Forgot Password?</value>
+      <webElementGuid>28d143d3-c4b1-4ff0-9d2e-a49cb1c7c58d</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>parent</name>
+      <type>Main</type>
+      <value>md5.v1-d3492ac102a5c710efb85ec2e0477fe1</value>
+      <webElementGuid>8e9eab50-9831-4c05-85b8-cdb0f928ba4f</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' forgot-password-link ')]</value>
+      <webElementGuid>996c82ba-b3d2-40d6-838c-4836cc07516b</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:attributes</name>
+      <type>Main</type>
+      <value>//*[@class and contains(concat(' ', normalize-space(@class), ' '), ' forgot-password-link ')]</value>
+      <webElementGuid>87f57d62-b6a9-4832-881d-3a8b516c07ba</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//a[@href = '/forgot_password' and (text() = 'Forgot Password?' or . = 'Forgot Password?')]</value>
+      <webElementGuid>f4d084b1-3cd0-4b69-a0ca-872530f96cb2</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>

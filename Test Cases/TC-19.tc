@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Print Assessment Data</description>
+   <name>TC-19</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>43996cc4-da24-4163-acef-9878a26f5767</testCaseGuid>
+</TestCaseEntity>

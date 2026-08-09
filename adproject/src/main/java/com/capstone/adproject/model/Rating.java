@@ -1,5 +1,8 @@
 package com.capstone.adproject.model;
 
+import java.math.BigDecimal;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -8,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "rating")
@@ -17,35 +21,45 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Integer level;
+    @Column(name = "name", length = 10000)
+    @Size(max = 10000, message = "Rating name must be at most 10000 characters")
+    private String name; 
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+    private BigDecimal marks; 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sub_rubric_id", nullable = false)
+    @JoinColumn(name = "sub_rubric_id")
     private SubRubric subRubric;
 
-    // === Getters and Setters ===
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rubric_id")
+    private Rubric rubric;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Integer getLevel() { return level; }
-    public void setLevel(Integer level) { this.level = level; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public BigDecimal getMarks() { return marks; }
+    public void setMarks(BigDecimal marks) { this.marks = marks; }
+
     public SubRubric getSubRubric() { return subRubric; }
     public void setSubRubric(SubRubric subRubric) { this.subRubric = subRubric; }
 
-    public String getLevelLabel() {
-        if (level == null) return "";
-        switch (level) {
-            case 0: return "0 - Unsatisfactory";
-            case 1: return "1 - Needs Improvement";
-            case 2: return "2 - Satisfactory";
-            case 3: return "3 - Good";
-            case 4: return "4 - Excellent";
-            default: return "";
-        }
+    public Rubric getRubric() { return rubric; }
+    public void setRubric(Rubric rubric) { this.rubric = rubric; }
+
+    public boolean belongsToSubRubric() {
+        return subRubric != null;
+    }
+
+    public boolean belongsToRubric() {
+        return rubric != null && subRubric == null;
     }
 }

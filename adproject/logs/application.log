@@ -1,0 +1,1150 @@
+2026-04-14T01:40:52.289+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing OPTIONS /login
+2026-04-14T01:40:52.297+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured OPTIONS /login
+2026-04-14T01:40:52.300+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-04-14T01:41:08.003+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing OPTIONS /api/some-resource
+2026-04-14T01:41:08.009+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured OPTIONS /api/some-resource
+2026-04-14T01:41:08.019+08:00  WARN 92056 --- [adproject] [http-nio-8080-exec-5] c.c.a.exception.GlobalExceptionHandler   : Resource not found: /api/some-resource
+2026-04-14T01:41:08.021+08:00  WARN 92056 --- [adproject] [http-nio-8080-exec-5] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource api/some-resource.]
+2026-04-14T01:41:08.041+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] org.thymeleaf.TemplateEngine             : [THYMELEAF] INITIALIZING TEMPLATE ENGINE
+2026-04-14T01:41:08.200+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] org.thymeleaf.TemplateEngine.CONFIG      : Initializing Thymeleaf Template engine configuration...
+[THYMELEAF] TEMPLATE ENGINE CONFIGURATION:
+[THYMELEAF] * Thymeleaf version: 3.1.3.RELEASE (built 2024-12-08T21:30:43+0000)
+[THYMELEAF] * Cache Manager implementation: org.thymeleaf.cache.StandardCacheManager
+[THYMELEAF] * Template resolvers:
+[THYMELEAF]     * org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver
+[THYMELEAF] * Message resolvers:
+[THYMELEAF]     * org.thymeleaf.spring6.messageresolver.SpringMessageResolver
+[THYMELEAF] * Link builders:
+[THYMELEAF]     * org.thymeleaf.linkbuilder.StandardLinkBuilder
+[THYMELEAF] * Dialect [1 of 2]: SpringStandard (org.thymeleaf.spring6.dialect.SpringStandardDialect)
+[THYMELEAF]     * Prefix: "th"
+[THYMELEAF]     * Processors for Template Mode: HTML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:include,data-th-include}] [100]: org.thymeleaf.standard.processor.StandardIncludeTagProcessor
+[THYMELEAF]             * [* {th:insert,data-th-insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace,data-th-replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each,data-th-each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch,data-th-switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case,data-th-case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if,data-th-if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless,data-th-unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object,data-th-object}] [500]: org.thymeleaf.spring6.processor.SpringObjectTagProcessor
+[THYMELEAF]             * [* {th:with,data-th-with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:attr,data-th-attr}] [700]: org.thymeleaf.standard.processor.StandardAttrTagProcessor
+[THYMELEAF]             * [* {th:attrprepend,data-th-attrprepend}] [800]: org.thymeleaf.standard.processor.StandardAttrprependTagProcessor
+[THYMELEAF]             * [* {th:attrappend,data-th-attrappend}] [900]: org.thymeleaf.standard.processor.StandardAttrappendTagProcessor
+[THYMELEAF]             * [* {th:method,data-th-method}] [990]: org.thymeleaf.spring6.processor.SpringMethodTagProcessor
+[THYMELEAF]             * [* {th:alt-title,data-th-alt-title}] [990]: org.thymeleaf.standard.processor.StandardAltTitleTagProcessor
+[THYMELEAF]             * [* {th:lang-xmllang,data-th-lang-xmllang}] [990]: org.thymeleaf.standard.processor.StandardLangXmlLangTagProcessor
+[THYMELEAF]             * [* {th:action,data-th-action}] [1000]: org.thymeleaf.spring6.processor.SpringActionTagProcessor
+[THYMELEAF]             * [* {th:href,data-th-href}] [1000]: org.thymeleaf.spring6.processor.SpringHrefTagProcessor
+[THYMELEAF]             * [* {th:src,data-th-src}] [1000]: org.thymeleaf.spring6.processor.SpringSrcTagProcessor
+[THYMELEAF]             * [* {th:required,data-th-required}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:seamless,data-th-seamless}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:loop,data-th-loop}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:reversed,data-th-reversed}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:autofocus,data-th-autofocus}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:checked,data-th-checked}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:readonly,data-th-readonly}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:pubdate,data-th-pubdate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:multiple,data-th-multiple}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:async,data-th-async}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:formnovalidate,data-th-formnovalidate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:selected,data-th-selected}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:default,data-th-default}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:controls,data-th-controls}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:autoplay,data-th-autoplay}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:nowrap,data-th-nowrap}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:novalidate,data-th-novalidate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:declare,data-th-declare}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:ismap,data-th-ismap}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:open,data-th-open}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:disabled,data-th-disabled}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:hidden,data-th-hidden}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:scoped,data-th-scoped}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:defer,data-th-defer}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:ondragenter,data-th-ondragenter}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onplay,data-th-onplay}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onblur,data-th-onblur}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeydown,data-th-onkeydown}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncanplaythrough,data-th-oncanplaythrough}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onsuspend,data-th-onsuspend}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onsubmit,data-th-onsubmit}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeypress,data-th-onkeypress}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondblclick,data-th-ondblclick}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onafterprint,data-th-onafterprint}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onchange,data-th-onchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragstart,data-th-ondragstart}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeyup,data-th-onkeyup}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onundo,data-th-onundo}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onabort,data-th-onabort}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onunload,data-th-onunload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onhashchange,data-th-onhashchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmousemove,data-th-onmousemove}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmousewheel,data-th-onmousewheel}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseup,data-th-onmouseup}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onclick,data-th-onclick}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onformchange,data-th-onformchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragleave,data-th-ondragleave}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onbeforeprint,data-th-onbeforeprint}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onresize,data-th-onresize}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onload,data-th-onload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onended,data-th-onended}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragover,data-th-ondragover}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmousedown,data-th-onmousedown}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondurationchange,data-th-ondurationchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onvolumechange,data-th-onvolumechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onwaiting,data-th-onwaiting}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onreset,data-th-onreset}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onprogress,data-th-onprogress}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onseeked,data-th-onseeked}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onfocus,data-th-onfocus}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oninvalid,data-th-oninvalid}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onplaying,data-th-onplaying}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmessage,data-th-onmessage}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onredo,data-th-onredo}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onerror,data-th-onerror}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadeddata,data-th-onloadeddata}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onstorage,data-th-onstorage}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondrop,data-th-ondrop}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseout,data-th-onmouseout}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onoffline,data-th-onoffline}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondrag,data-th-ondrag}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ononline,data-th-ononline}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onselect,data-th-onselect}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadedmetadata,data-th-onloadedmetadata}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncanplay,data-th-oncanplay}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onratechange,data-th-onratechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onstalled,data-th-onstalled}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragend,data-th-ondragend}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onemptied,data-th-onemptied}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onpopstate,data-th-onpopstate}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseover,data-th-onmouseover}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ontimeupdate,data-th-ontimeupdate}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onpause,data-th-onpause}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onseeking,data-th-onseeking}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onshow,data-th-onshow}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onreadystatechange,data-th-onreadystatechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncontextmenu,data-th-oncontextmenu}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadstart,data-th-onloadstart}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onscroll,data-th-onscroll}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onforminput,data-th-onforminput}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onbeforeunload,data-th-onbeforeunload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oninput,data-th-oninput}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:inline,data-th-inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineHTMLTagProcessor
+[THYMELEAF]             * [* {th:type,data-th-type}] [1000]: org.thymeleaf.standard.processor.StandardNonRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:name,data-th-name}] [1000]: org.thymeleaf.standard.processor.StandardNonRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cols,data-th-cols}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:align,data-th-align}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:wrap,data-th-wrap}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scope,data-th-scope}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:contenteditable,data-th-contenteditable}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:placeholder,data-th-placeholder}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:colspan,data-th-colspan}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formtarget,data-th-formtarget}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:poster,data-th-poster}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scrolling,data-th-scrolling}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:autocomplete,data-th-autocomplete}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:spellcheck,data-th-spellcheck}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:codetype,data-th-codetype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:summary,data-th-summary}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:high,data-th-high}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:valuetype,data-th-valuetype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formmethod,data-th-formmethod}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:preload,data-th-preload}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:max,data-th-max}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:form,data-th-form}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:label,data-th-label}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accept-charset,data-th-accept-charset}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:maxlength,data-th-maxlength}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:keytype,data-th-keytype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:pattern,data-th-pattern}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:dropzone,data-th-dropzone}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:compact,data-th-compact}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scheme,data-th-scheme}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:usemap,data-th-usemap}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rev,data-th-rev}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:target,data-th-target}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:border,data-th-border}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:kind,data-th-kind}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:lang,data-th-lang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cellspacing,data-th-cellspacing}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:id,data-th-id}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:manifest,data-th-manifest}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:class,data-th-class}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:media,data-th-media}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:bgcolor,data-th-bgcolor}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:title,data-th-title}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:hreflang,data-th-hreflang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:list,data-th-list}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:longdesc,data-th-longdesc}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accept,data-th-accept}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:dir,data-th-dir}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:icon,data-th-icon}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:charset,data-th-charset}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:codebase,data-th-codebase}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:tabindex,data-th-tabindex}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:width,data-th-width}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cellpadding,data-th-cellpadding}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:height,data-th-height}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:enctype,data-th-enctype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accesskey,data-th-accesskey}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:frameborder,data-th-frameborder}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:challenge,data-th-challenge}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:radiogroup,data-th-radiogroup}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:start,data-th-start}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:step,data-th-step}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:classid,data-th-classid}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:frame,data-th-frame}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:for,data-th-for}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:marginheight,data-th-marginheight}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:sandbox,data-th-sandbox}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:audio,data-th-audio}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:data,data-th-data}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:draggable,data-th-draggable}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:min,data-th-min}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:optimum,data-th-optimum}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:vspace,data-th-vspace}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rows,data-th-rows}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:style,data-th-style}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:srclang,data-th-srclang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:alt,data-th-alt}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:archive,data-th-archive}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:sizes,data-th-sizes}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rules,data-th-rules}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:abbr,data-th-abbr}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:hspace,data-th-hspace}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:size,data-th-size}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:contextmenu,data-th-contextmenu}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rel,data-th-rel}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:background,data-th-background}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:marginwidth,data-th-marginwidth}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:low,data-th-low}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formaction,data-th-formaction}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:axis,data-th-axis}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:standby,data-th-standby}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:datetime,data-th-datetime}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:content,data-th-content}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:headers,data-th-headers}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rowspan,data-th-rowspan}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cite,data-th-cite}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:http-equiv,data-th-http-equiv}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formenctype,data-th-formenctype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:span,data-th-span}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:xmlbase,data-th-xmlbase}] [1000]: org.thymeleaf.standard.processor.StandardXmlBaseTagProcessor
+[THYMELEAF]             * [* {th:xmllang,data-th-xmllang}] [1000]: org.thymeleaf.standard.processor.StandardXmlLangTagProcessor
+[THYMELEAF]             * [* {xmlns:th}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {th:xmlspace,data-th-xmlspace}] [1000]: org.thymeleaf.standard.processor.StandardXmlSpaceTagProcessor
+[THYMELEAF]             * [{option} *] [1005]: org.thymeleaf.spring6.processor.SpringOptionInSelectFieldTagProcessor
+[THYMELEAF]             * [* {th:value,data-th-value}] [1010]: org.thymeleaf.spring6.processor.SpringValueTagProcessor
+[THYMELEAF]             * [* {th:classappend,data-th-classappend}] [1100]: org.thymeleaf.standard.processor.StandardClassappendTagProcessor
+[THYMELEAF]             * [* {th:styleappend,data-th-styleappend}] [1100]: org.thymeleaf.standard.processor.StandardStyleappendTagProcessor
+[THYMELEAF]             * [* {th:text,data-th-text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext,data-th-utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:fragment,data-th-fragment}] [1500]: org.thymeleaf.standard.processor.StandardFragmentTagProcessor
+[THYMELEAF]             * [* {th:assert,data-th-assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove,data-th-remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* {th:errors,data-th-errors}] [1700]: org.thymeleaf.spring6.processor.SpringErrorsTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputCheckboxFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputFileFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputGeneralFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputPasswordFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputRadioFieldTagProcessor
+[THYMELEAF]             * [{option} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringOptionFieldTagProcessor
+[THYMELEAF]             * [{select} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringSelectFieldTagProcessor
+[THYMELEAF]             * [{textarea} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringTextareaFieldTagProcessor
+[THYMELEAF]             * [* {th:uerrors,data-th-uerrors}] [1700]: org.thymeleaf.spring6.processor.SpringUErrorsTagProcessor
+[THYMELEAF]             * [* {th:errorclass,data-th-errorclass}] [1800]: org.thymeleaf.spring6.processor.SpringErrorClassTagProcessor
+[THYMELEAF]             * [* {th:ref,data-th-ref}] [10000]: org.thymeleaf.standard.processor.StandardRefAttributeTagProcessor
+[THYMELEAF]             * [{th:block,th-block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* th:*] [2147483647]: org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]         * DOCTYPE Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardTranslationDocTypeProcessor
+[THYMELEAF]         * CDATA Section Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCDATASectionProcessor
+[THYMELEAF]         * Comment Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCommentProcessor
+[THYMELEAF]             * [1100]: org.thymeleaf.standard.processor.StandardConditionalCommentProcessor
+[THYMELEAF]     * Processors for Template Mode: XML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:include}] [100]: org.thymeleaf.standard.processor.StandardIncludeTagProcessor
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:attr}] [700]: org.thymeleaf.standard.processor.StandardAttrTagProcessor
+[THYMELEAF]             * [* {th:attrprepend}] [800]: org.thymeleaf.standard.processor.StandardAttrprependTagProcessor
+[THYMELEAF]             * [* {th:attrappend}] [900]: org.thymeleaf.standard.processor.StandardAttrappendTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineXMLTagProcessor
+[THYMELEAF]             * [* {xmlns:th}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:fragment}] [1500]: org.thymeleaf.standard.processor.StandardFragmentTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* {th:ref}] [10000]: org.thymeleaf.standard.processor.StandardRefAttributeTagProcessor
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* th:*] [2147483647]: org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]         * CDATA Section Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCDATASectionProcessor
+[THYMELEAF]         * Comment Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCommentProcessor
+[THYMELEAF]     * Processors for Template Mode: TEXT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Processors for Template Mode: JAVASCRIPT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Processors for Template Mode: CSS
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Expression Objects:
+[THYMELEAF]         * #ctx
+[THYMELEAF]         * #root
+[THYMELEAF]         * #vars
+[THYMELEAF]         * #object
+[THYMELEAF]         * #locale
+[THYMELEAF]         * #conversions
+[THYMELEAF]         * #uris
+[THYMELEAF]         * #temporals
+[THYMELEAF]         * #calendars
+[THYMELEAF]         * #dates
+[THYMELEAF]         * #bools
+[THYMELEAF]         * #numbers
+[THYMELEAF]         * #objects
+[THYMELEAF]         * #strings
+[THYMELEAF]         * #arrays
+[THYMELEAF]         * #lists
+[THYMELEAF]         * #sets
+[THYMELEAF]         * #maps
+[THYMELEAF]         * #aggregates
+[THYMELEAF]         * #messages
+[THYMELEAF]         * #ids
+[THYMELEAF]         * #execInfo
+[THYMELEAF]         * #request
+[THYMELEAF]         * #response
+[THYMELEAF]         * #session
+[THYMELEAF]         * #servletContext
+[THYMELEAF]         * #fields
+[THYMELEAF]         * #themes
+[THYMELEAF]         * #mvc
+[THYMELEAF]         * #requestdatavalues
+[THYMELEAF]     * Execution Attributes:
+[THYMELEAF]         * "StandardExpressionParser": Standard Expression Parser
+[THYMELEAF]         * "StandardJavaScriptSerializer": org.thymeleaf.standard.serializer.StandardJavaScriptSerializer@1bb5362b
+[THYMELEAF]         * "StandardCSSSerializer": org.thymeleaf.standard.serializer.StandardCSSSerializer@17ae046b
+[THYMELEAF]         * "EnableSpringELCompiler": false
+[THYMELEAF]         * "StandardVariableExpressionEvaluator": SpringEL
+[THYMELEAF]         * "StandardConversionService": org.thymeleaf.spring6.expression.SpringStandardConversionService@73939999
+[THYMELEAF] * Dialect [2 of 2]: SpringSecurity (org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect)
+[THYMELEAF]     * Prefix: "sec"
+[THYMELEAF]     * Processors for Template Mode: HTML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl,data-sec-authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr,data-sec-authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize,data-sec-authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url,data-sec-authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication,data-sec-authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: XML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: TEXT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: JAVASCRIPT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: CSS
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Expression Objects:
+[THYMELEAF]         * #authentication
+[THYMELEAF]         * #authorization
+[THYMELEAF] TEMPLATE ENGINE CONFIGURED OK
+2026-04-14T01:41:08.212+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] org.thymeleaf.TemplateEngine             : [THYMELEAF] TEMPLATE ENGINE INITIALIZED
+2026-04-14T01:41:08.480+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-5] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-04-14T01:46:56.841+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing OPTIONS /login
+2026-04-14T01:49:49.813+08:00 DEBUG 92056 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing OPTIONS /login
+2026-04-14T02:12:10.546+08:00  INFO 27328 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : Starting AdprojectApplication using Java 21.0.10 with PID 27328 (C:\Users\ihsan\OneDrive\Documents\AAS-Project-Main\adproject\target\classes started by ihsan in C:\Users\ihsan\OneDrive\Documents\AAS-Project-Main\adproject)
+2026-04-14T02:12:10.550+08:00  INFO 27328 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : The following 1 profile is active: "dev"
+2026-04-14T02:12:10.632+08:00  INFO 27328 --- [adproject] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-04-14T02:12:10.633+08:00  INFO 27328 --- [adproject] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-04-14T02:12:14.235+08:00  INFO 27328 --- [adproject] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-14T02:12:14.449+08:00  INFO 27328 --- [adproject] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 188 ms. Found 19 JPA repository interfaces.
+2026-04-14T02:12:15.721+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-14T02:12:15.781+08:00  INFO 27328 --- [adproject] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-14T02:12:15.783+08:00  INFO 27328 --- [adproject] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2026-04-14T02:12:15.980+08:00  INFO 27328 --- [adproject] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-14T02:12:15.981+08:00  INFO 27328 --- [adproject] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 5347 ms
+2026-04-14T02:12:16.826+08:00  INFO 27328 --- [adproject] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-14T02:12:16.922+08:00  INFO 27328 --- [adproject] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.22.Final
+2026-04-14T02:12:17.091+08:00  INFO 27328 --- [adproject] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-14T02:12:17.634+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-14T02:12:17.678+08:00  INFO 27328 --- [adproject] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-14T02:12:17.921+08:00  INFO 27328 --- [adproject] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@273cc81
+2026-04-14T02:12:17.925+08:00  INFO 27328 --- [adproject] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-14T02:12:18.005+08:00  WARN 27328 --- [adproject] [restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-14T02:12:18.032+08:00  INFO 27328 --- [adproject] [restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 9.4
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-14T02:12:20.171+08:00  INFO 27328 --- [adproject] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-14T02:12:20.519+08:00  INFO 27328 --- [adproject] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-14T02:12:21.109+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-14T02:12:24.142+08:00  WARN 27328 --- [adproject] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-14T02:12:24.999+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-04-14T02:12:25.090+08:00  INFO 27328 --- [adproject] [restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name daoAuthenticationProvider
+2026-04-14T02:12:25.092+08:00  WARN 27328 --- [adproject] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-04-14T02:12:25.379+08:00 DEBUG 27328 --- [adproject] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, CsrfFilter, LogoutFilter, UsernamePasswordAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, RememberMeAuthenticationFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-04-14T02:12:26.155+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-04-14T02:12:26.312+08:00  INFO 27328 --- [adproject] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-04-14T02:12:26.357+08:00  INFO 27328 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : Started AdprojectApplication in 16.568 seconds (process running for 17.663)
+2026-04-14T02:12:26.621+08:00  INFO 27328 --- [adproject] [restartedMain] c.c.a.config.SuperAdminBootstrapRunner   : INFO: Super admin ihsan.rubix@gmail.com already exists.
+2026-04-14T02:12:28.268+08:00  INFO 27328 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-14T02:12:28.270+08:00  INFO 27328 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-14T02:12:28.272+08:00  INFO 27328 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-04-14T02:12:29.099+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /rubrics/add/48
+2026-04-14T02:12:29.124+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.s.w.a.r.TokenBasedRememberMeServices : Remember-me cookie detected
+2026-04-14T02:12:29.195+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.s.w.a.r.TokenBasedRememberMeServices : Remember-me cookie accepted
+2026-04-14T02:12:29.204+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder populated with remember-me token: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:29.242+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] w.c.HttpSessionSecurityContextRepository : Stored SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]] to HttpSession [org.apache.catalina.session.StandardSessionFacade@3a19327f]
+2026-04-14T02:12:29.259+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /rubrics/add/48
+2026-04-14T02:12:29.644+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] org.thymeleaf.TemplateEngine             : [THYMELEAF] INITIALIZING TEMPLATE ENGINE
+2026-04-14T02:12:29.855+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] org.thymeleaf.TemplateEngine.CONFIG      : Initializing Thymeleaf Template engine configuration...
+[THYMELEAF] TEMPLATE ENGINE CONFIGURATION:
+[THYMELEAF] * Thymeleaf version: 3.1.3.RELEASE (built 2024-12-08T21:30:43+0000)
+[THYMELEAF] * Cache Manager implementation: org.thymeleaf.cache.StandardCacheManager
+[THYMELEAF] * Template resolvers:
+[THYMELEAF]     * org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver
+[THYMELEAF] * Message resolvers:
+[THYMELEAF]     * org.thymeleaf.spring6.messageresolver.SpringMessageResolver
+[THYMELEAF] * Link builders:
+[THYMELEAF]     * org.thymeleaf.linkbuilder.StandardLinkBuilder
+[THYMELEAF] * Dialect [1 of 2]: SpringStandard (org.thymeleaf.spring6.dialect.SpringStandardDialect)
+[THYMELEAF]     * Prefix: "th"
+[THYMELEAF]     * Processors for Template Mode: HTML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:include,data-th-include}] [100]: org.thymeleaf.standard.processor.StandardIncludeTagProcessor
+[THYMELEAF]             * [* {th:insert,data-th-insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace,data-th-replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each,data-th-each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch,data-th-switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case,data-th-case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if,data-th-if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless,data-th-unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object,data-th-object}] [500]: org.thymeleaf.spring6.processor.SpringObjectTagProcessor
+[THYMELEAF]             * [* {th:with,data-th-with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:attr,data-th-attr}] [700]: org.thymeleaf.standard.processor.StandardAttrTagProcessor
+[THYMELEAF]             * [* {th:attrprepend,data-th-attrprepend}] [800]: org.thymeleaf.standard.processor.StandardAttrprependTagProcessor
+[THYMELEAF]             * [* {th:attrappend,data-th-attrappend}] [900]: org.thymeleaf.standard.processor.StandardAttrappendTagProcessor
+[THYMELEAF]             * [* {th:method,data-th-method}] [990]: org.thymeleaf.spring6.processor.SpringMethodTagProcessor
+[THYMELEAF]             * [* {th:alt-title,data-th-alt-title}] [990]: org.thymeleaf.standard.processor.StandardAltTitleTagProcessor
+[THYMELEAF]             * [* {th:lang-xmllang,data-th-lang-xmllang}] [990]: org.thymeleaf.standard.processor.StandardLangXmlLangTagProcessor
+[THYMELEAF]             * [* {th:action,data-th-action}] [1000]: org.thymeleaf.spring6.processor.SpringActionTagProcessor
+[THYMELEAF]             * [* {th:href,data-th-href}] [1000]: org.thymeleaf.spring6.processor.SpringHrefTagProcessor
+[THYMELEAF]             * [* {th:src,data-th-src}] [1000]: org.thymeleaf.spring6.processor.SpringSrcTagProcessor
+[THYMELEAF]             * [* {th:formnovalidate,data-th-formnovalidate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:controls,data-th-controls}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:open,data-th-open}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:hidden,data-th-hidden}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:default,data-th-default}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:autoplay,data-th-autoplay}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:loop,data-th-loop}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:required,data-th-required}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:readonly,data-th-readonly}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:pubdate,data-th-pubdate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:multiple,data-th-multiple}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:seamless,data-th-seamless}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:disabled,data-th-disabled}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:declare,data-th-declare}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:nowrap,data-th-nowrap}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:checked,data-th-checked}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:ismap,data-th-ismap}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:defer,data-th-defer}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:scoped,data-th-scoped}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:autofocus,data-th-autofocus}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:reversed,data-th-reversed}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:selected,data-th-selected}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:novalidate,data-th-novalidate}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:async,data-th-async}] [1000]: org.thymeleaf.standard.processor.StandardConditionalFixedValueTagProcessor
+[THYMELEAF]             * [* {th:onmousemove,data-th-onmousemove}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onshow,data-th-onshow}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmousedown,data-th-onmousedown}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncanplay,data-th-oncanplay}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onvolumechange,data-th-onvolumechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oninput,data-th-oninput}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncontextmenu,data-th-oncontextmenu}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeydown,data-th-onkeydown}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragover,data-th-ondragover}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onchange,data-th-onchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onabort,data-th-onabort}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onplay,data-th-onplay}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onended,data-th-onended}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onselect,data-th-onselect}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onprogress,data-th-onprogress}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onsuspend,data-th-onsuspend}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onseeked,data-th-onseeked}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onoffline,data-th-onoffline}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onsubmit,data-th-onsubmit}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onpause,data-th-onpause}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onerror,data-th-onerror}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onwaiting,data-th-onwaiting}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onstorage,data-th-onstorage}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oninvalid,data-th-oninvalid}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onclick,data-th-onclick}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragend,data-th-ondragend}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:oncanplaythrough,data-th-oncanplaythrough}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onfocus,data-th-onfocus}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadeddata,data-th-onloadeddata}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onundo,data-th-onundo}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragleave,data-th-ondragleave}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseup,data-th-onmouseup}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ononline,data-th-ononline}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onplaying,data-th-onplaying}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ontimeupdate,data-th-ontimeupdate}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragenter,data-th-ondragenter}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onseeking,data-th-onseeking}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onpopstate,data-th-onpopstate}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onstalled,data-th-onstalled}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onunload,data-th-onunload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onload,data-th-onload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onbeforeunload,data-th-onbeforeunload}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onafterprint,data-th-onafterprint}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondrop,data-th-ondrop}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onscroll,data-th-onscroll}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondragstart,data-th-ondragstart}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onreadystatechange,data-th-onreadystatechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onratechange,data-th-onratechange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseout,data-th-onmouseout}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onresize,data-th-onresize}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onhashchange,data-th-onhashchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmessage,data-th-onmessage}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeyup,data-th-onkeyup}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onforminput,data-th-onforminput}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadstart,data-th-onloadstart}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onformchange,data-th-onformchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onredo,data-th-onredo}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondblclick,data-th-ondblclick}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onloadedmetadata,data-th-onloadedmetadata}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondurationchange,data-th-ondurationchange}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onblur,data-th-onblur}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:ondrag,data-th-ondrag}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onreset,data-th-onreset}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onkeypress,data-th-onkeypress}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmousewheel,data-th-onmousewheel}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onmouseover,data-th-onmouseover}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onbeforeprint,data-th-onbeforeprint}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:onemptied,data-th-onemptied}] [1000]: org.thymeleaf.standard.processor.StandardDOMEventAttributeTagProcessor
+[THYMELEAF]             * [* {th:inline,data-th-inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineHTMLTagProcessor
+[THYMELEAF]             * [* {th:name,data-th-name}] [1000]: org.thymeleaf.standard.processor.StandardNonRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:type,data-th-type}] [1000]: org.thymeleaf.standard.processor.StandardNonRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:sandbox,data-th-sandbox}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formtarget,data-th-formtarget}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rows,data-th-rows}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:srclang,data-th-srclang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:abbr,data-th-abbr}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:background,data-th-background}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:label,data-th-label}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rev,data-th-rev}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:longdesc,data-th-longdesc}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:hreflang,data-th-hreflang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:preload,data-th-preload}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formaction,data-th-formaction}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:tabindex,data-th-tabindex}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:marginwidth,data-th-marginwidth}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:align,data-th-align}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:media,data-th-media}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:list,data-th-list}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:contextmenu,data-th-contextmenu}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:id,data-th-id}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:datetime,data-th-datetime}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:span,data-th-span}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rel,data-th-rel}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:dropzone,data-th-dropzone}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:compact,data-th-compact}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scope,data-th-scope}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:class,data-th-class}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:marginheight,data-th-marginheight}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:wrap,data-th-wrap}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cite,data-th-cite}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scrolling,data-th-scrolling}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:height,data-th-height}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accept-charset,data-th-accept-charset}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:start,data-th-start}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cellspacing,data-th-cellspacing}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:min,data-th-min}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:placeholder,data-th-placeholder}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:poster,data-th-poster}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cellpadding,data-th-cellpadding}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formenctype,data-th-formenctype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accept,data-th-accept}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:pattern,data-th-pattern}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:icon,data-th-icon}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:high,data-th-high}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:manifest,data-th-manifest}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:classid,data-th-classid}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rules,data-th-rules}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:frameborder,data-th-frameborder}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:charset,data-th-charset}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:formmethod,data-th-formmethod}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:archive,data-th-archive}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:title,data-th-title}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:enctype,data-th-enctype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:vspace,data-th-vspace}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:form,data-th-form}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:lang,data-th-lang}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:keytype,data-th-keytype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:scheme,data-th-scheme}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:radiogroup,data-th-radiogroup}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:hspace,data-th-hspace}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:standby,data-th-standby}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:accesskey,data-th-accesskey}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:codetype,data-th-codetype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:axis,data-th-axis}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:width,data-th-width}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:valuetype,data-th-valuetype}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:contenteditable,data-th-contenteditable}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:content,data-th-content}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:dir,data-th-dir}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:spellcheck,data-th-spellcheck}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:low,data-th-low}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:step,data-th-step}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:kind,data-th-kind}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:maxlength,data-th-maxlength}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:sizes,data-th-sizes}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:colspan,data-th-colspan}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:headers,data-th-headers}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:border,data-th-border}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:cols,data-th-cols}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:usemap,data-th-usemap}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:data,data-th-data}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:bgcolor,data-th-bgcolor}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:challenge,data-th-challenge}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:target,data-th-target}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:audio,data-th-audio}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:autocomplete,data-th-autocomplete}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:size,data-th-size}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:frame,data-th-frame}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:style,data-th-style}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:draggable,data-th-draggable}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:summary,data-th-summary}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:codebase,data-th-codebase}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:max,data-th-max}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:optimum,data-th-optimum}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:alt,data-th-alt}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:for,data-th-for}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:rowspan,data-th-rowspan}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:http-equiv,data-th-http-equiv}] [1000]: org.thymeleaf.standard.processor.StandardRemovableAttributeTagProcessor
+[THYMELEAF]             * [* {th:xmlbase,data-th-xmlbase}] [1000]: org.thymeleaf.standard.processor.StandardXmlBaseTagProcessor
+[THYMELEAF]             * [* {th:xmllang,data-th-xmllang}] [1000]: org.thymeleaf.standard.processor.StandardXmlLangTagProcessor
+[THYMELEAF]             * [* {xmlns:th}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {th:xmlspace,data-th-xmlspace}] [1000]: org.thymeleaf.standard.processor.StandardXmlSpaceTagProcessor
+[THYMELEAF]             * [{option} *] [1005]: org.thymeleaf.spring6.processor.SpringOptionInSelectFieldTagProcessor
+[THYMELEAF]             * [* {th:value,data-th-value}] [1010]: org.thymeleaf.spring6.processor.SpringValueTagProcessor
+[THYMELEAF]             * [* {th:classappend,data-th-classappend}] [1100]: org.thymeleaf.standard.processor.StandardClassappendTagProcessor
+[THYMELEAF]             * [* {th:styleappend,data-th-styleappend}] [1100]: org.thymeleaf.standard.processor.StandardStyleappendTagProcessor
+[THYMELEAF]             * [* {th:text,data-th-text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext,data-th-utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:fragment,data-th-fragment}] [1500]: org.thymeleaf.standard.processor.StandardFragmentTagProcessor
+[THYMELEAF]             * [* {th:assert,data-th-assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove,data-th-remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* {th:errors,data-th-errors}] [1700]: org.thymeleaf.spring6.processor.SpringErrorsTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputCheckboxFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputFileFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputGeneralFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputPasswordFieldTagProcessor
+[THYMELEAF]             * [{input} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringInputRadioFieldTagProcessor
+[THYMELEAF]             * [{option} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringOptionFieldTagProcessor
+[THYMELEAF]             * [{select} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringSelectFieldTagProcessor
+[THYMELEAF]             * [{textarea} {th:field,data-th-field}] [1700]: org.thymeleaf.spring6.processor.SpringTextareaFieldTagProcessor
+[THYMELEAF]             * [* {th:uerrors,data-th-uerrors}] [1700]: org.thymeleaf.spring6.processor.SpringUErrorsTagProcessor
+[THYMELEAF]             * [* {th:errorclass,data-th-errorclass}] [1800]: org.thymeleaf.spring6.processor.SpringErrorClassTagProcessor
+[THYMELEAF]             * [* {th:ref,data-th-ref}] [10000]: org.thymeleaf.standard.processor.StandardRefAttributeTagProcessor
+[THYMELEAF]             * [{th:block,th-block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* th:*] [2147483647]: org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]         * DOCTYPE Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardTranslationDocTypeProcessor
+[THYMELEAF]         * CDATA Section Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCDATASectionProcessor
+[THYMELEAF]         * Comment Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCommentProcessor
+[THYMELEAF]             * [1100]: org.thymeleaf.standard.processor.StandardConditionalCommentProcessor
+[THYMELEAF]     * Processors for Template Mode: XML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:include}] [100]: org.thymeleaf.standard.processor.StandardIncludeTagProcessor
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:attr}] [700]: org.thymeleaf.standard.processor.StandardAttrTagProcessor
+[THYMELEAF]             * [* {th:attrprepend}] [800]: org.thymeleaf.standard.processor.StandardAttrprependTagProcessor
+[THYMELEAF]             * [* {th:attrappend}] [900]: org.thymeleaf.standard.processor.StandardAttrappendTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineXMLTagProcessor
+[THYMELEAF]             * [* {xmlns:th}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:fragment}] [1500]: org.thymeleaf.standard.processor.StandardFragmentTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* {th:ref}] [10000]: org.thymeleaf.standard.processor.StandardRefAttributeTagProcessor
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* th:*] [2147483647]: org.thymeleaf.standard.processor.StandardDefaultAttributesTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]         * CDATA Section Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCDATASectionProcessor
+[THYMELEAF]         * Comment Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningCommentProcessor
+[THYMELEAF]     * Processors for Template Mode: TEXT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Processors for Template Mode: JAVASCRIPT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Processors for Template Mode: CSS
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {th:insert}] [100]: org.thymeleaf.standard.processor.StandardInsertTagProcessor
+[THYMELEAF]             * [* {th:replace}] [100]: org.thymeleaf.standard.processor.StandardReplaceTagProcessor
+[THYMELEAF]             * [* {th:each}] [200]: org.thymeleaf.standard.processor.StandardEachTagProcessor
+[THYMELEAF]             * [* {th:switch}] [250]: org.thymeleaf.standard.processor.StandardSwitchTagProcessor
+[THYMELEAF]             * [* {th:case}] [275]: org.thymeleaf.standard.processor.StandardCaseTagProcessor
+[THYMELEAF]             * [* {th:if}] [300]: org.thymeleaf.standard.processor.StandardIfTagProcessor
+[THYMELEAF]             * [* {th:unless}] [400]: org.thymeleaf.standard.processor.StandardUnlessTagProcessor
+[THYMELEAF]             * [* {th:object}] [500]: org.thymeleaf.standard.processor.StandardObjectTagProcessor
+[THYMELEAF]             * [* {th:with}] [600]: org.thymeleaf.standard.processor.StandardWithTagProcessor
+[THYMELEAF]             * [* {th:inline}] [1000]: org.thymeleaf.standard.processor.StandardInlineTextualTagProcessor
+[THYMELEAF]             * [* {th:text}] [1300]: org.thymeleaf.standard.processor.StandardTextTagProcessor
+[THYMELEAF]             * [* {th:utext}] [1400]: org.thymeleaf.standard.processor.StandardUtextTagProcessor
+[THYMELEAF]             * [* {th:assert}] [1550]: org.thymeleaf.standard.processor.StandardAssertTagProcessor
+[THYMELEAF]             * [* {th:remove}] [1600]: org.thymeleaf.standard.processor.StandardRemoveTagProcessor
+[THYMELEAF]             * [{th:block} *] [100000]: org.thymeleaf.standard.processor.StandardBlockTagProcessor
+[THYMELEAF]             * [* 100000] [org.thymeleaf.standard.processor.StandardBlockTagProcessor]: {}
+[THYMELEAF]         * Text Processors by [precedence]:
+[THYMELEAF]             * [1000]: org.thymeleaf.standard.processor.StandardInliningTextProcessor
+[THYMELEAF]     * Expression Objects:
+[THYMELEAF]         * #ctx
+[THYMELEAF]         * #root
+[THYMELEAF]         * #vars
+[THYMELEAF]         * #object
+[THYMELEAF]         * #locale
+[THYMELEAF]         * #conversions
+[THYMELEAF]         * #uris
+[THYMELEAF]         * #temporals
+[THYMELEAF]         * #calendars
+[THYMELEAF]         * #dates
+[THYMELEAF]         * #bools
+[THYMELEAF]         * #numbers
+[THYMELEAF]         * #objects
+[THYMELEAF]         * #strings
+[THYMELEAF]         * #arrays
+[THYMELEAF]         * #lists
+[THYMELEAF]         * #sets
+[THYMELEAF]         * #maps
+[THYMELEAF]         * #aggregates
+[THYMELEAF]         * #messages
+[THYMELEAF]         * #ids
+[THYMELEAF]         * #execInfo
+[THYMELEAF]         * #request
+[THYMELEAF]         * #response
+[THYMELEAF]         * #session
+[THYMELEAF]         * #servletContext
+[THYMELEAF]         * #fields
+[THYMELEAF]         * #themes
+[THYMELEAF]         * #mvc
+[THYMELEAF]         * #requestdatavalues
+[THYMELEAF]     * Execution Attributes:
+[THYMELEAF]         * "StandardExpressionParser": Standard Expression Parser
+[THYMELEAF]         * "StandardJavaScriptSerializer": org.thymeleaf.standard.serializer.StandardJavaScriptSerializer@223b552b
+[THYMELEAF]         * "StandardCSSSerializer": org.thymeleaf.standard.serializer.StandardCSSSerializer@4989b0a0
+[THYMELEAF]         * "EnableSpringELCompiler": false
+[THYMELEAF]         * "StandardVariableExpressionEvaluator": SpringEL
+[THYMELEAF]         * "StandardConversionService": org.thymeleaf.spring6.expression.SpringStandardConversionService@3cf5dd23
+[THYMELEAF] * Dialect [2 of 2]: SpringSecurity (org.thymeleaf.extras.springsecurity6.dialect.SpringSecurityDialect)
+[THYMELEAF]     * Prefix: "sec"
+[THYMELEAF]     * Processors for Template Mode: HTML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl,data-sec-authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize,data-sec-authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr,data-sec-authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url,data-sec-authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication,data-sec-authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: XML
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: TEXT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: JAVASCRIPT
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Processors for Template Mode: CSS
+[THYMELEAF]         * Element Tag Processors by [matching element and attribute name] [precedence]:
+[THYMELEAF]             * [* {sec:authorize-acl}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAclAttrProcessor
+[THYMELEAF]             * [* {sec:authorize}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-expr}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeAttrProcessor
+[THYMELEAF]             * [* {sec:authorize-url}] [300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthorizeUrlAttrProcessor
+[THYMELEAF]             * [* {xmlns:sec}] [1000]: org.thymeleaf.standard.processor.StandardXmlNsTagProcessor
+[THYMELEAF]             * [* {sec:authentication}] [1300]: org.thymeleaf.extras.springsecurity6.dialect.processor.AuthenticationAttrProcessor
+[THYMELEAF]     * Expression Objects:
+[THYMELEAF]         * #authentication
+[THYMELEAF]         * #authorization
+[THYMELEAF] TEMPLATE ENGINE CONFIGURED OK
+2026-04-14T02:12:29.869+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] org.thymeleaf.TemplateEngine             : [THYMELEAF] TEMPLATE ENGINE INITIALIZED
+2026-04-14T02:12:30.427+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /css/critical.css
+2026-04-14T02:12:30.427+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /css/responsive-patterns.css
+2026-04-14T02:12:30.427+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /images/logoUTM.png
+2026-04-14T02:12:30.427+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /css/admin_sidebar.css
+2026-04-14T02:12:30.428+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /css/rubric_form.css
+2026-04-14T02:12:30.428+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.430+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.430+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.430+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.430+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.431+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.431+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.431+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.431+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.431+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.434+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /css/critical.css
+2026-04-14T02:12:30.434+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /css/responsive-patterns.css
+2026-04-14T02:12:30.434+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /css/rubric_form.css
+2026-04-14T02:12:30.434+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /css/admin_sidebar.css
+2026-04-14T02:12:30.434+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /images/logoUTM.png
+2026-04-14T02:12:30.472+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /js/loading.js
+2026-04-14T02:12:30.489+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.491+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.492+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /js/loading.js
+2026-04-14T02:12:30.503+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /images/utmbg.png
+2026-04-14T02:12:30.506+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.506+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.508+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /images/utmbg.png
+2026-04-14T02:12:30.722+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /favicon.ico
+2026-04-14T02:12:30.723+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:30.723+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:30.726+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /favicon.ico
+2026-04-14T02:12:30.734+08:00  WARN 27328 --- [adproject] [http-nio-8080-exec-8] c.c.a.exception.GlobalExceptionHandler   : Resource not found: /favicon.ico
+2026-04-14T02:12:30.735+08:00  WARN 27328 --- [adproject] [http-nio-8080-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource favicon.ico.]
+2026-04-14T02:12:32.607+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Securing GET /admin/home
+2026-04-14T02:12:32.609+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:32.609+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:32.610+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Secured GET /admin/home
+2026-04-14T02:12:32.850+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Securing GET /css/admin_sidebar.css
+2026-04-14T02:12:32.850+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /css/admin_home.css
+2026-04-14T02:12:32.850+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /images/utmlogo.png
+2026-04-14T02:12:32.850+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /css/responsive-patterns.css
+2026-04-14T02:12:32.851+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:32.851+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:32.851+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:32.852+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:32.852+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:32.852+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:32.852+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:32.853+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:32.853+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /images/utmlogo.png
+2026-04-14T02:12:32.853+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Secured GET /css/admin_sidebar.css
+2026-04-14T02:12:32.853+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /css/admin_home.css
+2026-04-14T02:12:32.854+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /css/responsive-patterns.css
+2026-04-14T02:12:41.675+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /css/admin_home.css
+2026-04-14T02:12:41.675+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /css/responsive-patterns.css
+2026-04-14T02:12:41.675+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /css/admin_sidebar.css
+2026-04-14T02:12:41.676+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:41.676+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:41.676+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:41.677+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:41.677+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:41.677+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:41.678+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /css/admin_home.css
+2026-04-14T02:12:41.678+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /css/responsive-patterns.css
+2026-04-14T02:12:41.678+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /css/admin_sidebar.css
+2026-04-14T02:12:41.713+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /.well-known/appspecific/com.chrome.devtools.json
+2026-04-14T02:12:41.714+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:12:41.715+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:12:41.716+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /.well-known/appspecific/com.chrome.devtools.json
+2026-04-14T02:12:41.720+08:00  WARN 27328 --- [adproject] [http-nio-8080-exec-4] c.c.a.exception.GlobalExceptionHandler   : Resource not found: /.well-known/appspecific/com.chrome.devtools.json
+2026-04-14T02:12:41.721+08:00  WARN 27328 --- [adproject] [http-nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.web.servlet.resource.NoResourceFoundException: No static resource .well-known/appspecific/com.chrome.devtools.json.]
+2026-04-14T02:13:19.114+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:19.115+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:19.116+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:19.117+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:20.218+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:20.219+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:20.220+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:20.221+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-6] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:21.279+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:21.281+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:21.281+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:21.283+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:22.339+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:22.340+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:22.341+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:22.343+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-7] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:23.395+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:23.396+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:23.396+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:23.397+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:24.446+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:24.447+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:24.448+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:24.449+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-9] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:25.513+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:25.514+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:25.515+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:25.516+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:26.583+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:26.584+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:26.585+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:26.586+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-3] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:27.640+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:27.641+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:27.642+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:27.643+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:28.706+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:28.707+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:28.707+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:28.708+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:29.767+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:29.768+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:29.768+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:29.770+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-8] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T02:13:30.828+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Securing GET /api/test/ping
+2026-04-14T02:13:30.830+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] w.c.HttpSessionSecurityContextRepository : Retrieved SecurityContextImpl [Authentication=RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]]
+2026-04-14T02:13:30.830+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] s.s.w.a.r.RememberMeAuthenticationFilter : SecurityContextHolder not populated with remember-me token, as it already contained: 'RememberMeAuthenticationToken [Principal=org.springframework.security.core.userdetails.User [Username=liew@gmail.com, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, CredentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]], Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_ADMIN, ROLE_LECTURER]]'
+2026-04-14T02:13:30.832+08:00 DEBUG 27328 --- [adproject] [http-nio-8080-exec-10] o.s.security.web.FilterChainProxy        : Secured GET /api/test/ping
+2026-04-14T10:49:13.958+08:00  INFO 77456 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : Starting AdprojectApplication using Java 21.0.10 with PID 77456 (C:\Users\ihsan\OneDrive\Documents\AAS-Project-Main\adproject\target\classes started by ihsan in C:\Users\ihsan\OneDrive\Documents\AAS-Project-Main\adproject)
+2026-04-14T10:49:13.962+08:00  INFO 77456 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : The following 1 profile is active: "dev"
+2026-04-14T10:49:14.067+08:00  INFO 77456 --- [adproject] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-04-14T10:49:14.067+08:00  INFO 77456 --- [adproject] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-04-14T10:49:17.259+08:00  INFO 77456 --- [adproject] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-14T10:49:17.549+08:00  INFO 77456 --- [adproject] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 251 ms. Found 19 JPA repository interfaces.
+2026-04-14T10:49:19.423+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-14T10:49:19.484+08:00  INFO 77456 --- [adproject] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-14T10:49:19.485+08:00  INFO 77456 --- [adproject] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.43]
+2026-04-14T10:49:19.698+08:00  INFO 77456 --- [adproject] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-14T10:49:19.699+08:00  INFO 77456 --- [adproject] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 5630 ms
+2026-04-14T10:49:20.599+08:00  INFO 77456 --- [adproject] [restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-14T10:49:20.830+08:00  INFO 77456 --- [adproject] [restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.22.Final
+2026-04-14T10:49:20.968+08:00  INFO 77456 --- [adproject] [restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-14T10:49:21.573+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-14T10:49:21.657+08:00  INFO 77456 --- [adproject] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-14T10:49:21.980+08:00  INFO 77456 --- [adproject] [restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4242465c
+2026-04-14T10:49:21.984+08:00  INFO 77456 --- [adproject] [restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-14T10:49:22.071+08:00  WARN 77456 --- [adproject] [restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-14T10:49:22.135+08:00  INFO 77456 --- [adproject] [restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 9.4
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-14T10:49:25.043+08:00  INFO 77456 --- [adproject] [restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-14T10:49:25.693+08:00  WARN 77456 --- [adproject] [restartedMain] o.h.t.s.i.ExceptionHandlerLoggedImpl     : GenerationTarget encountered exception accepting command : Error executing DDL "create index idx_deadline_assessment_assessor on deadlines (assessment_id, assessor_type)" via JDBC [Key column 'assessment_id' doesn't exist in table]
+
+org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "create index idx_deadline_assessment_assessor on deadlines (assessment_id, assessor_type)" via JDBC [Key column 'assessment_id' doesn't exist in table]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:94) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.applySqlString(AbstractSchemaMigrator.java:576) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.applySqlStrings(AbstractSchemaMigrator.java:516) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.applyIndexes(AbstractSchemaMigrator.java:361) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl.performTablesMigration(GroupedSchemaMigratorImpl.java:96) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.performMigration(AbstractSchemaMigrator.java:233) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.internal.AbstractSchemaMigrator.doMigration(AbstractSchemaMigrator.java:112) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.performDatabaseAction(SchemaManagementToolCoordinator.java:280) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.lambda$process$5(SchemaManagementToolCoordinator.java:144) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at java.base/java.util.HashMap.forEach(Unknown Source) ~[na:na]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.process(SchemaManagementToolCoordinator.java:141) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.boot.internal.SessionFactoryObserverForSchemaExport.sessionFactoryCreated(SessionFactoryObserverForSchemaExport.java:37) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryCreated(SessionFactoryObserverChain.java:35) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:324) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:463) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1517) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:66) ~[spring-orm-6.2.9.jar:6.2.9]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:390) ~[spring-orm-6.2.9.jar:6.2.9]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:419) ~[spring-orm-6.2.9.jar:6.2.9]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:400) ~[spring-orm-6.2.9.jar:6.2.9]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:366) ~[spring-orm-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207) ~[spring-beans-6.2.9.jar:6.2.9]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:970) ~[spring-context-6.2.9.jar:6.2.9]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.9.jar:6.2.9]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361) ~[spring-boot-3.5.4.jar:3.5.4]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350) ~[spring-boot-3.5.4.jar:3.5.4]
+	at com.capstone.adproject.AdprojectApplication.main(AdprojectApplication.java:10) ~[classes/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.5.4.jar:3.5.4]
+Caused by: java.sql.SQLSyntaxErrorException: Key column 'assessment_id' doesn't exist in table
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:112) ~[mysql-connector-j-9.3.0.jar:9.3.0]
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:114) ~[mysql-connector-j-9.3.0.jar:9.3.0]
+	at com.mysql.cj.jdbc.StatementImpl.executeInternal(StatementImpl.java:837) ~[mysql-connector-j-9.3.0.jar:9.3.0]
+	at com.mysql.cj.jdbc.StatementImpl.execute(StatementImpl.java:685) ~[mysql-connector-j-9.3.0.jar:9.3.0]
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:95) ~[HikariCP-6.3.1.jar:na]
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-6.3.1.jar:na]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:80) ~[hibernate-core-6.6.22.Final.jar:6.6.22.Final]
+	... 40 common frames omitted
+
+2026-04-14T10:49:27.214+08:00  INFO 77456 --- [adproject] [restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-14T10:49:27.706+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-04-14T10:49:31.038+08:00  WARN 77456 --- [adproject] [restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-14T10:49:31.937+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-04-14T10:49:32.034+08:00  INFO 77456 --- [adproject] [restartedMain] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name daoAuthenticationProvider
+2026-04-14T10:49:32.035+08:00  WARN 77456 --- [adproject] [restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-04-14T10:49:32.289+08:00 DEBUG 77456 --- [adproject] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, CsrfFilter, LogoutFilter, UsernamePasswordAuthenticationFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, RememberMeAuthenticationFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-04-14T10:49:32.844+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-04-14T10:49:32.999+08:00  INFO 77456 --- [adproject] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-04-14T10:49:33.037+08:00  INFO 77456 --- [adproject] [restartedMain] c.c.adproject.AdprojectApplication       : Started AdprojectApplication in 19.992 seconds (process running for 21.586)
+2026-04-14T10:49:33.266+08:00  INFO 77456 --- [adproject] [restartedMain] c.c.a.config.SuperAdminBootstrapRunner   : INFO: Super admin ihsan.rubix@gmail.com already exists.
+2026-04-14T10:49:34.161+08:00  INFO 77456 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-14T10:49:34.162+08:00  INFO 77456 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-14T10:49:34.164+08:00  INFO 77456 --- [adproject] [RMI TCP Connection(2)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
