@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overall Assessment Data</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/overall_data.css}">
+    <link rel="stylesheet" th:href="@{/css/print_overall_data.css}" media="print">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="overall-data-page">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        
+        <div class="overall-container">
+            <div class="page-header">
+                <h2><i class="fas fa-table"></i> Overall Assessment Data</h2>
+                <div class="action-buttons">
+                    <a th:href="@{/admin/data-views/edit-overrides}" class="btn btn-edit">
+                        <i class="fas fa-edit"></i> Edit Grades
+                    </a>
+                    <a th:href="@{/admin/data-views}" class="btn btn-back"><i class="fas fa-arrow-left"></i> Back</a>
+                    <button data-action="print-page" class="btn btn-print"><i class="fas fa-print"></i> Print</button>
+                    <a th:href="@{/admin/data-views/overall/export}" class="btn btn-export"><i class="fas fa-file-excel"></i> Export to Excel</a>
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table class="overall-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="sticky-col first-col">Team Name</th>
+                            <th rowspan="2" class="sticky-col second-col">Student Email</th>
+                            <th rowspan="2" class="sticky-col third-col">Factor</th>
+                            <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
+                            
+                            <th:block th:each="assessment : ${assessments}">
+                                <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
+                                    <th th:colspan="${assessment.cloMarks.size() + (cloWithGroupSet != null ? #sets.size(cloWithGroupSet) : 0) + 2}"
+                                        class="assessment-header" th:text="${assessment.title}"></th>
+                                </th:block>
+                            </th:block>
+                            
+                            <th rowspan="2" class="grand-total-header">Grand Total (Gt)</th>
+                            <th rowspan="2" class="grade-header">Grade</th>
+                        </tr>
+                        <tr>
+                            <th:block th:each="assessment : ${assessments}">
+                                <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
+                                    <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                        <th class="clo-header" th:text="'CLO ' + ${cloEntry.key}"></th>
+                                    </th:block>
+                                    <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                        <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
+                                            <th class="clo-weighted-header" th:text="'CLO ' + ${cloEntry.key} + ' (W)'"></th>
+                                        </th:block>
+                                    </th:block>
+                                    <th class="total-header">Total (Raw)</th>
+                                    <th class="total-w-header">Total (W)</th>
+                                </th:block>
+                            </th:block>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="student : ${students}">
+                            <th:block th:with="data=${studentOverallData[student.id]}">
+                                <td class="sticky-col first-col" th:text="${data['teamName']}"></td>
+                                <td class="sticky-col second-col" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}"></td>
+                                
+                                <td class="sticky-col third-col">
+                                    <span class="factor-badge" 
+                                          th:classappend="${data['factor'] == null || data['factor'] == 0.0 ? 'factor-zero' : (data['factor'] >= 1.05 ? 'factor-capped' : '')}"
+                                          th:text="${data['factor'] != null && data['factor'] > 0 ? #numbers.formatDecimal(data['factor'], 1, 3) : '0.000'}"></span>
+                                </td>
+                                <td class="sticky-col fourth-col">
+                                    <span class="factor-badge"
+                                          th:classappend="${data['factor'] == null || data['factor'] == 0.0 ? 'factor-zero' : (data['factor'] >= 1.05 ? 'factor-capped' : '')}"
+                                          th:text="${data['factor'] != null && data['factor'] >= 1.05 ? '1.050' : (data['factor'] != null && data['factor'] > 0 ? #numbers.formatDecimal(data['factor'], 1, 3) : '0.000')}"></span>
+                                    <div th:if="${data['factor'] != null && data['factor'] >= 1.05}" class="capped-indicator"><i class="fas fa-exclamation-triangle"></i> Capped</div>
+                                </td>
+                                
+                                <th:block th:each="assessmentData : ${data['assessmentDataList']}">
+                                    <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessmentData.assessment.id]}">
+                                        <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
+                                            <td class="clo-value">
+                                                <span th:text="${assessmentData.cloSums.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloSums[cloEntry.key], 1, 2) : '-'}"></span>
+                                            </td>
+                                        </th:block>
+                                        <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
+                                            <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
+                                                <td class="weighted-value">
+                                                    <span th:text="${assessmentData.cloWeightedSumsGroupOnly != null && assessmentData.cloWeightedSumsGroupOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloWeightedSumsGroupOnly[cloEntry.key], 1, 2) : '-'}"></span>
+                                                </td>
+                                            </th:block>
+                                        </th:block>
+                                        <td class="total-normal-value">
+                                            <span th:text="${#numbers.formatDecimal(assessmentData.totalUnweightedMarks, 1, 2)}"></span>
+                                        </td>
+                                        <td class="total-weighted-value">
+                                            <span th:text="${#numbers.formatDecimal(assessmentData.totalWeightedMarks, 1, 2)}"></span>
+                                        </td>
+                                    </th:block>
+                                </th:block>
+                                
+                                <td class="grand-total-value">
+                                    <span th:text="${#numbers.formatDecimal(data['grandTotal'], 1, 2)}"
+                                          th:classappend="${data['isOverridden'] == true ? 'overridden-value' : ''}"></span>
+                                </td>
+                                <td style="font-weight: bold; font-size: 1.1em;">
+                                    <span th:text="${data['grade']}"></span>
+                                </td>
+                            </th:block>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    
+</body>
+
+</html>

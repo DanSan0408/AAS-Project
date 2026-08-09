@@ -27,7 +27,7 @@ public class Admin {
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false) // Added unique constraint for email
+    @Column(unique = true, nullable = false)
     private String email;
     
     private String resetPasswordToken;

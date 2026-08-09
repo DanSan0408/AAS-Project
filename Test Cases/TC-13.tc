@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Assign Lecturer to a Group, Rubric or a Student</description>
+   <name>TC-13</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>8db70e39-bdcc-47b2-8517-67c244792348</testCaseGuid>
+</TestCaseEntity>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Assessment Re-evaluation</description>
+   <name>TC-17</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>1cbdb530-e2f6-4190-91b9-fba5a48afce7</testCaseGuid>
+</TestCaseEntity>

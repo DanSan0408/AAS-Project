@@ -1,0 +1,379 @@
+/* Progress Tracking Dashboards Styling */
+
+:root {
+    --color-primary: #4A0018;
+    --color-secondary: #3F3F46;
+    --color-accent: #F8A617;
+    --color-background: #F4F2EE;
+    --color-surface: #FFFFFF;
+    --color-border: #E5E7EB;
+}
+
+* { box-sizing: border-box; }
+
+body.progress-page,
+body.data-view-page {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-secondary);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    min-height: 100vh;
+}
+
+.progress-page .main-content {
+    margin-left: 270px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: calc(100% - 270px);
+    box-sizing: border-box;
+}
+
+.progress-page .header {
+    background: linear-gradient(135deg, var(--admin-primary, #4A0018) 0%, var(--admin-primary-light, #6B0025) 100%) !important;
+    padding: 20px 30px !important;
+    margin-bottom: 40px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-shadow: 0 4px 16px rgba(74, 0, 24, 0.15) !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.progress-page .header-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.progress-page .header-container img {
+    max-width: 200px !important;
+    height: auto !important;
+    filter: brightness(0) invert(1) !important;
+}
+
+.progress-page .container-responsive {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.page-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    color: var(--color-primary);
+    margin: 0 0 0.5rem 0;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+}
+
+.progress-bar-container {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 999px;
+    height: 12px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.3s ease;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-completed { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+.status-progress { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+.status-pending { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+
+.progress-page .card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #E5E7EB;
+    padding: 25px;
+    margin-bottom: 25px;
+}
+
+.progress-page .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.progress-page .btn-secondary { background-color: #3F3F46; color: white; }
+.progress-page .btn-secondary:hover { background-color: #27272A; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+.table-responsive table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 1rem;
+    background: var(--color-surface);
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.table-responsive th {
+    background-color: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.table-responsive td {
+    padding: 15px;
+    border-bottom: 1px solid #E5E7EB;
+    vertical-align: middle;
+    color: #4b5563;
+}
+
+.table-responsive tr:last-child td {
+    border-bottom: none;
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 15px;
+    margin-top: 0;
+}
+
+@media (max-width: 1279px) {
+    .progress-page .main-content,
+    .data-view-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .progress-page .main-content,
+    .data-view-page .main-content { padding: 84px 15px 20px 15px !important; }
+    .progress-page .header-container,
+    .data-view-page .header-container { flex-direction: column; gap: 10px; text-align: center; }
+    .progress-page .header-container img,
+    .data-view-page .header-container img { max-width: 140px; }
+    .progress-page .header-container h1,
+    .data-view-page .header-container h1 { font-size: 2rem; }
+    .progress-page .card,
+    .data-view-page .card { padding: 15px; }
+    .progress-page .btn,
+    .data-view-page .btn { width: 100%; justify-content: center; }
+    
+    .table-responsive table, .table-responsive thead, .table-responsive tbody,
+    .table-responsive th, .table-responsive td, .table-responsive tr { display: block; width: 100%; }
+    .table-responsive thead { display: none; }
+    .table-responsive tbody tr { border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; padding: 10px; }
+    .table-responsive tbody td { 
+        border: none; padding: 8px 0; display: flex; 
+        justify-content: space-between; align-items: center; text-align: right; 
+    }
+    .table-responsive tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #3F3F46;
+        text-align: left;
+    }
+    .table-responsive tbody tr.details-row td {
+        display: block !important;
+        text-align: left !important;
+        padding: 15px !important;
+    }
+    .table-responsive tbody tr.details-row td::before {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-responsive tbody td {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        text-align: left !important;
+        padding: 10px 0 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .table-responsive tbody td::before {
+        margin-bottom: 6px !important;
+    }
+    .progress-bar-container {
+        width: 100% !important;
+    }
+    .progress-page .btn,
+    .data-view-page .btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* ============================================================================
+ * UNIVERSAL MOBILE & TABLET RESPONSIVE OVERRIDES
+ * Guarantees layout & header fit on all screen sizes down to 375x667
+ * ============================================================================ */
+@media (max-width: 1279px) {
+    body .main-content,
+    body[class*="-page"] .main-content,
+    .main-content,
+    .content-container,
+    body .content-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+}
+
+@media (max-width: 768px) {
+    body .main-content,
+    body[class*="-page"] .main-content,
+    .main-content,
+    .content-container,
+    body .content-container {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    .header,
+    body .header,
+    body[class*="-page"] .header,
+    .header-container,
+    body .header-container,
+    body[class*="-page"] .header-container {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 15px 12px !important;
+        margin-bottom: 25px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+    }
+
+    .header-container img,
+    body .header-container img,
+    body[class*="-page"] .header-container img,
+    .header img,
+    body .header img,
+    body[class*="-page"] .header img {
+        max-width: 140px !important;
+        height: auto !important;
+        margin: 0 auto !important;
+    }
+
+    .header-container h1,
+    body .header-container h1,
+    body[class*="-page"] .header-container h1,
+    .header h1,
+    body .header h1,
+    body[class*="-page"] .header h1,
+    .header h2,
+    body .header h2,
+    body[class*="-page"] .header h2,
+    .page-header h1,
+    body .page-header h1,
+    body[class*="-page"] .page-header h1 {
+        font-size: 1.4rem !important;
+        line-height: 1.3 !important;
+        margin: 0 !important;
+        text-align: center !important;
+        word-wrap: break-word !important;
+        overflow-wrap: anywhere !important;
+    }
+}
+
+@media (max-width: 480px) {
+    body .main-content,
+    body[class*="-page"] .main-content,
+    .main-content,
+    .content-container,
+    body .content-container {
+        padding: 12px 10px !important;
+    }
+
+    .header,
+    body .header,
+    body[class*="-page"] .header,
+    .header-container,
+    body .header-container,
+    body[class*="-page"] .header-container {
+        padding: 12px 8px !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .header-container img,
+    body .header-container img,
+    body[class*="-page"] .header-container img,
+    .header img,
+    body .header img,
+    body[class*="-page"] .header img {
+        max-width: 120px !important;
+    }
+
+    .header-container h1,
+    body .header-container h1,
+    body[class*="-page"] .header-container h1,
+    .header h1,
+    body .header h1,
+    body[class*="-page"] .header h1,
+    .header h2,
+    body .header h2,
+    body[class*="-page"] .header h2,
+    .page-header h1,
+    body .page-header h1,
+    body[class*="-page"] .page-header h1 {
+        font-size: 1.2rem !important;
+    }
+}

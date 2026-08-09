@@ -1,12 +1,13 @@
 package com.capstone.adproject.dto;
 
-// This is a new, simple DTO for the randomization input form.
-// Alternatively, you can define it as a static inner class within AdminController (as shown above in AdminController).
-
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 public  class RandomizationInputDto {
-    private int maxStudentsPerGroup; // Renamed for clarity
-    
-    // Add default constructor if needed for Spring binding
+
+    @Min(1)
+    @Max(100)
+    private int maxStudentsPerGroup; 
+
     public RandomizationInputDto() {} 
 
     public int getMaxStudentsPerGroup() { return maxStudentsPerGroup; }

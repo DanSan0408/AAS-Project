@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Self Asssessment Submission</description>
+   <name>TC-15</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>aeb8fe3e-3ea9-4227-956f-2e674594a2b5</testCaseGuid>
+</TestCaseEntity>

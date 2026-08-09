@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Students - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/assign_lecturers.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="assign-lecturer-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <h1>Assign Students</h1>
+            <h2 th:text="${assessment.title}">Assessment Title</h2>
+            <p>Select students and configure whether they are allowed to perform self-assessment, peer assessment, or both when it is open.</p>
+
+            <div th:if="${successMessage}" class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <span th:text="${successMessage}"></span>
+            </div>
+            <div th:if="${errorMessage}" class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${errorMessage}"></span>
+            </div>
+        </div>
+
+        <form th:action="@{/admin/student-assignments/{id}/save(id=${assessment.id})}" method="post">
+            <div class="card mb-4" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                <h3 style="margin-top: 0;">Students In Current Course</h3>
+                <p style="margin: 0 0 15px 0; color: #666;">Configure the evaluation boundaries for students accessing this assessment.</p>
+
+                <div th:if="${#lists.isEmpty(allStudents)}" style="padding: 16px; background: #f8f9fa; border-radius: 8px; color: #666;">
+                    No students found in this course.
+                </div>
+
+                <div th:unless="${#lists.isEmpty(allStudents)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+                    <div th:each="student : ${allStudents}"
+                         style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; flex-direction: column; min-width: 0;">
+                            <strong th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}" style="word-break: break-word; color: #4A0018;">Student Name</strong>
+                            <small th:text="${student.group != null ? student.group.groupName : 'No Group'}" style="color: #666;">No Group</small>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px solid #eee;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95em;">
+                                <input type="checkbox"
+                                       name="selfStudentIds"
+                                       th:value="${student.id}"
+                                       th:checked="${selfAssignedStudentIds.contains(student.id)}">
+                                Assign Self Assessment
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95em;">
+                                <input type="checkbox"
+                                       name="peerStudentIds"
+                                       th:value="${student.id}"
+                                       th:checked="${peerAssignedStudentIds.contains(student.id)}">
+                                Assign Peer Assessment
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.95em;">
+                                <input type="checkbox"
+                                       name="groupStudentIds"
+                                       th:value="${student.id}"
+                                       th:checked="${groupAssignedStudentIds.contains(student.id)}">
+                                Assign Group Assessment
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="submit" class="btn btn-primary" style="background: #f7941d; border-color: #f7941d;">
+                    <i class="fas fa-save"></i> Save Student Assignments
+                </button>
+                <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

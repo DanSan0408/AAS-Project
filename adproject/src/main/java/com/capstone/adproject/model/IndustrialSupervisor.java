@@ -21,14 +21,17 @@ public class IndustrialSupervisor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false) // Added unique constraint for email
+    @Column(unique = true, nullable = false)
     private String email;
     
     private String resetPasswordToken;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isTempPassword = false;
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Secure Logout</description>
+   <name>TC-03</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>a0319264-61d9-4e4d-814b-2d717a6690df</testCaseGuid>
+</TestCaseEntity>

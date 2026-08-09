@@ -1,8 +1,11 @@
 package com.capstone.adproject.controller;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List; // Need Criteria model for type check
-import java.util.Map; // Need Rubric model for type check
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -11,95 +14,1264 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Assessment;
-import com.capstone.adproject.model.Criteria;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Deadline;
-import com.capstone.adproject.model.Rubric; // Crucial import for defining the utilities
+import com.capstone.adproject.model.Mark;
+import com.capstone.adproject.model.Rating;
+import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentAssessmentAssignment;
+import com.capstone.adproject.model.StudentCourseAssignment;
+import com.capstone.adproject.repositories.AssessmentRepository;
+import com.capstone.adproject.repositories.MarkRepository;
+import com.capstone.adproject.repositories.RatingRepository;
+import com.capstone.adproject.repositories.RubricRepository;
+import com.capstone.adproject.repositories.StudentAssessmentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.service.AssessmentCommentService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
+import com.capstone.adproject.service.MarkService;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Controller
 @RequestMapping("/student")
 public class StudentController {
     
-    private final AssessmentService assessmentService; 
-    private final DeadlineService deadlineService;
+    @Autowired
+    private AssessmentService assessmentService;
+    
+    @Autowired
+    private DeadlineService deadlineService;
+    
+    @Autowired
+    private StudentRepository studentRepository;
+    
+    @Autowired
+    private AssessmentRepository assessmentRepository;
+    
+    @Autowired
+    private RubricRepository rubricRepository;
+    
+    @Autowired
+    private RatingRepository ratingRepository;
+    
+    @Autowired
+    private MarkService markService;
+    
+    @Autowired
+    private AssessmentCommentService commentService;
+    
+    @Autowired
+    private MarkRepository markRepository;
 
     @Autowired
-    public StudentController(AssessmentService assessmentService, DeadlineService deadlineService) {
-        this.assessmentService = assessmentService;
-        this.deadlineService = deadlineService;
+    private StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
+
+    @Autowired
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
+
+    private Long resolveCurrentCourseId(Student student) {
+        if (student == null) {
+            return null;
+        }
+
+        if (student.getCourse() != null && student.getCourse().getId() != null) {
+            return student.getCourse().getId();
+        }
+
+        if (student.getGroup() != null && student.getGroup().getCourse() != null && student.getGroup().getCourse().getId() != null) {
+            return student.getGroup().getCourse().getId();
+        }
+
+        List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
+        for (StudentCourseAssignment assignment : assignments) {
+            if (assignment != null && assignment.getCourse() != null && assignment.getCourse().getId() != null) {
+                return assignment.getCourse().getId();
+            }
+        }
+
+        return null;
     }
     
-    @GetMapping("/home")
-    public String studentHome(Model model) {
-        
-        // --- 1. DEFINE UTILITY FUNCTIONS LOCALLY ---
+    private boolean isAssessmentOpen(Assessment assessment) {
+        long nowMillis = System.currentTimeMillis();
+        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId());
 
-        // Function 1: Replaces 'isRubricType.apply(component)'
-        // This function checks if a component is a Rubric (Likert Scale) or a Criteria-based component.
-        // It must handle the incoming object from Thymeleaf's iteration loop.
+        for (Deadline deadline : deadlines) {
+            long openMillis = deadline.getOpenDate() != null ? deadline.getOpenDate().getTime() : 0L;
+            long closeMillis = deadline.getDate().getTime() + 86399999L;
+
+            if (nowMillis >= openMillis && nowMillis <= closeMillis) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private Deadline getAssessmentDeadline(Assessment assessment) {
+        List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId());
+        return deadlines.isEmpty() ? null : deadlines.get(0);
+    }
+
+    private boolean isStudentAssignedToAssessment(Student student, Assessment assessment) {
+        return studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student);
+    }
+
+    private StudentAssessmentAssignment getAssignmentForStudent(Student student, Assessment assessment) {
+        if (assessment == null || student == null) return null;
+        List<StudentAssessmentAssignment> assignments = studentAssessmentAssignmentRepository.findByAssessment(assessment);
+        return assignments.stream()
+            .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private List<Student> getGroupmates(Student student) {
+        if (student == null || student.getGroup() == null || student.getId() == null) {
+            return List.of();
+        }
+
+        List<Student> groupmates = studentRepository.findByGroup(student.getGroup()).stream()
+            .filter(member -> member != null && member.getId() != null && !student.getId().equals(member.getId()))
+            .collect(Collectors.toList());
+        return sortStudentsAlphabetically(groupmates);
+    }
+
+    private Map<Long, Map<Integer, String>> extractRubricComments(Map<String, String> formData, String prefix) {
+    Map<Long, Map<Integer, String>> rubricComments = new HashMap<>();
+    
+    for (Map.Entry<String, String> entry : formData.entrySet()) {
+        String key = entry.getKey();
+        if (key.startsWith(prefix + "rubric_") && key.contains("_comment_")) {
+            try {
+                String suffix = key.substring((prefix + "rubric_").length());
+                String[] parts = suffix.split("_comment_");
+                if (parts.length == 2) {
+                    Long rubricId = Long.parseLong(parts[0]);
+                    Integer commentIndex = Integer.parseInt(parts[1]);
+                    
+                    rubricComments.computeIfAbsent(rubricId, k -> new HashMap<>())
+                        .put(commentIndex, entry.getValue());
+                }
+            } catch (NumberFormatException e) {
+            }
+        }
+    }
+    
+    return rubricComments;
+}
+    
+    private List<Student> sortStudentsAlphabetically(List<Student> students) {
+        if (students == null) return new java.util.ArrayList<>();
+        return students.stream()
+                .sorted((s1, s2) -> {
+                    String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+                    String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+                    return name1.compareToIgnoreCase(name2);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/home")
+    public String studentHome(Model model, Principal principal) {
+        
         Function<Object, Boolean> isRubricType = component -> component instanceof Rubric;
 
-        // Function 2: Replaces 'groupAssessmentComponents.apply(assessment)'
-        // This function groups both Rubric and Criteria lists within an Assessment object.
         Function<Assessment, Map<String, Map<String, List<Object>>>> groupAssessmentComponents = assessment -> {
             
-            // Combine both lists into a single stream of Objects (since they don't share an interface)
-            Stream<Object> combinedComponents = Stream.concat(
-                assessment.getRubrics().stream().map(r -> (Object)r),
-                assessment.getCriteria().stream().map(c -> (Object)c)
-            );
+            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
+            final String DUMMY_KEY = "ASSESSMENT_GROUPING"; 
             
-            // Collect into a list for grouping
+            Stream<Object> combinedComponents = Stream.empty();
+            if (assessment.getRubrics() != null) {
+                combinedComponents = assessment.getRubrics().stream().map(r -> (Object)r);
+            }
+            
             List<Object> components = combinedComponents.collect(Collectors.toList());
 
-            // 1. Group by Evaluation Type (e.g., "Group" or "Individual")
-            // We use a safe accessor here, assuming Rubric/Criteria have getEvaluationType()
-            Map<String, List<Object>> byEvalType = components.stream()
+            Map<String, List<Object>> byAssessType = components.stream()
                 .collect(Collectors.groupingBy(c -> {
                     if (c instanceof Rubric) {
-                        return ((Rubric) c).getEvaluationType();
-                    } else if (c instanceof Criteria) {
-                        return ((Criteria) c).getEvaluationType();
+                        return ((Rubric) c).getAssessmentTypes(); 
                     }
-                    return "Unknown"; // Fallback
+                    return "Unknown";
                 }, LinkedHashMap::new, Collectors.toList()));
 
-            // 2. Group the second level by Assessment Type (e.g., "Peer Assessment")
-            Map<String, Map<String, List<Object>>> finalGroup = new LinkedHashMap<>();
-            
-            byEvalType.forEach((evalType, evalComponents) -> {
-                Map<String, List<Object>> byAssessType = evalComponents.stream()
-                    .collect(Collectors.groupingBy(c -> {
-                        if (c instanceof Rubric) {
-                            return ((Rubric) c).getAssessmentTypes();
-                        } else if (c instanceof Criteria) {
-                            return ((Criteria) c).getAssessmentTypes();
-                        }
-                        return "Unknown"; // Fallback
-                    }, LinkedHashMap::new, Collectors.toList()));
-                
-                finalGroup.put(evalType, byAssessType);
-            });
+            finalGroup.put(DUMMY_KEY, byAssessType);
 
             return finalGroup;
         };
-
-        // --- 2. FETCH DATA ---
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics();
-        model.addAttribute("allAssessments", allAssessments);
         
-        List<Deadline> deadlines = deadlineService.getAllDeadlines();
-        model.addAttribute("deadlines", deadlines);
-
-        // --- 3. EXPOSE UTILITY FUNCTIONS TO THE MODEL ---
-        // This is the crucial step to resolve the template parsing error.
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long currentCourseId = resolveCurrentCourseId(currentStudent);
+        
+        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
+            .filter(a -> currentCourseId != null
+                && a.getCourse() != null
+                && currentCourseId.equals(a.getCourse().getId()))
+            .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
+            .collect(Collectors.toList());
+        List<Deadline> allDeadlines = currentCourseId == null
+            ? List.of()
+            : deadlineService.getDeadlinesByCourseId(currentCourseId);
+        long nowMillis = System.currentTimeMillis();
+        List<Long> assignedAssessmentIds = allAssessments.stream().map(Assessment::getId).collect(Collectors.toList());
+        List<Deadline> studentDeadlines = allDeadlines.stream()
+            .filter(d -> d.getAssessmentId() != null && assignedAssessmentIds.contains(d.getAssessmentId()))
+            .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
+            .collect(Collectors.toList());
+        
+        boolean hasGroup = currentStudent.getGroup() != null;
+        
+        if (hasGroup) {
+            Map<Long, Map<String, Object>> assessmentProgress = new HashMap<>();
+            for (Assessment assessment : allAssessments) { 
+                List<Student> teamMembers = sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
+                Map<String, Object> progress = markService.getAssessmentProgress(currentStudent, assessment, teamMembers);
+                assessmentProgress.put(assessment.getId(), progress);
+            }
+            model.addAttribute("assessmentProgress", assessmentProgress);
+        }
+        
+        Map<Long, Boolean> assessmentAccessMap = new HashMap<>();
+        Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
+        Map<Long, Boolean> selfAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
+        for (Assessment assessment : allAssessments) {
+            boolean isOpen = isAssessmentOpen(assessment);
+            assessmentAccessMap.put(assessment.getId(), isOpen);
+            
+            Deadline deadline = getAssessmentDeadline(assessment);
+            if (deadline != null) {
+                assessmentDeadlineMap.put(assessment.getId(), deadline);
+            }
+            
+            StudentAssessmentAssignment assignment = getAssignmentForStudent(currentStudent, assessment);
+            if (assignment != null) {
+                selfAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getSelfAssessment()));
+                peerAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getPeerAssessment()));
+                groupAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getGroupAssessment()));
+            }
+        }
+        
+        model.addAttribute("allAssessments", allAssessments); 
+        model.addAttribute("currentStudent", currentStudent);
+        model.addAttribute("allDeadlines", allDeadlines); 
+        model.addAttribute("deadlines", studentDeadlines); 
+        model.addAttribute("hasGroup", hasGroup);
+        model.addAttribute("assessmentAccessMap", assessmentAccessMap);
+        model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
+        model.addAttribute("selfAssessmentMap", selfAssessmentMap);
+        model.addAttribute("peerAssessmentMap", peerAssessmentMap);
+        model.addAttribute("groupAssessmentMap", groupAssessmentMap);
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
         model.addAttribute("isRubricType", isRubricType);
         
         return "student_home";
     }
+    
+    @GetMapping("/assessments")
+    public String listAssessments(Model model, Principal principal) {
+        
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long currentCourseId = resolveCurrentCourseId(currentStudent);
+        
+        List<Assessment> assessments = assessmentRepository.findAll().stream()
+            .filter(a -> currentCourseId != null
+                && a.getCourse() != null
+                && currentCourseId.equals(a.getCourse().getId()))
+            .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
+            .collect(Collectors.toList());
+        List<Assessment> peerSelfAssessments = new ArrayList<>();
+        
+        for (Assessment assessment : assessments) {
+            List<Rubric> rubrics = assessment.getRubrics();
+            
+            boolean hasComponents = !rubrics.isEmpty() || 
+                                    (assessment.getIndividualCommentLabels() != null && !assessment.getIndividualCommentLabels().isEmpty()) ||
+                                    (assessment.getGroupCommentLabels() != null && !assessment.getGroupCommentLabels().isEmpty());
+            
+            if (hasComponents && isAssessmentOpen(assessment)) {
+                peerSelfAssessments.add(assessment);
+            }
+        }
+        
+        model.addAttribute("assessments", peerSelfAssessments);
+        model.addAttribute("currentStudent", currentStudent);
+        model.addAttribute("group", currentStudent.getGroup());
+
+        List<Student> teamMembers = currentStudent.getGroup() == null
+            ? List.of()
+            : sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
+        model.addAttribute("teamMembers", teamMembers);
+        
+        Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
+        Map<Long, Boolean> selfAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
+        Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
+        for (Assessment assessment : peerSelfAssessments) {
+            Deadline deadline = getAssessmentDeadline(assessment);
+            if (deadline != null) {
+                assessmentDeadlineMap.put(assessment.getId(), deadline);
+            }
+            
+            StudentAssessmentAssignment assignment = getAssignmentForStudent(currentStudent, assessment);
+            if (assignment != null) {
+                selfAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getSelfAssessment()));
+                peerAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getPeerAssessment()));
+                groupAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getGroupAssessment()));
+            }
+        }
+        model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
+        model.addAttribute("selfAssessmentMap", selfAssessmentMap);
+        model.addAttribute("peerAssessmentMap", peerAssessmentMap);
+        model.addAttribute("groupAssessmentMap", groupAssessmentMap);
+        
+        return "student_assessments";
+    }
+    
+    @GetMapping("/assessment/{assessmentId}/evaluate/{studentId}")
+public String showPeerAssessmentForm(@PathVariable Long assessmentId, 
+                                     @PathVariable Long studentId,
+                                     Model model, 
+                                     Principal principal,
+                                     RedirectAttributes redirectAttributes) {
+    
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isAssessmentOpen(assessment)) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment is not currently open for evaluation.");
+        return "redirect:/student/assessments";
+    }
+
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    Student evaluatedStudent = studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+            
+    boolean isSelfAssessmentCheck = evaluator.getId().equals(evaluatedStudent.getId());
+    if (isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getSelfAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform self-assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getPeerAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform peer assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    if (!evaluator.getId().equals(evaluatedStudent.getId())) {
+        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
+            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+            redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
+            return "redirect:/student/assessments";
+        }
+    }
+    
+    List<Rubric> assessmentRubrics = assessment.getRubrics().stream()
+        .filter(r -> r.getAssessmentTypes() != null && 
+                     !r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+        .collect(Collectors.toList());
+    
+    List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment).stream()
+        .filter(m -> !"Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
+        .collect(Collectors.toList());
+    boolean hasExistingEvaluation = !existingMarks.isEmpty();
+    
+    List<AssessmentComment> existingComments = commentService.getExistingComments(
+        evaluator.getId(),
+        AssessmentComment.EvaluatorType.STUDENT,
+        evaluatedStudent,
+        assessment
+    ).stream()
+    .filter(c -> c.getRubricAssessmentType() == null || 
+                 !c.getRubricAssessmentType().equalsIgnoreCase("Group Assessment"))
+    .filter(c -> c.getRubricId() == null) 
+    .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
+    .collect(Collectors.toList());
+    
+
+    Map<Long, List<AssessmentComment>> existingRubricComments = new HashMap<>();
+    for (Rubric rubric : assessmentRubrics) {
+        if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
+            List<AssessmentComment> rubricCommentsList = commentService.getExistingComments(
+                evaluator.getId(),
+                AssessmentComment.EvaluatorType.STUDENT,
+                evaluatedStudent,
+                assessment
+            ).stream()
+            .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubric.getId()))
+            .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
+            .collect(Collectors.toList());
+            
+            existingRubricComments.put(rubric.getId(), rubricCommentsList);
+        }
+    }
+    
+    Map<Long, Mark> existingRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getRubric() != null && m.getSubRubric() == null)
+            .collect(Collectors.toMap(m -> m.getRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Map<Long, Mark> existingSubRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getSubRubric() != null)
+            .collect(Collectors.toMap(m -> m.getSubRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Deadline deadline = getAssessmentDeadline(assessment);
+    
+    model.addAttribute("assessment", assessment);
+    model.addAttribute("rubrics", assessmentRubrics);
+    model.addAttribute("evaluator", evaluator);
+    model.addAttribute("evaluatedStudent", evaluatedStudent);
+    model.addAttribute("existingRubricMarks", existingRubricMarksMap);
+    model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
+    model.addAttribute("existingComments", existingComments);
+    model.addAttribute("existingRubricComments", existingRubricComments); 
+    model.addAttribute("hasExistingEvaluation", hasExistingEvaluation);
+    model.addAttribute("isSelfAssessment", evaluator.getId().equals(evaluatedStudent.getId()));
+    model.addAttribute("isTeamEvaluation", false);
+    model.addAttribute("deadline", deadline);
+    
+    return "peer_assessment_form";
+}
+
+    
+   @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
+public String submitPeerAssessment(@PathVariable Long assessmentId,
+                                   @PathVariable Long studentId,
+                                   @RequestParam Map<String, String> formData,
+                                   Principal principal,
+                                   RedirectAttributes redirectAttributes) {
+    
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isAssessmentOpen(assessment)) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment has been closed. Submissions are no longer accepted.");
+        return "redirect:/student/assessments";
+    }
+
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    Student evaluatedStudent = studentRepository.findById(studentId)
+            .orElseThrow(() -> new RuntimeException("Evaluated student not found"));
+            
+    boolean isSelfAssessmentCheck = evaluator.getId().equals(evaluatedStudent.getId());
+    if (isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getSelfAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform self-assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!isSelfAssessmentCheck && !Boolean.TRUE.equals(assignment.getPeerAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform peer assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    if (!evaluator.getId().equals(evaluatedStudent.getId())) {
+        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
+            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+            redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
+            return "redirect:/student/assessments";
+        }
+    }
+    
+    List<String> commentTexts = new ArrayList<>();
+    List<String> commentLabels = assessment.getIndividualCommentLabels();
+    
+    if (commentLabels != null && !commentLabels.isEmpty()) {
+        int minLength = assessment.getIndividualCommentMinLength();
+        
+        for (int i = 0; i < commentLabels.size(); i++) {
+            String commentKey = "comment_" + i;
+            String commentText = formData.get(commentKey);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " is required!");
+                return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+            }
+            
+            if (commentText.trim().length() < minLength) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
+                return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+            }
+            
+            commentTexts.add(commentText.trim());
+        }
+    }
+    
+    Map<Long, Map<Integer, String>> rubricComments = extractRubricComments(formData, "");
+    
+    // Delete existing marks
+    List<Mark> existingMarks = markService.getMarksForStudentEvaluation(evaluator, evaluatedStudent, assessment).stream()
+        .filter(m -> !"Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
+        .collect(Collectors.toList());
+    if (!existingMarks.isEmpty()) {
+        markRepository.deleteAll(existingMarks);
+    }
+    
+    List<AssessmentComment> existingRubricComments = commentService.getExistingComments(
+        evaluator.getId(),
+        AssessmentComment.EvaluatorType.STUDENT,
+        evaluatedStudent,
+        assessment
+    ).stream()
+    .filter(c -> c.getRubricId() != null)
+    .collect(Collectors.toList());
+    
+    if (!existingRubricComments.isEmpty()) {
+        commentService.deleteComments(existingRubricComments);
+    }
+    
+    List<Mark> marks = new ArrayList<>();
+    boolean isSelfAssessment = evaluator.getId().equals(evaluatedStudent.getId());
+    String assessmentType = isSelfAssessment ? "Self Assessment" : "Peer Assessment";
+    
+    for (Map.Entry<String, String> entry : formData.entrySet()) {
+        String paramName = entry.getKey();
+        String paramValue = entry.getValue();
+        
+        if (paramName.startsWith("comment_") || 
+            (paramName.startsWith("rubric_") && paramName.contains("_comment_"))) {
+            continue;
+        }
+        
+        try {
+            if (paramName.startsWith("rubric_")) {
+                Long rubricId = Long.parseLong(paramName.substring("rubric_".length()));
+                Long ratingId = Long.parseLong(paramValue);
+                
+                Rubric rubric = rubricRepository.findById(rubricId)
+                        .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                Rating rating = ratingRepository.findById(ratingId)
+                        .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                
+                Mark mark = new Mark();
+                mark.setEvaluatorStudent(evaluator);
+                mark.setEvaluatedStudent(evaluatedStudent);
+                mark.setAssessment(assessment);
+                mark.setRubric(rubric);
+                mark.setSubRubric(null);
+                mark.setRating(rating);
+                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setClo(rubric.getClo());
+                mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setAssessmentType(assessmentType);
+                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                
+                marks.add(mark);
+            }
+            else if (paramName.startsWith("subRubric_")) {
+                Long subRubricId = Long.parseLong(paramName.substring("subRubric_".length()));
+                Long ratingId = Long.parseLong(paramValue);
+                
+                com.capstone.adproject.model.SubRubric subRubric = null;
+                Rubric parentRubric = null;
+                
+                for (Rubric r : assessment.getRubrics()) {
+                    if (r.getSubRubrics() != null) {
+                        for (com.capstone.adproject.model.SubRubric sr : r.getSubRubrics()) {
+                            if (sr.getId().equals(subRubricId)) {
+                                subRubric = sr;
+                                parentRubric = r;
+                                break;
+                            }
+                        }
+                    }
+                    if (subRubric != null) break;
+                }
+                
+                if (subRubric == null) {
+                    throw new RuntimeException("SubRubric not found: " + subRubricId);
+                }
+                
+                Rating rating = ratingRepository.findById(ratingId)
+                        .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                
+                Rubric resolvedParentRubric = parentRubric;
+                if (resolvedParentRubric == null) {
+                    throw new RuntimeException("Parent rubric not found for subRubric: " + subRubricId);
+                }
+
+                Mark mark = new Mark();
+                mark.setEvaluatorStudent(evaluator);
+                mark.setEvaluatedStudent(evaluatedStudent);
+                mark.setAssessment(assessment);
+                mark.setRubric(resolvedParentRubric);
+                mark.setSubRubric(subRubric);
+                mark.setRating(rating);
+                mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                mark.setClo(resolvedParentRubric.getClo() != null ? resolvedParentRubric.getClo() : Integer.valueOf(0));
+                
+                if (resolvedParentRubric.getMarks() != null && 
+                    resolvedParentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                    subRubric.getMarks() != null && 
+                    subRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                    resolvedParentRubric.getCloMarks() != null) {
+                    
+                    double subRubricProportion = subRubric.getMarks()
+                        .divide(resolvedParentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                        .doubleValue();
+                    
+                    double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
+                    
+                    java.math.BigDecimal ratingMarks = rating.getMarks() != null ? rating.getMarks() : java.math.BigDecimal.ZERO;
+                    double achievementProportion = ratingMarks
+                        .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                        .doubleValue();
+                    
+                    double cloMarksAwarded = cloMarksForSubRubric * achievementProportion;
+                    
+                    mark.setCloMarks(cloMarksAwarded);
+                } else {
+                    mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                }
+                
+                mark.setAssessmentType(assessmentType);
+                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                
+                marks.add(mark);
+            }
+        } catch (NumberFormatException e) {
+        }
+    }
+    
+    boolean hasRubrics = assessment.getRubrics().stream()
+        .anyMatch(r -> r.getAssessmentTypes() != null && !r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"));
+        
+    if (hasRubrics && marks.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", 
+            "Please select at least one rating before submitting!");
+        return "redirect:/student/assessment/" + assessmentId + "/evaluate/" + studentId;
+    }
+    
+    markService.saveAllMarks(marks);
+    
+    if (!commentTexts.isEmpty()) {
+        if (isSelfAssessment) {
+            commentService.submitSelfComments(evaluator, assessment, commentTexts);
+        } else {
+            commentService.submitPeerComments(evaluator, evaluatedStudent, assessment, commentTexts);
+        }
+    }
+    
+    if (!rubricComments.isEmpty()) {
+        for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
+            Long rubricId = rubricEntry.getKey();
+            Map<Integer, String> comments = rubricEntry.getValue();
+            
+            Rubric rubric = rubricRepository.findById(rubricId)
+                .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+            
+            for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                Integer commentIndex = commentEntry.getKey();
+                String commentText = commentEntry.getValue();
+                
+                if (commentText == null || commentText.trim().isEmpty()) {
+                    continue;
+                }
+                
+                boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                
+                AssessmentComment comment = new AssessmentComment();
+                comment.setEvaluatorId(evaluator.getId());
+                comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+                comment.setEvaluatorName(evaluator.getEmail());
+                comment.setEvaluatedStudent(evaluatedStudent);
+                comment.setAssessment(assessment);
+                comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
+                comment.setAssessmentType(isSelfAssessment ? 
+                    AssessmentComment.CommentAssessmentType.SELF : 
+                    AssessmentComment.CommentAssessmentType.PEER);
+                comment.setCommentIndex(commentIndex);
+                comment.setRubricAssessmentType("Individual Assessment");
+                comment.setRubricId(rubricId);
+                comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                
+                String anonymousIdentifier = null;
+                
+                if (isSelfAssessment) {
+                    anonymousIdentifier = "You (Self)";
+                } else if (isAnonymous) {
+                    anonymousIdentifier = commentService.getRubricAnonymousIdentifier(
+                        evaluatedStudent, evaluator.getId(), assessment, rubricId, commentIndex);
+                } else {
+                    anonymousIdentifier = evaluator.getEmail();
+                }
+                
+                comment.setAnonymousIdentifier(anonymousIdentifier);
+                
+                commentService.saveComment(comment);
+            }
+        }
+    }
+    
+    redirectAttributes.addFlashAttribute("success", 
+        "Assessment and comments submitted successfully!");
+    return "redirect:/student/assessments";
+}
+    
+    @GetMapping("/assessment/{assessmentId}/team-evaluate")
+public String showTeamEvaluationForm(@PathVariable Long assessmentId,
+                                      Model model,
+                                      Principal principal,
+                                      RedirectAttributes redirectAttributes) {
+    
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isAssessmentOpen(assessment)) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment is not currently open for evaluation.");
+        return "redirect:/student/assessments";
+    }
+
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!Boolean.TRUE.equals(assignment.getGroupAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform team/group assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    List<Student> groupmates = getGroupmates(evaluator);
+    if (groupmates.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student to submit team evaluation.");
+        return "redirect:/student/assessments";
+    }
+
+    Student referencePeer = groupmates.get(0);
+    
+    List<Rubric> groupRubrics = assessment.getRubrics().stream()
+        .filter(r -> r.getAssessmentTypes() != null && 
+                     r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"))
+        .collect(Collectors.toList());
+    
+    if (groupRubrics.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment has no group rubrics configured.");
+        return "redirect:/student/assessments";
+    }
+    
+    List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+        evaluator, referencePeer, assessment).stream()
+        .filter(m -> "Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
+        .collect(Collectors.toList());
+    
+    boolean hasExistingEvaluation = !existingMarks.isEmpty();
+    
+    List<AssessmentComment> existingComments = commentService.getExistingComments(
+        evaluator.getId(),
+        AssessmentComment.EvaluatorType.STUDENT,
+        referencePeer,
+        assessment
+    ).stream()
+    .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+    .filter(c -> c.getRubricId() == null) 
+    .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
+    .collect(Collectors.toList());
+    
+    Map<Long, List<AssessmentComment>> existingRubricComments = new HashMap<>();
+    for (Rubric rubric : groupRubrics) {
+        if (rubric.getRubricCommentCount() != null && rubric.getRubricCommentCount() > 0) {
+            List<AssessmentComment> rubricCommentsList = commentService.getExistingComments(
+                evaluator.getId(),
+                AssessmentComment.EvaluatorType.STUDENT,
+                referencePeer,
+                assessment
+            ).stream()
+            .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubric.getId()))
+            .sorted((c1, c2) -> Integer.compare(c1.getCommentIndex(), c2.getCommentIndex()))
+            .collect(Collectors.toList());
+            
+            existingRubricComments.put(rubric.getId(), rubricCommentsList);
+        }
+    }
+    
+    Map<Long, Mark> existingRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getRubric() != null && m.getSubRubric() == null)
+            .collect(Collectors.toMap(m -> m.getRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Map<Long, Mark> existingSubRubricMarksMap = existingMarks.stream()
+            .filter(m -> m.getSubRubric() != null)
+            .collect(Collectors.toMap(m -> m.getSubRubric().getId(), m -> m, (m1, m2) -> m1));
+    
+    Deadline deadline = getAssessmentDeadline(assessment);
+    
+    model.addAttribute("assessment", assessment);
+    model.addAttribute("rubrics", groupRubrics);
+    model.addAttribute("evaluator", evaluator);
+    model.addAttribute("evaluatedStudent", referencePeer);
+    model.addAttribute("existingRubricMarks", existingRubricMarksMap);
+    model.addAttribute("existingSubRubricMarks", existingSubRubricMarksMap);
+    model.addAttribute("existingComments", existingComments);
+    model.addAttribute("existingRubricComments", existingRubricComments); 
+    model.addAttribute("hasExistingEvaluation", hasExistingEvaluation);
+    model.addAttribute("isTeamEvaluation", true);
+    model.addAttribute("isSelfAssessment", false);
+    model.addAttribute("deadline", deadline);
+    
+    return "peer_assessment_form";
+}
+
+@PostMapping("/assessment/{assessmentId}/team-evaluate/submit")
+public String submitTeamEvaluation(@PathVariable Long assessmentId,
+                                    @RequestParam Map<String, String> formData,
+                                    Principal principal,
+                                    RedirectAttributes redirectAttributes) {
+    
+    String emailOrUsername = principal.getName();
+    Student evaluator = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Assessment assessment = assessmentRepository.findById(assessmentId)
+            .orElseThrow(() -> new RuntimeException("Assessment not found"));
+    
+    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
+        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
+        return "redirect:/student/assessments";
+    }
+
+    if (!isAssessmentOpen(assessment)) {
+        redirectAttributes.addFlashAttribute("error", 
+            "This assessment has been closed. Submissions are no longer accepted.");
+        return "redirect:/student/assessments";
+    }
+
+    StudentAssessmentAssignment assignment = getAssignmentForStudent(evaluator, assessment);
+    if (assignment == null) {
+        redirectAttributes.addFlashAttribute("error", "You are not assigned to this assessment.");
+        return "redirect:/student/assessments";
+    }
+    if (!Boolean.TRUE.equals(assignment.getGroupAssessment())) {
+        redirectAttributes.addFlashAttribute("error", "You are not authorized to perform team/group assessment for this assessment.");
+        return "redirect:/student/assessments";
+    }
+    
+    List<Student> groupmates = getGroupmates(evaluator);
+    if (groupmates.isEmpty()) {
+        redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student.");
+        return "redirect:/student/assessments";
+    }
+    
+    List<String> commentTexts = new ArrayList<>();
+    List<String> commentLabels = assessment.getGroupCommentLabels();
+    
+    if (commentLabels != null && !commentLabels.isEmpty()) {
+        int minLength = assessment.getGroupCommentMinLength();
+        
+        for (int i = 0; i < commentLabels.size(); i++) {
+            String commentKey = "comment_" + i;
+            String commentText = formData.get(commentKey);
+            
+            if (commentText == null || commentText.trim().isEmpty()) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " is required!");
+                return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+            }
+            
+            if (commentText.trim().length() < minLength) {
+                redirectAttributes.addFlashAttribute("error", 
+                    "Comment " + (i + 1) + " must be at least " + minLength + " characters!");
+                return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+            }
+            
+            commentTexts.add(commentText.trim());
+        }
+    }
+    
+    Map<Long, Map<Integer, String>> rubricComments = extractRubricComments(formData, "");
+    
+    for (Student member : groupmates) {
+        List<Mark> existingMarks = markRepository
+            .findByEvaluatorStudentAndEvaluatedStudentAndAssessment(evaluator, member, assessment).stream()
+            .filter(m -> "Group Assessment".equalsIgnoreCase(m.getAssessmentType()))
+            .collect(Collectors.toList());
+        
+        if (!existingMarks.isEmpty()) {
+            markRepository.deleteAll(existingMarks);
+        }
+        
+        List<AssessmentComment> existingRubricComments = commentService.getExistingComments(
+            evaluator.getId(),
+            AssessmentComment.EvaluatorType.STUDENT,
+            member,
+            assessment
+        ).stream()
+        .filter(c -> c.getRubricId() != null && "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+        .collect(Collectors.toList());
+        
+        if (!existingRubricComments.isEmpty()) {
+            commentService.deleteComments(existingRubricComments);
+        }
+    }
+    
+    for (Student member : groupmates) {
+        List<Mark> marks = new ArrayList<>();
+        
+        for (Map.Entry<String, String> entry : formData.entrySet()) {
+            String paramName = entry.getKey();
+            String paramValue = entry.getValue();
+            
+            if (paramName.startsWith("comment_") || 
+                (paramName.startsWith("rubric_") && paramName.contains("_comment_"))) {
+                continue;
+            }
+            
+            try {
+                if (paramName.startsWith("rubric_")) {
+                    Long rubricId = Long.parseLong(paramName.substring("rubric_".length()));
+                    Long ratingId = Long.parseLong(paramValue);
+                    
+                    Rubric rubric = rubricRepository.findById(rubricId)
+                            .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                    Rating rating = ratingRepository.findById(ratingId)
+                            .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                    
+                    Mark mark = new Mark();
+                    mark.setEvaluatorStudent(evaluator);
+                    mark.setEvaluatedStudent(member);
+                    mark.setAssessment(assessment);
+                    mark.setRubric(rubric);
+                    mark.setSubRubric(null);
+                    mark.setRating(rating);
+                    mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    mark.setClo(rubric.getClo());
+                    mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    mark.setAssessmentType("Group Assessment");
+                    mark.setStatus(Mark.SubmissionStatus.FINAL);
+                    
+                    marks.add(mark);
+                }
+                else if (paramName.startsWith("subRubric_")) {
+                    Long subRubricId = Long.parseLong(paramName.substring("subRubric_".length()));
+                    Long ratingId = Long.parseLong(paramValue);
+                    
+                    com.capstone.adproject.model.SubRubric subRubric = null;
+                    Rubric parentRubric = null;
+                    
+                    for (Rubric r : assessment.getRubrics()) {
+                        if (r.getSubRubrics() != null) {
+                            for (com.capstone.adproject.model.SubRubric sr : r.getSubRubrics()) {
+                                if (sr.getId().equals(subRubricId)) {
+                                    subRubric = sr;
+                                    parentRubric = r;
+                                    break;
+                                }
+                            }
+                        }
+                        if (subRubric != null) break;
+                    }
+                    
+                    if (subRubric == null) {
+                        throw new RuntimeException("SubRubric not found: " + subRubricId);
+                    }
+
+                    if (parentRubric == null) {
+                        throw new RuntimeException("Parent rubric not found for subRubric: " + subRubricId);
+                    }
+                    
+                    Rating rating = ratingRepository.findById(ratingId)
+                            .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                    
+                    Rubric resolvedParentRubric = parentRubric;
+
+                    Mark mark = new Mark();
+                    mark.setEvaluatorStudent(evaluator);
+                    mark.setEvaluatedStudent(member);
+                    mark.setAssessment(assessment);
+                    mark.setRubric(resolvedParentRubric);
+                    mark.setSubRubric(subRubric);
+                    mark.setRating(rating);
+                    mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    mark.setClo(resolvedParentRubric.getClo() != null ? resolvedParentRubric.getClo() : Integer.valueOf(0));
+                    
+                    if (resolvedParentRubric.getMarks() != null && 
+                        resolvedParentRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                        subRubric.getMarks() != null && 
+                        subRubric.getMarks().compareTo(java.math.BigDecimal.ZERO) > 0 &&
+                        resolvedParentRubric.getCloMarks() != null) {
+                        
+                        double subRubricProportion = subRubric.getMarks()
+                            .divide(resolvedParentRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                            .doubleValue();
+                        
+                        double cloMarksForSubRubric = resolvedParentRubric.getCloMarks() * subRubricProportion;
+                        
+                        java.math.BigDecimal ratingMarks = rating.getMarks() != null ? rating.getMarks() : java.math.BigDecimal.ZERO;
+                        double achievementProportion = ratingMarks
+                            .divide(subRubric.getMarks(), 4, java.math.RoundingMode.HALF_UP)
+                            .doubleValue();
+                        
+                        double cloMarksAwarded = cloMarksForSubRubric * achievementProportion;
+                        
+                        mark.setCloMarks(cloMarksAwarded);
+                    } else {
+                        mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                    }
+                    
+                    mark.setAssessmentType("Group Assessment");
+                    mark.setStatus(Mark.SubmissionStatus.FINAL);
+                    
+                    marks.add(mark);
+                }
+            } catch (NumberFormatException e) {
+            }
+        }
+        
+        if (!marks.isEmpty()) {
+            markService.saveAllMarks(marks);
+        }
+
+        if (!commentTexts.isEmpty()) {
+            commentService.submitPeerComments(evaluator, member, assessment, commentTexts);
+        }
+    }
+
+    if (!rubricComments.isEmpty()) {
+        for (Student member : groupmates) {
+            for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
+                Long rubricId = rubricEntry.getKey();
+                Map<Integer, String> comments = rubricEntry.getValue();
+                
+                Rubric rubric = rubricRepository.findById(rubricId)
+                    .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                
+                for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
+                    Integer commentIndex = commentEntry.getKey();
+                    String commentText = commentEntry.getValue();
+                    
+                    if (commentText == null || commentText.trim().isEmpty()) {
+                        continue;
+                    }
+                    
+                    AssessmentComment comment = new AssessmentComment();
+                    comment.setEvaluatorId(evaluator.getId());
+                    comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+                    comment.setEvaluatorName(evaluator.getEmail());
+                    comment.setEvaluatedStudent(member);
+                    comment.setAssessment(assessment);
+                    comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
+                    comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
+                    comment.setCommentIndex(commentIndex);
+                    comment.setRubricAssessmentType("Group Assessment");
+                    comment.setRubricId(rubricId);
+                    comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
+                    
+                    boolean isAnonymous = rubric.isRubricCommentAnonymous(commentIndex);
+                    
+                    if (isAnonymous) {
+                        comment.setAnonymousIdentifier(commentService.getRubricAnonymousIdentifier(
+                            member,
+                            evaluator.getId(),
+                            assessment,
+                            rubricId,
+                            commentIndex
+                        ));
+                    } else {
+                        comment.setAnonymousIdentifier(evaluator.getEmail());
+                    }
+                    
+                    commentService.saveComment(comment);
+                }
+            }
+        }
+    }
+    
+    redirectAttributes.addFlashAttribute("success", 
+        "Team evaluation submitted successfully! All groupmates received the same marks.");
+    return "redirect:/student/assessments";
+}
+    
+   @GetMapping("/comments")
+public String viewMyComments(Model model, Principal principal) {
+    
+    String emailOrUsername = principal.getName();
+    Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+        .or(() -> studentRepository.findByUsername(emailOrUsername))
+        .orElseThrow(() -> new RuntimeException("Student not found"));
+    
+    Map<String, Object> commentsData = commentService.getCompiledCommentsForStudent(currentStudent);
+    
+    @SuppressWarnings("unchecked")
+    Map<String, Map<String, List<AssessmentComment>>> commentsByAssessment = 
+        (Map<String, Map<String, List<AssessmentComment>>>) commentsData.get("commentsByAssessment");
+    
+    if (commentsByAssessment != null) {
+        for (Map.Entry<String, Map<String, List<AssessmentComment>>> assessmentEntry : commentsByAssessment.entrySet()) {
+            for (Map.Entry<String, List<AssessmentComment>> categoryEntry : assessmentEntry.getValue().entrySet()) {
+                for (AssessmentComment comment : categoryEntry.getValue()) {
+                    setCommentDisplayName(comment, currentStudent);
+                }
+            }
+        }
+    }
+    
+    Integer totalComments = (Integer) commentsData.get("totalComments");
+    
+    int peerCommentCount = 0;
+    int lecturerCommentCount = 0;
+    int supervisorCommentCount = 0;
+    
+    if (commentsByAssessment != null) {
+        for (Map<String, List<AssessmentComment>> assessmentComments : commentsByAssessment.values()) {
+            peerCommentCount += assessmentComments.getOrDefault("peer", List.of()).size();
+            lecturerCommentCount += assessmentComments.getOrDefault("lecturer", List.of()).size();
+            supervisorCommentCount += assessmentComments.getOrDefault("supervisor", List.of()).size();
+        }
+    }
+    
+    model.addAttribute("commentsByAssessment", commentsByAssessment);
+    model.addAttribute("totalComments", totalComments);
+    model.addAttribute("peerCommentCount", peerCommentCount);
+    model.addAttribute("lecturerCommentCount", lecturerCommentCount);
+    model.addAttribute("supervisorCommentCount", supervisorCommentCount);
+    model.addAttribute("currentStudent", currentStudent);
+    
+    return "student_comments";
+}
+    
+    @GetMapping("/assessment/{assessmentId}/results")
+    public String viewAssessmentResults(@PathVariable Long assessmentId,
+                                             Model model,
+                                             Principal principal) {
+        
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+            .or(() -> studentRepository.findByUsername(emailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        Assessment assessment = assessmentRepository.findById(assessmentId)
+                .orElseThrow(() -> new RuntimeException("Assessment not found"));
+        
+        if (currentStudent.getCourse() == null || assessment.getCourse() == null ||
+            !currentStudent.getCourse().getId().equals(assessment.getCourse().getId())) {
+            return "redirect:/student/home";
+        }
+        
+        List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(currentStudent, assessment);
+        
+        Map<Rubric, Double> averageScores = receivedMarks.stream()
+                .filter(m -> m.getRubric() != null)
+                .collect(Collectors.groupingBy(Mark::getRubric,
+                        Collectors.averagingDouble(Mark::getMarkValue)));
+        
+        Double totalMarks = markService.calculateTotalMarks(currentStudent, assessment);
+        Map<Integer, Double> cloMarks = markService.calculateCloMarks(currentStudent, assessment);
+        
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("receivedMarks", receivedMarks);
+        model.addAttribute("averageScores", averageScores);
+        model.addAttribute("totalMarks", totalMarks);
+        model.addAttribute("cloMarks", cloMarks);
+        model.addAttribute("currentStudent", currentStudent);
+        
+        return "assessment_results";
+    }
+
+   private void setCommentDisplayName(AssessmentComment comment, Student viewingStudent) {
+    String anonymousId = comment.getAnonymousIdentifier();
+    
+    // For lecturers and supervisors
+    if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER || 
+        comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
+        
+        if ("Lecturer".equals(anonymousId) || "Assessor".equals(anonymousId) || "Supervisor".equals(anonymousId)) {
+            comment.setDisplayName("Lecturer".equals(anonymousId) ? "Assessor" : anonymousId);
+            return;
+        }
+        
+        comment.setDisplayName(comment.getEvaluatorName() != null ? 
+            comment.getEvaluatorName() : 
+            (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER ? "Assessor" : "Supervisor"));
+        return;
+    }
+    
+    if (anonymousId != null && !anonymousId.isEmpty()) {
+        comment.setDisplayName(anonymousId);
+    } else {
+        comment.setDisplayName("Anonymous");
+    }
+}
+
+private void setRealName(AssessmentComment comment) {
+    if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.STUDENT) {
+        Student evaluatorStudent = studentRepository.findById(comment.getEvaluatorId()).orElse(null);
+        if (evaluatorStudent != null) {
+            comment.setDisplayName(evaluatorStudent.getEmail());
+        } else {
+            comment.setDisplayName("Unknown Student");
+        }
+    } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
+        comment.setDisplayName(comment.getEvaluatorName() != null ? 
+            comment.getEvaluatorName() : "Assessor");
+    } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
+        comment.setDisplayName(comment.getEvaluatorName() != null ? 
+            comment.getEvaluatorName() : "Supervisor");
+    } else {
+        comment.setDisplayName("Unknown");
+    }
+}
 }

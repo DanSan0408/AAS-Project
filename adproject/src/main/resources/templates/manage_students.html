@@ -6,14 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Students</title>
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/manage_students.css}">
 </head>
-<body>
+<body class="manage-users-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <div class="header-container">
-            <img th:src="@{/images/utmlogo.png}" alt="UTM Logo"/>
-            <h1>UTM CAS</h1>
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
         </div>
         
         <div class="card">
@@ -24,8 +27,8 @@
             <div class="user-editing-container">
                 <div class="user-editing-sidebar">
                     <a href="/admin/manage-students" class="active">Students</a>
-                    <a href="/admin/manage-lecturers">Lecturers</a>
-                    <a href="/admin/manage-supervisors">Industrial Supervisors</a>
+                    <a href="/admin/manage-lecturers">Assessors</a>
+                    <!--<a href="/admin/manage-supervisors" class="active">Industrial Supervisors</a>-->
                     <a href="/admin/group-assignment">Group Assignment</a>
                 </div>
                 
@@ -38,52 +41,153 @@
                     <div th:if="${successMessage}" class="alert alert-success">
                         <p th:text="${successMessage}">Success Message Placeholder</p>
                     </div>
+                    <div th:if="${duplicateWarning}" class="alert alert-warning">
+                        <p th:text="${duplicateWarning}">Duplicate Warning</p>
+                    </div>
 
                     <div class="add-form-container">
+                        
                         <h3 th:text="${student.id != null ? 'Update Student' : 'Add New Student'}">Add New Student</h3>
-                        <form th:action="@{/admin/manage-students}" th:object="${student}" method="post">
+                        
+                        <div th:if="${student.id == null}" class="info-box" style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                            <p style="margin: 0; color: #2c3e50;">
+                                <strong>📧 Email-Based Account Creation</strong><br/>
+                                Simply enter the student's email address. A secure temporary password will be automatically generated and sent to them via email with instructions to set their own password.
+                            </p>
+                        </div>
+                        
+                        <form id="studentForm" th:action="@{/admin/manage-students}" th:object="${student}" method="post">
                             <input type="hidden" th:field="*{id}" />
+                            <input type="hidden" name="confirmDuplicate" id="confirmDuplicate" value="false" />
 
-                            <label for="username">Username</label>
-                            <input type="text" id="username" th:field="*{username}" required>
-                            
-                            <label for="password">Password</label>
-                            <input type="password" id="password" th:field="*{password}">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" th:field="*{email}" required 
+                                   placeholder="student@example.com">
 
-                            <label for="email">Email</label>
-                            <input type="email" id="email" th:field="*{email}" required>
+                            <label for="username">Name / Username <span style="font-weight: normal; color: #666;" th:text="${student.id != null ? '(editable)' : '(optional)'}">(optional)</span></label>
+                            <input type="text" id="username" th:field="*{username}" 
+                                   placeholder="e.g. john.doe (leave blank to auto-generate)">
                             
-                            <button type="submit" th:text="${student.id != null ? 'Update Student' : 'Add Student'}">Add Student</button>
+                            <button type="submit" id="submitButton" 
+                                    th:text="${student.id != null ? 'Update Student' : 'Add Student'}">
+                                Add Student
+                            </button>
+                            
+                            <a th:if="${student.id != null}" th:href="@{/admin/manage-students}" 
+                               class="btn-cancel" style="display: inline-block; margin-left: 10px; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">
+                               Cancel
+                            </a>
                         </form>
                     </div>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="student : ${students}">
-                                <td th:text="${student.id}"></td>
-                                <td th:text="${student.username}"></td>
-                                <td th:text="${student.email}"></td>
-                                <td>
-                                    <div class="table-actions">
-                                        <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
-                                        <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" class="action-button delete">Delete</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Bulk Add Students -->
+                    <div class="add-form-container" th:if="${student.id == null}" style="margin-top: 30px; border-top: 2px solid #f0f0f0; padding-top: 20px;">
+                        <h3>Bulk Add Students</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                            Add one user per row. Email is required; Name/Username is optional. You can paste directly from Excel (Email in column 1, Name in column 2).
+                        </p>
+                        <form id="bulkStudentsForm" th:action="@{/admin/bulk-add-students}" method="post">
+                            <div style="overflow-x: auto; margin-bottom: 12px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Email Address *</th>
+                                            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Name / Username (Optional)</th>
+                                            <th style="width: 90px; text-align: center; padding: 8px; border-bottom: 1px solid #ddd;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulkStudentsRows"></tbody>
+                                </table>
+                            </div>
+                            <button type="button" id="addStudentRowBtn" class="action-button" style="width: auto; padding: 8px 16px; margin-right: 8px;">
+                                Add Row
+                            </button>
+                            <button type="submit" class="action-button promote" style="width: auto; padding: 10px 25px;">
+                                Bulk Add Students
+                            </button>
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        </form>
+                    </div>
+
+                    <form th:action="@{/admin/bulk-delete-students}" method="post" id="bulkDeleteForm"
+                          data-action="confirm-submit"
+                          data-confirm-message="Are you sure you want to delete the selected students? This cannot be undone.">
+                        <div class="header-actions">
+                            <h3>Existing Students</h3>
+                            <button type="submit" class="action-button delete" style="padding: 8px 15px; font-size: 0.9em;">
+                                Delete Selected
+                            </button>
+                        </div>
+
+                        <div class="table-scroll">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px; text-align: center;">
+                                            <input type="checkbox" id="selectAll" data-action="toggle-select-all" data-target-selector=".user-checkbox">
+                                        </th>
+                                        <th>ID</th>
+                                        <th>Email</th>
+                                        <th>Name / Username</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="student : ${students}">
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" name="ids" th:value="${student.id}" class="user-checkbox">
+                                        </td>
+                                        <td th:text="${student.id}"></td>
+                                        <td th:text="${student.email}"></td>
+                                        <td th:text="${student.username}"></td>
+                                        <td>
+                                            <div class="table-actions">
+                                                <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
+                                                <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" 
+                                                   class="action-button delete"
+                                                   data-action="confirm-link" data-confirm-message="Are you sure you want to delete this student? This action cannot be undone.">
+                                                   Delete
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-
-    
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:attr="nonce=${cspNonce}" th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDuplicate = /*[[${isDuplicate}]]*/ false;
+            
+            if (isDuplicate) {
+                const form = document.getElementById('studentForm');
+                const submitButton = document.getElementById('submitButton');
+                const confirmInput = document.getElementById('confirmDuplicate');
+                const duplicateWarning = /*[[${duplicateWarning}]]*/ '';
+                
+                submitButton.textContent = 'Confirm and Save Anyway';
+                submitButton.classList.add('btn-confirm', 'glow-effect');
+                
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const confirmed = confirm(duplicateWarning + "\n\nDo you want to save this user anyway?");
+                    
+                    if (confirmed) {
+                        confirmInput.value = 'true';
+                        form.submit();
+                    } else {
+                        submitButton.textContent = /*[[${student.id != null ? 'Update Student' : 'Add Student'}]]*/ 'Add Student';
+                        submitButton.classList.remove('btn-confirm', 'glow-effect');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

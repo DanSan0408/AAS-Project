@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Student - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_select.css}">
+</head>
+<body class="lecturer-page">
+
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <div class="content-flex-container">
+            <div class="selection-container">
+                <div class="dashboard-header">
+                    <h2 th:text="${assessment.title}">Assessment Title</h2>
+                    <p class="subtitle">Select a student below to begin or continue your evaluation.</p>
+                    <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
+                         style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5; color: #1f2937; white-space: pre-line;">
+                        <strong style="display: block; margin-bottom: 4px; color: #065f46;">Admin Notes</strong>
+                        <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
+                    </div>
+                </div>
+
+                <div class="alert-container">
+                    <div th:if="${errorMessage}" class="alert alert-error">
+                        <span class="icon">✖</span> <span th:text="${errorMessage}">Error</span>
+                    </div>
+                    <div th:if="${successMessage}" class="alert alert-success">
+                        <span class="icon">✓</span> <span th:text="${successMessage}">Success</span>
+                    </div>
+                </div>
+
+                <div class="students-list" style="margin-top: 20px; display: flex; flex-direction: column;">
+                    <div th:each="student : ${assignedStudents}" class="list-item-card" th:attr="data-name=${student.username}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
+
+                        <div class="list-item-info" style="flex: 1; min-width: 250px;">
+                            <h3 th:text="${student.username}" style="margin: 0 0 8px 0; color: #4A0018; font-size: 1.1rem;">Student Name</h3>
+                            <div style="color: #6B7280; font-size: 0.95rem;">
+                                <span style="font-weight: 500;">Group:</span> 
+                                <span th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
+                            </div>
+                        </div>
+
+                        <div class="list-item-status" style="width: 150px; text-align: center;">
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}" class="badge badge-completed">Completed</span>
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}" class="badge badge-progress">In Progress</span>
+                            <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}" class="badge badge-pending">Not Started</span>
+                        </div>
+
+                        <div class="list-item-action" style="width: 200px; text-align: right;">
+                            <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, studentId=${student.id})}"
+                               class="btn-action" 
+                               style="position: static; display: block; text-align: center; width: 100%; box-sizing: border-box; border-radius: 6px; margin: 0;">
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'completed'}">Review Evaluation</span>
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'in_progress'}">Continue</span>
+                                <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}">Start Evaluation</span>
+                            </a>
+                        </div>
+
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(assignedStudents)}" style="text-align: center; padding: 40px; color: #6B7280; background: white; border-radius: 8px; border: 1px solid #E5E7EB;">
+                        <p style="margin: 0; font-size: 1.1rem;">No students assigned.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

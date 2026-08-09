@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <link rel="stylesheet" th:href="@{/css/supervisor_sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <th:block th:fragment="sidebar">
+    <button type="button" class="sidebar-toggle" aria-label="Toggle navigation menu" aria-expanded="false">☰</button>
+    <div class="sidebar-overlay" aria-hidden="true"></div>
+    <div class="sidebar">
+        <div class="logo">
+            <h2>IAMS</h2>
+        </div>
+        
+        <div class="user-profile">
+            <span sec:authentication="name"></span>
+        </div>
+        
+        <ul class="menu-list">
+            <li>
+                <a th:href="@{/supervisor/home}">
+                    Dashboard
+                </a>
+            </li>
+            
+            <li>
+                <a th:href="@{/supervisor/evaluate}">
+                    Evaluate Groups
+                </a>
+            </li>
+
+            <li sec:authorize="hasRole('ROLE_ADMIN')">
+                <a th:href="@{/admin/home}" class="switch-role-btn">Switch to Admin</a>
+            </li>
+
+            <li sec:authorize="hasRole('ROLE_LECTURER')">
+                <a th:href="@{/lecturer/home}" class="switch-role-btn">Switch to Assessor</a>
+            </li>
+            
+            <li class="logout-item">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="logout-btn">
+                        Logout
+                    </button>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                </form>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        (function() {
+            var body = document.body;
+            var sidebarToggle = document.querySelector('.sidebar-toggle');
+            var sidebarOverlay = document.querySelector('.sidebar-overlay');
+            var lastScrollY = 0;
+
+            function lockBodyScroll() {
+                lastScrollY = window.scrollY || window.pageYOffset || 0;
+                body.style.position = 'fixed';
+                body.style.top = '-' + lastScrollY + 'px';
+                body.style.left = '0';
+                body.style.right = '0';
+                body.style.width = '100%';
+            }
+
+            function unlockBodyScroll() {
+                body.style.position = '';
+                body.style.top = '';
+                body.style.left = '';
+                body.style.right = '';
+                body.style.width = '';
+                window.scrollTo(0, lastScrollY);
+            }
+
+            function closeSidebar() {
+                body.classList.remove('sidebar-open');
+                unlockBodyScroll();
+                if (sidebarToggle) {
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                }
+            }
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    var willOpen = !body.classList.contains('sidebar-open');
+                    body.classList.toggle('sidebar-open');
+                    if (willOpen) {
+                        lockBodyScroll();
+                    } else {
+                        unlockBodyScroll();
+                    }
+                    sidebarToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 1279) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>
+    </th:block>
+</body>
+</html>

@@ -1,15 +1,31 @@
 package com.capstone.adproject.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+@FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
-@Table(name = "project_group")
+@Table(name = "project_group", indexes = {
+    @Index(name = "idx_group_course", columnList = "course_id"),
+    @Index(name = "idx_group_academic_sup", columnList = "academic_supervisor_id"),
+    @Index(name = "idx_group_industrial_sup", columnList = "industrial_supervisor_id")
+})
+
 public class Group {
 
     @Id
@@ -17,7 +33,7 @@ public class Group {
     private Long id;
 
     private String groupName;
-    private int groupSize; // Optional, to store the desired size if needed, but the actual size is determined by students.size()
+    private int groupSize;
 
     @ManyToOne
     @JoinColumn(name = "academic_supervisor_id")
@@ -25,20 +41,29 @@ public class Group {
 
     @ManyToOne
     @JoinColumn(name = "industrial_supervisor_id")
-    private IndustrialSupervisor industrialSupervisor;
+    private Lecturer industrialSupervisor;
 
-    // You can define the relationship to students here, or just use the mappedBy attribute in Student
-    // @OneToMany(mappedBy = "group")
-    // private List<Student> students; 
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course;
 
-    // Constructors
+    @OneToMany(mappedBy = "group")
+    private List<Student> students = new ArrayList<>(); 
+
+    public List<Student> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<Student> students) {
+        this.students = students;
+
+    }
+
     public Group() {}
 
     public Group(String groupName) {
         this.groupName = groupName;
     }
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -64,12 +89,20 @@ public class Group {
         this.academicSupervisor = academicSupervisor;
     }
 
-    public IndustrialSupervisor getIndustrialSupervisor() {
+    public Lecturer getIndustrialSupervisor() {
         return industrialSupervisor;
     }
 
-    public void setIndustrialSupervisor(IndustrialSupervisor industrialSupervisor) {
+    public void setIndustrialSupervisor(Lecturer industrialSupervisor) {
         this.industrialSupervisor = industrialSupervisor;
+    }
+
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
     }
 
     public int getGroupSize() {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>User Login with Invalid Credentials</description>
+   <name>TC-02</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>433fd5e4-b7bf-499e-88b8-e49cd78aaeee</testCaseGuid>
+</TestCaseEntity>

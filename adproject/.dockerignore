@@ -1,0 +1,10 @@
+target/
+logs/
+.git/
+.gitignore
+.idea/
+.vscode/
+README.md
+SQLQuery1.sql
+**/node_modules/
+**/.DS_Store

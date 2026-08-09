@@ -4,11 +4,12 @@
             "type": "java",
             "name": "Spring Boot-AdprojectApplication<adproject>",
             "request": "launch",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/adproject",
             "mainClass": "com.capstone.adproject.AdprojectApplication",
             "projectName": "adproject",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "vmArgs": "-Dspring.profiles.active=dev -Dspring.application.admin.enabled=true -Dspring.jmx.enabled=true -Dspring.devtools.restart.enabled=false -Dspring.devtools.livereload.enabled=false",
+            "envFile": "${workspaceFolder}/adproject/.env"
         }
     ]
 }

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configure [[${configType == 'group' ? 'Group' : 'Individual'}]] Comments - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/comment.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="comment-config-page">
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        
+        <div class="page-header">
+            <h1 th:text="${'Configure ' + (configType == 'group' ? 'Group' : 'Individual') + ' Comments'}">Configure Comments</h1>
+            <p th:text="${assessment.title}">Assessment Title</p>
+        </div>
+        
+        <div class="config-container">
+            <form th:action="@{/admin/comment-config/{id}/{type}/save(id=${assessment.id}, type=${configType})}" method="post" id="commentConfigForm">
+                
+                <div class="section-header" th:classappend="${configType == 'group' ? 'group-type' : 'individual-type'}">
+                    <h2 th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Feedback Questions'}">Questions</h2>
+                    <p>Add questions students must answer when evaluating this component.</p>
+                </div>
+
+                <div id="commentsContainer" class="comments-list">
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <p>No comment questions defined yet.</p>
+                    </div>
+
+                    <div th:if="${configType == 'group'}">
+                        <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
+                            <div class="comment-header">
+                                <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
+                                <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Question Prompt</label>
+                                <textarea name="commentLabels" required placeholder="e.g. What were the strengths?" th:text="${label}"></textarea>
+                            </div>
+
+                            <div class="settings-row">
+                                <div class="form-group setting-input">
+                                    <label>Min Characters</label>
+                                    <input type="number" name="commentMinLengths" th:value="${assessment.getGroupCommentMinLength(iterStat.index)}" min="10" max="500">
+                                </div>
+
+                                <div class="form-group setting-check">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isGroupCommentAnonymous(iterStat.index)}">
+                                        <span class="toggle-text">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${configType == 'individual'}">
+                        <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
+                            <div class="comment-header">
+                                <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
+                                <button type="button" class="btn-icon-remove" data-action="remove-comment-item"><i class="fas fa-times"></i></button>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Question Prompt</label>
+                                <textarea name="commentLabels" required placeholder="e.g. What were the strengths?" th:text="${label}"></textarea>
+                            </div>
+
+                            <div class="settings-row">
+                                <div class="form-group setting-input">
+                                    <label>Min Characters</label>
+                                    <input type="number" name="commentMinLengths" th:value="${assessment.getIndividualCommentMinLength(iterStat.index)}" min="10" max="500">
+                                </div>
+
+                                <div class="form-group setting-check">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isIndividualCommentAnonymous(iterStat.index)}">
+                                        <span class="toggle-text">
+                                            <i class="fas fa-user-secret"></i> Anonymous
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="add-action">
+                    <button type="button" id="addCommentBtn" class="btn btn-add">
+                        <i class="fas fa-plus-circle"></i> Add Question
+                    </button>
+                </div>
+                
+                <div class="sticky-footer">
+                    <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:src="@{/js/comment-config.js}" th:attr="nonce=${cspNonce}"></script>
+</body>
+</html>

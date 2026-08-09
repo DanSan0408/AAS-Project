@@ -1,17 +1,31 @@
 package com.capstone.adproject.model;
 
+import org.hibernate.annotations.Filter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
 @Entity
-@Table(name = "lecturer")
+@Table(name = "lecturer", indexes = {
+    @Index(name = "idx_lecturer_course", columnList = "course_id"),
+    @Index(name = "idx_lecturer_email_course", columnList = "email,course_id", unique = true),
+    @Index(name = "idx_lecturer_username", columnList = "username", unique = true)
+}, uniqueConstraints = @UniqueConstraint(name = "uk_lecturer_email_course", columnNames = {"email", "course_id"}))
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,14 +35,25 @@ public class Lecturer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @NotBlank
+    @Column(unique = true, nullable = true)
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false) // Added unique constraint for email
+    @NotBlank
+    @Email
+    @Column(nullable = false)
     private String email;
     
     private String resetPasswordToken;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isTempPassword = false;
+
+    private String roles; // Added for multi-role support
+    @ManyToOne
+    @JoinColumn(name = "course_id")
+    private Course course; // Added for multi-course support
 }

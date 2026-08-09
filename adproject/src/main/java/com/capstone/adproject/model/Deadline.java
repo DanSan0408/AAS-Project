@@ -6,18 +6,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "deadlines")
+@Table(name = "deadlines", indexes = {
+    @Index(name = "idx_deadline_assessment_assessor", columnList = "assessmentId, assessorType"),
+    @Index(name = "idx_deadline_course", columnList = "courseId")
+})
+
 public class Deadline {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
     private Date date;
+    private Long assessmentId; 
+private String assessorType; 
+private Date openDate;
+private Long courseId;
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -41,4 +49,36 @@ public class Deadline {
     public void setDate(Date date) {
         this.date = date;
     }
+
+    public Long getAssessmentId() {
+    return assessmentId;
+}
+
+public void setAssessmentId(Long assessmentId) {
+    this.assessmentId = assessmentId;
+}
+
+public String getAssessorType() {
+    return assessorType;
+}
+
+public void setAssessorType(String assessorType) {
+    this.assessorType = assessorType;
+}
+
+public Date getOpenDate() {
+    return openDate;
+}
+
+public void setOpenDate(Date openDate) {
+    this.openDate = openDate;
+}
+
+public Long getCourseId() {
+    return courseId;
+}
+
+public void setCourseId(Long courseId) {
+    this.courseId = courseId;
+}
 }

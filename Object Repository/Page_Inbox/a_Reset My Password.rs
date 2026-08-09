@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebElementEntity>
+   <description></description>
+   <name>a_Reset My Password</name>
+   <tag></tag>
+   <elementGuidId>7988b55e-79b5-4862-8680-708a86a30b7b</elementGuidId>
+   <selectorCollection>
+      <entry>
+         <key>XPATH</key>
+         <value>//a</value>
+      </entry>
+      <entry>
+         <key>CSS</key>
+         <value>a</value>
+      </entry>
+   </selectorCollection>
+   <selectorMethod>XPATH</selectorMethod>
+   <smartLocatorCollection>
+      <entry>
+         <key>SMART_LOCATOR</key>
+         <value>internal:role=link[name=&quot;Reset My Password&quot;i]</value>
+      </entry>
+   </smartLocatorCollection>
+   <smartLocatorEnabled>false</smartLocatorEnabled>
+   <useRalativeImagePath>true</useRalativeImagePath>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>tag</name>
+      <type>Main</type>
+      <value>a</value>
+      <webElementGuid>9df1ff34-eeb6-495b-978f-5bcec2ce7a8a</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>href</name>
+      <type>Main</type>
+      <value>https://bbagcbcj.r.af.d.sendibt2.com/tr/cl/vN25DroXB7hePslIMFw9jyS9_D0MTpwde4_NSCId1XlsTrLDCarHTFG7SXDkFzsCrDIRFfE-E0wiPfUGxjIKbGxbMSZodonTA63tEk2tLRnJQ6VVO4eq8b7GOnZW6AQuCy5l3sxbRL9vZbUFJdUK-wR8KwdB7cy0MgHKVprCGTbMr7m9lPyl0ouMMEVltEtakQxaSUWEYy0aWk0zh8MS_TTlIYEjTL64h8yqtp0aJipQLoUjOysJFFEtH5wJ3C_DCNNF1HxffvcIVG2OuVwSBD1YFGE7HF7scvVALd6I-nuJnGn2aUnlKosxPgpEH01FXkFulm5jTbgILZ3bpI1_rO0B61hszYSZx3pJnh2o</value>
+      <webElementGuid>a80d6e06-a6d8-4dc0-9a65-bfbbfde7783c</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>text</name>
+      <type>Main</type>
+      <value>Reset My Password</value>
+      <webElementGuid>428218f1-511c-409d-9d02-3b15a41c0707</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>parent</name>
+      <type>Main</type>
+      <value>md5.v1-336e16b7c7d0f9dc45f25024f3a40ede</value>
+      <webElementGuid>5298b4c2-6c64-49ba-92d3-afb691ccce89</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath</name>
+      <type>Main</type>
+      <value>//a</value>
+      <webElementGuid>2e93a5eb-9e45-4c18-bf8e-cbb9e9bf8641</webElementGuid>
+   </webElementProperties>
+   <webElementProperties>
+      <isSelected>true</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>ref_element</name>
+      <type>Main</type>
+      <value>Object Repository/Page_Inbox/iframe_ifmail</value>
+      <webElementGuid>5b1500c8-3c50-49eb-ac0b-b14e51c00194</webElementGuid>
+   </webElementProperties>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:attributes</name>
+      <type>Main</type>
+      <value>//a</value>
+      <webElementGuid>3f152d54-7391-429e-a62a-cdc14e287014</webElementGuid>
+   </webElementXpaths>
+   <webElementXpaths>
+      <isSelected>false</isSelected>
+      <matchCondition>equals</matchCondition>
+      <name>xpath:customAttributes</name>
+      <type>Main</type>
+      <value>//a[@href = 'https://bbagcbcj.r.af.d.sendibt2.com/tr/cl/vN25DroXB7hePslIMFw9jyS9_D0MTpwde4_NSCId1XlsTrLDCarHTFG7SXDkFzsCrDIRFfE-E0wiPfUGxjIKbGxbMSZodonTA63tEk2tLRnJQ6VVO4eq8b7GOnZW6AQuCy5l3sxbRL9vZbUFJdUK-wR8KwdB7cy0MgHKVprCGTbMr7m9lPyl0ouMMEVltEtakQxaSUWEYy0aWk0zh8MS_TTlIYEjTL64h8yqtp0aJipQLoUjOysJFFEtH5wJ3C_DCNNF1HxffvcIVG2OuVwSBD1YFGE7HF7scvVALd6I-nuJnGn2aUnlKosxPgpEH01FXkFulm5jTbgILZ3bpI1_rO0B61hszYSZx3pJnh2o' and (text() = 'Reset My Password' or . = 'Reset My Password')]</value>
+      <webElementGuid>608ecfb4-a061-46e9-af09-ec5171f43bc3</webElementGuid>
+   </webElementXpaths>
+</WebElementEntity>
