@@ -60,13 +60,17 @@ public class DataViewController {
         private Long studentId;
         private Double factor;
         private Double grandTotal;
+        private Double calculatedFactor;
+        private Double calculatedGrandTotal;
 
         public StudentResultUpdate() {}
 
-        public StudentResultUpdate(Long studentId, Double factor, Double grandTotal) {
+        public StudentResultUpdate(Long studentId, Double factor, Double grandTotal, Double calculatedFactor, Double calculatedGrandTotal) {
             this.studentId = studentId;
             this.factor = factor;
             this.grandTotal = grandTotal;
+            this.calculatedFactor = calculatedFactor;
+            this.calculatedGrandTotal = calculatedGrandTotal;
         }
 
         public Long getStudentId() { return studentId; }
@@ -75,6 +79,10 @@ public class DataViewController {
         public void setFactor(Double factor) { this.factor = factor; }
         public Double getGrandTotal() { return grandTotal; }
         public void setGrandTotal(Double grandTotal) { this.grandTotal = grandTotal; }
+        public Double getCalculatedFactor() { return calculatedFactor; }
+        public void setCalculatedFactor(Double calculatedFactor) { this.calculatedFactor = calculatedFactor; }
+        public Double getCalculatedGrandTotal() { return calculatedGrandTotal; }
+        public void setCalculatedGrandTotal(Double calculatedGrandTotal) { this.calculatedGrandTotal = calculatedGrandTotal; }
     }
 
     private final AssessmentService assessmentService;
@@ -537,13 +545,17 @@ public class DataViewController {
                     : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
                 
                 for (Student student : students) {
-                    Double currentFactor = 0.0;
+                    Double calculatedFactor = 0.0;
                     if(!assessments.isEmpty()) {
-                         currentFactor = calculateService.calculateStudentAssessmentData(student, assessments.get(0)).getFactor();
+                         calculatedFactor = calculateService.calculateStudentAssessmentData(student, assessments.get(0)).getFactor();
                     }
-                    Double currentTotal = calculateService.calculateGrandTotal(student, assessments);
+                    Double calculatedTotal = calculateService.calculateGrandTotal(student, assessments);
                     
-                    form.getUpdates().add(new StudentResultUpdate(student.getId(), currentFactor, currentTotal));
+                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+                    Double overrideFactor = overrideOpt.map(StudentResultOverride::getOverriddenFactor).orElse(null);
+                    Double overrideTotal = overrideOpt.map(StudentResultOverride::getOverriddenGrandTotal).orElse(null);
+                    
+                    form.getUpdates().add(new StudentResultUpdate(student.getId(), overrideFactor, overrideTotal, calculatedFactor, calculatedTotal));
                 }
             }
         }
@@ -560,35 +572,58 @@ public class DataViewController {
             if (update.getStudentId() != null) {
                 Student student = studentService.findStudentById(update.getStudentId()).orElse(null);
                 if (student != null && ownsStudent(student)) {
-                    StudentResultOverride override = overrideRepository.findByStudent(student)
-                        .orElse(new StudentResultOverride());
+                    boolean hasFactorOverride = update.getFactor() != null;
+                    boolean hasTotalOverride = update.getGrandTotal() != null;
                     
-                    Double oldFactor = override.getOverriddenFactor();
-                    Double oldTotal = override.getOverriddenGrandTotal();
+                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
                     
-                    // Only record history if something actually changed (or if it's new)
-                    boolean isNew = (override.getId() == null);
-                    boolean isChanged = isNew || 
-                                        !java.util.Objects.equals(oldFactor, update.getFactor()) || 
-                                        !java.util.Objects.equals(oldTotal, update.getGrandTotal());
+                    if (!hasFactorOverride && !hasTotalOverride) {
+                        if (overrideOpt.isPresent()) {
+                            StudentResultOverride override = overrideOpt.get();
+                            Double oldFactor = override.getOverriddenFactor();
+                            Double oldTotal = override.getOverriddenGrandTotal();
+                            overrideRepository.delete(override);
+                            
+                            FactorOverrideHistory history = new FactorOverrideHistory(
+                                    student,
+                                    oldFactor,
+                                    null,
+                                    oldTotal,
+                                    null,
+                                    getLoggedInUsername(),
+                                    java.time.LocalDateTime.now()
+                            );
+                            factorOverrideHistoryRepository.save(history);
+                        }
+                    } else {
+                        StudentResultOverride override = overrideOpt.orElse(new StudentResultOverride());
+                        
+                        Double oldFactor = override.getOverriddenFactor();
+                        Double oldTotal = override.getOverriddenGrandTotal();
+                        
+                        boolean isNew = (override.getId() == null);
+                        boolean isChanged = isNew || 
+                                            !java.util.Objects.equals(oldFactor, update.getFactor()) || 
+                                            !java.util.Objects.equals(oldTotal, update.getGrandTotal());
 
-                    override.setStudent(student);
-                    override.setOverriddenFactor(update.getFactor());
-                    override.setOverriddenGrandTotal(update.getGrandTotal());
-                    
-                    overrideRepository.save(override);
-                    
-                    if (isChanged) {
-                        FactorOverrideHistory history = new FactorOverrideHistory(
-                                student,
-                                oldFactor,
-                                update.getFactor(),
-                                oldTotal,
-                                update.getGrandTotal(),
-                                getLoggedInUsername(),
-                                java.time.LocalDateTime.now()
-                        );
-                        factorOverrideHistoryRepository.save(history);
+                        override.setStudent(student);
+                        override.setOverriddenFactor(update.getFactor());
+                        override.setOverriddenGrandTotal(update.getGrandTotal());
+                        
+                        overrideRepository.save(override);
+                        
+                        if (isChanged) {
+                            FactorOverrideHistory history = new FactorOverrideHistory(
+                                    student,
+                                    oldFactor,
+                                    update.getFactor(),
+                                    oldTotal,
+                                    update.getGrandTotal(),
+                                    getLoggedInUsername(),
+                                    java.time.LocalDateTime.now()
+                            );
+                            factorOverrideHistoryRepository.save(history);
+                        }
                     }
                 }
             }
