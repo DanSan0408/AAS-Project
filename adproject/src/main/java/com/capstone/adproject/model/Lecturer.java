@@ -18,7 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
+@Filter(name = "courseScopeFilter", condition = "(course_id = :activeCourseId OR course_id IS NULL)")
 @Entity
 @Table(name = "lecturer", indexes = {
     @Index(name = "idx_lecturer_course", columnList = "course_id"),
