@@ -61,7 +61,7 @@ public class Mark {
     @Column(name = "assessment_type", nullable = false)
     private String assessmentType;
 
-    @Column(nullable = false)
+    @Column(name = "submitted_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime submittedAt;
 
     @Column(columnDefinition = "TEXT")
