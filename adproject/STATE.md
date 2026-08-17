@@ -4,6 +4,20 @@
 
 ---
 
+## Current Status: Production Deployment DDL-Auto Migration Fix (Data View Crash)
+**Status**: COMPLETED
+
+### Summary
+- Resolved a crash on the deployed application where the Data Views would fail with `Unknown column 'm1_0.submitted_at' in 'field list'`.
+- **Root Cause**: The `submitted_at` column was recently added to the `Mark` and `AssessmentComment` entities with `@Column(nullable = false)` but no default value. In the production database, which already contains existing rows, Hibernate's `ddl-auto=update` encountered an error when executing `ALTER TABLE ... ADD COLUMN ... NOT NULL` without a default value, silently failing to add the column and leaving the schema out of sync.
+- **Fix**: Added `columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP"` to the `@Column` annotations for `submittedAt` in both `Mark.java` and `AssessmentComment.java`. This guarantees that MySQL will populate the current timestamp for all pre-existing records during the `ALTER TABLE` execution, allowing `ddl-auto=update` to successfully apply the migration to the production database on startup.
+
+### Files Modified
+- `Mark.java`
+- `AssessmentComment.java`
+- `STATE.md`
+
+---
 ## Current Status: Grade Override Recalculation Fix
 **Status**: COMPLETED
 
