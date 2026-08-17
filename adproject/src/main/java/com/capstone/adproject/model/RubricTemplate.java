@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
+@Filter(name = "courseScopeFilter", condition = "(course_id = :activeCourseId OR course_id IS NULL)")
 @Entity
 @Table(name = "rubric_templates", indexes = {
     @Index(name = "idx_rubric_template_course", columnList = "course_id")

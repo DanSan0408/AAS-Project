@@ -447,6 +447,13 @@ public class DataViewController {
         Map<Long, Object> studentGroupComments = new HashMap<>();
         Map<Long, Object> studentIndividualComments = new HashMap<>();
         
+        if (assessment.getRubrics() != null) {
+            for (Rubric rubric : assessment.getRubrics()) {
+                String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
+                rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
+            }
+        }
+        
         if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
             List<Student> students = new ArrayList<>(selectedGroup.getStudents());
             
@@ -457,13 +464,6 @@ public class DataViewController {
             });
             
             assessmentData = calculateService.calculateAssessmentData(assessment, students);
-            
-            if (assessment.getRubrics() != null) {
-                for (Rubric rubric : assessment.getRubrics()) {
-                    String type = rubric.getAssessmentTypes() != null ? rubric.getAssessmentTypes() : "Other";
-                    rubricsByType.computeIfAbsent(type, k -> new ArrayList<>()).add(rubric);
-                }
-            }
             
             for (Student student : students) {
                 Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();

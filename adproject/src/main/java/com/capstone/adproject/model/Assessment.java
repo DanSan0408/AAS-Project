@@ -25,7 +25,7 @@ import jakarta.persistence.Index;
 
 import org.hibernate.annotations.Filter;
 
-@Filter(name = "courseScopeFilter", condition = "course_id = :activeCourseId")
+@Filter(name = "courseScopeFilter", condition = "(course_id = :activeCourseId OR course_id IS NULL)")
 @Entity
 @Table(name = "assessment", indexes = {
     @Index(name = "idx_assessment_course", columnList = "course_id")
