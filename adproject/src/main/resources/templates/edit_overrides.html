@@ -54,8 +54,10 @@
                                 <tr>
                                     <th>Student Name</th>
                                     <th>Email</th>
-                                    <th style="width: 150px;">Factor <small>(0-5)</small></th>
-                                    <th style="width: 150px;">Grand Total <small>(0-100)</small></th>
+                                    <th style="width: 120px;">Calculated Factor</th>
+                                    <th style="width: 150px;">Factor Override <small>(0-5)</small></th>
+                                    <th style="width: 120px;">Calculated Total</th>
+                                    <th style="width: 150px;">Total Override <small>(0-100)</small></th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -64,13 +66,17 @@
                                 <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}" class="student-email">Student Name</td> 
                                 
                                 <input type="hidden" th:field="*{updates[__${stat.index}__].studentId}" />
+                                <input type="hidden" th:field="*{updates[__${stat.index}__].calculatedFactor}" />
+                                <input type="hidden" th:field="*{updates[__${stat.index}__].calculatedGrandTotal}" />
                                 
+                                <td class="calculated-value" th:text="*{updates[__${stat.index}__].calculatedFactor != null ? #numbers.formatDecimal(updates[__${stat.index}__].calculatedFactor, 1, 3) : 'N/A'}">1.000</td>
                                 <td>
-                                    <input type="number" step="0.001" min="0" max="5" class="inp-number"
+                                    <input type="number" step="0.001" min="0" max="5" class="inp-number" placeholder="Auto"
                                            th:field="*{updates[__${stat.index}__].factor}" />
                                 </td>
+                                <td class="calculated-value" th:text="*{updates[__${stat.index}__].calculatedGrandTotal != null ? #numbers.formatDecimal(updates[__${stat.index}__].calculatedGrandTotal, 1, 2) : 'N/A'}">75.00</td>
                                 <td>
-                                    <input type="number" step="0.01" min="0" max="100" class="inp-number"
+                                    <input type="number" step="0.01" min="0" max="100" class="inp-number" placeholder="Auto"
                                            th:field="*{updates[__${stat.index}__].grandTotal}" />
                                 </td>
                             </tr>

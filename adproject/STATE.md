@@ -4,6 +4,25 @@
 
 ---
 
+## Current Status: Grade Override Recalculation Fix
+**Status**: COMPLETED
+
+### Summary
+- Fixed an issue preventing the dynamic recalculation of the Grand Total when an admin overridden a student's Factor on the "Edit Assessment Results" page.
+- **Root Cause**: The page previously pre-filled both the Factor and Grand Total input boxes with their current calculated values. When an admin saved a new Factor without manually clearing the pre-filled Grand Total, the backend (`saveOverrides` in `DataViewController`) saved the old calculated total into the `StudentResultOverride` table. Because `overriddenGrandTotal` was populated, `CalculateService` halted dynamic calculation and permanently returned the frozen value, completely bypassing the new override factor.
+- **Implementation**:
+  - **Frontend Separation**: Updated `edit_overrides.html` to clearly separate the dynamically calculated values (displayed as read-only text) from the override input boxes (which now default to empty/auto).
+  - **Backend Logic**: Refactored `DataViewController.java`. If an admin inputs a Factor Override but leaves the Total Override blank, the backend explicitly leaves `overriddenGrandTotal` as null. This null value signals `CalculateService` to dynamically recalculate the student's final total on-the-fly using the new custom factor against their raw group marks. If both override inputs are left blank or cleared, the system dynamically deletes the override record entirely, restoring standard automatic calculation.
+  - Added new display properties (`calculatedFactor`, `calculatedGrandTotal`) to `StudentResultUpdate` to safely support this separation.
+  - Added custom CSS (`.calculated-value`) to `edit_overrides.css`.
+
+### Files Modified
+- `DataViewController.java`
+- `edit_overrides.html`
+- `edit_overrides.css`
+- `STATE.md`
+
+---
 ## Current Status: Universal Mobile & Tablet Responsive Layout Fix (375x667 Screen Support)
 **Status**: COMPLETED
 
