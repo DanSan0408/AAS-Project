@@ -50,6 +50,7 @@ public class Assessment {
     private Course course;
 
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Filter(name = "courseScopeFilter", condition = "1=1")
     private List<Rubric> rubrics = new ArrayList<>();
     
     @Column(name = "individual_order")
@@ -69,6 +70,7 @@ public class Assessment {
    
     @ElementCollection
     @Column(name = "label", length = 500)
+    @Filter(name = "courseScopeFilter", condition = "1=1")
     private List<String> groupCommentLabels = new ArrayList<>();
     
     @Column(name = "group_comment_min_lengths", columnDefinition = "TEXT")
@@ -88,6 +90,7 @@ public class Assessment {
     
     @ElementCollection
     @Column(name = "label", length = 500)
+    @Filter(name = "courseScopeFilter", condition = "1=1")
     private List<String> individualCommentLabels = new ArrayList<>();
     
     @Column(name = "individual_comment_min_lengths", columnDefinition = "TEXT")

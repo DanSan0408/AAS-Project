@@ -48,6 +48,7 @@ public class Group {
     private Course course;
 
     @OneToMany(mappedBy = "group")
+    @Filter(name = "courseScopeFilter", condition = "1=1")
     private List<Student> students = new ArrayList<>(); 
 
     public List<Student> getStudents() {
