@@ -49,13 +49,13 @@ public class Mark {
     @JoinColumn(name = "rating_id")
     private Rating rating;
 
-    @Column(name = "`markValue`", nullable = false)
+    @Column(name = "markvalue", nullable = false)
     private Double markValue;
 
     @Column(nullable = false)
     private Integer clo;
 
-    @Column(name = "`cloMarks`", nullable = false)
+    @Column(name = "clomarks", nullable = false)
     private Double cloMarks;
 
     @Column(name = "assessment_type", nullable = false)
