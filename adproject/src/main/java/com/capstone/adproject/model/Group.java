@@ -18,7 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @FilterDef(name = "courseScopeFilter", parameters = @ParamDef(name = "activeCourseId", type = Long.class))
-@Filter(name = "courseScopeFilter", condition = "(course_id = :activeCourseId OR course_id IS NULL)")
+@Filter(name = "courseScopeFilter", condition = "({alias}.course_id = :activeCourseId OR {alias}.course_id IS NULL)")
 @Entity
 @Table(name = "project_group", indexes = {
     @Index(name = "idx_group_course", columnList = "course_id"),
