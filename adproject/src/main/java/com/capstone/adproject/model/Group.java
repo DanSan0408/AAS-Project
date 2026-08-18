@@ -33,10 +33,10 @@ public class Group {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "groupName")
+    @Column(name = "`groupName`")
     private String groupName;
     
-    @Column(name = "groupSize")
+    @Column(name = "`groupSize`")
     private int groupSize;
 
     @ManyToOne
