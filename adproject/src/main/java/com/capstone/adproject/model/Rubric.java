@@ -33,10 +33,10 @@ public class Rubric {
     private String description;
     private BigDecimal marks;
     private Integer clo;
-    @Column(name = "clo_marks")
+    @Column(name = "cloMarks")
     private Double cloMarks;
     
-    @Column(name = "assessment_types")
+    @Column(name = "assessmentTypes")
     private String assessmentTypes;
     
     @Column(name = "assessment_type")
