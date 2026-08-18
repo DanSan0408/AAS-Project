@@ -51,9 +51,10 @@ public class Student {
     @Column(nullable = false)
     private String email;
     
+    @Column(name = "resetPasswordToken")
     private String resetPasswordToken;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "isTempPassword", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
 
     @ManyToOne
