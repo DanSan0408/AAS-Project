@@ -70,6 +70,9 @@
                 <p class="text-muted" style="margin-top: 5px; margin-bottom: 0;">Create and manage reusable rubric templates.</p>
             </div>
             <div class="action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin: 0;">
+                    <a th:href="@{/rubrics/templates/add-full}" class="btn btn-primary" style="background-color: var(--color-success) !important;">
+                        <i class="fas fa-plus"></i> Create Full Template
+                    </a>
                     <a th:href="@{/rubrics/templates/add}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Create Blueprint
                     </a>
@@ -85,9 +88,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 10%;">ID</th>
-                            <th style="width: 30%;">Template Name</th>
-                            <th style="width: 40%;">Description</th>
+                            <th style="width: 5%;">ID</th>
+                            <th style="width: 25%;">Template Name</th>
+                            <th style="width: 15%;">Type</th>
+                            <th style="width: 35%;">Description</th>
                             <th style="width: 20%;" class="actions-cell">Actions</th>
                         </tr>
                     </thead>
@@ -98,10 +102,17 @@
                         <tr th:each="template : ${templates}">
                             <td data-label="ID" th:text="${template.id}">1</td>
                             <td data-label="Name" th:text="${template.name}" style="font-weight: 600;">Standard Blueprint</td>
+                            <td data-label="Type">
+                                <span th:if="${template.templateType == 'FULL'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: #d1fae5; color: #065f46; border: 1px solid #10b981;">Full Template</span>
+                                <span th:if="${template.templateType == 'BLUEPRINT'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: #e0e7ff; color: #3730a3; border: 1px solid #6366f1;">Blueprint</span>
+                            </td>
                             <td data-label="Description" th:text="${template.description}">A description...</td>
                             <td data-label="Actions" class="actions-cell">
                             <div class="action-buttons action-buttons-flex">
-                                    <a th:href="@{/rubrics/templates/edit/{id}(id=${template.id})}" class="btn btn-sm btn-edit" title="Edit Blueprint">
+                                    <a th:if="${template.templateType == 'FULL'}" th:href="@{/rubrics/templates/edit-full/{id}(id=${template.id})}" class="btn btn-sm btn-edit" title="Edit Full Template">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a th:if="${template.templateType == 'BLUEPRINT'}" th:href="@{/rubrics/templates/edit/{id}(id=${template.id})}" class="btn btn-sm btn-edit" title="Edit Blueprint">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
                                     <form th:action="@{/rubrics/templates/delete/{id}(id=${template.id})}" method="post" 

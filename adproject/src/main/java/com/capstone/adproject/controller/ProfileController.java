@@ -31,7 +31,8 @@ public class ProfileController {
     private final SuperAdminRepository superAdminRepository;
     private final AdminRepository adminRepository;
 
-    public ProfileController(StudentRepository studentRepository, LecturerRepository lecturerRepository, SuperAdminRepository superAdminRepository, AdminRepository adminRepository) {
+    public ProfileController(StudentRepository studentRepository, LecturerRepository lecturerRepository,
+            SuperAdminRepository superAdminRepository, AdminRepository adminRepository) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
         this.superAdminRepository = superAdminRepository;
@@ -42,30 +43,34 @@ public class ProfileController {
     public String viewProfile(Authentication authentication, Model model) {
         String username = authentication.getName();
         String role = getRole(authentication);
-        
+
         String displayUsername = "";
         String displayEmail = "";
-        
+
         if ("STUDENT".equals(role)) {
-            Optional<Student> studentOpt = studentRepository.findByEmail(username).or(() -> studentRepository.findByUsername(username));
+            Optional<Student> studentOpt = studentRepository.findByEmail(username)
+                    .or(() -> studentRepository.findByUsername(username));
             if (studentOpt.isPresent()) {
                 displayUsername = studentOpt.get().getUsername();
                 displayEmail = studentOpt.get().getEmail();
             }
         } else if ("LECTURER".equals(role)) {
-            Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username).or(() -> lecturerRepository.findByUsername(username));
+            Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username)
+                    .or(() -> lecturerRepository.findByUsername(username));
             if (lecturerOpt.isPresent()) {
                 displayUsername = lecturerOpt.get().getUsername();
                 displayEmail = lecturerOpt.get().getEmail();
             }
         } else if ("ADMIN".equals(role)) {
-            Optional<Admin> adminOpt = adminRepository.findByEmail(username).or(() -> adminRepository.findByUsername(username));
+            Optional<Admin> adminOpt = adminRepository.findByEmail(username)
+                    .or(() -> adminRepository.findByUsername(username));
             if (adminOpt.isPresent()) {
                 displayUsername = adminOpt.get().getUsername();
                 displayEmail = adminOpt.get().getEmail();
             }
         } else if ("SUPER_ADMIN".equals(role)) {
-            Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(username).or(() -> superAdminRepository.findByUsername(username));
+            Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(username)
+                    .or(() -> superAdminRepository.findByUsername(username));
             if (superAdminOpt.isPresent()) {
                 displayUsername = superAdminOpt.get().getUsername();
                 displayEmail = superAdminOpt.get().getEmail();
@@ -75,20 +80,22 @@ public class ProfileController {
         model.addAttribute("username", displayUsername);
         model.addAttribute("email", displayEmail);
         model.addAttribute("role", role);
-        
+
         return "profile";
     }
 
     @PostMapping("/update")
     @Transactional
-    public String updateProfile(@RequestParam("username") String newUsername, Authentication authentication, RedirectAttributes redirectAttributes) {
+    public String updateProfile(@RequestParam("username") String newUsername, Authentication authentication,
+            RedirectAttributes redirectAttributes) {
         String authName = authentication.getName();
         String role = getRole(authentication);
         boolean isUpdated = false;
-        
+
         try {
             if ("STUDENT".equals(role)) {
-                Optional<Student> studentOpt = studentRepository.findByEmail(authName).or(() -> studentRepository.findByUsername(authName));
+                Optional<Student> studentOpt = studentRepository.findByEmail(authName)
+                        .or(() -> studentRepository.findByUsername(authName));
                 if (studentOpt.isPresent()) {
                     Student student = studentOpt.get();
                     student.setUsername(newUsername);
@@ -96,7 +103,8 @@ public class ProfileController {
                     isUpdated = true;
                 }
             } else if ("LECTURER".equals(role)) {
-                Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(authName).or(() -> lecturerRepository.findByUsername(authName));
+                Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(authName)
+                        .or(() -> lecturerRepository.findByUsername(authName));
                 if (lecturerOpt.isPresent()) {
                     Lecturer lecturer = lecturerOpt.get();
                     lecturer.setUsername(newUsername);
@@ -104,7 +112,8 @@ public class ProfileController {
                     isUpdated = true;
                 }
             } else if ("ADMIN".equals(role)) {
-                Optional<Admin> adminOpt = adminRepository.findByEmail(authName).or(() -> adminRepository.findByUsername(authName));
+                Optional<Admin> adminOpt = adminRepository.findByEmail(authName)
+                        .or(() -> adminRepository.findByUsername(authName));
                 if (adminOpt.isPresent()) {
                     Admin admin = adminOpt.get();
                     admin.setUsername(newUsername);
@@ -112,7 +121,8 @@ public class ProfileController {
                     isUpdated = true;
                 }
             } else if ("SUPER_ADMIN".equals(role)) {
-                Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(authName).or(() -> superAdminRepository.findByUsername(authName));
+                Optional<SuperAdmin> superAdminOpt = superAdminRepository.findByEmail(authName)
+                        .or(() -> superAdminRepository.findByUsername(authName));
                 if (superAdminOpt.isPresent()) {
                     SuperAdmin superAdmin = superAdminOpt.get();
                     superAdmin.setUsername(newUsername);
@@ -120,18 +130,19 @@ public class ProfileController {
                     isUpdated = true;
                 }
             }
-            
+
             if (isUpdated) {
                 redirectAttributes.addFlashAttribute("successMessage", "Profile updated successfully!");
             } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Error: Could not locate your account record to update.");
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Error: Could not locate your account record to update.");
             }
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error: Username might already be in use.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating profile: " + e.getMessage());
         }
-        
+
         return "redirect:/profile";
     }
 

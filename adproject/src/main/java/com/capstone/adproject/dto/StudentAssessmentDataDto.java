@@ -21,7 +21,9 @@ public class StudentAssessmentDataDto {
     private Map<Integer, Double> cloWeightedSums = new HashMap<>(); 
     
     private Map<Integer, Double> cloWeightedSumsGroupOnly = new HashMap<>(); 
+    private Map<Integer, Double> cloWeightedSumsIndividualOnly = new HashMap<>();
     private Map<Integer, Double> cloSumsIndividualOnly = new HashMap<>(); 
+    private Map<Integer, Double> cloSumsGroupOnly = new HashMap<>();
     
     private Double totalMarks = 0.0; 
     
@@ -93,6 +95,22 @@ public class StudentAssessmentDataDto {
     
     public void setCloSumsIndividualOnly(Map<Integer, Double> cloSumsIndividualOnly) {
         this.cloSumsIndividualOnly = cloSumsIndividualOnly;
+    }
+    
+    public Map<Integer, Double> getCloSumsGroupOnly() {
+        return cloSumsGroupOnly;
+    }
+    
+    public void setCloSumsGroupOnly(Map<Integer, Double> cloSumsGroupOnly) {
+        this.cloSumsGroupOnly = cloSumsGroupOnly;
+    }
+    
+    public Map<Integer, Double> getCloWeightedSumsIndividualOnly() {
+        return cloWeightedSumsIndividualOnly;
+    }
+    
+    public void setCloWeightedSumsIndividualOnly(Map<Integer, Double> cloWeightedSumsIndividualOnly) {
+        this.cloWeightedSumsIndividualOnly = cloWeightedSumsIndividualOnly;
     }
     
     public Double getTotalMarks() {

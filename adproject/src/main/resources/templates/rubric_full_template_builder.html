@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">Full Rubric Template Builder</title>
+    <link rel="stylesheet" th:href="@{/css/critical.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
+    <style>
+        @media (max-width: 768px) {
+            .card { padding: 15px 10px !important; }
+            .section-container { padding: 15px 10px !important; margin-left: 0 !important; margin-right: 0 !important; }
+            .sub-rubric-card, .rating-card, .comment-card { padding: 12px 10px !important; }
+            .form-grid { display: flex; flex-direction: column; gap: 10px; }
+            .col-fixed, .col-grow { width: 100% !important; }
+        }
+    </style>
+</head>
+<body class="rubric-form-page">
+    <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <div class="page-header" style="margin-bottom: 20px;">
+            <h1 th:text="${pageTitle}" style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Create Full Template</h1>
+            <p class="text-muted" style="margin-top: 5px;">Configure the full template structure, including names, marks, and settings.</p>
+        </div>
+
+        <div class="card" style="box-sizing: border-box; width: 100%; max-width: 100%; overflow-x: hidden;">
+            <form id="fullTemplateForm" th:action="@{/rubrics/templates/save}" th:object="${rubricTemplate}" method="post">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{templateType}" />
+                <input type="hidden" th:field="*{structureData}" id="structureData" />
+                
+                <!-- Basic Template Info -->
+                <div class="form-group">
+                    <label>Template Name *</label>
+                    <input type="text" th:field="*{name}" placeholder="e.g. Standard 5-Scale Lab Report" required maxlength="10000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Template Description</label>
+                    <textarea th:field="*{description}" rows="2"></textarea>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                
+                <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0; color: #334155; font-size: 1.1rem;"><i class="fas fa-sliders-h"></i> Pre-filled Form Values</h3>
+                    <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 15px;">These values will be automatically populated into the assessment rubric.</p>
+                    
+                    <div class="form-group">
+                        <label>Assessment Type (Optional)</label>
+                        <select id="assessmentTypeSelect" class="template-field" data-field="assessmentType">
+                            <option value="">Select Assessment Type</option>
+                            <option th:each="option : ${assessmentTypesOptions}" th:value="${option}" th:text="${option}"></option>
+                        </select>
+                    </div>
+
+                    <div class="rating-row form-grid">
+                        <div class="form-group col-grow">
+                            <label>Total Marks (Optional)</label>
+                            <input type="number" id="rubricMarks" step="0.01" class="template-field" data-field="marks">
+                        </div>
+                        <div class="form-group col-grow">
+                            <label>CLO (Optional)</label>
+                            <select id="rubricClo" class="template-field" data-field="clo">
+                                <option value="">Select CLO</option>
+                                <option th:each="i : ${#numbers.sequence(1, 9)}" th:value="${i}" th:text="|CLO ${i}|">CLO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sub-Rubrics -->
+                <div class="section-container section-blue">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2>Sub-Rubrics</h2>
+                        <button type="button" id="addSubRubricBtn" class="btn btn-add"><i class="fas fa-plus"></i> Add Sub-Rubric</button>
+                    </div>
+                    
+                    <div id="sub-rubrics-container"></div>
+                </div>
+
+                <!-- Direct Ratings -->
+                <div class="section-container section-green">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="color: var(--color-success) !important;">Direct Ratings</h2>
+                    </div>
+                    
+                    <div id="direct-ratings-container"></div>
+                    <button type="button" id="addDirectRatingBtn" class="btn btn-add" style="background-color: var(--color-success) !important; margin-top: 15px; width: 100%;"><i class="fas fa-plus"></i> Add Direct Rating</button>
+                </div>
+                
+                <!-- Comments -->
+                <div class="section-container section-purple">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <h2 style="color: var(--color-purple) !important;">Rubric-Specific Comments</h2>
+                    </div>
+                    
+                    <div id="rubric-comments-container"></div>
+                    <button type="button" id="addRubricCommentBtn" class="btn btn-add" style="background-color: var(--color-purple) !important; margin-top: 15px; width: 100%;"><i class="fas fa-plus"></i> Add Comment Question</button>
+                </div>
+                
+                <div class="button-container action-bar" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                    <a th:href="@{/rubrics/templates/manage}" class="btn btn-danger"><i class="fas fa-times"></i> Cancel</a>
+                    <button type="submit" id="submitButton" class="btn btn-primary"><i class="fas fa-save"></i> Save Full Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/rubric-full-template-builder.js}"></script>
+    <script th:src="@{/js/loading.js}"></script>
+</body>
+</html>

@@ -203,6 +203,84 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // Full Template Detection
+                    const isFullTemplate = data.assessmentType !== undefined || 
+                                          (data.subRubrics && data.subRubrics.length > 0 && typeof data.subRubrics[0].name === 'string') ||
+                                          data.directRatings;
+
+                    if (isFullTemplate) {
+                        if (data.templateName) {
+                            const rName = document.getElementById('name');
+                            if (rName) rName.value = data.templateName;
+                        }
+                        if (data.templateDescription) {
+                            const rDesc = document.getElementById('description');
+                            if (rDesc) rDesc.value = data.templateDescription;
+                        }
+                        if (data.assessmentType) {
+                            const typeSelect = document.getElementById('assessmentTypeSelect');
+                            if (typeSelect) typeSelect.value = data.assessmentType;
+                        }
+                        if (data.marks) {
+                            if (rubricMarksInput) rubricMarksInput.value = data.marks;
+                            if (cloMarksInput) cloMarksInput.value = data.marks;
+                        }
+                        if (data.clo) {
+                            const cloSelect = document.querySelector('select[name="clo"]') || document.getElementById('clo');
+                            if (cloSelect) cloSelect.value = data.clo;
+                        }
+
+                        if (data.subRubrics) {
+                            data.subRubrics.forEach(sub => {
+                                const currentSubIndex = subRubricIndex;
+                                if (addSubBtn) addSubBtn.click();
+                                
+                                const card = container.lastElementChild;
+                                if (sub.name) card.querySelector('.sub-rubric-name').value = sub.name;
+                                if (sub.description) card.querySelector('textarea').value = sub.description;
+
+                                setTimeout(() => {
+                                    const ratingButton = document.querySelector(`.add-sub-rating-btn[data-subindex="${currentSubIndex}"]`);
+                                    if (ratingButton && sub.ratings) {
+                                        sub.ratings.forEach(r => {
+                                            ratingButton.click();
+                                            const rContainer = document.querySelector(`.sub-ratings-container[data-subindex="${currentSubIndex}"]`);
+                                            const rCard = rContainer.lastElementChild;
+                                            if (r.name) rCard.querySelector('input[type="text"]').value = r.name;
+                                            if (r.marks) rCard.querySelector('input[type="number"]').value = r.marks;
+                                            if (r.description) rCard.querySelector('textarea').value = r.description;
+                                        });
+                                        updateSubRubricMarks(currentSubIndex);
+                                    }
+                                }, 30);
+                            });
+                        }
+
+                        if (data.directRatings) {
+                            data.directRatings.forEach(r => {
+                                if (addDirectBtn) addDirectBtn.click();
+                                const rCard = directRatingsContainer.lastElementChild;
+                                if (r.name) rCard.querySelector('input[type="text"]').value = r.name;
+                                if (r.marks) rCard.querySelector('input[type="number"]').value = r.marks;
+                                if (r.description) rCard.querySelector('textarea').value = r.description;
+                            });
+                        }
+
+                        if (data.comments) {
+                            data.comments.forEach(c => {
+                                if (addCommentBtn) addCommentBtn.click();
+                                const cCard = rubricCommentsContainer.lastElementChild;
+                                if (c.label) cCard.querySelector('textarea[name^="rubricCommentLabels"]').value = c.label;
+                                if (c.minLength) cCard.querySelector('input[type="number"]').value = c.minLength;
+                                if (c.isAnonymous) cCard.querySelector('input[type="checkbox"]').checked = true;
+                            });
+                        }
+
+                        setTimeout(() => alert('Full Template Applied successfully!'), 100);
+                        return;
+                    }
+
+                    // Blueprint Template Fallback
                     let blueprint = data;
                     if (data.rubrics && data.rubrics.length > 0) {
                         const first = data.rubrics[0];
@@ -238,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     setTimeout(() => {
-                        alert('Template Applied successfully!');
+                        alert('Blueprint Applied successfully!');
                     }, 100);
                 })
                 .catch(error => {
