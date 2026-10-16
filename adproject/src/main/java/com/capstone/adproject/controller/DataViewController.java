@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,19 +33,19 @@ import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.FactorOverrideHistory;
 import com.capstone.adproject.model.FactorWeightage;
 import com.capstone.adproject.model.Group;
+import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentResultOverride;
-import com.capstone.adproject.repositories.GroupRepository;
-import com.capstone.adproject.repositories.StudentResultOverrideRepository;
 import com.capstone.adproject.repositories.FactorWeightageRepository;
+import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.MarkRepository;
+import com.capstone.adproject.repositories.StudentResultOverrideRepository;
+import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.StudentService;
-import com.capstone.adproject.service.AdminService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/admin/data-views")
@@ -202,16 +203,25 @@ public class DataViewController {
     }
 
     @GetMapping("/overall")
-    public String showOverallData(Model model) {
-        Map<String, Object> dataMap = getOverallDataModelMap();
+    public String showOverallData(
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) String studentSearch,
+            @RequestParam(required = false) List<Long> assessmentIds,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "25") int size,
+            Model model) {
+        Map<String, Object> dataMap = getOverallDataModelMap(groupId, studentSearch, assessmentIds, true, page, size);
         model.addAllAttributes(dataMap);
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "overall_data_view";
     }
 
     @GetMapping("/overall/export")
-    public ResponseEntity<byte[]> exportOverallDataToExcel() {
-        Map<String, Object> dataMap = getOverallDataModelMap();
+    public ResponseEntity<byte[]> exportOverallDataToExcel(
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) String studentSearch,
+            @RequestParam(required = false) List<Long> assessmentIds) {
+        Map<String, Object> dataMap = getOverallDataModelMap(groupId, studentSearch, assessmentIds, false, 1, Integer.MAX_VALUE);
         @SuppressWarnings("unchecked")
         List<Student> students = (List<Student>) dataMap.get("students");
         @SuppressWarnings("unchecked")
@@ -232,18 +242,8 @@ public class DataViewController {
 
         for (Assessment assessment : assessments) {
             row1.add(escapeCsv(assessment.getTitle()));
-            Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessment.getId());
             Set<Integer> cloKeys = assessment.getCloMarks() != null ? new TreeSet<>(assessment.getCloMarks().keySet()) : Collections.emptySet();
-            int cloCount = cloKeys.size();
-            int weightedCloCount = 0;
-            if (cloWithGroupSet != null) {
-                for (Integer cloKey : cloKeys) {
-                    if (cloWithGroupSet.contains(cloKey)) {
-                        weightedCloCount++;
-                    }
-                }
-            }
-            int extraColumns = cloCount + weightedCloCount + 2 - 1;
+            int extraColumns = (cloKeys.size() * 4) + 2 - 1;
             for (int i = 0; i < extraColumns; i++) {
                 row1.add("");
             }
@@ -260,15 +260,14 @@ public class DataViewController {
         row2.add(""); // Capped Factor
 
         for (Assessment assessment : assessments) {
-            Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessment.getId());
             Set<Integer> cloKeys = assessment.getCloMarks() != null ? new TreeSet<>(assessment.getCloMarks().keySet()) : Collections.emptySet();
             for (Integer cloKey : cloKeys) {
                 row2.add(escapeCsv("CLO " + cloKey));
+                row2.add("");
             }
             for (Integer cloKey : cloKeys) {
-                if (cloWithGroupSet != null && cloWithGroupSet.contains(cloKey)) {
-                    row2.add(escapeCsv("CLO " + cloKey + " (W)"));
-                }
+                row2.add(escapeCsv("CLO " + cloKey + " (W)"));
+                row2.add("");
             }
             row2.add(escapeCsv("Total (Raw)"));
             row2.add(escapeCsv("Total (W)"));
@@ -276,6 +275,30 @@ public class DataViewController {
         row2.add(""); // Grand Total
         row2.add(""); // Grade
         csv.append(String.join(",", row2)).append("\r\n");
+
+        // Row 3: Sub-headers (IAR, GAR)
+        List<String> row3 = new ArrayList<>();
+        row3.add(""); // Team Name
+        row3.add(""); // Student Email
+        row3.add(""); // Factor
+        row3.add(""); // Capped Factor
+        
+        for (Assessment assessment : assessments) {
+            Set<Integer> cloKeys = assessment.getCloMarks() != null ? new TreeSet<>(assessment.getCloMarks().keySet()) : Collections.emptySet();
+            for (Integer cloKey : cloKeys) {
+                row3.add(escapeCsv("IAR"));
+                row3.add(escapeCsv("GAR"));
+            }
+            for (Integer cloKey : cloKeys) {
+                row3.add(escapeCsv("IAR"));
+                row3.add(escapeCsv("GAR"));
+            }
+            row3.add(""); // Total (Raw)
+            row3.add(""); // Total (W)
+        }
+        row3.add(""); // Grand Total
+        row3.add(""); // Grade
+        csv.append(String.join(",", row3)).append("\r\n");
 
         // Data rows
         for (Student student : students) {
@@ -296,8 +319,9 @@ public class DataViewController {
             List<StudentAssessmentDataDto> assessmentDataList = (List<StudentAssessmentDataDto>) data.get("assessmentDataList");
             if (assessmentDataList != null) {
                 for (StudentAssessmentDataDto assessmentData : assessmentDataList) {
-                    Set<Integer> cloWithGroupSet = assessmentCLOsWithGroupRubrics.get(assessmentData.getAssessment().getId());
-                    Map<Integer, Double> cloSums = assessmentData.getCloSums();
+                    Map<Integer, Double> cloSumsIndividualOnly = assessmentData.getCloSumsIndividualOnly();
+                    Map<Integer, Double> cloSumsGroupOnly = assessmentData.getCloSumsGroupOnly();
+                    Map<Integer, Double> cloWeightedSumsIndividualOnly = assessmentData.getCloWeightedSumsIndividualOnly();
                     Map<Integer, Double> cloWeightedSumsGroupOnly = assessmentData.getCloWeightedSumsGroupOnly();
 
                     Set<Integer> cloKeys = assessmentData.getAssessment().getCloMarks() != null
@@ -305,14 +329,16 @@ public class DataViewController {
                         : Collections.emptySet();
 
                     for (Integer cloKey : cloKeys) {
-                        Double val = cloSums != null ? cloSums.get(cloKey) : null;
-                        row.add(val != null ? String.format("%.2f", val) : "-");
+                        Double valI = cloSumsIndividualOnly != null ? cloSumsIndividualOnly.get(cloKey) : null;
+                        Double valG = cloSumsGroupOnly != null ? cloSumsGroupOnly.get(cloKey) : null;
+                        row.add(valI != null ? String.format("%.2f", valI) : "0.00");
+                        row.add(valG != null ? String.format("%.2f", valG) : "0.00");
                     }
                     for (Integer cloKey : cloKeys) {
-                        if (cloWithGroupSet != null && cloWithGroupSet.contains(cloKey)) {
-                            Double val = cloWeightedSumsGroupOnly != null ? cloWeightedSumsGroupOnly.get(cloKey) : null;
-                            row.add(val != null ? String.format("%.2f", val) : "-");
-                        }
+                        Double valI = cloWeightedSumsIndividualOnly != null ? cloWeightedSumsIndividualOnly.get(cloKey) : null;
+                        Double valG = cloWeightedSumsGroupOnly != null ? cloWeightedSumsGroupOnly.get(cloKey) : null;
+                        row.add(valI != null ? String.format("%.2f", valI) : "0.00");
+                        row.add(valG != null ? String.format("%.2f", valG) : "0.00");
                     }
 
                     Double totalRaw = assessmentData.getTotalUnweightedMarks();
@@ -344,34 +370,110 @@ public class DataViewController {
             .body(finalBytes);
     }
 
-    private Map<String, Object> getOverallDataModelMap() {
+    private Map<String, Object> getOverallDataModelMap(
+            Long selectedGroupId,
+            String studentSearch,
+            List<Long> selectedAssessmentIds,
+            boolean paginate,
+            int page,
+            int size) {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
-        List<Assessment> assessments = activeCourseId == null
+        List<Group> groups = activeCourseId == null
+            ? List.of()
+            : groupRepository.findByCourseId(activeCourseId);
+        List<Assessment> allAssessments = activeCourseId == null
             ? List.of()
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        List<Assessment> assessments = allAssessments;
+        if (selectedAssessmentIds != null && !selectedAssessmentIds.isEmpty()) {
+            Set<Long> selectedAssessmentIdSet = new java.util.HashSet<>(selectedAssessmentIds);
+            assessments = allAssessments.stream()
+                .filter(assessment -> assessment.getId() != null && selectedAssessmentIdSet.contains(assessment.getId()))
+                .toList();
+        }
+
         List<Student> students = activeCourseId == null
             ? new ArrayList<>()
             : new ArrayList<>(adminService.getAllStudents());
+
+        String normalizedSearch = studentSearch == null ? "" : studentSearch.trim().toLowerCase();
+        List<Student> filteredStudents = new ArrayList<>();
+        for (Student student : students) {
+            if (!ownsStudent(student)) {
+                continue;
+            }
+            if (selectedGroupId != null) {
+                if (student.getGroup() == null || student.getGroup().getId() == null || !selectedGroupId.equals(student.getGroup().getId())) {
+                    continue;
+                }
+            }
+            if (!normalizedSearch.isEmpty()) {
+                String username = student.getUsername() != null ? student.getUsername().toLowerCase() : "";
+                String email = student.getEmail() != null ? student.getEmail().toLowerCase() : "";
+                String teamName = student.getGroup() != null && student.getGroup().getGroupName() != null
+                    ? student.getGroup().getGroupName().toLowerCase()
+                    : "";
+                if (!username.contains(normalizedSearch)
+                        && !email.contains(normalizedSearch)
+                        && !teamName.contains(normalizedSearch)) {
+                    continue;
+                }
+            }
+            filteredStudents.add(student);
+        }
+
+        filteredStudents.sort((s1, s2) -> {
+            String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
+            String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
+
+        int totalStudents = filteredStudents.size();
+        int safeSize = paginate ? Math.max(1, size) : Math.max(1, totalStudents);
+        int totalPages = paginate ? Math.max(1, (int) Math.ceil((double) totalStudents / safeSize)) : 1;
+        int currentPage = paginate ? Math.min(Math.max(page, 1), totalPages) : 1;
+        int fromIndex = paginate ? Math.min((currentPage - 1) * safeSize, totalStudents) : 0;
+        int toIndex = paginate ? Math.min(fromIndex + safeSize, totalStudents) : totalStudents;
+        List<Student> visibleStudents = filteredStudents.subList(fromIndex, toIndex);
         
         Map<Long, Map<String, Object>> studentOverallData = new HashMap<>();
         Map<Long, Set<Integer>> assessmentCLOsWithGroupRubrics = new HashMap<>();
+        Map<Long, Map<Long, List<Mark>>> marksByAssessmentId = new HashMap<>();
+        Map<Long, StudentResultOverride> overridesByStudentId = new HashMap<>();
+        for (StudentResultOverride override : overrideRepository.findByStudentIn(visibleStudents)) {
+            if (override.getStudent() != null && override.getStudent().getId() != null) {
+                overridesByStudentId.put(override.getStudent().getId(), override);
+            }
+        }
         for (Assessment assessment : assessments) {
             assessmentCLOsWithGroupRubrics.put(assessment.getId(), calculateService.getCLOsWithGroupRubrics(assessment));
+            marksByAssessmentId.put(assessment.getId(), calculateService.getMarksByEvaluatedStudentForAssessment(assessment));
         }
         
-        for (Student student : students) {
+        for (Student student : visibleStudents) {
             Map<String, Object> data = new HashMap<>();
             data.put("teamName", student.getGroup() != null ? student.getGroup().getGroupName() : "No Team");
             
-            Double grandTotal = calculateService.calculateGrandTotal(student, assessments);
-            Double factor = 0.0;
-            
-            if (!assessments.isEmpty()) {
-                factor = calculateService.calculateStudentAssessmentData(student, assessments.get(0)).getFactor();
+            Double resolvedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student);
+            Double grandTotal = 0.0;
+            Map<Long, StudentAssessmentDataDto> assessmentDataById = new HashMap<>();
+            for (Assessment assessment : assessments) {
+                Map<Long, List<Mark>> marksByStudentId = marksByAssessmentId.get(assessment.getId());
+                StudentAssessmentDataDto assessmentData = calculateService.calculateStudentAssessmentData(
+                    student,
+                    assessment,
+                    resolvedFactor,
+                    marksByStudentId.get(student.getId())
+                );
+                assessmentDataById.put(assessment.getId(), assessmentData);
+                grandTotal += assessmentData.getTotalMarks();
             }
-            
-            Optional<StudentResultOverride> override = overrideRepository.findByStudent(student);
-            boolean isOverridden = override.isPresent() && override.get().getOverriddenGrandTotal() != null;
+
+            StudentResultOverride override = overridesByStudentId.get(student.getId());
+            Double factor = override != null && override.getOverriddenFactor() != null
+                ? override.getOverriddenFactor()
+                : resolvedFactor;
+            boolean isOverridden = override != null && override.getOverriddenGrandTotal() != null;
             
             data.put("factor", factor);
             data.put("grandTotal", grandTotal);
@@ -380,7 +482,7 @@ public class DataViewController {
             
             List<StudentAssessmentDataDto> details = new ArrayList<>();
             for(Assessment a : assessments) {
-                details.add(calculateService.calculateStudentAssessmentData(student, a));
+                details.add(assessmentDataById.get(a.getId()));
             }
             data.put("assessmentDataList", details);
             
@@ -388,10 +490,23 @@ public class DataViewController {
         }
         
         Map<String, Object> result = new HashMap<>();
-        result.put("students", students);
+        result.put("students", visibleStudents);
+        result.put("groups", groups);
+        result.put("allAssessments", allAssessments);
         result.put("assessments", assessments);
         result.put("studentOverallData", studentOverallData);
         result.put("assessmentCLOsWithGroupRubrics", assessmentCLOsWithGroupRubrics);
+        result.put("selectedGroupId", selectedGroupId);
+        result.put("studentSearch", studentSearch);
+        result.put("selectedAssessmentIds", selectedAssessmentIds == null ? List.of() : selectedAssessmentIds);
+        result.put("currentPage", currentPage);
+        result.put("pageSize", safeSize);
+        result.put("totalStudents", totalStudents);
+        result.put("showingFrom", totalStudents == 0 ? 0 : fromIndex + 1);
+        result.put("showingTo", toIndex);
+        result.put("totalPages", totalPages);
+        result.put("hasPreviousPage", paginate && currentPage > 1);
+        result.put("hasNextPage", paginate && currentPage < totalPages);
         return result;
     }
 
@@ -443,6 +558,7 @@ public class DataViewController {
         Map<String, List<Rubric>> rubricsByType = new HashMap<>();
         Map<Long, Map<Long, Map<String, Object>>> studentRubricDetails = new HashMap<>();
         Map<String, String> uniqueEvaluators = new java.util.LinkedHashMap<>();
+        Map<Long, StudentAssessmentDataDto> studentAssessmentDataById = new HashMap<>();
 
         Map<Long, Object> studentGroupComments = new HashMap<>();
         Map<Long, Object> studentIndividualComments = new HashMap<>();
@@ -464,6 +580,13 @@ public class DataViewController {
             });
             
             assessmentData = calculateService.calculateAssessmentData(assessment, students);
+            if (assessmentData.getStudentDataList() != null) {
+                for (StudentAssessmentDataDto studentData : assessmentData.getStudentDataList()) {
+                    if (studentData != null && studentData.getStudent() != null && studentData.getStudent().getId() != null) {
+                        studentAssessmentDataById.put(studentData.getStudent().getId(), studentData);
+                    }
+                }
+            }
             
             for (Student student : students) {
                 Map<Long, Map<String, Object>> rubricDetails = new HashMap<>();
@@ -486,8 +609,11 @@ public class DataViewController {
             }
             
             for (Student student : students) {
+                StudentAssessmentDataDto studentData = studentAssessmentDataById.get(student.getId());
+                if (studentData == null) {
+                    continue;
+                }
                 for (Rubric rubric : assessment.getRubrics()) {
-                    StudentAssessmentDataDto studentData = calculateService.calculateStudentAssessmentData(student, assessment);
                     RubricCalculationDto rubricCalc = studentData.getRubricCalculations().get(rubric.getId());
                     if (rubricCalc != null && rubricCalc.getEvaluatorDetails() != null) {
                         for (Map<String, Object> evalDetail : rubricCalc.getEvaluatorDetails()) {
@@ -547,7 +673,7 @@ public class DataViewController {
                 for (Student student : students) {
                     Double calculatedFactor = 0.0;
                     if(!assessments.isEmpty()) {
-                         calculatedFactor = calculateService.calculateStudentAssessmentData(student, assessments.get(0)).getFactor();
+                         calculatedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student);
                     }
                     Double calculatedTotal = calculateService.calculateGrandTotal(student, assessments);
                     
