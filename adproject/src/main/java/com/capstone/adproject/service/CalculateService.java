@@ -18,17 +18,17 @@ import com.capstone.adproject.dto.RubricCalculationDto;
 import com.capstone.adproject.dto.StudentAssessmentDataDto;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
+import com.capstone.adproject.model.FactorWeightage;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentResultOverride;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.FactorWeightageRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
-import com.capstone.adproject.repositories.FactorWeightageRepository;
-import com.capstone.adproject.model.FactorWeightage;
 
 @Service
 public class CalculateService {
@@ -58,9 +58,16 @@ public class CalculateService {
         
         List<StudentAssessmentDataDto> studentDataList = new ArrayList<>();
         students.sort((s1, s2) -> s1.getUsername().compareToIgnoreCase(s2.getUsername()));
+        Map<Long, List<Mark>> marksByStudentId = groupMarksByEvaluatedStudent(markRepository.findByAssessment(assessment));
         
         for (Student student : students) {
-            StudentAssessmentDataDto studentData = calculateStudentAssessmentData(student, assessment);
+            Double resolvedFactor = resolveStudentFactor(student);
+            StudentAssessmentDataDto studentData = calculateStudentAssessmentData(
+                student,
+                assessment,
+                resolvedFactor,
+                marksByStudentId.get(student.getId())
+            );
             studentDataList.add(studentData);
         }
         
@@ -80,21 +87,30 @@ public class CalculateService {
         return clos;
     }
 
+    public Map<Long, List<Mark>> getMarksByEvaluatedStudentForAssessment(Assessment assessment) {
+        return groupMarksByEvaluatedStudent(markRepository.findByAssessment(assessment));
+    }
+
     public StudentAssessmentDataDto calculateStudentAssessmentData(Student student, Assessment assessment) {
+        return calculateStudentAssessmentData(student, assessment, null);
+    }
+
+    public StudentAssessmentDataDto calculateStudentAssessmentData(Student student, Assessment assessment, Double precomputedFactor) {
+        return calculateStudentAssessmentData(student, assessment, precomputedFactor, null);
+    }
+
+    public StudentAssessmentDataDto calculateStudentAssessmentData(
+            Student student,
+            Assessment assessment,
+            Double precomputedFactor,
+            List<Mark> preloadedMarks) {
         StudentAssessmentDataDto dto = new StudentAssessmentDataDto();
         dto.setStudent(student);
         dto.setAssessment(assessment);
         
-        List<Mark> marks = markRepository.findByEvaluatedStudentAndAssessment(student, assessment);
+        List<Mark> marks = preloadedMarks != null ? preloadedMarks : markRepository.findByEvaluatedStudentAndAssessment(student, assessment);
         
-        Double factor = 0.0;
-        
-        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
-        if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenFactor() != null) {
-            factor = overrideOpt.get().getOverriddenFactor();
-        } else {
-            factor = calculatePeerAssessmentFactorForStudent(student);
-        }
+        Double factor = precomputedFactor != null ? precomputedFactor : resolveStudentFactor(student);
         
         dto.setFactor(factor);
         
@@ -124,7 +140,9 @@ public class CalculateService {
         dto.setCloSums(calculateCloSums(rubricCalculations));
         dto.setCloWeightedSums(calculateCloWeightedSums(rubricCalculations));
         dto.setCloWeightedSumsGroupOnly(calculateCloWeightedSumsGroupOnly(rubricCalculations));
+        dto.setCloWeightedSumsIndividualOnly(calculateCloWeightedSumsIndividualOnly(rubricCalculations));
         dto.setCloSumsIndividualOnly(calculateCloSumsIndividualOnly(rubricCalculations));
+        dto.setCloSumsGroupOnly(calculateCloSumsGroupOnly(rubricCalculations));
         
         Double totalUnweighted = round(calculateTotalMarks(dto.getCloSums()));
         dto.setTotalUnweightedMarks(totalUnweighted);
@@ -145,10 +163,11 @@ public class CalculateService {
             return overrideOpt.get().getOverriddenGrandTotal();
         }
 
+        Double factor = resolveStudentFactor(student);
         double grandTotal = 0.0;
         if (assessments != null) {
             for (Assessment assessment : assessments) {
-                StudentAssessmentDataDto studentData = calculateStudentAssessmentData(student, assessment);
+                StudentAssessmentDataDto studentData = calculateStudentAssessmentData(student, assessment, factor);
                 grandTotal += studentData.getTotalMarks(); 
             }
         }
@@ -479,11 +498,43 @@ public class CalculateService {
         return cloWeightedSums;
     }
 
+    private Map<Integer, Double> calculateCloWeightedSumsIndividualOnly(Map<Long, RubricCalculationDto> rubricCalculations) {
+        Map<Integer, Double> cloWeightedSums = new HashMap<>();
+        for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
+            String assessmentType = rubricCalc.getAssessmentType();
+            if (assessmentType != null && "Individual Assessment".equalsIgnoreCase(assessmentType.trim())) {
+                Integer clo = rubricCalc.getClo();
+                Double currentSum = cloWeightedSums.getOrDefault(clo, 0.0);
+                cloWeightedSums.put(clo, currentSum + rubricCalc.getWeightedRubricMark());
+            }
+        }
+        for (Map.Entry<Integer, Double> entry : cloWeightedSums.entrySet()) {
+            entry.setValue(round(entry.getValue()));
+        }
+        return cloWeightedSums;
+    }
+
     private Map<Integer, Double> calculateCloSumsIndividualOnly(Map<Long, RubricCalculationDto> rubricCalculations) {
         Map<Integer, Double> cloSums = new HashMap<>();
         for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
             String assessmentType = rubricCalc.getAssessmentType();
             if (assessmentType != null && "Individual Assessment".equalsIgnoreCase(assessmentType.trim())) {
+                Integer clo = rubricCalc.getClo();
+                Double currentSum = cloSums.getOrDefault(clo, 0.0);
+                cloSums.put(clo, currentSum + rubricCalc.getEvaluatedRubricMark());
+            }
+        }
+        for (Map.Entry<Integer, Double> entry : cloSums.entrySet()) {
+            entry.setValue(round(entry.getValue()));
+        }
+        return cloSums;
+    }
+
+    private Map<Integer, Double> calculateCloSumsGroupOnly(Map<Long, RubricCalculationDto> rubricCalculations) {
+        Map<Integer, Double> cloSums = new HashMap<>();
+        for (RubricCalculationDto rubricCalc : rubricCalculations.values()) {
+            String assessmentType = rubricCalc.getAssessmentType();
+            if (assessmentType != null && "Group Assessment".equalsIgnoreCase(assessmentType.trim())) {
                 Integer clo = rubricCalc.getClo();
                 Double currentSum = cloSums.getOrDefault(clo, 0.0);
                 cloSums.put(clo, currentSum + rubricCalc.getEvaluatedRubricMark());
@@ -559,6 +610,29 @@ public class CalculateService {
             .stream()
             .map(c -> c.getDisplayName() + ": " + c.getCommentText())
             .collect(Collectors.toList());
+    }
+
+    private Double resolveStudentFactor(Student student) {
+        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+        if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenFactor() != null) {
+            return overrideOpt.get().getOverriddenFactor();
+        }
+        return calculatePeerAssessmentFactorForStudent(student);
+    }
+
+    private Map<Long, List<Mark>> groupMarksByEvaluatedStudent(List<Mark> marks) {
+        Map<Long, List<Mark>> grouped = new HashMap<>();
+        if (marks == null || marks.isEmpty()) {
+            return grouped;
+        }
+
+        for (Mark mark : marks) {
+            if (mark.getEvaluatedStudent() == null || mark.getEvaluatedStudent().getId() == null) {
+                continue;
+            }
+            grouped.computeIfAbsent(mark.getEvaluatedStudent().getId(), key -> new ArrayList<>()).add(mark);
+        }
+        return grouped;
     }
     
     public String calculateGrade(Double totalMarks) {

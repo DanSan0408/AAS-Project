@@ -30,42 +30,136 @@
                     </a>
                     <a th:href="@{/admin/data-views}" class="btn btn-back"><i class="fas fa-arrow-left"></i> Back</a>
                     <button data-action="print-page" class="btn btn-print"><i class="fas fa-print"></i> Print</button>
-                    <a th:href="@{/admin/data-views/overall/export}" class="btn btn-export"><i class="fas fa-file-excel"></i> Export to Excel</a>
+                    <a th:href="@{/admin/data-views/overall/export(groupId=${selectedGroupId}, studentSearch=${studentSearch}, assessmentIds=${selectedAssessmentIds})}" class="btn btn-export"><i class="fas fa-file-excel"></i> Export to Excel</a>
                 </div>
             </div>
             
-            <div class="table-wrapper">
+            <details class="overall-filter-card">
+                <summary class="filter-card-summary">
+                    <span class="filter-card-summary-title"><i class="fas fa-filter"></i> Filter Overview</span>
+                    <span class="filter-card-summary-hint">Team, student, assessment, and page size filters</span>
+                </summary>
+
+                <div class="filter-card-body">
+                    <p class="filter-card-description">Filter by team, student, and assessment before loading the table. Hide unused assessment columns when the dataset is wide.</p>
+
+                    <form th:action="@{/admin/data-views/overall}" method="get" class="overall-filter-form">
+                    <div class="filter-grid">
+                        <div class="filter-field">
+                            <label for="groupId">Team</label>
+                            <select id="groupId" name="groupId">
+                                <option value="">All teams</option>
+                                <option th:each="group : ${groups}"
+                                        th:value="${group.id}"
+                                        th:text="${group.groupName}"
+                                        th:selected="${selectedGroupId != null and selectedGroupId == group.id}">
+                                    Team Name
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="filter-field">
+                            <label for="studentSearch">Student search</label>
+                            <input id="studentSearch" name="studentSearch" type="search" th:value="${studentSearch}" placeholder="Name, email, or team">
+                        </div>
+
+                        <div class="filter-field">
+                            <label for="size">Rows per page</label>
+                            <select id="size" name="size">
+                                <option value="10" th:selected="${pageSize == 10}">10</option>
+                                <option value="25" th:selected="${pageSize == 25}">25</option>
+                                <option value="50" th:selected="${pageSize == 50}">50</option>
+                                <option value="100" th:selected="${pageSize == 100}">100</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="assessment-filter-block">
+                        <div class="assessment-filter-header">
+                            <label>Assessments</label>
+                            <span th:text="|${assessments != null ? assessments.size() : 0} of ${allAssessments != null ? allAssessments.size() : 0} shown|">0 of 0 shown</span>
+                        </div>
+                        <div class="assessment-checkbox-grid">
+                            <label class="assessment-checkbox" th:each="assessment : ${allAssessments}">
+                                <input type="checkbox"
+                                       name="assessmentIds"
+                                       th:value="${assessment.id}"
+                                       th:checked="${selectedAssessmentIds != null and selectedAssessmentIds.contains(assessment.id)}">
+                                <span th:text="${assessment.title}">Assessment Title</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="btn btn-print"><i class="fas fa-search"></i> Apply Filters</button>
+                        <a th:href="@{/admin/data-views/overall}" class="btn btn-back"><i class="fas fa-undo"></i> Reset</a>
+                    </div>
+                    </form>
+                </div>
+            </details>
+
+            <div class="table-legend">
+                <strong><i class="fas fa-info-circle"></i> Legend:</strong>
+                <span><strong>IAR</strong> = Individual Assessment Rubric</span>
+                <span><strong>GAR</strong> = Group Assessment Rubric</span>
+            </div>
+
+            <div class="table-summary" th:if="${totalStudents != null}">
+                <span th:text="|Showing ${showingFrom} to ${showingTo} of ${totalStudents} students|">Showing 0 to 0 of 0 students</span>
+                <span th:text="|Displaying ${assessments != null ? assessments.size() : 0} of ${allAssessments != null ? allAssessments.size() : 0} assessments|">Displaying 0 of 0 assessments</span>
+            </div>
+
+            <div class="pagination-bar" th:if="${totalPages != null and totalPages > 1}">
+                <a class="btn btn-back"
+                   th:if="${hasPreviousPage}"
+                   th:href="@{/admin/data-views/overall(groupId=${selectedGroupId}, studentSearch=${studentSearch}, assessmentIds=${selectedAssessmentIds}, page=${currentPage - 1}, size=${pageSize})}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                <span class="page-indicator" th:text="|Page ${currentPage} of ${totalPages}|">Page 1 of 1</span>
+                <a class="btn btn-back"
+                   th:if="${hasNextPage}"
+                   th:href="@{/admin/data-views/overall(groupId=${selectedGroupId}, studentSearch=${studentSearch}, assessmentIds=${selectedAssessmentIds}, page=${currentPage + 1}, size=${pageSize})}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+            
+            <div class="table-wrapper" th:if="${students != null and !students.isEmpty()}">
                 <table class="overall-table">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="sticky-col first-col">Team Name</th>
-                            <th rowspan="2" class="sticky-col second-col">Student Email</th>
-                            <th rowspan="2" class="sticky-col third-col">Factor</th>
-                            <th rowspan="2" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
+                            <th rowspan="3" class="sticky-col first-col">Team Name</th>
+                            <th rowspan="3" class="sticky-col second-col">Student Email</th>
+                            <th rowspan="3" class="sticky-col third-col">Factor</th>
+                            <th rowspan="3" class="sticky-col fourth-col">Capped<br/><span style="font-size: 0.7em;">(Max 1.05)</span></th>
                             
                             <th:block th:each="assessment : ${assessments}">
-                                <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
-                                    <th th:colspan="${assessment.cloMarks.size() + (cloWithGroupSet != null ? #sets.size(cloWithGroupSet) : 0) + 2}"
-                                        class="assessment-header" th:text="${assessment.title}"></th>
-                                </th:block>
+                                <th th:colspan="${((assessment.cloMarks != null ? assessment.cloMarks.size() : 0) * 4) + 2}" class="assessment-header" th:text="${assessment.title}"></th>
                             </th:block>
                             
-                            <th rowspan="2" class="grand-total-header">Grand Total (Gt)</th>
-                            <th rowspan="2" class="grade-header">Grade</th>
+                            <th rowspan="3" class="grand-total-header">Grand Total (Gt)</th>
+                            <th rowspan="3" class="grade-header">Grade</th>
                         </tr>
                         <tr>
                             <th:block th:each="assessment : ${assessments}">
-                                <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessment.id]}">
-                                    <th:block th:each="cloEntry : ${assessment.cloMarks}">
-                                        <th class="clo-header" th:text="'CLO ' + ${cloEntry.key}"></th>
-                                    </th:block>
-                                    <th:block th:each="cloEntry : ${assessment.cloMarks}">
-                                        <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
-                                            <th class="clo-weighted-header" th:text="'CLO ' + ${cloEntry.key} + ' (W)'"></th>
-                                        </th:block>
-                                    </th:block>
-                                    <th class="total-header">Total (Raw)</th>
-                                    <th class="total-w-header">Total (W)</th>
+                                <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                    <th colspan="2" class="clo-header" th:text="'CLO ' + ${cloEntry.key}"></th>
+                                </th:block>
+                                <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                    <th colspan="2" class="clo-weighted-header" th:text="'CLO ' + ${cloEntry.key} + ' (W)'"></th>
+                                </th:block>
+                                <th rowspan="2" class="total-header">Total (Raw)</th>
+                                <th rowspan="2" class="total-w-header">Total (W)</th>
+                            </th:block>
+                        </tr>
+                        <tr>
+                            <th:block th:each="assessment : ${assessments}">
+                                <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                    <th class="sub-clo-header" style="font-size:0.85em; font-weight:normal;">IAR</th>
+                                    <th class="sub-clo-header" style="font-size:0.85em; font-weight:normal;">GAR</th>
+                                </th:block>
+                                <th:block th:each="cloEntry : ${assessment.cloMarks}">
+                                    <th class="sub-clo-header" style="font-size:0.85em; font-weight:normal;">IAR</th>
+                                    <th class="sub-clo-header" style="font-size:0.85em; font-weight:normal;">GAR</th>
                                 </th:block>
                             </th:block>
                         </tr>
@@ -89,26 +183,32 @@
                                 </td>
                                 
                                 <th:block th:each="assessmentData : ${data['assessmentDataList']}">
-                                    <th:block th:with="cloWithGroupSet=${assessmentCLOsWithGroupRubrics[assessmentData.assessment.id]}">
-                                        <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
-                                            <td class="clo-value">
-                                                <span th:text="${assessmentData.cloSums.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloSums[cloEntry.key], 1, 2) : '-'}"></span>
-                                            </td>
-                                        </th:block>
-                                        <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
-                                            <th:block th:if="${cloWithGroupSet != null && cloWithGroupSet.contains(cloEntry.key)}">
-                                                <td class="weighted-value">
-                                                    <span th:text="${assessmentData.cloWeightedSumsGroupOnly != null && assessmentData.cloWeightedSumsGroupOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloWeightedSumsGroupOnly[cloEntry.key], 1, 2) : '-'}"></span>
-                                                </td>
-                                            </th:block>
-                                        </th:block>
-                                        <td class="total-normal-value">
-                                            <span th:text="${#numbers.formatDecimal(assessmentData.totalUnweightedMarks, 1, 2)}"></span>
+                                    <!-- Raw IAR / GAR -->
+                                    <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
+                                        <td class="clo-value">
+                                            <span th:text="${assessmentData.cloSumsIndividualOnly != null && assessmentData.cloSumsIndividualOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloSumsIndividualOnly[cloEntry.key], 1, 2) : '0'}"></span>
                                         </td>
-                                        <td class="total-weighted-value">
-                                            <span th:text="${#numbers.formatDecimal(assessmentData.totalWeightedMarks, 1, 2)}"></span>
+                                        <td class="clo-value">
+                                            <span th:text="${assessmentData.cloSumsGroupOnly != null && assessmentData.cloSumsGroupOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloSumsGroupOnly[cloEntry.key], 1, 2) : '0'}"></span>
                                         </td>
                                     </th:block>
+                                    
+                                    <!-- Weighted IAR / GAR -->
+                                    <th:block th:each="cloEntry : ${assessmentData.assessment.cloMarks}">
+                                        <td class="weighted-value">
+                                            <span th:text="${assessmentData.cloWeightedSumsIndividualOnly != null && assessmentData.cloWeightedSumsIndividualOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloWeightedSumsIndividualOnly[cloEntry.key], 1, 2) : '0'}"></span>
+                                        </td>
+                                        <td class="weighted-value">
+                                            <span th:text="${assessmentData.cloWeightedSumsGroupOnly != null && assessmentData.cloWeightedSumsGroupOnly.containsKey(cloEntry.key) ? #numbers.formatDecimal(assessmentData.cloWeightedSumsGroupOnly[cloEntry.key], 1, 2) : '0'}"></span>
+                                        </td>
+                                    </th:block>
+                                    
+                                    <td class="total-normal-value">
+                                        <span th:text="${#numbers.formatDecimal(assessmentData.totalUnweightedMarks, 1, 2)}"></span>
+                                    </td>
+                                    <td class="total-weighted-value">
+                                        <span th:text="${#numbers.formatDecimal(assessmentData.totalWeightedMarks, 1, 2)}"></span>
+                                    </td>
                                 </th:block>
                                 
                                 <td class="grand-total-value">
@@ -122,6 +222,12 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="empty-results" th:if="${students == null or students.isEmpty()}">
+                <i class="fas fa-search"></i>
+                <h3>No matching records</h3>
+                <p>Try widening the team, student, or assessment filters to bring data back into view.</p>
             </div>
         </div>
     </div>

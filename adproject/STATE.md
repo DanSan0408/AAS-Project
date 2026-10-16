@@ -4,6 +4,77 @@
 
 ---
 
+## Current Status: Overall Assessment Data Filtering and Pagination
+**Status**: COMPLETED
+
+### Summary
+- Added server-side filtering to the Overall Assessment Data view so admins can narrow the dataset by team, student search text, and selected assessments before the table renders.
+- Added row pagination to keep large result sets readable when there are hundreds of students, while preserving the overall grand total and grade calculation across all assessments.
+- Updated the export action to carry the current filters so the CSV matches the visible slice of data.
+
+### Files Modified
+- `DataViewController.java`
+- `overall_data_view.html`
+- `overall_data.css`
+- `STATE.md`
+
+---
+
+## Current Status: IAR & GAR Breakdown under CLO Marks
+**Status**: COMPLETED
+
+### Summary
+- Updated the **Overall Assessment Data** view (`overall_data_view.html`) and its corresponding CSV export feature to explicitly breakdown Course Learning Outcome (CLO) marks into **Individual Assessment Rubric (IAR)** and **Group Assessment Rubric (GAR)** columns.
+- **Frontend / UI**: Redesigned the table headers in `overall_data_view.html` to use a 3-tier layout: Assessment Title -> CLO Header -> IAR and GAR sub-columns. Added a clear legend box above the table to define IAR and GAR.
+- **Backend Service**: Enhanced `CalculateService.java` to compute independent totals for `cloSumsGroupOnly` and `cloWeightedSumsIndividualOnly`, capturing the specific rubric evaluations required for the breakdown.
+- **Data Export**: Upgraded the `DataViewController.java` CSV export logic to mirror the 3-tier header structure and write the corresponding IAR/GAR data values, outputting `0.00` where scores are non-applicable or missing.
+
+### Files Modified
+- `StudentAssessmentDataDto.java`
+- `CalculateService.java`
+- `DataViewController.java`
+- `overall_data_view.html`
+- `STATE.md`
+
+---
+
+## Current Status: Fully Customizable Rubric Templates
+**Status**: COMPLETED
+
+### Summary
+- Maintained the existing "Blueprint" functionality (structural layouts) and introduced a parallel "Full Template" builder.
+- **Full Template Builder**: Admins can now pre-fill all rubric criteria, including Template Name, Description, Total Marks, CLO, Assessment Type, Sub-Rubrics, Direct Ratings, and Comments. 
+- **Template Application**: Updated the apply template logic so that applying a Full Template automatically fills in all inputs on the target Rubric, while older Blueprints continue to provide structural outlines.
+- **Refinements**: Dropdown default text changed to "Select Assessment Type" and "Select CLO", removed empty rating initialization on new templates, aligned the UI of remove buttons with the main form, and correctly bind the Template Name and Description to the target rubric upon applying.
+
+### Files Modified
+- `RubricTemplate.java`
+- `RubricTemplateController.java`
+- `rubric_template_manage.html`
+- `rubric_full_template_builder.html` (new)
+- `rubric-full-template-builder.js` (new)
+- `rubric-form.js`
+- `STATE.md`
+
+---
+
+## Current Status: Linux MySQL ResultSet Casing Fix (Production Data Missing)
+**Status**: COMPLETED
+
+### Summary
+- Resolved an issue on the Dokploy (Linux) deployed application where groups, rubrics, and students appeared empty or missing, and data view displays lacked CLO marks.
+- **Root Cause**: The production database tables contained camelCase column names (e.g., `groupName`, `cloMarks`), but the MySQL JDBC driver on Linux was returning the metadata keys in the `ResultSet` in entirely lowercase (e.g., `groupname`, `clomarks`). Because Hibernate explicitly generated case-sensitive mappings for these fields, it failed to match the lowercase keys in the `ResultSet`, leaving the Java objects populated with `null`s for those specific properties.
+- **Fix**: Re-mapped all affected `@Column` definitions in the entities (`Group`, `Rubric`, `Mark`, `Student`) to explicitly use completely lowercase column names without quotes (e.g., `@Column(name = "groupname")`). This ensures that while MySQL successfully reads the `groupName` column case-insensitively, Hibernate precisely matches the lowercase key returned by the Linux driver.
+
+### Files Modified
+- `Group.java`
+- `Rubric.java`
+- `Mark.java`
+- `Student.java`
+- `STATE.md`
+
+---
+
 ## Current Status: Production Deployment DDL-Auto Migration Fix (Data View Crash)
 **Status**: COMPLETED
 

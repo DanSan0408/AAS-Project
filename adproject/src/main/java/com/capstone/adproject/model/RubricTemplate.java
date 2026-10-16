@@ -32,6 +32,9 @@ public class RubricTemplate {
     @JoinColumn(name = "course_id")
     private Course course;
 
+    @Column(name = "template_type")
+    private String templateType = "BLUEPRINT";
+
     @Column(columnDefinition = "JSON")
     private String structureData;
 
@@ -65,5 +68,11 @@ public class RubricTemplate {
     }
     public void setStructureData(String structureData) {
         this.structureData = structureData;
+    }
+    public String getTemplateType() {
+        return templateType;
+    }
+    public void setTemplateType(String templateType) {
+        this.templateType = templateType;
     }
 }

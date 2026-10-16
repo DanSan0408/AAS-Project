@@ -55,6 +55,29 @@ public class RubricTemplateController {
         return "rubric_template_builder";
     }
 
+    @GetMapping("/add-full")
+    public String addFullTemplateForm(Model model) {
+        RubricTemplate rt = new RubricTemplate();
+        rt.setTemplateType("FULL");
+        model.addAttribute("rubricTemplate", rt);
+        model.addAttribute("pageTitle", "Create Full Rubric Template");
+        model.addAttribute("assessmentTypesOptions", new String[] { "Individual Assessment", "Group Assessment" });
+        return "rubric_full_template_builder";
+    }
+
+    @GetMapping("/edit-full/{id}")
+    public String editFullTemplateForm(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
+        Optional<RubricTemplate> templateOpt = rubricTemplateService.getTemplateById(id);
+        if (templateOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Full Template not found.");
+            return "redirect:/rubrics/templates/manage";
+        }
+        model.addAttribute("rubricTemplate", templateOpt.get());
+        model.addAttribute("pageTitle", "Edit Full Rubric Template");
+        model.addAttribute("assessmentTypesOptions", new String[] { "Individual Assessment", "Group Assessment" });
+        return "rubric_full_template_builder";
+    }
+
     @PostMapping("/save")
     public String saveTemplate(@ModelAttribute("rubricTemplate") RubricTemplate rubricTemplate, RedirectAttributes redirectAttributes) {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
