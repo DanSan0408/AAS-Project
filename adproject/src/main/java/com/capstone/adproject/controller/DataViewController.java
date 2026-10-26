@@ -514,7 +514,12 @@ public class DataViewController {
         if (value == null) {
             return "";
         }
-        String str = value.toString();
+        String str = value.trim();
+        // Prevent CSV Formula Injection (CWE-1236)
+        if (str.startsWith("=") || str.startsWith("+") || str.startsWith("-") || 
+            str.startsWith("@") || str.startsWith("\t") || str.startsWith("\r")) {
+            str = "'" + str;
+        }
         if (str.contains(",") || str.contains("\"") || str.contains("\n") || str.contains("\r")) {
             return "\"" + str.replace("\"", "\"\"") + "\"";
         }

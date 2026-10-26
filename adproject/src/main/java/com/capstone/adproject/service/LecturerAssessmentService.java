@@ -48,6 +48,7 @@ public class LecturerAssessmentService {
     private final RubricRepository rubricRepository;
     private final LecturerGroupAssignmentRepository groupAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
+    private final AssessmentCommentService assessmentCommentService;
 
     public LecturerAssessmentService(
             MarkRepository markRepository,
@@ -60,7 +61,8 @@ public class LecturerAssessmentService {
             LecturerRepository lecturerRepository,
             RubricRepository rubricRepository,
             LecturerGroupAssignmentRepository groupAssignmentRepository,
-            LecturerRubricAssignmentRepository rubricAssignmentRepository) {
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            AssessmentCommentService assessmentCommentService) {
         this.markRepository = markRepository;
         this.assessmentRepository = assessmentRepository;
         this.groupRepository = groupRepository;
@@ -72,6 +74,7 @@ public class LecturerAssessmentService {
         this.rubricRepository = rubricRepository;
         this.groupAssignmentRepository = groupAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
+        this.assessmentCommentService = assessmentCommentService;
     }
 
     public List<Assessment> getAssessmentsForLecturerEvaluation() {
@@ -784,7 +787,7 @@ public class LecturerAssessmentService {
                             comment.setAnonymousIdentifier(lecturerName);
                         }
                         
-                        assessmentCommentRepository.save(comment);
+                        assessmentCommentService.saveComment(comment);
                     }
                 }
             }
@@ -837,7 +840,7 @@ public class LecturerAssessmentService {
                             comment.setAnonymousIdentifier(lecturerName);
                         }
                         
-                        assessmentCommentRepository.save(comment);
+                        assessmentCommentService.saveComment(comment);
                     }
                 }
             }

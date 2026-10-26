@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,8 @@ import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import java.time.LocalDateTime;
+
 import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
@@ -27,13 +30,35 @@ public class AssessmentCommentService {
     
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private CommentSentimentAnalysisService sentimentAnalysisService;
     
     @Transactional
     public AssessmentComment saveComment(AssessmentComment comment) {
         if (comment.getCommentText() != null) {
             comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(comment.getCommentText()));
+            populateSentiment(comment);
+        }
+        if (comment.getIsApproved() == null) {
+            comment.setIsApproved(false);
+        }
+        if (comment.getApprovalStatus() == null) {
+            comment.setApprovalStatus(AssessmentComment.ApprovalStatus.PENDING);
         }
         return commentRepository.save(comment);
+    }
+
+    public void populateSentiment(AssessmentComment comment) {
+        if (sentimentAnalysisService != null && comment.getCommentText() != null 
+                && (comment.getFlagReason() == null || comment.getSentimentScore() == null)) {
+            CommentSentimentAnalysisService.SentimentAnalysisResult result = sentimentAnalysisService.analyze(comment.getCommentText());
+            if (result != null) {
+                comment.setIsFlaggedNegative(result.isFlaggedNegative());
+                comment.setFlagReason(result.getFlagReason());
+                comment.setSentimentScore(result.getSentimentScore());
+            }
+        }
     }
     
     public String getAnonymousIdentifier(Student evaluatedStudent, Long evaluatorId, Assessment assessment, String rubricAssessmentType) {
@@ -278,7 +303,10 @@ public class AssessmentCommentService {
     
     public Map<String, Object> getCompiledCommentsForStudent(Student student) {
     List<AssessmentComment> allComments = commentRepository
-        .findByEvaluatedStudent(student);
+        .findByEvaluatedStudent(student)
+        .stream()
+        .filter(AssessmentComment::isApproved)
+        .collect(Collectors.toList());
     
     System.out.println("===== FETCHING COMMENTS FOR STUDENT =====");
     System.out.println("Student: " + student.getUsername());
@@ -470,5 +498,188 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         }
         
         return true;
+    }
+
+    @Transactional
+    public boolean approveComment(Long commentId, String adminUsername) {
+        return commentRepository.findById(commentId).map(comment -> {
+            comment.setIsApproved(true);
+            comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+            comment.setApprovedAt(LocalDateTime.now());
+            comment.setApprovedBy(adminUsername);
+            commentRepository.save(comment);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional
+    public boolean rejectComment(Long commentId, String adminUsername) {
+        return commentRepository.findById(commentId).map(comment -> {
+            comment.setIsApproved(false);
+            comment.setApprovalStatus(AssessmentComment.ApprovalStatus.REJECTED);
+            comment.setApprovedAt(LocalDateTime.now());
+            comment.setApprovedBy(adminUsername);
+            commentRepository.save(comment);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AssessmentComment> getCommentById(Long commentId) {
+        if (commentId == null) {
+            return Optional.empty();
+        }
+        return commentRepository.findById(commentId);
+    }
+
+    @Transactional
+    public boolean toggleFlag(Long commentId) {
+        return commentRepository.findById(commentId).map(comment -> {
+            boolean current = Boolean.TRUE.equals(comment.getIsFlaggedNegative());
+            comment.setIsFlaggedNegative(!current);
+            if (!current && (comment.getFlagReason() == null || comment.getFlagReason().isEmpty())) {
+                comment.setFlagReason("Manually flagged by administrator");
+            }
+            commentRepository.save(comment);
+            return true;
+        }).orElse(false);
+    }
+
+    @Transactional
+    public int bulkApproveAllComments(Long assessmentId, String adminUsername) {
+        List<AssessmentComment> comments = commentRepository.findByAssessmentId(assessmentId);
+        int count = 0;
+        for (AssessmentComment comment : comments) {
+            if (!comment.isApproved()) {
+                comment.setIsApproved(true);
+                comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+                comment.setApprovedAt(LocalDateTime.now());
+                comment.setApprovedBy(adminUsername);
+                commentRepository.save(comment);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Transactional
+    public int bulkApproveSafeComments(Long assessmentId, String adminUsername) {
+        List<AssessmentComment> comments = commentRepository.findByAssessmentId(assessmentId);
+        int count = 0;
+        for (AssessmentComment comment : comments) {
+            populateSentiment(comment);
+            if (!Boolean.TRUE.equals(comment.getIsFlaggedNegative()) && !comment.isApproved()) {
+                comment.setIsApproved(true);
+                comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+                comment.setApprovedAt(LocalDateTime.now());
+                comment.setApprovedBy(adminUsername);
+                commentRepository.save(comment);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Transactional
+    public int bulkApproveComments(List<Long> commentIds, String adminUsername) {
+        if (commentIds == null || commentIds.isEmpty()) return 0;
+        int count = 0;
+        for (Long id : commentIds) {
+            if (approveComment(id, adminUsername)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Transactional
+    public int bulkRejectComments(List<Long> commentIds, String adminUsername) {
+        if (commentIds == null || commentIds.isEmpty()) return 0;
+        int count = 0;
+        for (Long id : commentIds) {
+            if (rejectComment(id, adminUsername)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public Map<String, Long> getModerationStats(Long assessmentId) {
+        Map<String, Long> stats = new HashMap<>();
+        List<AssessmentComment> comments = commentRepository.findByAssessmentId(assessmentId);
+        
+        long total = comments.size();
+        long pending = 0;
+        long approved = 0;
+        long rejected = 0;
+        long flagged = 0;
+
+        for (AssessmentComment c : comments) {
+            populateSentiment(c);
+            if (c.getApprovalStatus() == AssessmentComment.ApprovalStatus.APPROVED || Boolean.TRUE.equals(c.getIsApproved())) {
+                approved++;
+            } else if (c.getApprovalStatus() == AssessmentComment.ApprovalStatus.REJECTED) {
+                rejected++;
+            } else {
+                pending++;
+            }
+            if (Boolean.TRUE.equals(c.getIsFlaggedNegative())) {
+                flagged++;
+            }
+        }
+
+        stats.put("total", total);
+        stats.put("pending", pending);
+        stats.put("approved", approved);
+        stats.put("rejected", rejected);
+        stats.put("flagged", flagged);
+        return stats;
+    }
+
+    public List<AssessmentComment> getCommentsForModeration(Long assessmentId, String filter, String roleFilter, Long groupId, String search) {
+        List<AssessmentComment> comments = commentRepository.findByAssessmentIdOrderBySubmittedAtDesc(assessmentId);
+        
+        // Ensure sentiment is populated for all comments
+        for (AssessmentComment comment : comments) {
+            if (comment.getFlagReason() == null || comment.getSentimentScore() == null) {
+                populateSentiment(comment);
+            }
+        }
+
+        return comments.stream()
+            .filter(c -> {
+                if (filter == null || "all".equalsIgnoreCase(filter)) return true;
+                if ("flagged".equalsIgnoreCase(filter)) return Boolean.TRUE.equals(c.getIsFlaggedNegative());
+                if ("pending".equalsIgnoreCase(filter)) return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !Boolean.TRUE.equals(c.getIsApproved());
+                if ("approved".equalsIgnoreCase(filter)) return c.isApproved();
+                if ("rejected".equalsIgnoreCase(filter)) return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.REJECTED;
+                return true;
+            })
+            .filter(c -> {
+                if (roleFilter == null || roleFilter.isEmpty() || "all".equalsIgnoreCase(roleFilter)) return true;
+                if ("lecturer".equalsIgnoreCase(roleFilter) || "assessor".equalsIgnoreCase(roleFilter)) return c.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER;
+                if ("student".equalsIgnoreCase(roleFilter)) return c.getEvaluatorType() == AssessmentComment.EvaluatorType.STUDENT;
+                if ("peer".equalsIgnoreCase(roleFilter)) return c.getAssessmentType() == AssessmentComment.CommentAssessmentType.PEER;
+                if ("self".equalsIgnoreCase(roleFilter)) return c.getAssessmentType() == AssessmentComment.CommentAssessmentType.SELF;
+                if ("team".equalsIgnoreCase(roleFilter)) return c.getAssessmentType() == AssessmentComment.CommentAssessmentType.TEAM;
+                return true;
+            })
+            .filter(c -> {
+                if (groupId == null) return true;
+                Student s = c.getEvaluatedStudent();
+                return s != null && s.getGroup() != null && groupId.equals(s.getGroup().getId());
+            })
+            .filter(c -> {
+                if (search == null || search.trim().isEmpty()) return true;
+                String q = search.trim().toLowerCase();
+                String text = c.getCommentText() != null ? c.getCommentText().toLowerCase() : "";
+                String studentName = c.getEvaluatedStudent() != null ? (c.getEvaluatedStudent().getUsername() != null ? c.getEvaluatedStudent().getUsername().toLowerCase() : "") : "";
+                String studentEmail = c.getEvaluatedStudent() != null ? (c.getEvaluatedStudent().getEmail() != null ? c.getEvaluatedStudent().getEmail().toLowerCase() : "") : "";
+                String evalName = c.getEvaluatorName() != null ? c.getEvaluatorName().toLowerCase() : "";
+                String anon = c.getAnonymousIdentifier() != null ? c.getAnonymousIdentifier().toLowerCase() : "";
+                String label = c.getCommentLabel() != null ? c.getCommentLabel().toLowerCase() : "";
+                return text.contains(q) || studentName.contains(q) || studentEmail.contains(q) || evalName.contains(q) || anon.contains(q) || label.contains(q);
+            })
+            .collect(Collectors.toList());
     }
 }

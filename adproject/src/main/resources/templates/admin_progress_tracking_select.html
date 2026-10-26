@@ -3,13 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progress Tracking - Select Assessment</title>
+    <title>Progress &amp; Comments - Select Assessment</title>
     <link rel="stylesheet" th:href="@{/css/critical.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/data_home.css}">
     <link rel="stylesheet" th:href="@{/css/admin_progress_tracking.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            margin-right: 4px;
+        }
+        .badge-neutral {
+            background-color: #F4F2EE;
+            color: #374151;
+            border: 1px solid #D1D5DB;
+            font-weight: 600;
+        }
+        .badge-warning {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #F59E0B;
+            font-weight: 600;
+        }
+        .badge-danger {
+            background-color: #DC2626;
+            color: #FFFFFF;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(220, 38, 38, 0.25);
+        }
+        .comment-stats-row {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #E5E7EB;
+        }
+    </style>
 </head>
 <body class="data-view-page">
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -24,8 +58,8 @@
         <div class="data-view-container">
             <div class="section-container">
                 <div class="section-header">
-                    <h2><i class="fas fa-chart-line"></i> Assessment Progress Tracking</h2>
-                    <p>Select an assessment to view the evaluation progress of assigned assessors and students.</p>
+                    <h2><i class="fas fa-tasks"></i> Progress &amp; Comments Hub</h2>
+                    <p>Track evaluation completion rates and moderate student and assessor feedback before publishing to students.</p>
                 </div>
                 
                 <div th:if="${assessments != null and !#lists.isEmpty(assessments)}" class="assessment-grid">
@@ -47,11 +81,24 @@
                                 <span class="label"><i class="fas fa-star"></i> Total Marks:</span>
                                 <span class="value" th:text="${#numbers.formatDecimal(assessment.totalMarks, 1, 2)}">0.00</span>
                             </div>
+
+                            <!-- Comment Moderation Summary -->
+                            <div class="info-row comment-stats-row" th:if="${commentStats != null and commentStats.get(assessment.id) != null}">
+                                <span class="label"><i class="fas fa-comments"></i> Comments:</span>
+                                <span class="value" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;">
+                                    <span class="badge badge-neutral" th:text="${commentStats.get(assessment.id).get('total') + ' Total'}">0 Total</span>
+                                    <span th:if="${commentStats.get(assessment.id).get('pending') > 0}" class="badge badge-warning" th:text="${commentStats.get(assessment.id).get('pending') + ' Pending'}">0 Pending</span>
+                                    <span th:if="${commentStats.get(assessment.id).get('flagged') > 0}" class="badge badge-danger" title="Potential Sarcastic or Negative Comments" th:text="${'⚠️ ' + commentStats.get(assessment.id).get('flagged') + ' Flagged'}">0 Flagged</span>
+                                </span>
+                            </div>
                         </div>
                         
-                        <div class="card-footer">
-                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}}" class="btn btn-secondary">
+                        <div class="card-footer" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=progress'}" class="btn btn-secondary" style="flex: 1; text-align: center; min-width: 130px;">
                                 <i class="fas fa-chart-line"></i> View Progress
+                            </a>
+                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments'}" class="btn btn-primary" style="flex: 1; text-align: center; min-width: 130px; background-color: var(--color-primary); color: white;">
+                                <i class="fas fa-comments"></i> Moderate Comments
                             </a>
                         </div>
                     </div>
@@ -60,7 +107,7 @@
                 <div th:if="${assessments == null or #lists.isEmpty(assessments)}" class="empty-state">
                     <i class="fas fa-inbox"></i>
                     <h3>No assessments available.</h3>
-                    <p>Create assessments in the Manage Rubrics section to track progress.</p>
+                    <p>Create assessments in the Manage Rubrics section to track progress and moderate comments.</p>
                 </div>
             </div>
         </div>

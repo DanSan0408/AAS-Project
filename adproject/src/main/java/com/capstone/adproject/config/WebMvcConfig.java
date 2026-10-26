@@ -20,10 +20,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Apply rate limiting to all /api endpoints
         registry.addInterceptor(rateLimitInterceptor)
-                .addPathPatterns("/api/**"); // Apply rate limiting to all /api endpoints
+                .addPathPatterns("/api/**");
 
+        // Apply rate limiting to authentication endpoints
+        registry.addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/login", "/forgot_password", "/reset_password", "/reset_password/**");
+
+        // Enforce course scoping for admin contexts
         registry.addInterceptor(courseScopeInterceptor)
-                .addPathPatterns("/admin/**", "/rubrics/**", "/deadlines/**"); // Enforce course scoping for admin contexts
+                .addPathPatterns("/admin/**", "/rubrics/**", "/deadlines/**");
     }
 }

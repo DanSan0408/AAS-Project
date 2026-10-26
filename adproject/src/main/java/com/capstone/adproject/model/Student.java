@@ -54,6 +54,9 @@ public class Student {
     @Column(name = "resetpasswordtoken")
     private String resetPasswordToken;
 
+    @Column(name = "resetpasswordtokenexpiry")
+    private java.time.LocalDateTime resetPasswordTokenExpiry;
+
     @Column(name = "istemppassword", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
 

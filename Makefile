@@ -174,7 +174,7 @@ run-local: db-up
 	@echo -e "$(CYAN)[*] Checking local Java environment...$(RESET)"
 	@if java -version >/dev/null 2>&1; then \
 		echo -e "$(GREEN)[*] Launching Spring Boot locally via Maven wrapper...$(RESET)"; \
-		cd $(PROJECT_DIR) && ./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=prod --spring.datasource.url=jdbc:mysql://localhost:3306/aas_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC --spring.datasource.password=$(MYSQL_PASS)"; \
+		cd $(PROJECT_DIR) && ./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.datasource.password=$(MYSQL_PASS)"; \
 	else \
 		echo -e "$(RED)[x] Local Java runtime not found.$(RESET)"; \
 		echo -e "$(YELLOW)[i] To run directly on macOS host, install Java 17 via Homebrew:$(RESET)"; \

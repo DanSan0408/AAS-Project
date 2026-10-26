@@ -141,7 +141,7 @@
                                 <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
                                      class="rubric-comment-field">
                                     <label th:for="${'group_rubric_' + rubric.id + '_comment_' + i}">
-                                        <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                        <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
                                         <span class="optional-tag">(Optional)</span>
                                     </label>
                                     <textarea 
@@ -170,7 +170,7 @@
                                 <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                     <label class="comment-label" th:for="${'group_comment_' + i}">
                                         <i class="fas fa-comment-dots"></i>
-                                        <span th:utext="${commentLabels[i]}">Comment</span>
+                                        <span th:text="${commentLabels[i]}">Comment</span>
                                     </label>
                                     <textarea 
                                         th:id="${'group_comment_' + i}"
@@ -273,7 +273,7 @@
                                     <div th:each="i : ${#numbers.sequence(0, rubric.rubricCommentCount - 1)}" 
                                          class="rubric-comment-field">
                                         <label th:for="${'student_' + student.id + '_rubric_' + rubric.id + '_comment_' + i}">
-                                            <span th:utext="${rubric.getRubricCommentLabel(i)}">Comment</span>
+                                            <span th:text="${rubric.getRubricCommentLabel(i)}">Comment</span>
                                             <span class="optional-tag">(Optional)</span>
                                         </label>
                                         <textarea 
@@ -302,7 +302,7 @@
                                     <div th:each="i : ${#numbers.sequence(0, #lists.size(commentLabels) - 1)}" class="comment-field">
                                         <label class="comment-label" th:for="${'student_' + student.id + '_comment_' + i}">
                                             <i class="fas fa-comment-dots"></i>
-                                            <span th:utext="${commentLabels[i]}">Comment</span>
+                                            <span th:text="${commentLabels[i]}">Comment</span>
                                         </label>
                                         <textarea 
                                             th:id="${'student_' + student.id + '_comment_' + i}"

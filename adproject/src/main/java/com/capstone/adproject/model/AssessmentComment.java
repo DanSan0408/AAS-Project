@@ -66,12 +66,33 @@ public class AssessmentComment {
     @Column(name = "rubric_assessment_type", length = 50)
     private String rubricAssessmentType;
 
-    
     @Transient
     private String cachedDisplayName;
     
     @Column(name = "rubric_id")
     private Long rubricId;
+
+    @Column(name = "is_approved", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isApproved = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_status", nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'PENDING'")
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+
+    @Column(name = "is_flagged_negative", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isFlaggedNegative = false;
+
+    @Column(name = "flag_reason", columnDefinition = "TEXT")
+    private String flagReason;
+
+    @Column(name = "sentiment_score")
+    private Double sentimentScore = 0.0;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "approved_by")
+    private String approvedBy;
 
     public enum EvaluatorType {
         STUDENT,
@@ -87,6 +108,12 @@ public class AssessmentComment {
         SUPERVISOR_EVALUATION
     }
 
+    public enum ApprovalStatus {
+        PENDING,
+        APPROVED,
+        REJECTED
+    }
+
     public AssessmentComment() {
     }
 
@@ -97,6 +124,18 @@ public class AssessmentComment {
         }
         if (commentIndex == null) {
             commentIndex = 0;
+        }
+        if (isApproved == null) {
+            isApproved = false;
+        }
+        if (approvalStatus == null) {
+            approvalStatus = ApprovalStatus.PENDING;
+        }
+        if (isFlaggedNegative == null) {
+            isFlaggedNegative = false;
+        }
+        if (sentimentScore == null) {
+            sentimentScore = 0.0;
         }
     }
 
@@ -143,6 +182,41 @@ public class AssessmentComment {
     
     public Long getRubricId() { return rubricId; }
     public void setRubricId(Long rubricId) { this.rubricId = rubricId; }
+
+    public Boolean getIsApproved() { return isApproved != null ? isApproved : false; }
+    public void setIsApproved(Boolean isApproved) { 
+        this.isApproved = isApproved; 
+        if (Boolean.TRUE.equals(isApproved)) {
+            this.approvalStatus = ApprovalStatus.APPROVED;
+        } else if (this.approvalStatus == ApprovalStatus.APPROVED) {
+            this.approvalStatus = ApprovalStatus.PENDING;
+        }
+    }
+
+    public boolean isApproved() {
+        return Boolean.TRUE.equals(this.isApproved) || this.approvalStatus == ApprovalStatus.APPROVED;
+    }
+
+    public ApprovalStatus getApprovalStatus() { return approvalStatus != null ? approvalStatus : ApprovalStatus.PENDING; }
+    public void setApprovalStatus(ApprovalStatus approvalStatus) { 
+        this.approvalStatus = approvalStatus; 
+        this.isApproved = (approvalStatus == ApprovalStatus.APPROVED);
+    }
+
+    public Boolean getIsFlaggedNegative() { return isFlaggedNegative != null ? isFlaggedNegative : false; }
+    public void setIsFlaggedNegative(Boolean isFlaggedNegative) { this.isFlaggedNegative = isFlaggedNegative; }
+
+    public String getFlagReason() { return flagReason; }
+    public void setFlagReason(String flagReason) { this.flagReason = flagReason; }
+
+    public Double getSentimentScore() { return sentimentScore != null ? sentimentScore : 0.0; }
+    public void setSentimentScore(Double sentimentScore) { this.sentimentScore = sentimentScore; }
+
+    public LocalDateTime getApprovedAt() { return approvedAt; }
+    public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+
+    public String getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
 
     public String getDisplayName() {
         if (cachedDisplayName != null) {

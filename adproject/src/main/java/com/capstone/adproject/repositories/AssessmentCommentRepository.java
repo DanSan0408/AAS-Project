@@ -157,4 +157,26 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
         @Param("assessment") Assessment assessment, 
         @Param("rubricId") Long rubricId
     );
+
+    long countByAssessment(Assessment assessment);
+
+    long countByAssessmentId(Long assessmentId);
+
+    long countByAssessmentIdAndApprovalStatus(Long assessmentId, AssessmentComment.ApprovalStatus approvalStatus);
+
+    long countByAssessmentIdAndIsFlaggedNegativeTrue(Long assessmentId);
+
+    List<AssessmentComment> findByAssessmentId(Long assessmentId);
+
+    List<AssessmentComment> findByAssessmentIdOrderBySubmittedAtDesc(Long assessmentId);
+
+    List<AssessmentComment> findByAssessmentIdAndIsFlaggedNegativeTrueOrderBySubmittedAtDesc(Long assessmentId);
+
+    List<AssessmentComment> findByAssessmentIdAndApprovalStatusOrderBySubmittedAtDesc(
+            Long assessmentId, AssessmentComment.ApprovalStatus approvalStatus);
+
+    List<AssessmentComment> findByEvaluatedStudentAndIsApprovedTrue(Student student);
+
+    List<AssessmentComment> findByEvaluatedStudentAndApprovalStatus(
+            Student student, AssessmentComment.ApprovalStatus approvalStatus);
 }

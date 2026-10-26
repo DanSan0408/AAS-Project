@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -14,8 +15,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,6 +43,7 @@ import com.capstone.adproject.dto.AssessmentAssignmentDto;
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.dto.RandomizationInputDto;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
@@ -66,6 +70,9 @@ import com.capstone.adproject.service.ProgressTrackingService;
 import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.SuperAdminService;
 
+import com.capstone.adproject.model.AssessmentComment;
+import com.capstone.adproject.service.AssessmentCommentService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -89,6 +96,7 @@ public class AdminController {
     private final StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository;
     private final ProgressTrackingService progressTrackingService;
     private final EmailService emailService;
+    private final AssessmentCommentService assessmentCommentService;
 
     // constructor
     public AdminController(
@@ -106,7 +114,8 @@ public class AdminController {
             StudentAssessmentAssignmentRepository studentAssessmentAssignmentRepository,
             ProgressTrackingService progressTrackingService,
             CustomUserDetailsService userDetailsService,
-            EmailService emailService) {
+            EmailService emailService,
+            AssessmentCommentService assessmentCommentService) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
@@ -122,6 +131,7 @@ public class AdminController {
         this.progressTrackingService = progressTrackingService;
         this.userDetailsService = userDetailsService;
         this.emailService = emailService;
+        this.assessmentCommentService = assessmentCommentService;
     }
 
     // ensure that dates objects are converted as dates
@@ -214,11 +224,33 @@ public class AdminController {
 
         redirectAttributes.addFlashAttribute("successMessage", "Active course switched successfully.");
 
+        return safeRedirect(request, "/admin/home");
+    }
+
+    private String safeRedirect(HttpServletRequest request, String fallbackPath) {
         String referer = request.getHeader("Referer");
-        if (referer != null && !referer.isBlank() && !referer.contains("/admin/switch-course")) {
-            return "redirect:" + referer;
+        if (referer == null || referer.isBlank()) {
+            return "redirect:" + fallbackPath;
         }
-        return "redirect:/admin/home";
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            String host = uri.getHost();
+            // If the referer has a host, it must match the server name of the current request
+            if (host != null && !host.equalsIgnoreCase(request.getServerName())) {
+                return "redirect:" + fallbackPath;
+            }
+            String path = uri.getRawPath();
+            if (path == null || !path.startsWith("/") || path.startsWith("//")) {
+                return "redirect:" + fallbackPath;
+            }
+            if (path.contains("/admin/switch-course")) {
+                return "redirect:" + fallbackPath;
+            }
+            String query = uri.getRawQuery();
+            return "redirect:" + path + (query != null && !query.isBlank() ? "?" + query : "");
+        } catch (Exception e) {
+            return "redirect:" + fallbackPath;
+        }
     }
 
     @PostMapping("/api/set-course/{courseId}")
@@ -278,11 +310,7 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Role assignation failed: " + e.getMessage());
         }
 
-        String referer = request.getHeader("Referer");
-        if (referer != null) {
-            return "redirect:" + referer;
-        }
-        return "redirect:/admin/manage-users";
+        return safeRedirect(request, "/admin/manage-users");
     }
 
     // transform data (objects) and reorganizes it
@@ -376,12 +404,15 @@ public class AdminController {
                 : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
 
         Map<Long, String> assessorTypes = new java.util.HashMap<>();
+        Map<Long, Map<String, Long>> commentStats = new java.util.HashMap<>();
         for (Assessment assessment : assessments) {
             assessorTypes.put(assessment.getId(), progressTrackingService.getAssessorTypes(assessment));
+            commentStats.put(assessment.getId(), assessmentCommentService.getModerationStats(assessment.getId()));
         }
 
         model.addAttribute("assessments", assessments);
         model.addAttribute("assessorTypes", assessorTypes);
+        model.addAttribute("commentStats", commentStats);
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "admin_progress_tracking_select";
     }
@@ -389,6 +420,11 @@ public class AdminController {
     @GetMapping("/progress-tracking/{assessmentId}")
     public String viewProgressTracking(
             @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam(value = "tab", required = false, defaultValue = "progress") String tab,
+            @RequestParam(value = "filter", required = false, defaultValue = "all") String filter,
+            @RequestParam(value = "roleFilter", required = false, defaultValue = "all") String roleFilter,
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "search", required = false) String search,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -404,12 +440,199 @@ public class AdminController {
         Map<String, Object> lecturerProgress = progressTrackingService.getLecturerProgress(assessment);
         Map<String, Object> studentProgress = progressTrackingService.getStudentProgress(assessment);
 
+        Map<String, Long> moderationStats = assessmentCommentService.getModerationStats(assessmentId);
+        List<AssessmentComment> moderationComments = assessmentCommentService.getCommentsForModeration(
+                assessmentId, filter, roleFilter, groupId, search);
+
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Group> courseGroups = activeCourseId != null ? groupRepository.findByCourseId(activeCourseId) : List.of();
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("lecturerProgress", lecturerProgress);
         model.addAttribute("studentProgress", studentProgress);
+        model.addAttribute("moderationStats", moderationStats);
+        model.addAttribute("moderationComments", moderationComments);
+        model.addAttribute("courseGroups", courseGroups);
+        model.addAttribute("activeTab", tab);
+        model.addAttribute("currentFilter", filter);
+        model.addAttribute("currentRoleFilter", roleFilter);
+        model.addAttribute("currentGroupId", groupId);
+        model.addAttribute("currentSearch", search != null ? search : "");
         model.addAttribute("adminUsername", getLoggedInUsername());
 
         return "admin_progress_tracking_view";
+    }
+
+    @PostMapping("/comments/{commentId}/approve")
+    public Object approveComment(@PathVariable Long commentId,
+                                 @RequestParam Long assessmentId,
+                                 @RequestParam(required = false, defaultValue = "comments") String tab,
+                                 @RequestParam(required = false, defaultValue = "all") String filter,
+                                 HttpServletRequest request,
+                                 RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        boolean isAjax = isAjaxRequest(request);
+
+        if (assessment == null || !ownsAssessment(assessment)) {
+            if (isAjax) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        assessmentCommentService.approveComment(commentId, getLoggedInUsername());
+        Map<String, Long> stats = assessmentCommentService.getModerationStats(assessmentId);
+
+        if (isAjax) {
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("commentId", commentId);
+            resp.put("isApproved", true);
+            resp.put("approvalStatus", "APPROVED");
+            resp.put("stats", stats);
+            resp.put("message", "Comment approved. It is now visible to the student.");
+            return ResponseEntity.ok(resp);
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Comment approved. It is now visible to the student.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+    }
+
+    @PostMapping("/comments/{commentId}/reject")
+    public Object rejectComment(@PathVariable Long commentId,
+                                @RequestParam Long assessmentId,
+                                @RequestParam(required = false, defaultValue = "comments") String tab,
+                                @RequestParam(required = false, defaultValue = "all") String filter,
+                                HttpServletRequest request,
+                                RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        boolean isAjax = isAjaxRequest(request);
+
+        if (assessment == null || !ownsAssessment(assessment)) {
+            if (isAjax) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        assessmentCommentService.rejectComment(commentId, getLoggedInUsername());
+        Map<String, Long> stats = assessmentCommentService.getModerationStats(assessmentId);
+
+        if (isAjax) {
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("commentId", commentId);
+            resp.put("isApproved", false);
+            resp.put("approvalStatus", "REJECTED");
+            resp.put("stats", stats);
+            resp.put("message", "Comment rejected and hidden from the student.");
+            return ResponseEntity.ok(resp);
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Comment rejected and hidden from the student.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+    }
+
+    @PostMapping("/comments/{commentId}/toggle-flag")
+    public Object toggleCommentFlag(@PathVariable Long commentId,
+                                    @RequestParam Long assessmentId,
+                                    @RequestParam(required = false, defaultValue = "comments") String tab,
+                                    @RequestParam(required = false, defaultValue = "all") String filter,
+                                    HttpServletRequest request,
+                                    RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        boolean isAjax = isAjaxRequest(request);
+
+        if (assessment == null || !ownsAssessment(assessment)) {
+            if (isAjax) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        assessmentCommentService.toggleFlag(commentId);
+        AssessmentComment comment = assessmentCommentService.getCommentById(commentId).orElse(null);
+        boolean isFlagged = comment != null && Boolean.TRUE.equals(comment.getIsFlaggedNegative());
+        Map<String, Long> stats = assessmentCommentService.getModerationStats(assessmentId);
+
+        if (isAjax) {
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("commentId", commentId);
+            resp.put("isFlagged", isFlagged);
+            resp.put("flagReason", comment != null ? comment.getFlagReason() : null);
+            resp.put("stats", stats);
+            resp.put("message", isFlagged ? "Comment flagged as potentially negative/sarcastic." : "Comment flag removed (marked safe).");
+            return ResponseEntity.ok(resp);
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Comment flag updated.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+    }
+
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        if (request == null) return false;
+        String requestedWith = request.getHeader("X-Requested-With");
+        String accept = request.getHeader("Accept");
+        String ajaxParam = request.getParameter("ajax");
+        return "XMLHttpRequest".equalsIgnoreCase(requestedWith)
+                || (accept != null && accept.contains("application/json"))
+                || "true".equalsIgnoreCase(ajaxParam);
+    }
+
+    @PostMapping("/comments/assessment/{assessmentId}/bulk-approve-all")
+    public String bulkApproveAllComments(@PathVariable Long assessmentId,
+                                         RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        int count = assessmentCommentService.bulkApproveAllComments(assessmentId, getLoggedInUsername());
+        redirectAttributes.addFlashAttribute("successMessage", "Bulk approved " + count + " comment(s). Students can now view their feedback.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=approved";
+    }
+
+    @PostMapping("/comments/assessment/{assessmentId}/bulk-approve-safe")
+    public String bulkApproveSafeComments(@PathVariable Long assessmentId,
+                                          RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        int count = assessmentCommentService.bulkApproveSafeComments(assessmentId, getLoggedInUsername());
+        redirectAttributes.addFlashAttribute("successMessage", "Bulk approved " + count + " non-flagged comment(s). Potential negative comments were kept for your review.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=flagged";
+    }
+
+    @PostMapping("/comments/assessment/{assessmentId}/bulk-action")
+    public String bulkCommentAction(@PathVariable Long assessmentId,
+                                    @RequestParam String action,
+                                    @RequestParam(value = "commentIds", required = false) List<Long> commentIds,
+                                    @RequestParam(required = false, defaultValue = "comments") String tab,
+                                    @RequestParam(required = false, defaultValue = "all") String filter,
+                                    RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        if (commentIds == null || commentIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No comments were selected for bulk action.");
+            return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+        }
+        if ("approve".equalsIgnoreCase(action)) {
+            int count = assessmentCommentService.bulkApproveComments(commentIds, getLoggedInUsername());
+            redirectAttributes.addFlashAttribute("successMessage", "Approved " + count + " selected comment(s).");
+        } else if ("reject".equalsIgnoreCase(action)) {
+            int count = assessmentCommentService.bulkRejectComments(commentIds, getLoggedInUsername());
+            redirectAttributes.addFlashAttribute("successMessage", "Rejected " + count + " selected comment(s).");
+        }
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
     }
 
     @GetMapping("/lecturer-assignments/{assessmentId}")
@@ -1022,7 +1245,7 @@ public class AdminController {
         return "redirect:/admin/group/edit/" + groupId;
     }
 
-    @GetMapping("/group/remove-student/{studentId}")
+    @PostMapping("/group/remove-student/{studentId}")
     public String removeStudentFromGroup(@PathVariable("studentId") Long studentId,
             RedirectAttributes redirectAttributes) {
         Optional<Student> studentOpt = adminService.findStudentById(studentId);
@@ -1466,7 +1689,7 @@ public class AdminController {
         return "redirect:/admin/manage-lecturers";
     }
 
-    @GetMapping("/delete-student/{id}")
+    @PostMapping("/delete-student/{id}")
     public String deleteStudent(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             Optional<Student> studentOpt = adminService.findStudentById(id);
@@ -1482,7 +1705,7 @@ public class AdminController {
         return "redirect:/admin/manage-students";
     }
 
-    @GetMapping("/delete-lecturer/{id}")
+    @PostMapping("/delete-lecturer/{id}")
     public String deleteLecturer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
             Optional<Lecturer> lecturerOpt = adminService.findLecturerById(id);
