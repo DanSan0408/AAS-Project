@@ -93,9 +93,9 @@ Ensure that **no sensitive information exists outside `.env`**, remove hardcoded
   * Forward the new variables in `adproject/docker-compose.yml` under `app.environment`.
 
 ### Acceptance Criteria
-- [ ] No hardcoded passwords, emails, or cryptographic secrets remain in Java files.
-- [ ] Bootstrap account creation requires explicit `.env` variables and logs no credentials.
-- [ ] Running `git grep -i "Admin@12345"` and `git grep -i "utm-cas-remember-me-secret-key"` yields zero matches.
+- [x] No hardcoded passwords, emails, or cryptographic secrets remain in Java files.
+- [x] Bootstrap account creation requires explicit `.env` variables and logs no credentials.
+- [x] Running `git grep -i "Admin@12345"` and `git grep -i "utm-cas-remember-me-secret-key"` yields zero matches.
 
 ---
 
@@ -180,11 +180,11 @@ Remediate CSRF bypasses, Host Header Injection, password reset token weaknesses,
   * Change `th:utext="${rubric.getRubricCommentLabel(i)}"` and `th:utext="${commentLabels[i]}"` to `th:text`.
 
 ### Acceptance Criteria
-- [ ] Deleting students or lecturers via direct GET URL returns HTTP 405 Method Not Allowed.
-- [ ] Password reset links in emails strictly use `app.public-base-url`.
-- [ ] Password reset tokens expire after 30 minutes and are stored hashed in MySQL.
-- [ ] Exporting CSV with cells starting with `=SUM(...)` or `@cmd` prepends `'` preventing formula execution.
-- [ ] Open redirects via spoofed `Referer` headers are blocked.
+- [x] Deleting students or lecturers via direct GET URL returns HTTP 405 Method Not Allowed.
+- [x] Password reset links in emails strictly use `app.public-base-url`.
+- [x] Password reset tokens expire after 30 minutes and are stored hashed in MySQL.
+- [x] Exporting CSV with cells starting with `=SUM(...)` or `@cmd` prepends `'` preventing formula execution.
+- [x] Open redirects via spoofed `Referer` headers are blocked.
 
 ---
 
@@ -220,9 +220,9 @@ Protect authentication endpoints against credential stuffing and brute-force att
   * Prevent silent overwriting of passwords and uncontrolled authority merging when an identifier exists in multiple tables. If an account has elevated credentials (SuperAdmin/Admin), prioritize that entity's password and roles deterministically.
 
 ### Acceptance Criteria
-- [ ] Repeated requests to `/forgot_password` or `/login` beyond the configured limit trigger HTTP 429 Too Many Requests.
-- [ ] IPv6 client addresses are properly parsed and rate limited.
-- [ ] User role resolution is deterministic and prevents cross-table privilege confusion.
+- [x] Repeated requests to `/forgot_password` or `/login` beyond the configured limit trigger HTTP 429 Too Many Requests.
+- [x] IPv6 client addresses are properly parsed and rate limited.
+- [x] User role resolution is deterministic and prevents cross-table privilege confusion.
 
 ---
 
@@ -251,8 +251,8 @@ Remove commented-out code, delete obsolete controllers and entities from previou
   * Remove obsolete supervisor-specific helper methods from `AdminService.java`.
 
 ### Acceptance Criteria
-- [ ] No `/*ackage` or `/*package` commented-out files exist in the repository.
-- [ ] Application compiles cleanly without missing dependency warnings.
+- [x] No `/*ackage` or `/*package` commented-out files exist in the repository.
+- [x] Application compiles cleanly without missing dependency warnings.
 
 ---
 
@@ -305,9 +305,9 @@ Eliminate in-memory heap bottlenecks, ensure null safety in calculations, and es
   * Keep `application-prod.properties` strictly for containerized and production environments.
 
 ### Acceptance Criteria
-- [ ] Course statistics dashboard loads without executing full table scans in memory.
-- [ ] Calculating assessment data for students without usernames succeeds without throwing `NullPointerException`.
-- [ ] Running the application locally outside Docker connects smoothly to `localhost:3306`.
+- [x] Course statistics dashboard loads without executing full table scans in memory.
+- [x] Calculating assessment data for students without usernames succeeds without throwing `NullPointerException`.
+- [x] Running the application locally outside Docker connects smoothly to `localhost:3306`.
 
 ---
 
@@ -336,6 +336,13 @@ Validate system stability across all user flows, verify zero secret leakage, and
 
 #### 6.3 Update `STATE.md`
 * Document the completed Security Hardening & Architectural Refactoring milestone in `adproject/STATE.md`.
+
+### Acceptance Criteria
+- [x] Environment health diagnostic passes cleanly with Java runtime and environment variables verified.
+- [x] Full automated test suite passes with 0 failures or errors.
+- [x] Automated secret leak audit confirms zero hardcoded passwords, emails, or cryptographic keys in source code.
+- [x] `.env` is confirmed git-ignored and never tracked in repository history.
+- [x] Full milestone completion is documented in `STATE.md`.
 
 ---
 

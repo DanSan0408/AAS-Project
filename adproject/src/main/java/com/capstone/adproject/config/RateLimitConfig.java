@@ -11,9 +11,15 @@ import java.time.Duration;
 public class RateLimitConfig {
 
     // Define a default rate limit: 10 requests per minute
-    @Bean
+    @Bean("defaultRateLimit")
     public Bandwidth defaultRateLimit() {
         return Bandwidth.classic(10, Refill.greedy(10, Duration.ofMinutes(1)));
+    }
+
+    // Define an authentication rate limit: 5 attempts per minute
+    @Bean("authRateLimit")
+    public Bandwidth authRateLimit() {
+        return Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
     }
 
 }

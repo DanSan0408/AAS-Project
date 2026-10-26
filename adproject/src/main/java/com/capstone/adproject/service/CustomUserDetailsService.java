@@ -1,8 +1,11 @@
 package com.capstone.adproject.service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,75 +43,102 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String emailOrUsername) throws UsernameNotFoundException {
-        java.util.List<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
-        String password = null;
-        String email = null;
+        if (emailOrUsername == null || emailOrUsername.trim().isEmpty()) {
+            throw new UsernameNotFoundException("User not found: identifier is blank");
+        }
 
-        Optional<SuperAdmin> superAdmin = superAdminRepository.findByEmail(emailOrUsername);
+        String identifier = emailOrUsername.trim();
+
+        // 1. Strict Priority 1: Super Admin
+        Optional<SuperAdmin> superAdmin = superAdminRepository.findByEmail(identifier);
         if (superAdmin.isEmpty()) {
-            superAdmin = superAdminRepository.findByUsername(emailOrUsername);
+            superAdmin = superAdminRepository.findByUsername(identifier);
         }
         if (superAdmin.isPresent()) {
-            if (superAdmin.get().getRoles() != null && !superAdmin.get().getRoles().isEmpty()) {
-                Arrays.stream(superAdmin.get().getRoles().split(","))
+            SuperAdmin sa = superAdmin.get();
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            if (sa.getRoles() != null && !sa.getRoles().isBlank()) {
+                Arrays.stream(sa.getRoles().split(","))
                         .map(String::trim)
+                        .filter(role -> !role.isEmpty())
                         .map(SimpleGrantedAuthority::new)
                         .forEach(authorities::add);
-            } else {
-                authorities.add(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
             }
-            password = superAdmin.get().getPassword();
-            email = superAdmin.get().getEmail() != null ? superAdmin.get().getEmail() : superAdmin.get().getUsername();
+            if (authorities.stream().noneMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()))) {
+                authorities.add(0, new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"));
+            }
+            String email = sa.getEmail() != null ? sa.getEmail() : sa.getUsername();
+            return new User(email, sa.getPassword(), authorities);
         }
 
-        Optional<Student> student = studentRepository.findByEmail(emailOrUsername);
-        if (student.isEmpty()) {
-            student = studentRepository.findByUsername(emailOrUsername);
-        }
-        if (student.isPresent()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_STUDENT"));
-            password = student.get().getPassword();
-            email = student.get().getEmail() != null ? student.get().getEmail() : student.get().getUsername();
-        }
-
-        Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
-        if (lecturer.isEmpty()) {
-            lecturer = lecturerRepository.findByUsername(emailOrUsername);
-        }
-        if (lecturer.isPresent()) {
-            // Load roles from the lecturer object (this includes ROLE_SUPER_ADMIN if assigned)
-            if (lecturer.get().getRoles() != null && !lecturer.get().getRoles().isEmpty()) {
-                Arrays.stream(lecturer.get().getRoles().split(","))
-                      .map(String::trim).map(SimpleGrantedAuthority::new).forEach(authorities::add);
-            } else {
-                // If no roles defined, add default ROLE_LECTURER
-                authorities.add(new SimpleGrantedAuthority("ROLE_LECTURER"));
-            }
-            if (password == null) {
-                password = lecturer.get().getPassword();
-                email = lecturer.get().getEmail() != null ? lecturer.get().getEmail() : lecturer.get().getUsername();
-            }
-        }
-
-        Optional<Admin> admin = adminRepository.findByEmail(emailOrUsername);
+        // 2. Strict Priority 2: Admin
+        Optional<Admin> admin = adminRepository.findByEmail(identifier);
         if (admin.isEmpty()) {
-            admin = adminRepository.findByUsername(emailOrUsername);
+            admin = adminRepository.findByUsername(identifier);
         }
         if (admin.isPresent()) {
-            // Only add ROLE_ADMIN if not already present from lecturer roles
-            if (!authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            Admin adm = admin.get();
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+            // If account is also a Lecturer, safely append lecturer roles (e.g. ROLE_LECTURER) without altering admin password
+            Optional<Lecturer> linkedLecturer = lecturerRepository.findByEmail(identifier);
+            if (linkedLecturer.isEmpty()) {
+                linkedLecturer = lecturerRepository.findByUsername(identifier);
             }
-            // Admin credential should take precedence when account exists in multiple tables.
-            password = admin.get().getPassword();
-            email = admin.get().getEmail() != null ? admin.get().getEmail() : admin.get().getUsername();
+            if (linkedLecturer.isPresent()) {
+                Lecturer lec = linkedLecturer.get();
+                if (lec.getRoles() != null && !lec.getRoles().isBlank()) {
+                    Arrays.stream(lec.getRoles().split(","))
+                            .map(String::trim)
+                            .filter(role -> !role.isEmpty())
+                            .filter(role -> authorities.stream().noneMatch(a -> a.getAuthority().equals(role)))
+                            .map(SimpleGrantedAuthority::new)
+                            .forEach(authorities::add);
+                } else if (authorities.stream().noneMatch(a -> "ROLE_LECTURER".equals(a.getAuthority()))) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_LECTURER"));
+                }
+            }
+
+            String email = adm.getEmail() != null ? adm.getEmail() : adm.getUsername();
+            return new User(email, adm.getPassword(), authorities);
         }
 
-        if (password == null) {
-            throw new UsernameNotFoundException("User not found with email/username: " + emailOrUsername);
+        // 3. Strict Priority 3: Lecturer
+        Optional<Lecturer> lecturer = lecturerRepository.findByEmail(identifier);
+        if (lecturer.isEmpty()) {
+            lecturer = lecturerRepository.findByUsername(identifier);
+        }
+        if (lecturer.isPresent()) {
+            Lecturer lec = lecturer.get();
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            if (lec.getRoles() != null && !lec.getRoles().isBlank()) {
+                Arrays.stream(lec.getRoles().split(","))
+                        .map(String::trim)
+                        .filter(role -> !role.isEmpty())
+                        .map(SimpleGrantedAuthority::new)
+                        .forEach(authorities::add);
+            }
+            if (authorities.stream().noneMatch(a -> "ROLE_LECTURER".equals(a.getAuthority()))) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_LECTURER"));
+            }
+            String email = lec.getEmail() != null ? lec.getEmail() : lec.getUsername();
+            return new User(email, lec.getPassword(), authorities);
         }
 
-        return new User(email, password, authorities);
+        // 4. Strict Priority 4: Student
+        Optional<Student> student = studentRepository.findByEmail(identifier);
+        if (student.isEmpty()) {
+            student = studentRepository.findByUsername(identifier);
+        }
+        if (student.isPresent()) {
+            Student stu = student.get();
+            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_STUDENT"));
+            String email = stu.getEmail() != null ? stu.getEmail() : stu.getUsername();
+            return new User(email, stu.getPassword(), authorities);
+        }
+
+        throw new UsernameNotFoundException("User not found with email/username: " + emailOrUsername);
     }
 
 }

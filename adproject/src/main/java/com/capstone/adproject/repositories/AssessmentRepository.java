@@ -17,6 +17,8 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long> {
 
     List<Assessment> findByTitle(String title);
 
+    long countByCourseId(Long courseId);
+
     @Query("SELECT DISTINCT a FROM Assessment a LEFT JOIN FETCH a.rubrics WHERE a.course.id = :courseId")
     List<Assessment> findAllWithRubricsByCourseId(@Param("courseId") Long courseId);
     

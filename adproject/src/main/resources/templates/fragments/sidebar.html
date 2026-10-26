@@ -35,14 +35,12 @@
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-users"><span>Manage Users</span></a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-courses"><span>Manage Courses</span></a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/rubrics/manage"><span>Manage Assessments</span></a></li>
-            <li><a th:href="@{/admin/progress-tracking}" class="sidebar-link">Progress Tracking</a></li>
-            <li class="sidebar-item"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
-            <!-- Consistent View Comments Link -->
             <li class="sidebar-item">
-                <a class="sidebar-link" th:href="@{/admin/comments/view/assessments}">
-                    <span>View Comments</span>
+                <a th:href="@{/admin/progress-tracking}" class="sidebar-link">
+                    <span>Progress &amp; Comments</span>
                 </a>
             </li>
+            <li class="sidebar-item"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
             <li class="sidebar-item">
                 <a class="sidebar-link" th:href="@{/profile}"><span>My Profile</span></a>
             </li>

@@ -2,6 +2,7 @@ package com.capstone.adproject.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,6 +17,9 @@ public class EmailService {
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
     
     private final JavaMailSender mailSender;
+
+    @Value("${spring.mail.from:${spring.mail.username:admin@example.com}}")
+    private String mailFrom;
     
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
@@ -27,7 +31,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); 
 
-            helper.setFrom("admin@eduinnovax.com"); 
+            helper.setFrom(mailFrom); 
             helper.setTo(userEmail);
             helper.setSubject("Password Reset Request");
             
@@ -63,7 +67,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("admin@eduinnovax.com");
+            helper.setFrom(mailFrom);
             helper.setTo(userEmail);
             helper.setSubject("Welcome to UTM CAS - Your Account Has Been Created");
 
@@ -106,7 +110,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("admin@eduinnovax.com");
+            helper.setFrom(mailFrom);
             helper.setTo(userEmail);
             helper.setSubject(subject);
 
@@ -150,7 +154,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("admin@eduinnovax.com");
+            helper.setFrom(mailFrom);
             helper.setTo(userEmail);
             helper.setSubject(subject);
 

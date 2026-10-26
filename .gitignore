@@ -6,3 +6,5 @@
 .svn/
 .cache/
 Reports/
+.env
+.env.*

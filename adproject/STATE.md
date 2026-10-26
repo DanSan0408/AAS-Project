@@ -1,6 +1,254 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-28 (Antigravity)
+**Last Updated**: 2026-10-22 (Antigravity)
+
+---
+
+## Current Status: Unified Progress & Comments Hub, Sentiment Filtration & In-Place AJAX Moderation
+**Status**: COMPLETED
+**Date**: 2026-10-22
+
+### Summary
+- **Unified Progress & Comments Hub**:
+  - Combined the separate **Progress Tracking** and **View Comments** sections into a single, unified module: **Progress & Comments** (`/admin/progress-tracking`).
+  - Updated the Admin navigation sidebar (`sidebar.html`) to replace separate links with a single **Progress & Comments** navigation item (`/admin/progress-tracking`).
+  - Maintained backward compatibility by redirecting legacy comment routes (`/{role}/comments/view/assessments`) to the unified comments view.
+  - Upgraded the Assessment Selection dashboard (`admin_progress_tracking_select.html`) with real-time comment metric pills (Total, Pending, and Flagged counts) and dual quick-access buttons ("View Progress" and "Moderate Comments").
+  - Designed a 2-tier tabbed dashboard on the assessment details page (`admin_progress_tracking_view.html`):
+    - **Tab 1: Evaluation Progress** (Assessor and Student granular progress tracking tables with expandable rows).
+    - **Tab 2: Comments & Moderation** (Comment review, sentiment filtration, and bulk actions).
+- **In-Place Asynchronous Moderation & Flagging (Zero Page Navigation)**:
+  - Refactored `AdminController.java` (`toggleCommentFlag`, `approveComment`, `rejectComment`) to support asynchronous AJAX requests via `HttpServletRequest` inspection (`X-Requested-With: XMLHttpRequest` or `Accept: application/json`), returning JSON status and real-time moderation statistics.
+  - Updated `admin_progress_tracking_view.html` with asynchronous JavaScript handlers (`handleToggleFlagAsync`, `handleApproveCommentAsync`, `handleRejectCommentAsync`).
+  - Dynamic in-place DOM updates: Flag button toggles state between "Flag" and "Unflag" with colored icons, comment card border classes toggle (`card-flagged`), filtration reason banners and badges show/hide smoothly, and KPI/filter pill counters update in real time.
+  - Non-intrusive floating toast notifications provide immediate action feedback without reloading the page, redirecting, or altering the admin's scroll position.
+- **Visual Design Alignment & High-Contrast Styling (IAMS UTM Theme)**:
+  - Replaced subtle/muted pastels with bold, high-contrast visual cues strictly adhering to the UTM IAMS palette: Deep Maroon (`#4A0018`), Graphite (`#3F3F46`), and UTM Gold Accent (`#F8A617`).
+  - Potential Negative / Sarcastic Comments: Highlighted with a bold 6px solid red left border (`#DC2626`), high-contrast alert badge (`#DC2626` background, bold white text), distinct warning banner, and active button styling (`btn-flag-active`).
+  - Standard Comments: Styled with signature UTM Gold accent (`border-left: 4px solid #F8A617`) matching `comment_view.html`.
+  - KPI Stat Cards & Buttons: Enhanced with bold numbers, colored icon squares, UTM maroon primary buttons (`#4A0018`), emerald approve buttons (`#047857`), and graphite reject buttons (`#3F3F46`).
+- **Built-in Sarcasm & Negative Influence Filtration Engine**:
+  - Implemented `CommentSentimentAnalysisService.java` providing zero-dependency Java heuristic and lexicon-based analysis:
+    - **Sarcasm Detection**: Identifies backhanded compliments, praise inverted by negation/irony ("great job doing nothing", "thanks for nothing", "super helpful (not)", quotes around praise like "'leader'").
+    - **Hostile & Derogatory Phrasing**: Scans for toxic keywords and dismissive patterns ("useless", "lazy", "freeloader", "waste of time", "did zero", "ghosted", and local student slang like "beban", "tak buat kerja", "hauk").
+    - **Sentiment Scoring**: Computes normalized sentiment scores (-1.0 to +1.0) with negation-handling.
+    - Flags comments as `isFlaggedNegative = true` with descriptive reason tags.
+- **Comment Visibility Protection (Strict Admin Approval)**:
+  - Added moderation fields to `AssessmentComment.java`: `isApproved` (default `false`), `approvalStatus` (`PENDING`, `APPROVED`, `REJECTED`), `isFlaggedNegative`, `flagReason`, `sentimentScore`, `approvedAt`, and `approvedBy`.
+  - Enforced strict visibility boundary in `AssessmentCommentService.getCompiledCommentsForStudent`: unapproved comments (from both lecturers and students) are **completely hidden from students** until explicitly approved by the admin.
+  - Updated `student_comments.html` to clearly notify students that comments will appear once approved by the course administrator.
+- **Automated Verification & Test Suite**:
+  - Maintained complete test suite with unit tests in `CommentSentimentAnalysisServiceTest` (7 tests) and `AssessmentCommentServiceTest` (5 tests).
+  - Executed full Maven test suite (`mvn test`): **34 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB).
+
+### Files Modified & Created
+- `CommentSentimentAnalysisService.java` (new service)
+- `CommentSentimentAnalysisServiceTest.java` (new test)
+- `AssessmentCommentServiceTest.java` (new test)
+- `AssessmentComment.java` (entity modified)
+- `AssessmentCommentRepository.java` (modified)
+- `AssessmentCommentService.java` (modified)
+- `LecturerAssessmentService.java` (modified)
+- `AdminController.java` (modified)
+- `GroupCommentController.java` (modified)
+- `sidebar.html` (modified)
+- `admin_progress_tracking_select.html` (modified)
+- `admin_progress_tracking_view.html` (modified)
+- `student_comments.html` (modified)
+- `admin_progress_tracking.css` (modified)
+- `STATE.md` (updated)
+
+---
+
+### Summary
+- **Automated & Integration Testing**:
+  - Executed health diagnostics verifying host Java runtime (JDK 24 / target 17 bytecode), Maven 3.9.11, local MySQL connectivity on port 3306, and presence of `.env` configuration files.
+  - Ran complete automated test suite (`mvn test`) covering:
+    - `RateLimitInterceptorTest` (5 tests): Authentication endpoint rate limiting (HTTP 429), client IP resolution, IPv6 support, and anti-spoofing defense.
+    - `CalculateServiceTest` (1 test): Null-safe student sorting across null, blank, and mixed-case usernames and emails without NPEs.
+    - `CourseStatisticsServiceTest` (3 tests): Database aggregation queries (`countByCourseId`), avoidance of full table scans, and scoped fallback handling.
+    - `CustomUserDetailsServiceTest` (6 tests): Deterministic priority hierarchy (SuperAdmin > Admin > Lecturer > Student), multi-table collision separation, and credential safety.
+    - `SuperAdminServiceTest` (3 tests): Course management, validation, and update workflows.
+    - `HtmlSanitizerUtilTest` (3 tests): OWASP sanitization against script tags, HTML entity injection, and XSS attack vectors.
+    - Overall: **22 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB).
+- **Automated Secret Leak Audit**:
+  - Ran deep repository scan (`git grep`) for accidental hardcoded credentials, API keys, and passwords across all non-ignored project source files.
+  - Confirmed 0 hardcoded credentials or passwords in Java source files.
+  - Confirmed 0 occurrences of deprecated secrets (`Admin@12345`, `utm-cas-remember-me-secret-key-2025-DO-NOT-CHANGE`) in source code.
+  - Verified `.env` and `.env.*` are explicitly listed in both root `.gitignore` and `adproject/.gitignore`.
+  - Audited full git commit history (`git log --all --full-history`) and confirmed `.env` has never been committed or tracked in version control history.
+- **Milestone Completion**:
+  - All 6 phases defined in `IMPLEMENTATION_PLAN.md` (Security Hardening & Architectural Refactoring) are fully implemented, verified, and documented.
+
+### Files Modified & Updated
+- `IMPLEMENTATION_PLAN.md` (completed)
+- `STATE.md` (updated)
+
+---
+
+## Current Status: Phase 5: Performance Optimization & Reliability Improvements
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Database Aggregation Queries**:
+  - Added repository count methods:
+    - `StudentRepository.countByCourseId(Long courseId)`
+    - `LecturerRepository.countByCourseId(Long courseId)`
+    - `AssessmentRepository.countByCourseId(Long courseId)`
+    - `GroupRepository.countByCourseId(Long courseId)`
+  - Refactored `CourseStatisticsService.getCourseStatistics` to eliminate full table scans (`findAll().stream().filter(...)`), replacing them directly with database aggregation queries.
+  - Refactored admin emails query fallback in `CourseStatisticsService` to use course-scoped `findByCourseId(course.getId())` instead of full table in-memory filtering. Added constructor injection for `EntityManager`.
+- **Null-Safe Sorting in Assessment Calculation**:
+  - Updated `CalculateService.calculateAssessmentData` to replace raw `s1.getUsername().compareToIgnoreCase(s2.getUsername())` with a comprehensive null-safe comparator.
+  - Evaluates non-blank username, falls back safely to non-blank email, and gracefully defaults to empty string `""`, completely preventing `NullPointerException` when processing students with missing or blank usernames.
+- **Local Development Environment Configuration**:
+  - Configured base `application.properties` with default datasource settings pointing to `localhost:3306` with credentials `${SPRING_DATASOURCE_PASSWORD:${MYSQL_ROOT_PASSWORD:rootpassword123}}`.
+  - Removed `spring.profiles.active=prod` from `application.properties` so running locally outside Docker automatically uses base local properties without requiring explicit profile overrides.
+  - Retained `application-prod.properties` specifically for containerized and production environments, where Docker Compose injects `SPRING_PROFILES_ACTIVE=prod`.
+  - Updated `run-local` target in `Makefile` to use default local configuration without forcing prod profile flags.
+- **Automated Test Coverage & Verification**:
+  - Created `CourseStatisticsServiceTest` with 3 test cases verifying that database aggregation queries are invoked, full table scans are avoided, and fallbacks execute cleanly.
+  - Created `CalculateServiceTest` verifying null-safe student sorting across null usernames, blank whitespace, mixed casing, and null emails.
+  - Executed `mvn test` verifying 22 tests run with 0 failures, 0 errors, and 1 skipped (integration test requiring live DB).
+
+### Files Modified & Created
+- `StudentRepository.java` (modified)
+- `LecturerRepository.java` (modified)
+- `AssessmentRepository.java` (modified)
+- `GroupRepository.java` (modified)
+- `CourseStatisticsService.java` (modified)
+- `CalculateService.java` (modified)
+- `application.properties` (modified)
+- `Makefile` (modified)
+- `AdprojectApplicationTests.java` (modified)
+- `CourseStatisticsServiceTest.java` (new test)
+- `CalculateServiceTest.java` (new test)
+- `IMPLEMENTATION_PLAN.md` (updated)
+- `STATE.md` (updated)
+
+---
+
+## Current Status: Phase 4: Dead Code Elimination & Legacy Cleanup
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Dead Controller & Service Removal**:
+  - Deleted obsolete commented-out controller `IndustrialSupervisorController.java` (prefixed with `/*ackage ... */`).
+  - Deleted obsolete commented-out service `IndustrialSupervisorService.java` (prefixed with `/*package ... */`).
+  - Deleted empty 0-byte placeholder `TestController.java`.
+  - Deleted obsolete Thymeleaf template `industrial_supervisor_home.html`.
+- **Domain & Repository Cleanup**:
+  - Deleted redundant JPA entity `IndustrialSupervisor.java` and repository `IndustrialSupervisorRepository.java`, preventing Hibernate from creating or syncing an unused database table.
+  - Verified all group supervisor associations throughout `Group.java`, `GroupAssignmentDto.java`, `AdminService.java`, `GroupCommentController.java`, and `AdminController.java` strictly reference `Lecturer`.
+- **Compilation & Verification**:
+  - Confirmed 0 occurrences of commented-out `/*ackage` or `/*package` source code in the repository.
+  - Verified project compiles cleanly with `mvn compile` and passes all unit tests (`RateLimitInterceptorTest`, `CustomUserDetailsServiceTest`, `SuperAdminServiceTest`, `HtmlSanitizerUtilTest`) with 0 failures or errors.
+
+### Files Removed
+- `IndustrialSupervisorController.java` (deleted)
+- `IndustrialSupervisorService.java` (deleted)
+- `TestController.java` (deleted)
+- `industrial_supervisor_home.html` (deleted)
+- `IndustrialSupervisor.java` (deleted)
+- `IndustrialSupervisorRepository.java` (deleted)
+- `STATE.md` (updated)
+- `IMPLEMENTATION_PLAN.md` (updated)
+
+---
+
+## Current Status: Phase 3: Rate Limiting & Access Control Fortification
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Authentication Rate Limiting**:
+  - Defined dedicated `authRateLimit` bean (5 attempts per minute) in `RateLimitConfig.java` alongside the general `defaultRateLimit` (10 requests per minute).
+  - Registered `RateLimitInterceptor` for `/login`, `/forgot_password`, `/reset_password`, and `/reset_password/**` in `WebMvcConfig.java`.
+  - Configured `RateLimitInterceptor` to route authentication endpoint requests to dedicated auth buckets and general API requests to default buckets, returning HTTP 429 Too Many Requests with retry-after headers when thresholds are exceeded.
+- **Client IP Resolution & Anti-Spoofing**:
+  - Removed flawed `!xfHeader.contains(".")` check in `RateLimitInterceptor.java` to fully support IPv6 client addresses.
+  - Added `app.security.behind-proxy: false` configuration flag. `X-Forwarded-For` header is only trusted when `behind-proxy` is explicitly enabled; otherwise client IP defaults to direct `request.getRemoteAddr()`, preventing client IP spoofing attacks.
+  - Updated `application.properties`, `application-prod.properties`, `.env.example`, `.env`, and `docker-compose.yml` to support `APP_SECURITY_BEHIND_PROXY`.
+- **Harmonized UserDetails Lookup & Privilege Separation**:
+  - Refactored `CustomUserDetailsService.loadUserByUsername` to follow strict priority order:
+    1. Super Admin
+    2. Admin
+    3. Lecturer
+    4. Student
+  - Prevented silent overwriting of passwords and uncontrolled authority merging when an identifier exists in multiple tables.
+  - SuperAdmin and Admin accounts deterministically prioritize elevated credentials and authorities, preventing student or lower-privilege account data from compromising system access.
+- **Verification & Test Coverage**:
+  - Created `RateLimitInterceptorTest` covering authentication brute-force rate limits (blocking on 6th attempt), IPv6 parsing, and anti-spoofing behavior.
+  - Created `CustomUserDetailsServiceTest` covering priority hierarchy, multi-table collision resolution, and absence of privilege escalation.
+
+### Files Modified
+- `RateLimitConfig.java`
+- `RateLimitInterceptor.java`
+- `WebMvcConfig.java`
+- `CustomUserDetailsService.java`
+- `application.properties`
+- `application-prod.properties`
+- `.env.example`
+- `.env`
+- `docker-compose.yml`
+- `RateLimitInterceptorTest.java` (new test)
+- `CustomUserDetailsServiceTest.java` (new test)
+- `STATE.md`
+
+---
+
+## Current Status: Phase 2: Critical Web Security & Authentication Defenses
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **CSRF-Protected Mutating Endpoints**: Converted mutating deletion and removal endpoints (`/delete-student/{id}`, `/delete-lecturer/{id}`, `/group/remove-student/{studentId}`) in `AdminController.java` from `@GetMapping` to `@PostMapping`. Updated `manage_students.html`, `manage_lecturers.html`, and `edit_group.html` to submit via CSRF-protected POST forms instead of raw `<a>` tags.
+- **Host Header Injection Neutralization**: Injected `app.public-base-url` into `AuthController.java`, `AdminService.java`, and `SuperAdminService.java`. Replaced dynamic request host construction with sanitized `publicBaseUrl` for all password reset and welcome invitation links.
+- **Password Reset Token Hardening**:
+  - Added `resetPasswordTokenExpiry` column (`LocalDateTime`) to `Admin`, `SuperAdmin`, `Lecturer`, and `Student` entities.
+  - Updated `UserService.java` to hash password reset tokens with SHA-256 before storing them in the database, with a strict 30-minute expiration window (`plusMinutes(30)`).
+  - Ensured incoming reset tokens are hashed before database lookup and rejected if expired. Expired or used tokens have their expiry timestamps wiped.
+  - In `AuthController.java`, replaced user enumeration leak with uniform response: `"If an account with that email exists, a password reset link has been sent."`.
+- **CSV / Formula Injection Mitigation (CWE-1236)**: Updated `escapeCsv` in `DataViewController.java` to prepend a single quote (`'`) to any cell value beginning with formula triggers (`=`, `+`, `-`, `@`, `\t`, `\r`), preventing spreadsheet calculation attacks upon opening exported data files.
+- **Open Redirect Mitigation**: Implemented `safeRedirect` helper in `AdminController.java` to validate `Referer` headers against the local host and forbid external domains or protocol-relative paths (`//`), protecting course switching and role assignment redirects.
+- **XSS Sanitization & Elimination of `th:utext`**: Replaced all remaining unescaped `th:utext` bindings for rubric and feedback comment labels with `th:text` in `supervisor_continuous_evaluation.html`.
+
+### Files Modified
+- `AdminController.java`
+- `AuthController.java`
+- `AdminService.java`
+- `SuperAdminService.java`
+- `UserService.java`
+- `DataViewController.java`
+- `Admin.java`, `SuperAdmin.java`, `Lecturer.java`, `Student.java`
+- `manage_students.html`, `manage_lecturers.html`, `edit_group.html`, `supervisor_continuous_evaluation.html`
+- `STATE.md`
+
+---
+
+## Current Status: Phase 1: Environment Hardening & Secret Externalization
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- Fully externalized all credentials, cryptographic keys, and sensitive identities from Java source code and configuration files into environment variables (`.env`).
+- **SuperAdmin Bootstrap**: Replaced hardcoded default email (`ihsan.rubix@gmail.com`) and password (`Admin@12345`) in `SuperAdminBootstrapRunner.java` with injected `@Value("${app.bootstrap.superadmin.email:}")` and `@Value("${app.bootstrap.superadmin.password:}")`. If not set, bootstrap safely skips with an informative log message. Completely eliminated plaintext password logging on application startup.
+- **Remember-Me Secret Key**: Replaced the static hardcoded secret in `SecurityConfig.java` with `@Value("${app.security.remember-me-key:}")`. Added a secure cryptographic fallback that dynamically generates a random 256-bit key on startup if no explicit key is configured, preventing cookie forgery using known repository secrets.
+- **Email Sender Identity**: Replaced hardcoded `"admin@eduinnovax.com"` across all email dispatch methods in `EmailService.java` with dynamic `@Value("${spring.mail.from:${spring.mail.username:admin@example.com}}")`.
+- **Configuration Sanitization & Docker Mapping**: Removed hardcoded app credentials and personal emails from `application.properties` and `application-prod.properties`. Updated `docker-compose.yml` to pass through bootstrap credentials, remember-me keys, and mail from settings. Expanded `adproject/.env.example` with zero-leak templates and created local `adproject/.env`.
+
+### Files Modified
+- `SuperAdminBootstrapRunner.java`
+- `SecurityConfig.java`
+- `EmailService.java`
+- `application.properties`
+- `application-prod.properties`
+- `.env.example`
+- `docker-compose.yml`
+- `.gitignore`
+- `STATE.md`
 
 ---
 

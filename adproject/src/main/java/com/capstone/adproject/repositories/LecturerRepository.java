@@ -27,6 +27,7 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     List<Lecturer> findByRolesContaining(String role);
 
     List<Lecturer> findByCourseId(Long courseId);
+    long countByCourseId(Long courseId);
 
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")

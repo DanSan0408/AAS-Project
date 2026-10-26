@@ -23,6 +23,9 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+    @org.springframework.beans.factory.annotation.Value("${app.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
+
     private final UserService userService;
     private final EmailService emailService;
 
@@ -96,33 +99,29 @@ public class AuthController {
                                         HttpServletRequest request, 
                                         Model model) {
         
-        Object user = userService.findUserByEmail(email);
-        
-        if (user == null) {
-            model.addAttribute("error", "No user found with that email address.");
-            return "forgot_password_form";
-        }
-        
-        try {
-            String token = userService.generateResetToken(user);
-            
-            String applicationUrl = request.getScheme() + "://" + request.getServerName();
-            if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-                applicationUrl += ":" + request.getServerPort();
-            }
-            String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + token;
+        String cleanEmail = email != null ? email.trim() : "";
+        if (!cleanEmail.isBlank()) {
+            Object user = userService.findUserByEmail(cleanEmail);
+            if (user != null) {
+                try {
+                    String token = userService.generateResetToken(user);
+                    
+                    String baseUrl = (publicBaseUrl != null && !publicBaseUrl.isBlank())
+                            ? publicBaseUrl.replaceAll("/+$", "")
+                            : request.getScheme() + "://" + request.getServerName() 
+                                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort()) 
+                                + request.getContextPath();
+                    String resetLink = baseUrl + "/reset_password?token=" + token;
 
-            String userEmail = email;
-            emailService.sendResetPasswordEmail(userEmail, resetLink);
-            
-            model.addAttribute("message", "A password reset link has been sent to your email.");
-            return "forgot_password_form";
-            
-        } catch (Exception e) {
-            logger.error("Error processing forgot password request for email: {}", email, e);
-            model.addAttribute("error", "Error sending email. Please try again.");
-            return "forgot_password_form";
+                    emailService.sendResetPasswordEmail(cleanEmail, resetLink);
+                } catch (Exception e) {
+                    logger.error("Error processing forgot password request for email: {}", cleanEmail, e);
+                }
+            }
         }
+        
+        model.addAttribute("message", "If an account with that email exists, a password reset link has been sent.");
+        return "forgot_password_form";
     }
 
     @GetMapping("/reset_password")

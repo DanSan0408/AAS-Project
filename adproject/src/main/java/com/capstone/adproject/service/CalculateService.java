@@ -3,6 +3,7 @@ package com.capstone.adproject.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +58,19 @@ public class CalculateService {
         dto.setAssessment(assessment);
         
         List<StudentAssessmentDataDto> studentDataList = new ArrayList<>();
-        students.sort((s1, s2) -> s1.getUsername().compareToIgnoreCase(s2.getUsername()));
+        students.sort(Comparator.comparing(
+            s -> {
+                if (s == null) return "";
+                if (s.getUsername() != null && !s.getUsername().isBlank()) {
+                    return s.getUsername();
+                }
+                if (s.getEmail() != null && !s.getEmail().isBlank()) {
+                    return s.getEmail();
+                }
+                return "";
+            },
+            String.CASE_INSENSITIVE_ORDER
+        ));
         Map<Long, List<Mark>> marksByStudentId = groupMarksByEvaluatedStudent(markRepository.findByAssessment(assessment));
         
         for (Student student : students) {

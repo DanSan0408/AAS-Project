@@ -23,4 +23,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     List<Group> findAllWithStudentsByCourseId(@Param("courseId") Long courseId);
 
     List<Group> findByCourseId(Long courseId);
+
+    long countByCourseId(Long courseId);
 }

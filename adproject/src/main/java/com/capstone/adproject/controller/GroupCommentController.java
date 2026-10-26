@@ -174,10 +174,7 @@ public class GroupCommentController {
         boolean isAdmin = "admin".equalsIgnoreCase(role);
         logger.info("selectAssessment: Accessed with role='{}', isAdmin={}", role, isAdmin);
         if (isAdmin) {
-            Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
-            model.addAttribute("assessments", assessmentService.findAllAssessmentsWithRubrics().stream()
-                .filter(a -> assessmentInManagedCourses(a, managedCourseIds))
-                .collect(Collectors.toList()));
+            return "redirect:/admin/progress-tracking?tab=comments";
         } else {
             Optional<Lecturer> lecturerOpt = findLecturerByAuthName(auth.getName());
             if (lecturerOpt.isEmpty()) {
@@ -189,11 +186,7 @@ public class GroupCommentController {
         }
         model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("role", role);
-        if (isAdmin) {
-            return "comment_select_assessment"; // Admin uses existing template
-        } else {
-            return "lecturer_comment_select_assessment"; // Lecturer uses new template
-        }
+        return "lecturer_comment_select_assessment";
     }
 
     @GetMapping("/assessment/{assessmentId}/groups")
