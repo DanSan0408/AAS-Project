@@ -125,9 +125,23 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
                 return "redirect:/rubrics/manage";
             }
             existingAssessment.setTitle(assessment.getTitle());
+            existingAssessment.setRequiresSubmission(Boolean.TRUE.equals(assessment.getRequiresSubmission()));
+            existingAssessment.setSubmissionTitle(assessment.getSubmissionTitle());
+            existingAssessment.setSubmissionScope(assessment.getSubmissionScope() != null ? assessment.getSubmissionScope() : "GROUP");
+            existingAssessment.setSubmissionInstructions(assessment.getSubmissionInstructions());
+            existingAssessment.setMaxFileSizeMb(assessment.getMaxFileSizeMb() != null ? Math.min(assessment.getMaxFileSizeMb(), 50) : 50);
             rubricService.saveAssessment(existingAssessment);
             redirectAttributes.addFlashAttribute("successMessage", "Assessment updated successfully.");
         } else {
+            if (assessment.getRequiresSubmission() == null) {
+                assessment.setRequiresSubmission(false);
+            }
+            if (assessment.getSubmissionScope() == null) {
+                assessment.setSubmissionScope("GROUP");
+            }
+            if (assessment.getMaxFileSizeMb() == null || assessment.getMaxFileSizeMb() > 50) {
+                assessment.setMaxFileSizeMb(50);
+            }
             Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
             if (activeCourseId == null) {
                 redirectAttributes.addFlashAttribute("errorMessage",

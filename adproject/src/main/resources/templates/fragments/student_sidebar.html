@@ -21,29 +21,34 @@
     <ul class="menu-list">
         <li>
             <a th:href="@{/student/home}">
-                 Dashboard
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/submissions}">
+                <i class="fas fa-file-upload"></i> Report Submissions
             </a>
         </li>
 
         <li>
             <a th:href="@{/student/assessments}">
-                Peer & Self Assessments
+                <i class="fas fa-tasks"></i> Peer &amp; Self Assessments
             </a>
         </li>
 
         <li>
             <a th:href="@{/student/comments}">
-                My Comments
+                <i class="fas fa-comments"></i> My Comments
             </a>
         </li>
 
         <li>
-                <a th:href="@{/profile}">
-                    My Profile
-                </a>
-            </li>
+            <a th:href="@{/profile}">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+        </li>
             
-        
         <li class="logout-item">
             <form th:action="@{/logout}" method="post">
                 <button type="submit" class="logout-btn">
@@ -110,6 +115,27 @@
                 closeSidebar();
             }
         });
+
+        // Highlight active link based on current path
+        try {
+            var currentPath = window.location.pathname;
+            var menuLinks = document.querySelectorAll('.sidebar .menu-list a');
+            menuLinks.forEach(function(link) {
+                var href = link.getAttribute('href');
+                link.classList.remove('active');
+                if (href === currentPath) {
+                    link.classList.add('active');
+                } else if (href === '/student/submissions' && 
+                    (currentPath.indexOf('/student/submissions') === 0 || 
+                     (currentPath.indexOf('/student/assessment/') === 0 && (currentPath.indexOf('/submit') !== -1 || currentPath.indexOf('/submission') !== -1)))) {
+                    link.classList.add('active');
+                } else if (href === '/student/assessments' && 
+                    (currentPath === '/student/assessments' || 
+                     (currentPath.indexOf('/student/assessment/') === 0 && currentPath.indexOf('/evaluate') !== -1))) {
+                    link.classList.add('active');
+                }
+            });
+        } catch(e) {}
     })();
 </script>
 </th:block>

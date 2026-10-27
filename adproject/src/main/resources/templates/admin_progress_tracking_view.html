@@ -21,6 +21,27 @@
             </div>
         </div>
         
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+                <li>
+                    <a th:href="@{/admin/progress-tracking}">
+                        <i class="fas fa-layer-group"></i> Progress Tracking Hub
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="assessment-name" th:text="${assessment.title}">Assessment Title</span>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page">
+                        <i class="fas fa-chart-line"></i> Live Tracking &amp; Moderation
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
         <div class="container-responsive">
             <div class="action-bar" style="margin-bottom: 1.5rem;">
                 <a th:href="@{/admin/progress-tracking}" class="btn btn-secondary">
@@ -57,10 +78,14 @@
                    th:classappend="${activeTab == 'comments' ? 'active' : ''}">
                     <i class="fas fa-comments"></i> Comments &amp; Moderation
                     <span class="tab-badge" id="tab-comments-badge" th:text="${moderationStats.get('pending')} + ' Pending'">0 Pending</span>
-                    <span th:if="${moderationStats.get('flagged') > 0}" 
-                          id="tab-comments-flag-alert"
-                          class="tab-badge badge-flagged-alert" 
-                          th:text="${'⚠️ ' + moderationStats.get('flagged') + ' Flagged'}">0 Flagged</span>
+                </a>
+                <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=submissions'}" 
+                   class="hub-tab-btn" 
+                   th:classappend="${activeTab == 'submissions' ? 'active' : ''}">
+                    <i class="fas fa-file-upload"></i> Report Setup &amp; Assessor Mapping
+                    <span class="tab-badge" style="background-color: #047857;" 
+                          th:if="${submissionMappingData != null and submissionMappingData.stats != null}" 
+                          th:text="${submissionMappingData.stats.get('totalSubmitted')} + '/' + ${submissionMappingData.stats.get('totalExpected')} + ' Submitted'">0/0</span>
                 </a>
             </div>
 
@@ -247,7 +272,7 @@
                         </div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-icon icon-pending"><i class="fas fa-hourglass-half"></i></div>
+                        <div class="kpi-icon icon-pending"><i class="fas fa-clock"></i></div>
                         <div>
                             <div class="kpi-value" id="kpi-pending" th:text="${moderationStats.get('pending')}">0</div>
                             <div class="kpi-label">Pending Approval</div>
@@ -261,106 +286,98 @@
                         </div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-icon icon-flagged"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="kpi-icon icon-rejected"><i class="fas fa-eye-slash"></i></div>
                         <div>
-                            <div class="kpi-value" id="kpi-flagged" th:text="${moderationStats.get('flagged')}">0</div>
-                            <div class="kpi-label">Potential Sarcastic / Negative</div>
+                            <div class="kpi-value" id="kpi-rejected" th:text="${moderationStats.get('rejected')}">0</div>
+                            <div class="kpi-label">Rejected / Hidden</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Moderation Overview Banner & Bulk Allow All -->
+                <!-- Moderation Overview Banner & Bulk Action -->
                 <div class="moderation-banner">
                     <div class="banner-content">
                         <div class="banner-icon"><i class="fas fa-shield-alt"></i></div>
                         <div>
-                            <div class="banner-title">Comment Moderation &amp; Student Visibility Protection</div>
+                            <div class="banner-title">Student Visibility Control</div>
                             <p class="banner-desc">
-                                As long as a comment is not approved by the admin, it is <strong>completely hidden from the student</strong> (including peer, team, and assessor comments).
+                                All feedback (peer, self, team, and assessor comments) remains <strong>completely hidden from students</strong> until approved by the administrator.
                             </p>
                         </div>
                     </div>
                     <div class="banner-actions">
-                        <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-safe'}" method="post" style="display: inline;" onsubmit="return confirm('Bulk approve all safe comments? (Any comments flagged as sarcastic or negative will remain pending for your manual review)');">
+                        <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-all'}" method="post" style="display: inline;" onsubmit="return confirm('Approve all pending comments for this assessment? All feedback will become visible to students.');">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="btn btn-primary" style="background-color: #047857; color: white;">
-                                <i class="fas fa-check-double"></i> Bulk Allow All Non-Flagged
-                            </button>
-                        </form>
-                        <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-all'}" method="post" style="display: inline;" onsubmit="return confirm('Bulk approve ALL comments for this assessment? All students will be able to read all feedback.');">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="btn btn-primary" style="background-color: #4A0018; color: white;">
-                                <i class="fas fa-award"></i> Bulk Allow All Comments
+                            <button type="submit" class="btn btn-primary btn-approve-all" id="btnApproveAllPending" style="background-color: #047857; color: white;" th:disabled="${moderationStats.get('pending') == 0}">
+                                <i class="fas fa-check-double"></i> Approve All Pending (<span id="banner-pending-count" th:text="${moderationStats.get('pending')}">0</span>)
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- Sub-Navigation Filter Pills -->
-                <div class="filter-subnav">
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments&filter=all'}" 
-                       class="filter-pill" 
-                       th:classappend="${currentFilter == 'all' ? 'active' : ''}">
-                        <i class="fas fa-list"></i> All Comments 
-                        <span id="pill-count-all" th:text="'(' + ${moderationStats.get('total')} + ')'">(0)</span>
-                    </a>
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments&filter=flagged'}" 
-                       class="filter-pill pill-flagged" 
-                       th:classappend="${currentFilter == 'flagged' ? 'active' : ''}">
-                        <i class="fas fa-exclamation-triangle"></i> Potential Negative / Sarcastic
-                        <span id="pill-count-flagged" th:text="'(' + ${moderationStats.get('flagged')} + ')'">(0)</span>
-                    </a>
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments&filter=pending'}" 
-                       class="filter-pill" 
-                       th:classappend="${currentFilter == 'pending' ? 'active' : ''}">
-                        <i class="fas fa-hourglass-half"></i> Pending Review
-                        <span id="pill-count-pending" th:text="'(' + ${moderationStats.get('pending')} + ')'">(0)</span>
-                    </a>
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments&filter=approved'}" 
-                       class="filter-pill" 
-                       th:classappend="${currentFilter == 'approved' ? 'active' : ''}">
-                        <i class="fas fa-check-circle"></i> Approved
-                        <span id="pill-count-approved" th:text="'(' + ${moderationStats.get('approved')} + ')'">(0)</span>
-                    </a>
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments&filter=rejected'}" 
-                       class="filter-pill" 
-                       th:classappend="${currentFilter == 'rejected' ? 'active' : ''}">
-                        <i class="fas fa-ban"></i> Rejected / Hidden
-                        <span id="pill-count-rejected" th:text="'(' + ${moderationStats.get('rejected')} + ')'">(0)</span>
-                    </a>
-                </div>
-
-                <!-- Secondary Filter & Search Toolbar -->
-                <form th:action="@{'/admin/progress-tracking/' + ${assessment.id}}" method="get" class="filter-toolbar">
-                    <input type="hidden" name="tab" value="comments" />
-                    <input type="hidden" name="filter" th:value="${currentFilter}" />
-
-                    <div class="toolbar-search">
-                        <i class="fas fa-search"></i>
-                        <input type="text" name="search" th:value="${currentSearch}" placeholder="Search student name, evaluator, or comment keywords..." />
+                <!-- Unified Filter & Search Suite -->
+                <div class="filter-card">
+                    <!-- Status Segmented Tabs -->
+                    <div class="filter-subnav">
+                        <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='all', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
+                           class="filter-pill" 
+                           th:classappend="${currentFilter == 'all' or currentFilter == null ? 'active' : ''}">
+                            <i class="fas fa-list"></i> All Comments 
+                            <span id="pill-count-all" class="pill-badge" th:text="${moderationStats.get('total')}">0</span>
+                        </a>
+                        <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='pending', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
+                           class="filter-pill pill-pending-tab" 
+                           th:classappend="${currentFilter == 'pending' ? 'active' : ''}">
+                            <i class="fas fa-clock"></i> Pending Review
+                            <span id="pill-count-pending" class="pill-badge pill-badge-pending" th:text="${moderationStats.get('pending')}">0</span>
+                        </a>
+                        <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='approved', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
+                           class="filter-pill pill-approved-tab" 
+                           th:classappend="${currentFilter == 'approved' ? 'active' : ''}">
+                            <i class="fas fa-check-circle"></i> Approved
+                            <span id="pill-count-approved" class="pill-badge pill-badge-approved" th:text="${moderationStats.get('approved')}">0</span>
+                        </a>
+                        <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='rejected', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
+                           class="filter-pill" 
+                           th:classappend="${currentFilter == 'rejected' ? 'active' : ''}">
+                            <i class="fas fa-eye-slash"></i> Rejected
+                            <span id="pill-count-rejected" class="pill-badge" th:text="${moderationStats.get('rejected')}">0</span>
+                        </a>
                     </div>
 
-                    <select name="roleFilter" class="toolbar-select">
-                        <option value="all" th:selected="${currentRoleFilter == 'all' or currentRoleFilter == null}">All Evaluator Roles</option>
-                        <option value="assessor" th:selected="${currentRoleFilter == 'assessor'}">Assessors Only</option>
-                        <option value="student" th:selected="${currentRoleFilter == 'student'}">Students (All)</option>
-                        <option value="peer" th:selected="${currentRoleFilter == 'peer'}">Peer Comments Only</option>
-                        <option value="self" th:selected="${currentRoleFilter == 'self'}">Self Reflection Only</option>
-                        <option value="team" th:selected="${currentRoleFilter == 'team'}">Team Comments Only</option>
-                    </select>
+                    <!-- Search and Attributes Toolbar -->
+                    <form th:action="@{'/admin/progress-tracking/' + ${assessment.id}}" method="get" class="filter-toolbar">
+                        <input type="hidden" name="tab" value="comments" />
+                        <input type="hidden" name="filter" th:value="${currentFilter}" />
 
-                    <select name="groupId" class="toolbar-select" th:if="${courseGroups != null and !courseGroups.isEmpty()}">
-                        <option value="" th:selected="${currentGroupId == null}">All Groups</option>
-                        <option th:each="g : ${courseGroups}" th:value="${g.id}" th:text="${g.groupName}" th:selected="${currentGroupId == g.id}"></option>
-                    </select>
+                        <div class="toolbar-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" name="search" th:value="${currentSearch}" placeholder="Search student name, evaluator, or comment keywords..." />
+                        </div>
 
-                    <button type="submit" class="btn btn-secondary" style="padding: 9px 16px;">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments'}" class="btn" style="padding: 9px 12px; color: #6B7280;" title="Reset Filters">
-                        <i class="fas fa-undo"></i>
-                    </a>
-                </form>
+                        <select name="roleFilter" class="toolbar-select">
+                            <option value="all" th:selected="${currentRoleFilter == 'all' or currentRoleFilter == null}">All Evaluator Roles</option>
+                            <option value="assessor" th:selected="${currentRoleFilter == 'assessor'}">Assessors Only</option>
+                            <option value="student" th:selected="${currentRoleFilter == 'student'}">Students (All)</option>
+                            <option value="peer" th:selected="${currentRoleFilter == 'peer'}">Peer Comments Only</option>
+                            <option value="self" th:selected="${currentRoleFilter == 'self'}">Self Reflection Only</option>
+                            <option value="team" th:selected="${currentRoleFilter == 'team'}">Team Comments Only</option>
+                        </select>
+
+                        <select name="groupId" class="toolbar-select" th:if="${courseGroups != null and !courseGroups.isEmpty()}">
+                            <option value="" th:selected="${currentGroupId == null}">All Groups</option>
+                            <option th:each="g : ${courseGroups}" th:value="${g.id}" th:text="${g.groupName}" th:selected="${currentGroupId == g.id}"></option>
+                        </select>
+
+                        <button type="submit" class="btn btn-secondary" style="padding: 9px 18px;">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <a th:if="${(currentSearch != null and !currentSearch.trim().isEmpty()) or (currentRoleFilter != null and currentRoleFilter != 'all') or currentGroupId != null}"
+                           th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter=${currentFilter})}" class="btn btn-reset-filter" title="Reset Filters">
+                            <i class="fas fa-undo"></i> Reset
+                        </a>
+                    </form>
+                </div>
 
                 <!-- Bulk Selection & Actions Form -->
                 <form id="bulkActionForm" th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-action'}" method="post">
@@ -371,18 +388,18 @@
 
                     <div class="bulk-selection-bar" th:if="${moderationComments != null and !moderationComments.isEmpty()}">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="selectAllCheckbox" style="transform: scale(1.2); cursor: pointer;" />
+                            <input type="checkbox" id="selectAllCheckbox" style="transform: scale(1.15); cursor: pointer;" />
                             <label for="selectAllCheckbox" style="cursor: pointer; font-weight: 600; font-size: 0.9rem;">
-                                Select All on Page (<span th:text="${moderationComments.size()}"></span> visible)
+                                Select All (<span th:text="${moderationComments.size()}"></span> visible)
                             </label>
                         </div>
-                        <div style="display: flex; gap: 8px; align-items: center;">
-                            <span id="selectedCountLabel" style="font-size: 0.85rem; color: #6B7280; margin-right: 6px;">0 selected</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span id="selectedCountLabel" style="font-size: 0.85rem; color: #6B7280; margin-right: 4px;">0 selected</span>
                             <button type="button" class="btn btn-approve" id="bulkApproveBtn" disabled onclick="submitBulkAction('approve')">
                                 <i class="fas fa-check"></i> Approve Selected
                             </button>
                             <button type="button" class="btn btn-reject" id="bulkRejectBtn" disabled onclick="submitBulkAction('reject')">
-                                <i class="fas fa-times"></i> Reject Selected
+                                <i class="fas fa-eye-slash"></i> Reject Selected
                             </button>
                         </div>
                     </div>
@@ -392,49 +409,38 @@
                         <div th:each="comment : ${moderationComments}" 
                              class="comment-card-item"
                              th:id="'comment-card-' + ${comment.id}"
-                             th:classappend="${comment.isFlaggedNegative ? 'card-flagged' : (comment.isApproved ? 'card-approved' : (comment.approvalStatus == T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED ? 'card-rejected' : ''))}">
+                             th:classappend="${comment.isApproved ? 'card-approved' : (comment.approvalStatus == T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED ? 'card-rejected' : 'card-pending')}">
                             
                             <!-- Card Header -->
                             <div class="comment-card-header">
                                 <div class="comment-meta">
-                                    <input type="checkbox" name="commentIds" th:value="${comment.id}" class="comment-item-checkbox" style="transform: scale(1.2); cursor: pointer;" />
+                                    <input type="checkbox" name="commentIds" th:value="${comment.id}" class="comment-item-checkbox" style="transform: scale(1.15); cursor: pointer;" />
                                     
-                                    <!-- Approval Status -->
+                                    <!-- Approval Status Badge -->
                                     <span th:id="'status-tag-wrapper-' + ${comment.id}">
                                         <span th:if="${comment.isApproved}" class="status-tag status-approved">
-                                            <i class="fas fa-check-circle" style="margin-right: 4px;"></i> Approved (Visible)
+                                            <i class="fas fa-check-circle"></i> Approved
                                         </span>
                                         <span th:if="${!comment.isApproved and comment.approvalStatus == T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED}" class="status-tag status-rejected">
-                                            <i class="fas fa-times-circle" style="margin-right: 4px;"></i> Rejected (Hidden)
+                                            <i class="fas fa-eye-slash"></i> Rejected
                                         </span>
                                         <span th:if="${!comment.isApproved and comment.approvalStatus != T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED}" class="status-tag status-pending">
-                                            <i class="fas fa-clock" style="margin-right: 4px;"></i> Pending Review
+                                            <i class="fas fa-clock"></i> Pending Review
                                         </span>
                                     </span>
 
-                                    <!-- Flagged Alert Tag -->
-                                    <span th:id="'flag-badge-' + ${comment.id}" 
-                                          class="flag-alert-badge" 
-                                          th:style="${comment.isFlaggedNegative ? '' : 'display: none;'}"
-                                          th:title="${comment.flagReason}">
-                                        <i class="fas fa-exclamation-triangle"></i> Potential Negative / Sarcastic
-                                    </span>
-
-                                    <!-- Evaluator Role & Name -->
+                                    <!-- Evaluator Role Badge -->
                                     <span class="role-badge" 
-                                          th:classappend="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).LECTURER ? 'role-assessor' : (comment.assessmentType == T(com.capstone.adproject.model.AssessmentComment.CommentAssessmentType).SELF ? 'role-self' : (comment.assessmentType == T(com.capstone.adproject.model.AssessmentComment.CommentAssessmentType).TEAM ? 'role-peer' : 'role-student'))}"
+                                          th:classappend="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).LECTURER ? 'role-assessor' : (comment.assessmentType == T(com.capstone.adproject.model.AssessmentComment.CommentAssessmentType).SELF ? 'role-self' : (comment.assessmentType == T(com.capstone.adproject.model.AssessmentComment.CommentAssessmentType).TEAM ? 'role-team' : 'role-peer'))}"
                                           th:text="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).LECTURER ? 'Assessor' : (#strings.capitalize(#strings.toLowerCase(comment.assessmentType)))}">
                                         Role
                                     </span>
 
-                                    <span style="font-weight: 500; font-size: 0.88rem; color: #4B5563;">
-                                        By: <strong th:text="${comment.displayName}">Evaluator</strong>
-                                    </span>
-
-                                    <!-- Target Student & Group -->
-                                    <span style="color: #9CA3AF;">&bull;</span>
-                                    <span class="target-student-badge">
-                                        To: <span th:text="${comment.evaluatedStudent != null ? (comment.evaluatedStudent.username != null ? comment.evaluatedStudent.username : comment.evaluatedStudent.email) : 'Student'}">Target Student</span>
+                                    <!-- Relationship Flow -->
+                                    <span class="meta-participants">
+                                        <span class="participant-author">By: <strong th:text="${comment.displayName}">Evaluator</strong></span>
+                                        <i class="fas fa-arrow-right meta-arrow"></i>
+                                        <span class="participant-target">To: <strong th:text="${comment.evaluatedStudent != null ? (comment.evaluatedStudent.username != null ? comment.evaluatedStudent.username : comment.evaluatedStudent.email) : 'Student'}">Target Student</strong></span>
                                     </span>
                                     <span class="target-group-badge" th:if="${comment.evaluatedStudent != null and comment.evaluatedStudent.group != null}" th:text="${comment.evaluatedStudent.group.groupName}">Group</span>
                                 </div>
@@ -444,22 +450,11 @@
                                 </div>
                             </div>
 
-                            <!-- Question Label / Context -->
-                            <div style="font-size: 0.83rem; font-weight: 600; color: #6B7280; display: flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-question-circle"></i>
+                            <!-- Question Label / Prompt Context -->
+                            <div class="comment-prompt-label">
+                                <i class="far fa-question-circle"></i>
                                 <span th:text="${comment.getDisplayLabel(assessment)}">Question Label</span>
                                 <span th:if="${comment.rubricAssessmentType != null}" th:text="'(' + ${comment.rubricAssessmentType} + ')'" style="color: #9CA3AF; font-weight: 400;"></span>
-                            </div>
-
-                            <!-- Flagged Reason Banner -->
-                            <div th:id="'flag-banner-' + ${comment.id}" 
-                                 class="flag-reason-banner"
-                                 th:style="${comment.isFlaggedNegative ? '' : 'display: none;'}">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <div>
-                                    <strong>Filtration Flag:</strong> 
-                                    <span th:id="'flag-reason-text-' + ${comment.id}" th:text="${comment.flagReason != null ? comment.flagReason : 'Flagged for review by Administrator'}">Reason</span>
-                                </div>
                             </div>
 
                             <!-- Comment Content -->
@@ -469,11 +464,14 @@
 
                             <!-- Card Footer Action Buttons -->
                             <div class="comment-card-footer">
-                                <div style="font-size: 0.82rem; color: #6B7280;">
+                                <div class="moderated-info">
                                     <span th:id="'moderated-by-' + ${comment.id}">
                                         <span th:if="${comment.approvedBy != null}">
-                                            Moderated by <strong th:text="${comment.approvedBy}">admin</strong> 
+                                            <i class="fas fa-user-shield"></i> Reviewed by <strong th:text="${comment.approvedBy}">admin</strong> 
                                             <span th:if="${comment.approvedAt != null}" th:text="'on ' + ${#temporals.format(comment.approvedAt, 'dd MMM yyyy, HH:mm')}"></span>
+                                        </span>
+                                        <span th:if="${comment.approvedBy == null and !comment.isApproved and comment.approvalStatus != T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED}" class="text-muted">
+                                            <i class="fas fa-info-circle"></i> Awaiting administrator approval
                                         </span>
                                     </span>
                                 </div>
@@ -487,33 +485,19 @@
                                             onclick="handleApproveCommentAsync(this)"
                                             class="btn-approve" 
                                             th:style="${comment.isApproved ? 'display: none;' : ''}">
-                                        <i class="fas fa-check"></i> Approve
+                                        <i class="fas fa-check"></i> <span th:id="'btn-approve-text-' + ${comment.id}" th:text="${comment.approvalStatus == T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED ? 'Restore / Approve' : 'Approve'}">Approve</span>
                                     </button>
 
-                                    <!-- Reject Button (In-place AJAX) -->
+                                    <!-- Reject / Hide Button (In-place AJAX) -->
                                     <button type="button" 
                                             th:id="'btn-reject-' + ${comment.id}"
                                             th:data-comment-id="${comment.id}"
                                             th:data-assessment-id="${assessment.id}"
                                             onclick="handleRejectCommentAsync(this)"
                                             class="btn-reject" 
-                                            th:if="${comment.isApproved or comment.approvalStatus != T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED}">
+                                            th:style="${!comment.isApproved and comment.approvalStatus == T(com.capstone.adproject.model.AssessmentComment.ApprovalStatus).REJECTED ? 'display: none;' : ''}">
                                         <i class="fas fa-eye-slash"></i> 
                                         <span th:id="'btn-reject-text-' + ${comment.id}" th:text="${comment.isApproved ? 'Hide / Revoke' : 'Reject'}">Reject</span>
-                                    </button>
-
-                                    <!-- Toggle Flag Button (In-place AJAX - Never redirects) -->
-                                    <button type="button" 
-                                            th:id="'btn-flag-' + ${comment.id}"
-                                            th:data-comment-id="${comment.id}"
-                                            th:data-assessment-id="${assessment.id}"
-                                            th:data-flagged="${comment.isFlaggedNegative}"
-                                            onclick="handleToggleFlagAsync(this)"
-                                            class="btn-flag-toggle" 
-                                            th:classappend="${comment.isFlaggedNegative ? 'btn-flag-active' : ''}"
-                                            th:title="${comment.isFlaggedNegative ? 'Remove negative flag (Mark safe)' : 'Flag as potential negative/sarcastic'}">
-                                        <i th:id="'btn-flag-icon-' + ${comment.id}" class="fas fa-flag" th:style="${comment.isFlaggedNegative ? 'color: #DC2626;' : 'color: #9CA3AF;'}"></i>
-                                        <span th:id="'btn-flag-text-' + ${comment.id}" th:text="${comment.isFlaggedNegative ? 'Unflag' : 'Flag'}">Flag</span>
                                     </button>
                                 </div>
                             </div>
@@ -521,8 +505,8 @@
                     </div>
 
                     <!-- Empty State -->
-                    <div th:if="${moderationComments == null or moderationComments.isEmpty()}" style="text-align: center; padding: 48px 20px; background: white; border-radius: 12px; border: 1.5px dashed #D1D5DB; margin-top: 10px;">
-                        <i class="fas fa-clipboard-check" style="font-size: 2.8rem; color: #9CA3AF; margin-bottom: 12px;"></i>
+                    <div th:if="${moderationComments == null or moderationComments.isEmpty()}" class="comments-empty-state">
+                        <i class="fas fa-comments" style="font-size: 2.8rem; color: #9CA3AF; margin-bottom: 12px;"></i>
                         <h3 style="color: #374151; margin-bottom: 6px;">No Comments Found</h3>
                         <p style="color: #6B7280; font-size: 0.95rem; margin: 0;">No assessment comments match the selected filter or search criteria.</p>
                     </div>
@@ -533,6 +517,234 @@
                     <div id="toastCard" class="toast-card">
                         <i id="toastIcon" class="fas fa-check-circle"></i>
                         <span id="toastMsg">Action completed successfully.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- TAB 3: REPORT SETUP & ASSESSOR MAPPING -->
+            <!-- ================================================================= -->
+            <div th:if="${activeTab == 'submissions'}">
+                <!-- 4-KPI Grid for Submissions -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-total"><i class="fas fa-bullseye"></i></div>
+                        <div>
+                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalExpected') : 0}">0</div>
+                            <div class="kpi-label">Expected Targets</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-approved"><i class="fas fa-file-check"></i></div>
+                        <div>
+                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalSubmitted') : 0}">0</div>
+                            <div class="kpi-label">Reports Submitted</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-pending"><i class="fas fa-hourglass-half"></i></div>
+                        <div>
+                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalPending') : 0}">0</div>
+                            <div class="kpi-label">Pending Upload</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background-color: rgba(248, 166, 23, 0.15); color: #B45309;"><i class="fas fa-paint-brush"></i></div>
+                        <div>
+                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalDoodled') : 0}">0</div>
+                            <div class="kpi-label">Doodled Reports</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 1: Submission Configuration Status Banner -->
+                <div class="card" style="margin-bottom: 2rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                <h2 class="card-title" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-file-pdf" style="color: #4A0018;"></i>
+                                    <span th:text="${assessment.getEffectiveSubmissionTitle()}">Report / Assignment Submission</span>
+                                </h2>
+                                <span class="badge" th:style="${assessment.requiresSubmission} ? 'background-color: #047857; color: white;' : 'background-color: #94a3b8; color: white;'" style="padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.78rem;">
+                                    <i th:class="${assessment.requiresSubmission ? 'fas fa-check-circle' : 'fas fa-pause-circle'}"></i>
+                                    <span th:text="${assessment.requiresSubmission ? 'ACTIVE (' + assessment.submissionScope + ')' : 'SUBMISSION DISABLED'}">STATUS</span>
+                                </span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                                <span><i class="fas fa-layer-group"></i> Scope: <strong th:text="${assessment.submissionScope == 'INDIVIDUAL' ? 'Individual (Per Student)' : 'Group (1 Per Team)'}">Group</strong></span>
+                                <span>&bull;</span>
+                                <span><i class="fas fa-hdd"></i> Max Size: <strong th:text="${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50} + ' MB'">50 MB</strong></span>
+                                <span th:if="${not #strings.isEmpty(assessment.submissionInstructions)}">&bull;</span>
+                                <span th:if="${not #strings.isEmpty(assessment.submissionInstructions)}" th:title="${assessment.submissionInstructions}">
+                                    <i class="fas fa-info-circle"></i> Instructions Configured
+                                </span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" 
+                               class="btn" 
+                               style="background-color: #4A0018; color: #ffffff; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(74,0,24,0.15);">
+                                <i class="fas fa-sliders-h"></i> Configure Report Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Assessor Allocation & Report Mapping Matrix Card -->
+                <div class="card" style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h2 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-project-diagram" style="color: #4A0018;"></i> Report Allocation &amp; Assessor Mapping Matrix
+                            </h2>
+                            <p style="margin: 4px 0 0; color: #64748b; font-size: 0.85rem;">
+                                Maps out which assessor is assigned to evaluate and doodle on each student/group report based on assessment configuration.
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <span class="badge" style="background: #1e293b; color: #f8fafc; padding: 5px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 600;">
+                                <i class="fas fa-cog"></i> Mode: <span th:text="${submissionMappingData != null ? submissionMappingData.assignmentMode : 'GROUP'}">GROUP</span>
+                            </span>
+                            <span class="badge" style="background: #e2e8f0; color: #334155; padding: 5px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 600;">
+                                <i th:class="${assessment.submissionScope == 'GROUP' ? 'fas fa-users' : 'fas fa-user'}"></i>
+                                <span th:text="${assessment.submissionScope == 'GROUP' ? 'Group Reports (1/team)' : 'Individual Reports'}">Group</span>
+                            </span>
+                            <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-sm" style="background: #ffffff; color: #4A0018; border: 1px solid #4A0018; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                                <i class="fas fa-user-edit"></i> Edit Assessor Assignments
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Guidance Info Alert -->
+                    <div style="padding: 12px 16px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 0.88rem; color: #1e40af; margin-bottom: 20px; line-height: 1.4;">
+                        <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                        <span th:if="${submissionMappingData != null and submissionMappingData.assignmentMode == 'GROUP'}">
+                            <strong>Group Assignment Mode:</strong> Each assessor evaluates all rubrics for their assigned groups and doodles directly on the group's uploaded report.
+                        </span>
+                        <span th:if="${submissionMappingData != null and submissionMappingData.assignmentMode == 'STUDENT'}">
+                            <strong>Individual Student Mode:</strong> Assessors are mapped to specific students to grade individual rubrics and doodle on their submissions.
+                        </span>
+                        <span th:if="${submissionMappingData != null and submissionMappingData.assignmentMode == 'RUBRIC'}">
+                            <strong>Rubric Specialist Mode:</strong> Assessors evaluate specific rubrics across all targets and share side-by-side doodle access to all submitted reports.
+                        </span>
+                    </div>
+
+                    <!-- Mapping Table -->
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Target</th>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Assigned Assessor(s)</th>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Rubrics Scope</th>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Report Submission</th>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700; text-align: center;">Lecturer Doodles</th>
+                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700; text-align: center;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${submissionMappingData == null or submissionMappingData.mappings == null or submissionMappingData.mappings.isEmpty()}">
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: #64748b; font-style: italic;">
+                                        <i class="fas fa-inbox" style="font-size: 2rem; display: block; margin-bottom: 8px; color: #cbd5e1;"></i>
+                                        No targets found for this course or assessment. Assign students or groups to view mapping.
+                                    </td>
+                                </tr>
+
+                                <tr th:each="row : ${submissionMappingData.mappings}" style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.15s;">
+                                    <!-- Col 1: Target -->
+                                    <td style="padding: 14px 16px; vertical-align: top;">
+                                        <div style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                                            <i th:class="${row.targetType == 'GROUP' ? 'fas fa-users' : 'fas fa-user'}" style="color: #4A0018;"></i>
+                                            <span th:text="${row.targetName}">Target Name</span>
+                                        </div>
+                                        <div th:if="${row.targetType == 'GROUP' and row.students != null and !row.students.isEmpty()}" style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                                            <span th:each="std, iter : ${row.students}">
+                                                <span th:text="${not #strings.isEmpty(std.username) ? std.username : std.email}">Student</span><span th:if="${!iter.last}">, </span>
+                                            </span>
+                                        </div>
+                                        <div th:if="${row.targetType == 'STUDENT'}" style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                                            <span th:text="${row.email}">Email</span> &bull; 
+                                            <span th:text="'Group: ' + ${row.groupName}">Group</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Col 2: Assigned Assessors -->
+                                    <td style="padding: 14px 16px; vertical-align: top;">
+                                        <div th:if="${row.assignedLecturers != null and !row.assignedLecturers.isEmpty()}" style="display: flex; flex-direction: column; gap: 4px;">
+                                            <div th:each="lec : ${row.assignedLecturers}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #334155;">
+                                                <i class="fas fa-chalkboard-teacher" style="color: #047857;"></i>
+                                                <span th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}" style="font-weight: 600;">Lecturer</span>
+                                            </div>
+                                        </div>
+                                        <div th:unless="${row.assignedLecturers != null and !row.assignedLecturers.isEmpty()}">
+                                            <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem;">
+                                                <i class="fas fa-exclamation-circle"></i> Unassigned
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Col 3: Rubrics Scope -->
+                                    <td style="padding: 14px 16px; vertical-align: top;">
+                                        <span class="badge" style="background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 500;" th:text="${row.rubricsScope}">
+                                            All Assessment Rubrics
+                                        </span>
+                                    </td>
+
+                                    <!-- Col 4: Report Submission -->
+                                    <td style="padding: 14px 16px; vertical-align: top;">
+                                        <div th:if="${row.submission != null}">
+                                            <div style="display: flex; align-items: center; gap: 6px;">
+                                                <i class="fas fa-file-pdf" style="color: #dc2626;"></i>
+                                                <strong th:text="${row.submission.originalFileName}" style="color: #1e293b; font-size: 0.88rem; word-break: break-all;">file.pdf</strong>
+                                                <span class="badge" style="background: #047857; color: white; padding: 1px 6px; border-radius: 8px; font-size: 0.7rem;">v<span th:text="${row.submission.version}">1</span></span>
+                                            </div>
+                                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 3px;">
+                                                <span th:text="${#numbers.formatDecimal(row.submission.fileSizeBytes / 1048576.0, 1, 2)} + ' MB'">2.1 MB</span> &bull;
+                                                <span th:text="${#temporals.format(row.submission.submittedAt, 'dd MMM yyyy, HH:mm')}">Date</span>
+                                            </div>
+                                        </div>
+                                        <div th:unless="${row.submission != null}">
+                                            <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 8px; font-size: 0.78rem;">
+                                                <i class="fas fa-clock"></i> Pending Upload
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Col 5: Lecturer Doodles -->
+                                    <td style="padding: 14px 16px; vertical-align: top; text-align: center;">
+                                        <div th:if="${row.doodleCount > 0}">
+                                            <span class="badge" style="background: linear-gradient(135deg, #4A0018, #6d0726); color: #F8A617; padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="fas fa-paint-brush"></i> <span th:text="${row.doodleCount}">1</span> Page(s) Ink
+                                            </span>
+                                        </div>
+                                        <div th:unless="${row.doodleCount > 0}">
+                                            <span style="color: #94a3b8; font-size: 0.82rem;">
+                                                <i class="fas fa-minus"></i> No ink yet
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Col 6: Actions -->
+                                    <td style="padding: 14px 16px; vertical-align: top; text-align: center;">
+                                        <div th:if="${row.submission != null}" style="display: inline-flex; gap: 6px; align-items: center;">
+                                            <a th:href="@{/admin/submissions/{id}/file(id=${row.submission.id})}" target="_blank" 
+                                               class="btn btn-sm" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; text-decoration: none;" title="Download Original PDF">
+                                                <i class="fas fa-file-pdf" style="color: #dc2626;"></i> PDF
+                                            </a>
+                                            <a th:href="@{/admin/submissions/{id}/view(id=${row.submission.id})}" 
+                                               class="btn btn-sm" style="background: #4A0018; color: #ffffff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; font-weight: 600;" title="Review Report & Lecturer Doodles">
+                                                <i class="fas fa-paint-brush" style="color: #F8A617;"></i> Review &amp; Ink
+                                            </a>
+                                        </div>
+                                        <div th:unless="${row.submission != null}">
+                                            <span style="color: #cbd5e1; font-size: 0.8rem;">&mdash;</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -637,10 +849,7 @@
             const msg = document.getElementById('toastMsg');
 
             card.className = 'toast-card';
-            if (type === 'flagged') {
-                card.classList.add('toast-flagged');
-                icon.className = 'fas fa-exclamation-triangle';
-            } else if (type === 'approved' || type === 'success') {
+            if (type === 'approved' || type === 'success') {
                 card.classList.add('toast-approved');
                 icon.className = 'fas fa-check-circle';
             } else if (type === 'error') {
@@ -665,106 +874,32 @@
             const elTotal = document.getElementById('kpi-total');
             const elPending = document.getElementById('kpi-pending');
             const elApproved = document.getElementById('kpi-approved');
-            const elFlagged = document.getElementById('kpi-flagged');
+            const elRejected = document.getElementById('kpi-rejected');
             if (elTotal && stats.total !== undefined) elTotal.textContent = stats.total;
             if (elPending && stats.pending !== undefined) elPending.textContent = stats.pending;
             if (elApproved && stats.approved !== undefined) elApproved.textContent = stats.approved;
-            if (elFlagged && stats.flagged !== undefined) elFlagged.textContent = stats.flagged;
+            if (elRejected && stats.rejected !== undefined) elRejected.textContent = stats.rejected;
 
             // Filter pills
             const pillAll = document.getElementById('pill-count-all');
-            const pillFlagged = document.getElementById('pill-count-flagged');
             const pillPending = document.getElementById('pill-count-pending');
             const pillApproved = document.getElementById('pill-count-approved');
             const pillRejected = document.getElementById('pill-count-rejected');
-            if (pillAll && stats.total !== undefined) pillAll.textContent = '(' + stats.total + ')';
-            if (pillFlagged && stats.flagged !== undefined) pillFlagged.textContent = '(' + stats.flagged + ')';
-            if (pillPending && stats.pending !== undefined) pillPending.textContent = '(' + stats.pending + ')';
-            if (pillApproved && stats.approved !== undefined) pillApproved.textContent = '(' + stats.approved + ')';
-            if (pillRejected && stats.rejected !== undefined) pillRejected.textContent = '(' + stats.rejected + ')';
+            if (pillAll && stats.total !== undefined) pillAll.textContent = stats.total;
+            if (pillPending && stats.pending !== undefined) pillPending.textContent = stats.pending;
+            if (pillApproved && stats.approved !== undefined) pillApproved.textContent = stats.approved;
+            if (pillRejected && stats.rejected !== undefined) pillRejected.textContent = stats.rejected;
+
+            // Banner CTA button
+            const bannerPending = document.getElementById('banner-pending-count');
+            const btnApproveAll = document.getElementById('btnApproveAllPending');
+            if (bannerPending && stats.pending !== undefined) bannerPending.textContent = stats.pending;
+            if (btnApproveAll && stats.pending !== undefined) btnApproveAll.disabled = (stats.pending === 0);
 
             // Hub tabs
             const tabBadge = document.getElementById('tab-comments-badge');
-            const tabFlag = document.getElementById('tab-comments-flag-alert');
             if (tabBadge && stats.pending !== undefined) {
                 tabBadge.textContent = stats.pending + ' Pending';
-            }
-            if (tabFlag) {
-                if (stats.flagged && stats.flagged > 0) {
-                    tabFlag.style.display = 'inline-block';
-                    tabFlag.textContent = '⚠️ ' + stats.flagged + ' Flagged';
-                } else {
-                    tabFlag.style.display = 'none';
-                }
-            }
-        }
-
-        async function handleToggleFlagAsync(btn) {
-            const commentId = btn.getAttribute('data-comment-id');
-            const assessmentId = btn.getAttribute('data-assessment-id');
-            const csrf = getCsrfInfo();
-
-            btn.disabled = true;
-            try {
-                const formData = new URLSearchParams();
-                formData.append('assessmentId', assessmentId);
-                formData.append('ajax', 'true');
-                if (csrf.token) formData.append('_csrf', csrf.token);
-
-                const response = await fetch('/admin/comments/' + commentId + '/toggle-flag', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        [csrf.header]: csrf.token
-                    },
-                    body: formData.toString()
-                });
-
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                const data = await response.json();
-
-                if (data.success) {
-                    const card = document.getElementById('comment-card-' + commentId);
-                    const flagBadge = document.getElementById('flag-badge-' + commentId);
-                    const flagBanner = document.getElementById('flag-banner-' + commentId);
-                    const flagReasonText = document.getElementById('flag-reason-text-' + commentId);
-                    const flagIcon = document.getElementById('btn-flag-icon-' + commentId);
-                    const flagText = document.getElementById('btn-flag-text-' + commentId);
-
-                    if (data.isFlagged) {
-                        if (card) card.classList.add('card-flagged');
-                        if (flagBadge) flagBadge.style.display = 'inline-flex';
-                        if (flagBanner) flagBanner.style.display = 'flex';
-                        if (flagReasonText) flagReasonText.textContent = data.flagReason || 'Flagged for review by Administrator';
-                        btn.classList.add('btn-flag-active');
-                        if (flagIcon) flagIcon.style.color = '#DC2626';
-                        if (flagText) flagText.textContent = 'Unflag';
-                        btn.title = 'Remove negative flag (Mark safe)';
-                        btn.setAttribute('data-flagged', 'true');
-                        showToastNotification('Comment flagged as potentially negative/sarcastic.', 'flagged');
-                    } else {
-                        if (card) card.classList.remove('card-flagged');
-                        if (flagBadge) flagBadge.style.display = 'none';
-                        if (flagBanner) flagBanner.style.display = 'none';
-                        btn.classList.remove('btn-flag-active');
-                        if (flagIcon) flagIcon.style.color = '#9CA3AF';
-                        if (flagText) flagText.textContent = 'Flag';
-                        btn.title = 'Flag as potential negative/sarcastic';
-                        btn.setAttribute('data-flagged', 'false');
-                        showToastNotification('Comment flag removed (marked safe).', 'success');
-                    }
-
-                    if (data.stats) updateModerationStatsUI(data.stats);
-                } else {
-                    showToastNotification(data.message || 'Could not update flag.', 'error');
-                }
-            } catch (err) {
-                console.error('Error toggling flag:', err);
-                showToastNotification('Failed to update flag. Please check connection.', 'error');
-            } finally {
-                btn.disabled = false;
             }
         }
 
@@ -797,18 +932,22 @@
                 if (data.success) {
                     const card = document.getElementById('comment-card-' + commentId);
                     if (card) {
-                        card.classList.remove('card-rejected');
+                        card.classList.remove('card-rejected', 'card-pending');
                         card.classList.add('card-approved');
                     }
 
                     const statusWrapper = document.getElementById('status-tag-wrapper-' + commentId);
                     if (statusWrapper) {
-                        statusWrapper.innerHTML = '<span class="status-tag status-approved"><i class="fas fa-check-circle" style="margin-right: 4px;"></i> Approved (Visible)</span>';
+                        statusWrapper.innerHTML = '<span class="status-tag status-approved"><i class="fas fa-check-circle"></i> Approved</span>';
                     }
 
                     btn.style.display = 'none';
-                    const rejectText = document.getElementById('btn-reject-text-' + commentId);
-                    if (rejectText) rejectText.textContent = 'Hide / Revoke';
+                    const rejectBtn = document.getElementById('btn-reject-' + commentId);
+                    if (rejectBtn) {
+                        rejectBtn.style.display = 'inline-flex';
+                        const rejectText = document.getElementById('btn-reject-text-' + commentId);
+                        if (rejectText) rejectText.textContent = 'Hide / Revoke';
+                    }
 
                     if (data.stats) updateModerationStatsUI(data.stats);
                     showToastNotification('Comment approved! Visible to student.', 'approved');
@@ -852,20 +991,22 @@
                 if (data.success) {
                     const card = document.getElementById('comment-card-' + commentId);
                     if (card) {
-                        card.classList.remove('card-approved');
+                        card.classList.remove('card-approved', 'card-pending');
                         card.classList.add('card-rejected');
                     }
 
                     const statusWrapper = document.getElementById('status-tag-wrapper-' + commentId);
                     if (statusWrapper) {
-                        statusWrapper.innerHTML = '<span class="status-tag status-rejected"><i class="fas fa-times-circle" style="margin-right: 4px;"></i> Rejected (Hidden)</span>';
+                        statusWrapper.innerHTML = '<span class="status-tag status-rejected"><i class="fas fa-eye-slash"></i> Rejected</span>';
                     }
 
+                    btn.style.display = 'none';
                     const approveBtn = document.getElementById('btn-approve-' + commentId);
-                    if (approveBtn) approveBtn.style.display = 'inline-flex';
-
-                    const rejectText = document.getElementById('btn-reject-text-' + commentId);
-                    if (rejectText) rejectText.textContent = 'Reject';
+                    if (approveBtn) {
+                        approveBtn.style.display = 'inline-flex';
+                        const approveText = document.getElementById('btn-approve-text-' + commentId);
+                        if (approveText) approveText.textContent = 'Restore / Approve';
+                    }
 
                     if (data.stats) updateModerationStatsUI(data.stats);
                     showToastNotification('Comment rejected. Hidden from student.', 'info');
