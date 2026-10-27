@@ -1,5 +1,8 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive",
-    "java.transport": "stdio"
+    "java.transport": "stdio",
+    "boot-java.live-information.automatic-process-tracking.enabled": false,
+    "spring-boot.ls.java.live-information.automatic-process-tracking.enabled": false,
+    "sts.ls.java.live-information.automatic-process-tracking.enabled": false
 }

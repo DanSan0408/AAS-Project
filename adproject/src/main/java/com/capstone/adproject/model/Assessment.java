@@ -98,6 +98,21 @@ public class Assessment {
     
     @Column(name = "individual_comment_anonymous_flags", columnDefinition = "TEXT")
     private String individualCommentAnonymousFlagsJson;
+
+    @Column(name = "requires_submission")
+    private Boolean requiresSubmission = false;
+
+    @Column(name = "submission_title")
+    private String submissionTitle;
+
+    @Column(name = "submission_scope", length = 20)
+    private String submissionScope = "GROUP";
+
+    @Column(name = "submission_instructions", columnDefinition = "TEXT")
+    private String submissionInstructions;
+
+    @Column(name = "max_file_size_mb")
+    private Integer maxFileSizeMb = 50;
     
     @Transient
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -466,5 +481,57 @@ public class Assessment {
             this.rubrics.remove(rubric);
         }
         rubric.setAssessment(null);
+    }
+
+    public Boolean getRequiresSubmission() {
+        return requiresSubmission != null ? requiresSubmission : false;
+    }
+
+    public void setRequiresSubmission(Boolean requiresSubmission) {
+        this.requiresSubmission = requiresSubmission;
+    }
+
+    public String getSubmissionScope() {
+        return submissionScope != null ? submissionScope : "GROUP";
+    }
+
+    public void setSubmissionScope(String submissionScope) {
+        this.submissionScope = submissionScope;
+    }
+
+    public String getSubmissionInstructions() {
+        return submissionInstructions;
+    }
+
+    public void setSubmissionInstructions(String submissionInstructions) {
+        this.submissionInstructions = submissionInstructions;
+    }
+
+    public String getSubmissionTitle() {
+        return submissionTitle;
+    }
+
+    public void setSubmissionTitle(String submissionTitle) {
+        this.submissionTitle = submissionTitle;
+    }
+
+    public String getEffectiveSubmissionTitle() {
+        return (submissionTitle != null && !submissionTitle.trim().isEmpty())
+                ? submissionTitle.trim()
+                : "Report / Assignment Submission";
+    }
+
+    public Integer getMaxFileSizeMb() {
+        return maxFileSizeMb != null ? Math.min(maxFileSizeMb, 50) : 50;
+    }
+
+    public void setMaxFileSizeMb(Integer maxFileSizeMb) {
+        if (maxFileSizeMb != null && maxFileSizeMb > 50) {
+            this.maxFileSizeMb = 50;
+        } else if (maxFileSizeMb != null && maxFileSizeMb < 1) {
+            this.maxFileSizeMb = 1;
+        } else {
+            this.maxFileSizeMb = maxFileSizeMb != null ? maxFileSizeMb : 50;
+        }
     }
 }

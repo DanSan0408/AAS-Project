@@ -19,6 +19,28 @@
             </div>
         </div>
         
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+                <li>
+                    <a th:href="@{/rubrics/manage}">
+                        <i class="fas fa-layer-group"></i> Manage Assessments
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="assessment-name" th:text="${assessment.title}">Assessment Title</span>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page">
+                        <i th:class="${configType == 'group' ? 'fas fa-users' : 'fas fa-user'}"></i> 
+                        <span th:text="${(configType == 'group' ? 'Group' : 'Individual') + ' Comments'}">Comments</span>
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
         <div class="page-header">
             <h1 th:text="${'Configure ' + (configType == 'group' ? 'Group' : 'Individual') + ' Comments'}">Configure Comments</h1>
             <p th:text="${assessment.title}">Assessment Title</p>

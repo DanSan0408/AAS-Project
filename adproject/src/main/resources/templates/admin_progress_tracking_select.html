@@ -88,7 +88,6 @@
                                 <span class="value" style="display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end;">
                                     <span class="badge badge-neutral" th:text="${commentStats.get(assessment.id).get('total') + ' Total'}">0 Total</span>
                                     <span th:if="${commentStats.get(assessment.id).get('pending') > 0}" class="badge badge-warning" th:text="${commentStats.get(assessment.id).get('pending') + ' Pending'}">0 Pending</span>
-                                    <span th:if="${commentStats.get(assessment.id).get('flagged') > 0}" class="badge badge-danger" title="Potential Sarcastic or Negative Comments" th:text="${'⚠️ ' + commentStats.get(assessment.id).get('flagged') + ' Flagged'}">0 Flagged</span>
                                 </span>
                             </div>
                         </div>

@@ -23,7 +23,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentSubmission;
+import com.capstone.adproject.model.SubmissionAnnotation;
+import com.capstone.adproject.service.AssessmentSubmissionService;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
@@ -53,6 +62,7 @@ public class LecturerAssessmentController {
     private final LecturerStudentAssignmentRepository studentAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final GroupRepository groupRepository;
+    private final AssessmentSubmissionService assessmentSubmissionService;
 
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
@@ -62,7 +72,8 @@ public class LecturerAssessmentController {
             LecturerGroupAssignmentRepository assignmentRepository,
             LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
-            GroupRepository groupRepository) {
+            GroupRepository groupRepository,
+            AssessmentSubmissionService assessmentSubmissionService) {
         this.lecturerAssessmentService = lecturerAssessmentService;
         this.rubricService = rubricService;
         this.deadlineService = deadlineService;
@@ -71,6 +82,7 @@ public class LecturerAssessmentController {
         this.studentAssignmentRepository = studentAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.groupRepository = groupRepository;
+        this.assessmentSubmissionService = assessmentSubmissionService;
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
@@ -404,6 +416,11 @@ public class LecturerAssessmentController {
                 existingIndividualRubricComments.put(sampleStudent.getId(), studentRubricComments);
             }
 
+            AssessmentSubmission submission = null;
+            if (Boolean.TRUE.equals(assessment.getRequiresSubmission()) && !targetStudents.isEmpty()) {
+                submission = assessmentSubmissionService.getSubmissionForTarget(assessment, null, targetStudents.get(0)).orElse(null);
+            }
+
             model.addAttribute("assessment", assessment);
             model.addAttribute("selectedGroup", selectedGroup);
             model.addAttribute("groupStudents", targetStudents);
@@ -417,6 +434,7 @@ public class LecturerAssessmentController {
             model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
             model.addAttribute("isAssignedToGroup", true);
             model.addAttribute("isStudentTarget", true);
+            model.addAttribute("submission", submission);
 
             return "lecturer_combined_evaluation_form";
         }
@@ -512,6 +530,11 @@ public class LecturerAssessmentController {
             }
         }
 
+        AssessmentSubmission submission = null;
+        if (Boolean.TRUE.equals(assessment.getRequiresSubmission()) && targetGroup != null) {
+            submission = assessmentSubmissionService.getSubmissionForTarget(assessment, targetGroup, null).orElse(null);
+        }
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("selectedGroup", targetGroup);
         model.addAttribute("groupStudents", targetStudents);
@@ -525,6 +548,7 @@ public class LecturerAssessmentController {
         model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
         model.addAttribute("isAssignedToGroup", isAssignedToGroup);
         model.addAttribute("isStudentTarget", false);
+        model.addAttribute("submission", submission);
 
         return "lecturer_combined_evaluation_form";
     }
@@ -790,6 +814,28 @@ public class LecturerAssessmentController {
             boolean isComplete = lecturerAssessmentService.isGroupEvaluationComplete(
                 assessment, lecturer, groupId);
 
+            // Persist report doodle annotations if provided in form submission
+            String doodlesPayload = allParams.get("submissionDoodlesPayload");
+            if (doodlesPayload != null && !doodlesPayload.isBlank()) {
+                try {
+                    Group grp = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;
+                    Student std = null;
+                    if (studentId != null) {
+                        List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
+                        std = assignedStudents.stream()
+                            .filter(s -> s.getId().equals(studentId))
+                            .findFirst()
+                            .orElse(null);
+                    }
+                    var subOpt = assessmentSubmissionService.getSubmissionForTarget(assessment, grp, std);
+                    if (subOpt.isPresent()) {
+                        assessmentSubmissionService.saveAllAnnotationsFromJson(subOpt.get(), lecturer, doodlesPayload);
+                    }
+                } catch (Exception annotEx) {
+                    logger.warn("Could not persist doodlesPayload during evaluation submit", annotEx);
+                }
+            }
+
             if (isComplete) {
                 redirectAttributes.addFlashAttribute("successMessage",
                     "✓ Evaluation completed successfully for all students in the group!");
@@ -812,5 +858,74 @@ public class LecturerAssessmentController {
         return studentId != null
             ? "redirect:/lecturer/assessments/" + assessmentId + "/select-student"
             : "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
+    }
+
+    @GetMapping("/submissions/{submissionId}/file")
+    public ResponseEntity<Resource> streamSubmissionFile(
+            @PathVariable("submissionId") Long submissionId,
+            Authentication authentication) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submission = submissionOpt.get();
+        Resource resource = assessmentSubmissionService.getSubmissionFileResource(submission);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + submission.getOriginalFileName() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/submissions/{submissionId}/annotations")
+    @ResponseBody
+    public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotations(
+            @PathVariable("submissionId") Long submissionId,
+            Authentication authentication) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<SubmissionAnnotation> annotations =
+                assessmentSubmissionService.getAnnotationsForSubmission(submissionOpt.get());
+
+        return ResponseEntity.ok(annotations);
+    }
+
+    @PostMapping("/submissions/{submissionId}/annotations")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveSubmissionAnnotation(
+            @PathVariable("submissionId") Long submissionId,
+            @RequestBody Map<String, Object> payload,
+            Authentication authentication) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Integer pageNumber = payload.get("pageNumber") != null ? Integer.valueOf(payload.get("pageNumber").toString()) : 1;
+        String strokesJson = payload.get("strokesJson") != null ? payload.get("strokesJson").toString() : "[]";
+
+        SubmissionAnnotation annotation = assessmentSubmissionService.saveOrUpdateAnnotation(
+                submissionOpt.get(),
+                lecturer,
+                pageNumber,
+                strokesJson
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("annotationId", annotation.getId());
+        response.put("pageNumber", annotation.getPageNumber());
+
+        return ResponseEntity.ok(response);
     }
 }

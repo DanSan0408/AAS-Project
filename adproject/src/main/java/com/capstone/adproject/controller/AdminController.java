@@ -17,9 +17,15 @@ import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import com.capstone.adproject.model.SubmissionAnnotation;
+import com.capstone.adproject.service.AssessmentSubmissionService;
+import com.capstone.adproject.util.HtmlSanitizerUtil;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,11 +75,8 @@ import com.capstone.adproject.service.EmailService;
 import com.capstone.adproject.service.ProgressTrackingService;
 import com.capstone.adproject.service.RubricService;
 import com.capstone.adproject.service.SuperAdminService;
-
-import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.service.AssessmentCommentService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -97,6 +100,7 @@ public class AdminController {
     private final ProgressTrackingService progressTrackingService;
     private final EmailService emailService;
     private final AssessmentCommentService assessmentCommentService;
+    private final AssessmentSubmissionService assessmentSubmissionService;
 
     // constructor
     public AdminController(
@@ -115,7 +119,8 @@ public class AdminController {
             ProgressTrackingService progressTrackingService,
             CustomUserDetailsService userDetailsService,
             EmailService emailService,
-            AssessmentCommentService assessmentCommentService) {
+            AssessmentCommentService assessmentCommentService,
+            AssessmentSubmissionService assessmentSubmissionService) {
         this.adminService = adminService;
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
@@ -132,6 +137,7 @@ public class AdminController {
         this.userDetailsService = userDetailsService;
         this.emailService = emailService;
         this.assessmentCommentService = assessmentCommentService;
+        this.assessmentSubmissionService = assessmentSubmissionService;
     }
 
     // ensure that dates objects are converted as dates
@@ -447,12 +453,15 @@ public class AdminController {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Group> courseGroups = activeCourseId != null ? groupRepository.findByCourseId(activeCourseId) : List.of();
 
+        Map<String, Object> submissionMappingData = assessmentSubmissionService.getSubmissionMappingOverview(assessment);
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("lecturerProgress", lecturerProgress);
         model.addAttribute("studentProgress", studentProgress);
         model.addAttribute("moderationStats", moderationStats);
         model.addAttribute("moderationComments", moderationComments);
         model.addAttribute("courseGroups", courseGroups);
+        model.addAttribute("submissionMappingData", submissionMappingData);
         model.addAttribute("activeTab", tab);
         model.addAttribute("currentFilter", filter);
         model.addAttribute("currentRoleFilter", roleFilter);
@@ -593,20 +602,13 @@ public class AdminController {
         }
         int count = assessmentCommentService.bulkApproveAllComments(assessmentId, getLoggedInUsername());
         redirectAttributes.addFlashAttribute("successMessage", "Bulk approved " + count + " comment(s). Students can now view their feedback.");
-        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=approved";
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=all";
     }
 
     @PostMapping("/comments/assessment/{assessmentId}/bulk-approve-safe")
     public String bulkApproveSafeComments(@PathVariable Long assessmentId,
                                           RedirectAttributes redirectAttributes) {
-        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
-        if (assessment == null || !ownsAssessment(assessment)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
-            return "redirect:/admin/progress-tracking";
-        }
-        int count = assessmentCommentService.bulkApproveSafeComments(assessmentId, getLoggedInUsername());
-        redirectAttributes.addFlashAttribute("successMessage", "Bulk approved " + count + " non-flagged comment(s). Potential negative comments were kept for your review.");
-        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=flagged";
+        return bulkApproveAllComments(assessmentId, redirectAttributes);
     }
 
     @PostMapping("/comments/assessment/{assessmentId}/bulk-action")
@@ -633,6 +635,130 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("successMessage", "Rejected " + count + " selected comment(s).");
         }
         return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+    }
+
+    @GetMapping({"/assessment/{assessmentId}/submission-config", "/assessment/{assessmentId}/submission-configuration"})
+    public String showAssessmentSubmissionConfig(
+            @PathVariable Long assessmentId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found or you are not authorized to access it.");
+            return "redirect:/rubrics/manage";
+        }
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+
+        return "assessment_submission_configuration";
+    }
+
+    @PostMapping({"/assessment/{assessmentId}/submission-config", "/assessment/{assessmentId}/submission-configuration"})
+    public String saveAssessmentSubmissionConfig(
+            @PathVariable Long assessmentId,
+            @RequestParam(value = "requiresSubmission", defaultValue = "false") boolean requiresSubmission,
+            @RequestParam(value = "submissionTitle", required = false) String submissionTitle,
+            @RequestParam(value = "submissionScope", defaultValue = "GROUP") String submissionScope,
+            @RequestParam(value = "maxFileSizeMb", defaultValue = "50") Integer maxFileSizeMb,
+            @RequestParam(value = "submissionInstructions", required = false) String submissionInstructions,
+            @RequestParam(value = "returnUrl", required = false) String returnUrl,
+            RedirectAttributes redirectAttributes) {
+
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found or you are not authorized to edit it.");
+            return "redirect:/rubrics/manage";
+        }
+
+        assessment.setRequiresSubmission(requiresSubmission);
+        assessment.setSubmissionTitle(submissionTitle != null && !submissionTitle.trim().isEmpty() ? HtmlSanitizerUtil.sanitizePlainText(submissionTitle.trim()) : null);
+        assessment.setSubmissionScope(submissionScope != null ? submissionScope : "GROUP");
+        assessment.setSubmissionInstructions(submissionInstructions != null ? HtmlSanitizerUtil.sanitizePlainText(submissionInstructions.trim()) : null);
+
+        int cappedMaxMb = maxFileSizeMb != null ? Math.min(Math.max(1, maxFileSizeMb), 50) : 50;
+        assessment.setMaxFileSizeMb(cappedMaxMb);
+
+        rubricService.saveAssessment(assessment);
+        redirectAttributes.addFlashAttribute("successMessage", "Report submission configuration saved successfully.");
+
+        if (returnUrl != null && !returnUrl.isBlank()) {
+            return "redirect:" + returnUrl;
+        }
+        return "redirect:/admin/assessment/" + assessmentId + "/submission-config";
+    }
+
+    @GetMapping("/submissions/{submissionId}/file")
+    public ResponseEntity<Resource> downloadSubmissionFileAdmin(
+            @PathVariable Long submissionId,
+            RedirectAttributes redirectAttributes) {
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submission = submissionOpt.get();
+        if (!ownsAssessment(submission.getAssessment())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        Resource resource = assessmentSubmissionService.getSubmissionFileResource(submission);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + submission.getOriginalFileName() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/submissions/{submissionId}/view")
+    public String viewSubmissionDoodlesAdmin(
+            @PathVariable Long submissionId,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Submission not found.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        var submission = submissionOpt.get();
+        Assessment assessment = submission.getAssessment();
+        if (!ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to view this submission.");
+            return "redirect:/admin/progress-tracking";
+        }
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("submission", submission);
+        model.addAttribute("pdfUrl", "/admin/submissions/" + submissionId + "/file");
+        model.addAttribute("annotationsUrl", "/admin/submissions/" + submissionId + "/annotations");
+        model.addAttribute("readOnly", true);
+        model.addAttribute("isAdminView", true);
+
+        return "student_submission_view";
+    }
+
+    @GetMapping("/submissions/{submissionId}/annotations")
+    @ResponseBody
+    public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotationsAdmin(
+            @PathVariable Long submissionId) {
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submission = submissionOpt.get();
+        if (!ownsAssessment(submission.getAssessment())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<SubmissionAnnotation> annotations =
+                assessmentSubmissionService.getAnnotationsForSubmission(submission);
+
+        return ResponseEntity.ok(annotations);
     }
 
     @GetMapping("/lecturer-assignments/{assessmentId}")

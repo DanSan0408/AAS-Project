@@ -29,6 +29,27 @@
             </div>
         </div>
 
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb" th:if="${rubric.assessment != null}">
+            <ol>
+                <li>
+                    <a th:href="@{/rubrics/manage}">
+                        <i class="fas fa-layer-group"></i> Manage Assessments
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="assessment-name" th:text="${rubric.assessment.title}">Assessment Title</span>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page">
+                        <i class="fas fa-pen-nib"></i> <span th:text="${pageTitle}">Rubric</span>
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
         <div class="page-header" style="margin-bottom: 20px;">
             <h1 th:text="${pageTitle} + ' for ' + ${rubric.assessment.title}" style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Add New Rubric</h1>
             <p class="text-muted" style="margin-top: 5px;">Configure the rubric structure below.</p>

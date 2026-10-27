@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Feedback & Annotations - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}" th:unless="${isAdminView != null and isAdminView}">
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}" th:if="${isAdminView != null and isAdminView}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/student_assessments.css}">
+    <link rel="stylesheet" th:href="@{/css/pdf-doodle-studio.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .student-viewer-wrapper {
+            margin: 20px 0;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .viewer-top-bar {
+            padding: 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .viewer-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .viewer-title-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #fee2e2;
+            color: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .viewer-meta-title {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .viewer-meta-sub {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .viewer-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-viewer-back {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-viewer-back:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .btn-viewer-download {
+            background: #4A0018;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-viewer-download:hover {
+            background: #6b0c26;
+            color: #ffffff;
+        }
+
+        .viewer-studio-frame {
+            height: calc(100vh - 210px);
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+        }
+    </style>
+</head>
+<body th:class="${isAdminView != null and isAdminView ? 'admin-page' : 'student-page student-submissions-page'}">
+    <div th:if="${isAdminView != null and isAdminView}" class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <div th:unless="${isAdminView != null and isAdminView}" th:replace="fragments/student_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb" style="max-width: 1400px; margin: 0 auto 15px auto;">
+            <ol>
+                <li th:if="${isAdminView != null and isAdminView}">
+                    <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=submissions'}">
+                        <i class="fas fa-layer-group"></i> Progress Tracking
+                    </a>
+                </li>
+                <li th:unless="${isAdminView != null and isAdminView}">
+                    <a th:href="@{/student/submissions}">
+                        <i class="fas fa-file-upload"></i> Report Submissions
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="assessment-name" th:text="${assessment.title}">Assessment Title</span>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page">
+                        <i class="fas fa-file-pdf"></i> <span th:text="${assessment.getEffectiveSubmissionTitle()}">Report</span>
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
+        <div class="content-container" style="max-width: 1400px; margin: 0 auto; padding: 0 20px 20px 20px;">
+            <div class="student-viewer-wrapper">
+                <div class="viewer-top-bar">
+                    <div class="viewer-title-group">
+                        <div class="viewer-title-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <h3 class="viewer-meta-title" th:text="${assessment.getEffectiveSubmissionTitle()} + ' — ' + ${assessment.title}">Assessment Title</h3>
+                            <div class="viewer-meta-sub">
+                                <span style="font-weight: 600; color: #1e293b;" th:text="${submission.originalFileName}">report.pdf</span> &bull; 
+                                <span>Version <strong th:text="${submission.version}">1</strong></span> &bull;
+                                <span>Uploaded on <strong th:text="${#temporals.format(submission.submittedAt, 'dd MMM yyyy, HH:mm')}">Date</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="viewer-actions">
+                        <a th:href="${isAdminView != null and isAdminView ? '/admin/progress-tracking/' + assessment.id + '?tab=submissions' : '/student/submissions'}" class="btn-viewer-back">
+                            <i class="fas fa-arrow-left"></i> 
+                            <span th:text="${isAdminView != null and isAdminView ? 'Back to Submissions & Mapping' : 'Back to Submissions'}">Back</span>
+                        </a>
+                        <button type="button" id="btn-download-annotated-pdf" class="btn-viewer-download" style="background: #047857; cursor: pointer;" title="Download PDF with Assessor Doodles &amp; Notes Baked In">
+                            <i class="fas fa-file-signature"></i> Download Annotated PDF
+                        </button>
+                        <a th:href="${pdfUrl}" target="_blank" class="btn-viewer-back" style="background: #ffffff;" title="Download original file without doodles">
+                            <i class="fas fa-file-pdf"></i> Original PDF
+                        </a>
+                    </div>
+                </div>
+
+                <div class="viewer-studio-frame" id="student-studio-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script th:src="@{/js/pdfjs/pdf.min.js}"></script>
+    <script th:src="@{/js/pdf-doodle-studio.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfUrl = /*[[${pdfUrl}]]*/ '';
+            const annotationsUrl = /*[[${annotationsUrl}]]*/ '';
+            const origFileName = /*[[${submission.originalFileName}]]*/ 'report.pdf';
+
+            const studio = new PdfDoodleStudio({
+                container: 'student-studio-container',
+                pdfUrl: pdfUrl,
+                annotationsUrl: annotationsUrl,
+                saveAnnotationUrl: null,
+                readOnly: true,
+                fileName: origFileName
+            });
+
+            const dlBtn = document.getElementById('btn-download-annotated-pdf');
+            if (dlBtn) {
+                dlBtn.addEventListener('click', function() {
+                    const cleanName = origFileName.endsWith('.pdf') ? origFileName : (origFileName + '.pdf');
+                    studio.downloadAnnotatedPdf('annotated_' + cleanName);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

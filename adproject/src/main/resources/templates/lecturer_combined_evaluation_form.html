@@ -2,11 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Evaluate - [[${assessment.title}]]</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+    <link rel="stylesheet" th:href="@{/css/pdf-doodle-studio.css}">
     <style>
         .validation-error-highlight {
             border: 2px solid #e74c3c !important;
@@ -58,9 +61,67 @@
             color: #065f46;
             font-weight: 700;
         }
+
+        /* Split Screen Dual-Scroll Ergonomics */
+        body.lecturer-page.has-split-studio {
+            overflow: hidden;
+        }
+        body.lecturer-page.has-split-studio .main-content {
+            padding: 12px 24px !important;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        body.lecturer-page.has-split-studio .header {
+            margin-bottom: 8px !important;
+            flex-shrink: 0;
+        }
+        body.lecturer-page.has-split-studio .header-container {
+            margin-bottom: 4px !important;
+        }
+        body.lecturer-page.has-split-studio .header-container img {
+            max-width: 130px !important;
+        }
+        body.lecturer-page.has-split-studio .split-controls-bar {
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        body.lecturer-page.has-split-studio .split-evaluation-layout {
+            flex: 1 1 auto;
+            height: calc(100vh - 145px);
+            margin-top: 0;
+            overflow: hidden;
+        }
+        body.lecturer-page.has-split-studio .form-actions {
+            position: sticky;
+            bottom: -24px;
+            background: #ffffff;
+            padding: 14px 20px;
+            margin: 30px -24px -24px -24px !important;
+            border-top: 2px solid #e2e8f0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        @media (max-width: 1024px) {
+            body.lecturer-page.has-split-studio {
+                overflow: auto;
+            }
+            body.lecturer-page.has-split-studio .main-content {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+            body.lecturer-page.has-split-studio .split-evaluation-layout {
+                height: auto;
+                overflow: visible;
+            }
+        }
     </style>
 </head>
-<body class="lecturer-page">
+<body class="lecturer-page" th:classappend="${submission != null ? ' has-split-studio' : ''}">
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -70,8 +131,48 @@
             </div>
         </div>
 
-        <div class="content-flex-container">
-            <div class="evaluation-container">
+        <div th:if="${submission != null}" class="split-controls-bar">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-file-pdf" style="color: #dc2626; font-size: 1.2rem;"></i> <span th:text="${assessment.getEffectiveSubmissionTitle()}">Student Report</span>:
+                    <span th:text="${submission.originalFileName}" style="color: #4A0018;">Report.pdf</span>
+                </span>
+                <span class="badge" style="background: #047857; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
+                    v<span th:text="${submission.version}">1</span>
+                </span>
+                <a th:href="@{/lecturer/assessments/submissions/{id}/file(id=${submission.id})}" target="_blank" style="font-size: 0.8rem; color: #4A0018; text-decoration: underline; margin-left: 6px;">
+                    <i class="fas fa-external-link-alt"></i> Pop Out PDF
+                </a>
+            </div>
+            <div class="split-btn-group">
+                <button type="button" id="btn-layout-split" class="active" onclick="setStudioLayout('50-50')">
+                    <i class="fas fa-columns"></i> 50/50 Split
+                </button>
+                <button type="button" id="btn-layout-expand-pdf" onclick="setStudioLayout('70-30')">
+                    <i class="fas fa-expand-alt"></i> Focus Report
+                </button>
+                <button type="button" id="btn-layout-expand-rubric" onclick="setStudioLayout('30-70')">
+                    <i class="fas fa-list-alt"></i> Focus Rubric
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${assessment.requiresSubmission and submission == null}" 
+             class="alert alert-info" 
+             style="margin: 16px 24px; padding: 14px 18px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-info-circle" style="font-size: 1.2rem;"></i>
+            <span>This assessment requires a report submission, but no file has been submitted by the student/group yet. You may evaluate the rubrics normally below.</span>
+        </div>
+
+        <div th:class="${submission != null ? 'split-evaluation-layout' : 'content-flex-container'}">
+            <!-- Left Pane: PDF & Doodle Studio (Only if submission != null) -->
+            <div th:if="${submission != null}" class="pdf-pane" id="pdf-studio-pane">
+                <div id="doodle-studio-container" style="display: flex; flex-direction: column; height: 100%;"></div>
+            </div>
+
+            <!-- Right Pane: Evaluation Container -->
+            <div th:class="${submission != null ? 'rubric-pane' : 'evaluation-container'}" id="rubric-form-pane">
+                <div th:class="${submission != null ? 'evaluation-container' : ''}" th:style="${submission != null ? 'max-width: 100%; margin: 0;' : ''}">
                 
                 <div class="evaluation-header">
                     <h2 th:text="${assessment.title}">Assessment Title</h2>
@@ -102,9 +203,10 @@
 
                 <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-                <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post">
+                <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post" id="evaluationMainForm">
                     <input type="hidden" th:if="${isStudentTarget == null or !isStudentTarget}" name="groupId" th:value="${selectedGroup.id}"/>
                     <input type="hidden" th:if="${isStudentTarget != null and isStudentTarget}" name="studentId" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" name="submissionDoodlesPayload" id="submissionDoodlesPayload" />
 
                     <div th:if="${groupRubrics != null and !groupRubrics.isEmpty()}">
                         <div class="section-divider">
@@ -350,9 +452,64 @@
                         <button type="submit" id="submitEvalBtn" name="action" value="submit" class="btn btn-submit">✅ Submit Evaluation</button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
+
+<th:block th:if="${submission != null}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script th:src="@{/js/pdfjs/pdf.min.js}"></script>
+    <script th:src="@{/js/pdf-doodle-studio.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-CSRF-TOKEN';
+
+            const submissionId = /*[[${submission.id}]]*/ 0;
+
+            const studio = new PdfDoodleStudio({
+                container: 'doodle-studio-container',
+                pdfUrl: '/lecturer/assessments/submissions/' + submissionId + '/file',
+                annotationsUrl: '/lecturer/assessments/submissions/' + submissionId + '/annotations',
+                saveAnnotationUrl: '/lecturer/assessments/submissions/' + submissionId + '/annotations',
+                csrfToken: csrfToken,
+                csrfHeader: csrfHeader,
+                readOnly: false,
+                fileName: /*[[${submission.originalFileName}]]*/ 'report.pdf'
+            });
+            window.activeStudio = studio;
+
+            window.setStudioLayout = function(mode) {
+                const pdfPane = document.getElementById('pdf-studio-pane');
+                const rubricPane = document.getElementById('rubric-form-pane');
+                document.querySelectorAll('.split-btn-group button').forEach(b => b.classList.remove('active'));
+
+                if (mode === '70-30') {
+                    if (pdfPane) pdfPane.style.flex = '1 1 70%';
+                    if (rubricPane) rubricPane.style.flex = '1 1 30%';
+                    const b = document.getElementById('btn-layout-expand-pdf');
+                    if (b) b.classList.add('active');
+                } else if (mode === '30-70') {
+                    if (pdfPane) pdfPane.style.flex = '1 1 30%';
+                    if (rubricPane) rubricPane.style.flex = '1 1 70%';
+                    const b = document.getElementById('btn-layout-expand-rubric');
+                    if (b) b.classList.add('active');
+                } else {
+                    if (pdfPane) pdfPane.style.flex = '1 1 50%';
+                    if (rubricPane) rubricPane.style.flex = '1 1 50%';
+                    const b = document.getElementById('btn-layout-split');
+                    if (b) b.classList.add('active');
+                }
+                setTimeout(() => {
+                    if (studio) studio.zoomFit();
+                }, 300);
+            };
+        });
+    </script>
+</th:block>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -375,20 +532,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (currentLength === 0) {
-            
             if (hint) {
                 hint.style.color = '#95a5a6';
                 hint.innerHTML = `Suggested minimum: ${minLength} characters`;
             }
         } else if (currentLength < minLength) {
-            
             textarea.classList.add('insufficient');
             if (hint) {
                 hint.classList.add('insufficient');
                 hint.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Minimum ${minLength} characters required (current: ${currentLength})`;
             }
         } else {
-            
             textarea.classList.add('sufficient');
             if (hint) {
                 hint.classList.add('sufficient');
@@ -398,26 +552,75 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const allTextareas = document.querySelectorAll('.rubric-comment-field textarea, .comment-textarea');
-    
-    console.log(`📝 Found ${allTextareas.length} comment textareas`);
-    
     allTextareas.forEach(function(textarea) {
-        
         validateTextarea(textarea);
-        
         textarea.addEventListener('input', function() {
             validateTextarea(this);
         });
-        
         textarea.addEventListener('blur', function() {
             validateTextarea(this);
         });
     });
     
-    const form = document.querySelector('form');
+    // Intercept form submission to guarantee all vector ink strokes & text annotations are saved
+    const form = document.querySelector('form#evaluationMainForm') || document.querySelector('form');
     if (form) {
-        form.addEventListener('submit', function(e) {
-            console.log('📤 Form submitted');
+        let isSubmitting = false;
+        let clickedSubmitBtn = null;
+
+        form.querySelectorAll('button[type="submit"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                clickedSubmitBtn = this;
+            });
+        });
+
+        form.addEventListener('submit', async function(e) {
+            if (isSubmitting) return;
+
+            if (window.activeStudio) {
+                e.preventDefault();
+
+                const originalBtnText = clickedSubmitBtn ? clickedSubmitBtn.innerHTML : '';
+                if (clickedSubmitBtn) {
+                    clickedSubmitBtn.disabled = true;
+                    clickedSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving annotations &amp; scores...';
+                }
+
+                try {
+                    // Commit any open text box editor
+                    if (typeof window.activeStudio.commitActiveTextEditor === 'function') {
+                        window.activeStudio.commitActiveTextEditor();
+                    }
+
+                    // Populate hidden payload input with all annotations
+                    const payloadInput = document.getElementById('submissionDoodlesPayload');
+                    if (payloadInput && typeof window.activeStudio.getAllAnnotationsByPage === 'function') {
+                        payloadInput.value = JSON.stringify(window.activeStudio.getAllAnnotationsByPage());
+                    }
+
+                    // Synchronously await AJAX saving of all dirty pages
+                    if (typeof window.activeStudio.saveAnnotations === 'function') {
+                        await window.activeStudio.saveAnnotations(true);
+                    }
+                } catch (saveErr) {
+                    console.warn('Pre-submit annotation save error:', saveErr);
+                }
+
+                // Preserve the clicked button action (save vs submit)
+                if (clickedSubmitBtn && clickedSubmitBtn.name === 'action') {
+                    let actionInput = form.querySelector('input[name="action"][type="hidden"]');
+                    if (!actionInput) {
+                        actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        form.appendChild(actionInput);
+                    }
+                    actionInput.value = clickedSubmitBtn.value;
+                }
+
+                isSubmitting = true;
+                form.submit();
+            }
         });
     }
 });

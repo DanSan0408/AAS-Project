@@ -24,8 +24,6 @@ import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
-import org.mockito.Spy;
-
 @ExtendWith(MockitoExtension.class)
 public class AssessmentCommentServiceTest {
 
@@ -34,9 +32,6 @@ public class AssessmentCommentServiceTest {
 
     @Mock
     private StudentRepository studentRepository;
-
-    @Spy
-    private CommentSentimentAnalysisService sentimentAnalysisService = new CommentSentimentAnalysisService();
 
     @InjectMocks
     private AssessmentCommentService commentService;
@@ -165,28 +160,51 @@ public class AssessmentCommentServiceTest {
     }
 
     @Test
-    public void testBulkApproveSafeCommentsExcludesFlagged() {
-        AssessmentComment safeComment = new AssessmentComment();
-        safeComment.setId(301L);
-        safeComment.setCommentText("Good effort");
-        safeComment.setIsApproved(false);
-        safeComment.setIsFlaggedNegative(false);
+    public void testBulkApproveAllComments() {
+        AssessmentComment comment1 = new AssessmentComment();
+        comment1.setId(301L);
+        comment1.setIsApproved(false);
+        comment1.setApprovalStatus(AssessmentComment.ApprovalStatus.PENDING);
 
-        AssessmentComment flaggedComment = new AssessmentComment();
-        flaggedComment.setId(302L);
-        flaggedComment.setCommentText("Thanks for nothing, did zero work");
-        flaggedComment.setIsApproved(false);
-        flaggedComment.setIsFlaggedNegative(true);
-        flaggedComment.setFlagReason("Sarcasm detected");
+        AssessmentComment comment2 = new AssessmentComment();
+        comment2.setId(302L);
+        comment2.setIsApproved(false);
+        comment2.setApprovalStatus(AssessmentComment.ApprovalStatus.PENDING);
 
         when(commentRepository.findByAssessmentId(10L))
-                .thenReturn(new ArrayList<>(List.of(safeComment, flaggedComment)));
+                .thenReturn(new ArrayList<>(List.of(comment1, comment2)));
         when(commentRepository.save(any(AssessmentComment.class))).thenAnswer(i -> i.getArgument(0));
 
-        int approvedCount = commentService.bulkApproveSafeComments(10L, "admin_user");
+        int approvedCount = commentService.bulkApproveAllComments(10L, "admin_user");
 
-        assertEquals(1, approvedCount);
-        assertTrue(safeComment.isApproved());
-        assertFalse(flaggedComment.isApproved());
+        assertEquals(2, approvedCount);
+        assertTrue(comment1.isApproved());
+        assertTrue(comment2.isApproved());
+        assertEquals(AssessmentComment.ApprovalStatus.APPROVED, comment1.getApprovalStatus());
+    }
+
+    @Test
+    public void testModerationStatsCalculation() {
+        AssessmentComment pending = new AssessmentComment();
+        pending.setIsApproved(false);
+        pending.setApprovalStatus(AssessmentComment.ApprovalStatus.PENDING);
+
+        AssessmentComment approved = new AssessmentComment();
+        approved.setIsApproved(true);
+        approved.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+
+        AssessmentComment rejected = new AssessmentComment();
+        rejected.setIsApproved(false);
+        rejected.setApprovalStatus(AssessmentComment.ApprovalStatus.REJECTED);
+
+        when(commentRepository.findByAssessmentId(10L))
+                .thenReturn(List.of(pending, approved, rejected));
+
+        Map<String, Long> stats = commentService.getModerationStats(10L);
+
+        assertEquals(3L, stats.get("total"));
+        assertEquals(1L, stats.get("pending"));
+        assertEquals(1L, stats.get("approved"));
+        assertEquals(1L, stats.get("rejected"));
     }
 }
