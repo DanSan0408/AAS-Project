@@ -4,13 +4,18 @@
 
 
 ## Production missing-comments investigation (2026-10-28)
-**Status**: INVESTIGATING — production cause and recovery not yet verified.
+**Status**: CAUSE CONFIRMED; mapping fix tested locally, awaiting production deployment verification.
+
+- Production startup logs at 2026-10-28 05:40:55 UTC show Hibernate maps comment text to `comment_text`: all 2,072 rows are blank there, while all 2,072 original `commentText` values are nonblank. Both camelCase and snake_case variants also exist for evaluator and assessment types.
+- `AssessmentComment` now explicitly quotes the original `commentText`, `evaluatorType`, and `assessmentType` columns. `CommentColumnNamingConfiguration` preserves those quoted identifiers through production naming overrides and delegates all other identifiers to the configured strategy. Hibernate 6.6 rewrites quoted camelCase names under its snake_case strategy unless this preservation is applied.
+- Regression tests build real Hibernate metadata under local and production naming strategies, verify the original columns are selected, and verify other naming decisions remain delegated. The targeted mapping, diagnostics, comment service, calculation, and template suite passed: 15 tests, zero failures/errors.
+- No production data was changed. Deploy the source changes through Dokploy; the startup diagnostic should report `mappedTextColumns=[commentText]` (possibly quoted), and group comment retrieval should report nonzero displayed counts. Existing student approval restrictions remain in effect.
 
 - User reports empty admin moderation for assessment 1 and empty admin/assessor group comment views (including assessment 8).
 - Production SQL confirms 92 nonblank comments for assessment 1 and 470 for assessment 8. `temp_things.csv` confirms all recipients exist, both assessment and student course IDs are 1, and recipients have group IDs. Approval status does not restrict the admin views.
 - Current-code regression checks render both student and assessor text in all three templates. The eight comment-service tests, one existing calculation-service test and two template tests passed (11 total).
 - Added count-only INFO diagnostics: `Comment moderation totals`, `Comment moderation retrieval`, and `Comment retrieval`. They report assessment/student IDs, query/result counts and filter state, without comment bodies, names, email addresses or search terms. Production logs previously recorded only controller entry, so did not establish whether queries returned any rows.
-- No production deployment or database was changed. Reproduce after deploying the diagnostics and inspect these messages to distinguish ORM/datasource retrieval from filtering/rendering. The local test suite does not prove the deployed image or database configuration matches this workspace.
+- Earlier investigation added diagnostics before the column mismatch was confirmed. Production recovery still requires deploying and verifying the mapping fix above.
 - `diagnostics/comments-read-only.sql` provides read-only schema, count and relationship checks. Browser authentication is unavailable to the current tools.
 
 ---
