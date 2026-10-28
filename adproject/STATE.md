@@ -1,6 +1,969 @@
 # Project State Documentation
 
-**Last Updated**: 2026-07-28 (Antigravity)
+**Last Updated**: 2026-10-28 (Antigravity)
+
+---
+
+## Current Status: Diverse Analytics Charts & Authentication Branding
+**Status**: IMPLEMENTED — calculation, template and browser checks passed
+**Date**: 2026-10-28
+
+### Analytics
+- Added a lecturer-pair scatter plot for rating alignment, with a pair selector, equal-rating diagonal, hover context and explicit 0–100% axes. It distinguishes ratings within 10 percentage points and discloses overlapping points and its 2,000-point display cap; metrics still use all paired ratings.
+- Replaced the score-band distribution bars with box-and-whisker plots showing median, interpolated quartiles and minimum/maximum target percentages per lecturer. Single evaluations remain visible as coincident lines.
+- Added two filter-aware metrics: agreement within 10 pp (matched lecturer-pair proximity rate) and typical shared-criterion spread (median highest-minus-lowest percentage, counted once per target/criterion with at least two lecturers). No shared work produces an unavailable marker, not a fabricated zero.
+- Retained the existing average/range bars, pair-gap bars, grouped team charts, rubric heatmap, breakdown, filters and export. Updated the calculation guide and in-page explanations; the tolerance is descriptive rather than a grading-quality score.
+
+### Authentication pages
+- Removed breadcrumbs from login, forgot-password and reset-password forms. These are deliberate exceptions to the authenticated-page navigation pattern.
+- Added authentication-only logo sizing: 260px desktop and 240px mobile, bounded by available width without the signed-in header's height cap. Signed-in header/sidebar sizes are unchanged.
+
+### Validation
+- 12 JavaScript calculation/export tests passed, including pair-count weighting, the inclusive 10pp threshold, median spread, quartile interpolation, single/empty data and existing filter/export checks.
+- 3 Java infrastructure tests passed, covering Hibernate query validation, the analytics page/shared fragments and all three authentication forms rendered through Thymeleaf.
+- 144 browser fixture checks passed across desktop/tablet/mobile widths, including both new metrics, scatter-pair switching, box plots, filters and empty/error states, plus all authentication forms' missing breadcrumbs and enlarged logo dimensions.
+- Reviewed updated analytics and login previews. No backend schema, scoring persistence, live database or running application process was changed.
+
+---
+
+## Current Status: Lecturer Evaluation Comparison Analytics
+**Status**: IMPLEMENTED — Java/JavaScript/browser checks and Docker build passed
+**Date**: 2026-10-28
+
+### Access and scope
+- Added **Lecturer Analytics** to the admin sidebar and **Compare Lecturer Evaluations** to Data Views. The page is `/admin/analytics/lecturer-comparison`; its JSON snapshot endpoint is `/admin/analytics/lecturer-comparison/data?assessmentId=...`.
+- Uses the existing admin/super-admin security boundary and active-course selection. Both the assessment and evaluated students are scoped to that course. An unavailable assessment returns a generic 404; no active course returns 403. JSON responses are not cached, and only immutable DTOs are returned.
+
+### Comparisons and filtering
+- Added lecturer average/range bars, matched-criterion pair-gap bars, team comparison charts, a lecturer/rubric heatmap, score distributions and a detailed evaluation breakdown.
+- Filters: assessment, team (including unassigned), group/individual evaluation, lecturer selection, rubric, CLO, individual student, Final/Submitted status, and shared target/criteria only. Filter URLs are shareable; CSV exports all filtered rows and print expands the on-screen row limits.
+- Group score copies are deduplicated to one latest row per lecturer, team and criterion. Individual targets remain distinct students. Peer/self marks and drafts are excluded; missing evaluations are never counted as zero.
+- Normalisation uses each criterion's highest configured rating mark, falling back to the stored criterion maximum for legacy criteria without ratings. This avoids interpreting a 4/5 rating as 4/20 when 20 is the rubric weight. Target percentages sum awarded/available rating marks; lecturer averages weight each target equally. Pair gaps compare the same target and criterion, averaging absolute percentage-point differences.
+- Rubric assignments and different team workloads can affect aggregate averages. The page explains these limits and offers matched-criteria comparisons. Current team membership and current rating definitions are used; this is not historical grade/membership auditing.
+- Charts are generated locally with SVG and tables; no chart CDN, analytics tracking or schema migration was added. Long tables and team charts have explicit show-more controls; CSV contains all filtered breakdown rows and neutralises spreadsheet formula prefixes.
+
+### Files and deployment
+- Added `LecturerAnalyticsController`, `LecturerAnalyticsService`, analytics DTO/projection types, a course-scoped mark query, `lecturer_comparison_analytics.html`, `lecturer_analytics.css`, and `lecturer-analytics.js`.
+- Updated navigation/data-hub entry points, README, and `ANALYTICS.md` with calculation rules and usage.
+- Aligned Docker build/runtime images to Java 21, matching the existing `pom.xml` requirement (the Dockerfile previously used Java 17). Existing separate Dokploy app/database and persistent-upload setup are retained.
+
+### Verification
+- Full Java suite on Java 21: **155 tests, 0 failures, 0 errors, 1 existing live-database integration test skipped**. New tests cover group deduplication, individual targets, rating-scale normalisation, invalid/missing data, legacy lecturer tags, active-course isolation, JSON handling, Hibernate query parsing against real entity mappings and Thymeleaf template/fragment rendering.
+- **8 Node calculation/export tests passed**, covering weighted available ratings, shared comparisons, combined filters, zero vs missing data, unassigned teams and CSV formula escaping.
+- **100 browser fixture checks passed** at desktop/tablet/mobile widths, including chart rendering, all main filters, individual student selection, reset, empty and connection-error states, assessment switching, URL state and layout bounds. Reviewed desktop and mobile screenshots of the actual Thymeleaf-rendered page with controlled score data.
+- Built the complete application image successfully as local `iams-analytics-check:local`. No live database, production deployment or Dokploy service was changed.
+
+---
+
+## Current Status: Persistent Upload Storage for Dokploy and Compose
+**Status**: REPOSITORY IMPLEMENTED — live Dokploy mount/setup still required
+**Date**: 2026-10-28
+
+### Deployment arrangement
+- The production deployment uses separate Dokploy app and database services. Upload persistence belongs on the app service; the existing database service and datasource configuration remain unchanged.
+- The Dockerfile explicitly sets `APP_UPLOAD_SUBMISSIONS_DIR=/app/uploads/submissions`, creates that directory and assigns `/app` ownership to the existing non-root `appuser`. This works independently of Compose.
+- Configure a Dokploy app-service bind mount from host `/srv/iams/uploads` to container `/app/uploads`. The image cannot create this host mount; it must be saved in Dokploy and the app redeployed after migrating any existing PDFs and preparing host ownership.
+
+### Repository changes
+- Added `DEPLOYMENT_STORAGE.md` with separate Dokploy app/database instructions, exact mount/environment fields, existing-report migration before container replacement, host ownership based on the image's actual appuser UID/GID, access verification and paired PDF/database backups.
+- Retained the repository's standalone Compose deployment option. Its app service now mounts `${APP_UPLOAD_HOST_DIR:-/srv/iams/uploads}` at `/app/uploads`, with explicit host-directory creation required. Existing MySQL/log volumes are preserved.
+- Documented the Compose-only host setting in `.env.example`; excluded uploads from the Docker build context; updated README and migration guidance so importing SQL alone is not presented as restoring PDFs.
+- PDF paths in the database remain relative. Submission metadata and vector doodles remain in the separate database; PDFs live in the host upload directory.
+
+### Validation
+- Docker Compose configuration validated with both the default host path and a custom host path, using example environment values.
+- Two isolated containers using the cached Java/Maven image exercised the Dockerfile's actual user/directory initialisation commands: appuser wrote a report fixture without root, and a replacement container read the persisted fixture from the same temporary bind mount.
+- Targeted whitespace checks passed. The production runtime image was not rebuilt, and no app/database service or live Dokploy configuration was changed.
+- Checked Dokploy's official application mount documentation: https://docs.dokploy.com/docs/core/applications/advanced
+
+---
+
+## Current Status: System-Wide Header Rollout Verified
+**Status**: IMPLEMENTED — all browser layout fixtures passed
+**Date**: 2026-10-28
+
+- Verified all 61 top-level pages load `system-ui.css` after feature styles and inline style blocks.
+- Centralised the accepted desktop/mobile header dimensions in shared CSS variables. Applied the logo dimensions to login, forgot-password and reset-password views as well as all role, assessment and profile headers.
+- Preserved the compact sidebar, restored sidebar appearance, SVG icons, breadcrumb arrangement and collapse controls.
+- Passed 268 browser fixture cases (67 page/role/layout variants at four widths) using the actual IAMS logo. Checks include exact logo width/maximum height, header padding, content offsets, fonts, role palettes, breadcrumbs and shell bounds.
+- Verification used static browser fixtures; live authenticated Thymeleaf rendering was not exercised.
+
+---
+
+## Current Status: Header Proportions Adjusted
+**Status**: IMPLEMENTED
+**Date**: 2026-10-28
+
+- Slightly increased the shared logo header to balance the compact sidebar: desktop logo width 150px → 170px, maximum height 52px → 60px, and vertical padding 12px → 14px.
+- Mobile headers use a 130px logo (maximum height 56px) and 12px vertical padding. Breadcrumb and sidebar proportions are retained.
+- Checked the final shared CSS overrides and whitespace; this small visual adjustment was not rerun through browser fixtures.
+
+---
+
+## Current Status: Compact Sidebar Sizing
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+- Reduced desktop sidebars from 240px to 220px and the content offset from 270px to 250px, including the PDF workstation.
+- Reduced mobile/tablet drawers to `min(82vw, 300px)` and aligned the close button with that width.
+- Tightened logo, user-profile, menu and course-switcher spacing; retained the restored role gradients, SVG icons, breadcrumb controls and 44px minimum link targets.
+- Centralised sidebar dimensions as shared CSS variables and included borders within the specified width.
+- All 170 browser interaction/style fixture checks passed, including five-role desktop/mobile dimensions, collapse/restore, and existing PDF navigation checks.
+
+---
+
+## Current Status: Previous Sidebar Appearance Restored
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+- Preserved the refined breadcrumb/menu-toggle arrangement, SVG navigation icons, collapse persistence, active-route handling, and mobile drawer controls.
+- Removed the new sidebar appearance overrides so each role again uses its established gradient IAMS header, white branding, coloured user profile panel, original link sizing/spacing, active gradients, and hover treatment.
+- Removed injected workspace subtitles and user-initial badges. The new icons remain alongside the original menu styling.
+- JavaScript syntax checks passed. All 160 browser interaction/style fixture checks passed, including original gradient/white branding across five sidebars and desktop/mobile navigation behaviour. Live authenticated rendering was not exercised.
+
+---
+
+## Current Status: Refined Breadcrumb & Sidebar UI
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+### Refinements
+- Moved the sidebar toggle into the breadcrumb bar. Desktop controls display “Hide menu” / “Show menu” with a panel icon; narrow screens use a compact icon. The mobile close control remains accessible in the drawer header while open.
+- Refined breadcrumb spacing, muted parent links, reliable CSS chevrons, assessment context, and the role-coloured current-page marker. Long names wrap, with full context retained. Removed the floating-toggle spacer on mobile to recover vertical space.
+- Unified sidebar presentation: compact IAMS/workspace heading, user initial badge, inline SVG navigation icons, balanced link spacing, and subtle active-page backgrounds. Hover states no longer shift link text sideways.
+- Consolidated active-link selection in the shared controller, including nested routes, breadcrumb parent fallback, and student assessment/submission routing. Applied `aria-current` to the selected link and removed the redundant admin active-link script.
+- Preserved desktop collapse preference, full-width assessment layout, mobile overlay/Escape dismissal, focus handling, and reduced-motion support.
+
+### Validation
+- Headless Chrome: 140 interaction checks passed across all five sidebar variants, desktop/mobile controls, collapse persistence, mobile close-button hit testing, and the existing PDF navigation/draft-preservation checks.
+- Rechecked 268 page/role/viewport layout fixtures: no failures. Reviewed desktop expanded/collapsed and true mobile viewport screenshots.
+- JavaScript syntax and targeted whitespace checks passed. These remain static browser fixtures; live authenticated server rendering was not exercised.
+
+---
+
+## Current Status: PDF Assessment Navigation & Shared Navigation Improvements
+**Status**: IMPLEMENTED — browser fixture and interaction checks passed
+**Date**: 2026-10-28
+
+### PDF assessment workstation
+- Replaced the always-expanded annotation controls with a labelled Tools dropdown containing Navigate, Pen, Highlighter, Text Box, Eraser, colours, and stroke widths. History and save remain immediately accessible; clear-page and annotated download actions live in a Document dropdown.
+- Navigate is the initial tool: mouse dragging pans the report and touch scrolling remains available without adding ink accidentally.
+- Added direct page-number entry, Fit Page, zoom percentage, and keyboard Page Up/Page Down/Home/End navigation when the PDF region is focused. Page changes scroll only the PDF viewport, leaving the rubric and outer document in place.
+- Zoom and pane resizing retain the current page and relative reading position. A ResizeObserver handles sidebar/splitter reflows. Active text drafts are committed before reflow or switching tools.
+- Improved page-indicator tracking, fixed flex shrinking for independent scrolling, and removed the minimum PDF width that prevented fitting narrow panes. Mobile views stack the panes without a redundant splitter.
+- Made the assessment title white in the evaluation header, and reduced toolbar/button and shared logo-header sizes to increase reading space.
+
+### System navigation
+- Consolidated all five sidebar fragments onto `sidebar-toggle.js`. Desktop sidebars can collapse and expand, with the preference retained across pages. The content area expands into the released space, including the assessment workstation.
+- Kept mobile drawer behaviour with overlay/Escape dismissal, focus containment, hidden-sidebar focus exclusion, and accurate expanded/collapsed labels. Integrated the existing Zen layout with the shared toggle.
+- Added a reusable server-rendered `fragments/breadcrumb.html` and filled navigation gaps across all 61 top-level pages. Existing assessment-specific breadcrumbs remain intact. New breadcrumbs use role-appropriate parent links, assessment context when available, and a current-page marker; login/recovery/error views have public navigation.
+- Breadcrumbs and sidebar controls are excluded from print layouts.
+
+### Validation and remaining limits
+- JavaScript syntax checks passed for both modified scripts.
+- Headless Chrome: 90 interaction checks passed, covering all five sidebars at desktop/mobile widths, collapse/restore, stored preference, overlay/Escape, tool dropdowns, page entry and bounds, isolated PDF scrolling, zoom/page/annotation preservation, text-draft preservation, white assessment title, and read-only navigation.
+- Rechecked 67 static page/role/layout fixtures at 1440/1024/768/375px (268 cases) for breadcrumb presence, reduced logo sizing, typography, role palettes, and shell bounds: no failures. Visually inspected a desktop workstation preview.
+- PDF interaction fixtures use a controlled four-page PDF renderer and local annotation responses; smooth scrolling is made immediate in the test harness for deterministic headless checks. Live authenticated workflows and database persistence were not retested. The local Java runtime/Maven are unavailable, so Thymeleaf server rendering was not exercised in this pass.
+
+---
+
+## Current Status: System Font Consistency
+**Status**: IMPLEMENTED — headless browser typography checks passed
+**Date**: 2026-10-28
+
+### Changes
+- Found that Inter was declared throughout the system but never supplied as a font asset. Different fallback stacks, Poppins imports on rubric template pages, an Arial legacy stylesheet, monospace deadline labels, and Arial Narrow print tables could produce visibly different typefaces.
+- Added self-hosted Inter variable normal and italic WOFF2 fonts, with the upstream SIL Open Font License, under `static/css/fonts/inter/`. This uses the existing public `/css/**` resource rule, including on login and password recovery pages. No third-party font request is needed.
+- Defined the shared `--ui-font` family and text-size/weight tokens in `system-ui.css`. Updated all authored CSS/template font-family declarations to use that family, and removed the two Poppins imports.
+- Applied the shared family to headings, navigation, forms, buttons, labels, tables, placeholders, and upload buttons. Deadline dates retain aligned digits with `font-variant-numeric: tabular-nums` using the same typeface.
+- Standardised the base text and navigation weight, while keeping heading/control size hierarchy, print-specific sizing, icon fonts, and user-selected PDF annotation formatting.
+
+### Validation
+- Headless Chrome checked 67 page/role/layout fixtures at four widths (268 cases). Each case loaded real Inter regular, medium, semibold, bold, and italic font faces and checked computed families on text and form controls, alongside the existing shell/palette checks: no failures.
+- Static audit: no remaining authored Arial, Arial Narrow, monospace, or Poppins font-family overrides in application CSS/templates. Live authenticated workflows remain outside these fixture checks.
+
+---
+
+## Current Status: Shared System Style Consistency
+**Status**: IMPLEMENTED — browser fixture checks completed; live authenticated review pending
+**Date**: 2026-10-28
+
+### Changes
+- Audited the 61 top-level Thymeleaf pages and their feature stylesheets. Found inconsistent header treatment, content padding, sidebar widths, control typography, and admin colours hardcoded into lecturer pages.
+- Added `src/main/resources/static/css/system-ui.css`, loaded last in all 61 page heads. This is the shared visual contract for typography, role palettes, shell spacing, brand headers, common cards, text controls, action buttons, alerts, breadcrumbs, and keyboard focus indicators.
+- Added explicit `data-ui-role` attributes. Profile and submission feedback pages resolve their role with Thymeleaf so shared pages retain the active subsystem palette.
+- Preserved admin/super-admin maroon, lecturer green, student crimson, and supervisor blue. Replaced hardcoded admin maroon in lecturer templates with the shared role token.
+- Standardised desktop sidebar width to 240px with a 270px content offset, and responsive drawers at the existing 1279px breakpoint. Unified mobile content spacing leaves room for the sidebar toggle.
+- Kept screen layout rules out of print media and excluded the assessment workstation from shared content sizing so split scrolling and Zen mode retain their specialised layout.
+
+### Validation and limits
+- Headless Chrome: 67 static template fixtures (61 pages plus role and split/Zen variants) at 1440, 1024, 768, and 375px; 268 checks for role palette, content offset, shell/header overflow, gradient headers, and stylesheet availability passed.
+- These checks use template markup and actual CSS, without backend data or authentication. They do not replace live workflow and visual review with populated tables and reports.
+- No Java or application behaviour changes were required for this style pass. Existing backend/PDF work in the working tree was preserved.
+
+### Maintaining consistency
+- Load `system-ui.css` after feature styles and inline style blocks on new pages. Set `data-ui-role` to `admin`, `super_admin`, `lecturer`, `student`, `supervisor`, or `public`.
+- Use `--ui-primary`, `--ui-primary-light`, `--ui-primary-soft`, `--ui-border`, and the shared radius/font tokens for new components. Keep page-specific layout and semantic status colours in feature stylesheets.
+
+---
+
+## Current Status: Doodle Reflection on Student Page Fix & Enhanced Side-by-Side Assessor Workstation
+**Status**: COMPLETED
+**Date**: 2026-10-28
+
+### 1. Root Cause Analysis & Doodle Persistence Fix
+#### Issues Identified
+1. **Jackson Lazy Proxy Serialization Failure (HTTP 500)**:
+   - When students visited `/student/assessment/{id}/submission/view`, the front-end fetched `/student/assessment/{id}/submission/annotations`.
+   - `SubmissionAnnotation` had `@ManyToOne(fetch = FetchType.LAZY)` on `submission` and `lecturer` without `@JsonIgnore`.
+   - Jackson attempted to serialize Hibernate `ByteBuddyInterceptor` proxies outside an open transaction, throwing `LazyInitializationException` / `InvalidDefinitionException` (HTTP 500).
+   - In `pdf-doodle-studio.js`, `!response.ok` failed silently with an empty annotation store, leaving the PDF blank without doodles on the student's end.
+2. **Early Return in Lecturer Evaluation Submission**:
+   - In [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java), when evaluating an individual student (`isStudentTarget != null && isStudentTarget`), `submitCombinedEvaluation` returned early at line 693 without ever executing the doodle persistence block (which was placed at line 818).
+   - Doodles submitted during individual student evaluations were completely dropped.
+3. **Incompatible Jackson Tree Traversal Method**:
+   - `AssessmentSubmissionService.saveAllAnnotationsFromJson` invoked `root.properties()`, which was only introduced in Jackson 2.16. Older Jackson releases threw a runtime `NoSuchMethodError`.
+4. **Missing Explicit Submission Identifier in Evaluation Form**:
+   - The combined evaluation form only transmitted `groupId` or `studentId`. If an assessment had individual student submissions under a group scope, the controller risked querying the wrong submission entity.
+
+#### Resolutions Implemented
+1. **Model Serialization Hardening ([`SubmissionAnnotation.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/SubmissionAnnotation.java))**:
+   - Annotated `submission` and `lecturer` fields and getters with `@JsonIgnore`.
+   - Added lightweight `@JsonProperty("submissionId")` and `@JsonProperty("lecturerId")` getter methods to ensure clean, flat JSON serialization without Hibernate proxy leaks.
+2. **Controller Pipeline Restructuring ([`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java))**:
+   - Relocated doodle persistence to the very beginning of `submitCombinedEvaluation`, executing before any branching returns (both group and individual evaluation flows).
+   - Added hidden `submissionId` input into [`lecturer_combined_evaluation_form.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_combined_evaluation_form.html) with fallback resolution via `getSubmissionForTarget`.
+   - Safely handled null returns from `saveSubmissionAnnotation` when empty strokes are submitted.
+   - Added `@Transactional(readOnly = true)` to annotation retrieval endpoints across [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java), [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java), and [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java).
+3. **Backend Service Enhancements ([`AssessmentSubmissionService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AssessmentSubmissionService.java))**:
+   - Replaced `root.properties()` with backward-compatible `root.fields().forEachRemaining(...)` iterator.
+   - Updated `saveOrUpdateAnnotation` to skip persisting redundant empty rows (`"[]"` or blank) for untouched pages.
+   - Added fallback logic in `getSubmissionForTarget` to look up group members' submissions if a group-level submission row is absent.
+4. **Frontend Studio Robustness ([`pdf-doodle-studio.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/pdf-doodle-studio.js))**:
+   - Updated `loadAnnotations()` to handle both stringified and pre-parsed JSON objects.
+   - Aggregated multi-assessor marks seamlessly per page.
+   - Automatically invokes `redrawDoodlesForPage()` on all visible and pre-rendered pages once annotation fetching resolves asynchronously.
+
+---
+
+### 2. Enhanced Side-by-Side Assessor Workstation
+#### UX/UI Features Implemented
+1. **Interactive Draggable Splitter Handle**:
+   - Added `.split-divider-handle` and `.split-divider-grip` between the PDF and Rubrics panes.
+   - Assessors can freely click-and-drag horizontally to adjust the viewport ratio between 20% and 80%, with mouse and touch support.
+   - Automatically triggers `activeStudio.zoomFit()` on drag release to maintain optimal PDF scaling.
+2. **Instant Preset Layout Toggles**:
+   - `50/50 Split`: Balanced side-by-side view for standard grading.
+   - `Focus Report (70/30)`: Expands PDF pane to 70% width for detailed reading of diagrams and dense technical reports.
+   - `Focus Rubric (30/70)`: Expands Rubric pane to 70% width for rapid grading of complex rubrics with extensive criteria.
+3. **Full-Width Zen Focus Mode**:
+   - Added `.btn-zen` toggle button in the control bar.
+   - Smoothly slides away the global navigation sidebar (`transform: translateX(-100%)`) and expands the dual workstation across 100% of the screen.
+   - Maximizes screen real estate on laptops and smaller desktop displays.
+4. **Live Completion Tracker & Auto-Navigator**:
+   - Added `.workstation-progress-badge` with an integrated mini progress bar (`.workstation-mini-bar-fill`).
+   - Dynamically monitors all radio button rating groups and mandatory comment textareas in real-time.
+   - Displays live stats (e.g. `4/6 Criteria (67%)`), transitioning to a vibrant green `All Criteria Done!` badge upon 100% completion.
+   - Clicking the badge activates `scrollToNextIncomplete()`, which automatically identifies the first unanswered criterion or unfilled comment, smoothly scrolls it into view, and highlights it with an animated pulse ring.
+5. **Sticky Rubric Quick Jump Navigation Bar**:
+   - Positioned at the top of the rubric pane (`.rubric-quick-nav`).
+   - Automatically generates navigation pills for every rubric section and comment category.
+   - Clicking a pill smoothly scrolls directly to that section.
+   - Section pills update with a green checkmark as each section's criteria are completed.
+6. **Compact Evaluation Header**:
+   - Replaced bulky tables with a clean metadata row and target badge.
+   - Member lists are consolidated into a collapsible chip tray (`toggleMembersChipList()`), saving up to 150px of vertical space.
+   - Admin evaluation guidelines are tucked into a collapsible callout (`toggleAdminNotes()`).
+
+---
+
+## Current Status: Comprehensive Full-Fledged System Testing & Error Resolution
+**Status**: COMPLETED
+**Date**: 2026-10-28
+
+### Summary of Full-Fledged Testing
+1. **Verification Scope**:
+   - Comprehensive end-to-end unit and integration test coverage across all subsystems:
+     - **Authentication & Security**: [`AuthControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/AuthControllerTest.java), [`RateLimitInterceptorTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/interceptor/RateLimitInterceptorTest.java), [`CustomUserDetailsServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/CustomUserDetailsServiceTest.java).
+     - **Student Subsystem**: [`StudentControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/StudentControllerTest.java), [`StudentSubmissionControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/StudentSubmissionControllerTest.java).
+     - **Lecturer Subsystem**: [`LecturerAssessmentControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/LecturerAssessmentControllerTest.java), [`LecturerControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/LecturerControllerTest.java).
+     - **Admin Management & Moderation**: [`AdminManagementControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/AdminManagementControllerTest.java), [`AdminSubmissionControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/AdminSubmissionControllerTest.java).
+     - **Rubrics & Criteria Architecture**: [`RubricControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/RubricControllerTest.java), [`RubricTemplateControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/RubricTemplateControllerTest.java).
+     - **Deadlines & Course Scoping**: [`DeadlineControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/DeadlineControllerTest.java).
+     - **Data Views & Analytics**: [`DataViewControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/DataViewControllerTest.java), [`CalculateServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/CalculateServiceTest.java), [`CourseStatisticsServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/CourseStatisticsServiceTest.java).
+     - **SuperAdmin Controls**: [`SuperAdminControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/SuperAdminControllerTest.java), [`SuperAdminServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/SuperAdminServiceTest.java).
+     - **User Profiles**: [`ProfileControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/ProfileControllerTest.java).
+     - **Comment & Feedback Engine**: [`CommentConfigControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/CommentConfigControllerTest.java), [`GroupCommentControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/GroupCommentControllerTest.java), [`AssessmentCommentServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/AssessmentCommentServiceTest.java).
+     - **Database Migration & Schema Integrity**: [`LegacyColumnCleanupMigrationRunnerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/config/LegacyColumnCleanupMigrationRunnerTest.java).
+     - **File Storage & Sanitization**: [`FileStorageServiceTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/service/FileStorageServiceTest.java), [`HtmlSanitizerUtilTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/util/HtmlSanitizerUtilTest.java).
+2. **Results**:
+   - Total Tests Executed: **136**
+   - Failures: **0**
+   - Errors: **0**
+   - Skipped: **1**
+   - Pass Rate: **100%**
+
+---
+
+## Current Status: MySQL Evaluation Save Fix (Legacy 'submittedAt' Column Schema Migration)
+**Status**: COMPLETED
+**Date**: 2026-10-28
+
+### Summary
+1. **Error Analysis**:
+   - Error: `Error saving evaluation: could not execute statement [Field 'submittedAt' doesn't have a default value] [insert into marks (... submitted_at ...)]`
+   - **Is this caused by report submission?**: **No.** Student report submission is saved in `assessment_submissions` (and doodles in `submission_annotations`). It is completely separate and decoupled from lecturer mark saving in `marks`.
+   - **Root Cause**:
+     - Earlier in development, `Mark.java` (and `AssessmentComment.java`) defined `private LocalDateTime submittedAt;` with `@Column(nullable = false)` without a custom column name. Under `PhysicalNamingStrategyStandardImpl`, MySQL created the column `submittedAt` (camelCase) with `NOT NULL` and no default value.
+     - Later in commit `1911a9b`, the mapping was changed to `@Column(name = "submitted_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")`.
+     - When Spring Boot booted with `hibernate.ddl-auto=update`, Hibernate added the new column `submitted_at` (snake_case). However, Hibernate **never** deletes or renames existing columns in MySQL.
+     - Consequently, the legacy column `submittedAt` remained in the MySQL table as an orphan with `NOT NULL` and no default value. When Hibernate inserted marks into `submitted_at`, MySQL's strict mode rejected the insert because `submittedAt` had no value provided.
+
+2. **Automated Migration Fix**:
+   - Created [`LegacyColumnCleanupMigrationRunner.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/java/com/capstone/adproject/config/LegacyColumnCleanupMigrationRunner.java):
+     - Executes automatically on application startup.
+     - Inspects `information_schema.columns` for `marks` and `assessment_comments`.
+     - Detects the legacy `submittedAt` column.
+     - Synchronizes any legacy timestamps into `submitted_at`, and drops or alters `submittedAt` to `DATETIME NULL DEFAULT NULL`.
+     - Permanently prevents `Field 'submittedAt' doesn't have a default value` across all environments without requiring manual DBA interventions.
+
+3. **Direct SQL Commands for Manual Execution (Optional)**:
+   - For immediate resolution without rebooting:
+     ```sql
+     ALTER TABLE marks MODIFY COLUMN submittedAt DATETIME NULL DEFAULT NULL;
+     -- Or drop if submitted_at exists:
+     ALTER TABLE marks DROP COLUMN submittedAt;
+
+     ALTER TABLE assessment_comments MODIFY COLUMN submittedAt DATETIME NULL DEFAULT NULL;
+     -- Or:
+     ALTER TABLE assessment_comments DROP COLUMN submittedAt;
+     ```
+
+---
+
+## Current Status: Assessor Workstation Enhancements & Simplified Submissions UI
+**Status**: COMPLETED
+**Date**: 2026-10-28
+
+### Summary
+1. **Continuous Vertical Scroll for PDF & Doodle Studio**:
+   - Refactored [`pdf-doodle-studio.js`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/static/js/pdf-doodle-studio.js) from single-page pagination to continuous vertical scrolling.
+   - Automatically renders all PDF pages sequentially into `.pdf-continuous-scroll-wrapper` inside `#pdf-viewport` with independent `overflow-y: auto`.
+   - Added live scroll listener detecting visible page positions and updating the toolbar counter (`Page X of Y`) in real-time.
+   - Previous/Next toolbar buttons smoothly scroll directly to target page containers.
+
+2. **Text Box Feedback Tool**:
+   - Added a dedicated Text Box tool (`#tool-text`) to the studio toolbar.
+   - Assessors can click anywhere on any PDF page to spawn a floating inline text editor (`.pdf-text-editor-overlay`).
+   - Supports keyboard shortcuts (`Ctrl+Enter` to save, `Escape` to dismiss) and inline delete.
+   - Converts text to vector annotations (`tool: 'text', x: ..., y: ..., text: ..., color: ...`) stored in `SubmissionAnnotation.strokesJson`.
+   - Renders beautiful sticky note callouts on the doodle canvas with word-wrapping, colored accent bars, rounded corners, and drop shadows.
+   - Hit detection allows clicking existing notes to re-edit, as well as removal via the vector eraser tool.
+   - Vector-accurate and scale-invariant; visible to students and admins in read-only mode.
+
+3. **Independent Dual-Scroll Side-by-Side Workstation**:
+   - Created a split-screen evaluation workstation in [`lecturer_combined_evaluation_form.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/lecturer_combined_evaluation_form.html) and [`pdf-doodle-studio.css`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/static/css/pdf-doodle-studio.css).
+   - When a report submission is present (`submission != null`):
+     - `body.lecturer-page.has-split-studio` locks outer page overflow.
+     - The viewport is divided into a 52% PDF viewer pane (`.pdf-pane`) and a 48% rubric pane (`.rubric-pane`), each with independent vertical scrolling (`overflow-y: auto`).
+     - Assessors can scroll through a 50-page PDF report without moving the rubrics, or scroll through dozens of rubric criteria and comments without losing their place on the PDF.
+     - The bottom form action bar (`.form-actions`) remains sticky at the base of the rubric pane.
+   - Graceful fallback: When `submission == null`, the layout maintains the standard full-width rubric document flow.
+
+4. **Sidebar Navigation Consistency Across Submissions**:
+   - Updated the active link detection script in [`fragments/student_sidebar.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/fragments/student_sidebar.html).
+   - `/student/assessment/{id}/submit` and `/student/assessment/{id}/submission/view` correctly activate the **Report Submissions** tab.
+   - `/student/assessment/{id}/evaluate/{studentId}` activates **Peer & Self Assessments**.
+   - Standardized `body.student-submissions-page` in [`student_sidebar.css`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/static/css/student_sidebar.css) to ensure proper desktop `margin-left: 270px` and mobile responsive collapse.
+
+5. **Simplified Student Report Submission Interface**:
+   - Streamlined [`student_submissions.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submissions.html) and [`student_submit_single.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submit_single.html).
+   - Replaced bulky hero banner and 4-box KPI grid with a sleek, minimalist `.submissions-header-card` and `.header-summary-badges`.
+   - Unified `.simple-deliverable-card` with clean typography, compact status badges, clear deadline labels, 1-line file upload controls, and direct action buttons.
+   - Maintained 50MB hard ceiling and PDF format enforcement across all student upload forms.
+
+6. **Verification & Test Suite**:
+   - All 48 Maven unit and integration tests passed (`BUILD SUCCESS`, 0 failures, 0 errors).
+
+---
+
+## Current Status: Report Submissions Portal Fix & Clean Decoupling from Peer/Self Assessments
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+1. **Resolved Report Submissions Error on `/student/submissions`**:
+   - **Root Cause 1 (`Comparator` missing import)**: `java.util.Comparator` was missing an explicit import in [`StudentController.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java), causing an `Unresolved compilation problem: Comparator cannot be resolved` error upon invoking the endpoint. Added `import java.util.Comparator;`.
+   - **Root Cause 2 (Null Date formatting crash)**: Thymeleaf's `#dates.format(...)` threw `IllegalArgumentException: Cannot format a null Date` when an assessment deadline existed with a null target date. Guarded with `th:if="${assessmentDeadlineMap != null and assessmentDeadlineMap.get(assessment.id) != null and assessmentDeadlineMap.get(assessment.id).date != null}"` in both [`student_submissions.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submissions.html) and [`student_submit_single.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submit_single.html).
+   - **Root Cause 3 (Unsafe SpEL Map lookup)**: Pre-populated `doodleCountMap.put(assessment.getId(), 0)` in `StudentController.java` and strengthened the template check: `th:if="${doodleCountMap != null and doodleCountMap.containsKey(assessment.id) and doodleCountMap.get(assessment.id) != null and doodleCountMap.get(assessment.id) > 0}"`.
+   - **Root Cause 4 (Sidebar Fragment Syntax)**: Updated `th:replace="fragments/student_sidebar :: sidebar"` across `student_submissions.html` and `student_submit_single.html` to align with `student_home.html` and `student_assessments.html`.
+   - **Root Cause 5 (Course Resolution)**: Autowired `CourseRepository` and resolved course safely via `courseRepository.findById(currentCourseId).orElse(currentStudent.getCourse())` so that students assigned via course assignments or groups have complete course code and title data displayed in the portal.
+
+2. **Decoupled Report Submissions from Peer & Self Assessments**:
+   - **Clean Separation of Concerns**:
+     - Peer and self assessment assignments (`StudentAssessmentAssignment`) are strictly for rubric ratings and team evaluation.
+     - Report submission is a course deliverable applying to all enrolled students for any assessment where `assessment.requiresSubmission == true`.
+   - **Removed Submission Card from Peer & Self Assessment Page**:
+     - Removed the entire report submission card and upload forms from [`student_assessments.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_assessments.html).
+     - Cleaned up `/student/assessments` in `StudentController.java` to eliminate unnecessary submission model attributes and ensure `hasComponents` only checks rubrics and comments.
+     - Kept report submissions exclusively housed in the dedicated portal at `/student/submissions` and single submission page at `/student/assessment/{assessmentId}/submit`.
+   - **Eligibility Simplification (`StudentController.isStudentEligibleForSubmission`)**:
+     - Students need only be enrolled in the course of the assessment to upload their reports. They are no longer blocked by whether they have a `StudentAssessmentAssignment` record.
+
+3. **Automated Verification & Unit Tests**:
+   - Created [`StudentSubmissionControllerTest.java`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/test/java/com/capstone/adproject/controller/StudentSubmissionControllerTest.java) covering `listStudentSubmissions`, submission with lecturer doodles, and `showAssessmentSubmitPage`.
+   - Ran complete project test suite: **48 tests run, 0 failures, 0 errors, 1 skipped**, 100% green build.
+
+---
+
+## Current Status: Dedicated Student Report & Assignment Submissions Portal
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+- **Dedicated Student Submissions Hub (`GET /student/submissions`)**:
+  - Created [`student_submissions.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submissions.html) and custom stylesheet [`student_submissions.css`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/static/css/student_submissions.css).
+  - Features:
+    - **Header & Navigation**: Logo header and unified `.system-breadcrumb` (`Dashboard > Report Submissions`).
+    - **Hero Context Banner**: Deep UTM Maroon gradient card detailing course code/name, group name (or individual scope badge), and portal description.
+    - **Live 4-Metric KPI Grid**:
+      - Total Required Deliverables
+      - Reports Submitted
+      - Pending Uploads
+      - Reports with Lecturer Doodles & Markups
+    - **Deliverables Assessment Cards**:
+      - Submission Title (`assessment.getEffectiveSubmissionTitle()`) and parent assessment title.
+      - Dual badges: Scope (`GROUP SUBMISSION` vs `INDIVIDUAL SUBMISSION`) and Deadline (`OPEN` with due date vs `CLOSED`).
+      - Special Instructions callout box displaying admin guidelines and student prompts.
+      - **Submitted State**:
+        - File details box: file name, version tag (`v1`, `v2`), file size in MB, submission timestamp, and uploader attribution.
+        - Gold highlight banner when lecturer has added handwritten ink notes & vector doodles.
+        - Action buttons: "Download Submitted PDF", "Review Report & Lecturer Doodles" (opens interactive viewer), and "Replace / Re-upload PDF" (if deadline is open).
+        - Collapsible re-upload zone with file picker, instant 50MB client-side limit check, and version advancing alert.
+      - **Not Yet Submitted State**:
+        - Drag-and-drop file upload dropzone accepting `.pdf` documents with interactive highlight.
+        - Client-side size validator enforcing assessment limit (hard ceiling: 50MB).
+        - Instant file preview bar before submission.
+        - "Submit Report (PDF)" button.
+        - Group requirement guardrail: friendly notification if assessment requires a group but student is not yet assigned.
+      - **Empty State**: Friendly graphic when no submissions are currently required.
+- **Dedicated Single Submission View (`GET /student/assessment/{assessmentId}/submit`)**:
+  - Created [`student_submit_single.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submit_single.html) for focused submission flows per assessment.
+- **Student Navigation Integration**:
+  - Updated [`fragments/student_sidebar.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/fragments/student_sidebar.html) to add **"Report Submissions"** with `<i class="fas fa-file-upload"></i>` directly in the navigation menu.
+  - Added automatic active-state highlighting for sidebar links.
+  - Updated [`student_home.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_home.html) (Student Dashboard) with a prominent **Report Submissions Banner** displaying scheduled deliverables and pending upload count with a direct action button.
+- **Backend Controller & Eligibility Logic (`StudentController.java`)**:
+  - Added `isStudentEligibleForSubmission(Student student, Assessment assessment)`:
+    - Allows course-enrolled students to submit even when assessments do not have peer/self evaluations assigned.
+    - Accurately checks explicit `StudentAssessmentAssignment` only if configured by the admin.
+  - Improved `isAssessmentOpen(Assessment assessment)`:
+    - Automatically defaults to open if no strict deadline dates are configured.
+    - Prevents NPEs when dates are null.
+  - Updated `uploadAssessmentSubmission` (`POST /student/assessment/{assessmentId}/upload`):
+    - Added `redirectSource` parameter to redirect students smoothly back to `/student/submissions` (default) or `/student/assessments`.
+    - Validates course enrollment, group presence (if GROUP scope), deadline window, and 50MB file size ceiling.
+- **Automated Verification & Test Suite**:
+  - Full Maven test suite: **45 tests run, 0 failures, 0 errors, 1 skipped**, 100% green build.
+
+---
+
+## Current Status: Unified System Breadcrumb Pattern & Full Style Alignment Across Subpages
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+- **Removal of Assessor Mapping Matrix from Configuration Page**:
+  - Completely excised the assessor mapping table, preview buttons, and bottom KPI snapshot cards from [`assessment_submission_configuration.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/assessment_submission_configuration.html).
+  - The submission configuration page is now 100% focused on its core responsibility: configuring submission activation (`requiresSubmission`), custom title (`submissionTitle`), submission scope (`GROUP` vs `INDIVIDUAL`), max file size (1-50 MB with hard storage ceiling), and student instructions.
+- **Unified System Breadcrumb Component (`.system-breadcrumb`)**:
+  - Implemented a unified, responsive breadcrumb navigation pattern (`system-breadcrumb`) across `rubric.css` and `responsive-patterns.css`.
+  - Design features:
+    - Clean white bar container with subtle border `#e2e8f0` and soft elevation.
+    - Deep UTM Maroon `#4A0018` clickable links with chevron separators (`fa-chevron-right`).
+    - Assessment context title in slate `#1e293b`.
+    - Active page pill in soft maroon background `#fdf2f4` with accent border `#fce7eb`.
+  - Maintained across **all system assessment sub-pages**:
+    1. [`assessment_submission_configuration.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/assessment_submission_configuration.html) (`Manage Assessments > [Title] > Report Submission Setup`)
+    2. [`view-assessment-rubrics.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/view-assessment-rubrics.html) (`Manage Assessments > [Title] > Rubrics & Comments`)
+    3. [`admin_assign_lecturers.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/admin_assign_lecturers.html) (`Manage Assessments > [Title] > Assign Assessors`)
+    4. [`admin_assign_students.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/admin_assign_students.html) (`Manage Assessments > [Title] > Assign Students`)
+    5. [`comment_configuration_single_type.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/comment_configuration_single_type.html) (`Manage Assessments > [Title] > Group/Individual Comments`)
+    6. [`assign_assessment.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/assign_assessment.html) (`Manage Assessments > [Title] > Assign Deadlines`)
+    7. [`rubric-form.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/rubric-form.html) (`Manage Assessments > [Title] > Add / Edit Rubric`)
+    8. [`admin_progress_tracking_view.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/admin_progress_tracking_view.html) (`Progress Tracking Hub > [Title] > Live Tracking & Moderation`)
+    9. [`student_submission_view.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/student_submission_view.html) (`Progress Tracking / My Assessments > [Title] > Report & Feedback`)
+- **CSP-Safe SVG Mask Icon Expansion in `rubric.css`**:
+  - Added inline SVG data URI masks for icons on `body.rubric-page`:
+    - `fa-arrow-left` (Back buttons)
+    - `fa-chevron-right` & `fa-angle-right` (Breadcrumb separators)
+    - `fa-chevron-left` & `fa-angle-left`
+    - `fa-graduation-cap` (Course & student badges)
+    - `fa-ban` (Disabled submission status badge)
+    - `fa-info-circle` (Input helper hints)
+    - `fa-chart-line` (Progress tracking)
+  - Prevents solid black square rendering artifacts when running under strict Content Security Policies.
+- **Automated Verification & Test Suite**:
+  - Full Maven test suite: **45 tests run, 0 failures, 0 errors, 1 skipped**, 100% green build.
+
+---
+
+## Current Status: Dedicated Report Submission Configuration Page & Live Data IDE Error Resolution
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+- **Resolution for "Failed to refresh live data from process <PID> after retries: 10"**:
+  - Identified the root cause: The VS Code Spring Boot Tools / Language Server extension monitors active Java processes and attempts to pull live runtime metrics (beans, request mappings) via JMX/Actuator. When management endpoints are restricted to `health,info` or JMX connection times out during local reboots, the extension retries 10 times and surfaces an error notification toast.
+  - Fixes applied:
+    - Updated `.vscode/settings.json` to disable automatic process tracking (`boot-java.live-information.automatic-process-tracking.enabled: false`, `spring-boot.ls.java.live-information.automatic-process-tracking.enabled: false`, `sts.ls.java.live-information.automatic-process-tracking.enabled: false`).
+    - Updated `application.properties` and `application-dev.properties` to expose all JMX management endpoints (`management.endpoints.jmx.exposure.include=*`) ensuring IDE connections succeed if live process tracking is queried.
+- **Dedicated Report Submission Configuration Page**:
+  - Created a dedicated page [`assessment_submission_configuration.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/assessment_submission_configuration.html) accessible via `GET /admin/assessment/{assessmentId}/submission-config`:
+    - **Header & Breadcrumbs**: `Manage Assessments` > `[Assessment Title]` > `Report Submission Setup`.
+    - **Assessment Hero Card**: Deep maroon gradient card displaying assessment title, course code/name, ID, and real-time status badges (Enabled/Disabled, Group vs Individual, 50MB storage ceiling).
+    - **Toggle Activation Switch**: High-visibility switch card to toggle `requiresSubmission` with dynamic slide-down options.
+    - **Custom Submission Title**: Configurable report title (`submissionTitle`), defaulting gracefully to "Report / Assignment Submission".
+    - **Submission Scope**: Dual interactive option cards for `GROUP` (1 report per team with versioning) vs `INDIVIDUAL` (per student).
+    - **Max File Size**: Number input strictly bounded between 1 MB and 50 MB, backed by an inline storage guardrail notice.
+    - **Submission Instructions & Guidelines**: Multi-line textarea for student prompts, cover page guidelines, and matric number instructions.
+    - **Live Mapping Snapshot**: Mini KPI cards previewing Expected Targets, Submitted Reports, Pending Uploads, and Doodled Reports.
+    - **Action Buttons**: Save Configuration, Back to Manage Assessments, and View Assessor Mapping Matrix.
+- **Manage Assessments Hub Optimization (`manage-assessments.html`)**:
+  - Removed cluttered submission fields from the quick "Create Assessment" modal to restore a lightweight, instant creation flow (Title + Save).
+  - In the Existing Assessments table:
+    - Replaced the text button with a clean **icon-only logo button** (`<i class="fas fa-file-upload"></i>`), styled with `.btn-submission` in `rubric.css` (Deep Maroon `#4A0018` when active, subtle slate `#64748b` when unconfigured) to match all other action buttons perfectly.
+    - Added CSP-safe inline SVG masks for `fa-file-upload` and `fa-file-pdf` in `rubric.css`.
+    - Made the `[GROUP] REPORT` title badge clickable, navigating directly to the configuration page.
+    - Added a direct **"Report Submission Setup"** action in the assessment dropdown menu.
+  - Refined the design of [`assessment_submission_configuration.html`](file:///c:/Users/ihsan/OneDrive/Documents/AAS-Project-Main/adproject/src/main/resources/templates/assessment_submission_configuration.html) with top brand header (logo only), pill breadcrumbs, hero context card, interactive scope selection cards, 50MB storage guardrail alert, and live mapping snapshot tiles.
+- **Progress Tracking Hub Tab 3 Streamlining (`admin_progress_tracking_view.html`)**:
+  - Replaced the bulky duplicate configuration form on Tab 3 with a sleek **Report Configuration Status Card** featuring active badges and a "Configure Report Settings" link.
+  - Tab 3 is now dedicated to its core purpose: tracking student submissions and reviewing lecturer ink doodles across the Assessor Mapping Matrix.
+- **Automated Verification & Test Suite**:
+  - Full Maven test suite: **45 tests run, 0 failures, 0 errors, 1 skipped**, 100% green build.
+
+---
+
+## Current Status: Admin Report Setup & Assessor Mapping Tab, 50MB Storage Limit & Custom Submission Titles
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+- **Admin Report Setup & Assessor Mapping Tab (Tab 3 in Progress Tracking Hub)**:
+  - Added dedicated 3rd tab in `admin_progress_tracking_view.html` (`tab=submissions`), named **"Report Setup & Assessor Mapping"**, with a dynamic status counter badge (`X/Y Submitted`).
+  - Added direct quick link in `manage-assessments.html` dropdown menu: *Report Setup & Assessor Mapping*.
+  - Added 4-metric overview KPI grid on Tab 3:
+    - **Expected Submissions** (Maroon `#4A0018`)
+    - **Submitted Reports** (Emerald `#059669`)
+    - **Pending Uploads** (Warm Amber `#D97706`)
+    - **Reports with Doodles** (UTM Gold `#F8A617`)
+- **Report Submission Configuration**:
+  - Embedded configuration card directly inside Tab 3 (`POST /admin/assessment/{assessmentId}/submission-config`):
+    - `requiresSubmission` (toggle checkbox with dynamic slide-down options)
+    - `submissionTitle` (custom title, e.g. "Final Project Report", "Capstone Interim Report")
+    - `submissionScope` (`GROUP` vs `INDIVIDUAL`)
+    - `maxFileSizeMb` (enforced at max 50MB, minimum 1MB)
+    - `submissionInstructions` (detailed instructions/prompts for students)
+- **Assessor Allocation & Report Mapping Matrix**:
+  - Implemented `getSubmissionMappingOverview(Assessment assessment)` in `AssessmentSubmissionService.java`.
+  - Automatically resolves active assessment assignment mode (`GROUP`, `STUDENT`, `RUBRIC`):
+    - **Target Column**: Displays Target Name (Group or Student) with student member list (or email/group for individual mode).
+    - **Assigned Assessor(s) Column**: Lists all lecturers assigned to that student or group, with fallback badge if unassigned.
+    - **Rubric Scope Column**: Indicates whether assigned to "All Assessment Rubrics" or "Assigned by Specific Rubrics".
+    - **Submission Status Column**: Displays file name, version badge (`v1`, `v2`), file size in KB/MB, upload timestamp, and uploader name; or "Pending Submission" badge.
+    - **Doodle Annotations Column**: Displays count of annotated pages with a gold badge indicator.
+    - **Actions Column**:
+      - "View / Download PDF" (`/admin/submissions/{id}/file`)
+      - "Review Report & Doodles" (`/admin/submissions/{id}/view`)
+- **Strict 50MB Storage Guardrail**:
+  - Hard capped at **50MB** across:
+    - Backend entity setter in `Assessment.java` (`Math.min(maxFileSizeMb, 50)`)
+    - Service layer validation in `AssessmentSubmissionService.saveSubmission` (throws `IllegalArgumentException` if file exceeds 50MB or the assessment's configured limit)
+    - Admin UI input constraints (`max="50"`, with helper label indicating max storage limit)
+    - Student upload display constraint in `student_assessments.html`
+- **Custom Submission Titles Across Portals**:
+  - Added `submissionTitle` field to `Assessment.java` with fallback `getEffectiveSubmissionTitle()` ("Report / Assignment Submission").
+  - Form field added in `manage-assessments.html` and Tab 3 config.
+  - Rendered dynamically in student upload cards (`student_assessments.html`), PDF viewer headers (`student_submission_view.html`), and lecturer evaluation form (`lecturer_combined_evaluation_form.html`).
+- **Admin Report & Doodle Viewer**:
+  - Created endpoints in `AdminController.java`:
+    - `GET /admin/submissions/{id}/file` (streams PDF)
+    - `GET /admin/submissions/{id}/view` (renders viewer with Admin sidebar and back button)
+    - `GET /admin/submissions/{id}/annotations` (allows Admin to fetch lecturer doodles without 403 Forbidden)
+- **Automated Verification & Test Suite**:
+  - Added unit tests in `AssessmentSubmissionServiceTest.java` verifying 50MB hard cap, custom title fallbacks, and mapping overview aggregation.
+  - Full Maven test suite: **45 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB), 100% green build.
+
+### Files Modified & Created
+- `Assessment.java` (Added `submissionTitle`, enforced 50MB cap on `maxFileSizeMb`)
+- `AssessmentSubmissionService.java` (Added `getSubmissionMappingOverview`, enforced 50MB cap)
+- `AdminController.java` (Injected submission service, added Tab 3 model data, config update endpoint, and submission file/view/annotation endpoints)
+- `RubricController.java` (Bound `submissionTitle` and 50MB cap in assessment save)
+- `admin_progress_tracking_view.html` (Added Tab 3, KPI grid, config form, and Assessor Mapping table)
+- `manage-assessments.html` (Added `submissionTitle`, 50MB limit, and dropdown link to Tab 3)
+- `student_assessments.html` (Updated dynamic submission title and 50MB display)
+- `lecturer_combined_evaluation_form.html` (Updated dynamic submission title)
+- `student_submission_view.html` (Updated dynamic submission title and admin view support)
+- `AssessmentSubmissionServiceTest.java` (Added unit tests for mapping overview, title fallbacks, and 50MB limit)
+- `STATE.md` (Updated)
+
+---
+
+## Current Status: Student Report Submission, Lecturer Side-by-Side Review & Vector Ink Doodle Studio
+**Status**: COMPLETED
+**Date**: 2026-10-27
+
+### Summary
+- **Admin Assessment Configuration**:
+  - Upgraded `manage-assessments.html` and `RubricController.java` to allow administrators to configure report/assignment upload requirements per assessment.
+  - Configurable parameters:
+    - `requiresSubmission` (boolean toggle)
+    - `submissionScope` (`GROUP` [1 submission per team] vs `INDIVIDUAL` [each student submits])
+    - `maxFileSizeMb` (default 25 MB, configurable up to 100 MB)
+    - `submissionInstructions` (instructions and prompts for students)
+  - Existing assessments list shows badge indicators for assessments requiring PDF submissions.
+- **Secure File Storage & PDF Ingestion**:
+  - Implemented `FileStorageService.java` with strict PDF-only enforcement (`.pdf` extension, `%PDF-` header byte validation).
+  - Path traversal protection (folder and filename sanitization, `normalize()` checks against base upload path).
+  - Configured multipart limits (50 MB) and storage paths in `application.properties` and `application-prod.properties`.
+- **Student Upload Flow & Viewer**:
+  - Enhanced `StudentController.java` and `student_assessments.html`.
+  - Added dedicated submission card per assessment showing upload status, file metadata (filename, size, submission time, uploader, version), and instructions.
+  - For group assessments, any team member can upload; subsequent uploads cleanly replace the file and increment the version (`v1` → `v2`).
+  - Added `student_submission_view.html` providing a dedicated student report viewer that renders the PDF alongside the lecturer's handwritten ink scribbles and highlighters in read-only mode.
+- **Lecturer Side-by-Side Evaluation & Vector Ink Doodle Studio**:
+  - Transformed `lecturer_combined_evaluation_form.html` into a side-by-side workspace when a student submission is available.
+  - **Left Pane**: Interactive PDF & Doodle Studio powered by PDF.js with an HTML5 transparent canvas layer.
+    - Vector ink annotation recording normalized coordinates `(x/width, y/height)` for resolution-independent rendering at any zoom level or device DPI.
+    - Tools: **Pen**, **Highlighter**, **Eraser** (vector stroke deletion).
+    - Palette: IAMS Maroon (`#4A0018`), Gold (`#F8A617`), Red, Blue, Emerald Green, Black.
+    - Stroke sizes (Fine, Medium, Thick), Undo/Redo history, and Clear Page.
+    - Auto-save debounced after stroke completion + manual "Save Ink" button with CSRF-authenticated asynchronous JSON persistence.
+  - **Right Pane**: Standard rubric evaluation form, scrollable independently.
+  - **Split Screen Layout Bar**: Instant toggle between `50/50 Split`, `Focus Report (70/30)`, and `Focus Rubric (30/70)`.
+- **Database Architecture**:
+  - Created `AssessmentSubmission` entity tracking student, group, assessment, course, stored path, size, content type, version, and status.
+  - Created `SubmissionAnnotation` entity tracking submission, lecturer, page number, and vector ink strokes JSON.
+  - Created corresponding repositories `AssessmentSubmissionRepository` and `SubmissionAnnotationRepository`.
+  - Service layer orchestration in `AssessmentSubmissionService.java`.
+- **Automated Verification & Test Suite**:
+  - Created `FileStorageServiceTest.java` (7 unit tests: magic bytes, path traversal, deletion, resource loading).
+  - Created `AssessmentSubmissionServiceTest.java` (6 unit tests: group/individual submissions, file replacement, size limits, ink creation/updating).
+  - Executed full Maven test suite (`mvn test`): **42 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB), 100% green build.
+
+### Files Created & Modified
+- **Created**:
+  - `AssessmentSubmission.java` (JPA Entity)
+  - `SubmissionAnnotation.java` (JPA Entity)
+  - `AssessmentSubmissionRepository.java` (JPA Repository)
+  - `SubmissionAnnotationRepository.java` (JPA Repository)
+  - `FileStorageService.java` (Service)
+  - `AssessmentSubmissionService.java` (Service)
+  - `pdf-doodle-studio.css` (CSS)
+  - `pdf-doodle-studio.js` (JavaScript)
+  - `static/js/pdfjs/pdf.min.js` & `pdf.worker.min.js` (PDF.js bundled assets)
+  - `student_submission_view.html` (Thymeleaf Template)
+  - `FileStorageServiceTest.java` (Unit Tests)
+  - `AssessmentSubmissionServiceTest.java` (Unit Tests)
+- **Modified**:
+  - `Assessment.java` (Added submission fields)
+  - `RubricController.java` (Bound submission fields on create/edit)
+  - `StudentController.java` (Upload, download, annotations, and viewer endpoints)
+  - `LecturerAssessmentController.java` (Submission lookup, file streaming, and doodle annotation endpoints)
+  - `manage-assessments.html` (Admin UI configuration)
+  - `student_assessments.html` (Student upload card and doodle feedback button)
+  - `lecturer_combined_evaluation_form.html` (Split-screen studio integration)
+  - `application.properties` & `application-prod.properties` (Upload directory and multipart limits)
+  - `STATE.md` (Updated)
+
+---
+
+## Current Status: Simplified Comment Moderation, Decommissioned Sarcasm Evaluation & Modernized UI/UX
+**Status**: COMPLETED
+**Date**: 2026-10-26
+
+### Summary
+- **Decommissioned Sarcastic & Negative Sentiment Evaluation Engine**:
+  - Removed `CommentSentimentAnalysisService.java` and its unit test suite `CommentSentimentAnalysisServiceTest.java`.
+  - Removed automated regex pattern matching, hostile keyword tokenization, and arbitrary sentiment scoring from `AssessmentCommentService.java`.
+  - Eliminated noisy, false-alarm red borders, alert badges ("⚠️ Potential Negative / Sarcastic"), and red warning reason banners ("Filtration Flag: ...") from all comment views.
+  - Simplified database moderation fields in `AssessmentComment` to serve purely as lightweight, zero-overhead moderation indicators.
+- **Unified & Enhanced Comment Filtration Hub**:
+  - Replaced fragmented, double-stacked filter bars with a single, integrated **Filter & Search Suite** (`.filter-card`).
+  - **Status Segmented Tabs**: Clean, intuitive tabs for **All Comments**, **Pending Review**, **Approved**, and **Rejected** with real-time numeric badges (`.pill-badge`).
+  - **Parameter-Preserving Navigation**: Switching between status tabs seamlessly preserves active keyword search queries, evaluator role filters, and group filters without resetting admin context.
+  - **Secondary Filter Controls**: Integrated responsive search bar, evaluator role filter (Assessors, Students, Peer, Self, Team), group filter, and an active filter reset button.
+  - Retained fast multi-select checkboxes and bulk action controls ("Approve Selected", "Reject Selected").
+- **Professional UI/UX Simplification & Visual Hierarchy (IAMS UTM Theme)**:
+  - **Balanced 4-Metric KPI Grid**: Symmetrical 4-column desktop layout featuring **Total Comments** (IAMS Maroon `#4A0018`), **Pending Approval** (Warm Amber `#D97706`), **Approved & Visible** (Emerald `#059669`), and **Rejected / Hidden** (Graphite Slate `#4B5563`).
+  - **Streamlined Moderation Action Header**: Replaced confusing dual bulk-approve buttons with a single, clear **"Approve All Pending"** primary CTA button that automatically disables when pending count reaches 0.
+  - **Polished Comment Cards**: Clean white card surface with subtle 1px border and status accent left border (Amber for Pending, Emerald for Approved, Slate for Rejected). Removed visual clutter, harsh alert banners, and awkward italics.
+  - **Clear Participant Flow**: Readable relationship display: `By: Evaluator → To: Target Student [Group Name]`.
+  - **Seamless In-Place AJAX Moderation**: Retained instantaneous approval and rejection with dynamic DOM updates, real-time KPI counter recalculation, and non-intrusive floating toast notifications with zero scroll jumping or full-page reload.
+  - **Assessment Selection Hub (`admin_progress_tracking_select.html`)**: Cleaned assessment cards by removing red danger badges and displaying clean Total and Pending count pills.
+- **Automated Verification & Test Suite**:
+  - Updated `AssessmentCommentServiceTest.java` to test approval status updates, bulk actions, and moderation stats.
+  - Executed full Maven test suite (`mvn test`): **29 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB).
+
+### Files Modified & Deleted
+- `CommentSentimentAnalysisService.java` (deleted)
+- `CommentSentimentAnalysisServiceTest.java` (deleted)
+- `AssessmentCommentService.java` (modified)
+- `AssessmentCommentServiceTest.java` (modified)
+- `AdminController.java` (modified)
+- `admin_progress_tracking_view.html` (modified)
+- `admin_progress_tracking_select.html` (modified)
+- `admin_progress_tracking.css` (modified)
+- `STATE.md` (updated)
+
+---
+
+## Current Status: Unified Progress & Comments Hub, Sentiment Filtration & In-Place AJAX Moderation
+**Status**: COMPLETED
+**Date**: 2026-10-22
+
+### Summary
+- **Unified Progress & Comments Hub**:
+  - Combined the separate **Progress Tracking** and **View Comments** sections into a single, unified module: **Progress & Comments** (`/admin/progress-tracking`).
+  - Updated the Admin navigation sidebar (`sidebar.html`) to replace separate links with a single **Progress & Comments** navigation item (`/admin/progress-tracking`).
+  - Maintained backward compatibility by redirecting legacy comment routes (`/{role}/comments/view/assessments`) to the unified comments view.
+  - Upgraded the Assessment Selection dashboard (`admin_progress_tracking_select.html`) with real-time comment metric pills (Total, Pending, and Flagged counts) and dual quick-access buttons ("View Progress" and "Moderate Comments").
+  - Designed a 2-tier tabbed dashboard on the assessment details page (`admin_progress_tracking_view.html`):
+    - **Tab 1: Evaluation Progress** (Assessor and Student granular progress tracking tables with expandable rows).
+    - **Tab 2: Comments & Moderation** (Comment review, sentiment filtration, and bulk actions).
+- **In-Place Asynchronous Moderation & Flagging (Zero Page Navigation)**:
+  - Refactored `AdminController.java` (`toggleCommentFlag`, `approveComment`, `rejectComment`) to support asynchronous AJAX requests via `HttpServletRequest` inspection (`X-Requested-With: XMLHttpRequest` or `Accept: application/json`), returning JSON status and real-time moderation statistics.
+  - Updated `admin_progress_tracking_view.html` with asynchronous JavaScript handlers (`handleToggleFlagAsync`, `handleApproveCommentAsync`, `handleRejectCommentAsync`).
+  - Dynamic in-place DOM updates: Flag button toggles state between "Flag" and "Unflag" with colored icons, comment card border classes toggle (`card-flagged`), filtration reason banners and badges show/hide smoothly, and KPI/filter pill counters update in real time.
+  - Non-intrusive floating toast notifications provide immediate action feedback without reloading the page, redirecting, or altering the admin's scroll position.
+- **Visual Design Alignment & High-Contrast Styling (IAMS UTM Theme)**:
+  - Replaced subtle/muted pastels with bold, high-contrast visual cues strictly adhering to the UTM IAMS palette: Deep Maroon (`#4A0018`), Graphite (`#3F3F46`), and UTM Gold Accent (`#F8A617`).
+  - Potential Negative / Sarcastic Comments: Highlighted with a bold 6px solid red left border (`#DC2626`), high-contrast alert badge (`#DC2626` background, bold white text), distinct warning banner, and active button styling (`btn-flag-active`).
+  - Standard Comments: Styled with signature UTM Gold accent (`border-left: 4px solid #F8A617`) matching `comment_view.html`.
+  - KPI Stat Cards & Buttons: Enhanced with bold numbers, colored icon squares, UTM maroon primary buttons (`#4A0018`), emerald approve buttons (`#047857`), and graphite reject buttons (`#3F3F46`).
+- **Built-in Sarcasm & Negative Influence Filtration Engine**:
+  - Implemented `CommentSentimentAnalysisService.java` providing zero-dependency Java heuristic and lexicon-based analysis:
+    - **Sarcasm Detection**: Identifies backhanded compliments, praise inverted by negation/irony ("great job doing nothing", "thanks for nothing", "super helpful (not)", quotes around praise like "'leader'").
+    - **Hostile & Derogatory Phrasing**: Scans for toxic keywords and dismissive patterns ("useless", "lazy", "freeloader", "waste of time", "did zero", "ghosted", and local student slang like "beban", "tak buat kerja", "hauk").
+    - **Sentiment Scoring**: Computes normalized sentiment scores (-1.0 to +1.0) with negation-handling.
+    - Flags comments as `isFlaggedNegative = true` with descriptive reason tags.
+- **Comment Visibility Protection (Strict Admin Approval)**:
+  - Added moderation fields to `AssessmentComment.java`: `isApproved` (default `false`), `approvalStatus` (`PENDING`, `APPROVED`, `REJECTED`), `isFlaggedNegative`, `flagReason`, `sentimentScore`, `approvedAt`, and `approvedBy`.
+  - Enforced strict visibility boundary in `AssessmentCommentService.getCompiledCommentsForStudent`: unapproved comments (from both lecturers and students) are **completely hidden from students** until explicitly approved by the admin.
+  - Updated `student_comments.html` to clearly notify students that comments will appear once approved by the course administrator.
+- **Automated Verification & Test Suite**:
+  - Maintained complete test suite with unit tests in `CommentSentimentAnalysisServiceTest` (7 tests) and `AssessmentCommentServiceTest` (5 tests).
+  - Executed full Maven test suite (`mvn test`): **34 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB).
+
+### Files Modified & Created
+- `CommentSentimentAnalysisService.java` (new service)
+- `CommentSentimentAnalysisServiceTest.java` (new test)
+- `AssessmentCommentServiceTest.java` (new test)
+- `AssessmentComment.java` (entity modified)
+- `AssessmentCommentRepository.java` (modified)
+- `AssessmentCommentService.java` (modified)
+- `LecturerAssessmentService.java` (modified)
+- `AdminController.java` (modified)
+- `GroupCommentController.java` (modified)
+- `sidebar.html` (modified)
+- `admin_progress_tracking_select.html` (modified)
+- `admin_progress_tracking_view.html` (modified)
+- `student_comments.html` (modified)
+- `admin_progress_tracking.css` (modified)
+- `STATE.md` (updated)
+
+---
+
+### Summary
+- **Automated & Integration Testing**:
+  - Executed health diagnostics verifying host Java runtime (JDK 24 / target 17 bytecode), Maven 3.9.11, local MySQL connectivity on port 3306, and presence of `.env` configuration files.
+  - Ran complete automated test suite (`mvn test`) covering:
+    - `RateLimitInterceptorTest` (5 tests): Authentication endpoint rate limiting (HTTP 429), client IP resolution, IPv6 support, and anti-spoofing defense.
+    - `CalculateServiceTest` (1 test): Null-safe student sorting across null, blank, and mixed-case usernames and emails without NPEs.
+    - `CourseStatisticsServiceTest` (3 tests): Database aggregation queries (`countByCourseId`), avoidance of full table scans, and scoped fallback handling.
+    - `CustomUserDetailsServiceTest` (6 tests): Deterministic priority hierarchy (SuperAdmin > Admin > Lecturer > Student), multi-table collision separation, and credential safety.
+    - `SuperAdminServiceTest` (3 tests): Course management, validation, and update workflows.
+    - `HtmlSanitizerUtilTest` (3 tests): OWASP sanitization against script tags, HTML entity injection, and XSS attack vectors.
+    - Overall: **22 tests run, 0 failures, 0 errors, 1 skipped** (integration test requiring live DB).
+- **Automated Secret Leak Audit**:
+  - Ran deep repository scan (`git grep`) for accidental hardcoded credentials, API keys, and passwords across all non-ignored project source files.
+  - Confirmed 0 hardcoded credentials or passwords in Java source files.
+  - Confirmed 0 occurrences of deprecated secrets (`Admin@12345`, `utm-cas-remember-me-secret-key-2025-DO-NOT-CHANGE`) in source code.
+  - Verified `.env` and `.env.*` are explicitly listed in both root `.gitignore` and `adproject/.gitignore`.
+  - Audited full git commit history (`git log --all --full-history`) and confirmed `.env` has never been committed or tracked in version control history.
+- **Milestone Completion**:
+  - All 6 phases defined in `IMPLEMENTATION_PLAN.md` (Security Hardening & Architectural Refactoring) are fully implemented, verified, and documented.
+
+### Files Modified & Updated
+- `IMPLEMENTATION_PLAN.md` (completed)
+- `STATE.md` (updated)
+
+---
+
+## Current Status: Phase 5: Performance Optimization & Reliability Improvements
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Database Aggregation Queries**:
+  - Added repository count methods:
+    - `StudentRepository.countByCourseId(Long courseId)`
+    - `LecturerRepository.countByCourseId(Long courseId)`
+    - `AssessmentRepository.countByCourseId(Long courseId)`
+    - `GroupRepository.countByCourseId(Long courseId)`
+  - Refactored `CourseStatisticsService.getCourseStatistics` to eliminate full table scans (`findAll().stream().filter(...)`), replacing them directly with database aggregation queries.
+  - Refactored admin emails query fallback in `CourseStatisticsService` to use course-scoped `findByCourseId(course.getId())` instead of full table in-memory filtering. Added constructor injection for `EntityManager`.
+- **Null-Safe Sorting in Assessment Calculation**:
+  - Updated `CalculateService.calculateAssessmentData` to replace raw `s1.getUsername().compareToIgnoreCase(s2.getUsername())` with a comprehensive null-safe comparator.
+  - Evaluates non-blank username, falls back safely to non-blank email, and gracefully defaults to empty string `""`, completely preventing `NullPointerException` when processing students with missing or blank usernames.
+- **Local Development Environment Configuration**:
+  - Configured base `application.properties` with default datasource settings pointing to `localhost:3306` with credentials `${SPRING_DATASOURCE_PASSWORD:${MYSQL_ROOT_PASSWORD:rootpassword123}}`.
+  - Removed `spring.profiles.active=prod` from `application.properties` so running locally outside Docker automatically uses base local properties without requiring explicit profile overrides.
+  - Retained `application-prod.properties` specifically for containerized and production environments, where Docker Compose injects `SPRING_PROFILES_ACTIVE=prod`.
+  - Updated `run-local` target in `Makefile` to use default local configuration without forcing prod profile flags.
+- **Automated Test Coverage & Verification**:
+  - Created `CourseStatisticsServiceTest` with 3 test cases verifying that database aggregation queries are invoked, full table scans are avoided, and fallbacks execute cleanly.
+  - Created `CalculateServiceTest` verifying null-safe student sorting across null usernames, blank whitespace, mixed casing, and null emails.
+  - Executed `mvn test` verifying 22 tests run with 0 failures, 0 errors, and 1 skipped (integration test requiring live DB).
+
+### Files Modified & Created
+- `StudentRepository.java` (modified)
+- `LecturerRepository.java` (modified)
+- `AssessmentRepository.java` (modified)
+- `GroupRepository.java` (modified)
+- `CourseStatisticsService.java` (modified)
+- `CalculateService.java` (modified)
+- `application.properties` (modified)
+- `Makefile` (modified)
+- `AdprojectApplicationTests.java` (modified)
+- `CourseStatisticsServiceTest.java` (new test)
+- `CalculateServiceTest.java` (new test)
+- `IMPLEMENTATION_PLAN.md` (updated)
+- `STATE.md` (updated)
+
+---
+
+## Current Status: Phase 4: Dead Code Elimination & Legacy Cleanup
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Dead Controller & Service Removal**:
+  - Deleted obsolete commented-out controller `IndustrialSupervisorController.java` (prefixed with `/*ackage ... */`).
+  - Deleted obsolete commented-out service `IndustrialSupervisorService.java` (prefixed with `/*package ... */`).
+  - Deleted empty 0-byte placeholder `TestController.java`.
+  - Deleted obsolete Thymeleaf template `industrial_supervisor_home.html`.
+- **Domain & Repository Cleanup**:
+  - Deleted redundant JPA entity `IndustrialSupervisor.java` and repository `IndustrialSupervisorRepository.java`, preventing Hibernate from creating or syncing an unused database table.
+  - Verified all group supervisor associations throughout `Group.java`, `GroupAssignmentDto.java`, `AdminService.java`, `GroupCommentController.java`, and `AdminController.java` strictly reference `Lecturer`.
+- **Compilation & Verification**:
+  - Confirmed 0 occurrences of commented-out `/*ackage` or `/*package` source code in the repository.
+  - Verified project compiles cleanly with `mvn compile` and passes all unit tests (`RateLimitInterceptorTest`, `CustomUserDetailsServiceTest`, `SuperAdminServiceTest`, `HtmlSanitizerUtilTest`) with 0 failures or errors.
+
+### Files Removed
+- `IndustrialSupervisorController.java` (deleted)
+- `IndustrialSupervisorService.java` (deleted)
+- `TestController.java` (deleted)
+- `industrial_supervisor_home.html` (deleted)
+- `IndustrialSupervisor.java` (deleted)
+- `IndustrialSupervisorRepository.java` (deleted)
+- `STATE.md` (updated)
+- `IMPLEMENTATION_PLAN.md` (updated)
+
+---
+
+## Current Status: Phase 3: Rate Limiting & Access Control Fortification
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **Authentication Rate Limiting**:
+  - Defined dedicated `authRateLimit` bean (5 attempts per minute) in `RateLimitConfig.java` alongside the general `defaultRateLimit` (10 requests per minute).
+  - Registered `RateLimitInterceptor` for `/login`, `/forgot_password`, `/reset_password`, and `/reset_password/**` in `WebMvcConfig.java`.
+  - Configured `RateLimitInterceptor` to route authentication endpoint requests to dedicated auth buckets and general API requests to default buckets, returning HTTP 429 Too Many Requests with retry-after headers when thresholds are exceeded.
+- **Client IP Resolution & Anti-Spoofing**:
+  - Removed flawed `!xfHeader.contains(".")` check in `RateLimitInterceptor.java` to fully support IPv6 client addresses.
+  - Added `app.security.behind-proxy: false` configuration flag. `X-Forwarded-For` header is only trusted when `behind-proxy` is explicitly enabled; otherwise client IP defaults to direct `request.getRemoteAddr()`, preventing client IP spoofing attacks.
+  - Updated `application.properties`, `application-prod.properties`, `.env.example`, `.env`, and `docker-compose.yml` to support `APP_SECURITY_BEHIND_PROXY`.
+- **Harmonized UserDetails Lookup & Privilege Separation**:
+  - Refactored `CustomUserDetailsService.loadUserByUsername` to follow strict priority order:
+    1. Super Admin
+    2. Admin
+    3. Lecturer
+    4. Student
+  - Prevented silent overwriting of passwords and uncontrolled authority merging when an identifier exists in multiple tables.
+  - SuperAdmin and Admin accounts deterministically prioritize elevated credentials and authorities, preventing student or lower-privilege account data from compromising system access.
+- **Verification & Test Coverage**:
+  - Created `RateLimitInterceptorTest` covering authentication brute-force rate limits (blocking on 6th attempt), IPv6 parsing, and anti-spoofing behavior.
+  - Created `CustomUserDetailsServiceTest` covering priority hierarchy, multi-table collision resolution, and absence of privilege escalation.
+
+### Files Modified
+- `RateLimitConfig.java`
+- `RateLimitInterceptor.java`
+- `WebMvcConfig.java`
+- `CustomUserDetailsService.java`
+- `application.properties`
+- `application-prod.properties`
+- `.env.example`
+- `.env`
+- `docker-compose.yml`
+- `RateLimitInterceptorTest.java` (new test)
+- `CustomUserDetailsServiceTest.java` (new test)
+- `STATE.md`
+
+---
+
+## Current Status: Phase 2: Critical Web Security & Authentication Defenses
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- **CSRF-Protected Mutating Endpoints**: Converted mutating deletion and removal endpoints (`/delete-student/{id}`, `/delete-lecturer/{id}`, `/group/remove-student/{studentId}`) in `AdminController.java` from `@GetMapping` to `@PostMapping`. Updated `manage_students.html`, `manage_lecturers.html`, and `edit_group.html` to submit via CSRF-protected POST forms instead of raw `<a>` tags.
+- **Host Header Injection Neutralization**: Injected `app.public-base-url` into `AuthController.java`, `AdminService.java`, and `SuperAdminService.java`. Replaced dynamic request host construction with sanitized `publicBaseUrl` for all password reset and welcome invitation links.
+- **Password Reset Token Hardening**:
+  - Added `resetPasswordTokenExpiry` column (`LocalDateTime`) to `Admin`, `SuperAdmin`, `Lecturer`, and `Student` entities.
+  - Updated `UserService.java` to hash password reset tokens with SHA-256 before storing them in the database, with a strict 30-minute expiration window (`plusMinutes(30)`).
+  - Ensured incoming reset tokens are hashed before database lookup and rejected if expired. Expired or used tokens have their expiry timestamps wiped.
+  - In `AuthController.java`, replaced user enumeration leak with uniform response: `"If an account with that email exists, a password reset link has been sent."`.
+- **CSV / Formula Injection Mitigation (CWE-1236)**: Updated `escapeCsv` in `DataViewController.java` to prepend a single quote (`'`) to any cell value beginning with formula triggers (`=`, `+`, `-`, `@`, `\t`, `\r`), preventing spreadsheet calculation attacks upon opening exported data files.
+- **Open Redirect Mitigation**: Implemented `safeRedirect` helper in `AdminController.java` to validate `Referer` headers against the local host and forbid external domains or protocol-relative paths (`//`), protecting course switching and role assignment redirects.
+- **XSS Sanitization & Elimination of `th:utext`**: Replaced all remaining unescaped `th:utext` bindings for rubric and feedback comment labels with `th:text` in `supervisor_continuous_evaluation.html`.
+
+### Files Modified
+- `AdminController.java`
+- `AuthController.java`
+- `AdminService.java`
+- `SuperAdminService.java`
+- `UserService.java`
+- `DataViewController.java`
+- `Admin.java`, `SuperAdmin.java`, `Lecturer.java`, `Student.java`
+- `manage_students.html`, `manage_lecturers.html`, `edit_group.html`, `supervisor_continuous_evaluation.html`
+- `STATE.md`
+
+---
+
+## Current Status: Phase 1: Environment Hardening & Secret Externalization
+**Status**: COMPLETED
+**Date**: 2026-10-17
+
+### Summary
+- Fully externalized all credentials, cryptographic keys, and sensitive identities from Java source code and configuration files into environment variables (`.env`).
+- **SuperAdmin Bootstrap**: Replaced hardcoded default email (`ihsan.rubix@gmail.com`) and password (`Admin@12345`) in `SuperAdminBootstrapRunner.java` with injected `@Value("${app.bootstrap.superadmin.email:}")` and `@Value("${app.bootstrap.superadmin.password:}")`. If not set, bootstrap safely skips with an informative log message. Completely eliminated plaintext password logging on application startup.
+- **Remember-Me Secret Key**: Replaced the static hardcoded secret in `SecurityConfig.java` with `@Value("${app.security.remember-me-key:}")`. Added a secure cryptographic fallback that dynamically generates a random 256-bit key on startup if no explicit key is configured, preventing cookie forgery using known repository secrets.
+- **Email Sender Identity**: Replaced hardcoded `"admin@eduinnovax.com"` across all email dispatch methods in `EmailService.java` with dynamic `@Value("${spring.mail.from:${spring.mail.username:admin@example.com}}")`.
+- **Configuration Sanitization & Docker Mapping**: Removed hardcoded app credentials and personal emails from `application.properties` and `application-prod.properties`. Updated `docker-compose.yml` to pass through bootstrap credentials, remember-me keys, and mail from settings. Expanded `adproject/.env.example` with zero-leak templates and created local `adproject/.env`.
+
+### Files Modified
+- `SuperAdminBootstrapRunner.java`
+- `SecurityConfig.java`
+- `EmailService.java`
+- `application.properties`
+- `application-prod.properties`
+- `.env.example`
+- `docker-compose.yml`
+- `.gitignore`
+- `STATE.md`
 
 ---
 

@@ -19,7 +19,7 @@ body.edit-deadline-page .header-container h1 {
     color: var(--color-primary)
 }
 body.edit-deadline-page {
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     background-color: var(--color-background);
     color: var(--color-secondary);
     margin: 0;

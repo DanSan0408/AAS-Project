@@ -16,7 +16,7 @@
 body.lecturer-page {
     background-color: var(--lecturer-background);
     color: var(--lecturer-text-dark);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
 }
 
 body.lecturer-page .main-content {

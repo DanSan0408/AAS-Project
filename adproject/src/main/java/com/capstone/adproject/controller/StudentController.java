@@ -2,6 +2,7 @@ package com.capstone.adproject.controller;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,8 +22,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
+import com.capstone.adproject.model.AssessmentSubmission;
+import com.capstone.adproject.model.SubmissionAnnotation;
+import com.capstone.adproject.service.AssessmentSubmissionService;
+import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
@@ -30,6 +42,7 @@ import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentAssessmentAssignment;
 import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AssessmentRepository;
+import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.RatingRepository;
 import com.capstone.adproject.repositories.RubricRepository;
@@ -79,6 +92,12 @@ public class StudentController {
     @Autowired
     private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
+    @Autowired
+    private AssessmentSubmissionService assessmentSubmissionService;
+
+    @Autowired
+    private CourseRepository courseRepository;
+
     private Long resolveCurrentCourseId(Student student) {
         if (student == null) {
             return null;
@@ -103,12 +122,16 @@ public class StudentController {
     }
     
     private boolean isAssessmentOpen(Assessment assessment) {
-        long nowMillis = System.currentTimeMillis();
+        if (assessment == null) return false;
         List<Deadline> deadlines = deadlineService.getDeadlinesByAssessmentId(assessment.getId());
+        if (deadlines.isEmpty()) {
+            return true;
+        }
 
+        long nowMillis = System.currentTimeMillis();
         for (Deadline deadline : deadlines) {
             long openMillis = deadline.getOpenDate() != null ? deadline.getOpenDate().getTime() : 0L;
-            long closeMillis = deadline.getDate().getTime() + 86399999L;
+            long closeMillis = deadline.getDate() != null ? (deadline.getDate().getTime() + 86399999L) : Long.MAX_VALUE;
 
             if (nowMillis >= openMillis && nowMillis <= closeMillis) {
                 return true;
@@ -124,6 +147,18 @@ public class StudentController {
 
     private boolean isStudentAssignedToAssessment(Student student, Assessment assessment) {
         return studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student);
+    }
+
+    private boolean isStudentEligibleForSubmission(Student student, Assessment assessment) {
+        if (student == null || assessment == null) return false;
+        if (!Boolean.TRUE.equals(assessment.getRequiresSubmission())) return false;
+
+        Long currentCourseId = resolveCurrentCourseId(student);
+        if (currentCourseId == null || assessment.getCourse() == null || !currentCourseId.equals(assessment.getCourse().getId())) {
+            return false;
+        }
+
+        return true;
     }
 
     private StudentAssessmentAssignment getAssignmentForStudent(Student student, Assessment assessment) {
@@ -279,6 +314,21 @@ public class StudentController {
         model.addAttribute("groupAssessmentMap", groupAssessmentMap);
         model.addAttribute("groupAssessmentComponents", groupAssessmentComponents);
         model.addAttribute("isRubricType", isRubricType);
+
+        List<Assessment> submissionAssessments = assessmentRepository.findAll().stream()
+                .filter(a -> currentCourseId != null
+                        && a.getCourse() != null
+                        && currentCourseId.equals(a.getCourse().getId()))
+                .filter(a -> Boolean.TRUE.equals(a.getRequiresSubmission()))
+                .filter(a -> isStudentEligibleForSubmission(currentStudent, a))
+                .collect(Collectors.toList());
+
+        long pendingSubmissionsCount = submissionAssessments.stream()
+                .filter(a -> assessmentSubmissionService.getSubmissionForStudent(a, currentStudent).isEmpty())
+                .count();
+
+        model.addAttribute("submissionAssessmentsCount", submissionAssessments.size());
+        model.addAttribute("pendingSubmissionsCount", pendingSubmissionsCount);
         
         return "student_home";
     }
@@ -303,7 +353,7 @@ public class StudentController {
         for (Assessment assessment : assessments) {
             List<Rubric> rubrics = assessment.getRubrics();
             
-            boolean hasComponents = !rubrics.isEmpty() || 
+            boolean hasComponents = (rubrics != null && !rubrics.isEmpty()) || 
                                     (assessment.getIndividualCommentLabels() != null && !assessment.getIndividualCommentLabels().isEmpty()) ||
                                     (assessment.getGroupCommentLabels() != null && !assessment.getGroupCommentLabels().isEmpty());
             
@@ -325,6 +375,9 @@ public class StudentController {
         Map<Long, Boolean> selfAssessmentMap = new HashMap<>();
         Map<Long, Boolean> peerAssessmentMap = new HashMap<>();
         Map<Long, Boolean> groupAssessmentMap = new HashMap<>();
+        Map<Long, AssessmentSubmission> submissionMap = new HashMap<>();
+        Map<Long, Integer> doodleCountMap = new HashMap<>();
+
         for (Assessment assessment : peerSelfAssessments) {
             Deadline deadline = getAssessmentDeadline(assessment);
             if (deadline != null) {
@@ -337,13 +390,296 @@ public class StudentController {
                 peerAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getPeerAssessment()));
                 groupAssessmentMap.put(assessment.getId(), Boolean.TRUE.equals(assignment.getGroupAssessment()));
             }
+
+            if (Boolean.TRUE.equals(assessment.getRequiresSubmission())) {
+                var subOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+                if (subOpt.isPresent()) {
+                    submissionMap.put(assessment.getId(), subOpt.get());
+                    int count = assessmentSubmissionService.getAnnotationsForSubmission(subOpt.get()).size();
+                    doodleCountMap.put(assessment.getId(), count);
+                } else {
+                    doodleCountMap.put(assessment.getId(), 0);
+                }
+            }
         }
         model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
         model.addAttribute("selfAssessmentMap", selfAssessmentMap);
         model.addAttribute("peerAssessmentMap", peerAssessmentMap);
         model.addAttribute("groupAssessmentMap", groupAssessmentMap);
+        model.addAttribute("submissionMap", submissionMap);
+        model.addAttribute("doodleCountMap", doodleCountMap);
         
         return "student_assessments";
+    }
+
+    @GetMapping("/submissions")
+    public String listStudentSubmissions(Model model, Principal principal) {
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Long currentCourseId = resolveCurrentCourseId(currentStudent);
+
+        List<Assessment> submissionAssessments = assessmentRepository.findAll().stream()
+                .filter(a -> currentCourseId != null
+                        && a.getCourse() != null
+                        && currentCourseId.equals(a.getCourse().getId()))
+                .filter(a -> Boolean.TRUE.equals(a.getRequiresSubmission()))
+                .filter(a -> isStudentEligibleForSubmission(currentStudent, a))
+                .sorted(Comparator.comparing(Assessment::getId))
+                .collect(Collectors.toList());
+
+        Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
+        Map<Long, Boolean> assessmentOpenMap = new HashMap<>();
+        Map<Long, AssessmentSubmission> submissionMap = new HashMap<>();
+        Map<Long, Integer> doodleCountMap = new HashMap<>();
+
+        int totalRequired = submissionAssessments.size();
+        int totalSubmitted = 0;
+        int totalPending = 0;
+        int totalWithDoodles = 0;
+
+        for (Assessment assessment : submissionAssessments) {
+            doodleCountMap.put(assessment.getId(), 0);
+            boolean isOpen = isAssessmentOpen(assessment);
+            assessmentOpenMap.put(assessment.getId(), isOpen);
+
+            Deadline deadline = getAssessmentDeadline(assessment);
+            if (deadline != null) {
+                assessmentDeadlineMap.put(assessment.getId(), deadline);
+            }
+
+            var subOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+            if (subOpt.isPresent()) {
+                var sub = subOpt.get();
+                submissionMap.put(assessment.getId(), sub);
+                totalSubmitted++;
+
+                int count = assessmentSubmissionService.getAnnotationsForSubmission(sub).size();
+                doodleCountMap.put(assessment.getId(), count);
+                if (count > 0) {
+                    totalWithDoodles++;
+                }
+            } else {
+                totalPending++;
+            }
+        }
+
+        Course currentCourse = currentCourseId != null 
+                ? courseRepository.findById(currentCourseId).orElse(currentStudent.getCourse())
+                : currentStudent.getCourse();
+
+        model.addAttribute("assessments", submissionAssessments);
+        model.addAttribute("currentStudent", currentStudent);
+        model.addAttribute("group", currentStudent.getGroup());
+        model.addAttribute("course", currentCourse);
+        model.addAttribute("assessmentDeadlineMap", assessmentDeadlineMap);
+        model.addAttribute("assessmentOpenMap", assessmentOpenMap);
+        model.addAttribute("submissionMap", submissionMap);
+        model.addAttribute("doodleCountMap", doodleCountMap);
+
+        model.addAttribute("totalRequired", totalRequired);
+        model.addAttribute("totalSubmitted", totalSubmitted);
+        model.addAttribute("totalPending", totalPending);
+        model.addAttribute("totalWithDoodles", totalWithDoodles);
+
+        return "student_submissions";
+    }
+
+    @GetMapping("/assessment/{assessmentId}/submit")
+    public String showAssessmentSubmitPage(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null || !Boolean.TRUE.equals(assessment.getRequiresSubmission())) {
+            redirectAttributes.addFlashAttribute("error", "Assessment not found or does not require a report submission.");
+            return "redirect:/student/submissions";
+        }
+
+        if (!isStudentEligibleForSubmission(currentStudent, assessment)) {
+            redirectAttributes.addFlashAttribute("error", "You are not eligible to submit for this assessment.");
+            return "redirect:/student/submissions";
+        }
+
+        boolean isOpen = isAssessmentOpen(assessment);
+        Deadline deadline = getAssessmentDeadline(assessment);
+        var subOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+        int doodleCount = subOpt.map(s -> assessmentSubmissionService.getAnnotationsForSubmission(s).size()).orElse(0);
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("currentStudent", currentStudent);
+        model.addAttribute("group", currentStudent.getGroup());
+        model.addAttribute("course", assessment.getCourse());
+        model.addAttribute("isOpen", isOpen);
+        model.addAttribute("deadline", deadline);
+        model.addAttribute("submission", subOpt.orElse(null));
+        model.addAttribute("doodleCount", doodleCount);
+
+        return "student_submit_single";
+    }
+
+    @PostMapping("/assessment/{assessmentId}/upload")
+    public String uploadAssessmentSubmission(
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "redirectSource", required = false) String redirectSource,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        String redirectTarget = "assessments".equalsIgnoreCase(redirectSource)
+                ? "redirect:/student/assessments"
+                : ("single".equalsIgnoreCase(redirectSource)
+                        ? "redirect:/student/assessment/" + assessmentId + "/submit"
+                        : "redirect:/student/submissions");
+
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Assessment assessment = assessmentRepository.findById(assessmentId)
+                .orElse(null);
+
+        if (assessment == null || !Boolean.TRUE.equals(assessment.getRequiresSubmission())) {
+            redirectAttributes.addFlashAttribute("error", "This assessment does not accept submissions.");
+            return redirectTarget;
+        }
+
+        if (!isStudentEligibleForSubmission(currentStudent, assessment)) {
+            redirectAttributes.addFlashAttribute("error", "You are not eligible to submit for this assessment.");
+            return redirectTarget;
+        }
+
+        if ("GROUP".equalsIgnoreCase(assessment.getSubmissionScope()) && currentStudent.getGroup() == null) {
+            redirectAttributes.addFlashAttribute("error", "This assessment requires a group submission, but you are not assigned to any group.");
+            return redirectTarget;
+        }
+
+        if (!isAssessmentOpen(assessment)) {
+            redirectAttributes.addFlashAttribute("error", "The submission deadline for this assessment has passed.");
+            return redirectTarget;
+        }
+
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Please select a valid PDF file to upload.");
+            return redirectTarget;
+        }
+
+        try {
+            assessmentSubmissionService.saveSubmission(
+                    assessment,
+                    assessment.getCourse(),
+                    currentStudent.getGroup(),
+                    currentStudent,
+                    file
+            );
+            redirectAttributes.addFlashAttribute("success", "Your report '" + file.getOriginalFilename() + "' was uploaded successfully.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to upload report: " + e.getMessage());
+        }
+
+        return redirectTarget;
+    }
+
+    @GetMapping("/assessment/{assessmentId}/submission/file")
+    public ResponseEntity<Resource> downloadSubmissionFile(
+            @PathVariable("assessmentId") Long assessmentId,
+            Principal principal) {
+
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submission = submissionOpt.get();
+        Resource resource = assessmentSubmissionService.getSubmissionFileResource(submission);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + submission.getOriginalFileName() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/assessment/{assessmentId}/submission/annotations")
+    @ResponseBody
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotations(
+            @PathVariable("assessmentId") Long assessmentId,
+            Principal principal) {
+
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<SubmissionAnnotation> annotations =
+                assessmentSubmissionService.getAnnotationsForSubmission(submissionOpt.get());
+
+        return ResponseEntity.ok(annotations);
+    }
+
+    @GetMapping("/assessment/{assessmentId}/submission/view")
+    public String viewSubmissionWithDoodles(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
+        if (assessment == null) {
+            redirectAttributes.addFlashAttribute("error", "Assessment not found.");
+            return "redirect:/student/submissions";
+        }
+
+        var submissionOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
+        if (submissionOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "No report submission found for this assessment.");
+            return "redirect:/student/submissions";
+        }
+
+        var submission = submissionOpt.get();
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("submission", submission);
+        model.addAttribute("pdfUrl", "/student/assessment/" + assessmentId + "/submission/file");
+        model.addAttribute("annotationsUrl", "/student/assessment/" + assessmentId + "/submission/annotations");
+        model.addAttribute("readOnly", true);
+
+        return "student_submission_view";
     }
     
     @GetMapping("/assessment/{assessmentId}/evaluate/{studentId}")

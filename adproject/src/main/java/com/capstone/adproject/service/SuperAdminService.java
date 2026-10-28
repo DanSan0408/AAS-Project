@@ -377,6 +377,9 @@ public class SuperAdminService {
     }
 
     private String getBaseUrl(HttpServletRequest request) {
+        if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
+            return publicBaseUrl.replaceAll("/+$", "");
+        }
         String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();

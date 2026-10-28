@@ -22,7 +22,7 @@
 
 body.lecturer-page {
     background-color: var(--lecturer-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--lecturer-secondary);
     margin: 0;
     padding: 0;

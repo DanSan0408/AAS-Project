@@ -27,6 +27,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: prod
+      APP_UPLOAD_SUBMISSIONS_DIR: /app/uploads/submissions
       LOGGING_FILE_PATH: /app/logs
       LOGGING_FILE_NAME: /app/logs/application.log
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/aas_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -36,6 +37,11 @@ services:
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_MAIL_FROM: ${SPRING_MAIL_FROM}
+      BOOTSTRAP_SUPERADMIN_EMAIL: ${BOOTSTRAP_SUPERADMIN_EMAIL}
+      BOOTSTRAP_SUPERADMIN_PASSWORD: ${BOOTSTRAP_SUPERADMIN_PASSWORD}
+      APP_SECURITY_REMEMBER_ME_KEY: ${APP_SECURITY_REMEMBER_ME_KEY}
+      APP_SECURITY_BEHIND_PROXY: ${APP_SECURITY_BEHIND_PROXY:-false}
       APP_PUBLIC_BASE_URL: ${APP_PUBLIC_BASE_URL:-https://www.eduinnovax.com}
       ADPROJECT_ALERTS_ENABLED: ${ADPROJECT_ALERTS_ENABLED:-true}
       ADPROJECT_ALERTS_RECIPIENT_EMAIL: ${ADPROJECT_ALERTS_RECIPIENT_EMAIL}
@@ -44,6 +50,11 @@ services:
       - "8080:8080"
     volumes:
       - app-logs:/app/logs
+      - type: bind
+        source: ${APP_UPLOAD_HOST_DIR:-/srv/iams/uploads}
+        target: /app/uploads
+        bind:
+          create_host_path: false
 
 volumes:
   mysql-data:

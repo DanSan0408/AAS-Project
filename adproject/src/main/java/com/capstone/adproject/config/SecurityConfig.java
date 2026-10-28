@@ -1,8 +1,13 @@
 package com.capstone.adproject.config;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -36,13 +41,32 @@ import jakarta.servlet.RequestDispatcher;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final CustomUserDetailsService userDetailsService;
 
-    //untuk cookie, generate a token in the browser and di-hash guna secret key ni
-    private static final String REMEMBER_ME_KEY = "utm-cas-remember-me-secret-key-2025-DO-NOT-CHANGE";
+    @Value("${app.security.remember-me-key:}")
+    private String configuredRememberMeKey;
+
+    private String resolvedRememberMeKey;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
+    }
+
+    private synchronized String getOrGenerateRememberMeKey() {
+        if (resolvedRememberMeKey != null) {
+            return resolvedRememberMeKey;
+        }
+        if (configuredRememberMeKey != null && !configuredRememberMeKey.isBlank()) {
+            resolvedRememberMeKey = configuredRememberMeKey.trim();
+        } else {
+            logger.warn("SECURITY WARNING: 'app.security.remember-me-key' is not configured. Generating a random ephemeral 256-bit key. Existing remember-me cookies will be invalidated across restarts.");
+            byte[] randomBytes = new byte[32];
+            new SecureRandom().nextBytes(randomBytes);
+            resolvedRememberMeKey = Base64.getEncoder().encodeToString(randomBytes);
+        }
+        return resolvedRememberMeKey;
     }
 
     //encrypt password guna BCrypt
@@ -65,7 +89,7 @@ public class SecurityConfig {
     public RememberMeServices rememberMeServices() {
         TokenBasedRememberMeServices rememberMeServices = 
             new TokenBasedRememberMeServices(
-                REMEMBER_ME_KEY, 
+                getOrGenerateRememberMeKey(), 
                 userDetailsService, 
                 RememberMeTokenAlgorithm.SHA256
             );

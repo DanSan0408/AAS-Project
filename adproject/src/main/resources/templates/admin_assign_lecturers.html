@@ -8,8 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/assign_lecturers.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="assign-lecturer-page">
+<body data-ui-role="admin" class="assign-lecturer-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -19,6 +20,27 @@
             </div>
         </div>
         
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+                <li>
+                    <a th:href="@{/rubrics/manage}">
+                        <i class="fas fa-layer-group"></i> Manage Assessments
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="assessment-name" th:text="${assessment.title}">Assessment Title</span>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page" aria-current="page">
+                        <i class="fas fa-user-tie"></i> Assign Assessors
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
         <div class="page-header">
             <h1>Assign Assessors</h1>
             <h2 th:text="${assessment.title}">Assessment Title</h2>

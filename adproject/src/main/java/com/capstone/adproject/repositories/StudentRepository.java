@@ -39,6 +39,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByCourseId(Long courseId);
 
+    long countByCourseId(Long courseId);
+
     long countByGroup(Group group);
 
     List<Student> findByGroupIsNullAndUsernameContainingIgnoreCase(String username);

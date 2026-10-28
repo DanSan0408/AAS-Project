@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #F4F2EE; margin: 0; overflow-x: hidden; }
+        body { font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); background-color: #F4F2EE; margin: 0; overflow-x: hidden; }
         .main-content { margin-left: 270px; padding: 40px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; width: calc(100% - 270px); max-width: 100%; }
         .header-container { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; width: 100%; max-width: 1000px; }
         .header-container img { max-width: 200px; height: auto; }
@@ -101,8 +101,9 @@
             .btn-secondary { font-size: 0.85rem; padding: 9px 10px; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="admin-page">
+<body data-ui-role="admin" class="admin-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
     <!-- Removed conditional sidebar loading as this template is now admin-specific -->
     <div class="main-content">
@@ -111,6 +112,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('View Comments', '/admin/comments/view/assessments', 'Select Group')}"></nav>
+
 
         <div class="page-content">
             <h2>Select Group - <span th:text="${assessment.title}" style="color: #F8A617;"></span></h2>

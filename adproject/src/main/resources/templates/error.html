@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,7 +28,7 @@
 
         body {
             margin: 0;
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
             color: var(--color-text);
             background:
                 radial-gradient(circle at top left, rgba(248, 166, 23, 0.16), transparent 32%),
@@ -323,10 +323,13 @@
             }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body>
+<body data-ui-role="public">
     <main class="error-page" aria-labelledby="error-title">
         <section class="error-shell">
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('IAMS', '/login', 'System Error')}"></nav>
+
             <header class="error-header">
                 <div class="brand-mark">
                     <div class="brand-logo" aria-hidden="true">⚠</div>

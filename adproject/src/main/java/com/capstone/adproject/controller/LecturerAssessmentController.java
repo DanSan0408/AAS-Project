@@ -23,7 +23,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentSubmission;
+import com.capstone.adproject.model.SubmissionAnnotation;
+import com.capstone.adproject.service.AssessmentSubmissionService;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
@@ -35,9 +44,11 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
 import com.capstone.adproject.service.RubricService;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 @RequestMapping("/lecturer/assessments")
@@ -53,6 +64,8 @@ public class LecturerAssessmentController {
     private final LecturerStudentAssignmentRepository studentAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final GroupRepository groupRepository;
+    private final AssessmentSubmissionService assessmentSubmissionService;
+    private final StudentRepository studentRepository;
 
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
@@ -62,7 +75,9 @@ public class LecturerAssessmentController {
             LecturerGroupAssignmentRepository assignmentRepository,
             LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
-            GroupRepository groupRepository) {
+            GroupRepository groupRepository,
+            AssessmentSubmissionService assessmentSubmissionService,
+            StudentRepository studentRepository) {
         this.lecturerAssessmentService = lecturerAssessmentService;
         this.rubricService = rubricService;
         this.deadlineService = deadlineService;
@@ -71,6 +86,8 @@ public class LecturerAssessmentController {
         this.studentAssignmentRepository = studentAssignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.groupRepository = groupRepository;
+        this.assessmentSubmissionService = assessmentSubmissionService;
+        this.studentRepository = studentRepository;
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
@@ -404,6 +421,11 @@ public class LecturerAssessmentController {
                 existingIndividualRubricComments.put(sampleStudent.getId(), studentRubricComments);
             }
 
+            AssessmentSubmission submission = null;
+            if (Boolean.TRUE.equals(assessment.getRequiresSubmission()) && !targetStudents.isEmpty()) {
+                submission = assessmentSubmissionService.getSubmissionForTarget(assessment, null, targetStudents.get(0)).orElse(null);
+            }
+
             model.addAttribute("assessment", assessment);
             model.addAttribute("selectedGroup", selectedGroup);
             model.addAttribute("groupStudents", targetStudents);
@@ -417,6 +439,7 @@ public class LecturerAssessmentController {
             model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
             model.addAttribute("isAssignedToGroup", true);
             model.addAttribute("isStudentTarget", true);
+            model.addAttribute("submission", submission);
 
             return "lecturer_combined_evaluation_form";
         }
@@ -512,6 +535,11 @@ public class LecturerAssessmentController {
             }
         }
 
+        AssessmentSubmission submission = null;
+        if (Boolean.TRUE.equals(assessment.getRequiresSubmission()) && targetGroup != null) {
+            submission = assessmentSubmissionService.getSubmissionForTarget(assessment, targetGroup, null).orElse(null);
+        }
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("selectedGroup", targetGroup);
         model.addAttribute("groupStudents", targetStudents);
@@ -525,6 +553,7 @@ public class LecturerAssessmentController {
         model.addAttribute("existingIndividualRubricComments", existingIndividualRubricComments);
         model.addAttribute("isAssignedToGroup", isAssignedToGroup);
         model.addAttribute("isStudentTarget", false);
+        model.addAttribute("submission", submission);
 
         return "lecturer_combined_evaluation_form";
     }
@@ -543,6 +572,35 @@ public class LecturerAssessmentController {
         try {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
             boolean isStudentTarget = studentId != null;
+
+            // 1. Persist report doodle annotations if provided in form submission (supports both student & group evaluation modes)
+            String doodlesPayload = allParams.get("submissionDoodlesPayload");
+            if (doodlesPayload != null && !doodlesPayload.isBlank()) {
+                try {
+                    AssessmentSubmission sub = null;
+                    if (allParams.containsKey("submissionId") && !allParams.get("submissionId").isBlank()) {
+                        try {
+                            Long subId = Long.parseLong(allParams.get("submissionId"));
+                            sub = assessmentSubmissionService.getSubmissionById(subId).orElse(null);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    if (sub == null) {
+                        Group grp = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;
+                        Student std = studentId != null ? studentRepository.findById(studentId).orElse(null) : null;
+                        sub = assessmentSubmissionService.getSubmissionForTarget(assessment, grp, std).orElse(null);
+                    }
+
+                    if (sub != null) {
+                        assessmentSubmissionService.saveAllAnnotationsFromJson(sub, lecturer, doodlesPayload);
+                        logger.info("Successfully persisted doodle annotations for submission ID {} during evaluation submit", sub.getId());
+                    } else {
+                        logger.warn("Could not find submission to persist doodles for assessment ID {} (groupId: {}, studentId: {})",
+                                assessmentId, groupId, studentId);
+                    }
+                } catch (Throwable annotEx) {
+                    logger.warn("Could not persist doodlesPayload during evaluation submit", annotEx);
+                }
+            }
 
             if (isStudentTarget) {
                 List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
@@ -812,5 +870,75 @@ public class LecturerAssessmentController {
         return studentId != null
             ? "redirect:/lecturer/assessments/" + assessmentId + "/select-student"
             : "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
+    }
+
+    @GetMapping("/submissions/{submissionId}/file")
+    public ResponseEntity<Resource> streamSubmissionFile(
+            @PathVariable("submissionId") Long submissionId,
+            Authentication authentication) {
+
+        getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var submission = submissionOpt.get();
+        Resource resource = assessmentSubmissionService.getSubmissionFileResource(submission);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + submission.getOriginalFileName() + "\"")
+                .body(resource);
+    }
+
+    @GetMapping("/submissions/{submissionId}/annotations")
+    @ResponseBody
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotations(
+            @PathVariable("submissionId") Long submissionId,
+            Authentication authentication) {
+
+        getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<SubmissionAnnotation> annotations =
+                assessmentSubmissionService.getAnnotationsForSubmission(submissionOpt.get());
+
+        return ResponseEntity.ok(annotations);
+    }
+
+    @PostMapping("/submissions/{submissionId}/annotations")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> saveSubmissionAnnotation(
+            @PathVariable("submissionId") Long submissionId,
+            @RequestBody Map<String, Object> payload,
+            Authentication authentication) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
+        if (submissionOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Integer pageNumber = payload.get("pageNumber") != null ? Integer.valueOf(payload.get("pageNumber").toString()) : 1;
+        String strokesJson = payload.get("strokesJson") != null ? payload.get("strokesJson").toString() : "[]";
+
+        SubmissionAnnotation annotation = assessmentSubmissionService.saveOrUpdateAnnotation(
+                submissionOpt.get(),
+                lecturer,
+                pageNumber,
+                strokesJson
+        );
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("annotationId", annotation != null ? annotation.getId() : null);
+        response.put("pageNumber", annotation != null ? annotation.getPageNumber() : pageNumber);
+
+        return ResponseEntity.ok(response);
     }
 }

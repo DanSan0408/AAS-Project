@@ -2,11 +2,15 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Evaluate - [[${assessment.title}]]</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_evaluation.css}">
+    <link rel="stylesheet" th:href="@{/css/pdf-doodle-studio.css}">
     <style>
         .validation-error-highlight {
             border: 2px solid #e74c3c !important;
@@ -58,9 +62,102 @@
             color: #065f46;
             font-weight: 700;
         }
+
+        /* Split Screen Dual-Scroll Ergonomics */
+        body.lecturer-page.has-split-studio {
+            overflow: hidden;
+        }
+        body.lecturer-page.has-split-studio .main-content {
+            padding: 12px 24px !important;
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        body.lecturer-page.has-split-studio .header {
+            margin-bottom: 8px !important;
+            flex-shrink: 0;
+        }
+        body.lecturer-page.has-split-studio .header-container {
+            margin-bottom: 4px !important;
+        }
+        body.lecturer-page.has-split-studio .header-container img {
+            max-width: 130px !important;
+        }
+        body.lecturer-page.has-split-studio .split-controls-bar {
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+        body.lecturer-page.has-split-studio .split-evaluation-layout {
+            flex: 1 1 auto;
+            height: calc(100vh - 145px);
+            margin-top: 0;
+            overflow: hidden;
+        }
+        body.lecturer-page.has-split-studio .form-actions {
+            position: sticky;
+            bottom: -24px;
+            background: #ffffff;
+            padding: 14px 20px;
+            margin: 30px -24px -24px -24px !important;
+            border-top: 2px solid #e2e8f0;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+        }
+        .student-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: #334155;
+            font-weight: 500;
+        }
+        .students-chips-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+        }
+        .pulse-highlight {
+            animation: pulse-ring 1.4s ease 2;
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0.15); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        .rubric-pane .evaluation-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+        }
+        @media (max-width: 1024px) {
+            body.lecturer-page.has-split-studio {
+                overflow: auto;
+            }
+            body.lecturer-page.has-split-studio .main-content {
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+            body.lecturer-page.has-split-studio .split-evaluation-layout {
+                height: auto;
+                overflow: visible;
+            }
+        }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="lecturer-page">
+<body data-ui-role="lecturer" class="lecturer-page" th:classappend="${submission != null ? ' has-split-studio' : ''}">
     <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -69,32 +166,117 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Assess Students', '/lecturer/assessments', 'Assess Student')}"></nav>
 
-        <div class="content-flex-container">
-            <div class="evaluation-container">
+
+        <div th:if="${submission != null}" class="split-controls-bar">
+            <div class="deliverable-info">
+                <span class="deliverable-title">
+                    <i class="fas fa-file-pdf" style="color: #dc2626; font-size: 1.15rem;"></i>
+                    <span th:text="${assessment.getEffectiveSubmissionTitle()}">Student Report</span>:
+                    <span th:text="${submission.originalFileName}" style="color: var(--ui-primary, #047857);">Report.pdf</span>
+                </span>
+                <span class="badge" style="background: #047857; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
+                    v<span th:text="${submission.version}">1</span>
+                </span>
+                <a th:href="@{/lecturer/assessments/submissions/{id}/file(id=${submission.id})}" target="_blank" class="workstation-action-link" title="Open PDF in new tab">
+                    <i class="fas fa-external-link-alt"></i> Pop Out PDF
+                </a>
+            </div>
+
+            <!-- Live Evaluation Completion Badge -->
+            <div class="workstation-progress-badge" id="workstation-progress-badge" onclick="scrollToNextIncomplete()" title="Click to jump to next incomplete criterion">
+                <div class="workstation-mini-bar">
+                    <div class="workstation-mini-bar-fill" id="eval-progress-fill"></div>
+                </div>
+                <span id="eval-progress-text">0/0 Criteria</span>
+            </div>
+
+            <!-- Layout Presets & Zen Focus Mode -->
+            <div class="split-btn-group">
+                <button type="button" class="btn-zen" id="btn-zen-mode" onclick="toggleZenMode()" title="Toggle full-width Zen Focus Mode">
+                    <i class="fas fa-expand-arrows-alt"></i> <span>Zen Mode</span>
+                </button>
+                <button type="button" id="btn-layout-split" class="active" onclick="setStudioLayout('50-50')" title="50/50 Equal Split">
+                    <i class="fas fa-columns"></i> 50/50
+                </button>
+                <button type="button" id="btn-layout-expand-pdf" onclick="setStudioLayout('70-30')" title="Focus on Report (70% PDF, 30% Rubric)">
+                    <i class="fas fa-file-alt"></i> Focus Report
+                </button>
+                <button type="button" id="btn-layout-expand-rubric" onclick="setStudioLayout('30-70')" title="Focus on Rubric (30% PDF, 70% Rubric)">
+                    <i class="fas fa-list-check"></i> Focus Rubric
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${assessment.requiresSubmission and submission == null}" 
+             class="alert alert-info" 
+             style="margin: 16px 24px; padding: 14px 18px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-info-circle" style="font-size: 1.2rem;"></i>
+            <span>This assessment requires a report submission, but no file has been submitted by the student/group yet. You may evaluate the rubrics normally below.</span>
+        </div>
+
+        <div th:class="${submission != null ? 'split-evaluation-layout' : 'content-flex-container'}">
+            <!-- Left Pane: PDF & Doodle Studio (Only if submission != null) -->
+            <div th:if="${submission != null}" class="pdf-pane" id="pdf-studio-pane">
+                <div id="doodle-studio-container" style="display: flex; flex-direction: column; height: 100%;"></div>
+            </div>
+
+            <!-- Draggable Splitter Handle (Only if submission != null) -->
+            <div th:if="${submission != null}" class="split-divider-handle" id="split-divider-handle" title="Drag horizontally to resize panes">
+                <div class="split-divider-grip"></div>
+            </div>
+
+            <!-- Right Pane: Evaluation Container -->
+            <div th:class="${submission != null ? 'rubric-pane' : 'evaluation-container'}" id="rubric-form-pane">
+                <!-- Rubric Quick Navigation Bar (Only if submission != null) -->
+                <div th:if="${submission != null}" class="rubric-quick-nav" id="rubric-quick-nav">
+                    <span class="quick-nav-label"><i class="fas fa-bookmark"></i> Jump To:</span>
+                    <div class="quick-nav-pills" id="quick-nav-pills"></div>
+                </div>
+
+                <div th:class="${submission != null ? 'evaluation-container' : ''}" th:style="${submission != null ? 'max-width: 100%; margin: 0;' : ''}">
                 
                 <div class="evaluation-header">
-                    <h2 th:text="${assessment.title}">Assessment Title</h2>
-                    <div class="target-info">
-                        <h3 class="evaluating-target">
-                            <span th:if="${isStudentTarget != null and isStudentTarget}">Evaluating Student: </span>
-                            <span th:unless="${isStudentTarget != null and isStudentTarget}">Evaluating Group: </span>
-                            <span th:text="${selectedGroup.groupName}">Group Name</span>
-                        </h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                        <div>
+                            <h2 th:text="${assessment.title}" class="evaluation-assessment-title" style="margin: 0; font-size: 1.35rem; color: #ffffff;">Assessment Title</h2>
+                            <div class="target-info" style="margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="badge" style="background: var(--ui-primary, #047857); color: #ffffff; font-size: 0.85rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i th:class="${isStudentTarget != null and isStudentTarget ? 'fas fa-user' : 'fas fa-users'}"></i>
+                                    <span th:if="${isStudentTarget != null and isStudentTarget}">Student: </span>
+                                    <span th:unless="${isStudentTarget != null and isStudentTarget}">Group: </span>
+                                    <span th:text="${selectedGroup.groupName}">Group Name</span>
+                                </span>
+                                <span th:if="${isStudentTarget == null or !isStudentTarget}" style="color: #64748b; font-size: 0.82rem; font-weight: 500;">
+                                    (<span th:text="${#lists.size(groupStudents)}">0</span> members)
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button th:if="${isStudentTarget == null or !isStudentTarget}" type="button" class="btn-toggle-members" onclick="toggleMembersChipList()" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-users"></i> <span id="toggle-members-text">View Members</span>
+                            </button>
+                            <button th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}" type="button" onclick="toggleAdminNotes()" style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: #047857; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-note-sticky"></i> <span id="toggle-notes-text">Admin Notes</span>
+                            </button>
+                        </div>
                     </div>
                     
-                    <div class="students-list">
-                        <strong th:if="${isStudentTarget != null and isStudentTarget}">📋 Selected Student:</strong>
-                        <strong th:unless="${isStudentTarget != null and isStudentTarget}">📋 Group Members:</strong>
-                        <ul>
-                            <li th:each="student : ${groupStudents}" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student</li>
-                        </ul>
+                    <!-- Collapsible Members List -->
+                    <div id="collapsible-students-list" class="students-chips-list" style="display: none;">
+                        <span th:each="student : ${groupStudents}" class="student-chip">
+                            <i class="fas fa-user-circle" style="color: #64748b;"></i>
+                            <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student</span>
+                        </span>
                     </div>
 
-                    <div class="assessment-extra-notes"
-                         th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}">
+                    <!-- Collapsible Admin Notes -->
+                    <div id="collapsible-admin-notes" class="assessment-extra-notes"
+                         th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
+                         style="display: none; margin-top: 10px;">
                         <span class="assessment-extra-notes-title">
-                            <i class="fas fa-note-sticky"></i> Admin Notes
+                            <i class="fas fa-info-circle"></i> Evaluation Guidelines &amp; Admin Notes
                         </span>
                         <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
                     </div>
@@ -102,9 +284,11 @@
 
                 <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
-                <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post">
+                <form th:action="@{/lecturer/assessments/{id}/submit(id=${assessment.id})}" method="post" id="evaluationMainForm">
                     <input type="hidden" th:if="${isStudentTarget == null or !isStudentTarget}" name="groupId" th:value="${selectedGroup.id}"/>
                     <input type="hidden" th:if="${isStudentTarget != null and isStudentTarget}" name="studentId" th:value="${selectedGroup.id}"/>
+                    <input type="hidden" th:if="${submission != null}" name="submissionId" th:value="${submission.id}" />
+                    <input type="hidden" name="submissionDoodlesPayload" id="submissionDoodlesPayload" />
 
                     <div th:if="${groupRubrics != null and !groupRubrics.isEmpty()}">
                         <div class="section-divider">
@@ -112,7 +296,7 @@
                             <p style="color: white; margin: 10px 0 0 0;">All students in the group will receive the same marks for these rubrics</p>
                         </div>
 
-                        <div th:each="rubric : ${groupRubrics}" class="rubric-section">
+                        <div th:each="rubric : ${groupRubrics}" class="rubric-section" th:id="'rubric-sec-group-' + ${rubric.id}" th:attr="data-section-name=${rubric.name}">
                             <div class="rubric-header">
                                 <div class="rubric-title" th:text="${rubric.name}">Rubric Name</div>
                             </div>
@@ -192,7 +376,7 @@
                                     minLengths=${assessment.groupCommentMinLengths},
                                     hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                             
-                            <div th:if="${hasComments}" class="comments-section">
+                            <div th:if="${hasComments}" class="comments-section rubric-section" id="rubric-sec-group-comments" data-section-name="Group Feedback">
                                 <div class="comments-header">
                                     <h3>Group Assessment Comments</h3>
                                 </div>
@@ -234,7 +418,7 @@
                                 </h3>
                             </div>
 
-                            <div th:each="rubric : ${individualRubrics}" class="rubric-section">
+                            <div th:each="rubric : ${individualRubrics}" class="rubric-section" th:id="'rubric-sec-student-' + ${student.id} + '-' + ${rubric.id}" th:attr="data-section-name=${(#lists.size(groupStudents) > 1 ? (not #strings.isEmpty(student.username) ? student.username : 'S' + (studentStat.index + 1)) + ': ' : '') + rubric.name}">
                                 <div class="rubric-header">
                                     <div class="rubric-title" th:text="${rubric.name}">Rubric Name</div>
                                 </div>
@@ -314,7 +498,7 @@
                                         minLengths=${assessment.individualCommentMinLengths},
                                         hasComments=${commentLabels != null and !#lists.isEmpty(commentLabels)}">
                                 
-                                <div th:if="${hasComments}" class="comments-section">
+                                <div th:if="${hasComments}" class="comments-section rubric-section" th:id="'rubric-sec-student-' + ${student.id} + '-comments'" th:attr="data-section-name=${(#lists.size(groupStudents) > 1 ? (not #strings.isEmpty(student.username) ? student.username : 'S' + (studentStat.index + 1)) + ': ' : '') + 'Feedback'}">
                                     <div class="comments-header">
                                         <h3>Individual Assessment Comments</h3>
                                     </div>
@@ -350,9 +534,148 @@
                         <button type="submit" id="submitEvalBtn" name="action" value="submit" class="btn btn-submit">✅ Submit Evaluation</button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
+
+<th:block th:if="${submission != null}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script th:src="@{/js/pdfjs/pdf.min.js}"></script>
+    <script th:src="@{/js/pdf-doodle-studio.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-CSRF-TOKEN';
+
+            const submissionId = /*[[${submission.id}]]*/ 0;
+
+            const studio = new PdfDoodleStudio({
+                container: 'doodle-studio-container',
+                pdfUrl: '/lecturer/assessments/submissions/' + submissionId + '/file',
+                annotationsUrl: '/lecturer/assessments/submissions/' + submissionId + '/annotations',
+                saveAnnotationUrl: '/lecturer/assessments/submissions/' + submissionId + '/annotations',
+                csrfToken: csrfToken,
+                csrfHeader: csrfHeader,
+                readOnly: false,
+                fileName: /*[[${submission.originalFileName}]]*/ 'report.pdf'
+            });
+            window.activeStudio = studio;
+
+            window.setStudioLayout = function(mode) {
+                const pdfPane = document.getElementById('pdf-studio-pane');
+                const rubricPane = document.getElementById('rubric-form-pane');
+                document.querySelectorAll('.split-btn-group button').forEach(b => {
+                    if (b.id !== 'btn-zen-mode') b.classList.remove('active');
+                });
+
+                if (mode === '70-30') {
+                    if (pdfPane) pdfPane.style.flex = '0 0 70%';
+                    if (rubricPane) rubricPane.style.flex = '0 0 30%';
+                    const b = document.getElementById('btn-layout-expand-pdf');
+                    if (b) b.classList.add('active');
+                } else if (mode === '30-70') {
+                    if (pdfPane) pdfPane.style.flex = '0 0 30%';
+                    if (rubricPane) rubricPane.style.flex = '0 0 70%';
+                    const b = document.getElementById('btn-layout-expand-rubric');
+                    if (b) b.classList.add('active');
+                } else {
+                    if (pdfPane) pdfPane.style.flex = '1 1 50%';
+                    if (rubricPane) rubricPane.style.flex = '1 1 50%';
+                    const b = document.getElementById('btn-layout-split');
+                    if (b) b.classList.add('active');
+                }
+                setTimeout(() => {
+                    if (studio && typeof studio.zoomFit === 'function') studio.zoomFit();
+                }, 300);
+            };
+
+            // Draggable Split Divider Interaction
+            function initSplitDivider() {
+                const handle = document.getElementById('split-divider-handle');
+                const pdfPane = document.getElementById('pdf-studio-pane');
+                const rubricPane = document.getElementById('rubric-form-pane');
+                const layout = document.querySelector('.split-evaluation-layout');
+                if (!handle || !pdfPane || !rubricPane || !layout) return;
+
+                let isDragging = false;
+
+                function onPointerDown(e) {
+                    isDragging = true;
+                    handle.classList.add('is-dragging');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+                    e.preventDefault();
+                }
+
+                function onPointerMove(e) {
+                    if (!isDragging) return;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const rect = layout.getBoundingClientRect();
+                    const offsetX = clientX - rect.left;
+                    const totalWidth = rect.width;
+                    let pdfPercent = (offsetX / totalWidth) * 100;
+
+                    if (pdfPercent < 20) pdfPercent = 20;
+                    if (pdfPercent > 80) pdfPercent = 80;
+                    const rubricPercent = 100 - pdfPercent;
+
+                    pdfPane.style.flex = '0 0 ' + pdfPercent.toFixed(1) + '%';
+                    rubricPane.style.flex = '0 0 ' + rubricPercent.toFixed(1) + '%';
+
+                    document.querySelectorAll('.split-btn-group button').forEach(b => {
+                        if (b.id !== 'btn-zen-mode') b.classList.remove('active');
+                    });
+                }
+
+                function onPointerUp() {
+                    if (isDragging) {
+                        isDragging = false;
+                        handle.classList.remove('is-dragging');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+                        if (studio && typeof studio.zoomFit === 'function') {
+                            studio.zoomFit();
+                        }
+                    }
+                }
+
+                handle.addEventListener('mousedown', onPointerDown);
+                window.addEventListener('mousemove', onPointerMove);
+                window.addEventListener('mouseup', onPointerUp);
+
+                handle.addEventListener('touchstart', onPointerDown, { passive: false });
+                window.addEventListener('touchmove', onPointerMove, { passive: false });
+                window.addEventListener('touchend', onPointerUp);
+            }
+            initSplitDivider();
+
+            // Zen Focus Mode Toggle
+            window.toggleZenMode = function() {
+                document.body.classList.toggle('zen-mode');
+                window.dispatchEvent(new Event('iams:layoutchange'));
+                const isZen = document.body.classList.contains('zen-mode');
+                const zenBtn = document.getElementById('btn-zen-mode');
+                if (zenBtn) {
+                    if (isZen) {
+                        zenBtn.innerHTML = '<i class="fas fa-compress-arrows-alt"></i> <span>Standard</span>';
+                        zenBtn.title = 'Exit Zen Focus Mode';
+                    } else {
+                        zenBtn.innerHTML = '<i class="fas fa-expand-arrows-alt"></i> <span>Zen Mode</span>';
+                        zenBtn.title = 'Toggle full-width Zen Focus Mode';
+                    }
+                }
+                setTimeout(() => {
+                    if (studio && typeof studio.zoomFit === 'function') {
+                        studio.zoomFit();
+                    }
+                }, 320);
+            };
+        });
+    </script>
+</th:block>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -375,20 +698,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (currentLength === 0) {
-            
             if (hint) {
                 hint.style.color = '#95a5a6';
                 hint.innerHTML = `Suggested minimum: ${minLength} characters`;
             }
         } else if (currentLength < minLength) {
-            
             textarea.classList.add('insufficient');
             if (hint) {
                 hint.classList.add('insufficient');
                 hint.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Minimum ${minLength} characters required (current: ${currentLength})`;
             }
         } else {
-            
             textarea.classList.add('sufficient');
             if (hint) {
                 hint.classList.add('sufficient');
@@ -398,26 +718,277 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const allTextareas = document.querySelectorAll('.rubric-comment-field textarea, .comment-textarea');
-    
-    console.log(`📝 Found ${allTextareas.length} comment textareas`);
-    
     allTextareas.forEach(function(textarea) {
-        
         validateTextarea(textarea);
-        
         textarea.addEventListener('input', function() {
             validateTextarea(this);
         });
-        
         textarea.addEventListener('blur', function() {
             validateTextarea(this);
         });
     });
-    
-    const form = document.querySelector('form');
+
+    // Toggle collapsible student members
+    window.toggleMembersChipList = function() {
+        const list = document.getElementById('collapsible-students-list');
+        const text = document.getElementById('toggle-members-text');
+        if (!list) return;
+        const isHidden = list.style.display === 'none' || list.style.display === '';
+        list.style.display = isHidden ? 'flex' : 'none';
+        if (text) text.textContent = isHidden ? 'Hide Members' : 'View Members';
+    };
+
+    // Toggle collapsible admin guidelines / notes
+    window.toggleAdminNotes = function() {
+        const notes = document.getElementById('collapsible-admin-notes');
+        const text = document.getElementById('toggle-notes-text');
+        if (!notes) return;
+        const isHidden = notes.style.display === 'none' || notes.style.display === '';
+        notes.style.display = isHidden ? 'block' : 'none';
+        if (text) text.textContent = isHidden ? 'Hide Notes' : 'Admin Notes';
+    };
+
+    // Initialize Sticky Rubric Quick Nav
+    function initRubricQuickNav() {
+        const pillsContainer = document.getElementById('quick-nav-pills');
+        if (!pillsContainer) return;
+
+        pillsContainer.innerHTML = '';
+        const sections = document.querySelectorAll('.rubric-section[data-section-name]');
+        if (sections.length === 0) {
+            const quickNav = document.getElementById('rubric-quick-nav');
+            if (quickNav) quickNav.style.display = 'none';
+            return;
+        }
+
+        sections.forEach((section, index) => {
+            const title = section.getAttribute('data-section-name') || ('Section ' + (index + 1));
+            const secId = section.id || ('rubric-sec-auto-' + index);
+            section.id = secId;
+
+            const pill = document.createElement('a');
+            pill.className = 'quick-nav-pill';
+            pill.setAttribute('data-target-sec', secId);
+            pill.href = '#' + secId;
+            pill.innerHTML = '<i class="fas fa-circle-dot" style="font-size: 0.65rem; color: #94a3b8;"></i> <span>' + title + '</span>';
+            
+            pill.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetEl = document.getElementById(secId);
+                if (targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    targetEl.classList.add('pulse-highlight');
+                    setTimeout(() => targetEl.classList.remove('pulse-highlight'), 1600);
+                }
+            });
+            pillsContainer.appendChild(pill);
+        });
+    }
+    initRubricQuickNav();
+
+    // Live Evaluation Completion Tracker
+    function updateLiveEvaluationProgress() {
+        const formEl = document.getElementById('evaluationMainForm');
+        if (!formEl) return;
+
+        const radioInputs = formEl.querySelectorAll('input[type="radio"]');
+        const radioGroups = {};
+        radioInputs.forEach(r => {
+            if (!radioGroups[r.name]) {
+                radioGroups[r.name] = { checked: false, el: r };
+            }
+            if (r.checked) {
+                radioGroups[r.name].checked = true;
+            }
+        });
+
+        const radioGroupNames = Object.keys(radioGroups);
+        const totalRadioGroups = radioGroupNames.length;
+        let completedRadioGroups = 0;
+        radioGroupNames.forEach(name => {
+            if (radioGroups[name].checked) completedRadioGroups++;
+        });
+
+        const requiredTextareas = formEl.querySelectorAll('textarea[required]');
+        let totalTextareas = requiredTextareas.length;
+        let completedTextareas = 0;
+        requiredTextareas.forEach(t => {
+            const minLen = parseInt(t.getAttribute('minlength')) || 1;
+            if (t.value.trim().length >= minLen) completedTextareas++;
+        });
+
+        const totalCriteria = totalRadioGroups + totalTextareas;
+        const completedCriteria = completedRadioGroups + completedTextareas;
+        const percentage = totalCriteria > 0 ? Math.round((completedCriteria / totalCriteria) * 100) : 100;
+
+        const badge = document.getElementById('workstation-progress-badge');
+        const fill = document.getElementById('eval-progress-fill');
+        const text = document.getElementById('eval-progress-text');
+
+        if (fill) fill.style.width = percentage + '%';
+        if (text) {
+            if (totalCriteria > 0 && completedCriteria >= totalCriteria) {
+                text.innerHTML = '<i class="fas fa-check-circle" style="color: #047857;"></i> All ' + totalCriteria + ' Criteria Done!';
+                if (badge) badge.classList.add('is-complete');
+            } else {
+                text.textContent = completedCriteria + '/' + totalCriteria + ' Criteria (' + percentage + '%)';
+                if (badge) badge.classList.remove('is-complete');
+            }
+        }
+
+        // Update pills checkmarks
+        const sections = document.querySelectorAll('.rubric-section[data-section-name]');
+        sections.forEach(sec => {
+            const secId = sec.id;
+            const pill = document.querySelector(`.quick-nav-pill[data-target-sec="${secId}"]`);
+            if (!pill) return;
+
+            const secRadios = sec.querySelectorAll('input[type="radio"]');
+            const secGroups = {};
+            secRadios.forEach(r => {
+                if (!secGroups[r.name]) secGroups[r.name] = false;
+                if (r.checked) secGroups[r.name] = true;
+            });
+            const allRadiosChecked = Object.keys(secGroups).length > 0 ? Object.values(secGroups).every(v => v === true) : true;
+
+            const secTextareas = sec.querySelectorAll('textarea[required]');
+            const allTextareasFilled = Array.from(secTextareas).every(t => {
+                const minLen = parseInt(t.getAttribute('minlength')) || 1;
+                return t.value.trim().length >= minLen;
+            });
+
+            if (allRadiosChecked && allTextareasFilled && (secRadios.length > 0 || secTextareas.length > 0)) {
+                pill.classList.add('all-done');
+                const icon = pill.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-check-circle';
+                    icon.style.color = '#047857';
+                }
+            } else {
+                pill.classList.remove('all-done');
+                const icon = pill.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-circle-dot';
+                    icon.style.color = '#94a3b8';
+                }
+            }
+        });
+    }
+
+    // Scroll to next incomplete criterion on progress badge click
+    window.scrollToNextIncomplete = function() {
+        const formEl = document.getElementById('evaluationMainForm');
+        if (!formEl) return;
+
+        const radioInputs = formEl.querySelectorAll('input[type="radio"]');
+        const radioGroups = {};
+        radioInputs.forEach(r => {
+            if (!radioGroups[r.name]) radioGroups[r.name] = { checked: false, el: r };
+            if (r.checked) radioGroups[r.name].checked = true;
+        });
+
+        for (const name in radioGroups) {
+            if (!radioGroups[name].checked) {
+                const el = radioGroups[name].el;
+                const card = el.closest('.sub-rubric-card') || el.closest('.rubric-section');
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('pulse-highlight');
+                    setTimeout(() => card.classList.remove('pulse-highlight'), 1800);
+                    return;
+                }
+            }
+        }
+
+        const requiredTextareas = formEl.querySelectorAll('textarea[required]');
+        for (let i = 0; i < requiredTextareas.length; i++) {
+            const t = requiredTextareas[i];
+            const minLen = parseInt(t.getAttribute('minlength')) || 1;
+            if (t.value.trim().length < minLen) {
+                const card = t.closest('.rubric-comment-field') || t.closest('.comment-field') || t;
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                t.focus();
+                card.classList.add('pulse-highlight');
+                setTimeout(() => card.classList.remove('pulse-highlight'), 1800);
+                return;
+            }
+        }
+
+        const submitBtn = document.getElementById('submitEvalBtn');
+        if (submitBtn) {
+            submitBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            submitBtn.classList.add('pulse-highlight');
+            setTimeout(() => submitBtn.classList.remove('pulse-highlight'), 1500);
+        }
+    };
+
+    // Attach real-time listeners for progress tracker
+    const evalForm = document.getElementById('evaluationMainForm');
+    if (evalForm) {
+        evalForm.addEventListener('change', updateLiveEvaluationProgress);
+        evalForm.addEventListener('input', updateLiveEvaluationProgress);
+        updateLiveEvaluationProgress();
+    }
+
+    // Intercept form submission to guarantee all vector ink strokes & text annotations are saved
+    const form = document.querySelector('form#evaluationMainForm') || document.querySelector('form');
     if (form) {
-        form.addEventListener('submit', function(e) {
-            console.log('📤 Form submitted');
+        let isSubmitting = false;
+        let clickedSubmitBtn = null;
+
+        form.querySelectorAll('button[type="submit"]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                clickedSubmitBtn = this;
+            });
+        });
+
+        form.addEventListener('submit', async function(e) {
+            if (isSubmitting) return;
+
+            if (window.activeStudio) {
+                e.preventDefault();
+
+                const originalBtnText = clickedSubmitBtn ? clickedSubmitBtn.innerHTML : '';
+                if (clickedSubmitBtn) {
+                    clickedSubmitBtn.disabled = true;
+                    clickedSubmitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving annotations &amp; scores...';
+                }
+
+                try {
+                    // Commit any open text box editor
+                    if (typeof window.activeStudio.commitActiveTextEditor === 'function') {
+                        window.activeStudio.commitActiveTextEditor();
+                    }
+
+                    // Populate hidden payload input with all annotations
+                    const payloadInput = document.getElementById('submissionDoodlesPayload');
+                    if (payloadInput && typeof window.activeStudio.getAllAnnotationsByPage === 'function') {
+                        payloadInput.value = JSON.stringify(window.activeStudio.getAllAnnotationsByPage());
+                    }
+
+                    // Synchronously await AJAX saving of all dirty pages
+                    if (typeof window.activeStudio.saveAnnotations === 'function') {
+                        await window.activeStudio.saveAnnotations(true);
+                    }
+                } catch (saveErr) {
+                    console.warn('Pre-submit annotation save error:', saveErr);
+                }
+
+                // Preserve the clicked button action (save vs submit)
+                if (clickedSubmitBtn && clickedSubmitBtn.name === 'action') {
+                    let actionInput = form.querySelector('input[name="action"][type="hidden"]');
+                    if (!actionInput) {
+                        actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        form.appendChild(actionInput);
+                    }
+                    actionInput.value = clickedSubmitBtn.value;
+                }
+
+                isSubmitting = true;
+                form.submit();
+            }
         });
     }
 });

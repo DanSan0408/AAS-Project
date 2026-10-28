@@ -36,7 +36,7 @@
         width: 100% !important;
         table-layout: auto;
         border-collapse: collapse !important;
-        font-family: 'Arial Narrow', sans-serif;
+        font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
         font-size: 9pt !important;
     }
 

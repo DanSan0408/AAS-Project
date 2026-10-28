@@ -1,0 +1,954 @@
+/* ==========================================================================
+   IAMS PDF Doodle Studio Stylesheet
+   Modern, responsive side-by-side evaluation & vector ink annotation studio
+   ========================================================================== */
+
+:root {
+    --doodle-bg-dark: #0f172a;
+    --doodle-bg-stage: #334155;
+    --doodle-border: #475569;
+    --doodle-primary: #4A0018;
+    --doodle-accent: #F8A617;
+    --doodle-emerald: #047857;
+}
+
+/* Split Layout Container - Independent Dual-Scroll Workstation */
+.split-evaluation-layout {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    width: 100%;
+    height: calc(100vh - 120px);
+    min-height: 550px;
+    margin-top: 6px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.pdf-pane {
+    flex: 1 1 50%;
+    min-width: 250px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--doodle-bg-dark);
+    border-radius: 12px 0 0 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1px solid var(--doodle-border);
+    transition: flex 0.2s ease;
+}
+
+/* Draggable Splitter Handle */
+.split-divider-handle {
+    width: 14px;
+    margin: 0 -2px;
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    position: relative;
+    user-select: none;
+    background: transparent;
+    transition: background 0.2s;
+}
+
+.split-divider-handle:hover,
+.split-divider-handle.is-dragging {
+    background: rgba(74, 0, 24, 0.15);
+}
+
+.split-divider-grip {
+    width: 4px;
+    height: 48px;
+    background: #94a3b8;
+    border-radius: 4px;
+    transition: background 0.2s, height 0.2s;
+}
+
+.split-divider-handle:hover .split-divider-grip,
+.split-divider-handle.is-dragging .split-divider-grip {
+    background: var(--doodle-accent);
+    height: 68px;
+}
+
+.rubric-pane {
+    flex: 1 1 50%;
+    min-width: 250px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    padding: 20px 24px;
+    box-sizing: border-box;
+    transition: flex 0.2s ease;
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+.rubric-pane::-webkit-scrollbar {
+    width: 8px;
+}
+.rubric-pane::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+.rubric-pane::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.rubric-pane::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Split Controls Bar */
+.split-controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.split-controls-bar .deliverable-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.88rem;
+    flex-wrap: wrap;
+}
+
+.split-controls-bar .deliverable-title {
+    font-weight: 700;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.workstation-action-link {
+    font-size: 0.8rem;
+    color: var(--doodle-primary);
+    text-decoration: underline;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s;
+}
+
+.workstation-action-link:hover {
+    color: #831843;
+}
+
+/* Live Evaluation Completion Badge */
+.workstation-progress-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.workstation-progress-badge:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+}
+
+.workstation-progress-badge.is-complete {
+    background: #ecfdf5;
+    border-color: #6ee7b7;
+    color: #047857;
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.15);
+}
+
+.workstation-mini-bar {
+    width: 60px;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+}
+
+.workstation-mini-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #3b82f6;
+    border-radius: 3px;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.workstation-progress-badge.is-complete .workstation-mini-bar-fill {
+    background: #059669;
+}
+
+.split-controls-bar .split-btn-group {
+    display: inline-flex;
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.split-btn-group button {
+    background: transparent;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.split-btn-group button.active,
+.split-btn-group button:hover {
+    background: #ffffff;
+    color: var(--doodle-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-zen {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-zen:hover,
+body.zen-mode .btn-zen {
+    background: #4A0018;
+    color: #ffffff;
+    border-color: #4A0018;
+    box-shadow: 0 2px 6px rgba(74, 0, 24, 0.2);
+}
+
+/* Rubric Quick Jump Bar */
+.rubric-quick-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    position: sticky;
+    top: -20px;
+    z-index: 8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.quick-nav-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.quick-nav-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+}
+
+.quick-nav-pills::-webkit-scrollbar {
+    display: none;
+}
+
+.quick-nav-pill {
+    padding: 3px 10px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.quick-nav-pill:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #94a3b8;
+}
+
+.quick-nav-pill.all-done {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+}
+
+/* Zen Mode Sidebar Collapse */
+body.has-split-studio .sidebar {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+body.has-split-studio .main-content {
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+}
+
+body.has-split-studio.zen-mode .sidebar {
+    transform: translateX(-100%);
+}
+
+body.has-split-studio.zen-mode .main-content {
+    margin-left: 0 !important;
+    padding: 8px 16px !important;
+}
+
+/* PDF Studio Toolbar */
+.pdf-doodle-toolbar {
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #334155;
+    user-select: none;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toolbar-group-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    margin-right: 4px;
+}
+
+.doodle-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.doodle-btn:hover:not(:disabled) {
+    background: #334155;
+    border-color: #64748b;
+    color: #ffffff;
+}
+
+.doodle-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.doodle-btn.active {
+    background: var(--doodle-primary);
+    border-color: var(--doodle-accent);
+    color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(248, 166, 23, 0.3);
+}
+
+/* Color Palette Swatches */
+.color-swatch-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #475569;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    padding: 0;
+}
+
+.color-swatch:hover {
+    transform: scale(1.2);
+}
+
+.color-swatch.active {
+    border-color: #ffffff;
+    transform: scale(1.25);
+    box-shadow: 0 0 0 2px var(--doodle-accent);
+}
+
+/* Stroke Size Selection */
+.stroke-size-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stroke-size-btn {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.stroke-size-btn.active {
+    background: #334155;
+    border-color: var(--doodle-accent);
+}
+
+.stroke-size-dot {
+    background: #cbd5e1;
+    border-radius: 50%;
+    display: block;
+}
+
+.stroke-size-btn.active .stroke-size-dot {
+    background: var(--doodle-accent);
+}
+
+/* Page Navigation Display */
+.page-counter {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    padding: 0 6px;
+}
+
+/* Save Status Indicator */
+.save-status-indicator {
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.25s ease;
+}
+
+.save-status-indicator.saved {
+    background: rgba(4, 120, 87, 0.25);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.save-status-indicator.saving {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.save-status-indicator.dirty {
+    background: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+/* Viewport & Continuous Canvas Stage */
+.pdf-viewport {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: auto;
+    background: var(--doodle-bg-stage);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px 16px;
+    position: relative;
+    min-height: 450px;
+    scroll-behavior: smooth;
+}
+
+.pdf-viewport::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.pdf-viewport::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+.pdf-viewport::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+}
+.pdf-viewport::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.pdf-continuous-scroll-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    padding-bottom: 50px;
+}
+
+.pdf-page-container {
+    position: relative;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    background: #ffffff;
+    line-height: 0;
+    border-radius: 4px;
+    user-select: none;
+    margin: 0 auto;
+}
+
+.pdf-page-container .page-pill {
+    position: absolute;
+    top: -24px;
+    left: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 2px 8px;
+    border-radius: 4px;
+    line-height: 1.3;
+    pointer-events: none;
+    z-index: 5;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+}
+
+.pdf-page-container canvas.pdf-page-canvas {
+    display: block;
+    max-width: 100%;
+}
+
+.pdf-page-container canvas.doodle-page-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.doodle-page-canvas.tool-pen,
+#doodle-canvas.tool-pen {
+    cursor: crosshair;
+}
+
+.doodle-page-canvas.tool-highlighter,
+#doodle-canvas.tool-highlighter {
+    cursor: crosshair;
+}
+
+.doodle-page-canvas.tool-text,
+#doodle-canvas.tool-text {
+    cursor: text;
+}
+
+.doodle-page-canvas.tool-eraser,
+#doodle-canvas.tool-eraser {
+    cursor: cell;
+}
+
+.doodle-page-canvas.tool-readonly,
+#doodle-canvas.tool-readonly {
+    cursor: default;
+}
+
+.doodle-page-canvas.is-dragging-text {
+    cursor: grabbing !important;
+}
+
+.doodle-page-canvas.is-hovering-text {
+    cursor: grab !important;
+}
+
+/* Floating Text Box Editor Overlay */
+.pdf-text-editor-overlay {
+    position: absolute;
+    z-index: 50;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 290px;
+    max-width: 380px;
+    animation: fadeInScale 0.15s ease-out;
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.pdf-text-editor-overlay .editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #334155;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.pdf-text-editor-overlay .editor-hint {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Typography Formatting Toolbar */
+.pdf-text-editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: #f8fafc;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.fmt-select {
+    height: 26px;
+    padding: 2px 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    background: #ffffff;
+    color: #1e293b;
+    outline: none;
+    cursor: pointer;
+}
+
+.fmt-select:focus {
+    border-color: #2563EB;
+}
+
+.fmt-font-family {
+    max-width: 105px;
+}
+
+.fmt-font-size {
+    max-width: 65px;
+}
+
+.btn-fmt-toggle {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: #ffffff;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.76rem;
+    transition: all 0.15s;
+    padding: 0;
+}
+
+.btn-fmt-toggle:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-fmt-toggle.active {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #0f172a;
+}
+
+.fmt-colors {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.fmt-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.fmt-color-dot:hover {
+    transform: scale(1.2);
+}
+
+.fmt-color-dot.active {
+    border-color: #0f172a;
+    transform: scale(1.25);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4);
+}
+
+.pdf-text-editor-overlay textarea {
+    width: 100%;
+    min-height: 75px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+    background: #ffffff;
+    resize: vertical;
+    box-sizing: border-box;
+    line-height: 1.4;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pdf-text-editor-overlay textarea:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.pdf-text-editor-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.pdf-text-editor-actions button {
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pdf-text-editor-actions .btn-text-save {
+    background: #047857;
+    color: #ffffff;
+}
+
+.pdf-text-editor-actions .btn-text-save:hover {
+    background: #065f46;
+}
+
+.pdf-text-editor-actions .btn-text-cancel {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.pdf-text-editor-actions .btn-text-cancel:hover {
+    background: #cbd5e1;
+}
+
+.pdf-text-editor-actions .btn-text-delete {
+    background: #fee2e2;
+    color: #dc2626;
+    margin-right: auto;
+}
+
+.pdf-text-editor-actions .btn-text-delete:hover {
+    background: #fecaca;
+}
+
+/* Loading & Empty States */
+.pdf-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    z-index: 20;
+    gap: 12px;
+}
+
+.pdf-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: var(--doodle-accent);
+    border-radius: 50%;
+    animation: pdf-spin 0.8s linear infinite;
+}
+
+@keyframes pdf-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+    .split-evaluation-layout {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .pdf-pane {
+        position: relative;
+        top: 0;
+        height: 600px;
+        max-height: 600px;
+        width: 100%;
+    }
+
+    .rubric-pane {
+        width: 100%;
+        height: auto;
+        overflow-y: visible;
+    }
+
+    .split-controls-bar {
+        display: none;
+    }
+}
+
+
+/* Compact PDF navigation, with infrequent actions tucked into dropdown panels. */
+.pdf-doodle-toolbar { position: relative; z-index: 30; padding: 8px 10px; gap: 8px; justify-content: flex-start; flex-shrink: 0; }
+.pdf-toolbar-menu { position: relative; }
+.pdf-toolbar-menu > summary { list-style: none; cursor: pointer; white-space: nowrap; }
+.pdf-toolbar-menu > summary::-webkit-details-marker { display: none; }
+.pdf-toolbar-menu[open] > summary { border-color: var(--doodle-accent); }
+.pdf-menu-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(280px, 75vw);
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgb(0 0 0 / 30%);
+    z-index: 50;
+    box-sizing: border-box;
+}
+.pdf-menu-heading { color: #cbd5e1; font-size: 0.78rem; font-weight: 600; }
+.pdf-tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pdf-menu-panel .color-swatch { width: 28px; height: 28px; }
+.pdf-menu-panel .stroke-size-btn { width: 36px; height: 32px; }
+.pdf-actions-menu .pdf-menu-panel { left: auto; right: 0; }
+.pdf-save-status { margin-left: auto; }
+.pdf-zoom-label { font-size: 0.75rem; color: #cbd5e1; min-width: 36px; text-align: center; }
+body[data-ui-role] .pdf-doodle-toolbar #pdf-page-jump {
+    width: 58px;
+    min-height: 30px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    background: #1e293b;
+    border: 1px solid #64748b;
+    color: #fff;
+    font-size: 0.85rem;
+    text-align: center;
+}
+.page-counter { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.doodle-page-canvas.tool-hand { cursor: grab; touch-action: pan-x pan-y; }
+.pdf-viewport { min-width: 0; overscroll-behavior: contain; }
+.pdf-continuous-scroll-wrapper { flex-shrink: 0; min-width: min-content; }
+.pdf-page-container { flex-shrink: 0; }
+.pdf-viewport:focus-visible { outline: 3px solid var(--doodle-accent); outline-offset: -3px; }
+body[data-ui-role] .evaluation-header .evaluation-assessment-title { color: #fff !important; }
+
+/* A flex child must be able to shrink for the report and rubric to scroll separately. */
+@media (min-width: 1025px) {
+    body.has-split-studio .split-evaluation-layout { min-height: 0; height: auto !important; }
+    body.has-split-studio .pdf-pane, body.has-split-studio .rubric-pane { min-height: 0; }
+    body.has-split-studio .pdf-viewport { min-height: 0; }
+}
+@media (max-width: 768px) {
+    .pdf-doodle-toolbar { gap: 6px; }
+    .pdf-doodle-toolbar .doodle-btn { min-height: 34px; padding: 6px 8px; }
+    .pdf-toolbar-menu .pdf-menu-panel { position: fixed; top: auto; bottom: 16px; left: 5vw; right: 5vw; width: 90vw; max-height: 45vh; }
+}
+@media (max-width: 1024px) {
+    .split-divider-handle { display: none; }
+    .split-evaluation-layout { gap: 12px; }
+    .pdf-pane, .rubric-pane { border-radius: 12px; }
+    .rubric-pane { border-left: 1px solid #e2e8f0; }
+}
+
+body[data-ui-role] .pdf-doodle-toolbar .doodle-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px 8px;
+    justify-content: center;
+}

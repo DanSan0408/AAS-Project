@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /workspace
 
@@ -7,15 +7,16 @@ COPY src ./src
 
 RUN mvn -B -DskipTests package
 
-FROM eclipse-temurin:17-jre-jammy AS runtime
+FROM eclipse-temurin:21-jre-jammy AS runtime
 
 WORKDIR /app
 
 ENV SPRING_PROFILES_ACTIVE=prod
+ENV APP_UPLOAD_SUBMISSIONS_DIR=/app/uploads/submissions
 ENV JAVA_OPTS=""
 
 RUN useradd --create-home --shell /usr/sbin/nologin appuser \
-    && mkdir -p /app/logs \
+    && mkdir -p /app/logs /app/uploads/submissions \
     && chown -R appuser:appuser /app
 
 COPY --from=build /workspace/target/*.jar /app/app.jar

@@ -12,7 +12,7 @@
 * { box-sizing: border-box; }
 
 body.assign-assessment-page {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     background-color: var(--color-background);
     margin: 0;
     padding: 0;

@@ -8,8 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/edit_overrides.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="edit-overrides-page">
+<body data-ui-role="admin" class="edit-overrides-page">
     <div th:replace="fragments/sidebar :: sidebar"></div>
 
     <div class="main-content">
@@ -18,6 +19,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Data Views', '/admin/data-views', 'Edit Student Grades')}"></nav>
+
         
         <div class="edit-container">
             <div class="page-header">

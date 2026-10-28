@@ -71,7 +71,10 @@ public class AdminService {
     }
 
     @Autowired
-private EmailService emailService;
+    private EmailService emailService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
 
     public void saveStudent(Student student, HttpServletRequest request) {
     if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
@@ -201,11 +204,12 @@ public Optional<Course> getCurrentAdminCourse() {
 }
 
 private void sendWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
-    String applicationUrl = request.getScheme() + "://" + request.getServerName();
-    if (request.getServerPort() != 80 && request.getServerPort() != 443) {
-        applicationUrl += ":" + request.getServerPort();
-    }
-    String resetLink = applicationUrl + request.getContextPath() + "/reset_password?token=" + resetToken;
+    String baseUrl = (publicBaseUrl != null && !publicBaseUrl.isBlank())
+            ? publicBaseUrl.replaceAll("/+$", "")
+            : request.getScheme() + "://" + request.getServerName() 
+                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort()) 
+                + request.getContextPath();
+    String resetLink = baseUrl + "/reset_password?token=" + resetToken;
     
     try {
         emailService.sendWelcomeEmailWithPassword(
