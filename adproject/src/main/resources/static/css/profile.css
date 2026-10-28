@@ -39,7 +39,7 @@ body.profile-page.role-super_admin {
 
 body.profile-page {
     background-color: var(--color-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--color-secondary);
     margin: 0;
     padding: 0;

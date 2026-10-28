@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="breadcrumb(rootLabel, rootUrl, pageLabel)" class="system-breadcrumb" aria-label="Breadcrumb">
+    <ol>
+        <li th:if="${rootLabel != pageLabel or assessment != null}"><a th:href="@{${rootUrl}}" th:text="${rootLabel}">Dashboard</a></li>
+        <li th:if="${rootLabel != pageLabel or assessment != null}" class="separator" aria-hidden="true">›</li>
+        <li th:if="${assessment != null}"><span class="assessment-name" th:text="${assessment.title}">Assessment</span></li>
+        <li th:if="${assessment != null}" class="separator" aria-hidden="true">›</li>
+        <li><span class="current-page" aria-current="page" th:text="${pageLabel}">Current Page</span></li>
+    </ol>
+</nav>
+</body>
+</html>

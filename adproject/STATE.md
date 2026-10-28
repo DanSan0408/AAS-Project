@@ -4,6 +4,279 @@
 
 ---
 
+## Current Status: Diverse Analytics Charts & Authentication Branding
+**Status**: IMPLEMENTED — calculation, template and browser checks passed
+**Date**: 2026-10-28
+
+### Analytics
+- Added a lecturer-pair scatter plot for rating alignment, with a pair selector, equal-rating diagonal, hover context and explicit 0–100% axes. It distinguishes ratings within 10 percentage points and discloses overlapping points and its 2,000-point display cap; metrics still use all paired ratings.
+- Replaced the score-band distribution bars with box-and-whisker plots showing median, interpolated quartiles and minimum/maximum target percentages per lecturer. Single evaluations remain visible as coincident lines.
+- Added two filter-aware metrics: agreement within 10 pp (matched lecturer-pair proximity rate) and typical shared-criterion spread (median highest-minus-lowest percentage, counted once per target/criterion with at least two lecturers). No shared work produces an unavailable marker, not a fabricated zero.
+- Retained the existing average/range bars, pair-gap bars, grouped team charts, rubric heatmap, breakdown, filters and export. Updated the calculation guide and in-page explanations; the tolerance is descriptive rather than a grading-quality score.
+
+### Authentication pages
+- Removed breadcrumbs from login, forgot-password and reset-password forms. These are deliberate exceptions to the authenticated-page navigation pattern.
+- Added authentication-only logo sizing: 260px desktop and 240px mobile, bounded by available width without the signed-in header's height cap. Signed-in header/sidebar sizes are unchanged.
+
+### Validation
+- 12 JavaScript calculation/export tests passed, including pair-count weighting, the inclusive 10pp threshold, median spread, quartile interpolation, single/empty data and existing filter/export checks.
+- 3 Java infrastructure tests passed, covering Hibernate query validation, the analytics page/shared fragments and all three authentication forms rendered through Thymeleaf.
+- 144 browser fixture checks passed across desktop/tablet/mobile widths, including both new metrics, scatter-pair switching, box plots, filters and empty/error states, plus all authentication forms' missing breadcrumbs and enlarged logo dimensions.
+- Reviewed updated analytics and login previews. No backend schema, scoring persistence, live database or running application process was changed.
+
+---
+
+## Current Status: Lecturer Evaluation Comparison Analytics
+**Status**: IMPLEMENTED — Java/JavaScript/browser checks and Docker build passed
+**Date**: 2026-10-28
+
+### Access and scope
+- Added **Lecturer Analytics** to the admin sidebar and **Compare Lecturer Evaluations** to Data Views. The page is `/admin/analytics/lecturer-comparison`; its JSON snapshot endpoint is `/admin/analytics/lecturer-comparison/data?assessmentId=...`.
+- Uses the existing admin/super-admin security boundary and active-course selection. Both the assessment and evaluated students are scoped to that course. An unavailable assessment returns a generic 404; no active course returns 403. JSON responses are not cached, and only immutable DTOs are returned.
+
+### Comparisons and filtering
+- Added lecturer average/range bars, matched-criterion pair-gap bars, team comparison charts, a lecturer/rubric heatmap, score distributions and a detailed evaluation breakdown.
+- Filters: assessment, team (including unassigned), group/individual evaluation, lecturer selection, rubric, CLO, individual student, Final/Submitted status, and shared target/criteria only. Filter URLs are shareable; CSV exports all filtered rows and print expands the on-screen row limits.
+- Group score copies are deduplicated to one latest row per lecturer, team and criterion. Individual targets remain distinct students. Peer/self marks and drafts are excluded; missing evaluations are never counted as zero.
+- Normalisation uses each criterion's highest configured rating mark, falling back to the stored criterion maximum for legacy criteria without ratings. This avoids interpreting a 4/5 rating as 4/20 when 20 is the rubric weight. Target percentages sum awarded/available rating marks; lecturer averages weight each target equally. Pair gaps compare the same target and criterion, averaging absolute percentage-point differences.
+- Rubric assignments and different team workloads can affect aggregate averages. The page explains these limits and offers matched-criteria comparisons. Current team membership and current rating definitions are used; this is not historical grade/membership auditing.
+- Charts are generated locally with SVG and tables; no chart CDN, analytics tracking or schema migration was added. Long tables and team charts have explicit show-more controls; CSV contains all filtered breakdown rows and neutralises spreadsheet formula prefixes.
+
+### Files and deployment
+- Added `LecturerAnalyticsController`, `LecturerAnalyticsService`, analytics DTO/projection types, a course-scoped mark query, `lecturer_comparison_analytics.html`, `lecturer_analytics.css`, and `lecturer-analytics.js`.
+- Updated navigation/data-hub entry points, README, and `ANALYTICS.md` with calculation rules and usage.
+- Aligned Docker build/runtime images to Java 21, matching the existing `pom.xml` requirement (the Dockerfile previously used Java 17). Existing separate Dokploy app/database and persistent-upload setup are retained.
+
+### Verification
+- Full Java suite on Java 21: **155 tests, 0 failures, 0 errors, 1 existing live-database integration test skipped**. New tests cover group deduplication, individual targets, rating-scale normalisation, invalid/missing data, legacy lecturer tags, active-course isolation, JSON handling, Hibernate query parsing against real entity mappings and Thymeleaf template/fragment rendering.
+- **8 Node calculation/export tests passed**, covering weighted available ratings, shared comparisons, combined filters, zero vs missing data, unassigned teams and CSV formula escaping.
+- **100 browser fixture checks passed** at desktop/tablet/mobile widths, including chart rendering, all main filters, individual student selection, reset, empty and connection-error states, assessment switching, URL state and layout bounds. Reviewed desktop and mobile screenshots of the actual Thymeleaf-rendered page with controlled score data.
+- Built the complete application image successfully as local `iams-analytics-check:local`. No live database, production deployment or Dokploy service was changed.
+
+---
+
+## Current Status: Persistent Upload Storage for Dokploy and Compose
+**Status**: REPOSITORY IMPLEMENTED — live Dokploy mount/setup still required
+**Date**: 2026-10-28
+
+### Deployment arrangement
+- The production deployment uses separate Dokploy app and database services. Upload persistence belongs on the app service; the existing database service and datasource configuration remain unchanged.
+- The Dockerfile explicitly sets `APP_UPLOAD_SUBMISSIONS_DIR=/app/uploads/submissions`, creates that directory and assigns `/app` ownership to the existing non-root `appuser`. This works independently of Compose.
+- Configure a Dokploy app-service bind mount from host `/srv/iams/uploads` to container `/app/uploads`. The image cannot create this host mount; it must be saved in Dokploy and the app redeployed after migrating any existing PDFs and preparing host ownership.
+
+### Repository changes
+- Added `DEPLOYMENT_STORAGE.md` with separate Dokploy app/database instructions, exact mount/environment fields, existing-report migration before container replacement, host ownership based on the image's actual appuser UID/GID, access verification and paired PDF/database backups.
+- Retained the repository's standalone Compose deployment option. Its app service now mounts `${APP_UPLOAD_HOST_DIR:-/srv/iams/uploads}` at `/app/uploads`, with explicit host-directory creation required. Existing MySQL/log volumes are preserved.
+- Documented the Compose-only host setting in `.env.example`; excluded uploads from the Docker build context; updated README and migration guidance so importing SQL alone is not presented as restoring PDFs.
+- PDF paths in the database remain relative. Submission metadata and vector doodles remain in the separate database; PDFs live in the host upload directory.
+
+### Validation
+- Docker Compose configuration validated with both the default host path and a custom host path, using example environment values.
+- Two isolated containers using the cached Java/Maven image exercised the Dockerfile's actual user/directory initialisation commands: appuser wrote a report fixture without root, and a replacement container read the persisted fixture from the same temporary bind mount.
+- Targeted whitespace checks passed. The production runtime image was not rebuilt, and no app/database service or live Dokploy configuration was changed.
+- Checked Dokploy's official application mount documentation: https://docs.dokploy.com/docs/core/applications/advanced
+
+---
+
+## Current Status: System-Wide Header Rollout Verified
+**Status**: IMPLEMENTED — all browser layout fixtures passed
+**Date**: 2026-10-28
+
+- Verified all 61 top-level pages load `system-ui.css` after feature styles and inline style blocks.
+- Centralised the accepted desktop/mobile header dimensions in shared CSS variables. Applied the logo dimensions to login, forgot-password and reset-password views as well as all role, assessment and profile headers.
+- Preserved the compact sidebar, restored sidebar appearance, SVG icons, breadcrumb arrangement and collapse controls.
+- Passed 268 browser fixture cases (67 page/role/layout variants at four widths) using the actual IAMS logo. Checks include exact logo width/maximum height, header padding, content offsets, fonts, role palettes, breadcrumbs and shell bounds.
+- Verification used static browser fixtures; live authenticated Thymeleaf rendering was not exercised.
+
+---
+
+## Current Status: Header Proportions Adjusted
+**Status**: IMPLEMENTED
+**Date**: 2026-10-28
+
+- Slightly increased the shared logo header to balance the compact sidebar: desktop logo width 150px → 170px, maximum height 52px → 60px, and vertical padding 12px → 14px.
+- Mobile headers use a 130px logo (maximum height 56px) and 12px vertical padding. Breadcrumb and sidebar proportions are retained.
+- Checked the final shared CSS overrides and whitespace; this small visual adjustment was not rerun through browser fixtures.
+
+---
+
+## Current Status: Compact Sidebar Sizing
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+- Reduced desktop sidebars from 240px to 220px and the content offset from 270px to 250px, including the PDF workstation.
+- Reduced mobile/tablet drawers to `min(82vw, 300px)` and aligned the close button with that width.
+- Tightened logo, user-profile, menu and course-switcher spacing; retained the restored role gradients, SVG icons, breadcrumb controls and 44px minimum link targets.
+- Centralised sidebar dimensions as shared CSS variables and included borders within the specified width.
+- All 170 browser interaction/style fixture checks passed, including five-role desktop/mobile dimensions, collapse/restore, and existing PDF navigation checks.
+
+---
+
+## Current Status: Previous Sidebar Appearance Restored
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+- Preserved the refined breadcrumb/menu-toggle arrangement, SVG navigation icons, collapse persistence, active-route handling, and mobile drawer controls.
+- Removed the new sidebar appearance overrides so each role again uses its established gradient IAMS header, white branding, coloured user profile panel, original link sizing/spacing, active gradients, and hover treatment.
+- Removed injected workspace subtitles and user-initial badges. The new icons remain alongside the original menu styling.
+- JavaScript syntax checks passed. All 160 browser interaction/style fixture checks passed, including original gradient/white branding across five sidebars and desktop/mobile navigation behaviour. Live authenticated rendering was not exercised.
+
+---
+
+## Current Status: Refined Breadcrumb & Sidebar UI
+**Status**: IMPLEMENTED — browser fixture checks passed
+**Date**: 2026-10-28
+
+### Refinements
+- Moved the sidebar toggle into the breadcrumb bar. Desktop controls display “Hide menu” / “Show menu” with a panel icon; narrow screens use a compact icon. The mobile close control remains accessible in the drawer header while open.
+- Refined breadcrumb spacing, muted parent links, reliable CSS chevrons, assessment context, and the role-coloured current-page marker. Long names wrap, with full context retained. Removed the floating-toggle spacer on mobile to recover vertical space.
+- Unified sidebar presentation: compact IAMS/workspace heading, user initial badge, inline SVG navigation icons, balanced link spacing, and subtle active-page backgrounds. Hover states no longer shift link text sideways.
+- Consolidated active-link selection in the shared controller, including nested routes, breadcrumb parent fallback, and student assessment/submission routing. Applied `aria-current` to the selected link and removed the redundant admin active-link script.
+- Preserved desktop collapse preference, full-width assessment layout, mobile overlay/Escape dismissal, focus handling, and reduced-motion support.
+
+### Validation
+- Headless Chrome: 140 interaction checks passed across all five sidebar variants, desktop/mobile controls, collapse persistence, mobile close-button hit testing, and the existing PDF navigation/draft-preservation checks.
+- Rechecked 268 page/role/viewport layout fixtures: no failures. Reviewed desktop expanded/collapsed and true mobile viewport screenshots.
+- JavaScript syntax and targeted whitespace checks passed. These remain static browser fixtures; live authenticated server rendering was not exercised.
+
+---
+
+## Current Status: PDF Assessment Navigation & Shared Navigation Improvements
+**Status**: IMPLEMENTED — browser fixture and interaction checks passed
+**Date**: 2026-10-28
+
+### PDF assessment workstation
+- Replaced the always-expanded annotation controls with a labelled Tools dropdown containing Navigate, Pen, Highlighter, Text Box, Eraser, colours, and stroke widths. History and save remain immediately accessible; clear-page and annotated download actions live in a Document dropdown.
+- Navigate is the initial tool: mouse dragging pans the report and touch scrolling remains available without adding ink accidentally.
+- Added direct page-number entry, Fit Page, zoom percentage, and keyboard Page Up/Page Down/Home/End navigation when the PDF region is focused. Page changes scroll only the PDF viewport, leaving the rubric and outer document in place.
+- Zoom and pane resizing retain the current page and relative reading position. A ResizeObserver handles sidebar/splitter reflows. Active text drafts are committed before reflow or switching tools.
+- Improved page-indicator tracking, fixed flex shrinking for independent scrolling, and removed the minimum PDF width that prevented fitting narrow panes. Mobile views stack the panes without a redundant splitter.
+- Made the assessment title white in the evaluation header, and reduced toolbar/button and shared logo-header sizes to increase reading space.
+
+### System navigation
+- Consolidated all five sidebar fragments onto `sidebar-toggle.js`. Desktop sidebars can collapse and expand, with the preference retained across pages. The content area expands into the released space, including the assessment workstation.
+- Kept mobile drawer behaviour with overlay/Escape dismissal, focus containment, hidden-sidebar focus exclusion, and accurate expanded/collapsed labels. Integrated the existing Zen layout with the shared toggle.
+- Added a reusable server-rendered `fragments/breadcrumb.html` and filled navigation gaps across all 61 top-level pages. Existing assessment-specific breadcrumbs remain intact. New breadcrumbs use role-appropriate parent links, assessment context when available, and a current-page marker; login/recovery/error views have public navigation.
+- Breadcrumbs and sidebar controls are excluded from print layouts.
+
+### Validation and remaining limits
+- JavaScript syntax checks passed for both modified scripts.
+- Headless Chrome: 90 interaction checks passed, covering all five sidebars at desktop/mobile widths, collapse/restore, stored preference, overlay/Escape, tool dropdowns, page entry and bounds, isolated PDF scrolling, zoom/page/annotation preservation, text-draft preservation, white assessment title, and read-only navigation.
+- Rechecked 67 static page/role/layout fixtures at 1440/1024/768/375px (268 cases) for breadcrumb presence, reduced logo sizing, typography, role palettes, and shell bounds: no failures. Visually inspected a desktop workstation preview.
+- PDF interaction fixtures use a controlled four-page PDF renderer and local annotation responses; smooth scrolling is made immediate in the test harness for deterministic headless checks. Live authenticated workflows and database persistence were not retested. The local Java runtime/Maven are unavailable, so Thymeleaf server rendering was not exercised in this pass.
+
+---
+
+## Current Status: System Font Consistency
+**Status**: IMPLEMENTED — headless browser typography checks passed
+**Date**: 2026-10-28
+
+### Changes
+- Found that Inter was declared throughout the system but never supplied as a font asset. Different fallback stacks, Poppins imports on rubric template pages, an Arial legacy stylesheet, monospace deadline labels, and Arial Narrow print tables could produce visibly different typefaces.
+- Added self-hosted Inter variable normal and italic WOFF2 fonts, with the upstream SIL Open Font License, under `static/css/fonts/inter/`. This uses the existing public `/css/**` resource rule, including on login and password recovery pages. No third-party font request is needed.
+- Defined the shared `--ui-font` family and text-size/weight tokens in `system-ui.css`. Updated all authored CSS/template font-family declarations to use that family, and removed the two Poppins imports.
+- Applied the shared family to headings, navigation, forms, buttons, labels, tables, placeholders, and upload buttons. Deadline dates retain aligned digits with `font-variant-numeric: tabular-nums` using the same typeface.
+- Standardised the base text and navigation weight, while keeping heading/control size hierarchy, print-specific sizing, icon fonts, and user-selected PDF annotation formatting.
+
+### Validation
+- Headless Chrome checked 67 page/role/layout fixtures at four widths (268 cases). Each case loaded real Inter regular, medium, semibold, bold, and italic font faces and checked computed families on text and form controls, alongside the existing shell/palette checks: no failures.
+- Static audit: no remaining authored Arial, Arial Narrow, monospace, or Poppins font-family overrides in application CSS/templates. Live authenticated workflows remain outside these fixture checks.
+
+---
+
+## Current Status: Shared System Style Consistency
+**Status**: IMPLEMENTED — browser fixture checks completed; live authenticated review pending
+**Date**: 2026-10-28
+
+### Changes
+- Audited the 61 top-level Thymeleaf pages and their feature stylesheets. Found inconsistent header treatment, content padding, sidebar widths, control typography, and admin colours hardcoded into lecturer pages.
+- Added `src/main/resources/static/css/system-ui.css`, loaded last in all 61 page heads. This is the shared visual contract for typography, role palettes, shell spacing, brand headers, common cards, text controls, action buttons, alerts, breadcrumbs, and keyboard focus indicators.
+- Added explicit `data-ui-role` attributes. Profile and submission feedback pages resolve their role with Thymeleaf so shared pages retain the active subsystem palette.
+- Preserved admin/super-admin maroon, lecturer green, student crimson, and supervisor blue. Replaced hardcoded admin maroon in lecturer templates with the shared role token.
+- Standardised desktop sidebar width to 240px with a 270px content offset, and responsive drawers at the existing 1279px breakpoint. Unified mobile content spacing leaves room for the sidebar toggle.
+- Kept screen layout rules out of print media and excluded the assessment workstation from shared content sizing so split scrolling and Zen mode retain their specialised layout.
+
+### Validation and limits
+- Headless Chrome: 67 static template fixtures (61 pages plus role and split/Zen variants) at 1440, 1024, 768, and 375px; 268 checks for role palette, content offset, shell/header overflow, gradient headers, and stylesheet availability passed.
+- These checks use template markup and actual CSS, without backend data or authentication. They do not replace live workflow and visual review with populated tables and reports.
+- No Java or application behaviour changes were required for this style pass. Existing backend/PDF work in the working tree was preserved.
+
+### Maintaining consistency
+- Load `system-ui.css` after feature styles and inline style blocks on new pages. Set `data-ui-role` to `admin`, `super_admin`, `lecturer`, `student`, `supervisor`, or `public`.
+- Use `--ui-primary`, `--ui-primary-light`, `--ui-primary-soft`, `--ui-border`, and the shared radius/font tokens for new components. Keep page-specific layout and semantic status colours in feature stylesheets.
+
+---
+
+## Current Status: Doodle Reflection on Student Page Fix & Enhanced Side-by-Side Assessor Workstation
+**Status**: COMPLETED
+**Date**: 2026-10-28
+
+### 1. Root Cause Analysis & Doodle Persistence Fix
+#### Issues Identified
+1. **Jackson Lazy Proxy Serialization Failure (HTTP 500)**:
+   - When students visited `/student/assessment/{id}/submission/view`, the front-end fetched `/student/assessment/{id}/submission/annotations`.
+   - `SubmissionAnnotation` had `@ManyToOne(fetch = FetchType.LAZY)` on `submission` and `lecturer` without `@JsonIgnore`.
+   - Jackson attempted to serialize Hibernate `ByteBuddyInterceptor` proxies outside an open transaction, throwing `LazyInitializationException` / `InvalidDefinitionException` (HTTP 500).
+   - In `pdf-doodle-studio.js`, `!response.ok` failed silently with an empty annotation store, leaving the PDF blank without doodles on the student's end.
+2. **Early Return in Lecturer Evaluation Submission**:
+   - In [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java), when evaluating an individual student (`isStudentTarget != null && isStudentTarget`), `submitCombinedEvaluation` returned early at line 693 without ever executing the doodle persistence block (which was placed at line 818).
+   - Doodles submitted during individual student evaluations were completely dropped.
+3. **Incompatible Jackson Tree Traversal Method**:
+   - `AssessmentSubmissionService.saveAllAnnotationsFromJson` invoked `root.properties()`, which was only introduced in Jackson 2.16. Older Jackson releases threw a runtime `NoSuchMethodError`.
+4. **Missing Explicit Submission Identifier in Evaluation Form**:
+   - The combined evaluation form only transmitted `groupId` or `studentId`. If an assessment had individual student submissions under a group scope, the controller risked querying the wrong submission entity.
+
+#### Resolutions Implemented
+1. **Model Serialization Hardening ([`SubmissionAnnotation.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/SubmissionAnnotation.java))**:
+   - Annotated `submission` and `lecturer` fields and getters with `@JsonIgnore`.
+   - Added lightweight `@JsonProperty("submissionId")` and `@JsonProperty("lecturerId")` getter methods to ensure clean, flat JSON serialization without Hibernate proxy leaks.
+2. **Controller Pipeline Restructuring ([`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java))**:
+   - Relocated doodle persistence to the very beginning of `submitCombinedEvaluation`, executing before any branching returns (both group and individual evaluation flows).
+   - Added hidden `submissionId` input into [`lecturer_combined_evaluation_form.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_combined_evaluation_form.html) with fallback resolution via `getSubmissionForTarget`.
+   - Safely handled null returns from `saveSubmissionAnnotation` when empty strokes are submitted.
+   - Added `@Transactional(readOnly = true)` to annotation retrieval endpoints across [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java), [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java), and [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java).
+3. **Backend Service Enhancements ([`AssessmentSubmissionService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AssessmentSubmissionService.java))**:
+   - Replaced `root.properties()` with backward-compatible `root.fields().forEachRemaining(...)` iterator.
+   - Updated `saveOrUpdateAnnotation` to skip persisting redundant empty rows (`"[]"` or blank) for untouched pages.
+   - Added fallback logic in `getSubmissionForTarget` to look up group members' submissions if a group-level submission row is absent.
+4. **Frontend Studio Robustness ([`pdf-doodle-studio.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/pdf-doodle-studio.js))**:
+   - Updated `loadAnnotations()` to handle both stringified and pre-parsed JSON objects.
+   - Aggregated multi-assessor marks seamlessly per page.
+   - Automatically invokes `redrawDoodlesForPage()` on all visible and pre-rendered pages once annotation fetching resolves asynchronously.
+
+---
+
+### 2. Enhanced Side-by-Side Assessor Workstation
+#### UX/UI Features Implemented
+1. **Interactive Draggable Splitter Handle**:
+   - Added `.split-divider-handle` and `.split-divider-grip` between the PDF and Rubrics panes.
+   - Assessors can freely click-and-drag horizontally to adjust the viewport ratio between 20% and 80%, with mouse and touch support.
+   - Automatically triggers `activeStudio.zoomFit()` on drag release to maintain optimal PDF scaling.
+2. **Instant Preset Layout Toggles**:
+   - `50/50 Split`: Balanced side-by-side view for standard grading.
+   - `Focus Report (70/30)`: Expands PDF pane to 70% width for detailed reading of diagrams and dense technical reports.
+   - `Focus Rubric (30/70)`: Expands Rubric pane to 70% width for rapid grading of complex rubrics with extensive criteria.
+3. **Full-Width Zen Focus Mode**:
+   - Added `.btn-zen` toggle button in the control bar.
+   - Smoothly slides away the global navigation sidebar (`transform: translateX(-100%)`) and expands the dual workstation across 100% of the screen.
+   - Maximizes screen real estate on laptops and smaller desktop displays.
+4. **Live Completion Tracker & Auto-Navigator**:
+   - Added `.workstation-progress-badge` with an integrated mini progress bar (`.workstation-mini-bar-fill`).
+   - Dynamically monitors all radio button rating groups and mandatory comment textareas in real-time.
+   - Displays live stats (e.g. `4/6 Criteria (67%)`), transitioning to a vibrant green `All Criteria Done!` badge upon 100% completion.
+   - Clicking the badge activates `scrollToNextIncomplete()`, which automatically identifies the first unanswered criterion or unfilled comment, smoothly scrolls it into view, and highlights it with an animated pulse ring.
+5. **Sticky Rubric Quick Jump Navigation Bar**:
+   - Positioned at the top of the rubric pane (`.rubric-quick-nav`).
+   - Automatically generates navigation pills for every rubric section and comment category.
+   - Clicking a pill smoothly scrolls directly to that section.
+   - Section pills update with a green checkmark as each section's criteria are completed.
+6. **Compact Evaluation Header**:
+   - Replaced bulky tables with a clean metadata row and target badge.
+   - Member lists are consolidated into a collapsible chip tray (`toggleMembersChipList()`), saving up to 150px of vertical space.
+   - Admin evaluation guidelines are tucked into a collapsible callout (`toggleAdminNotes()`).
+
+---
+
 ## Current Status: Comprehensive Full-Fledged System Testing & Error Resolution
 **Status**: COMPLETED
 **Date**: 2026-10-28

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecturer Evaluation Analytics - IAMS</title>
+    <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_analytics.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <script defer th:src="@{/js/lecturer-analytics.js}"></script>
+</head>
+<body data-ui-role="admin" class="admin-page analytics-page">
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+    <main class="main-content">
+        <div class="header"><div class="header-container"><img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"></div></div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Data Views', '/admin/data-views', 'Lecturer Evaluation Analytics')}"></nav>
+        <section id="lecturer-analytics" th:data-endpoint="@{/admin/analytics/lecturer-comparison/data}" aria-labelledby="analytics-title">
+            <div class="analytics-heading">
+                <div><p class="analytics-eyebrow">ASSESSOR COMPARISON <span th:if="${activeCourse != null}" th:text="' / ' + ${activeCourse.courseCode}"></span></p>
+                    <h1 id="analytics-title">How do lecturers evaluate?</h1>
+                    <p>Compare awarded scores within one assessment, across teams and rubric criteria.</p>
+                </div>
+                <div class="analytics-actions"><button type="button" id="analytics-export" class="btn-secondary" disabled>Export comparison CSV</button><button type="button" id="analytics-print" class="btn-secondary">Print</button></div>
+            </div>
+            <form id="analytics-filters" class="analytics-filter-card" aria-label="Analytics filters">
+                <div class="analytics-primary-filters">
+                    <label>Assessment<select id="analytics-assessment" name="assessmentId" required>
+                        <option th:each="item : ${analyticsAssessments}" th:value="${item.id}" th:text="${item.label}" th:selected="${item.id == selectedAssessmentId}"></option>
+                        <option th:if="${#lists.isEmpty(analyticsAssessments)}" value="">No assessments in the active course</option>
+                    </select></label>
+                    <label>Team<select id="analytics-team" name="team"><option value="">All teams</option></select></label>
+                    <label>Evaluation type<select id="analytics-scope" name="scope"><option value="">Group &amp; individual</option><option value="GROUP">Group evaluation</option><option value="INDIVIDUAL">Individual evaluation</option></select></label>
+                    <details class="analytics-lecturer-picker"><summary id="analytics-lecturer-label">All lecturers</summary><div class="analytics-lecturer-options"><div class="analytics-picker-actions"><button type="button" id="analytics-all-lecturers">Select all</button><button type="button" id="analytics-no-lecturers">Clear</button></div><fieldset id="analytics-lecturer-list"><legend class="sr-only">Lecturers to compare</legend></fieldset></div></details>
+                </div>
+                <div class="analytics-filter-footer"><details id="analytics-more-filters"><summary>More filters</summary><div class="analytics-extra-filters">
+                    <label>Rubric<select id="analytics-rubric" name="rubric"><option value="">All rubrics</option></select></label>
+                    <label>CLO<select id="analytics-clo" name="clo"><option value="">All CLOs</option></select></label>
+                    <label>Student (individual only)<select id="analytics-student" name="student"><option value="">All students</option></select></label>
+                    <label>Submission status<select id="analytics-status" name="status"><option value="">Final &amp; submitted</option><option value="FINAL">Final only</option><option value="SUBMITTED">Submitted only</option></select></label>
+                    <label class="analytics-checkbox"><input id="analytics-shared" type="checkbox" name="shared">Only criteria assessed by two or more selected lecturers</label>
+                </div></details><button type="button" id="analytics-reset" class="analytics-reset">Reset filters</button></div>
+            </form>
+            <div id="analytics-status-message" class="analytics-message" role="status" aria-live="polite">Loading lecturer evaluations…</div>
+            <div id="analytics-error" class="analytics-message analytics-error" role="alert" hidden><span id="analytics-error-text"></span><button type="button" id="analytics-retry">Try again</button></div>
+            <noscript><p class="analytics-message">Enable JavaScript to filter and compare lecturer evaluations.</p></noscript>
+            <div id="analytics-content" hidden>
+                <div class="analytics-kpis" aria-label="Comparison summary">
+                    <article><span>Lecturers in view</span><strong id="analytics-kpi-lecturers">—</strong><small>With scored criteria in this selection</small></article>
+                    <article><span>Evaluation targets</span><strong id="analytics-kpi-targets">—</strong><small>One team or one individual student</small></article>
+                    <article><span>Mean awarded score</span><strong id="analytics-kpi-mean">—</strong><small>Each lecturer–target evaluation counts once</small></article>
+                    <article><span>Largest matched-pair gap</span><strong id="analytics-kpi-gap">—</strong><small>Mean absolute difference, percentage points</small></article>
+                    <article><span>Agreement within 10 pp</span><strong id="analytics-kpi-agreement">—</strong><small id="analytics-agreement-sample">Paired ratings on the same target and criterion</small></article>
+                    <article><span>Typical shared-criterion spread</span><strong id="analytics-kpi-spread">—</strong><small id="analytics-spread-sample">Median highest–lowest rating difference</small></article>
+                </div>
+                <div id="analytics-empty" class="analytics-empty" hidden><h2>No evaluations match these filters</h2><p>Try another team or assessment, select more lecturers, or clear the shared-criteria filter. Missing evaluations are not counted as zero.</p></div>
+                <div id="analytics-visuals">
+                    <div class="analytics-chart-grid">
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Scores by lecturer</h2><p>Mean normalised score; dots show the lowest and highest target scores.</p></div><span class="analytics-unit">0–100%</span></div><div id="analytics-average-chart" class="analytics-chart"></div></article>
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Agreement on shared criteria</h2><p>Lecturer pairs compared on the same target and criterion.</p></div><span class="analytics-unit">Percentage points</span></div><div id="analytics-gap-chart" class="analytics-chart"></div></article>
+                    </div>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Team comparison</h2><p>Compare lecturers within each team. Group and individual evaluations appear separately.</p></div></div><div id="analytics-team-chart" class="analytics-chart"></div></article>
+                    <div class="analytics-chart-grid">
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Rubric comparison</h2><p>Mean target score by rubric and lecturer. A dash means no evaluation.</p></div></div><div id="analytics-rubric-chart" class="analytics-table-wrap"></div></article>
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Score distribution</h2><p>Box-and-whisker plots compare the median, middle half and full range of target scores.</p></div></div><div id="analytics-distribution-chart" class="analytics-chart"></div></article>
+                    </div>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Rating alignment</h2><p>One point per shared target and criterion. The diagonal represents equal ratings.</p></div><label class="analytics-pair-label">Lecturer pair<select id="analytics-pair" aria-label="Lecturer pair for rating alignment"></select></label></div><div id="analytics-alignment-chart" class="analytics-chart"></div></article>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Evaluation breakdown</h2><p>Inspect the scores behind the charts, including evaluated criteria and available marks.</p></div><span id="analytics-row-count" class="analytics-unit"></span></div><div class="analytics-table-wrap"><table class="analytics-table"><caption class="sr-only">Filtered lecturer evaluations grouped by target and rubric</caption><thead><tr><th>Lecturer</th><th>Team / student</th><th>Type</th><th>Rubric</th><th>Criteria scored</th><th>Awarded / available</th><th>Score</th></tr></thead><tbody id="analytics-breakdown"></tbody></table></div><button type="button" id="analytics-show-more" class="analytics-reset" hidden>Show more rows</button></article>
+                </div>
+                <details class="analytics-method"><summary>How to read these comparisons</summary><p>Only lecturer evaluations marked Final or Submitted are included; drafts and student peer/self evaluations are excluded. Scores are divided by the highest configured rating for each criterion and expressed as percentages (the stored criterion maximum is used for legacy criteria without ratings). These are comparisons of awarded ratings, before final grade or factor adjustments. Each target score uses the marks available for its scored criteria; missing criteria are not treated as zero.</p><p>Group evaluations copied to team members count once per lecturer, team and criterion. Team filters use current team membership. Lecturer averages describe the selected work, so differences can also reflect different teams or rubric assignments. Use the shared-criteria filter and paired-gap chart for comparisons on the same work. The paired gap is the mean absolute difference between criterion percentages, weighted equally per matched criterion.</p><p>Agreement within 10 pp is the proportion of all matched lecturer-pair ratings whose difference is at most 10 percentage points. This fixed band describes proximity, not grading quality. Typical shared-criterion spread is the median of the highest minus lowest rating percentage on each target and criterion scored by at least two selected lecturers. Each target–criterion combination counts once, even when three or more lecturers rated it. Box-plot quartiles use linear interpolation.</p><p id="analytics-excluded-note"></p></details>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

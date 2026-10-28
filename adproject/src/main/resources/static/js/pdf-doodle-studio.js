@@ -40,7 +40,7 @@
             this.dirtyPages = new Set();
 
             // Drawing properties
-            this.currentTool = 'pen'; // 'pen', 'highlighter', 'text', 'eraser'
+            this.currentTool = 'hand'; // Navigate first; drawing requires an explicit tool selection.
             this.currentColor = '#4A0018';
             this.currentSize = 4;
             this.isDrawing = false;
@@ -74,32 +74,41 @@
             this.container.innerHTML = `
                 <div class="pdf-doodle-toolbar">
                     <div class="toolbar-group">
-                        <button type="button" class="doodle-btn" id="btn-prev-page" title="Scroll to Previous Page">
-                            <i class="fas fa-chevron-left"></i>
+                        <button type="button" class="doodle-btn" id="btn-prev-page" aria-label="Previous PDF page" title="Scroll to Previous Page">
+                            <span aria-hidden="true">‹</span>
                         </button>
-                        <span class="page-counter">
-                            Page <span id="current-page-num">1</span> / <span id="total-page-count">--</span>
-                        </span>
-                        <button type="button" class="doodle-btn" id="btn-next-page" title="Scroll to Next Page">
-                            <i class="fas fa-chevron-right"></i>
+                        <label class="page-counter" for="pdf-page-jump">Page
+                            <input id="pdf-page-jump" type="number" min="1" value="1" disabled aria-label="Go to PDF page">
+                            <span class="sr-only" id="current-page-num">1</span>
+                            / <span id="total-page-count">--</span>
+                        </label>
+                        <button type="button" class="doodle-btn" id="btn-next-page" aria-label="Next PDF page" title="Scroll to Next Page">
+                            <span aria-hidden="true">›</span>
                         </button>
                     </div>
 
                     <div class="toolbar-group">
-                        <button type="button" class="doodle-btn" id="btn-zoom-out" title="Zoom Out">
-                            <i class="fas fa-search-minus"></i>
+                        <button type="button" class="doodle-btn" id="btn-zoom-out" aria-label="Zoom out" title="Zoom Out">
+                            <span aria-hidden="true">−</span>
                         </button>
                         <button type="button" class="doodle-btn" id="btn-zoom-fit" title="Fit Width">
                             <i class="fas fa-arrows-alt-h"></i> Fit Width
                         </button>
-                        <button type="button" class="doodle-btn" id="btn-zoom-in" title="Zoom In">
-                            <i class="fas fa-search-plus"></i>
+                        <button type="button" class="doodle-btn" id="btn-fit-page" title="Fit a complete page in the PDF pane">Fit Page</button>
+                        <span class="pdf-zoom-label" id="pdf-zoom-label" aria-live="polite">100%</span>
+                        <button type="button" class="doodle-btn" id="btn-zoom-in" aria-label="Zoom in" title="Zoom In">
+                            <span aria-hidden="true">+</span>
                         </button>
                     </div>
 
                     ${!this.readOnly ? `
-                    <div class="toolbar-group">
-                        <button type="button" class="doodle-btn active" id="tool-pen" data-tool="pen" title="Freehand Pen">
+                    <details class="pdf-toolbar-menu" id="pdf-tools-menu">
+                        <summary class="doodle-btn">Tools: <span id="pdf-active-tool">Navigate</span> <span aria-hidden="true">▾</span></summary>
+                        <div class="pdf-menu-panel">
+                        <div class="pdf-menu-heading">Annotation tools</div>
+                        <div class="pdf-tool-grid">
+                        <button type="button" class="doodle-btn active" data-tool="hand" aria-pressed="true" title="Drag to move around the report">Navigate</button>
+                        <button type="button" class="doodle-btn" id="tool-pen" data-tool="pen" title="Freehand Pen">
                             <i class="fas fa-pen"></i> Pen
                         </button>
                         <button type="button" class="doodle-btn" id="tool-highlighter" data-tool="highlighter" title="Highlighter">
@@ -134,15 +143,14 @@
                         </button>
                     </div>
 
+                        </div>
+                    </details>
                     <div class="toolbar-group">
-                        <button type="button" class="doodle-btn" id="btn-undo" title="Undo (Ctrl+Z)" disabled>
-                            <i class="fas fa-undo"></i>
+                        <button type="button" class="doodle-btn" id="btn-undo" aria-label="Undo annotation" title="Undo (Ctrl+Z)" disabled>
+                            <span aria-hidden="true">↶</span>
                         </button>
-                        <button type="button" class="doodle-btn" id="btn-redo" title="Redo (Ctrl+Y)" disabled>
-                            <i class="fas fa-redo"></i>
-                        </button>
-                        <button type="button" class="doodle-btn" id="btn-clear" title="Clear Current Page Markups">
-                            <i class="fas fa-trash-alt"></i> Clear Page
+                        <button type="button" class="doodle-btn" id="btn-redo" aria-label="Redo annotation" title="Redo (Ctrl+Y)" disabled>
+                            <span aria-hidden="true">↷</span>
                         </button>
                         <button type="button" class="doodle-btn" id="btn-save" style="background:var(--doodle-primary); border-color:var(--doodle-accent); font-weight:600;">
                             <i class="fas fa-save"></i> Save Ink
@@ -156,17 +164,23 @@
                     </div>
                     `}
 
-                    <div class="toolbar-group">
+                    <details class="pdf-toolbar-menu pdf-actions-menu">
+                        <summary class="doodle-btn">Document <span aria-hidden="true">▾</span></summary>
+                        <div class="pdf-menu-panel">
+                        ${!this.readOnly ? '<button type="button" class="doodle-btn" id="btn-clear">Clear current page annotations</button>' : ''}
                         <button type="button" class="doodle-btn" id="btn-export-annotated-pdf" style="background:#047857; border-color:#10b981; font-weight:600;" title="Download PDF with Assessor Markups &amp; Text Notes Baked In">
                             <i class="fas fa-file-download"></i> Download Annotated PDF
                         </button>
+                        </div>
+                    </details>
+                    <div class="toolbar-group pdf-save-status" role="status">
                         <span class="save-status-indicator saved" id="save-status">
                             <i class="fas fa-check-circle"></i> Ready
                         </span>
                     </div>
                 </div>
 
-                <div class="pdf-viewport" id="pdf-viewport">
+                <div class="pdf-viewport" id="pdf-viewport" tabindex="0" role="region" aria-label="PDF report. Use Page Up and Page Down to navigate.">
                     <div class="pdf-continuous-scroll-wrapper" id="pdf-scroll-wrapper"></div>
                     <div class="pdf-loading-overlay" id="pdf-loading-overlay">
                         <div class="pdf-loading-spinner"></div>
@@ -185,6 +199,33 @@
             // Page navigation via scrolling
             this.container.querySelector('#btn-prev-page').addEventListener('click', () => this.scrollToPrevPage());
             this.container.querySelector('#btn-next-page').addEventListener('click', () => this.scrollToNextPage());
+
+            const jump = this.container.querySelector('#pdf-page-jump');
+            const jumpToInput = () => {
+                const page = Number(jump.value);
+                if (Number.isInteger(page) && page >= 1 && page <= this.totalPageCount) this.scrollToPage(page);
+                else jump.value = this.currentPageNum;
+            };
+            jump.addEventListener('change', jumpToInput);
+            jump.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); jumpToInput(); this.viewportEl.focus(); } });
+            this.viewportEl.addEventListener('keydown', e => {
+                if (e.target !== this.viewportEl) return;
+                const page = { PageDown: this.currentPageNum + 1, PageUp: this.currentPageNum - 1, Home: 1, End: this.totalPageCount }[e.key];
+                if (page !== undefined) { e.preventDefault(); this.scrollToPage(page); }
+            });
+            this.container.querySelector('#btn-fit-page').addEventListener('click', () => this.zoomFitPage());
+            this.container.querySelectorAll('details.pdf-toolbar-menu').forEach(menu => {
+                menu.setAttribute('name', 'pdf-tools-' + (this.container.id || 'studio'));
+                menu.querySelector('summary').addEventListener('click', () => {
+                    if (!menu.open) this.container.querySelectorAll('details.pdf-toolbar-menu').forEach(other => { if (other !== menu) other.open = false; });
+                });
+            });
+            document.addEventListener('click', e => {
+                this.container.querySelectorAll('details.pdf-toolbar-menu[open]').forEach(menu => { if (!menu.contains(e.target)) menu.open = false; });
+            });
+            this.container.addEventListener('keydown', e => {
+                if (e.key === 'Escape') this.container.querySelectorAll('details.pdf-toolbar-menu[open]').forEach(menu => { menu.open = false; menu.querySelector('summary').focus(); });
+            });
 
             // Scroll listener on viewport to update page indicator
             this.viewportEl.addEventListener('scroll', () => {
@@ -206,10 +247,15 @@
                 // Tools
                 this.container.querySelectorAll('[data-tool]').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        this.container.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active'));
+                        this.commitActiveTextEditor();
+                        this.container.querySelectorAll('[data-tool]').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
                         const target = e.currentTarget;
                         target.classList.add('active');
                         this.currentTool = target.dataset.tool;
+                        target.setAttribute('aria-pressed', 'true');
+                        this.container.querySelector('#pdf-active-tool').textContent = {hand:'Navigate', pen:'Pen', highlighter:'Highlighter', text:'Text Box', eraser:'Eraser'}[this.currentTool];
+                        this.container.querySelector('#pdf-tools-menu').open = false;
+                        this.container.querySelector('#pdf-tools-menu summary').focus();
                         this.updateCanvasesToolClass();
                     });
                 });
@@ -243,6 +289,7 @@
                 // Global Pointer up & move for smooth strokes & dragging
                 window.addEventListener('pointermove', (e) => this.onGlobalPointerMove(e));
                 window.addEventListener('pointerup', (e) => this.onGlobalPointerUp(e));
+                window.addEventListener('pointercancel', (e) => this.onGlobalPointerUp(e));
 
                 // Keyboard shortcuts for Undo/Redo
                 window.addEventListener('keydown', (e) => {
@@ -255,6 +302,20 @@
                         this.redo();
                     }
                 });
+            }
+
+            // Observe the pane itself: sidebar collapse and splitter changes need a re-fit too.
+            if (typeof ResizeObserver !== 'undefined') {
+                let lastWidth = this.viewportEl.clientWidth;
+                let lastHeight = this.viewportEl.clientHeight;
+                this.resizeObserver = new ResizeObserver(() => {
+                    const width = this.viewportEl.clientWidth, height = this.viewportEl.clientHeight;
+                    if (Math.abs(width - lastWidth) < 2 && (!this.fitPage || Math.abs(height - lastHeight) < 2)) return;
+                    lastWidth = width; lastHeight = height;
+                    clearTimeout(this.paneResizeTimer);
+                    this.paneResizeTimer = setTimeout(() => { if ((this.fitWidth || this.fitPage) && this.pdfDoc) this.renderAllPages(); }, 180);
+                });
+                this.resizeObserver.observe(this.viewportEl);
             }
 
             // Window resize: re-fit if in fitWidth mode
@@ -289,6 +350,9 @@
                 this.totalPageCount = this.pdfDoc.numPages;
 
                 this.container.querySelector('#total-page-count').textContent = this.totalPageCount;
+                const jump = this.container.querySelector('#pdf-page-jump');
+                jump.max = this.totalPageCount;
+                jump.disabled = false;
                 this.updatePageNav();
                 await this.renderAllPages();
                 if (this.loadingOverlay) {
@@ -313,13 +377,30 @@
                         data.forEach(ann => {
                             if (ann.pageNumber && ann.strokesJson) {
                                 try {
-                                    this.annotationsByPage[ann.pageNumber] = JSON.parse(ann.strokesJson);
+                                    const parsed = typeof ann.strokesJson === 'string'
+                                        ? JSON.parse(ann.strokesJson)
+                                        : ann.strokesJson;
+                                    if (Array.isArray(parsed)) {
+                                        if (!this.annotationsByPage[ann.pageNumber]) {
+                                            this.annotationsByPage[ann.pageNumber] = [];
+                                        }
+                                        this.annotationsByPage[ann.pageNumber].push(...parsed);
+                                    }
                                 } catch (e) {
                                     console.warn('Failed parsing strokes for page ' + ann.pageNumber, e);
                                 }
                             }
                         });
+
+                        // Immediately redraw any already-rendered pages
+                        if (this.pages && Object.keys(this.pages).length > 0) {
+                            for (const p in this.pages) {
+                                this.redrawDoodlesForPage(parseInt(p, 10));
+                            }
+                        }
                     }
+                } else {
+                    console.error('PdfDoodleStudio: Failed loading annotations, HTTP ' + response.status);
                 }
             } catch (err) {
                 console.warn('Could not load existing annotations:', err);
@@ -327,22 +408,30 @@
         }
 
         async renderAllPages() {
-            if (this.isRenderingAll || !this.pdfDoc) return;
+            if (!this.pdfDoc) return;
+            if (this.isRenderingAll) { this.pendingRender = true; return; }
             this.isRenderingAll = true;
+            const savedPage = this.currentPageNum;
+            const oldPage = this.pages[savedPage];
+            const savedFraction = oldPage ? (this.viewportEl.scrollTop - oldPage.container.offsetTop) / oldPage.height : 0;
+            try {
 
-            // Close open text box if any
+            // Preserve a text draft before a zoom, splitter or sidebar reflow.
+            this.commitActiveTextEditor();
             this.closeTextEditor();
 
             this.scrollWrapper.innerHTML = '';
             this.pages = {};
 
             // Calculate scale
-            if (this.fitWidth) {
+            if (this.fitWidth || this.fitPage) {
                 try {
                     const page1 = await this.pdfDoc.getPage(1);
                     const unscaled = page1.getViewport({ scale: 1.0 });
-                    const targetWidth = Math.max(340, this.viewportEl.clientWidth - 48);
-                    this.scale = Math.max(0.4, Math.min(2.5, targetWidth / unscaled.width));
+                    const targetWidth = Math.max(100, this.viewportEl.clientWidth - 48);
+                    const widthScale = targetWidth / unscaled.width;
+                    const heightScale = Math.max(100, this.viewportEl.clientHeight - 64) / unscaled.height;
+                    this.scale = Math.max(0.1, Math.min(2.5, this.fitPage ? Math.min(widthScale, heightScale) : widthScale));
                 } catch (e) {
                     this.scale = 1.0;
                 }
@@ -395,10 +484,10 @@
                 };
 
                 // Render PDF background
-                page.render({
+                await page.render({
                     canvasContext: pdfCtx,
                     viewport: viewport
-                });
+                }).promise;
 
                 // Attach drawing and dragging pointer events
                 if (!this.readOnly) {
@@ -409,9 +498,15 @@
                 this.redrawDoodlesForPage(p);
             }
 
-            this.isRenderingAll = false;
-            this.updateCurrentPageFromScroll();
+            const restoredPage = this.pages[savedPage];
+            if (restoredPage) this.viewportEl.scrollTo({ top: oldPage ? restoredPage.container.offsetTop + savedFraction * restoredPage.height : 0, behavior: 'instant' });
+            this.container.querySelector('#pdf-zoom-label').textContent = Math.round(this.scale * 100) + '%';
+            this.updateCurrentPageFromScroll(true);
             this.updateUndoRedoButtons();
+            } finally {
+                this.isRenderingAll = false;
+                if (this.pendingRender) { this.pendingRender = false; this.renderAllPages(); }
+            }
         }
 
         attachPageEvents(canvas, pageNum) {
@@ -419,21 +514,19 @@
             canvas.addEventListener('pointermove', (e) => this.onPagePointerMove(e, pageNum));
         }
 
-        updateCurrentPageFromScroll() {
+        updateCurrentPageFromScroll(force = false) {
+            if (this.isRenderingAll && !force) return;
             const viewportRect = this.viewportEl.getBoundingClientRect();
             let activePage = 1;
-            let minDistance = Infinity;
+            const readingLine = viewportRect.top + Math.min(100, viewportRect.height * 0.2);
 
             for (let p = 1; p <= this.totalPageCount; p++) {
                 const pageInfo = this.pages[p];
                 if (!pageInfo || !pageInfo.container) continue;
 
                 const rect = pageInfo.container.getBoundingClientRect();
-                const dist = Math.abs(rect.top - viewportRect.top);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    activePage = p;
-                }
+                activePage = p;
+                if (rect.bottom > readingLine) break;
             }
 
             if (activePage !== this.currentPageNum) {
@@ -447,9 +540,10 @@
 
         scrollToPage(pageNum) {
             if (pageNum < 1 || pageNum > this.totalPageCount) return;
-            const targetContainer = document.getElementById('page-container-' + pageNum);
+            const targetContainer = this.pages[pageNum]?.container;
             if (targetContainer) {
-                targetContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const top = targetContainer.getBoundingClientRect().top - this.viewportEl.getBoundingClientRect().top + this.viewportEl.scrollTop - 24;
+                this.viewportEl.scrollTo({ top, behavior: 'smooth' });
             }
         }
 
@@ -467,11 +561,19 @@
 
         zoom(multiplier) {
             this.fitWidth = false;
+            this.fitPage = false;
             this.scale = Math.min(3.0, Math.max(0.4, this.scale * multiplier));
             this.renderAllPages();
         }
 
+        zoomFitPage() {
+            this.fitWidth = false;
+            this.fitPage = true;
+            this.renderAllPages();
+        }
+
         zoomFit() {
+            this.fitPage = false;
             this.fitWidth = true;
             this.renderAllPages();
         }
@@ -481,6 +583,8 @@
             const nextBtn = this.container.querySelector('#btn-next-page');
             if (prevBtn) prevBtn.disabled = this.currentPageNum <= 1;
             if (nextBtn) nextBtn.disabled = this.currentPageNum >= this.totalPageCount;
+            const jump = this.container.querySelector('#pdf-page-jump');
+            if (jump && document.activeElement !== jump) jump.value = this.currentPageNum;
         }
 
         // =========================================================================
@@ -653,6 +757,7 @@
 
         // Pointer Move on canvas for grab/hover cursor cues
         onPagePointerMove(e, pageNum) {
+            if (this.currentTool === 'hand') return;
             if (this.isDrawing || this.draggingText || this.readOnly) return;
             const pageInfo = this.pages[pageNum];
             if (!pageInfo) return;
@@ -682,6 +787,14 @@
             const pageInfo = this.pages[pageNum];
             if (!pageInfo) return;
 
+            if (this.currentTool === 'hand') {
+                if (e.pointerType === 'touch') return; // Native touch scrolling remains available.
+                e.preventDefault();
+                this.panState = { x: e.clientX, y: e.clientY, left: this.viewportEl.scrollLeft, top: this.viewportEl.scrollTop, canvas: pageInfo.doodleCanvas, pointerId: e.pointerId };
+                pageInfo.doodleCanvas.setPointerCapture(e.pointerId);
+                pageInfo.doodleCanvas.style.cursor = 'grabbing';
+                return;
+            }
             const coords = this.getCanvasCoordinates(e, pageInfo.doodleCanvas);
 
             // Check if user clicked on an existing text note on this page
@@ -752,6 +865,10 @@
         }
 
         onGlobalPointerMove(e) {
+            if (this.panState && e.pointerId === this.panState.pointerId) {
+                this.viewportEl.scrollTo({ left: this.panState.left - (e.clientX - this.panState.x), top: this.panState.top - (e.clientY - this.panState.y), behavior: 'instant' });
+                return;
+            }
             // Dragging text annotation around the page
             if (this.draggingText) {
                 const pageNum = this.draggingText.pageNum;
@@ -789,6 +906,13 @@
         }
 
         onGlobalPointerUp(e) {
+            if (this.panState) {
+                if (e.pointerId !== this.panState.pointerId) return;
+                try { this.panState.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+                this.panState.canvas.style.cursor = '';
+                this.panState = null;
+                return;
+            }
             // Handle completion of text box dragging or single click to edit
             if (this.draggingText) {
                 const { pageNum, annotation, hasMoved, pointerId } = this.draggingText;

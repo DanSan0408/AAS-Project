@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -621,6 +622,7 @@ public class StudentController {
 
     @GetMapping("/assessment/{assessmentId}/submission/annotations")
     @ResponseBody
+    @Transactional(readOnly = true)
     public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotations(
             @PathVariable("assessmentId") Long assessmentId,
             Principal principal) {

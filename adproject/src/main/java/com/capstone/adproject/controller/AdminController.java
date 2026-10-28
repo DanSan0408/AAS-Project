@@ -742,6 +742,7 @@ public class AdminController {
 
     @GetMapping("/submissions/{submissionId}/annotations")
     @ResponseBody
+    @Transactional(readOnly = true)
     public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotationsAdmin(
             @PathVariable Long submissionId) {
 

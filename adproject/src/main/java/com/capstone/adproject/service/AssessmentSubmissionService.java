@@ -85,6 +85,16 @@ public class AssessmentSubmissionService {
             Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(assessment, group);
             if (groupSub.isPresent())
                 return groupSub;
+
+            // Fallback for individual submissions if students in this group uploaded individually
+            if (group.getStudents() != null) {
+                for (Student s : group.getStudents()) {
+                    Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(assessment, s);
+                    if (studentSub.isPresent()) {
+                        return studentSub;
+                    }
+                }
+            }
         }
         if (student != null) {
             if (student.getGroup() != null) {
@@ -209,8 +219,16 @@ public class AssessmentSubmissionService {
             throw new IllegalArgumentException("Submission, lecturer, and page number are required.");
         }
 
+        boolean isEmptyStrokes = (strokesJson == null || strokesJson.trim().isEmpty()
+                || strokesJson.trim().equals("[]") || strokesJson.trim().equals("{}"));
+
         Optional<SubmissionAnnotation> existing = annotationRepository
                 .findBySubmissionAndLecturerAndPageNumber(submission, lecturer, pageNumber);
+
+        if (isEmptyStrokes && existing.isEmpty()) {
+            return null; // Skip creating empty annotation rows for untouched pages
+        }
+
         SubmissionAnnotation annotation;
         if (existing.isPresent()) {
             annotation = existing.get();
@@ -237,7 +255,9 @@ public class AssessmentSubmissionService {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(allAnnotationsJson);
             if (root.isObject()) {
-                root.properties().forEach(entry -> {
+                java.util.Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
+                while (fields.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = fields.next();
                     try {
                         int pageNum = Integer.parseInt(entry.getKey());
                         String strokesJson = entry.getValue().toString();
@@ -245,9 +265,9 @@ public class AssessmentSubmissionService {
                     } catch (Exception e) {
                         logger.warn("Failed saving annotation for page: " + entry.getKey(), e);
                     }
-                });
+                }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("Failed parsing allAnnotationsJson", e);
         }
     }

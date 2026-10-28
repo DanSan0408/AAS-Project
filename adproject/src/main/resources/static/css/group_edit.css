@@ -19,7 +19,7 @@
 body.group-edit-page {
     background-color: var(--color-background);
     color: var(--color-secondary);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     margin: 0;
     padding: 0;
     min-height: 100vh;

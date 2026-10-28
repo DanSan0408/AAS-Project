@@ -44,6 +44,18 @@ mysql -u root -p < adproject/aas_db_dump.sql
 
 ---
 
+### Copy the Physical Reports Too
+
+Copy the source machine's `adproject/uploads/submissions/` contents into the same
+relative directory on the destination. Importing `aas_db_dump.sql` alone restores
+submission metadata and doodles, but does not copy the PDF files. Preserve the
+`course_*/assessment_*/student_*` or `group_*` structure.
+
+For a Docker/VPS deployment, follow [persistent upload storage setup](DEPLOYMENT_STORAGE.md)
+to migrate the PDFs into the mounted host directory and initialise app-user permissions.
+
+---
+
 ### Step 2.3: Configure Database Credentials
 Because `application-dev.properties` is in `.gitignore` to prevent leaking local credentials, create or edit `adproject/src/main/resources/application-dev.properties` on your new machine with your local MySQL password:
 

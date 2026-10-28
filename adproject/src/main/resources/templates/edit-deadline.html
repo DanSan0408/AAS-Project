@@ -8,8 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/editdeadline.css}">
     
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="edit-deadline-page">
+<body data-ui-role="admin" class="edit-deadline-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -18,6 +19,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/admin/home', 'Edit Deadline')}"></nav>
+
 
         <div class="deadline-form-container">
             <h2>

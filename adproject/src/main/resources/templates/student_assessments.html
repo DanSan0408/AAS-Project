@@ -8,8 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/student_assessments.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="student-page">
+<body data-ui-role="student" class="student-page">
     <div th:replace="fragments/student_sidebar :: sidebar"></div>
 
     <div class="main-content">
@@ -29,7 +30,7 @@
                 </li>
                 <li class="separator"><i class="fas fa-chevron-right"></i></li>
                 <li>
-                    <span class="current-page">
+                    <span class="current-page" aria-current="page">
                         <i class="fas fa-tasks"></i> Peer &amp; Self Assessments
                     </span>
                 </li>
