@@ -16,7 +16,7 @@
 * { box-sizing: border-box; }
 
 body.assign-lecturer-page {
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     background-color: var(--color-background);
     margin: 0;
     padding: 0;

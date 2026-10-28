@@ -6,8 +6,9 @@
     <title th:text="|Edit Group: ${group.groupName}|">Edit Group</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/manageUser.css}"> <link rel="stylesheet" th:href="@{/css/group_edit.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="group-edit-page">
+<body data-ui-role="admin" class="group-edit-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -16,6 +17,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Group Assignment', '/admin/group-assignment', 'Edit Group')}"></nav>
+
 
         <div class="card">
             <div class="card-header">
@@ -136,9 +139,11 @@
                                             <td th:text="${student.id}">101</td>
                                         <td th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</td>
                                             <td>
-                                                <a th:href="@{|/admin/group/remove-student/${student.id}|}" class="btn btn-danger" 
-                                                   data-action="confirm-link" 
-                                                   data-confirm-message="Are you sure you want to remove this student from the group?">Remove</a>
+                                                <form th:action="@{|/admin/group/remove-student/${student.id}|}" method="post" style="display:inline;"
+                                                      data-action="confirm-submit" 
+                                                      data-confirm-message="Are you sure you want to remove this student from the group?">
+                                                    <button type="submit" class="btn btn-danger">Remove</button>
+                                                </form>
                                             </td>
                                         </tr>
                                     </tbody>

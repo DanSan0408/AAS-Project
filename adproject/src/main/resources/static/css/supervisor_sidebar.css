@@ -191,7 +191,7 @@ body.sidebar-open {
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 10px;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
 }
 
 .sidebar .menu-list li form button:hover,

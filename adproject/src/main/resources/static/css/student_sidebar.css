@@ -355,3 +355,29 @@ body.sidebar-open {
         font-size: 1.2rem !important;
     }
 }
+
+
+/* Student Submissions Page Layout Consistency */
+body.student-submissions-page {
+    display: flex;
+    background-color: var(--student-background);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+body.student-submissions-page .main-content {
+    margin-left: 270px !important;
+    padding: 30px 40px !important;
+    flex-grow: 1 !important;
+    background-color: var(--student-background) !important;
+    min-height: 100vh;
+    width: auto !important;
+}
+
+@media (max-width: 1279px) {
+    body.student-submissions-page .main-content {
+        margin-left: 0 !important;
+        padding: 20px 15px !important;
+    }
+}

@@ -21,29 +21,34 @@
     <ul class="menu-list">
         <li>
             <a th:href="@{/student/home}">
-                 Dashboard
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a th:href="@{/student/submissions}">
+                <i class="fas fa-file-upload"></i> Report Submissions
             </a>
         </li>
 
         <li>
             <a th:href="@{/student/assessments}">
-                Peer & Self Assessments
+                <i class="fas fa-tasks"></i> Peer &amp; Self Assessments
             </a>
         </li>
 
         <li>
             <a th:href="@{/student/comments}">
-                My Comments
+                <i class="fas fa-comments"></i> My Comments
             </a>
         </li>
 
         <li>
-                <a th:href="@{/profile}">
-                    My Profile
-                </a>
-            </li>
+            <a th:href="@{/profile}">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+        </li>
             
-        
         <li class="logout-item">
             <form th:action="@{/logout}" method="post">
                 <button type="submit" class="logout-btn">
@@ -55,63 +60,7 @@
     </ul>
 </div>
 
-<script>
-    (function() {
-        var body = document.body;
-        var sidebarToggle = document.querySelector('.sidebar-toggle');
-        var sidebarOverlay = document.querySelector('.sidebar-overlay');
-        var lastScrollY = 0;
-
-        function lockBodyScroll() {
-            lastScrollY = window.scrollY || window.pageYOffset || 0;
-            body.style.position = 'fixed';
-            body.style.top = '-' + lastScrollY + 'px';
-            body.style.left = '0';
-            body.style.right = '0';
-            body.style.width = '100%';
-        }
-
-        function unlockBodyScroll() {
-            body.style.position = '';
-            body.style.top = '';
-            body.style.left = '';
-            body.style.right = '';
-            body.style.width = '';
-            window.scrollTo(0, lastScrollY);
-        }
-
-        function closeSidebar() {
-            body.classList.remove('sidebar-open');
-            unlockBodyScroll();
-            if (sidebarToggle) {
-                sidebarToggle.setAttribute('aria-expanded', 'false');
-            }
-        }
-
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function() {
-                var willOpen = !body.classList.contains('sidebar-open');
-                body.classList.toggle('sidebar-open');
-                if (willOpen) {
-                    lockBodyScroll();
-                } else {
-                    unlockBodyScroll();
-                }
-                sidebarToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-            });
-        }
-
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', closeSidebar);
-        }
-
-        window.addEventListener('resize', function() {
-            if (window.innerWidth > 1279) {
-                closeSidebar();
-            }
-        });
-    })();
-</script>
+<script th:src="@{/js/sidebar-toggle.js}"></script>
 </th:block>
 </body>
 </html>

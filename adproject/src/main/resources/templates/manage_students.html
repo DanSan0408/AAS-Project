@@ -8,8 +8,9 @@
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/manage_students.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="manage-users-page">
+<body data-ui-role="admin" class="manage-users-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -18,6 +19,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Manage Users', '/admin/manage-users', 'Manage Students')}"></nav>
+
         
         <div class="card">
             <div class="card-header">
@@ -118,43 +121,45 @@
                                 Delete Selected
                             </button>
                         </div>
-
-                        <div class="table-scroll">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style="width: 50px; text-align: center;">
-                                            <input type="checkbox" id="selectAll" data-action="toggle-select-all" data-target-selector=".user-checkbox">
-                                        </th>
-                                        <th>ID</th>
-                                        <th>Email</th>
-                                        <th>Name / Username</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="student : ${students}">
-                                        <td style="text-align: center;">
-                                            <input type="checkbox" name="ids" th:value="${student.id}" class="user-checkbox">
-                                        </td>
-                                        <td th:text="${student.id}"></td>
-                                        <td th:text="${student.email}"></td>
-                                        <td th:text="${student.username}"></td>
-                                        <td>
-                                            <div class="table-actions">
-                                                <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
-                                                <a th:href="@{/admin/delete-student/{id}(id=${student.id})}" 
-                                                   class="action-button delete"
-                                                   data-action="confirm-link" data-confirm-message="Are you sure you want to delete this student? This action cannot be undone.">
-                                                   Delete
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
                     </form>
+
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px; text-align: center;">
+                                        <input type="checkbox" id="selectAll" data-action="toggle-select-all" data-target-selector=".user-checkbox">
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Name / Username</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="student : ${students}">
+                                    <td style="text-align: center;">
+                                        <input type="checkbox" name="ids" th:value="${student.id}" class="user-checkbox" form="bulkDeleteForm">
+                                    </td>
+                                    <td th:text="${student.id}"></td>
+                                    <td th:text="${student.email}"></td>
+                                    <td th:text="${student.username}"></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
+                                            <form th:action="@{/admin/delete-student/{id}(id=${student.id})}" method="post" style="display:inline;"
+                                                  data-action="confirm-submit"
+                                                  data-confirm-message="Are you sure you want to delete this student? This action cannot be undone.">
+                                                <button type="submit" class="action-button delete">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

@@ -8,7 +8,6 @@
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/rubric.css}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .actions-cell { text-align: center; }
@@ -44,8 +43,9 @@
             .action-buttons-flex { justify-content: flex-end !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="rubric-page">
+<body data-ui-role="admin" class="rubric-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -54,6 +54,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Manage Assessments', '/rubrics/manage', 'Rubric Templates')}"></nav>
+
         
         <div class="message-container">
             <div th:if="${successMessage}" class="alert alert-success">

@@ -1,0 +1,560 @@
+/* Self-hosted Inter keeps every role and authentication page on the same font.
+ * Font files live under /css/ so the existing public static-resource rule applies.
+ * Variable weights provide real regular, medium, semibold and bold faces.
+ */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('./fonts/inter/InterVariable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('./fonts/inter/InterVariable-Italic.woff2') format('woff2');
+}
+
+:root {
+    --ui-auth-logo-width: 260px;
+    --ui-header-logo-width: 170px;
+    --ui-header-logo-height: 60px;
+    --ui-header-padding: 14px 20px;
+    --ui-sidebar-width: 220px;
+    --ui-sidebar-offset: 250px;
+    --ui-sidebar-drawer-width: min(82vw, 300px);
+    --ui-font: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --ui-text-body: 1rem;
+    --ui-text-control: 0.95rem;
+    --ui-text-button: 0.9rem;
+    --ui-text-nav: 0.9375rem;
+    --ui-text-title: 2rem;
+    --ui-text-section: 1.5rem;
+    --ui-weight-normal: 400;
+    --ui-weight-medium: 500;
+    --ui-weight-semibold: 600;
+    --ui-weight-bold: 700;
+}
+
+/* Text elements use the shared family even when a feature sets its own family.
+ * Icon glyphs and user-selected PDF annotation formatting retain their own faces.
+ */
+body[data-ui-role] :is(h1, h2, h3, h4, h5, h6, p, a, label, legend,
+    summary, input, select, textarea, button, table, small, code, pre, kbd, samp, output) {
+    font-family: var(--ui-font);
+}
+
+body[data-ui-role] :is(input, select, textarea, button)::placeholder {
+    font-family: var(--ui-font);
+}
+
+body[data-ui-role] input::file-selector-button {
+    font-family: var(--ui-font);
+    font-size: var(--ui-text-button);
+    font-weight: var(--ui-weight-semibold);
+}
+
+/*
+ * IAMS shared visual contract. Load after feature styles and inline style blocks.
+ * Role is explicit on the body, including pages shared by multiple roles.
+ * Screen-only rules preserve the dedicated data export / print layouts.
+ * !important is limited to properties already forced by legacy page styles.
+ */
+body[data-ui-role] {
+    --ui-primary: #4a0018;
+    --ui-primary-light: #6b0025;
+    --ui-primary-soft: #fdf2f4;
+    --ui-background: #f4f2ee;
+    --ui-surface: #ffffff;
+    --ui-text: #3f3f46;
+    --ui-muted: #64748b;
+    --ui-border: #e5e7eb;
+    --ui-radius: 12px;
+    --ui-control-radius: 8px;
+    --ui-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+    font-family: var(--ui-font);
+}
+
+body[data-ui-role="lecturer"] {
+    --ui-primary: #047857;
+    --ui-primary-light: #059669;
+    --ui-primary-soft: #ecfdf5;
+}
+
+body[data-ui-role="student"] {
+    --ui-primary: #7a1e2d;
+    --ui-primary-light: #922838;
+    --ui-primary-soft: #fff1f2;
+}
+
+body[data-ui-role="supervisor"] {
+    --ui-primary: #002b5b;
+    --ui-primary-light: #004080;
+    --ui-primary-soft: #eff6ff;
+}
+
+@media screen {
+    body[data-ui-role] {
+        font-size: var(--ui-text-body);
+        font-weight: var(--ui-weight-normal);
+        line-height: 1.5;
+    }
+
+    body[data-ui-role]:not([data-ui-role="public"]) {
+        background-color: var(--ui-background);
+        color: var(--ui-text);
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    body[data-ui-role] :is(input, select, textarea, button) {
+        font-family: inherit;
+    }
+
+    /* Keep the PDF workstation's independent scrolling and Zen layout intact. */
+    body[data-ui-role]:not(.has-split-studio) .main-content {
+        box-sizing: border-box !important;
+        min-width: 0;
+        margin-top: 0 !important;
+        margin-left: var(--ui-sidebar-offset) !important;
+        width: calc(100% - var(--ui-sidebar-offset)) !important;
+        max-width: calc(100% - var(--ui-sidebar-offset)) !important;
+        padding: 30px 40px !important;
+        background-color: var(--ui-background) !important;
+    }
+
+    body[data-ui-role] .sidebar a {
+        font-size: var(--ui-text-nav);
+        font-weight: var(--ui-weight-semibold);
+    }
+
+    body[data-ui-role] .sidebar {
+        box-sizing: border-box;
+        width: var(--ui-sidebar-width) !important;
+        font-family: var(--ui-font);
+    }
+
+    body[data-ui-role] .main-content .header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 20px 30px !important;
+        margin: 0 0 32px !important;
+        border-radius: 16px !important;
+        background: linear-gradient(135deg, var(--ui-primary), var(--ui-primary-light)) !important;
+        box-shadow: var(--ui-shadow) !important;
+        color: #fff !important;
+    }
+
+    body[data-ui-role] .main-content .header-container {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        gap: 20px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    body[data-ui-role] .main-content .header-container img {
+        width: 200px !important;
+        max-width: 100% !important;
+        height: auto !important;
+        filter: brightness(0) invert(1) !important;
+    }
+
+    body[data-ui-role] .main-content .header :is(h1, h2) {
+        margin: 0 !important;
+        color: #fff !important;
+        font-size: var(--ui-text-title) !important;
+        line-height: 1.3 !important;
+    }
+
+    body[data-ui-role] .main-content :is(.page-content, .dashboard-header, .card-header) > h2 {
+        color: var(--ui-primary);
+        border-bottom-color: var(--ui-primary);
+        font-size: var(--ui-text-section);
+        line-height: 1.35;
+        font-weight: var(--ui-weight-bold);
+    }
+
+    body[data-ui-role] .main-content :is(.card, .page-content, .form-container, .table-container) {
+        border-radius: var(--ui-radius);
+        border-color: var(--ui-border);
+        box-shadow: var(--ui-shadow);
+    }
+
+    /* Only standard text controls: do not resize ratings, uploads or PDF tools. */
+    body[data-ui-role] :is(input[type="text"], input[type="email"], input[type="password"],
+        input[type="number"], input[type="date"], input[type="datetime-local"], input[type="search"],
+        select, textarea):not([readonly]):not(:disabled) {
+        box-sizing: border-box;
+        border: 1px solid var(--ui-border);
+        border-radius: var(--ui-control-radius);
+        background-color: var(--ui-surface);
+        color: var(--ui-text);
+        font-size: var(--ui-text-control);
+        line-height: 1.5;
+        padding: 10px 12px;
+    }
+
+    body[data-ui-role] :is(input[type="checkbox"], input[type="radio"]) {
+        accent-color: var(--ui-primary);
+    }
+
+    body[data-ui-role] :is(.btn-primary, .btn-secondary, .btn-cancel, .btn-back,
+        .btn-save, .btn-submit, .btn-danger, .btn-delete, .action-button, .add-rubric-button) {
+        font-family: var(--ui-font);
+        font-size: var(--ui-text-button);
+        font-weight: var(--ui-weight-semibold);
+        line-height: 1.4;
+        border-radius: var(--ui-control-radius);
+        text-decoration: none;
+    }
+
+    body[data-ui-role] :is(.btn-primary, .btn-secondary, .btn-cancel, .btn-back, .btn-save, .btn-submit) {
+        padding: 10px 16px;
+    }
+
+    body[data-ui-role] :is(.btn-primary, .btn-save, .btn-submit,
+        .action-button:not(.delete):not(.promote), .btn-viewer-download) {
+        background: var(--ui-primary);
+        color: #fff;
+    }
+
+    body[data-ui-role] :is(.btn-secondary, .btn-cancel, .btn-back) {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+
+    body[data-ui-role] :is(.btn-danger, .btn-delete, .action-button.delete) {
+        background: #8b1e1e;
+        color: #fff;
+    }
+
+    body[data-ui-role] :is(a, button, input, select, textarea):focus-visible {
+        outline: 3px solid var(--ui-primary);
+        outline-offset: 3px;
+    }
+
+    body[data-ui-role] :is(button, .btn, .action-button):disabled,
+    body[data-ui-role] [aria-disabled="true"] {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    body[data-ui-role] .alert {
+        padding: 14px 18px;
+        border: 1px solid transparent;
+        border-radius: var(--ui-control-radius);
+        font-size: var(--ui-text-control);
+        line-height: 1.5;
+    }
+
+    body[data-ui-role] .alert-success {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
+        color: #065f46;
+    }
+
+    body[data-ui-role] :is(.alert-danger, .alert-error) {
+        background: #fef2f2;
+        border-color: #fecaca;
+        color: #991b1b;
+    }
+
+    body[data-ui-role] .alert-warning {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #92400e;
+    }
+
+    body[data-ui-role] .alert-info {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1e40af;
+    }
+
+    body[data-ui-role] .system-breadcrumb a { color: var(--ui-primary); }
+    body[data-ui-role] .system-breadcrumb .current-page {
+        background: var(--ui-primary-soft);
+        color: var(--ui-primary);
+        border-color: var(--ui-border);
+    }
+}
+
+@media screen and (max-width: 1279px) {
+    body[data-ui-role]:not(.has-split-studio) .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 72px 20px 24px !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    body[data-ui-role]:not(.has-split-studio) .main-content {
+        padding: 68px 15px 20px !important;
+    }
+    body[data-ui-role] .main-content .header {
+        padding: 16px !important;
+        margin-bottom: 24px !important;
+    }
+    body[data-ui-role] .main-content .header-container {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    body[data-ui-role] .main-content .header-container img { width: 140px !important; }
+    body[data-ui-role] .main-content .header :is(h1, h2) { font-size: 1.4rem !important; }
+}
+
+@media screen and (max-width: 480px) {
+    body[data-ui-role]:not(.has-split-studio) .main-content { padding-inline: 10px !important; }
+    body[data-ui-role] .main-content .header-container img { width: 120px !important; }
+    body[data-ui-role] .main-content .header :is(h1, h2) { font-size: 1.2rem !important; }
+}
+
+/* Match the drawer geometry across roles at the shared sidebar breakpoint. */
+@media screen and (max-width: 1279px) {
+    body[data-ui-role] .sidebar { width: var(--ui-sidebar-drawer-width) !important; }
+}
+
+/* Shared brand band, location trail, and sidebar controls. */
+@media screen {
+    body[data-ui-role] .main-content .header {
+        padding: var(--ui-header-padding) !important;
+        margin-bottom: 14px !important;
+        border-radius: 12px !important;
+        flex-shrink: 0;
+    }
+    body[data-ui-role] .main-content .header-container img {
+        width: var(--ui-header-logo-width) !important;
+        max-height: var(--ui-header-logo-height) !important;
+        object-fit: contain;
+    }
+    body[data-ui-role] .auth-container img.logo {
+        width: var(--ui-auth-logo-width);
+        max-width: 100%;
+        max-height: none;
+        height: auto;
+        object-fit: contain;
+    }
+    body[data-ui-role] .system-breadcrumb {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 50px;
+        margin: 0 0 16px !important;
+        padding: 6px 12px !important;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        background: var(--ui-surface);
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+    }
+    body[data-ui-role] .system-breadcrumb ol {
+        display: flex !important;
+        flex: 1;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 7px !important;
+        min-width: 0;
+        width: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        list-style: none !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        box-sizing: border-box;
+        font-size: 0.825rem !important;
+        line-height: 1.5;
+    }
+    body[data-ui-role] .system-breadcrumb.navigation-toolbar ol {
+        padding-left: 12px !important;
+        border-left: 1px solid var(--ui-border) !important;
+    }
+    body[data-ui-role] .system-breadcrumb li {
+        display: inline-flex !important;
+        align-items: center;
+        min-width: 0;
+        max-width: 100%;
+    }
+    body[data-ui-role] .system-breadcrumb i { display: none !important; }
+    body[data-ui-role] .system-breadcrumb a {
+        color: var(--ui-muted) !important;
+        font-weight: var(--ui-weight-medium) !important;
+        text-decoration: none;
+        padding: 4px 2px;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+    }
+    body[data-ui-role] .system-breadcrumb a:hover { color: var(--ui-primary) !important; text-decoration: underline; text-underline-offset: 3px; }
+    body[data-ui-role] .system-breadcrumb .separator {
+        padding: 0 3px !important;
+        font-size: 0 !important;
+        flex: 0 0 auto;
+    }
+    body[data-ui-role] .system-breadcrumb .separator::before {
+        content: '';
+        display: block;
+        width: 5px;
+        height: 5px;
+        border-top: 1.5px solid #94a3b8;
+        border-right: 1.5px solid #94a3b8;
+        transform: rotate(45deg);
+    }
+    body[data-ui-role] .system-breadcrumb .assessment-name {
+        color: var(--ui-text) !important;
+        font-weight: var(--ui-weight-medium) !important;
+        overflow-wrap: anywhere;
+    }
+    body[data-ui-role] .system-breadcrumb .current-page {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px !important;
+        color: var(--ui-primary) !important;
+        background: var(--ui-primary-soft) !important;
+        border: 0 !important;
+        padding: 5px 10px !important;
+        border-radius: 7px;
+        font-weight: var(--ui-weight-semibold) !important;
+        overflow-wrap: anywhere;
+    }
+    body[data-ui-role] .system-breadcrumb .current-page::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+        flex-shrink: 0;
+    }
+    body[data-ui-role] .sidebar-toggle {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: auto;
+        min-width: 40px;
+        height: 36px;
+        padding: 0 10px;
+        background: var(--ui-primary-soft);
+        color: var(--ui-primary);
+        border: 1px solid transparent;
+        border-radius: 8px;
+        box-shadow: none;
+        font-size: 0.78rem;
+        font-weight: var(--ui-weight-semibold);
+        white-space: nowrap;
+        cursor: pointer;
+        z-index: 4000;
+        transition: background 160ms ease, border-color 160ms ease;
+    }
+    body[data-ui-role] .system-breadcrumb .sidebar-toggle {
+        position: static;
+        flex: 0 0 auto;
+        z-index: auto;
+    }
+    body[data-ui-role] .sidebar-toggle:hover { background: var(--ui-surface); border-color: var(--ui-border); }
+    body[data-ui-role] .sidebar-toggle svg { flex-shrink: 0; }
+
+    /* Compact proportions retain the existing role colours and gradient styling. */
+    body[data-ui-role] .sidebar .logo { padding: 22px 16px 18px; margin-bottom: 12px; }
+    body[data-ui-role] .sidebar .logo h2 { font-size: 24px; letter-spacing: 3px; }
+    body[data-ui-role] .sidebar .user-profile { padding: 12px 14px; margin: 0 12px 12px; }
+    body[data-ui-role] .sidebar .user-profile :is(span, p) { font-size: 13px; }
+    body[data-ui-role] .sidebar .menu-list { padding: 0 10px; }
+    body[data-ui-role] .sidebar .menu-list li { margin-bottom: 5px; }
+    body[data-ui-role] .sidebar .menu-list li a {
+        min-height: 44px;
+        padding: 10px 12px;
+        gap: 9px;
+        font-size: 14px;
+    }
+    body[data-ui-role] .sidebar .menu-list li a:hover { padding-left: 14px; }
+    body[data-ui-role] .sidebar .menu-list li a.active { padding-left: 12px; }
+    body[data-ui-role] .sidebar .course-switcher { padding: 8px; margin-bottom: 12px; }
+    body[data-ui-role] .sidebar .course-switch-select { padding: 8px 10px; font-size: 12px; }
+    body[data-ui-role] .sidebar .logout-btn { padding: 10px 12px; min-height: 44px; font-size: 14px; }
+    body[data-ui-role] .sidebar-nav-icon { width: 18px; height: 18px; }
+
+    /* Retain the established role-specific sidebar appearance and new SVG icons. */
+    body[data-ui-role] .sidebar { transition: transform 220ms ease, visibility 220ms; }
+    body[data-ui-role] .sidebar .menu-list li a > i { display: none; }
+    body[data-ui-role] .sidebar-nav-icon { flex-shrink: 0; }
+
+}
+@media screen and (min-width: 1280px) {
+    body[data-ui-role] .main-content {
+        margin-left: var(--ui-sidebar-offset) !important;
+        width: calc(100% - var(--ui-sidebar-offset)) !important;
+        max-width: calc(100% - var(--ui-sidebar-offset)) !important;
+    }
+    body[data-ui-role] .system-breadcrumb .sidebar-toggle { min-width: 112px; }
+    body[data-ui-role].sidebar-collapsed .sidebar,
+    body[data-ui-role].zen-mode .sidebar { transform: translateX(-280px) !important; visibility: hidden; }
+    body[data-ui-role].sidebar-collapsed .main-content,
+    body[data-ui-role].zen-mode .main-content { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+    body[data-ui-role].has-split-studio.sidebar-collapsed .main-content,
+    body[data-ui-role].has-split-studio.zen-mode .main-content { padding-left: 24px !important; }
+}
+@media screen and (max-width: 1279px) {
+    /* The menu control lives in the breadcrumb, so no floating-button spacer is needed. */
+    body[data-ui-role]:not(.has-split-studio) .main-content { padding-top: 20px !important; }
+    body[data-ui-role].has-split-studio .main-content { padding-top: 12px !important; }
+    body[data-ui-role] .sidebar { visibility: hidden; }
+    body[data-ui-role].sidebar-open .sidebar { visibility: visible; }
+    body[data-ui-role] .sidebar .logo { padding-inline: 52px; }
+    body[data-ui-role].sidebar-open .system-breadcrumb .sidebar-toggle {
+        position: fixed;
+        top: 16px;
+        left: calc(var(--ui-sidebar-drawer-width) - 52px);
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        background: var(--ui-primary-soft);
+        z-index: 4000;
+    }
+    body[data-ui-role].sidebar-open .sidebar-toggle-label { display: none; }
+}
+@media screen and (max-width: 768px) {
+    :root {
+        --ui-auth-logo-width: 240px;
+        --ui-header-logo-width: 130px;
+        --ui-header-logo-height: 56px;
+        --ui-header-padding: 12px 16px;
+    }
+    body[data-ui-role]:not(.has-split-studio) .main-content { padding-top: 15px !important; }
+    body[data-ui-role] .main-content .header { padding: var(--ui-header-padding) !important; margin-bottom: 10px !important; }
+    body[data-ui-role] .main-content .header-container img { width: var(--ui-header-logo-width) !important; max-height: var(--ui-header-logo-height) !important; }
+    body[data-ui-role] .system-breadcrumb { gap: 9px; padding: 7px 9px !important; align-items: flex-start !important; }
+    body[data-ui-role] .system-breadcrumb .sidebar-toggle { min-width: 34px; width: 34px; height: 34px; padding: 0; }
+    body[data-ui-role] .sidebar-toggle-label { display: none; }
+    body[data-ui-role] .system-breadcrumb.navigation-toolbar ol { padding-left: 9px !important; min-height: 34px; }
+    body[data-ui-role] .system-breadcrumb ol { gap: 5px !important; font-size: 0.75rem !important; }
+    body[data-ui-role] .system-breadcrumb .current-page { padding: 4px 7px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body[data-ui-role] :is(.sidebar, .sidebar-toggle, .sidebar .menu-list a) { transition: none !important; }
+}
+@media print {
+    .system-breadcrumb, .sidebar-toggle, .sidebar-overlay { display: none !important; }
+}

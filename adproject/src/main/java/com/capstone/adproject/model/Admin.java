@@ -31,4 +31,7 @@ public class Admin {
     private String email;
     
     private String resetPasswordToken;
+
+    @Column(name = "resetpasswordtokenexpiry")
+    private java.time.LocalDateTime resetPasswordTokenExpiry;
 }

@@ -22,7 +22,7 @@
 
 body.student-home-page {
     background-color: var(--student-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--student-secondary);
     margin: 0;
     padding: 0;

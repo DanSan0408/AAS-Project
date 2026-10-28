@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Report - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/student_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/student_assessments.css}">
+    <link rel="stylesheet" th:href="@{/css/student_submissions.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+</head>
+<body data-ui-role="student" class="student-page student-submissions-page">
+    <div th:replace="fragments/student_sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <!-- Brand Logo Header -->
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+
+        <!-- Unified System Breadcrumb -->
+        <nav class="system-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+                <li>
+                    <a th:href="@{/student/home}">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <a th:href="@{/student/submissions}">
+                        <i class="fas fa-file-upload"></i> Report Submissions
+                    </a>
+                </li>
+                <li class="separator"><i class="fas fa-chevron-right"></i></li>
+                <li>
+                    <span class="current-page" aria-current="page">
+                        <i class="fas fa-file-pdf"></i> <span th:text="${assessment.getEffectiveSubmissionTitle()}">Submit</span>
+                    </span>
+                </li>
+            </ol>
+        </nav>
+
+        <div class="submissions-container" style="max-width: 960px;">
+            <!-- Feedback Alert Messages -->
+            <div class="alert-container">
+                <div th:if="${success}" class="alert alert-success" style="background:#ecfdf5; border-left:4px solid #10b981; padding:12px 16px; border-radius:8px; color:#065f46; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-check-circle" style="font-size: 1.1rem;"></i>
+                    <span th:text="${success}">Report uploaded successfully!</span>
+                </div>
+                <div th:if="${error}" class="alert alert-error" style="background:#fef2f2; border-left:4px solid #ef4444; padding:12px 16px; border-radius:8px; color:#991b1b; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 1.1rem;"></i>
+                    <span th:text="${error}">Error occurred during upload.</span>
+                </div>
+            </div>
+
+            <!-- Single Deliverable Card (Consistent with submissions list) -->
+            <div class="simple-deliverable-card">
+                <!-- Top Info Header -->
+                <div class="card-top-row">
+                    <div class="deliverable-main-meta">
+                        <div class="pdf-icon-badge">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <h3 th:text="${assessment.getEffectiveSubmissionTitle()}">Final Project Report</h3>
+                            <div class="parent-assessment-text">
+                                <span>Assessment: <strong th:text="${assessment.title}">Assessment Title</strong></span>
+                                <span class="sep">&bull;</span>
+                                <span class="scope-tag" th:text="${assessment.submissionScope == 'GROUP' ? 'Group Submission' : 'Individual Submission'}">Scope</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-status-badges">
+                        <span th:if="${isOpen}" class="badge-status open">
+                            <i class="fas fa-calendar-check"></i>
+                            <span th:if="${deadline != null and deadline.date != null}">
+                                Due: <strong th:text="${#dates.format(deadline.date, 'dd MMM yyyy, HH:mm')}">Date</strong>
+                            </span>
+                            <span th:unless="${deadline != null and deadline.date != null}">
+                                Open
+                            </span>
+                        </span>
+                        <span th:unless="${isOpen}" class="badge-status closed">
+                            <i class="fas fa-lock"></i> Closed
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Special Instructions if any -->
+                <div th:if="${assessment.submissionInstructions != null and !#strings.isEmpty(assessment.submissionInstructions)}" 
+                     class="simple-instructions-box">
+                    <i class="fas fa-info-circle"></i>
+                    <span th:text="${assessment.submissionInstructions}">Instructions text</span>
+                </div>
+
+                <!-- STATE 1: ALREADY SUBMITTED -->
+                <div th:if="${submission != null}" class="submitted-box">
+                    <div class="file-summary-row">
+                        <div class="file-info-col">
+                            <div class="file-title-row">
+                                <span class="file-name-text" th:text="${submission.originalFileName}">report.pdf</span>
+                                <span class="version-tag">v<span th:text="${submission.version}">1</span></span>
+                                <span class="submitted-pill"><i class="fas fa-check"></i> Submitted</span>
+                            </div>
+                            <div class="file-sub-meta">
+                                <span th:if="${submission.fileSizeBytes != null}">Size: <strong th:text="${#numbers.formatDecimal(submission.fileSizeBytes / 1048576.0, 1, 2)} + ' MB'">2.1 MB</strong> &bull;</span>
+                                <span th:if="${submission.submittedAt != null}">Submitted on <strong th:text="${#temporals.format(submission.submittedAt, 'dd MMM yyyy, HH:mm')}">Date</strong></span>
+                                <span th:if="${submission.student != null}">
+                                    by <strong th:text="${not #strings.isEmpty(submission.student.username) ? submission.student.username : submission.student.email}">Uploader</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notice if lecturer doodles / text notes exist -->
+                    <div th:if="${doodleCount != null and doodleCount > 0}" class="feedback-available-notice">
+                        <i class="fas fa-paint-brush"></i>
+                        <span>Lecturer has added ink annotations &amp; text notes on your report!</span>
+                    </div>
+
+                    <!-- Actions Bar -->
+                    <div class="submitted-actions-bar">
+                        <a th:href="@{/student/assessment/{id}/submission/view(id=${assessment.id})}" class="btn-action primary">
+                            <i class="fas fa-paint-brush"></i> Review Report &amp; Lecturer Feedback
+                        </a>
+                        <a th:href="@{/student/assessment/{id}/submission/file(id=${assessment.id})}" target="_blank" class="btn-action secondary">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                        <button th:if="${isOpen}" 
+                                type="button" class="btn-action outline"
+                                onclick="toggleSingleReupload()">
+                            <i class="fas fa-sync-alt"></i> Replace File
+                        </button>
+                        <a th:href="@{/student/submissions}" class="btn-action outline">
+                            <i class="fas fa-arrow-left"></i> All Submissions
+                        </a>
+                    </div>
+
+                    <!-- Collapsible Re-upload form -->
+                    <div th:if="${isOpen}" id="single-reupload-zone" class="reupload-inline-zone" style="display: none;">
+                        <form th:action="@{/student/assessment/{id}/upload(id=${assessment.id})}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <input type="hidden" name="redirectSource" value="single" />
+                            <div class="upload-inline-controls">
+                                <label class="inline-file-picker">
+                                    <input type="file" name="file" accept="application/pdf,.pdf" required 
+                                           th:onchange="'checkFileSize(this, ' + (${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50}) + ')'"/>
+                                </label>
+                                <button type="submit" class="btn-action primary">
+                                    <i class="fas fa-upload"></i> Upload Replacement
+                                </button>
+                            </div>
+                            <div class="upload-hint">PDF format only &bull; Max allowed size: <strong th:text="${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50}">50</strong> MB (System Ceiling)</div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- STATE 2: NOT YET SUBMITTED -->
+                <div th:unless="${submission != null}" class="unsubmitted-box">
+                    <!-- Group Missing Warning -->
+                    <div th:if="${assessment.submissionScope == 'GROUP' and group == null}" class="group-warning-box">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>This is a group deliverable, but you are not assigned to any group. Please contact your lecturer or coordinator to join a group before submitting.</span>
+                    </div>
+
+                    <!-- Upload form if open -->
+                    <div th:if="${assessment.submissionScope != 'GROUP' or group != null}">
+                        <div th:if="${isOpen}">
+                            <form th:action="@{/student/assessment/{id}/upload(id=${assessment.id})}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <input type="hidden" name="redirectSource" value="single" />
+                                <div class="upload-inline-controls">
+                                    <label class="inline-file-picker">
+                                        <input type="file" name="file" accept="application/pdf,.pdf" required 
+                                               th:onchange="'checkFileSize(this, ' + (${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50}) + ')'"/>
+                                    </label>
+                                    <div style="display:flex; gap:10px;">
+                                        <a th:href="@{/student/submissions}" class="btn-action secondary">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                        <button type="submit" class="btn-action primary">
+                                            <i class="fas fa-cloud-upload-alt"></i> Submit Report (PDF)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="upload-hint">
+                                    <span>PDF documents only &bull; Max size: <strong th:text="${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50}">50</strong> MB</span>
+                                    <span th:if="${assessment.submissionScope == 'GROUP'}"> &bull; Any team member can submit on behalf of the group</span>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Closed notice -->
+                        <div th:unless="${isOpen}" class="closed-notice-box">
+                            <i class="fas fa-lock"></i>
+                            <span>The submission deadline for this assessment has passed. New submissions are no longer accepted.</span>
+                            <a th:href="@{/student/submissions}" class="btn-action outline" style="margin-left: 12px;">
+                                <i class="fas fa-arrow-left"></i> Back to Submissions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSingleReupload() {
+            const zone = document.getElementById('single-reupload-zone');
+            if (zone) {
+                zone.style.display = (zone.style.display === 'none' || zone.style.display === '') ? 'block' : 'none';
+            }
+        }
+
+        function checkFileSize(input, maxMb) {
+            if (!input.files || input.files.length === 0) return;
+            const file = input.files[0];
+            const maxBytes = maxMb * 1024 * 1024;
+            const absoluteCeiling = 50 * 1024 * 1024;
+
+            if (file.size > maxBytes || file.size > absoluteCeiling) {
+                alert('File size exceeds the allowed limit of ' + maxMb + ' MB (System storage ceiling: 50 MB). Please choose a smaller PDF file.');
+                input.value = '';
+                return false;
+            }
+
+            if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+                alert('Only PDF documents (.pdf) are accepted.');
+                input.value = '';
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

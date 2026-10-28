@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,7 +18,12 @@ import com.capstone.adproject.repositories.SuperAdminRepository;
 public class SuperAdminBootstrapRunner implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(SuperAdminBootstrapRunner.class);
-    private static final String DEFAULT_EMAIL = "ihsan.rubix@gmail.com";
+
+    @Value("${app.bootstrap.superadmin.email:}")
+    private String bootstrapEmail;
+
+    @Value("${app.bootstrap.superadmin.password:}")
+    private String bootstrapPassword;
 
     private final SuperAdminRepository superAdminRepository;
     private final PasswordEncoder passwordEncoder;
@@ -29,20 +35,26 @@ public class SuperAdminBootstrapRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Optional<SuperAdmin> existing = superAdminRepository.findByEmail(DEFAULT_EMAIL);
+        if (bootstrapEmail == null || bootstrapEmail.isBlank() || 
+            bootstrapPassword == null || bootstrapPassword.isBlank()) {
+            logger.info("BOOTSTRAP: SuperAdmin bootstrap skipped. 'app.bootstrap.superadmin.email' or 'app.bootstrap.superadmin.password' not configured.");
+            return;
+        }
+
+        String email = bootstrapEmail.trim();
+        Optional<SuperAdmin> existing = superAdminRepository.findByEmail(email);
         if (existing.isPresent()) {
-            logger.info("INFO: Super admin {} already exists.", DEFAULT_EMAIL);
+            logger.info("INFO: Super admin {} already exists.", email);
             return;
         }
 
         SuperAdmin superAdmin = new SuperAdmin();
-        superAdmin.setEmail(DEFAULT_EMAIL);
+        superAdmin.setEmail(email);
         superAdmin.setUsername("superadmin");
-        superAdmin.setPassword(passwordEncoder.encode("Admin@12345"));
+        superAdmin.setPassword(passwordEncoder.encode(bootstrapPassword.trim()));
         superAdmin.setRoles("ROLE_SUPER_ADMIN,ROLE_ADMIN,ROLE_LECTURER");
 
         superAdminRepository.save(superAdmin);
-        logger.warn("BOOTSTRAP: Created super admin account: {} / Admin@12345", DEFAULT_EMAIL);
-        logger.warn("BOOTSTRAP: Please change this password immediately after login.");
+        logger.info("BOOTSTRAP: Successfully created super admin account for: {}", email);
     }
 }
