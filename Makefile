@@ -3,8 +3,9 @@
 # ==============================================================================
 # Usage:
 #   make help          Show all available commands
-#   make dev           Start complete local stack (MySQL + App in Docker)
+#   make dev           Start complete local stack (MySQL + App + AI in Docker)
 #   make dev-db        Start ONLY MySQL database (for local IDE development)
+#   make ai-dev        Start LangGraph AI service locally with hot-reload
 #   make down          Stop all running services
 #   make logs          Follow application logs
 #   make db-reset      Reset database while preserving SuperAdmin
@@ -13,6 +14,7 @@
 
 SHELL := /bin/bash
 PROJECT_DIR := $(CURDIR)/adproject
+AI_DIR := $(CURDIR)/ai-service
 COMPOSE_FILE := $(PROJECT_DIR)/docker-compose.yml
 ENV_FILE := $(PROJECT_DIR)/.env
 ENV_EXAMPLE := $(PROJECT_DIR)/.env.example
@@ -36,7 +38,7 @@ RESET  := \033[0m
 BOLD   := \033[1m
 
 .DEFAULT_GOAL := help
-.PHONY: help env dev up dev-db db-up down stop restart build rebuild logs logs-app logs-db status ps db-shell db-reset test run-local check-env clean
+.PHONY: help env dev up dev-db db-up down stop restart build rebuild logs logs-app logs-db logs-ai status ps db-shell db-reset test run-local check-env clean ai-setup ai-dev ai-run
 
 # ------------------------------------------------------------------------------
 # Help Menu
@@ -46,10 +48,15 @@ help:
 	@echo -e "$(BOLD)$(CYAN)       IAMS / AAS Project - Local Development Automation Makefile     $(RESET)"
 	@echo -e "$(BOLD)$(CYAN)=====================================================================$(RESET)"
 	@echo -e "$(BOLD)Core Workflows:$(RESET)"
-	@echo -e "  $(GREEN)make dev$(RESET)          Start full environment in Docker (MySQL + App)"
+	@echo -e "  $(GREEN)make dev$(RESET)          Start full environment in Docker (MySQL + App + AI)"
 	@echo -e "  $(GREEN)make dev-db$(RESET)       Start ONLY MySQL container (for running App in IDE)"
 	@echo -e "  $(GREEN)make down$(RESET)         Stop all containers"
 	@echo -e "  $(GREEN)make restart$(RESET)      Restart all containers"
+	@echo -e ""
+	@echo -e "$(BOLD)AI Service (LangGraph + Gemini):$(RESET)"
+	@echo -e "  $(GREEN)make ai-setup$(RESET)     Install Python venv & dependencies for AI service"
+	@echo -e "  $(GREEN)make ai-dev$(RESET)       Start local LangGraph/FastAPI server (port 8000, reload)"
+	@echo -e "  $(GREEN)make logs-ai$(RESET)      Follow AI microservice container logs"
 	@echo -e ""
 	@echo -e "$(BOLD)Monitoring & Logs:$(RESET)"
 	@echo -e "  $(GREEN)make logs$(RESET)         Follow all container logs"
@@ -126,13 +133,16 @@ logs-app:
 logs-db:
 	@cd $(PROJECT_DIR) && $(DOCKER_COMPOSE) logs -f mysql
 
+logs-ai:
+	@cd $(PROJECT_DIR) && $(DOCKER_COMPOSE) logs -f ai-service
+
 status: ps
 
 ps:
 	@echo -e "$(BOLD)$(CYAN)Docker Containers:$(RESET)"
 	@cd $(PROJECT_DIR) && $(DOCKER_COMPOSE) ps
 	@echo -e "\n$(BOLD)$(CYAN)Local Port Listening Status:$(RESET)"
-	@lsof -i :8080 -i :3306 2>/dev/null || echo -e "Ports 8080 and 3306 are currently free."
+	@lsof -i :8080 -i :3306 -i :8000 2>/dev/null || echo -e "Ports 8080, 3306, and 8000 are currently free."
 
 # ------------------------------------------------------------------------------
 # Database Operations
@@ -185,6 +195,28 @@ run-local: db-up
 	fi
 
 # ------------------------------------------------------------------------------
+# AI Service (LangGraph + Gemini)
+# ------------------------------------------------------------------------------
+ai-setup:
+	@echo -e "$(CYAN)[*] Setting up Python virtual environment for ai-service...$(RESET)"
+	@if [ ! -d "$(AI_DIR)/.venv" ]; then \
+		python3 -m venv $(AI_DIR)/.venv; \
+	fi
+	@echo -e "$(CYAN)[*] Installing AI service dependencies into $(AI_DIR)/.venv...$(RESET)"
+	@$(AI_DIR)/.venv/bin/pip install -r $(AI_DIR)/requirements.txt
+	@echo -e "$(GREEN)[✓] AI microservice dependencies installed into $(AI_DIR)/.venv$(RESET)"
+
+ai-dev: env
+	@echo -e "$(CYAN)[*] Starting LangGraph / FastAPI AI Service (port 8000)...$(RESET)"
+	@if [ ! -d "$(AI_DIR)/.venv" ]; then \
+		echo -e "$(YELLOW)[i] Virtual environment missing. Running 'make ai-setup'...$(RESET)"; \
+		$(MAKE) ai-setup; \
+	fi
+	@cd $(AI_DIR) && .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+ai-run: ai-dev
+
+# ------------------------------------------------------------------------------
 # Diagnostics & Healthcheck
 # ------------------------------------------------------------------------------
 check-env:
@@ -207,6 +239,24 @@ check-env:
 	else \
 		echo -e "$(RED)[FAIL] Docker daemon is not running. Please start Docker Desktop.$(RESET)"; \
 	fi
+	@echo -n "Python 3 Runtime:     "
+	@if python3 --version >/dev/null 2>&1; then \
+		echo -e "$(GREEN)[OK] $$(python3 --version)$(RESET)"; \
+	else \
+		echo -e "$(RED)[FAIL] Python 3 not found on host.$(RESET)"; \
+	fi
+	@echo -n "AI Service Venv:      "
+	@if [ -d "$(AI_DIR)/.venv" ]; then \
+		echo -e "$(GREEN)[OK] Present at $(AI_DIR)/.venv$(RESET)"; \
+	else \
+		echo -e "$(YELLOW)[OPTIONAL] Missing. Run 'make ai-setup' to configure.$(RESET)"; \
+	fi
+	@echo -n "Gemini API Key:       "
+	@if [ -f $(ENV_FILE) ] && grep -E '^GEMINI_API_KEY=[a-zA-Z0-9_-]+' $(ENV_FILE) >/dev/null 2>&1; then \
+		echo -e "$(GREEN)[OK] Configured in $(ENV_FILE)$(RESET)"; \
+	else \
+		echo -e "$(YELLOW)[WARN] Missing or empty in $(ENV_FILE). Add GEMINI_API_KEY for AI features.$(RESET)"; \
+	fi
 	@echo -n "Local Java 17:        "
 	@if java -version >/dev/null 2>&1; then \
 		echo -e "$(GREEN)[OK] $$(java -version 2>&1 | head -n 1)$(RESET)"; \
@@ -228,6 +278,12 @@ check-env:
 	@echo -n "Port 3306 (MySQL):    "
 	@if lsof -i :3306 >/dev/null 2>&1; then \
 		echo -e "$(YELLOW)[BUSY] Port 3306 is currently in use.$(RESET)"; \
+	else \
+		echo -e "$(GREEN)[FREE] Available$(RESET)"; \
+	fi
+	@echo -n "Port 8000 (AI API):   "
+	@if lsof -i :8000 >/dev/null 2>&1; then \
+		echo -e "$(YELLOW)[BUSY] Port 8000 is currently in use.$(RESET)"; \
 	else \
 		echo -e "$(GREEN)[FREE] Available$(RESET)"; \
 	fi
