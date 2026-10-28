@@ -49,4 +49,9 @@ class LecturerAnalyticsControllerTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.assessmentId").value(20))
             .andExpect(jsonPath("$.scores").isArray()).andExpect(header().string("Cache-Control", "no-store"));
     }
+
+    @Test void moderationBriefingWithoutActiveCourseIsForbidden() throws Exception {
+        mvc.perform(get("/admin/analytics/lecturer-comparison/moderation-briefing").param("assessmentId", "20"))
+            .andExpect(status().isForbidden()).andExpect(jsonPath("$.message").exists());
+    }
 }

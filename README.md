@@ -1,7 +1,7 @@
 # 🎓 Integrated External Assessment System
 
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.4-brightgreen.svg)
-![Java](https://img.shields.io/badge/Java-17-orange.svg)
+![Java](https://img.shields.io/badge/Java-21-orange.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-8.4-blue.svg)
 ![Docker](https://img.shields.io/badge/Docker-Supported-blueviolet.svg)
 
@@ -14,6 +14,7 @@ Welcome to the **Integrated External Assessment System**, a comprehensive, full-
 * **Role-Based Access Control (RBAC):** Dedicated and secure portals tailored for Administrators, Lecturers, Students, and Industrial Supervisors.
 * **Assessment & Evaluation Management:** Streamlined tracking, grading, and evaluation workflows for academic capstone projects.
 * **Customizable Rubrics & Weightages:** Flexible configuration of assessment factors, breakdowns, and scoring weightages.
+* **Lecturer Evaluation Analytics:** Compare lecturer scores, team results, rubric ratings, distributions and matched-criteria gaps, with assessment/team filters and CSV export. [Usage and calculation rules](adproject/ANALYTICS.md).
 * **Robust Security:** Secure authentication and authorization powered by Spring Security.
 * **Automated Notifications:** SMTP-integrated email alerts for seamless system communications.
 * **Responsive User Interface:** A clean, user-friendly frontend built with HTML5, CSS3, and Thymeleaf.
@@ -22,7 +23,7 @@ Welcome to the **Integrated External Assessment System**, a comprehensive, full-
 
 ## 💻 Tech Stack
 
-* **Backend:** Java 17, Spring Boot 3.5.4, Spring Security, Spring Data JPA, Hibernate.
+* **Backend:** Java 21, Spring Boot 3.5.4, Spring Security, Spring Data JPA, Hibernate.
 * **Frontend:** HTML5, CSS3, Thymeleaf (Server-side rendering).
 * **Database:** MySQL 8.4.
 * **Deployment & Containerization:** Docker, Docker Compose.
@@ -38,7 +39,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 Ensure you have the following installed:
 * [Docker](https://www.docker.com/products/docker-desktop/) (Recommended for easy setup)
-* *Alternative (for manual setup):* [Java 17 JDK](https://adoptium.net/), [Maven](https://maven.apache.org/), and [MySQL 8.4](https://dev.mysql.com/downloads/mysql/)
+* *Alternative (for manual setup):* [Java 21 JDK](https://adoptium.net/), [Maven](https://maven.apache.org/), and [MySQL 8.4](https://dev.mysql.com/downloads/mysql/)
 
 ---
 
@@ -59,15 +60,35 @@ The easiest way to get the application running is by using Docker Compose. This 
    ```
    *(Make sure to open `.env` and fill in any required passwords and email configurations if you wish to test the email features).*
 
-3. **Build and Run the Containers:**
+3. **Prepare Persistent Report Storage:**
+   Follow [VPS upload storage setup](adproject/DEPLOYMENT_STORAGE.md) to create the
+   host upload directory and initialise permissions for the app user before starting.
+   The VPS default is `/srv/iams/uploads`. For local Docker development, set
+   `APP_UPLOAD_HOST_DIR=./uploads` in `.env` and follow the same ownership check.
+   If upgrading an existing container, copy its reports out before recreating it.
+
+4. **Build and Run the Containers:**
    ```bash
    docker-compose up -d --build
    ```
 
-4. **Access the Application:**
+5. **Access the Application:**
    Open your browser and navigate to: `http://localhost:8080`
 
 To stop the application, run: `docker-compose down`
+
+---
+
+### Dokploy with Separate App and Database Services
+
+Use the existing Dokploy app and database services. Configure a persistent bind
+mount on the **app service** from `/srv/iams/uploads` to `/app/uploads`, and set
+`APP_UPLOAD_SUBMISSIONS_DIR=/app/uploads/submissions` in that service's environment.
+The repository Compose file is a separate deployment option; it is not required
+for this Dokploy arrangement.
+
+Follow the [Dokploy storage and migration steps](adproject/DEPLOYMENT_STORAGE.md#dokploy-separate-app-and-database-services)
+before redeploying, including app-user ownership and preserving existing PDFs.
 
 ---
 

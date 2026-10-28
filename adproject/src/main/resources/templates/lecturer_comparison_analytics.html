@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lecturer Evaluation Analytics - IAMS</title>
+    <title>Data Analytics - IAMS</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
     <link rel="stylesheet" th:href="@{/css/lecturer_analytics.css}">
@@ -14,11 +14,11 @@
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
     <main class="main-content">
         <div class="header"><div class="header-container"><img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"></div></div>
-        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Data Views', '/admin/data-views', 'Lecturer Evaluation Analytics')}"></nav>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Data Views', '/admin/data-views', 'Data Analytics')}"></nav>
         <section id="lecturer-analytics" th:data-endpoint="@{/admin/analytics/lecturer-comparison/data}" aria-labelledby="analytics-title">
             <div class="analytics-heading">
-                <div><p class="analytics-eyebrow">ASSESSOR COMPARISON <span th:if="${activeCourse != null}" th:text="' / ' + ${activeCourse.courseCode}"></span></p>
-                    <h1 id="analytics-title">How do lecturers evaluate?</h1>
+                <div><p class="analytics-eyebrow">DATA ANALYTICS <span th:if="${activeCourse != null}" th:text="' / ' + ${activeCourse.courseCode}"></span></p>
+                    <h1 id="analytics-title">Data Analytics</h1>
                     <p>Compare awarded scores within one assessment, across teams and rubric criteria.</p>
                 </div>
                 <div class="analytics-actions"><button type="button" id="analytics-export" class="btn-secondary" disabled>Export comparison CSV</button><button type="button" id="analytics-print" class="btn-secondary">Print</button></div>
@@ -54,18 +54,40 @@
                     <article><span>Typical shared-criterion spread</span><strong id="analytics-kpi-spread">—</strong><small id="analytics-spread-sample">Median highest–lowest rating difference</small></article>
                 </div>
                 <div id="analytics-empty" class="analytics-empty" hidden><h2>No evaluations match these filters</h2><p>Try another team or assessment, select more lecturers, or clear the shared-criteria filter. Missing evaluations are not counted as zero.</p></div>
+
+                <!-- Moderation Summary Panel -->
+                <section id="ai-moderation-section" class="analytics-panel" style="margin-bottom: 24px; border-left: 4px solid #4A0018; background: #ffffff;">
+                    <div class="analytics-panel-heading" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h2 style="color: #4A0018; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-clipboard-check" style="font-size: 1.15rem; color: #4A0018;"></i>
+                                Moderation Summary
+                            </h2>
+                            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.875rem;">Consolidated review of scoring alignment across assessors, divergent criteria, and priority review targets.</p>
+                        </div>
+                        <button type="button" id="btn-generate-ai-briefing" class="analytics-btn" style="background: #4A0018; color: #fff; font-weight: 600; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; font-size: 0.875rem;">
+                            <i class="fas fa-file-alt"></i> View Moderation Summary
+                        </button>
+                    </div>
+                    <div id="ai-briefing-loading" style="display:none; padding: 16px; text-align: center; color: #4A0018; font-weight: 500; font-size: 0.9rem;">
+                        <i class="fas fa-circle-notch fa-spin" style="margin-right:8px;"></i> Compiling moderation summary...
+                    </div>
+                    <div id="ai-briefing-error" style="display:none; padding: 10px 14px; margin-top: 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; color: #dc2626; font-size: 0.875rem;"></div>
+                    <div id="ai-briefing-content" style="display:none; padding-top: 14px;"></div>
+                </section>
+
                 <div id="analytics-visuals">
                     <div class="analytics-chart-grid">
-                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Scores by lecturer</h2><p>Mean normalised score; dots show the lowest and highest target scores.</p></div><span class="analytics-unit">0–100%</span></div><div id="analytics-average-chart" class="analytics-chart"></div></article>
-                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Agreement on shared criteria</h2><p>Lecturer pairs compared on the same target and criterion.</p></div><span class="analytics-unit">Percentage points</span></div><div id="analytics-gap-chart" class="analytics-chart"></div></article>
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Scores by lecturer</h2><p>Mean normalised score; dots show the lowest and highest target scores.</p></div><span class="analytics-unit">0–100%</span></div><div id="analytics-average-chart" class="analytics-chart analytics-compact-chart"></div></article>
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Agreement on shared criteria</h2><p>Lecturer pairs compared on the same target and criterion.</p></div><span class="analytics-unit">Percentage points</span></div><div id="analytics-gap-chart" class="analytics-chart analytics-compact-chart"></div></article>
                     </div>
-                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Team comparison</h2><p>Compare lecturers within each team. Group and individual evaluations appear separately.</p></div></div><div id="analytics-team-chart" class="analytics-chart"></div></article>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Team comparison</h2><p>Compare lecturers within each team. Four teams per page, with group and individual evaluations shown within each team.</p></div></div><div id="analytics-team-chart" class="analytics-chart"></div><nav id="analytics-team-pagination" class="analytics-pagination" aria-label="Team comparison pages"><span id="analytics-team-page-status" role="status" aria-live="polite"></span><div><button type="button" id="analytics-team-previous" aria-label="Previous team comparison page">Previous</button><button type="button" id="analytics-team-next" aria-label="Next team comparison page">Next</button></div></nav></article>
                     <div class="analytics-chart-grid">
                         <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Rubric comparison</h2><p>Mean target score by rubric and lecturer. A dash means no evaluation.</p></div></div><div id="analytics-rubric-chart" class="analytics-table-wrap"></div></article>
-                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Score distribution</h2><p>Box-and-whisker plots compare the median, middle half and full range of target scores.</p></div></div><div id="analytics-distribution-chart" class="analytics-chart"></div></article>
+                        <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Score distribution</h2><p>Box-and-whisker plots compare the median, middle half and full range of target scores.</p></div></div><div id="analytics-distribution-chart" class="analytics-chart analytics-compact-chart"></div></article>
                     </div>
-                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Rating alignment</h2><p>One point per shared target and criterion. The diagonal represents equal ratings.</p></div><label class="analytics-pair-label">Lecturer pair<select id="analytics-pair" aria-label="Lecturer pair for rating alignment"></select></label></div><div id="analytics-alignment-chart" class="analytics-chart"></div></article>
-                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Evaluation breakdown</h2><p>Inspect the scores behind the charts, including evaluated criteria and available marks.</p></div><span id="analytics-row-count" class="analytics-unit"></span></div><div class="analytics-table-wrap"><table class="analytics-table"><caption class="sr-only">Filtered lecturer evaluations grouped by target and rubric</caption><thead><tr><th>Lecturer</th><th>Team / student</th><th>Type</th><th>Rubric</th><th>Criteria scored</th><th>Awarded / available</th><th>Score</th></tr></thead><tbody id="analytics-breakdown"></tbody></table></div><button type="button" id="analytics-show-more" class="analytics-reset" hidden>Show more rows</button></article>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Rating alignment</h2><p>One point per shared target and criterion. The diagonal represents equal ratings.</p></div><label class="analytics-pair-label">Lecturer pair<select id="analytics-pair" aria-label="Lecturer pair for rating alignment"></select></label></div><div id="analytics-alignment-chart" class="analytics-chart analytics-compact-chart"></div></article>
+                    <article class="analytics-panel"><div class="analytics-panel-heading"><div><h2>Evaluation breakdown</h2><p>Inspect the scores behind the charts, including evaluated criteria and available marks.</p></div><span id="analytics-row-count" class="analytics-unit"></span></div><div class="analytics-table-wrap"><table class="analytics-table"><caption class="sr-only">Filtered lecturer evaluations grouped by target and rubric</caption><thead><tr><th>Lecturer</th><th>Team / student</th><th>Type</th><th>Rubric</th><th>Criteria scored</th><th>Awarded / available</th><th>Score</th></tr></thead><tbody id="analytics-breakdown"></tbody></table></div><nav id="analytics-rows-pagination" class="analytics-pagination" aria-label="Evaluation breakdown pages"><span id="analytics-rows-page-status" role="status" aria-live="polite"></span><div><button type="button" id="analytics-rows-previous" aria-label="Previous evaluation breakdown page">Previous</button><button type="button" id="analytics-rows-next" aria-label="Next evaluation breakdown page">Next</button></div></nav></article>
                 </div>
                 <details class="analytics-method"><summary>How to read these comparisons</summary><p>Only lecturer evaluations marked Final or Submitted are included; drafts and student peer/self evaluations are excluded. Scores are divided by the highest configured rating for each criterion and expressed as percentages (the stored criterion maximum is used for legacy criteria without ratings). These are comparisons of awarded ratings, before final grade or factor adjustments. Each target score uses the marks available for its scored criteria; missing criteria are not treated as zero.</p><p>Group evaluations copied to team members count once per lecturer, team and criterion. Team filters use current team membership. Lecturer averages describe the selected work, so differences can also reflect different teams or rubric assignments. Use the shared-criteria filter and paired-gap chart for comparisons on the same work. The paired gap is the mean absolute difference between criterion percentages, weighted equally per matched criterion.</p><p>Agreement within 10 pp is the proportion of all matched lecturer-pair ratings whose difference is at most 10 percentage points. This fixed band describes proximity, not grading quality. Typical shared-criterion spread is the median of the highest minus lowest rating percentage on each target and criterion scored by at least two selected lecturers. Each target–criterion combination counts once, even when three or more lecturers rated it. Box-plot quartiles use linear interpolation.</p><p id="analytics-excluded-note"></p></details>
             </div>

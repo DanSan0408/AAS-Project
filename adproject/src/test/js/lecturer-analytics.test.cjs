@@ -80,3 +80,27 @@ test('new comparison metrics return unavailable, not zero, without any overlappi
     const r = analyse(data); assert.equal(r.agreementRate, null); assert.equal(r.medianSpread, null); assert.equal(r.sharedCells, 0);
     const filtered = analyse(data, { lecturers: [] }); assert.equal(filtered.agreementRate, null); assert.equal(filtered.medianSpread, null);
 });
+test('breakdown pages contain fifteen rows, with bounded first and last pages', () => {
+    const { paginate } = require('../../main/resources/static/js/lecturer-analytics.js');
+    const rows = Array.from({ length: 31 }, (_, i) => i);
+    const first = paginate(rows, 0, 15), second = paginate(rows, 1, 15), last = paginate(rows, 2, 15);
+    assert.equal(first.items.length, 15); assert.equal(first.start, 1); assert.equal(first.end, 15);
+    assert.equal(second.items[0], 15); assert.equal(second.items.length, 15);
+    assert.deepEqual(last.items, [30]); assert.equal(last.start, 31); assert.equal(last.end, 31);
+    assert.equal(paginate(rows, 999, 15).page, 2); assert.equal(paginate(rows, -1, 15).page, 0);
+    assert.deepEqual(paginate([], 10, 15), { items: [], page: 0, pages: 1, total: 0, start: 0, end: 0 });
+});
+test('team pagination counts four distinct teams and keeps both evaluation types together', () => {
+    const { paginate, groupTeams } = require('../../main/resources/static/js/lecturer-analytics.js');
+    const data = snapshot(Array.from({ length: 6 }, (_, i) => [
+        score(1, 'GROUP:' + i, 's1', 8, { teamId: i, teamName: 'Team ' + i }),
+        score(1, 'INDIVIDUAL:' + i, 'r2', 16, { teamId: i, teamName: 'Team ' + i, studentId: i })
+    ]).flat());
+    const result = analyse(data), groups = groupTeams(result.teams);
+    assert.equal(result.teams.length, 12); assert.equal(groups.length, 6);
+    assert.equal(paginate(groups, 0, 4).items.length, 4);
+    assert.equal(paginate(groups, 1, 4).items.length, 2);
+    assert.equal(groups[0].sections.length, 2);
+    const csv = comparisonCsv(data, result);
+    assert.equal(csv.split('\r\n').length, result.breakdown.length + 1);
+});

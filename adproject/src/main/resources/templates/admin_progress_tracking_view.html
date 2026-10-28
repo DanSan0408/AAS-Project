@@ -88,6 +88,11 @@
                           th:if="${submissionMappingData != null and submissionMappingData.stats != null}" 
                           th:text="${submissionMappingData.stats.get('totalSubmitted')} + '/' + ${submissionMappingData.stats.get('totalExpected')} + ' Submitted'">0/0</span>
                 </a>
+                <a th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/groups'}" 
+                   class="hub-tab-btn" 
+                   style="border-left: 2px solid #4A0018; color: #4A0018;">
+                    <i class="fas fa-comments" style="color: #4A0018;"></i> Group Comments &amp; Summaries
+                </a>
             </div>
 
             <!-- ================================================================= -->
@@ -373,6 +378,9 @@
                         <button type="submit" class="btn btn-secondary" style="padding: 9px 18px;">
                             <i class="fas fa-filter"></i> Filter
                         </button>
+                        <a th:if="${currentGroupId != null}" th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/group/' + ${currentGroupId}}" class="btn btn-primary" style="background: #4A0018; color: white; border: none; padding: 9px 16px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                            <i class="fas fa-users"></i> View Group Comments &amp; Summary
+                        </a>
                         <a th:if="${(currentSearch != null and !currentSearch.trim().isEmpty()) or (currentRoleFilter != null and currentRoleFilter != 'all') or currentGroupId != null}"
                            th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter=${currentFilter})}" class="btn btn-reset-filter" title="Reset Filters">
                             <i class="fas fa-undo"></i> Reset
@@ -439,7 +447,9 @@
 
                                     <!-- Relationship Flow -->
                                     <span class="meta-participants">
-                                        <span class="participant-author">By: <strong th:text="${comment.displayName}">Evaluator</strong></span>
+                                        <span class="participant-author">By: <strong th:text="${comment.evaluatorName != null and !comment.evaluatorName.isEmpty() ? comment.evaluatorName : (comment.displayName != null ? comment.displayName : 'Student')}">Evaluator</strong>
+                                            <span th:if="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).STUDENT and comment.anonymousIdentifier != null}" th:text="'(' + ${comment.anonymousIdentifier} + ')'" style="font-size: 0.85em; color: #6B7280; font-weight: 500;"></span>
+                                        </span>
                                         <i class="fas fa-arrow-right meta-arrow"></i>
                                         <span class="participant-target">To: <strong th:text="${comment.evaluatedStudent != null ? (comment.evaluatedStudent.username != null ? comment.evaluatedStudent.username : comment.evaluatedStudent.email) : 'Student'}">Target Student</strong></span>
                                     </span>

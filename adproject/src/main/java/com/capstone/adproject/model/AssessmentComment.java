@@ -230,7 +230,7 @@ public class AssessmentComment {
                     return evaluatorName != null ? evaluatorName : "Student";
                 }
             }
-            return anonymousIdentifier != null ? anonymousIdentifier : "Teammate";
+            return anonymousIdentifier != null ? anonymousIdentifier : (evaluatorName != null ? evaluatorName : "Teammate");
         } else if (evaluatorType == EvaluatorType.LECTURER || evaluatorType == EvaluatorType.SUPERVISOR) {
 
             if (anonymousIdentifier != null && !anonymousIdentifier.equals(evaluatorName)) {

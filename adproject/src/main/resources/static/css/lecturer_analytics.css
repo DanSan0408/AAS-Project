@@ -45,6 +45,17 @@ body[data-ui-role] .analytics-filter-card select { width: 100%; min-width: 0; mi
 .analytics-unit { color: #64748b; font-size: 10px; white-space: nowrap; }
 .analytics-chart, .analytics-table-wrap { overflow-x: auto; min-width: 0; max-width: 100%; scrollbar-width: thin; }
 .analytics-chart svg { display: block; width: 100%; min-width: 560px; font-family: var(--ui-font); }
+.analytics-compact-chart { max-height: 340px; overflow: auto; }
+.analytics-compact-chart svg { min-width: 480px; max-width: 640px; height: auto; margin-inline: auto; }
+.analytics-compact-chart .analytics-chart-note { padding: 12px 8px; font-size: 11px; }
+.analytics-team-graph { max-height: 260px; overflow: auto; }
+.analytics-team-type { color: #64748b; font-size: 11px; font-weight: 500; margin: 12px 0 6px; }
+.analytics-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--ui-border); }
+.analytics-pagination > span { color: #64748b; font-size: 12px; }
+.analytics-pagination > div { display: flex; gap: 8px; }
+.analytics-pagination button { padding: 8px 14px; min-height: 38px; border: 1px solid var(--ui-border); border-radius: 8px; background: #fff; color: var(--ui-primary); font-family: var(--ui-font); font-size: 12px; font-weight: 600; cursor: pointer; }
+.analytics-pagination button:hover:not(:disabled) { background: var(--ui-primary-soft); }
+.analytics-pagination button:disabled { opacity: 0.45; cursor: default; }
 .analytics-axis { font-size: 13px; fill: #64748b; }
 .analytics-chart-label { font-size: 14px; fill: #475569; }
 .analytics-chart-value { font-size: 14px; font-weight: 600; fill: #27272a; }
@@ -65,7 +76,7 @@ body[data-ui-role] .analytics-filter-card select { width: 100%; min-width: 0; mi
 .analytics-heatmap th { min-width: 130px; }
 .analytics-pair-label { display: grid; gap: 6px; font-size: 11px; color: #64748b; min-width: 200px; max-width: 350px; }
 body[data-ui-role] .analytics-pair-label select { width: 100%; min-width: 0; font-size: 12px; padding: 8px 10px; }
-#analytics-alignment-chart svg { max-width: 760px; margin-inline: auto; }
+#analytics-alignment-chart svg { min-width: 400px; max-width: 520px; margin-inline: auto; }
 .analytics-empty { padding: 40px 20px; border: 1px dashed #cbd5e1; background: #fff; border-radius: 12px; text-align: center; margin-bottom: 20px; }
 .analytics-empty h2 { font-size: 18px; color: #334155; }
 .analytics-empty p { max-width: 560px; margin: 0 auto; color: #64748b; font-size: 13px; line-height: 1.7; }
@@ -90,11 +101,12 @@ body[data-ui-role] .analytics-pair-label select { width: 100%; min-width: 0; fon
     .analytics-pair-label { width: 100%; max-width: none; }
 }
 @media print {
-    body.analytics-page .sidebar, .analytics-actions, .analytics-filter-card, #analytics-show-more { display: none !important; }
+    body.analytics-page .sidebar, .analytics-actions, .analytics-filter-card, .analytics-pagination { display: none !important; }
     body[data-ui-role].analytics-page .main-content { margin: 0 !important; width: 100% !important; max-width: 100% !important; padding: 0 !important; }
     .analytics-chart-grid { display: block; }
     .analytics-chart, .analytics-table-wrap { overflow: visible; }
-    .analytics-chart svg { min-width: 0; }
+    .analytics-chart svg { min-width: 0 !important; }
+    .analytics-compact-chart, .analytics-team-graph { max-height: none; overflow: visible; }
     .analytics-panel { break-inside: avoid; }
     .analytics-table :is(th, td) { padding: 6px; min-width: 0; font-size: 9px; }
     .analytics-chart svg, .analytics-heatmap td { print-color-adjust: exact; -webkit-print-color-adjust: exact; }

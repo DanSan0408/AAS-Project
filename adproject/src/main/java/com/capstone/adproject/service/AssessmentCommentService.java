@@ -119,7 +119,9 @@ public class AssessmentCommentService {
         List<AssessmentComment> savedComments = new ArrayList<>();
         
         String identifier = getAnonymousIdentifier(evaluatedStudent, evaluator.getId(), assessment, "Individual Assessment");
-        String evaluatorName = evaluator.getUsername();
+        String evaluatorName = (evaluator.getUsername() != null && !evaluator.getUsername().trim().isEmpty())
+                ? evaluator.getUsername()
+                : evaluator.getEmail();
         
         List<AssessmentComment> existingComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
                 evaluator.getId(),
@@ -187,7 +189,10 @@ public class AssessmentCommentService {
             AssessmentComment comment = new AssessmentComment();
             comment.setEvaluatorId(student.getId());
             comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-            comment.setEvaluatorName(student.getUsername());
+            String studentName = (student.getUsername() != null && !student.getUsername().trim().isEmpty())
+                    ? student.getUsername()
+                    : student.getEmail();
+            comment.setEvaluatorName(studentName);
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
             comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
@@ -231,7 +236,10 @@ public class AssessmentCommentService {
             AssessmentComment comment = new AssessmentComment();
             comment.setEvaluatorId(student.getId());
             comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
-            comment.setEvaluatorName(student.getUsername());
+            String studentName = (student.getUsername() != null && !student.getUsername().trim().isEmpty())
+                    ? student.getUsername()
+                    : student.getEmail();
+            comment.setEvaluatorName(studentName);
             comment.setEvaluatedStudent(student);
             comment.setAssessment(assessment);
             comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
@@ -575,6 +583,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         return count;
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Long> getModerationStats(Long assessmentId) {
         Map<String, Long> stats = new HashMap<>();
         List<AssessmentComment> comments = commentRepository.findByAssessmentId(assessmentId);
@@ -602,6 +611,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         return stats;
     }
 
+    @Transactional(readOnly = true)
     public List<AssessmentComment> getCommentsForModeration(Long assessmentId, String filter, String roleFilter, Long groupId, String search) {
         List<AssessmentComment> comments = commentRepository.findByAssessmentIdOrderBySubmittedAtDesc(assessmentId);
 
