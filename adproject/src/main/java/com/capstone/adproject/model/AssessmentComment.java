@@ -34,7 +34,7 @@ public class AssessmentComment {
     private Long evaluatorId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "`evaluatorType`", nullable = false)
     private EvaluatorType evaluatorType;
 
     @Column(name = "evaluator_name")
@@ -44,11 +44,13 @@ public class AssessmentComment {
     @JoinColumn(name = "assessment_id", nullable = false)
     private Assessment assessment;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    // Preserve the existing column even when production overrides the naming strategy.
+    // Unquoted implicit names can resolve to empty parallel snake_case columns.
+    @Column(name = "`commentText`", columnDefinition = "TEXT", nullable = false)
     private String commentText;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "`assessmentType`", nullable = false)
     private CommentAssessmentType assessmentType;
 
     @Column(name = "submitted_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
