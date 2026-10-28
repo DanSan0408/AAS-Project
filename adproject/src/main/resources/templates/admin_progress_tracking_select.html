@@ -96,11 +96,14 @@
                         </div>
                         
                         <div class="card-footer" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=progress'}" class="btn btn-secondary" style="flex: 1; text-align: center; min-width: 130px;">
+                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=progress'}" class="btn btn-secondary" style="flex: 1; text-align: center; min-width: 120px;">
                                 <i class="fas fa-chart-line"></i> View Progress
                             </a>
-                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments'}" class="btn btn-primary" style="flex: 1; text-align: center; min-width: 130px; background-color: var(--color-primary); color: white;">
+                            <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments'}" class="btn btn-primary" style="flex: 1; text-align: center; min-width: 120px; background-color: var(--color-primary); color: white;">
                                 <i class="fas fa-comments"></i> Moderate Comments
+                            </a>
+                            <a th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/groups'}" class="btn btn-secondary" style="flex: 1; text-align: center; min-width: 140px; border: 1px solid #4A0018; color: #4A0018; background: #fff;">
+                                <i class="fas fa-comments"></i> Group Comments
                             </a>
                         </div>
                     </div>
