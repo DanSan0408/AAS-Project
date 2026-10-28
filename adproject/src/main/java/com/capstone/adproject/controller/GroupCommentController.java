@@ -11,24 +11,31 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping; // Import Logger
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Import LoggerFactory
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.capstone.adproject.dto.ai.AiTeamDynamicsDtos;
 import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.MarkRepository;
+import com.capstone.adproject.service.AiServiceClient;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
@@ -37,7 +44,7 @@ import com.capstone.adproject.service.CourseScopeService;
 @RequestMapping("/{role}/comments/view")
 public class GroupCommentController {
 
-    private static final Logger logger = LoggerFactory.getLogger(GroupCommentController.class); // Add logger
+    private static final Logger logger = LoggerFactory.getLogger(GroupCommentController.class);
 
     private final AssessmentService assessmentService;
     private final GroupRepository groupRepository;
@@ -47,6 +54,8 @@ public class GroupCommentController {
     private final AdminCourseAssignmentRepository adminCourseAssignmentRepository;
     private final CalculateService calculateService;
     private final CourseScopeService courseScopeService;
+    private final MarkRepository markRepository;
+    private final AiServiceClient aiServiceClient;
 
     public GroupCommentController(
             AssessmentService assessmentService,
@@ -57,6 +66,23 @@ public class GroupCommentController {
             AdminCourseAssignmentRepository adminCourseAssignmentRepository,
             CalculateService calculateService,
             CourseScopeService courseScopeService) {
+        this(assessmentService, groupRepository, lecturerRepository, lecturerGroupAssignmentRepository,
+             lecturerRubricAssignmentRepository, adminCourseAssignmentRepository, calculateService,
+             courseScopeService, null, null);
+    }
+
+    @Autowired
+    public GroupCommentController(
+            AssessmentService assessmentService,
+            GroupRepository groupRepository,
+            LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository,
+            LecturerRubricAssignmentRepository lecturerRubricAssignmentRepository,
+            AdminCourseAssignmentRepository adminCourseAssignmentRepository,
+            CalculateService calculateService,
+            CourseScopeService courseScopeService,
+            @Autowired(required = false) MarkRepository markRepository,
+            @Autowired(required = false) AiServiceClient aiServiceClient) {
         this.assessmentService = assessmentService;
         this.groupRepository = groupRepository;
         this.lecturerRepository = lecturerRepository;
@@ -65,6 +91,8 @@ public class GroupCommentController {
         this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
         this.calculateService = calculateService;
         this.courseScopeService = courseScopeService;
+        this.markRepository = markRepository;
+        this.aiServiceClient = aiServiceClient;
     }
 
     private Optional<Lecturer> findLecturerByAuthName(String authName) {
@@ -364,5 +392,112 @@ public class GroupCommentController {
         model.addAttribute("role", role);
         model.addAttribute("isAdmin", isAdmin); // Will be false for this path
         return "lecturer_comment_view";
+    }
+
+    @GetMapping("/assessment/{assessmentId}/group/{groupId}/ai-audit")
+    @ResponseBody
+    public ResponseEntity<?> auditTeamDynamics(
+            @PathVariable("role") String role,
+            @PathVariable("assessmentId") Long assessmentId,
+            @PathVariable("groupId") Long groupId,
+            Authentication auth) {
+
+        if (aiServiceClient == null) {
+            return ResponseEntity.status(503).body(Map.of("message", "AI service is not configured."));
+        }
+
+        Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(assessmentId);
+        Optional<Group> groupOpt = groupId == null ? Optional.empty() : groupRepository.findById(groupId);
+
+        if (assessmentOpt.isEmpty() || groupOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "Assessment or Group not found."));
+        }
+
+        Assessment assessment = assessmentOpt.get();
+        Group group = groupOpt.get();
+        boolean isAdmin = "admin".equalsIgnoreCase(role);
+
+        if (isAdmin) {
+            Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
+            if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Unauthorized course access."));
+            }
+        } else {
+            Optional<Lecturer> lecturerOpt = findLecturerByAuthName(auth.getName());
+            if (lecturerOpt.isEmpty() || !isLecturerAssignedToAssessment(lecturerOpt.get(), assessment)) {
+                return ResponseEntity.status(403).body(Map.of("message", "Unauthorized assessment access."));
+            }
+        }
+
+        List<Student> students = new java.util.ArrayList<>(group.getStudents());
+        List<AiTeamDynamicsDtos.MemberOverview> memberOverviews = students.stream()
+            .map(s -> new AiTeamDynamicsDtos.MemberOverview(
+                s.getId(),
+                (s.getUsername() != null && !s.getUsername().trim().isEmpty()) ? s.getUsername() : s.getEmail(),
+                s.getEmail()
+            ))
+            .collect(Collectors.toList());
+
+        List<AiTeamDynamicsDtos.PeerRatingItem> peerRatings = new java.util.ArrayList<>();
+        if (markRepository != null && !students.isEmpty()) {
+            List<Mark> marks = markRepository.findByGroupMembersAndAssessment(students, assessment);
+            for (Mark m : marks) {
+                if (m.getEvaluatorStudent() != null && m.getEvaluatedStudent() != null) {
+                    double earned = m.getMarkValue() != null ? m.getMarkValue() : 0.0;
+                    double possible = (m.getSubRubric() != null && m.getSubRubric().getMarks() != null)
+                            ? m.getSubRubric().getMarks().doubleValue()
+                            : (m.getRubric() != null && m.getRubric().getMarks() != null
+                                    ? m.getRubric().getMarks().doubleValue()
+                                    : 100.0);
+                    String criterionLabel = m.getSubRubric() != null ? m.getSubRubric().getName() : (m.getRubric() != null ? m.getRubric().getName() : "Criterion");
+                    peerRatings.add(new AiTeamDynamicsDtos.PeerRatingItem(
+                        m.getEvaluatorStudent().getId(),
+                        m.getEvaluatorStudent().getUsername() != null ? m.getEvaluatorStudent().getUsername() : m.getEvaluatorStudent().getEmail(),
+                        m.getEvaluatedStudent().getId(),
+                        m.getEvaluatedStudent().getUsername() != null ? m.getEvaluatedStudent().getUsername() : m.getEvaluatedStudent().getEmail(),
+                        criterionLabel,
+                        earned,
+                        possible
+                    ));
+                }
+            }
+        }
+
+        List<AiTeamDynamicsDtos.PeerCommentItem> peerComments = new java.util.ArrayList<>();
+        for (Student student : students) {
+            String studentName = (student.getUsername() != null && !student.getUsername().trim().isEmpty()) ? student.getUsername() : student.getEmail();
+            Map<String, Map<String, List<String>>> commentsMap = calculateService.getAllAssessmentComments(student, assessment);
+            for (Map.Entry<String, Map<String, List<String>>> qEntry : commentsMap.entrySet()) {
+                String question = qEntry.getKey();
+                for (Map.Entry<String, List<String>> eEntry : qEntry.getValue().entrySet()) {
+                    String evaluatorName = eEntry.getKey();
+                    for (String text : eEntry.getValue()) {
+                        peerComments.add(new AiTeamDynamicsDtos.PeerCommentItem(
+                            evaluatorName,
+                            studentName,
+                            question,
+                            text
+                        ));
+                    }
+                }
+            }
+        }
+
+        AiTeamDynamicsDtos.AuditRequest request = new AiTeamDynamicsDtos.AuditRequest(
+            group.getId(),
+            group.getGroupName(),
+            assessment.getId(),
+            assessment.getTitle(),
+            memberOverviews,
+            peerRatings,
+            peerComments
+        );
+
+        try {
+            var response = aiServiceClient.auditTeamDynamics(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("message", "AI Audit Error: " + ex.getMessage()));
+        }
     }
 }

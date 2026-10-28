@@ -72,6 +72,29 @@
             <h2>Comments for <span style="color: #F8A617;" th:text="${group.groupName}"></span></h2>
             <h5 class="text-muted">Assessment: <span th:text="${assessment.title}"></span></h5>
             
+            <!-- Team Review Summary Panel -->
+            <div id="ai-team-dynamics-card" style="background:#ffffff; border:1px solid #e5e7eb; border-left:4px solid #4A0018; border-radius:8px; padding:18px 20px; margin-bottom:25px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                        <h3 style="margin:0; font-size:1.1rem; color:#4A0018; font-weight:700; display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-users" style="color:#4A0018;"></i>
+                            Team Review Summary
+                        </h3>
+                        <p style="margin:4px 0 0 0; color:#6b7280; font-size:0.875rem;">
+                            Consolidated review of peer evaluation balance, individual contributions, and team dynamics.
+                        </p>
+                    </div>
+                    <button type="button" id="btn-run-team-audit" th:data-audit-url="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/group/' + ${group.id} + '/ai-audit'}" style="background:#4A0018; color:#fff; font-weight:600; padding:8px 18px; border-radius:6px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:0.875rem; transition:filter 0.2s;">
+                        <i class="fas fa-file-alt"></i> View Summary
+                    </button>
+                </div>
+                <div id="team-audit-loading" style="display:none; padding:16px; text-align:center; color:#4A0018; font-weight:500; font-size:0.9rem;">
+                    <i class="fas fa-circle-notch fa-spin" style="margin-right:8px;"></i> Compiling team summary...
+                </div>
+                <div id="team-audit-error" style="display:none; padding:10px 14px; margin-top:12px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; font-size:0.875rem;"></div>
+                <div id="team-audit-content" style="display:none; padding-top:14px;"></div>
+            </div>
+
             <div th:if="${#lists.isEmpty(students)}" class="alert alert-warning" style="color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; padding: 15px; border-radius: 4px;">
                 <p class="mb-0" style="margin: 0;">No students in this group.</p>
             </div>
@@ -101,5 +124,166 @@
             <a th:href="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/groups'}" class="btn btn-secondary mt-3 mb-5">Back to Groups Selection</a>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const btn = document.getElementById('btn-run-team-audit');
+            const loading = document.getElementById('team-audit-loading');
+            const errorDiv = document.getElementById('team-audit-error');
+            const content = document.getElementById('team-audit-content');
+
+            if (!btn || !loading || !errorDiv || !content) return;
+
+            btn.addEventListener('click', async function() {
+                const url = btn.dataset.auditUrl;
+                if (!url) return;
+
+                errorDiv.style.display = 'none';
+                content.style.display = 'none';
+                loading.style.display = 'block';
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({ message: 'Server error' }));
+                        throw new Error(err.message || 'Audit request failed');
+                    }
+
+                    const data = await response.json();
+                    
+                    let statusBg = '#dcfce7', statusColor = '#166534', statusLabel = 'Healthy Dynamic';
+                    if (data.collaborationStatus === 'FREE_RIDER_DETECTED') {
+                        statusBg = '#fee2e2';
+                        statusColor = '#991b1b';
+                        statusLabel = 'Contribution Discrepancy';
+                    } else if (data.collaborationStatus === 'SUSPECTED_COLLUSION') {
+                        statusBg = '#fef3c7';
+                        statusColor = '#92400e';
+                        statusLabel = 'Uniform Rating Pattern';
+                    } else if (data.collaborationStatus === 'HIGH_FRICTION') {
+                        statusBg = '#ffedd5';
+                        statusColor = '#9a3412';
+                        statusLabel = 'Team Friction Noted';
+                    }
+
+                    let html = `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:14px 18px; margin-bottom:14px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                                <span style="background:${statusBg}; color:${statusColor}; font-weight:600; font-size:0.8rem; padding:3px 10px; border-radius:9999px;">
+                                    ${statusLabel}
+                                </span>
+                                <span style="font-size:0.875rem; color:#64748b; font-weight:600;">
+                                    Overall Health: <strong style="color:#1e293b;">${data.teamHealthScore}/100</strong>
+                                </span>
+                            </div>
+                            <p style="margin:0; font-size:0.925rem; line-height:1.6; color:#334155;">${escapeHtml(data.executiveSummary)}</p>
+                        </div>
+                    `;
+
+                    if (data.memberMetrics && data.memberMetrics.length > 0) {
+                        html += `
+                            <div style="margin-bottom:14px;">
+                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin-bottom:6px;">
+                                    Member Contributions
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                        `;
+                        data.memberMetrics.forEach(m => {
+                            let badgeBg = '#f1f5f9', badgeColor = '#475569', badgeText = 'Standard';
+                            if (m.status === 'CONTRIBUTING') {
+                                badgeBg = '#dcfce7';
+                                badgeColor = '#166534';
+                                badgeText = 'Contributing';
+                            } else if (m.status === 'SUSPECTED_FREE_RIDER') {
+                                badgeBg = '#fee2e2';
+                                badgeColor = '#991b1b';
+                                badgeText = 'Low Peer Rating';
+                            } else if (m.status === 'OVER_CONFIDENT') {
+                                badgeBg = '#fef3c7';
+                                badgeColor = '#92400e';
+                                badgeText = 'Self-Elevated';
+                            } else if (m.status === 'UNDER_EVALUATED') {
+                                badgeBg = '#e0e7ff';
+                                badgeColor = '#3730a3';
+                                badgeText = 'Under-Rated';
+                            }
+
+                            html += `
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 12px; background:#fff; border:1px solid #e2e8f0; border-radius:5px; font-size:0.875rem; gap:12px;">
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                            <strong style="color:#0f172a;">${escapeHtml(m.studentName)}</strong>
+                                            <span style="background:${badgeBg}; color:${badgeColor}; font-size:0.75rem; font-weight:600; padding:1px 7px; border-radius:4px;">${badgeText}</span>
+                                        </div>
+                                        <p style="margin:2px 0 0 0; color:#64748b; font-size:0.825rem; line-height:1.4;">${escapeHtml(m.contributionSummary)}</p>
+                                    </div>
+                                    <div style="color:#64748b; font-size:0.8rem; white-space:nowrap; text-align:right;">
+                                        Peer Avg: <strong style="color:#1e293b;">${m.peerScoreAvg}%</strong>
+                                        ${m.selfScoreAvg !== null ? `<br><span style="font-size:0.775rem;">Self: ${m.selfScoreAvg}%</span>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    }
+
+                    if (data.anomalyFlags && data.anomalyFlags.length > 0) {
+                        html += `
+                            <div style="margin-bottom:14px;">
+                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#92400e; margin-bottom:6px;">
+                                    Notes for Attention
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                        `;
+                        data.anomalyFlags.forEach(a => {
+                            html += `
+                                <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:3px solid #f59e0b; padding:8px 12px; border-radius:4px; font-size:0.85rem; color:#78350f;">
+                                    <strong>${escapeHtml(a.targetStudent || a.type)}:</strong> ${escapeHtml(a.description)}
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    }
+
+                    if (data.recommendedActions && data.recommendedActions.length > 0) {
+                        html += `
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:10px 14px;">
+                                <div style="font-size:0.775rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#475569; margin-bottom:4px;">
+                                    Suggested Next Steps
+                                </div>
+                                <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:#334155; line-height:1.5;">
+                        `;
+                        data.recommendedActions.forEach(act => {
+                            html += `<li>${escapeHtml(act)}</li>`;
+                        });
+                        html += `</ul></div>`;
+                    }
+
+                    content.innerHTML = html;
+                    content.style.display = 'block';
+                } catch (err) {
+                    errorDiv.textContent = err.message || 'Error executing team dynamics audit.';
+                    errorDiv.style.display = 'block';
+                } finally {
+                    loading.style.display = 'none';
+                    btn.disabled = false;
+                }
+            });
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return (str + '').replace(/[&<"']/g, function(m) {
+                    switch (m) {
+                        case '&': return '&amp;';
+                        case '<': return '&lt;';
+                        case '"': return '&quot;';
+                        case "'": return '&#039;';
+                        default: return m;
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

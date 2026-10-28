@@ -92,7 +92,9 @@
                             <td th:text="${assessment.id}"></td>
                             <td th:text="${assessment.title}"></td>
                             <td>
-                                <a th:href="@{'/lecturer/comments/view/assessment/' + ${assessment.id} + '/view'}" class="btn btn-primary btn-sm">View Comments</a>
+                                <a th:href="@{'/lecturer/comments/view/assessment/' + ${assessment.id} + '/view'}" class="btn btn-primary btn-sm" style="background: var(--ui-primary, #047857); border: none; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-comments"></i> View Comments &amp; Summary
+                                </a>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(assessments)}">

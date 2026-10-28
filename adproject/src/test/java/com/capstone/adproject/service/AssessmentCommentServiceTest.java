@@ -207,4 +207,49 @@ public class AssessmentCommentServiceTest {
         assertEquals(1L, stats.get("approved"));
         assertEquals(1L, stats.get("rejected"));
     }
+
+    @Test
+    public void testGetCommentsForModeration_FiltersStudentCommentsCorrectly() {
+        AssessmentComment studentComment = new AssessmentComment();
+        studentComment.setId(401L);
+        studentComment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+        studentComment.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
+        studentComment.setEvaluatorName("StudentBob");
+        studentComment.setEvaluatedStudent(student);
+        studentComment.setCommentText("Bob's peer feedback");
+        studentComment.setApprovalStatus(AssessmentComment.ApprovalStatus.PENDING);
+        studentComment.setIsApproved(false);
+
+        AssessmentComment lecturerComment = new AssessmentComment();
+        lecturerComment.setId(402L);
+        lecturerComment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+        lecturerComment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+        lecturerComment.setEvaluatorName("Dr. Smith");
+        lecturerComment.setEvaluatedStudent(student);
+        lecturerComment.setCommentText("Lecturer grading feedback");
+        lecturerComment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+        lecturerComment.setIsApproved(true);
+
+        when(commentRepository.findByAssessmentIdOrderBySubmittedAtDesc(10L))
+                .thenReturn(List.of(studentComment, lecturerComment));
+
+        // When filtering by 'all', both appear
+        List<AssessmentComment> allComments = commentService.getCommentsForModeration(10L, "all", "all", null, null);
+        assertEquals(2, allComments.size());
+
+        // When filtering by 'student' role, only the student comment appears
+        List<AssessmentComment> studentOnly = commentService.getCommentsForModeration(10L, "all", "student", null, null);
+        assertEquals(1, studentOnly.size());
+        assertEquals("StudentBob", studentOnly.get(0).getEvaluatorName());
+
+        // When filtering by 'pending' status, only the student comment appears
+        List<AssessmentComment> pendingOnly = commentService.getCommentsForModeration(10L, "pending", "all", null, null);
+        assertEquals(1, pendingOnly.size());
+        assertEquals(401L, pendingOnly.get(0).getId());
+
+        // When filtering by 'assessor' role, only the lecturer comment appears
+        List<AssessmentComment> assessorOnly = commentService.getCommentsForModeration(10L, "all", "assessor", null, null);
+        assertEquals(1, assessorOnly.size());
+        assertEquals("Dr. Smith", assessorOnly.get(0).getEvaluatorName());
+    }
 }

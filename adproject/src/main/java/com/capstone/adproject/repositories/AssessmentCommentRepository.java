@@ -166,9 +166,11 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
 
     long countByAssessmentIdAndIsFlaggedNegativeTrue(Long assessmentId);
 
-    List<AssessmentComment> findByAssessmentId(Long assessmentId);
+    @Query("SELECT c FROM AssessmentComment c WHERE c.assessment.id = :assessmentId")
+    List<AssessmentComment> findByAssessmentId(@Param("assessmentId") Long assessmentId);
 
-    List<AssessmentComment> findByAssessmentIdOrderBySubmittedAtDesc(Long assessmentId);
+    @Query("SELECT c FROM AssessmentComment c LEFT JOIN FETCH c.evaluatedStudent s LEFT JOIN FETCH s.group WHERE c.assessment.id = :assessmentId ORDER BY c.submittedAt DESC")
+    List<AssessmentComment> findByAssessmentIdOrderBySubmittedAtDesc(@Param("assessmentId") Long assessmentId);
 
     List<AssessmentComment> findByAssessmentIdAndIsFlaggedNegativeTrueOrderBySubmittedAtDesc(Long assessmentId);
 
