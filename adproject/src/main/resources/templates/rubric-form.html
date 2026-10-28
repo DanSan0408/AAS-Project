@@ -18,8 +18,9 @@
             .col-fixed, .col-grow { width: 100% !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="rubric-form-page">
+<body data-ui-role="admin" class="rubric-form-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -43,7 +44,7 @@
                 </li>
                 <li class="separator"><i class="fas fa-chevron-right"></i></li>
                 <li>
-                    <span class="current-page">
+                    <span class="current-page" aria-current="page">
                         <i class="fas fa-pen-nib"></i> <span th:text="${pageTitle}">Rubric</span>
                     </span>
                 </li>

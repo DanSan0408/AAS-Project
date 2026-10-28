@@ -44,9 +44,11 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
 import com.capstone.adproject.service.RubricService;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 @RequestMapping("/lecturer/assessments")
@@ -63,6 +65,7 @@ public class LecturerAssessmentController {
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final GroupRepository groupRepository;
     private final AssessmentSubmissionService assessmentSubmissionService;
+    private final StudentRepository studentRepository;
 
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
@@ -73,7 +76,8 @@ public class LecturerAssessmentController {
             LecturerStudentAssignmentRepository studentAssignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
             GroupRepository groupRepository,
-            AssessmentSubmissionService assessmentSubmissionService) {
+            AssessmentSubmissionService assessmentSubmissionService,
+            StudentRepository studentRepository) {
         this.lecturerAssessmentService = lecturerAssessmentService;
         this.rubricService = rubricService;
         this.deadlineService = deadlineService;
@@ -83,6 +87,7 @@ public class LecturerAssessmentController {
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.groupRepository = groupRepository;
         this.assessmentSubmissionService = assessmentSubmissionService;
+        this.studentRepository = studentRepository;
     }
 
     private Lecturer getCurrentLecturer(Authentication authentication) {
@@ -568,6 +573,35 @@ public class LecturerAssessmentController {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
             boolean isStudentTarget = studentId != null;
 
+            // 1. Persist report doodle annotations if provided in form submission (supports both student & group evaluation modes)
+            String doodlesPayload = allParams.get("submissionDoodlesPayload");
+            if (doodlesPayload != null && !doodlesPayload.isBlank()) {
+                try {
+                    AssessmentSubmission sub = null;
+                    if (allParams.containsKey("submissionId") && !allParams.get("submissionId").isBlank()) {
+                        try {
+                            Long subId = Long.parseLong(allParams.get("submissionId"));
+                            sub = assessmentSubmissionService.getSubmissionById(subId).orElse(null);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                    if (sub == null) {
+                        Group grp = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;
+                        Student std = studentId != null ? studentRepository.findById(studentId).orElse(null) : null;
+                        sub = assessmentSubmissionService.getSubmissionForTarget(assessment, grp, std).orElse(null);
+                    }
+
+                    if (sub != null) {
+                        assessmentSubmissionService.saveAllAnnotationsFromJson(sub, lecturer, doodlesPayload);
+                        logger.info("Successfully persisted doodle annotations for submission ID {} during evaluation submit", sub.getId());
+                    } else {
+                        logger.warn("Could not find submission to persist doodles for assessment ID {} (groupId: {}, studentId: {})",
+                                assessmentId, groupId, studentId);
+                    }
+                } catch (Throwable annotEx) {
+                    logger.warn("Could not persist doodlesPayload during evaluation submit", annotEx);
+                }
+            }
+
             if (isStudentTarget) {
                 List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
                 Student selectedStudent = assignedStudents.stream()
@@ -814,28 +848,6 @@ public class LecturerAssessmentController {
             boolean isComplete = lecturerAssessmentService.isGroupEvaluationComplete(
                 assessment, lecturer, groupId);
 
-            // Persist report doodle annotations if provided in form submission
-            String doodlesPayload = allParams.get("submissionDoodlesPayload");
-            if (doodlesPayload != null && !doodlesPayload.isBlank()) {
-                try {
-                    Group grp = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;
-                    Student std = null;
-                    if (studentId != null) {
-                        List<Student> assignedStudents = studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment);
-                        std = assignedStudents.stream()
-                            .filter(s -> s.getId().equals(studentId))
-                            .findFirst()
-                            .orElse(null);
-                    }
-                    var subOpt = assessmentSubmissionService.getSubmissionForTarget(assessment, grp, std);
-                    if (subOpt.isPresent()) {
-                        assessmentSubmissionService.saveAllAnnotationsFromJson(subOpt.get(), lecturer, doodlesPayload);
-                    }
-                } catch (Exception annotEx) {
-                    logger.warn("Could not persist doodlesPayload during evaluation submit", annotEx);
-                }
-            }
-
             if (isComplete) {
                 redirectAttributes.addFlashAttribute("successMessage",
                     "✓ Evaluation completed successfully for all students in the group!");
@@ -865,7 +877,7 @@ public class LecturerAssessmentController {
             @PathVariable("submissionId") Long submissionId,
             Authentication authentication) {
 
-        Lecturer lecturer = getCurrentLecturer(authentication);
+        getCurrentLecturer(authentication);
         var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
         if (submissionOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -882,11 +894,12 @@ public class LecturerAssessmentController {
 
     @GetMapping("/submissions/{submissionId}/annotations")
     @ResponseBody
+    @Transactional(readOnly = true)
     public ResponseEntity<List<SubmissionAnnotation>> getSubmissionAnnotations(
             @PathVariable("submissionId") Long submissionId,
             Authentication authentication) {
 
-        Lecturer lecturer = getCurrentLecturer(authentication);
+        getCurrentLecturer(authentication);
         var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
         if (submissionOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -923,8 +936,8 @@ public class LecturerAssessmentController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
-        response.put("annotationId", annotation.getId());
-        response.put("pageNumber", annotation.getPageNumber());
+        response.put("annotationId", annotation != null ? annotation.getId() : null);
+        response.put("pageNumber", annotation != null ? annotation.getPageNumber() : pageNumber);
 
         return ResponseEntity.ok(response);
     }

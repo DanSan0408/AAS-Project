@@ -32,7 +32,7 @@
 /* Main Content Layout */
 body {
     background-color: var(--color-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--color-secondary);
     margin: 0;
     padding: 0;
@@ -40,7 +40,7 @@ body {
 
 body.superadmin-page {
     background-color: var(--color-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--color-secondary);
     margin: 0;
     padding: 0;

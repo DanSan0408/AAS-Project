@@ -13,8 +13,9 @@
     <link th:if="${role == 'LECTURER'}" rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
     <link th:if="${role == 'STUDENT'}" rel="stylesheet" th:href="@{/css/student_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/profile.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body th:class="'profile-page role-' + (${role != null ? role.toLowerCase() : 'admin'})">
+<body th:attr="data-ui-role=${role != null ? #strings.toLowerCase(role) : 'admin'}" th:class="'profile-page role-' + (${role != null ? role.toLowerCase() : 'admin'})">
 
     <div th:if="${role == 'SUPER_ADMIN'}"><div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div></div>
     <div th:if="${role == 'ADMIN'}"><div th:replace="~{fragments/sidebar :: sidebar}"></div></div>
@@ -27,6 +28,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', ${role == 'STUDENT' ? '/student/home' : (role == 'LECTURER' ? '/lecturer/home' : (role == 'SUPER_ADMIN' ? '/superadmin/home' : '/admin/home'))}, 'My Profile')}"></nav>
+
         <div class="profile-container">
             <div class="profile-header">
                 <h2>My Profile</h2>

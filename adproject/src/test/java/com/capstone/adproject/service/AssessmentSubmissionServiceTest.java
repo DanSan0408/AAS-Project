@@ -266,5 +266,45 @@ class AssessmentSubmissionServiceTest {
         assertEquals("Alpha Squad", rows.get(0).get("targetName"));
         assertEquals(null, rows.get(0).get("submission"));
     }
+
+    @Test
+    void saveOrUpdateAnnotation_emptyStrokes_skipsCreationWhenNotFound() {
+        AssessmentSubmission submission = new AssessmentSubmission();
+        submission.setId(50L);
+
+        when(annotationRepository.findBySubmissionAndLecturerAndPageNumber(submission, lecturer, 2))
+                .thenReturn(Optional.empty());
+
+        SubmissionAnnotation annotation = submissionService.saveOrUpdateAnnotation(submission, lecturer, 2, "[]");
+        org.junit.jupiter.api.Assertions.assertNull(annotation);
+    }
+
+    @Test
+    void saveAllAnnotationsFromJson_validJson_savesAnnotations() {
+        AssessmentSubmission submission = new AssessmentSubmission();
+        submission.setId(50L);
+
+        when(annotationRepository.findBySubmissionAndLecturerAndPageNumber(eq(submission), eq(lecturer), eq(1)))
+                .thenReturn(Optional.empty());
+        when(annotationRepository.save(any(SubmissionAnnotation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        String payload = "{\"1\":[{\"tool\":\"pen\",\"color\":\"#4A0018\",\"points\":[{\"x\":0.1,\"y\":0.2}]}]}";
+        submissionService.saveAllAnnotationsFromJson(submission, lecturer, payload);
+
+        verify(annotationRepository).save(any(SubmissionAnnotation.class));
+    }
+
+    @Test
+    void getSubmissionForTarget_fallbackToMember_returnsSubmission() {
+        group.setStudents(List.of(student));
+        when(submissionRepository.findByAssessmentAndGroup(assessment, group)).thenReturn(Optional.empty());
+        AssessmentSubmission memberSub = new AssessmentSubmission();
+        memberSub.setId(88L);
+        when(submissionRepository.findByAssessmentAndStudent(assessment, student)).thenReturn(Optional.of(memberSub));
+
+        var result = submissionService.getSubmissionForTarget(assessment, group, null);
+        assertTrue(result.isPresent());
+        assertEquals(88L, result.get().getId());
+    }
 }
 

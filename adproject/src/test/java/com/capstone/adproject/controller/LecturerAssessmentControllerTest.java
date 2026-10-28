@@ -47,6 +47,7 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.service.AssessmentSubmissionService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
@@ -78,6 +79,9 @@ class LecturerAssessmentControllerTest {
 
     @Mock
     private GroupRepository groupRepository;
+
+    @Mock
+    private StudentRepository studentRepository;
 
     @Mock
     private AssessmentSubmissionService assessmentSubmissionService;

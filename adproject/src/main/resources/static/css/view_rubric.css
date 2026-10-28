@@ -25,7 +25,7 @@ html {
 }
 
 body.view-rubric-page {
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     background-color: var(--color-background);
     margin: 0;
     padding: 0;

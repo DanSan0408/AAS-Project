@@ -30,7 +30,7 @@
 
 body.admin-page {
     background-color: var(--color-background);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     color: var(--color-secondary);
     margin: 0;
     padding: 0;
@@ -546,7 +546,8 @@ body.admin-page .date-info {
     padding: 4px 10px !important;
     border-radius: 6px !important;
     display: inline-block !important;
-    font-family: monospace !important;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif) !important;
+    font-variant-numeric: tabular-nums;
     font-size: 0.9em !important;
 }
 

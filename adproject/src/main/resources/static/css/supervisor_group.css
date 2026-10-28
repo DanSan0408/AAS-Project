@@ -17,7 +17,7 @@
 body.supervisor-page {
     background-color: var(--supervisor-background);
     color: var(--supervisor-text-dark);
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
 }
 
 body.supervisor-page .main-content {

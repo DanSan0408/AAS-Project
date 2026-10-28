@@ -116,8 +116,9 @@
             background: #0f172a;
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body th:class="${isAdminView != null and isAdminView ? 'admin-page' : 'student-page student-submissions-page'}">
+<body th:attr="data-ui-role=${isAdminView != null and isAdminView ? 'admin' : 'student'}" th:class="${isAdminView != null and isAdminView ? 'admin-page' : 'student-page student-submissions-page'}">
     <div th:if="${isAdminView != null and isAdminView}" class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
     <div th:unless="${isAdminView != null and isAdminView}" th:replace="fragments/student_sidebar :: sidebar"></div>
 
@@ -147,7 +148,7 @@
                 </li>
                 <li class="separator"><i class="fas fa-chevron-right"></i></li>
                 <li>
-                    <span class="current-page">
+                    <span class="current-page" aria-current="page">
                         <i class="fas fa-file-pdf"></i> <span th:text="${assessment.getEffectiveSubmissionTitle()}">Report</span>
                     </span>
                 </li>

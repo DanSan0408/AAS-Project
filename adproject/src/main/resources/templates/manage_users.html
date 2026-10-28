@@ -7,8 +7,9 @@
     <title>Manage Users</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="manage-users-page">
+<body data-ui-role="admin" class="manage-users-page">
     <div class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="main-content">
@@ -17,6 +18,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/admin/home', 'Manage Users')}"></nav>
+
         
         <div class="card">
             <h1>Manage Users</h1>

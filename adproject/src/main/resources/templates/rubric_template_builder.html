@@ -10,7 +10,6 @@
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/rubric_form.css}">
     <link rel="stylesheet" th:href="@{/css/rubric_template_builder.css}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Mobile optimization for deeply nested form cards */
@@ -22,8 +21,9 @@
             .col-fixed, .col-grow { width: 100% !important; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
-<body class="rubric-form-page">
+<body data-ui-role="admin" class="rubric-form-page">
 
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
@@ -33,6 +33,8 @@
                 <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
             </div>
         </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Manage Assessments', '/rubrics/manage', 'Build Rubric Template')}"></nav>
+
 
         <div class="page-header" style="margin-bottom: 30px; text-align: center;">
             <h1 style="color: var(--color-primary); font-size: clamp(1.2rem, 4vw, 1.8rem); margin: 0; word-wrap: break-word;">Rubric Blueprint Builder</h1>

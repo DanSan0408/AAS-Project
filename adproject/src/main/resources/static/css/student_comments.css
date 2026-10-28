@@ -17,7 +17,7 @@
 * { box-sizing: border-box; }
 
 body.student-comments-page {
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--ui-font, 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
     background-color: var(--student-background);
     margin: 0;
     padding: 0;
