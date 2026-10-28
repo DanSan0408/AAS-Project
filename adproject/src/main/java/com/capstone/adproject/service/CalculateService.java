@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.dto.AssessmentDataDto;
@@ -33,6 +35,8 @@ import com.capstone.adproject.repositories.StudentResultOverrideRepository;
 
 @Service
 public class CalculateService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CalculateService.class);
 
     private final MarkRepository markRepository;
     private final LecturerGroupAssignmentRepository lecturerAssignmentRepository;
@@ -926,6 +930,12 @@ public class CalculateService {
             }
         }
         
+        long displayed = result.values().stream()
+            .flatMap(evaluators -> evaluators.values().stream())
+            .mapToLong(List::size).sum();
+        logger.info("Comment retrieval: assessmentId={}, studentId={}, loaded={}, displayed={}",
+            assessment.getId(), student.getId(), allComments.size(), displayed);
+
         return result;
     }
 

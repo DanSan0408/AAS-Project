@@ -2,6 +2,17 @@
 
 **Last Updated**: 2026-10-28 (Antigravity)
 
+
+## Production missing-comments investigation (2026-10-28)
+**Status**: INVESTIGATING — production cause and recovery not yet verified.
+
+- User reports empty admin moderation for assessment 1 and empty admin/assessor group comment views (including assessment 8).
+- Production SQL confirms 92 nonblank comments for assessment 1 and 470 for assessment 8. `temp_things.csv` confirms all recipients exist, both assessment and student course IDs are 1, and recipients have group IDs. Approval status does not restrict the admin views.
+- Current-code regression checks render both student and assessor text in all three templates. The eight comment-service tests, one existing calculation-service test and two template tests passed (11 total).
+- Added count-only INFO diagnostics: `Comment moderation totals`, `Comment moderation retrieval`, and `Comment retrieval`. They report assessment/student IDs, query/result counts and filter state, without comment bodies, names, email addresses or search terms. Production logs previously recorded only controller entry, so did not establish whether queries returned any rows.
+- No production deployment or database was changed. Reproduce after deploying the diagnostics and inspect these messages to distinguish ORM/datasource retrieval from filtering/rendering. The local test suite does not prove the deployed image or database configuration matches this workspace.
+- `diagnostics/comments-read-only.sql` provides read-only schema, count and relationship checks. Browser authentication is unavailable to the current tools.
+
 ---
 
 ## Current Status: Compact Data Analytics & Pagination

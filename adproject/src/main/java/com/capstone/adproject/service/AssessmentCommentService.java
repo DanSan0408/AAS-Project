@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,8 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
 public class AssessmentCommentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AssessmentCommentService.class);
     
     @Autowired
     private AssessmentCommentRepository commentRepository;
@@ -608,6 +612,8 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         stats.put("approved", approved);
         stats.put("rejected", rejected);
         stats.put("flagged", 0L);
+        logger.info("Comment moderation totals: assessmentId={}, total={}, pending={}, approved={}, rejected={}",
+            assessmentId, total, pending, approved, rejected);
         return stats;
     }
 
@@ -615,7 +621,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
     public List<AssessmentComment> getCommentsForModeration(Long assessmentId, String filter, String roleFilter, Long groupId, String search) {
         List<AssessmentComment> comments = commentRepository.findByAssessmentIdOrderBySubmittedAtDesc(assessmentId);
 
-        return comments.stream()
+        List<AssessmentComment> filteredComments = comments.stream()
             .filter(c -> {
                 if (filter == null || "all".equalsIgnoreCase(filter)) return true;
                 if ("pending".equalsIgnoreCase(filter)) return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !Boolean.TRUE.equals(c.getIsApproved());
@@ -649,5 +655,9 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
                 return text.contains(q) || studentName.contains(q) || studentEmail.contains(q) || evalName.contains(q) || anon.contains(q) || label.contains(q);
             })
             .collect(Collectors.toList());
+        logger.info("Comment moderation retrieval: assessmentId={}, loaded={}, displayed={}, statusFilter={}, roleFilter={}, groupId={}, searchApplied={}",
+            assessmentId, comments.size(), filteredComments.size(), filter, roleFilter, groupId,
+            search != null && !search.isBlank());
+        return filteredComments;
     }
 }
