@@ -1,6 +1,6 @@
-# Lecturer evaluation analytics
+# Data Analytics
 
-Open **Lecturer Analytics** from the admin sidebar, or **Compare Lecturer Evaluations**
+Open **Data Analytics** from the admin sidebar, or **Open Data Analytics**
 from Data Views. The page is available to admins and super-admins at
 `/admin/analytics/lecturer-comparison` and uses the currently active course.
 
@@ -27,6 +27,9 @@ rubric, CLO, individual student and Final/Submitted status. The optional shared-
 criteria filter retains only target/criterion combinations scored by at least
 two selected lecturers. URLs retain filters for bookmarking or sharing with
 another authorised admin. Changing assessments resets the scoped filters.
+
+The average/range, pair-gap, box-plot and scatter charts have bounded display sizes.
+Long lecturer lists scroll within their cards rather than expanding the dashboard.
 
 ## Additional comparison metrics
 
@@ -70,9 +73,13 @@ it does not infer lecturer quality or grading bias.
 
 ## Export and print
 
-CSV export contains every filtered breakdown row, including rows beyond the initial
-on-screen page. Names are escaped and spreadsheet formula prefixes are neutralised.
-Print expands the remaining team and breakdown rows. Neither action changes marks.
+Team comparison displays four distinct teams per page; group and individual
+sections stay together within each team. Evaluation breakdown displays 15 rows per
+page. Both use Previous/Next controls with visible range/page indicators and reset
+to page one when filters change.
+
+CSV export contains every filtered breakdown row, including rows on other pages. Names are escaped and spreadsheet formula prefixes are neutralised.
+Print includes all teams and breakdown rows, then restores the selected screen pages. Neither action changes marks.
 
 ## Implementation and checks
 

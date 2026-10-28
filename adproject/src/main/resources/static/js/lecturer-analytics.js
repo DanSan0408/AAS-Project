@@ -88,12 +88,12 @@
         const teams = new Map();
         targets.forEach(t => {
             const k = key(t.teamId, t.criterion.scope);
-            if (!teams.has(k)) teams.set(k, { name: t.teamName + ' · ' + (t.criterion.scope === 'GROUP' ? 'Group' : 'Individual'), lecturers: new Map() });
+            if (!teams.has(k)) teams.set(k, { teamId: t.teamId, teamName: t.teamName, scope: t.criterion.scope, name: t.teamName + ' · ' + (t.criterion.scope === 'GROUP' ? 'Group' : 'Individual'), lecturers: new Map() });
             const group = teams.get(k);
             if (!group.lecturers.has(t.lecturerId)) group.lecturers.set(t.lecturerId, { id: t.lecturerId, name: t.lecturerName, values: [] });
             group.lecturers.get(t.lecturerId).values.push(t.percentage);
         });
-        const teamRows = [...teams.values()].sort(byName).map(t => ({ name: t.name, lecturers: [...t.lecturers.values()].sort(byName).map(l => ({ ...l, value: mean(l.values) })) }));
+        const teamRows = [...teams.values()].sort(byName).map(t => ({ teamId: t.teamId, teamName: t.teamName, scope: t.scope, name: t.name, lecturers: [...t.lecturers.values()].sort(byName).map(l => ({ ...l, value: mean(l.values) })) }));
         const rubricMap = new Map();
         breakdown.forEach(b => {
             const r = b.criterion;
@@ -104,6 +104,22 @@
         });
         const rubrics = [...rubricMap.values()].sort(byName);
         return { facts, targets, breakdown, lecturers, pairs, teams: teamRows, rubrics, mean: mean(targets.map(t => t.percentage)), agreementRate: pairedRatings ? matchingPairs / pairedRatings * 100 : null, pairedRatings, matchingPairs, medianSpread: quantile(spreads, 0.5), sharedCells: spreads.length };
+    }
+    function paginate(items, requestedPage, size) {
+        const pages = Math.max(1, Math.ceil(items.length / size));
+        const page = Math.min(pages - 1, Math.max(0, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 0));
+        const offset = page * size;
+        return { items: items.slice(offset, offset + size), page, pages, total: items.length,
+            start: items.length ? offset + 1 : 0, end: Math.min(offset + size, items.length) };
+    }
+    function groupTeams(teams) {
+        const groups = new Map();
+        teams.forEach(section => {
+            const id = section.teamId == null ? 'unassigned' : String(section.teamId);
+            if (!groups.has(id)) groups.set(id, { id, name: section.teamName, sections: [] });
+            groups.get(id).sections.push(section);
+        });
+        return [...groups.values()].sort(byName);
     }
     function csvCell(value) {
         let text = String(value ?? '');
@@ -116,7 +132,7 @@
         result.breakdown.forEach(r => rows.push([snapshot.assessmentTitle, r.lecturerName, r.teamName, r.targetName, r.criterion.scope, r.criterion.rubricName, r.count, r.earned, r.possible, r.percentage.toFixed(2)]));
         return '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
     }
-    const api = { analyse, comparisonCsv };
+    const api = { analyse, comparisonCsv, paginate, groupTeams };
     global.IamsLecturerAnalytics = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     if (typeof document === 'undefined') return;
@@ -126,7 +142,7 @@
         if (!root) return;
         const get = id => document.getElementById('analytics-' + id);
         const palette = ['#7a1e2d', '#047857', '#2563eb', '#9333ea', '#b45309', '#0e7490', '#475569', '#be185d'];
-        let snapshot = null, result = null, request = null, rowLimit = 100, teamLimit = 8;
+        let snapshot = null, result = null, request = null, rowPage = 0, teamPage = 0, printing = false;
         let wanted = new URLSearchParams(location.search);
         const colors = new Map();
         const percent = n => n == null ? '—' : n.toFixed(1) + '%';
@@ -219,19 +235,27 @@
             });
             container.append(svg);
         }
+        function updatePager(kind, page, noun) {
+            get(kind + '-page-status').textContent = `${noun} ${page.start}–${page.end} of ${page.total} · Page ${page.page + 1} of ${page.pages}`;
+            get(kind + '-previous').disabled = page.page === 0;
+            get(kind + '-next').disabled = page.page + 1 >= page.pages;
+            get(kind + '-pagination').hidden = printing || !page.total;
+        }
         function teamChart() {
             const box = get('team-chart'); box.replaceChildren();
-            result.teams.slice(0, teamLimit).forEach(team => {
+            const teams = groupTeams(result.teams);
+            const page = paginate(teams, teamPage, 4); teamPage = page.page;
+            (printing ? teams : page.items).forEach(team => {
                 const section = element('section', null, 'analytics-team-section');
                 section.append(element('h3', team.name));
-                const graph = element('div'); section.append(graph); box.append(section);
-                chart(graph, team.lecturers.map(l => ({ ...l, color: colors.get(String(l.id)) })));
+                team.sections.forEach(type => {
+                    section.append(element('h4', type.scope === 'GROUP' ? 'Group evaluation' : 'Individual evaluation', 'analytics-team-type'));
+                    const graph = element('div', null, 'analytics-team-graph'); section.append(graph);
+                    chart(graph, type.lecturers.map(l => ({ ...l, color: colors.get(String(l.id)) })));
+                });
+                box.append(section);
             });
-            if (teamLimit < result.teams.length) {
-                box.append(element('p', `Showing ${teamLimit} of ${result.teams.length} team/type groups.`, 'analytics-chart-note'));
-                const more = element('button', 'Show more teams', 'analytics-reset'); more.type = 'button';
-                more.addEventListener('click', () => { teamLimit += 8; teamChart(); }); box.append(more);
-            }
+            updatePager('team', page, 'Teams');
         }
         function rubricChart() {
             const box = get('rubric-chart');
@@ -282,7 +306,7 @@
             box.replaceChildren();
             const pair = result.pairs.find(p => p.id === picker.value);
             if (!pair) { box.append(element('p', 'Select two or more lecturers with scores for the same target and criterion to see their rating alignment.', 'analytics-chart-note')); return; }
-            const width = 640, height = 420, left = 80, top = 20, plotWidth = 500, plotHeight = 310;
+            const width = 640, height = 340, left = 80, top = 20, plotWidth = 500, plotHeight = 230;
             const x = v => left + v / 100 * plotWidth, y = v => top + plotHeight - v / 100 * plotHeight;
             const svg = svgNode('svg', { viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': `${pair.name}: ${pair.count} paired criterion ratings. Points on the diagonal are equal ratings; points above it indicate a higher rating from ${pair.bName}.` });
             [0, 25, 50, 75, 100].forEach(tick => {
@@ -302,16 +326,18 @@
         }
         function breakdownTable() {
             const tbody = get('breakdown'); tbody.replaceChildren();
-            result.breakdown.slice(0, rowLimit).forEach(r => {
+            const page = paginate(result.breakdown, rowPage, 15); rowPage = page.page;
+            (printing ? result.breakdown : page.items).forEach(r => {
                 const tr = element('tr');
                 [r.lecturerName, r.criterion.scope === 'GROUP' ? r.targetName : `${r.teamName} / ${r.targetName}`, r.criterion.scope === 'GROUP' ? 'Group' : 'Individual', r.criterion.rubricName, r.count, `${number(r.earned)} / ${number(r.possible)}`, percent(r.percentage)].forEach(text => tr.append(element('td', String(text))));
                 tbody.append(tr);
             });
             get('row-count').textContent = `${result.breakdown.length} rows`;
-            get('show-more').hidden = rowLimit >= result.breakdown.length;
+            updatePager('rows', page, 'Rows');
         }
         function render() {
             if (!snapshot) return;
+            rowPage = 0; teamPage = 0;
             const filters = readFilters();
             result = analyse(snapshot, filters);
             const selected = filters.lecturers.length;
@@ -357,7 +383,7 @@
                 const data = await response.json();
                 if (!Array.isArray(data.criteria) || !Array.isArray(data.scores) || !Array.isArray(data.teams)) throw new Error('The analytics response was incomplete. Please try again.');
                 if (controller.signal.aborted) return;
-                snapshot = data; rowLimit = 100; teamLimit = 8; populate(); render();
+                snapshot = data; rowPage = 0; teamPage = 0; populate(); render();
             } catch (error) {
                 if (controller.signal.aborted) return;
                 snapshot = null; result = null;
@@ -371,7 +397,7 @@
         get('filters').addEventListener('change', e => {
             if (e.target === get('assessment') || !snapshot) return;
             if (e.target === get('scope') || e.target === get('team')) updateStudentOptions();
-            rowLimit = 100; teamLimit = 8; render();
+            rowPage = 0; teamPage = 0; render();
         });
         ['all', 'no'].forEach(action => get(action + '-lecturers').addEventListener('click', () => {
             get('lecturer-list').querySelectorAll('input').forEach(input => { input.checked = action === 'all'; }); render();
@@ -380,16 +406,26 @@
             ['team', 'scope', 'rubric', 'clo', 'student', 'status'].forEach(name => { get(name).value = ''; });
             get('shared').checked = false;
             get('lecturer-list').querySelectorAll('input').forEach(input => { input.checked = true; });
-            if (snapshot) { updateStudentOptions(); rowLimit = 100; teamLimit = 8; render(); }
+            if (snapshot) { updateStudentOptions(); rowPage = 0; teamPage = 0; render(); }
         });
         get('retry').addEventListener('click', load);
         get('pair').addEventListener('change', alignmentChart);
-        get('print').addEventListener('click', () => { if (result) { rowLimit = result.breakdown.length; teamLimit = result.teams.length; breakdownTable(); teamChart(); } global.print(); });
-        get('show-more').addEventListener('click', () => { rowLimit += 100; breakdownTable(); });
+        function preparePrint() { if (result) { printing = true; breakdownTable(); teamChart(); } }
+        function restorePages() { if (result) { printing = false; breakdownTable(); teamChart(); } }
+        global.addEventListener('beforeprint', preparePrint);
+        global.addEventListener('afterprint', restorePages);
+        get('print').addEventListener('click', () => {
+            preparePrint();
+            try { global.print(); } finally { restorePages(); }
+        });
+        get('team-previous').addEventListener('click', () => { if (result) { teamPage--; teamChart(); } });
+        get('team-next').addEventListener('click', () => { if (result) { teamPage++; teamChart(); } });
+        get('rows-previous').addEventListener('click', () => { if (result) { rowPage--; breakdownTable(); } });
+        get('rows-next').addEventListener('click', () => { if (result) { rowPage++; breakdownTable(); } });
         get('export').addEventListener('click', () => {
             if (!snapshot || !result || !result.facts.length) return;
             const url = URL.createObjectURL(new Blob([comparisonCsv(snapshot, result)], { type: 'text/csv;charset=utf-8;' }));
-            const link = element('a'); link.href = url; link.download = `lecturer-comparison-${snapshot.assessmentId}.csv`; link.click();
+            const link = element('a'); link.href = url; link.download = `data-analytics-${snapshot.assessmentId}.csv`; link.click();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         });
         root.querySelectorAll('.analytics-chart, .analytics-table-wrap').forEach(box => {
@@ -399,6 +435,151 @@
         const picker = root.querySelector('.analytics-lecturer-picker');
         document.addEventListener('click', e => { if (!picker.contains(e.target)) picker.open = false; });
         picker.addEventListener('keydown', e => { if (e.key === 'Escape') { picker.open = false; picker.querySelector('summary').focus(); } });
+
+        // --- AI Moderation Briefing Handler ---
+        const aiBriefingBtn = document.getElementById('btn-generate-ai-briefing');
+        const aiBriefingLoading = document.getElementById('ai-briefing-loading');
+        const aiBriefingError = document.getElementById('ai-briefing-error');
+        const aiBriefingContent = document.getElementById('ai-briefing-content');
+
+        if (aiBriefingBtn) {
+            aiBriefingBtn.addEventListener('click', async () => {
+                if (!snapshot || !snapshot.assessmentId) {
+                    alert('Please select an assessment first.');
+                    return;
+                }
+                aiBriefingError.style.display = 'none';
+                aiBriefingContent.style.display = 'none';
+                aiBriefingLoading.style.display = 'block';
+                aiBriefingBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`/admin/analytics/lecturer-comparison/moderation-briefing?assessmentId=${snapshot.assessmentId}`, {
+                        cache: 'no-store',
+                        headers: { Accept: 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json().catch(() => ({ message: 'Server error' }));
+                        throw new Error(err.message || 'Failed to generate moderation briefing.');
+                    }
+
+                    const data = await response.json();
+                    
+                    let badgeBg = '#dcfce7', badgeColor = '#166534', badgeLabel = 'High Agreement';
+                    if (data.consensusStatus === 'ACTION_REQUIRED') {
+                        badgeBg = '#fee2e2';
+                        badgeColor = '#991b1b';
+                        badgeLabel = 'Review Recommended';
+                    } else if (data.consensusStatus === 'MODERATE_DISCREPANCY') {
+                        badgeBg = '#fef3c7';
+                        badgeColor = '#92400e';
+                        badgeLabel = 'Moderate Discrepancy';
+                    }
+
+                    function escapeHtml(str) {
+                        if (!str) return '';
+                        return (str + '').replace(/[&<"']/g, function(m) {
+                            switch (m) {
+                                case '&': return '&amp;';
+                                case '<': return '&lt;';
+                                case '"': return '&quot;';
+                                case "'": return '&#039;';
+                                default: return m;
+                            }
+                        });
+                    }
+
+                    let html = `
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:14px 18px; margin-bottom:14px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+                                <span style="background:${badgeBg}; color:${badgeColor}; font-weight:600; font-size:0.8rem; padding:3px 10px; border-radius:9999px;">
+                                    ${badgeLabel}
+                                </span>
+                                <span style="font-size:0.875rem; color:#64748b; font-weight:600;">
+                                    Mean Cohort Gap: <strong style="color:#1e293b;">${data.meanCohortGapPct}%</strong>
+                                </span>
+                            </div>
+                            <p style="margin:0; font-size:0.925rem; line-height:1.6; color:#334155;">${escapeHtml(data.executiveSummary)}</p>
+                        </div>
+                    `;
+
+                    if (data.topDivergentCriteria && data.topDivergentCriteria.length > 0) {
+                        html += `
+                            <div style="margin-bottom:14px;">
+                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin-bottom:6px;">
+                                    Criteria with Widest Differences
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                        `;
+                        data.topDivergentCriteria.forEach(c => {
+                            const sevColor = c.severity === 'CRITICAL' ? '#dc2626' : c.severity === 'MODERATE' ? '#d97706' : '#2563eb';
+                            html += `
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 12px; background:#fff; border:1px solid #e2e8f0; border-radius:5px; font-size:0.875rem; gap:12px;">
+                                    <div style="flex:1; min-width:0;">
+                                        <div>
+                                            <strong style="color:#0f172a;">${escapeHtml(c.criterionLabel)}</strong>
+                                            <span style="color:#64748b; font-size:0.8rem; margin-left:6px;">(${escapeHtml(c.rubricName)})</span>
+                                        </div>
+                                        <p style="margin:2px 0 0 0; color:#64748b; font-size:0.825rem; line-height:1.4;">${escapeHtml(c.analysis)}</p>
+                                    </div>
+                                    <div style="color:${sevColor}; font-weight:600; font-size:0.825rem; white-space:nowrap;">
+                                        Gap: ${c.meanPairGapPct}%
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    }
+
+                    if (data.priorityReviewTargets && data.priorityReviewTargets.length > 0) {
+                        html += `
+                            <div style="margin-bottom:14px;">
+                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin-bottom:6px;">
+                                    Submissions for Priority Review
+                                </div>
+                                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px;">
+                        `;
+                        data.priorityReviewTargets.forEach(t => {
+                            html += `
+                                <div style="padding:8px 12px; background:#fff; border:1px solid #e2e8f0; border-radius:5px; font-size:0.85rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <strong style="color:#0f172a;">${escapeHtml(t.targetName)}</strong>
+                                        <span style="color:#dc2626; font-size:0.8rem; font-weight:600;">Spread: ${t.spreadPct} pp</span>
+                                    </div>
+                                    <p style="margin:2px 0 0 0; color:#64748b; font-size:0.8rem;">${escapeHtml(t.summaryNote)}</p>
+                                </div>
+                            `;
+                        });
+                        html += `</div></div>`;
+                    }
+
+                    if (data.moderationActions && data.moderationActions.length > 0) {
+                        html += `
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:10px 14px;">
+                                <div style="font-size:0.775rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#475569; margin-bottom:4px;">
+                                    Suggested Moderation Next Steps
+                                </div>
+                                <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:#334155; line-height:1.5;">
+                        `;
+                        data.moderationActions.forEach(a => {
+                            html += `<li>${escapeHtml(a)}</li>`;
+                        });
+                        html += `</ul></div>`;
+                    }
+
+                    aiBriefingContent.innerHTML = html;
+                    aiBriefingContent.style.display = 'block';
+                } catch (err) {
+                    aiBriefingError.textContent = err.message || 'Error generating moderation briefing.';
+                    aiBriefingError.style.display = 'block';
+                } finally {
+                    aiBriefingLoading.style.display = 'none';
+                    aiBriefingBtn.disabled = false;
+                }
+            });
+        }
+
         load();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

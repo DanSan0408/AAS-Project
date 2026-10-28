@@ -46,6 +46,8 @@ services:
       ADPROJECT_ALERTS_ENABLED: ${ADPROJECT_ALERTS_ENABLED:-true}
       ADPROJECT_ALERTS_RECIPIENT_EMAIL: ${ADPROJECT_ALERTS_RECIPIENT_EMAIL}
       ADPROJECT_ALERTS_THRESHOLD_CRITICAL_ERRORS: ${ADPROJECT_ALERTS_THRESHOLD_CRITICAL_ERRORS:-10}
+      AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
+      AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
     ports:
       - "8080:8080"
     volumes:
@@ -55,6 +57,19 @@ services:
         target: /app/uploads
         bind:
           create_host_path: false
+
+  ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: Dockerfile
+    container_name: adproject-ai
+    restart: unless-stopped
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
+    ports:
+      - "8000:8000"
 
 volumes:
   mysql-data:

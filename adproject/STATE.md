@@ -4,6 +4,56 @@
 
 ---
 
+## Current Status: Compact Data Analytics & Pagination
+**Status**: IMPLEMENTED — pagination, chart sizing and template checks passed
+**Date**: 2026-10-28
+
+- Renamed the visible feature to **Data Analytics** in the sidebar, page title, heading, breadcrumb and Data Views entry point. Existing endpoint URLs remain compatible with saved links.
+- Bounded Scores by lecturer, Agreement on shared criteria, Score distribution and Rating alignment chart areas to 340px height; ordinary comparison SVGs cap at 640px width and scatter SVGs at 520px. Long lists scroll within cards. Reduced scatter plot geometry and retained full data for calculations.
+- Team comparison now paginates **four distinct teams per page**. Group and individual evaluations are retained together inside each team's card; they do not consume separate team-page slots. Added Previous/Next controls, disabled end buttons and live range/page indicators.
+- Evaluation breakdown now paginates **15 rows per page**, replacing the accumulating show-more control. Both pagers reset to page one when filters/assessment/lecturer selection change.
+- Metrics and CSV continue using all filtered data. Print includes all teams/rows and restores the selected screen pages afterward. Updated `ANALYTICS.md` with the new display behaviour.
+- Verification: 14 Node calculation/export/pagination tests passed; 3 existing Java infrastructure/template tests passed using resource refresh plus the compiled test classes, without rebuilding unrelated backend edits. 245 browser fixture checks passed, including four-team grouping, 15-row replacement, last/previous pages, filter resets, complete CSV/print output, restored print pages and bounded chart dimensions at desktop/tablet/mobile widths. Reviewed a compact chart preview.
+- No live database, running application process or deployment was changed.
+
+---
+
+## Current Status: AI Microservice with LangGraph & Gemini Integration (Use Cases 3 & 5)
+**Status**: IMPLEMENTED — FastAPI, LangGraph stategraphs, Spring Boot REST client, templates, and Makefile automation completed
+**Date**: 2026-10-28
+
+### Architecture and Zero Secrets Compliance
+- Implemented a decoupled Python AI sidecar microservice under `ai-service/` powered by **FastAPI**, **LangGraph**, and **Google Gemini** (`ChatGoogleGenerativeAI`).
+- Strictly adheres to Zero Secrets in source control: all sensitive credentials (`GEMINI_API_KEY`, `GEMINI_MODEL`, `AI_SERVICE_URL`, `AI_INTERNAL_SECRET`) are configured strictly via `adproject/.env` for local development and the Dokploy Environment tab in production.
+- Internal requests from Spring Boot to FastAPI are secured via `X-Internal-Secret`.
+
+### Features Implemented
+1. **Use Case 3: Team Dynamics & Peer Review Integrity Auditor**:
+   - `team_dynamics_graph.py`: LangGraph state machine with nodes:
+     - `compute_peer_metrics`: Computes peer scores, self scores, and self-inflation gaps.
+     - `analyze_comment_sentiments`: Uses Gemini to assess sentiment tone, constructiveness, and alignment with peer marks.
+     - `detect_anomalies_and_dynamics`: Rules + LLM anomaly detector flagging `FREE_RIDER`, `COLLUSION`, `SELF_INFLATION`, and `SENTIMENT_MARK_MISMATCH`.
+     - `synthesize_team_report`: Computes overall Team Health Index (0-100), collaboration status, executive summary, and actionable supervisor interventions.
+   - Spring Boot endpoints in `GroupCommentController`: `GET /{role}/comments/view/assessment/{assessmentId}/group/{groupId}/ai-audit` (accessible by admin and assigned lecturers).
+   - UI: Added AI Team Dynamics card, trigger button, spinner, and interactive report rendering in `comment_view.html` (Admin) and `lecturer_comment_view.html` (Assessor/Lecturer for each supervised group card).
+   - Updated assessment selection entry points (`comment_select_group.html` and `lecturer_comment_select_assessment.html`) with "View Comments & AI Audit" action buttons.
+   - Controller unit tests expanded in `GroupCommentControllerTest.java` to verify lecturer role authorization and successful audit retrieval.
+2. **Use Case 5: Lecturer Moderation & Evaluation Anomaly Explainer**:
+   - `moderation_graph.py`: LangGraph state machine computing exact matched-pair discrepancies, ranking divergent criteria, isolating high-spread target teams/students, and synthesizing an official executive moderation briefing.
+   - Added Spring Boot endpoint in `LecturerAnalyticsController`: `GET /admin/analytics/lecturer-comparison/moderation-briefing?assessmentId=...`.
+   - UI: Added interactive AI Moderation Briefing card in `lecturer_comparison_analytics.html` and `lecturer-analytics.js`.
+3. **Humanlike, Simplified Summarization & Style Consistency**:
+   - Refined LLM system instructions and prompts across both `team_dynamics_graph.py` and `moderation_graph.py` to eliminate AI clichés, robotic jargon, and mechanical repetition of raw percentages.
+   - Enforced a 2–3 sentence structure (60–90 words max) speaking with the voice of an experienced, pragmatic academic lead/chair: direct, constructive, and empathetic.
+   - Provided practical, humanlike fallback narratives for all health/moderation states when LLM is unavailable.
+   - Standardized visual layout and typography across Admin Team Dynamics (`comment_view.html`), Lecturer Team Dynamics (`lecturer_comment_view.html`), and Moderation Briefing (`lecturer-analytics.js`): replaced neon AI gradients and magic-wand badges with clean, institutional IAMS styling (Admin maroon `#4A0018` / Lecturer emerald `#047857`), streamlined compact member and criteria lists, simplified callouts, and XSS-safe HTML sanitization (`escapeHtml`).
+   - Normalized navigation buttons and hubs across `admin_progress_tracking_view.html`, `admin_progress_tracking_select.html`, `comment_select_group.html`, and `lecturer_comment_select_assessment.html` to native academic titles ("Group Comments & Summaries", "View Comments & Summary").
+4. **Local Development & Docker Integration**:
+   - Added `ai-service` container in `adproject/docker-compose.yml`.
+   - Updated root `Makefile` with `make ai-setup`, `make ai-dev`, `make ai-run`, `make logs-ai`, port 8000 listening check, and `GEMINI_API_KEY` diagnostic in `make check-env`.
+
+---
+
 ## Current Status: Diverse Analytics Charts & Authentication Branding
 **Status**: IMPLEMENTED — calculation, template and browser checks passed
 **Date**: 2026-10-28
