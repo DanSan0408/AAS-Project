@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,6 +95,11 @@ class AdminSubmissionControllerTest {
         testSubmission.setId(500L);
         testSubmission.setAssessment(testAssessment);
         testSubmission.setOriginalFileName("Team_Report.pdf");
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test

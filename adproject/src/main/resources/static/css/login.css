@@ -16,7 +16,7 @@
 }
 
 body {
-    background: url('/images/backgroundKL.jpg') center center / cover no-repeat fixed;
+    background: url('/images/kl_view.png') center center / cover no-repeat fixed;
     display: flex;
     justify-content: center;
     align-items: center;

@@ -1,6 +1,248 @@
 # Project State Documentation
 
-**Last Updated**: 2026-10-28 (Antigravity)
+**Last Updated**: 2026-11-05 (Antigravity)
+
+
+## Current Status: Theme Polish & Resolution of Invisible Assessment Titles, Sidebar Logo/Email, and Dark Mode Tables & Color Palette
+**Status**: COMPLETED
+**Date**: 2026-11-05
+
+### Summary of Enhancements & Fixes
+1. **Fix for Invisible "test assessment 1" (Progress & Comments, Data Views)**:
+   - **Root Cause**: In [`data_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/data_home.css), `.card-header` had background `var(--color-primary)` and `color: white`, but `.card-header h3` lacked an explicit `color` declaration. In Warm Mode, [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css) forced `:is(h1, h2, h3, h4, h5, h6)` to `color: var(--ui-brand) !important;` (`#521323` dark wine), causing the `h3` assessment title ("test assessment 1") to render dark-on-dark inside the dark wine card header. In Dark Mode with pastel pink, white text washed out to near-invisibility. In view pages, Thymeleaf wrapped titles in `<span>` inside `<h1>/<h2>`, causing body text span rules to clobber heading contrast.
+   - **Resolution**:
+     - Explicitly enforced `.card-header h3, .assessment-card .card-header h3 { color: #ffffff !important; }` in both [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css) and [`data_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/data_home.css).
+     - Added `:is(.page-header, .header, .card-header) :is(h1, h2, h3) :is(span, strong, b) { color: inherit !important; }`.
+     - Styled `.assessment-card` across all themes: in Dark Mode, header is `#22222a` with amber accent border (`#f59e0b`) and `#ffffff` title text; in Warm Mode, header is `#521323` with `#ffffff` title text.
+
+2. **Fix for Sidebar Logo ("IAMS") and User Email Invisibility**:
+   - **Root Cause**: Sidebar logo (`.sidebar .logo h2`) and user profile (`.sidebar .user-profile span`) are positioned over dark burgundy/maroon gradient header panels. In Warm Mode, `:is(h1, h2, h3, h4, h5, h6)` was forced to `#521323` (dark wine), and `:is(p, span)` was forced to `#3f342c` (dark charcoal), rendering "IAMS" and the user's email completely dark-on-dark and invisible.
+   - **Resolution**: Added universal high-contrast overrides across all themes and sidebars (Admin, Lecturer, Student, Supervisor):
+     - `:is(.sidebar, aside) .logo :is(h1, h2, h3, span, a) { color: #ffffff !important; text-shadow: 0 2px 4px rgba(0,0,0,0.4) !important; }`
+     - `:is(.sidebar, aside) .user-profile :is(span, p, strong, small, em) { color: #ffffff !important; text-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }`
+     - Reinforced explicitly inside `html[data-theme="warm"]` and `html[data-theme="dark"]` to ensure headings and spans are never clobbered.
+
+3. **Elimination of Disliked Pink Palette in Dark View**:
+   - **User Request**: Disliked the pink tones in Dark View; requested a suitable, dignified palette.
+   - **Resolution**: Completely eliminated the neon pink palette (`#fb7185`, `#f43f5e`, `#fda4af`) across the entire system:
+     - Replaced with **Warm Amber / Scholarly Gold** (`#f59e0b` / `#fbbf24`), an authoritative academic institutional color that creates a balanced tri-color role taxonomy:
+       - **Admin / Institutional Primary**: Warm Amber Gold (`#f59e0b`, light: `#fbbf24`, dark: `#b45309`, soft: `rgba(245, 158, 11, 0.15)`)
+       - **Lecturer Primary**: Emerald (`#34d399`)
+       - **Supervisor Primary**: Sky (`#60a5fa`)
+       - **Student Primary**: Warm Amber Gold (`#f59e0b`)
+     - Danger alert/error color updated from pink (`#f43f5e`) to clean danger red (`#ef4444`, soft: `rgba(239, 68, 68, 0.16)`, light: `#fca5a5`).
+     - Updated in [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css), [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css), [`view_rubric.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/view_rubric.css), and [`ui-enhancements-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/ui-enhancements-browser.test.cjs).
+     - Verified zero occurrences of `#fb7185`, `#f43f5e`, or `#fda4af` in the codebase.
+
+4. **Resolution of Blinding White Tables in Dark View**:
+   - **Root Cause**: Feature stylesheets ([`assessment_data.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/assessment_data.css), [`overall_data.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/overall_data.css)) had high-specificity rules with `!important` hardcoding `background-color: white !important;` or `#f8fafc !important;` on `.table-container`, `.data-container`, `.sub-rubric-row`, `.rubric-title`, `.evaluator-item`, `th`, `.sticky-col`, etc., with no dark mode overrides.
+   - **Resolution**:
+     - Added high-specificity universal table and data container overrides in [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css):
+       - All table elements (`table, thead, tbody, tfoot, tr, td, .table-container, .data-container, .sub-rubric-row, .rubric-row, .rubric-title, .evaluator-item, .sticky-col, .overall-table, .matrix-table`) mapped to `var(--ui-bg-surface)` (`#18181c`) and `var(--ui-text-body-color)` (`#e4e4e7`).
+       - Headers (`thead th, th, th.sticky-col, .assessment-header`) mapped to `var(--ui-bg-subtle)` (`#22222a`) and `var(--ui-text-primary)` (`#ffffff`).
+       - Row hover mapped to subtle `rgba(255, 255, 255, 0.04)`.
+     - Appended dedicated Dark & Warm mode stylesheets to [`assessment_data.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/assessment_data.css), [`overall_data.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/overall_data.css), and [`data_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/data_home.css).
+
+5. **Verification & Test Suite**:
+   - Expanded assertions in [`ui-enhancements-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/ui-enhancements-browser.test.cjs) verifying amber tokens, absence of `#fb7185` and `#f43f5e`, sidebar logo/user-profile text contrast, card header title contrast, and dark mode table overrides.
+   - Ran `node --test adproject/src/test/js/*.test.cjs`: **29/29 tests passing** (0 failures).
+
+---
+
+### Summary
+1. **Resolution of Theme Invisibility & Root Cause Diagnosis**:
+   - **Root Cause 1: CSS Variable Clobbering on `body[data-ui-role]`**:
+     - *Problem*: In [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css), `body[data-ui-role]` hardcoded `--ui-background: #f4f2ee; --ui-surface: #ffffff; --ui-text: #3f3f46; --ui-muted: #64748b; --ui-border: #e5e7eb;`. Because `body[data-ui-role]` is a descendant of `html[data-theme="dark"]`, its local variable declarations took precedence over `:root[data-theme="dark"]`. The `.main-content` rule evaluated `background-color: var(--ui-background) !important;` to `#f4f2ee` (light canvas) while headings and body text evaluated to `#ffffff` / `#e4e4e7` (white text on light beige = 100% invisible).
+     - *Resolution*: Replaced all hardcoded hex values on `body[data-ui-role]` with dynamic semantic tokens: `--ui-background: var(--ui-bg-canvas); --ui-surface: var(--ui-bg-surface); --ui-text: var(--ui-text-body-color); --ui-muted: var(--ui-text-muted); --ui-border: var(--ui-border);`, delegating role-primary mappings dynamically to `var(--admin-primary)`, `var(--lecturer-primary)`, `var(--student-primary)`, and `var(--supervisor-primary)`.
+   - **Root Cause 2: Missing Accessible Role Primaries in Dark Mode**:
+     - *Problem*: In Dark Mode, `--lecturer-primary` (dark forest green `#047857`), `--student-primary` (dark ruby `#7a1e2d`), and `--supervisor-primary` (dark navy `#002b5b`) were undefined, and `--admin-primary` was set to `#4a0018` (dark maroon). On dark canvas (`#0f0f12`), their contrast ratio dropped below 1.5:1, submerging titles, section headings, borders, and buttons into near-black invisibility.
+     - *Resolution*: Standardized high-contrast, accessible role primary tokens in Dark Mode:
+       - `--admin-primary: #fb7185;` (Rose Coral, contrast > 7:1)
+       - `--lecturer-primary: #34d399;` (Mint Emerald, contrast > 8:1)
+       - `--student-primary: #fb7185;` (Rose Coral, contrast > 7:1)
+       - `--supervisor-primary: #60a5fa;` (Sky Blue, contrast > 7:1)
+   - **Root Cause 3: Contrast Inversion on `--color-text` / `--*-text` (Buttons, Headers, Badges)**:
+     - *Problem*: Older stylesheets (`manageUser.css`, `group.css`, `rubric.css`, `admin_manage_courses.css`) styled primary buttons, user tiles, and `thead th` with `background: var(--color-primary); color: var(--color-text) !important;`. Setting `--color-text: var(--ui-text-body-color)` (`#27272a` dark charcoal) caused dark charcoal text to render onto dark maroon backgrounds in Light and Warm modes!
+     - *Resolution*: Standardized `--color-text: #ffffff;`, `--admin-text: #ffffff;`, `--lecturer-text: #ffffff;`, `--student-text: #ffffff;`, and `--supervisor-text: #ffffff;` across all themes for text on colored/primary components, reserving `--*-text-dark: var(--ui-text-body-color);` exclusively for text on light surfaces.
+   - **Root Cause 4: Component Theming Gaps (Secondary Buttons, Alerts, Sidebars, Breadcrumbs)**:
+     - *Secondary & Cancel Buttons*: Added high-contrast dark mode styles (`background: #24242c; color: #e4e4e7; border: 1px solid #3f3f4e;`) and warm mode styles (`background: #eee5d8; color: #3f342c; border: 1px solid #dfd2c0;`), eliminating unstyled white boxes.
+     - *Alerts*: Implemented non-slop, accessible dark mode alerts (`.alert-success` mint tint with `#6ee7b7` text, `.alert-danger` rose tint with `#fda4af` text, `.alert-warning` amber tint with `#fde68a` text, `.alert-info` sky tint with `#bae6fd` text).
+     - *Sidebars*: Fixed student sidebar links (`.sidebar .menu-list li a`), course switcher select (`.course-switcher, .course-switch-select`), and logout button (`.sidebar .logout-btn`) for dark and warm modes.
+     - *Breadcrumbs*: Styled `.system-breadcrumb .current-page` with role-tinted subtle backgrounds and readable role text, replacing jarring pale pink boxes.
+     - *Mobile Responsive Tables*: Styled `td::before` column headers with high-contrast role primary colors across dark and warm modes.
+   - **Root Cause 5: Expanded Card Surface Selectors & Spaceless Inline Rescues**:
+     - Expanded card selectors to cover `.ai-team-dynamics-card`, `[id*="ai-team-dynamics-card"]`, `.evaluators-card`, `.simple-deliverable-card`, `.submissions-header-card`, `.submitted-box`, `.unsubmitted-box`, `.analytics-filter-card`, `.analytics-panel`, `.modal-content`, `.auth-container`, `.summary-section`, etc.
+     - Added spaceless and spaced inline style rescues for `#4a0018`, `#7a1e2d`, `#8b1e1e`, `#047857`, `#002b5b`, `#1f2937`, `#374151`, `#3F3F46`, `#2c3e50`, `#0f766e`, `#6b7280`, `#f8f9fa`, `#eff6ff`, `#ffffff`, `#fff`, `#f8fafc`, `#fffbeb`, etc.
+
+2. **Verification & Test Coverage**:
+   - Expanded [`ui-enhancements-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/ui-enhancements-browser.test.cjs) to test role primary tokens, secondary button styling, high-contrast alerts, and mobile table labels.
+   - **Node Browser & Contract Tests (`node --test adproject/src/test/js/*.test.cjs`)**: **29/29 passed** (0 failures).
+
+---
+
+### Summary
+1. **Standard System Palette Implementation (Ponytail & Hallmark Compliant)**:
+   - **Problem Solved**: Fragmented, piecemeal inline overrides (`[style*="..."]`) produced jarring color mismatches, invisible words, and clashing icons when toggling themes.
+   - **Architectural Solution**: Defined a comprehensive, semantic design token palette in [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css) and cascaded it across all three themes:
+     - **Light Mode (Default Institutional)**: Canvas `#f4f2ee`, Surface `#ffffff`, Subtle `#f8f9fa`, Border `#e2e8f0`, Text `#27272a` (primary `#18181b`, muted `#71717a`), Brand `#4a0018`, Accent `#d97706`.
+     - **Dark Mode (Midnight Charcoal)**: Canvas `#0f0f12`, Surface `#18181c`, Subtle `#22222a`, Border `#2b2b36`, Text `#e4e4e7` (primary `#ffffff`, muted `#858592`), Brand `#f43f5e`, Accent `#f59e0b`.
+     - **Warm Mode (Academic Linen / Sepia)**: Canvas `#f5efe6`, Surface `#fffdf9`, Subtle `#eee5d8`, Border `#dfd2c0`, Text `#3f342c` (primary `#2c241e`, muted `#796c5f`), Brand `#521323`, Accent `#b45309`.
+
+2. **Global Text & Icon Contrast Resolution**:
+   - **Root Cause of Vanishing Text**: Role-specific stylesheets (`lecturer_*.css`, `student_*.css`, `supervisor_*.css`) declared hardcoded `--*-text-dark: #2B2B2B` in `:root`. In dark mode, without matching `--*-text-dark` theme definitions, cards, forms, rubrics, and lists rendered as near-black text (`#2B2B2B`) on charcoal canvases (`#0f0f12`).
+   - **Fixes Applied**:
+     - Standardized role tokens in [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css) (`--lecturer-text-dark`, `--student-text-dark`, `--supervisor-text-dark`, `--lecturer-background`, `--lecturer-surface`, etc.) mapped to `--ui-text-body-color` across all three themes.
+     - Universal icon color inheritance: `:is(i.fas, i.far, i.fa):not([class*="text-"]):not(.sidebar-group-icon) { color: inherit; }` ensures FontAwesome icons blend harmoniously with surrounding text.
+     - Neutralized rogue `--color-text: #FAFAFA` (white) in [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css) and [`view_rubric.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/view_rubric.css), setting it to `--ui-text-body-color` (`#27272a`) and using explicit `#ffffff` on dark badge/header elements.
+     - Standardized evaluation form cards, `.rating-option` radio options, `.students-list li`, `.rubric-section`, `.comments-section`, `.save-info`, and textareas across all modes.
+
+3. **Multi-Assessment Workstation on Dashboard (Anti-Clutter Architecture)**:
+   - Single unified Live Progress Card with `#liveAssessmentSelect` dropdown and collapsible `#liveMultiSummaryDrawer` ("All Active (N)").
+   - Dynamic SSE switching with clean socket disposal (`eventSource.close()`).
+
+4. **Verification**:
+   - **Node Browser & Contract Tests (`node --test adproject/src/test/js/*.test.cjs`)**: 29/29 passed.
+   - **Backend Java Tests (Docker `mvn test`)**: All unit and integration suites passing.
+
+---
+**Status**: COMPLETED
+**Date**: 2026-11-04
+
+### Summary
+1. **Multi-Assessment Workstation on Dashboard (Anti-Clutter Architecture)**:
+   - **Problem Solved**: When multiple concurrent assessments were active, rendering multiple separate cards or unmanaged streams cluttered and pushed down the dashboard, creating an overwhelming, messy screen.
+   - **Single Unified Live Progress Card** ([`admin_home.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_home.html), [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css)):
+     - Preserves a clean, compact, single-card footprint on the dashboard regardless of how many assessments are open simultaneously.
+     - **Dynamic Assessment Switcher Dropdown (`#liveAssessmentSelect`)**: Placed neatly in the card header when more than 1 assessment exists, displaying the active assessment title and course code (`Presentation 1 (CS101)`).
+     - **Collapsible Multi-Assessment Overview Drawer (`#liveMultiSummaryDrawer`)**: Opened via an `"All Active (N)"` button (`#btnToggleMultiSummary`). Displays a compact, scrollable 1-line summary list (max-height 220px) showing each assessment's course code, mini-progress track (80px), live %, and a 1-click `"Monitor"` button.
+   - **SSE Stream Orchestration & Lifecycle** ([`live-progress-sse.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/live-progress-sse.js)):
+     - Added `switchAssessment(newId, newTitle)`: Gracefully closes the prior `EventSource` stream (`eventSource.close()`) to prevent socket leaks and background noise.
+     - Updates the active tracker attributes, resets visual indicators, triggers an immediate fast-path snapshot (`/api/progress/snapshot/{id}`), and binds a fresh live SSE stream (`/api/progress/stream/{id}`).
+     - Populates all concurrent mini progress bars upon expanding the drawer via parallel snapshot queries.
+
+2. **System-Wide Universal Dark Mode & Warm Mode Text Contrast & Theme Fix**:
+   - **Universal Text Rescues in [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css)**:
+     - Added global rules ensuring all standard HTML text elements (`p`, `span`, `label`, `td`, `li`, `div`) inherit proper theme text colors (`#f4f4f5` / `#d4d4d8` in Dark Mode; `#2c241e` in Warm Mode) instead of falling back to default black or dark gray.
+     - Implemented attribute selector overrides for all legacy hardcoded inline styles:
+       - Dark text rescues: `[style*="color: #4A0018"]`, `[style*="color: #7A1E2D"]`, `[style*="color: #8B1E1E"]` -> `#fb7185` (Dark) / `#521323` (Warm).
+       - Charcoal text rescues: `[style*="color: #1f2937"]`, `[style*="color: #374151"]`, `[style*="color: #3F3F46"]`, `[style*="color: #1e293b"]`, `[style*="color: #334155"]` -> `#f4f4f5` (Dark) / `#2c241e` (Warm).
+       - Muted text rescues: `[style*="color: #6b7280"]`, `[style*="color: #64748b"]`, `[style*="color: #666"]`, `[style*="color: #777"]` -> `#a1a1aa` (Dark) / `#796c5f` (Warm).
+       - Light background rescues: `[style*="background-color: #f8f9fa"]`, `[style*="background: white"]`, `[style*="background: #eff6ff"]`, `[style*="background: #f0fdfa"]` -> `#1e1e24` (Dark) / `#fffdf9` (Warm).
+   - **Template & Stylesheet Decoupling**:
+     - [`admin_home.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_home.html) & [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css): Removed hardcoded `#1f2937` and `#eff6ff` from assessor and student notes banners; styled `.comment-number-badge` (`#ffffff` text with high-contrast background in all themes), `.comment-item`, `.summary-label`, and `.question-meta`.
+     - [`view-assessment-rubrics.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/view-assessment-rubrics.html) & [`view_rubric.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/view_rubric.css): Refactored inline notes into `.notes-display-box` and added complete Dark and Warm mode theme blocks.
+     - [`manage-assessments.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/manage-assessments.html): Removed `#4A0018` dark maroon from dropdown items.
+     - [`admin_assign_students.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_assign_students.html), [`lecturer_comparison_analytics.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_comparison_analytics.html), [`admin_progress_tracking_view.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_progress_tracking_view.html), and [`peer_assessment_form.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/peer_assessment_form.html): Cleaned up inline colors and replaced with semantic classes and CSS variables.
+
+3. **Verification**:
+   - **Frontend DOM & Theme Test Suite (`node --test adproject/src/test/js/*.test.cjs`)**:
+     - **29 passed**, 0 failures across all test suites.
+   - **Backend Java Test Suite (Docker `mvn test`)**:
+     - **194 passed**, 0 failures, 0 errors, 1 skipped (BUILD SUCCESS in 52.8s).
+
+---
+
+## Current Status: Hallmark Anti-Slop UI Refinements & Complete Dark/Warm Mode Contrast Audit
+**Status**: COMPLETED
+**Date**: 2026-11-04
+
+### Summary
+1. **Hallmark Anti-AI-Slop Redesign across Key Modules**:
+   - **Comments & Moderation** ([`admin_progress_tracking_view.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_progress_tracking_view.html), [`admin_progress_tracking.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_progress_tracking.css)):
+     - Replaced 4 toy colorful floating KPI cards with a quiet, high-density institutional summary strip (`.tracking-stats-summary`) displaying Total Comments, Pending Approval, Approved & Visible, and Rejected / Hidden with tabular font numbers.
+     - Replaced the giant cartoon shield banner ("Student Visibility Control") with a compact, administrative notice bar (`.moderation-notice-bar`).
+     - Replaced loose, oversized filter pill bubbles with a restrained segmented tab control (`.filter-segmented-tabs`).
+     - Replaced 5 saturated pastel role badges (`role-assessor` bright blue, `role-student` purple, `role-peer` orange, `role-team` violet, `role-self` green) with unified, dignified semantic tags.
+     - Preserved all JavaScript hooks (`#kpi-total`, `#kpi-pending`, `#kpi-approved`, `#kpi-rejected`, `#pill-count-pending`, `#btnApproveAllPending`, `#toastContainer`, `#toastCard`, etc.) for uninterrupted asynchronous AJAX moderation.
+   - **Report Setup & Assessor Mapping** ([`admin_progress_tracking_view.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_progress_tracking_view.html), [`admin_progress_tracking.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_progress_tracking.css)):
+     - Replaced 4 toy KPI cards with the calm `.tracking-stats-summary` strip (Expected Targets, Reports Submitted, Pending Upload, Doodled Reports).
+     - Refactored Section 1 into `.submission-config-card` and removed all hardcoded inline CSS colors.
+     - In Section 2, replaced the loud blue alert (`#eff6ff`) with `.matrix-guide-note` and refactored the matrix table into `.matrix-table` with semantic column classes (`col-target`, `col-assessors`, `col-scope`, `col-submission`, `col-doodles`, `col-actions`).
+   - **Live Presentation & Evaluation Progress** ([`admin_home.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_home.html), [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css)):
+     - Replaced the flashy animated radar wave dot with a calm, steady green status dot (`.live-status-dot`).
+     - Replaced the sci-fi broadcast tower `<i class="fas fa-broadcast-tower"></i>` and nerdy tech tag `Live SSE` with a clean institutional header `<h3><i class="fas fa-chart-line"></i> Evaluation Progress • [Assessment Title]</h3>` and subtitle `Live updates`.
+     - Harmonized typography, tabular progress counters, and drawer expansion to match `.managed-courses-indicator`.
+
+2. **Dark Mode & Warm Mode Color Scheme & Visibility Fixes ([`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css), [`admin_progress_tracking.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_progress_tracking.css), [`admin_home.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_home.css))**:
+   - **Eliminated Bright Pink Header / Logo Distortion in Dark Mode**:
+     - *Root cause*: `--color-primary` and `--admin-primary` were overridden globally in `html[data-theme="dark"]` to `#fb7185` (neon pink), turning `.header` and `.sidebar .logo` into bright hot pink!
+     - *Resolution*: Centrally styled `.main-content .header`, `.header`, `.progress-page .header`, and `.sidebar .logo` in dark mode with a deep burgundy/charcoal gradient (`linear-gradient(135deg, #2d0510 0%, #170107 100%) !important; border: 1px solid rgba(248, 166, 23, 0.25) !important;`), preserving prestigious institutional identity while preventing neon pink slop.
+   - **Eliminated Invisible Text in Dark Mode & Warm Mode**:
+     - *Root cause*: Hardcoded inline styles like `style="color: #1e293b;"`, `style="color: #334155;"`, `style="color: #475569;"`, `style="color: #4A0018;"`, and `style="background: #f8fafc;"` prevented dark mode from styling table cells, labels, and text spans, rendering dark navy/maroon text virtually invisible against charcoal backgrounds (`#121214`).
+     - *Resolution*: Stripped all hardcoded inline color styles across `admin_progress_tracking_view.html` (including Tab 1 expandable details rows and rubric breakdown cards).
+     - Defined comprehensive tokenized overrides in `admin_progress_tracking.css`:
+       - **Dark Mode**: Surfaces `#1c1c22` / `#18181c`, borders `#2e2e38`, headings crisp `#ffffff !important`, body text `#d4d4d8`, muted `#a1a1aa`, tables `#18181c` with `#202028` inputs and `#23232b` comment text boxes.
+       - **Warm Mode**: Surfaces `#fffdf9`, borders `#e3d7c5`, headings `#521323`, body text `#2c241e`, muted `#796c5f`, tables `#fffdf9` with `#ede3d3` headers and rich wine accents.
+
+3. **System Testing & Verification**:
+   - **Frontend DOM & Browser Tests (`node --test src/test/js/*.test.cjs`)**:
+     - **28 passed**, 0 failures across `course-management-browser.test.cjs`, `lecturer-analytics.test.cjs`, and `ui-enhancements-browser.test.cjs`.
+   - **Backend Maven Unit & Integration Tests (Docker `mvn test`)**:
+     - **194 passed**, 0 failures, 0 errors, 1 skipped. Verified compilation, security sanitizers, entity mappings, and Thymeleaf rendering contracts.
+
+---
+
+
+## Current Status: MySQL Course Creation Fix (Legacy 'course_code' Column Schema Migration)
+**Status**: COMPLETED
+**Date**: 2026-11-04
+
+### Summary
+1. **Error Analysis**:
+   - Error: `Error adding course: could not execute statement [Field 'course_code' doesn't have a default value] [insert into courses (courseCode,courseName,created_by_lecturer_id,description) values (?,?,?,?)]`
+   - **Root Cause**:
+     - The application is configured with `PhysicalNamingStrategyStandardImpl` (and explicit camelCase column mappings), causing Hibernate to generate SQL targeting camelCase columns: `courseCode` and `courseName`.
+     - In earlier schema iterations (or environments running Spring's default `CamelCaseToUnderscoresNamingStrategy`), the MySQL `courses` table was created with snake_case columns `course_code` and `course_name` defined as `NOT NULL` without default values (due to `@NotBlank` validation).
+     - Hibernate `ddl-auto=update` added the camelCase columns (`courseCode`, `courseName`) to the MySQL table, but Hibernate **never** deletes or modifies existing columns.
+     - Consequently, the legacy columns `course_code` (and `course_name`) remained in the MySQL table as orphans with `NOT NULL` and no default values. When Hibernate executed `insert into courses (courseCode,courseName,created_by_lecturer_id,description)`, MySQL's strict mode rejected the insert because `course_code` received no value.
+
+2. **Resolutions Implemented**:
+   - **Explicit Column Mapping ([`Course.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Course.java))**:
+     - Added explicit `@Column(name = "courseName")` and `@Column(name = "courseCode")` annotations to `Course.java`, guaranteeing that Hibernate always targets camelCase column names consistently across all profiles and naming strategy overrides.
+   - **Naming Strategy Standardization ([`application-prod.properties`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/application-prod.properties))**:
+     - Added `spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl` to `application-prod.properties` to ensure production/Docker runtime behavior matches local development.
+   - **Automated Migration Runner ([`LegacyColumnCleanupMigrationRunner.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/config/LegacyColumnCleanupMigrationRunner.java))**:
+     - Extended the automated startup migration runner to inspect `information_schema.columns` for `courses` and `course`.
+     - Detects orphan `course_code` and `course_name` columns.
+     - Dynamically inspects column types (`VARCHAR(255)` etc.) rather than hardcoding `DATETIME`.
+     - Automatically copies any existing non-null data from `course_code` / `course_name` to `courseCode` / `courseName` if not already present.
+     - Safely drops the legacy columns (`ALTER TABLE courses DROP COLUMN course_code`, `ALTER TABLE courses DROP COLUMN course_name`), falling back to making them nullable (`NULL DEFAULT NULL`) if dropping is restricted.
+   - **Unit Tests ([`LegacyColumnCleanupMigrationRunnerTest.java`](file:///Users/dansan04/AAS-Project/adproject/src/test/java/com/capstone/adproject/config/LegacyColumnCleanupMigrationRunnerTest.java))**:
+     - Added test cases verifying data copying, column dropping, and nullable fallback handling for `courses`.
+
+3. **System-Wide Testing & Test Suite Expansion**:
+   - **Backend Java Test Suite (`mvn test`)**:
+     - Total: **191 tests run**, **0 failures**, **0 errors**, 1 skipped (template test).
+     - Expanded test coverage across:
+       - `CourseEntityMappingTest`: Validates physical column names (`courseCode`, `courseName`) and Bean Validation constraints.
+       - `AdminManagementControllerTest`: 17 tests covering course addition, duplicate code checks, update, edit, and deletion flows.
+       - `CourseScopeServiceTest`: 6 tests covering course scoping, active course session switching, and assignment permissions.
+       - Resolved test isolation contamination where `SecurityContextHolder` mock contexts leaked across controller and service tests.
+   - **Frontend & Browser DOM Contract Suite (`node --test adproject/src/test/js/*.test.cjs`)**:
+     - Total: **20 tests run**, **20 passed**, **0 failures**.
+     - Tested:
+       - 6 browser/DOM tests verifying HTML templates (`admin_manage_courses.html`, `manage_courses.html`, `admin_edit_course.html`), CSRF token integrity, input bindings, styling rules, and dynamic debounce/async duplicate check behaviors in `course-validation.js`.
+       - 14 analytics and moderation contract tests.
+   - **Python AI Microservice (`unittest`)**:
+     - Total: **2 tests run**, **2 passed**, **0 failures**.
+
+4. **Direct SQL Commands for Manual Execution (Immediate Fix)**:
+   - To resolve immediately on the running database without server reboot:
+     ```sql
+     -- Step 1: Copy any legacy values if present
+     UPDATE `courses` SET `courseCode` = `course_code` WHERE `courseCode` IS NULL AND `course_code` IS NOT NULL;
+     UPDATE `courses` SET `courseName` = `course_name` WHERE `courseName` IS NULL AND `course_name` IS NOT NULL;
+
+     -- Step 2: Drop legacy orphan columns (or make nullable)
+     ALTER TABLE `courses` DROP COLUMN `course_code`;
+     ALTER TABLE `courses` DROP COLUMN `course_name`;
+
+     -- If DROP is blocked, make them nullable:
+     -- ALTER TABLE `courses` MODIFY COLUMN `course_code` VARCHAR(255) NULL DEFAULT NULL;
+     -- ALTER TABLE `courses` MODIFY COLUMN `course_name` VARCHAR(255) NULL DEFAULT NULL;
+     ```
+
+---
 
 
 ## Production missing-comments investigation (2026-10-28)

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -118,6 +119,11 @@ class AdminManagementControllerTest {
         assessment.setCourse(course);
     }
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void testAdminHome_LoadsDashboard() throws Exception {
         when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
@@ -182,5 +188,182 @@ class AdminManagementControllerTest {
                 .andExpect(flash().attribute("successMessage", "Lecturer deleted successfully!"));
 
         verify(adminService).deleteLecturerById(66L);
+    }
+
+    @Test
+    void testManageCourses_LoadsPageWithCourses() throws Exception {
+        when(courseScopeService.getManagedCoursesForCurrentUser()).thenReturn(List.of(course));
+        when(superAdminService.getAllAdminLecturers()).thenReturn(Collections.emptyList());
+        when(superAdminService.getAdminManagedCoursesMap(any())).thenReturn(Collections.emptyMap());
+
+        mockMvc.perform(get("/admin/manage-courses"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin_manage_courses"))
+                .andExpect(model().attributeExists("courses", "creatorOwnedCourses", "newCourse", "adminUsername"));
+    }
+
+    @Test
+    void testAddCourse_ValidCourse_SavesAndRedirects() throws Exception {
+        Lecturer adminLecturer = new Lecturer();
+        adminLecturer.setId(5L);
+        adminLecturer.setEmail("admin@example.com");
+
+        Course savedCourse = new Course();
+        savedCourse.setId(15L);
+        savedCourse.setCourseName("New Course");
+        savedCourse.setCourseCode("SECJ101");
+
+        when(superAdminService.resolveLecturerByIdentity("admin@example.com"))
+                .thenReturn(Optional.of(adminLecturer));
+        when(superAdminService.saveCourse(any(Course.class))).thenReturn(savedCourse);
+
+        mockMvc.perform(post("/admin/courses/add")
+                .param("courseName", "New Course")
+                .param("courseCode", "SECJ101")
+                .param("description", "Intro course"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("successMessage", "Course added successfully!"));
+
+        verify(superAdminService).assignAdminToCourse(5L, 15L);
+    }
+
+    @Test
+    void testAddCourse_ValidationError_RedirectsWithErrors() throws Exception {
+        mockMvc.perform(post("/admin/courses/add")
+                .param("courseName", "")
+                .param("courseCode", ""))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage", "Validation failed. Please check the course fields."));
+    }
+
+    @Test
+    void testAddCourse_ServiceThrowsException_RedirectsWithErrorMessage() throws Exception {
+        Lecturer adminLecturer = new Lecturer();
+        adminLecturer.setId(5L);
+        adminLecturer.setEmail("admin@example.com");
+
+        when(superAdminService.resolveLecturerByIdentity("admin@example.com"))
+                .thenReturn(Optional.of(adminLecturer));
+        when(superAdminService.saveCourse(any(Course.class)))
+                .thenThrow(new RuntimeException("Field 'course_code' doesn't have a default value"));
+
+        mockMvc.perform(post("/admin/courses/add")
+                .param("courseName", "New Course")
+                .param("courseCode", "SECJ101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage",
+                        "Error adding course: Field 'course_code' doesn't have a default value"));
+    }
+
+    @Test
+    void testEditCourse_Authorized_LoadsEditPage() throws Exception {
+        when(superAdminService.getCourseById(10L)).thenReturn(Optional.of(course));
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(true);
+
+        mockMvc.perform(get("/admin/courses/edit/10"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin_edit_course"))
+                .andExpect(model().attributeExists("course", "adminUsername"));
+    }
+
+    @Test
+    void testEditCourse_Unauthorized_Redirects() throws Exception {
+        when(superAdminService.getCourseById(999L)).thenReturn(Optional.of(course));
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(false);
+
+        mockMvc.perform(get("/admin/courses/edit/999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage", "You are not authorized to edit this course."));
+    }
+
+    @Test
+    void testEditCourse_NotFound_Redirects() throws Exception {
+        when(superAdminService.getCourseById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/admin/courses/edit/999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage", "Course not found."));
+    }
+
+    @Test
+    void testUpdateCourse_ValidCourse_UpdatesAndRedirects() throws Exception {
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(true);
+        when(superAdminService.saveCourse(any(Course.class))).thenReturn(course);
+
+        mockMvc.perform(post("/admin/courses/update")
+                .param("id", "10")
+                .param("courseName", "Updated Course")
+                .param("courseCode", "SECJ101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("successMessage", "Course updated successfully!"));
+
+        verify(superAdminService).saveCourse(any(Course.class));
+    }
+
+    @Test
+    void testUpdateCourse_Unauthorized_Redirects() throws Exception {
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(false);
+
+        mockMvc.perform(post("/admin/courses/update")
+                .param("id", "10")
+                .param("courseName", "Updated Course")
+                .param("courseCode", "SECJ101"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage", "You are not authorized to update this course."));
+    }
+
+    @Test
+    void testDeleteCourse_ValidCourse_DeletesAndRedirects() throws Exception {
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(true);
+
+        mockMvc.perform(post("/admin/courses/delete/10"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("successMessage", "Course deleted successfully!"));
+
+        verify(superAdminService).deleteCourse(10L);
+    }
+
+    @Test
+    void testDeleteCourse_Unauthorized_Redirects() throws Exception {
+        when(courseScopeService.isManagedCourseId(10L)).thenReturn(false);
+
+        mockMvc.perform(post("/admin/courses/delete/10"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/manage-courses"))
+                .andExpect(flash().attribute("errorMessage", "You are not authorized to delete this course."));
+    }
+
+    @Test
+    void testCheckCourseCode_Exists_ReturnsTrue() throws Exception {
+        when(superAdminService.getCourseByCode("SECJ101")).thenReturn(Optional.of(course));
+
+        mockMvc.perform(get("/admin/courses/check-code")
+                .param("courseCode", "SECJ101"))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"exists\":true"));
+                });
+    }
+
+    @Test
+    void testCheckCourseCode_NotExists_ReturnsFalse() throws Exception {
+        when(superAdminService.getCourseByCode("UNKNOWN")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/admin/courses/check-code")
+                .param("courseCode", "UNKNOWN"))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String json = result.getResponse().getContentAsString();
+                    org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"exists\":false"));
+                });
     }
 }

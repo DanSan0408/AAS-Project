@@ -11,7 +11,7 @@
     --color-accent: #F8A617;
     --color-background: #F4F2EE;
     --color-alert: #8B1E1E;
-    --color-text: #FAFAFA;
+    --color-text: #27272A;
     --color-primary-light: #6B0025;
     --color-primary-dark: #2D000E;
     --color-secondary-light: #52525B;
@@ -82,7 +82,7 @@ body.admin-page .header-container img {
 }
 
 body.admin-page .header-container h1 {
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     font-size: 2.2rem !important;
     margin: 0 !important;
     font-weight: 700 !important;
@@ -140,7 +140,7 @@ body.admin-page .managed-courses-count {
     height: 34px !important;
     border-radius: 999px !important;
     background: var(--color-primary) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     font-weight: 700 !important;
     padding: 0 10px !important;
 }
@@ -169,7 +169,7 @@ body.admin-page .managed-course-chip {
 
 body.admin-page .managed-course-code {
     background: var(--color-primary) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     border-radius: 7px !important;
     padding: 3px 8px !important;
     font-size: 0.8rem !important;
@@ -362,7 +362,7 @@ body.admin-page .add-rubric-button {
     padding: 11px 20px !important;
     border-radius: 8px !important;
     text-decoration: none !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     font-weight: 600 !important;
     font-size: 0.9em !important;
     transition: all 0.3s ease !important;
@@ -409,7 +409,7 @@ body.admin-page .rubric-action-btn {
 
 body.admin-page .edit-btn {
     background-color: var(--color-secondary) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
 }
 
 body.admin-page .edit-btn:hover {
@@ -420,7 +420,7 @@ body.admin-page .edit-btn:hover {
 
 body.admin-page .delete-btn {
     background-color: var(--color-alert) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
 }
 
 body.admin-page .delete-btn:hover {
@@ -477,7 +477,7 @@ body.admin-page .add-new-deadline input:focus {
 
 body.admin-page .save-deadlines-button {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     padding: 11px 20px !important;
     border: none !important;
     border-radius: 8px !important;
@@ -556,7 +556,7 @@ body.admin-page .deadline-type-badge {
     border-radius: 12px !important;
     font-size: 0.75em !important;
     font-weight: 700 !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     margin-left: 8px !important;
     display: inline-block !important;
     text-transform: uppercase !important;
@@ -565,7 +565,7 @@ body.admin-page .deadline-type-badge {
 
 body.admin-page .instant-badge {
     background-color: var(--color-alert) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     padding: 3px 8px !important;
     border-radius: 6px !important;
     font-size: 0.75em !important;
@@ -663,7 +663,7 @@ body.admin-page .comment-item-header {
 
 body.admin-page .comment-number-badge {
     background: var(--color-primary) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
     padding: 4px 12px !important;
     border-radius: 6px !important;
     font-weight: 700 !important;
@@ -700,7 +700,7 @@ body.admin-page .btn-sm {
 
 body.admin-page .btn-edit {
     background: var(--color-secondary) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
 }
 
 body.admin-page .btn-edit:hover {
@@ -709,7 +709,7 @@ body.admin-page .btn-edit:hover {
 
 body.admin-page .btn-delete {
     background: var(--color-alert) !important;
-    color: var(--color-text) !important;
+    color: #ffffff !important;
 }
 
 body.admin-page .btn-delete:hover {
@@ -928,3 +928,1005 @@ body.admin-page .btn-delete:hover {
         font-size: 1.2rem !important;
     }
 }
+
+/* ==========================================================================
+   Live Real-Time Presentation Progress Tracker (SSE)
+   Designed to follow .managed-courses-indicator and institutional design language
+   ========================================================================== */
+body.admin-page .live-progress-card {
+    background: linear-gradient(135deg, rgba(74, 0, 24, 0.06) 0%, rgba(248, 166, 23, 0.12) 100%) !important;
+    border: 1px solid rgba(74, 0, 24, 0.15) !important;
+    border-left: 5px solid var(--color-accent, #F8A617) !important;
+    border-radius: 14px !important;
+    padding: 18px 20px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+body.admin-page .live-progress-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+}
+
+body.admin-page .live-progress-title {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
+
+body.admin-page .live-progress-title :is(h3, h4) {
+    margin: 0 !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body.admin-page .live-progress-subtitle {
+    margin: 6px 0 14px 0 !important;
+    color: var(--color-secondary) !important;
+    font-size: 0.92rem !important;
+}
+
+body.admin-page .live-status-dot,
+body.admin-page .sse-live-dot {
+    width: 8px !important;
+    height: 8px !important;
+    background: #059669 !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+body.admin-page .badge-assessment-title {
+    background: var(--color-primary) !important;
+    color: #ffffff !important;
+    border-radius: 7px !important;
+    padding: 3px 10px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px !important;
+}
+
+body.admin-page .live-progress-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+}
+
+body.admin-page .live-assessment-switcher {
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+body.admin-page .live-assessment-select {
+    padding: 5px 12px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(74, 0, 24, 0.25) !important;
+    background-color: #ffffff !important;
+    color: var(--color-primary) !important;
+    cursor: pointer !important;
+    outline: none !important;
+    max-width: 280px !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+
+body.admin-page .live-assessment-select:focus {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 2px rgba(74, 0, 24, 0.15) !important;
+}
+
+body.admin-page .btn-toggle-multi-summary {
+    padding: 6px 14px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(74, 0, 24, 0.2) !important;
+    color: var(--color-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s !important;
+}
+
+body.admin-page .btn-toggle-multi-summary:hover {
+    background: rgba(74, 0, 24, 0.07) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+body.admin-page .live-multi-summary-drawer {
+    margin-top: 16px !important;
+    padding: 14px 16px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(74, 0, 24, 0.12) !important;
+    border-radius: 10px !important;
+}
+
+body.admin-page .multi-summary-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 12px !important;
+}
+
+body.admin-page .multi-summary-header h4 {
+    margin: 0 !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    color: var(--color-primary) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+body.admin-page .multi-summary-hint {
+    font-size: 0.8rem !important;
+    color: var(--color-secondary) !important;
+}
+
+body.admin-page .multi-summary-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    max-height: 220px !important;
+    overflow-y: auto !important;
+    padding-right: 4px !important;
+}
+
+body.admin-page .multi-summary-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 12px !important;
+    background: #ffffff !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    gap: 12px !important;
+    transition: border-color 0.2s, background-color 0.2s !important;
+}
+
+body.admin-page .multi-summary-row:hover {
+    border-color: var(--color-primary) !important;
+    background: rgba(74, 0, 24, 0.02) !important;
+}
+
+body.admin-page .multi-summary-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+body.admin-page .multi-summary-title {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    color: var(--color-primary) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+body.admin-page .multi-summary-course {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    background: rgba(74, 0, 24, 0.08) !important;
+    color: var(--color-primary) !important;
+    padding: 2px 7px !important;
+    border-radius: 4px !important;
+}
+
+body.admin-page .multi-summary-status {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+body.admin-page .multi-summary-bar-track {
+    width: 80px !important;
+    height: 6px !important;
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+}
+
+body.admin-page .multi-summary-bar-fill {
+    height: 100% !important;
+    background: #10b981 !important;
+    border-radius: 9999px !important;
+    transition: width 0.3s ease !important;
+}
+
+body.admin-page .multi-summary-pct {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    color: var(--color-secondary) !important;
+    min-width: 38px !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+body.admin-page .btn-switch-live {
+    padding: 4px 10px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    border: 1px solid var(--color-border) !important;
+    background: #ffffff !important;
+    color: var(--color-primary) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    transition: all 0.2s !important;
+}
+
+body.admin-page .btn-switch-live:hover {
+    background: var(--color-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--color-primary) !important;
+}
+
+body.admin-page .live-progress-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+body.admin-page .live-progress-updated {
+    font-size: 0.82rem !important;
+    color: var(--color-secondary) !important;
+    font-weight: 500 !important;
+}
+
+body.admin-page .btn-toggle-details {
+    padding: 6px 14px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(74, 0, 24, 0.2) !important;
+    color: var(--color-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s !important;
+}
+
+body.admin-page .btn-toggle-details:hover {
+    background: rgba(74, 0, 24, 0.07) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+body.admin-page .live-progress-bar-container {
+    width: 100% !important;
+    height: 10px !important;
+    background: rgba(0, 0, 0, 0.08) !important;
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+    margin-bottom: 8px !important;
+}
+
+body.admin-page .live-progress-fill {
+    height: 100% !important;
+    background: #059669 !important;
+    border-radius: 9999px !important;
+    transition: width 0.4s ease !important;
+}
+
+body.admin-page .live-progress-metrics {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-size: 0.88rem !important;
+}
+
+body.admin-page .live-progress-percent {
+    font-weight: 700 !important;
+    color: #047857 !important;
+    font-size: 1rem !important;
+    font-variant-numeric: tabular-nums !important;
+}
+
+body.admin-page .live-progress-count {
+    color: var(--color-secondary) !important;
+    font-weight: 500 !important;
+}
+
+body.admin-page .live-progress-details-drawer {
+    margin-top: 16px !important;
+    padding-top: 14px !important;
+    border-top: 1px solid rgba(74, 0, 24, 0.12) !important;
+}
+
+body.admin-page .live-details-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    font-size: 0.85rem !important;
+    background: #ffffff !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+
+body.admin-page .live-details-table th,
+body.admin-page .live-details-table td {
+    padding: 10px 14px !important;
+    text-align: left !important;
+}
+
+body.admin-page .live-details-table th {
+    background: rgba(74, 0, 24, 0.04) !important;
+    color: var(--color-primary) !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+body.admin-page .live-details-table td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    color: var(--color-secondary) !important;
+}
+
+body.admin-page .live-details-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+body.admin-page .status-badge {
+    display: inline-block !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+}
+
+body.admin-page .status-badge.badge-success { background: #d1fae5 !important; color: #065f46 !important; }
+body.admin-page .status-badge.badge-warning { background: #fef3c7 !important; color: #92400e !important; }
+body.admin-page .status-badge.badge-secondary { background: #f1f5f9 !important; color: #475569 !important; }
+
+body.admin-page .mini-progress-track {
+    width: 100% !important;
+    height: 6px !important;
+    background: #e2e8f0 !important;
+    border-radius: 9999px !important;
+    overflow: hidden !important;
+    margin-bottom: 2px !important;
+}
+
+body.admin-page .mini-progress-fill {
+    height: 100% !important;
+    background: #10b981 !important;
+    border-radius: 9999px !important;
+    transition: width 0.4s ease !important;
+}
+
+/* ==========================================================================
+   Multi-Theme Overrides: Dark Mode for Admin Dashboard
+   ========================================================================== */
+html[data-theme="dark"] body.admin-page {
+    background-color: #121214 !important;
+    color: #f4f4f5 !important;
+    --color-primary: #f59e0b;
+    --color-primary-light: #fbbf24;
+    --color-primary-dark: #b45309;
+    --color-secondary: #d4d4d8;
+    --color-secondary-light: #e4e4e7;
+    --color-secondary-dark: #a1a1aa;
+    --color-background: #121214;
+    --color-surface: #1e1e24;
+    --color-border: #2e2e38;
+    --color-hover: #26262e;
+}
+
+html[data-theme="dark"] body.admin-page .main-content {
+    background-color: #121214 !important;
+}
+
+html[data-theme="dark"] body.admin-page .header {
+    background: linear-gradient(135deg, #2d0510 0%, #170107 100%) !important;
+    border: 1px solid rgba(248, 166, 23, 0.25) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+html[data-theme="dark"] body.admin-page :is(h1, h2, h3, h4, h5, h6) {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-courses-indicator {
+    background: linear-gradient(135deg, rgba(248, 166, 23, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+    border-color: #2e2e38 !important;
+    border-left-color: var(--color-accent, #F8A617) !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-courses-header h3 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-courses-subtitle {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-course-chip {
+    background: #24242c !important;
+    border-color: #383844 !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-course-code {
+    background: rgba(248, 166, 23, 0.15) !important;
+    color: #F8A617 !important;
+    border: 1px solid rgba(248, 166, 23, 0.3) !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="dark"] body.admin-page .managed-course-name {
+    color: #e4e4e7 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-card {
+    background: linear-gradient(135deg, rgba(248, 166, 23, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+    border-color: #2e2e38 !important;
+    border-left-color: var(--color-accent, #F8A617) !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-title :is(h3, h4) {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-subtitle {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .badge-assessment-title {
+    background: rgba(248, 166, 23, 0.15) !important;
+    color: #F8A617 !important;
+    border: 1px solid rgba(248, 166, 23, 0.3) !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-toggle-details {
+    background: #24242c !important;
+    border-color: #3f3f46 !important;
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-toggle-details:hover {
+    background: #2e2e38 !important;
+    border-color: #f8a617 !important;
+    color: #f8a617 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-bar-container {
+    background: #27272a !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-count,
+html[data-theme="dark"] body.admin-page .live-progress-updated {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-assessment-select {
+    background-color: #24242c !important;
+    border-color: #3f3f46 !important;
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-toggle-multi-summary {
+    background: #24242c !important;
+    border-color: #3f3f46 !important;
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-toggle-multi-summary:hover {
+    background: #2e2e38 !important;
+    border-color: #f8a617 !important;
+    color: #f8a617 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-multi-summary-drawer {
+    background: #18181c !important;
+    border-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-header h4 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-hint {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-row {
+    background: #1e1e24 !important;
+    border-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-row:hover {
+    border-color: #f59e0b !important;
+    background: #26262e !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-title {
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-course {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-bar-track {
+    background: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .multi-summary-pct {
+    color: #d4d4d8 !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-switch-live {
+    background: #26262e !important;
+    border-color: #3f3f46 !important;
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .btn-switch-live:hover {
+    background: #f59e0b !important;
+    color: #121214 !important;
+    border-color: #f59e0b !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-progress-details-drawer {
+    border-top-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-details-table {
+    background: #18181c !important;
+    border-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-details-table th {
+    background: #22222a !important;
+    color: #ffffff !important;
+    border-bottom-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .live-details-table td {
+    color: #d4d4d8 !important;
+    border-bottom-color: #26262e !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-box {
+    background-color: #1a1a20 !important;
+    border-color: #2e2e38 !important;
+    border-left-color: var(--color-accent, #F8A617) !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-header h3 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .total-marks {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: #2e2e38 !important;
+    border-left-color: var(--color-accent, #F8A617) !important;
+}
+
+html[data-theme="dark"] body.admin-page .total-marks p,
+html[data-theme="dark"] body.admin-page .total-marks div p {
+    color: #d4d4d8 !important;
+}
+
+html[data-theme="dark"] body.admin-page .total-marks span {
+    color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.admin-page .assess-type-group {
+    background: #202028 !important;
+    border-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .rubric-assessment {
+    background: #24242c !important;
+    border-color: #2e2e38 !important;
+}
+
+html[data-theme="dark"] body.admin-page .rubric-assessment h6 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .rubric-details p {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .rubric-details span {
+    color: #fbbf24 !important;
+}
+
+html[data-theme="dark"] body.admin-page .rubric-section h2 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.assessor-notes {
+    background: #111e3b !important;
+    border-color: #1e3a8a !important;
+    border-left-color: #60a5fa !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.assessor-notes h6 {
+    color: #93c5fd !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.assessor-notes p {
+    color: #dbeafe !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.student-notes {
+    background: #062320 !important;
+    border-color: #134e4a !important;
+    border-left-color: #2dd4bf !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.student-notes h6 {
+    color: #5eead4 !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.student-notes p,
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.student-notes .notes-content {
+    color: #ccfbf1 !important;
+}
+
+html[data-theme="dark"] body.admin-page .assessment-notes-banner.assessor-notes .notes-content {
+    color: #dbeafe !important;
+}
+
+html[data-theme="dark"] body.admin-page .comment-item {
+    background: #1e1e24 !important;
+    border-color: #2e2e38 !important;
+    border-left-color: #f59e0b !important;
+}
+
+html[data-theme="dark"] body.admin-page .comment-number-badge {
+    background: #f59e0b !important;
+    color: #121214 !important;
+}
+
+html[data-theme="dark"] body.admin-page .comment-item-text {
+    color: #d4d4d8 !important;
+}
+
+html[data-theme="dark"] body.admin-page .summary-label {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .summary-value {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.admin-page .question-meta {
+    color: #a1a1aa !important;
+}
+
+html[data-theme="dark"] body.admin-page .question-meta strong {
+    color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] body.admin-page .assess-type-group h5 {
+    color: #ffffff !important;
+}
+
+/* ==========================================================================
+   Multi-Theme Overrides: Warm Mode for Admin Dashboard
+   ========================================================================== */
+html[data-theme="warm"] body.admin-page {
+    background-color: #f5efe6 !important;
+    color: #2c241e !important;
+    --color-primary: #521323;
+    --color-primary-light: #701c31;
+    --color-primary-dark: #3b0d18;
+    --color-secondary: #4a3d33;
+    --color-secondary-light: #635345;
+    --color-secondary-dark: #2c241e;
+    --color-background: #f5efe6;
+    --color-surface: #fffdf9;
+    --color-border: #e3d7c5;
+    --color-hover: #ede3d3;
+}
+
+html[data-theme="warm"] body.admin-page .main-content {
+    background-color: #f5efe6 !important;
+}
+
+html[data-theme="warm"] body.admin-page .header {
+    background: linear-gradient(135deg, #4a0e1c 0%, #2e050f 100%) !important;
+    border: 1px solid rgba(217, 119, 6, 0.25) !important;
+}
+
+html[data-theme="warm"] body.admin-page :is(h1, h2, h3, h4, h5, h6) {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-courses-indicator {
+    background: linear-gradient(135deg, rgba(82, 19, 35, 0.05) 0%, rgba(217, 119, 6, 0.09) 100%) !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #d97706 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-courses-header h3 {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-courses-subtitle {
+    color: #635345 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-course-chip {
+    background: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-course-code {
+    background: #521323 !important;
+    color: #fffdf9 !important;
+}
+
+html[data-theme="warm"] body.admin-page .managed-course-name {
+    color: #3f342c !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-card {
+    background: linear-gradient(135deg, rgba(82, 19, 35, 0.05) 0%, rgba(217, 119, 6, 0.09) 100%) !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #d97706 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-title :is(h3, h4) {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-subtitle {
+    color: #796c5f !important;
+}
+
+html[data-theme="warm"] body.admin-page .badge-assessment-title {
+    background: #521323 !important;
+    color: #fffdf9 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-toggle-details {
+    background: #fffdf9 !important;
+    border-color: #d6c6b2 !important;
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-toggle-details:hover {
+    background: #f7eee4 !important;
+    border-color: #701c31 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-bar-container {
+    background: #ede3d3 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-count,
+html[data-theme="warm"] body.admin-page .live-progress-updated {
+    color: #796c5f !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-assessment-select {
+    background-color: #fffdf9 !important;
+    border-color: #d6c6b2 !important;
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-toggle-multi-summary {
+    background: #fffdf9 !important;
+    border-color: #d6c6b2 !important;
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-toggle-multi-summary:hover {
+    background: #f7eee4 !important;
+    border-color: #701c31 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-multi-summary-drawer {
+    background: #faf6ef !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-header h4 {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-hint {
+    color: #796c5f !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-row {
+    background: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-row:hover {
+    border-color: #521323 !important;
+    background: #fdfaf6 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-title {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-course {
+    background: #f7eee4 !important;
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-bar-track {
+    background: #ede3d3 !important;
+}
+
+html[data-theme="warm"] body.admin-page .multi-summary-pct {
+    color: #4a3d33 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-switch-live {
+    background: #fffdf9 !important;
+    border-color: #d6c6b2 !important;
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .btn-switch-live:hover {
+    background: #521323 !important;
+    color: #fffdf9 !important;
+    border-color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-progress-details-drawer {
+    border-top-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-details-table {
+    background: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-details-table th {
+    background: #ede3d3 !important;
+    color: #521323 !important;
+    border-bottom-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .live-details-table td {
+    color: #3f342c !important;
+    border-bottom-color: #f0e6d8 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-box {
+    background-color: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-header h3 {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .total-marks {
+    background: rgba(82, 19, 35, 0.04) !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #d97706 !important;
+}
+
+html[data-theme="warm"] body.admin-page .total-marks p,
+html[data-theme="warm"] body.admin-page .total-marks div p {
+    color: #4a3d33 !important;
+}
+
+html[data-theme="warm"] body.admin-page .total-marks span {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assess-type-group {
+    background: #faf6ef !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .rubric-assessment {
+    background: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+}
+
+html[data-theme="warm"] body.admin-page .rubric-assessment h6 {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .rubric-details p {
+    color: #635345 !important;
+}
+
+html[data-theme="warm"] body.admin-page .rubric-details span {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .rubric-section h2 {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.assessor-notes {
+    background: #fdfaf6 !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #b45309 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.assessor-notes h6 {
+    color: #92400e !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.assessor-notes p,
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.assessor-notes .notes-content {
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.student-notes {
+    background: #fdfaf6 !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #047857 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.student-notes h6 {
+    color: #065f46 !important;
+}
+
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.student-notes p,
+html[data-theme="warm"] body.admin-page .assessment-notes-banner.student-notes .notes-content {
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] body.admin-page .comment-item {
+    background: #fffdf9 !important;
+    border-color: #e3d7c5 !important;
+    border-left-color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .comment-number-badge {
+    background: #521323 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="warm"] body.admin-page .comment-item-text {
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] body.admin-page .summary-label {
+    color: #635345 !important;
+}
+
+html[data-theme="warm"] body.admin-page .summary-value {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.admin-page .question-meta {
+    color: #796c5f !important;
+}
+
+html[data-theme="warm"] body.admin-page .question-meta strong {
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] body.admin-page .assess-type-group h5 {
+    color: #521323 !important;
+}
+

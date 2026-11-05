@@ -570,3 +570,105 @@ body.overall-data-page .legend-grid { display: grid !important; grid-template-co
         font-size: 1.2rem !important;
     }
 }
+
+/* ============================================================================
+ * OVERALL DATA VIEW THEME EXTENSIONS: DARK & WARM MODES
+ * Guarantees table cells, sticky columns, filter blocks, and headers are dark/warm
+ * ============================================================================ */
+html[data-theme="dark"] body.overall-data-page {
+    background-color: var(--ui-bg-canvas, #0f0f12) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .filter-card {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .filter-field input,
+html[data-theme="dark"] body.overall-data-page .filter-field select {
+    background-color: #1e1e24 !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+    border-color: var(--ui-border-strong, #3f3f4e) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .assessment-filter-block {
+    background-color: #1e1e24 !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .assessment-checkbox {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .table-container {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .overall-table {
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page th {
+    background-color: var(--ui-bg-subtle, #22222a) !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page td {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page .sticky-col {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page th.sticky-col {
+    background-color: var(--ui-bg-subtle, #22222a) !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page tbody tr:hover td {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+html[data-theme="dark"] body.overall-data-page tbody tr:hover .sticky-col {
+    background-color: #1e1e24 !important;
+}
+
+/* Warm Mode Extensions */
+html[data-theme="warm"] body.overall-data-page .filter-card {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.overall-data-page .table-container {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.overall-data-page th {
+    background-color: #f7eee4 !important;
+    color: #2c241e !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.overall-data-page td {
+    background-color: #fffdf9 !important;
+    color: #2c241e !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.overall-data-page .sticky-col {
+    background-color: #fffdf9 !important;
+}
+
+html[data-theme="warm"] body.overall-data-page th.sticky-col {
+    background-color: #f7eee4 !important;
+    color: #2c241e !important;
+}

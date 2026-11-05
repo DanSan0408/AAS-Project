@@ -865,3 +865,138 @@ body.data-view-page .btn-secondary:hover {
         font-size: 1.2rem !important;
     }
 }
+
+/* ============================================================================
+ * ASSESSMENT DATA VIEW THEME EXTENSIONS: DARK & WARM MODES
+ * Guarantees tables, rows, evaluator panels, and assessment titles are high contrast
+ * ============================================================================ */
+html[data-theme="dark"] body.data-view-page {
+    background-color: var(--ui-bg-canvas, #0f0f12) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .data-container {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .page-header {
+    background-color: #22222a !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .page-header h2,
+html[data-theme="dark"] body.data-view-page .page-header h2 span {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] body.data-view-page .assessment-meta {
+    color: var(--ui-text-secondary, #a1a1aa) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .table-container {
+    background-color: #1e1e24 !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .matrix-table {
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .matrix-table th {
+    background-color: var(--ui-bg-subtle, #22222a) !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .rubric-row,
+html[data-theme="dark"] body.data-view-page .rubric-title {
+    background-color: #1e1e26 !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .sub-rubric-row,
+html[data-theme="dark"] body.data-view-page .sub-rubric-row td {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .sub-rubric-row:hover,
+html[data-theme="dark"] body.data-view-page .sub-rubric-row:hover td {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .evaluators-container {
+    background-color: #1e1e24 !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .evaluator-item {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .evaluator-item-header {
+    background-color: #22222a !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+    color: var(--ui-text-primary, #ffffff) !important;
+}
+
+html[data-theme="dark"] body.data-view-page .comment-bubble {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+    border-color: var(--ui-border, #2b2b36) !important;
+}
+
+/* Warm Mode Extensions */
+html[data-theme="warm"] body.data-view-page .data-container {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .page-header {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .page-header h2,
+html[data-theme="warm"] body.data-view-page .page-header h2 span {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .table-container {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .matrix-table th {
+    background-color: #f7eee4 !important;
+    color: #2c241e !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .sub-rubric-row,
+html[data-theme="warm"] body.data-view-page .sub-rubric-row td {
+    background-color: #fffdf9 !important;
+    color: #2c241e !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .evaluators-container {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .evaluator-item {
+    background-color: #fffdf9 !important;
+    border-color: #e5dac9 !important;
+}
+
+html[data-theme="warm"] body.data-view-page .comment-bubble {
+    background-color: #fffdf9 !important;
+    color: #2c241e !important;
+    border-color: #e5dac9 !important;
+}

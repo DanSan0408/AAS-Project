@@ -99,7 +99,7 @@ body.admin-page .btn.btn-sm {
 
 body.admin-page .btn-primary {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
-    color: var(--color-text);
+    color: #ffffff !important;
 }
 
 body.admin-page .btn-primary:hover {

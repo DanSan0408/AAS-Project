@@ -829,3 +829,41 @@ body.lecturer-page .fa-check {
         font-size: 1.2rem !important;
     }
 }
+
+/* ==========================================================================
+   Assessor Rapid-Grading Keyboard Workstation Styles
+   ========================================================================== */
+.keyboard-active-card {
+    outline: 2.5px solid var(--ui-primary, #047857) !important;
+    outline-offset: 2px !important;
+    background-color: rgba(4, 120, 87, 0.03) !important;
+    box-shadow: 0 4px 16px rgba(4, 120, 87, 0.12) !important;
+    position: relative;
+    transition: outline 0.15s ease, box-shadow 0.15s ease;
+}
+
+.keyboard-card-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ui-primary, #047857);
+    background: rgba(4, 120, 87, 0.1);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.keyboard-selected-pulse {
+    animation: hotkeyPulse 0.35s ease-out;
+}
+
+@keyframes hotkeyPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.04); background-color: rgba(4, 120, 87, 0.15); }
+    100% { transform: scale(1); }
+}
+
