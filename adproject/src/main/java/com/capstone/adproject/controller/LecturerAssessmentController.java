@@ -67,6 +67,9 @@ public class LecturerAssessmentController {
     private final AssessmentSubmissionService assessmentSubmissionService;
     private final StudentRepository studentRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.capstone.adproject.service.AssessmentProgressStreamService progressStreamService;
+
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
             RubricService rubricService,
@@ -854,6 +857,14 @@ public class LecturerAssessmentController {
             } else {
                 redirectAttributes.addFlashAttribute("successMessage",
                     "✓ Progress saved! Your evaluation is incomplete. Please complete all rubrics and comments to finish.");
+            }
+
+            if (progressStreamService != null) {
+                try {
+                    progressStreamService.broadcastProgress(assessmentId);
+                } catch (Exception ex) {
+                    logger.debug("Failed to broadcast SSE progress for assessment {}: {}", assessmentId, ex.getMessage());
+                }
             }
             
         } catch (Exception e) {

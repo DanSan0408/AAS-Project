@@ -63,6 +63,7 @@ public class DataViewController {
         private Double grandTotal;
         private Double calculatedFactor;
         private Double calculatedGrandTotal;
+        private String reason;
 
         public StudentResultUpdate() {}
 
@@ -84,6 +85,8 @@ public class DataViewController {
         public void setCalculatedFactor(Double calculatedFactor) { this.calculatedFactor = calculatedFactor; }
         public Double getCalculatedGrandTotal() { return calculatedGrandTotal; }
         public void setCalculatedGrandTotal(Double calculatedGrandTotal) { this.calculatedGrandTotal = calculatedGrandTotal; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
     }
 
     private final AssessmentService assessmentService;
@@ -688,6 +691,9 @@ public class DataViewController {
                     
                     form.getUpdates().add(new StudentResultUpdate(student.getId(), overrideFactor, overrideTotal, calculatedFactor, calculatedTotal));
                 }
+
+                List<FactorOverrideHistory> auditLogs = factorOverrideHistoryRepository.findByStudentInOrderByChangedAtDesc(students);
+                model.addAttribute("recentAuditLogs", auditLogs);
             }
         }
         
@@ -722,7 +728,8 @@ public class DataViewController {
                                     oldTotal,
                                     null,
                                     getLoggedInUsername(),
-                                    java.time.LocalDateTime.now()
+                                    java.time.LocalDateTime.now(),
+                                    update.getReason()
                             );
                             factorOverrideHistoryRepository.save(history);
                         }
@@ -751,7 +758,8 @@ public class DataViewController {
                                     oldTotal,
                                     update.getGrandTotal(),
                                     getLoggedInUsername(),
-                                    java.time.LocalDateTime.now()
+                                    java.time.LocalDateTime.now(),
+                                    update.getReason()
                             );
                             factorOverrideHistoryRepository.save(history);
                         }

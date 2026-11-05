@@ -1,5 +1,6 @@
 package com.capstone.adproject.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
@@ -27,9 +28,11 @@ public class Course {
     private Long id;
 
     @NotBlank
+    @Column(name = "courseName")
     private String courseName;
     
     @NotBlank
+    @Column(name = "courseCode")
     private String courseCode;
     
     private String description;

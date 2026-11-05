@@ -61,6 +61,7 @@
                                     <th style="width: 150px;">Factor Override <small>(0-5)</small></th>
                                     <th style="width: 120px;">Calculated Total</th>
                                     <th style="width: 150px;">Total Override <small>(0-100)</small></th>
+                                    <th style="width: 200px;">Reason for Adjustment</th>
                                 </tr>
                             </thead>
                         <tbody>
@@ -82,16 +83,74 @@
                                     <input type="number" step="0.01" min="0" max="100" class="inp-number" placeholder="Auto"
                                            th:field="*{updates[__${stat.index}__].grandTotal}" />
                                 </td>
+                                <td>
+                                    <input type="text" class="inp-number" placeholder="e.g. Medical exemption"
+                                           list="overrideReasonPresets" style="text-align: left; width: 100%;"
+                                           th:field="*{updates[__${stat.index}__].reason}" />
+                                </td>
                             </tr>
                         </tbody>
                         </table>
                     </div>
                 </div>
+
+                <datalist id="overrideReasonPresets">
+                    <option value="Medical Exemption (MC)"></option>
+                    <option value="Coordinator Discretionary Adjustment"></option>
+                    <option value="Peer Assessment Outlier Correction"></option>
+                    <option value="Technical Resubmission Approved"></option>
+                    <option value="Presentation Makeup Session"></option>
+                </datalist>
                 
                 <div class="sticky-footer">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All Changes</button>
                 </div>
             </form>
+            
+            <!-- Simplified Grade Override Audit Trail -->
+            <div th:if="${recentAuditLogs != null && !recentAuditLogs.isEmpty()}" class="card table-card" style="margin-top: 25px;">
+                <div class="page-header" style="margin-bottom: 12px;">
+                    <h2 style="font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-history"></i> Grade Override Audit Trail
+                        <span style="font-size: 0.75rem; background: var(--ui-primary-soft); color: var(--ui-primary); padding: 2px 8px; border-radius: 9999px;" th:text="${#lists.size(recentAuditLogs)} + ' entries'">0 entries</span>
+                    </h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Admin User</th>
+                                <th>Student</th>
+                                <th>Factor Change</th>
+                                <th>Total Mark Change</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="log : ${recentAuditLogs}">
+                                <td th:text="${#temporals.format(log.changedAt, 'dd MMM yyyy, HH:mm')}">Date</td>
+                                <td th:text="${log.changedBy}">admin@domain.com</td>
+                                <td th:text="${log.student != null ? log.student.username : 'Unknown'}">Student</td>
+                                <td>
+                                    <span th:text="${log.oldFactor != null ? #numbers.formatDecimal(log.oldFactor, 1, 3) : 'Auto'}">1.000</span>
+                                    &rarr;
+                                    <strong th:text="${log.newFactor != null ? #numbers.formatDecimal(log.newFactor, 1, 3) : 'Auto'}" style="color: var(--ui-primary);">1.050</strong>
+                                </td>
+                                <td>
+                                    <span th:text="${log.oldGrandTotal != null ? #numbers.formatDecimal(log.oldGrandTotal, 1, 2) : 'Auto'}">75.00</span>
+                                    &rarr;
+                                    <strong th:text="${log.newGrandTotal != null ? #numbers.formatDecimal(log.newGrandTotal, 1, 2) : 'Auto'}" style="color: var(--ui-primary);">80.00</strong>
+                                </td>
+                                <td>
+                                    <span th:text="${log.reason != null && !log.reason.isBlank() ? log.reason : 'No reason specified'}"
+                                          th:style="${log.reason != null ? 'font-weight: 500;' : 'color: var(--ui-muted); font-style: italic;'}">Reason</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             
             <div th:if="${selectedGroupId == null}" class="empty-state">
                 <i class="fas fa-mouse-pointer"></i>

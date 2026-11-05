@@ -95,6 +95,7 @@
             if (current) current.setAttribute('aria-current', 'page');
         }
         highlightCurrentPage(breadcrumb);
+        initSidebarGroups();
         // Inline SVGs keep navigation recognisable without an external icon font.
         const icons = {
             dashboard: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
@@ -141,6 +142,49 @@
             link.classList.toggle('active', link === current);
             if (link === current) link.setAttribute('aria-current', 'page');
             else link.removeAttribute('aria-current');
+        });
+    }
+
+    function initSidebarGroups() {
+        const groups = sidebar.querySelectorAll('.sidebar-group');
+        const path = window.location.pathname;
+        groups.forEach(group => {
+            const btn = group.querySelector('.sidebar-group-btn');
+            const submenu = group.querySelector('.sidebar-submenu');
+            if (!btn || !submenu) return;
+
+            const hasActiveLink = !!submenu.querySelector('a.active, a[aria-current="page"]');
+            const matchesPath = [...submenu.querySelectorAll('a[href]')].some(a => {
+                const href = a.getAttribute('href');
+                return href && (path === href || path.startsWith(href + '/'));
+            });
+
+            const groupId = group.id || btn.textContent.trim();
+            let savedState = null;
+            try { savedState = localStorage.getItem('iams.sidebar.group.' + groupId); } catch (_) {}
+            
+            // Auto-open if active page is inside, otherwise respect saved state (defaults to open for data/courses)
+            const shouldOpen = hasActiveLink || matchesPath || savedState === 'open' || savedState === null;
+
+            if (shouldOpen) {
+                group.classList.add('is-open');
+                btn.setAttribute('aria-expanded', 'true');
+            } else {
+                group.classList.remove('is-open');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+
+            if (!btn.dataset.bound) {
+                btn.dataset.bound = 'true';
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const isOpen = group.classList.toggle('is-open');
+                    btn.setAttribute('aria-expanded', String(isOpen));
+                    try {
+                        localStorage.setItem('iams.sidebar.group.' + groupId, isOpen ? 'open' : 'closed');
+                    } catch (_) {}
+                });
+            }
         });
     }
     const form = document.getElementById('courseSwitchForm');

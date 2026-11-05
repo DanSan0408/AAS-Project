@@ -129,8 +129,8 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div th:id="'dropdown-' + ${assessment.id}" class="dropdown-menu">
-                                            <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" class="dropdown-item" style="color: #4A0018; font-weight: 600;">
-                                                <i class="fas fa-file-upload" style="color: #4A0018;"></i> Report Submission Setup
+                                            <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" class="dropdown-item dropdown-item-primary" style="font-weight: 600;">
+                                                <i class="fas fa-file-upload"></i> Report Submission Setup
                                             </a>
                                             <div class="dropdown-divider"></div>
                                             <a th:href="@{/admin/comment-config/{id}/group(id=${assessment.id})}" class="dropdown-item">

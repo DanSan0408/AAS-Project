@@ -33,15 +33,38 @@
             </li>
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/home"><span>Dashboard</span></a></li>
             <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-users"><span>Manage Users</span></a></li>
-            <li class="sidebar-item"><a class="sidebar-link" href="/admin/manage-courses"><span>Manage Courses</span></a></li>
-            <li class="sidebar-item"><a class="sidebar-link" href="/rubrics/manage"><span>Manage Assessments</span></a></li>
-            <li class="sidebar-item">
-                <a th:href="@{/admin/progress-tracking}" class="sidebar-link">
-                    <span>Progress &amp; Comments</span>
-                </a>
+            
+            <!-- Collapsible: Course & Rubrics Management -->
+            <li class="sidebar-group" id="navGroupCourseRubrics">
+                <button type="button" class="sidebar-group-btn" aria-expanded="false" aria-controls="submenuCourseRubrics">
+                    <span class="sidebar-group-title">
+                        <svg class="sidebar-group-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+                        <span>Course &amp; Rubrics Management</span>
+                    </span>
+                    <svg class="sidebar-group-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <ul class="sidebar-submenu" id="submenuCourseRubrics">
+                    <li class="sidebar-subitem"><a class="sidebar-link" href="/admin/manage-courses"><span>Manage Courses</span></a></li>
+                    <li class="sidebar-subitem"><a class="sidebar-link" href="/rubrics/manage"><span>Manage Assessments</span></a></li>
+                </ul>
             </li>
-            <li class="sidebar-item"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
-            <li class="sidebar-item"><a class="sidebar-link" th:href="@{/admin/analytics/lecturer-comparison}"><span>Data Analytics</span></a></li>
+
+            <!-- Collapsible: Data Management -->
+            <li class="sidebar-group" id="navGroupDataManagement">
+                <button type="button" class="sidebar-group-btn" aria-expanded="false" aria-controls="submenuDataManagement">
+                    <span class="sidebar-group-title">
+                        <svg class="sidebar-group-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        <span>Data Management</span>
+                    </span>
+                    <svg class="sidebar-group-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <ul class="sidebar-submenu" id="submenuDataManagement">
+                    <li class="sidebar-subitem"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
+                    <li class="sidebar-subitem"><a class="sidebar-link" th:href="@{/admin/analytics/lecturer-comparison}"><span>Data Analytics</span></a></li>
+                    <li class="sidebar-subitem"><a th:href="@{/admin/progress-tracking}" class="sidebar-link"><span>Progress &amp; Comments</span></a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-item">
                 <a class="sidebar-link" th:href="@{/profile}"><span>My Profile</span></a>
             </li>
@@ -51,16 +74,29 @@
             <li class="sidebar-item" sec:authorize="hasRole('ROLE_SUPER_ADMIN')">
                 <a th:href="@{/superadmin/home}" class="sidebar-link"><span>Back to Super Admin</span></a>
             </li>
-            <!-- Consistent Logout Button -->
+            <!-- Consistent Logout & Hotkey Guide Row -->
             <li class="sidebar-item logout-item">
-                <form th:action="@{/logout}" method="post">
-                    <button type="submit" class="sidebar-link logout-btn"><span>Logout</span></button>
-                </form>
+                <div class="sidebar-footer-row">
+                    <div class="hotkey-guide-anchor">
+                        <button type="button" class="hotkey-help-trigger" aria-label="Assessor Hotkey Guide" title="Assessor Hotkeys">?</button>
+                        <div class="hotkey-guide-popover" role="tooltip">
+                            <div class="hotkey-guide-popover-title">Rapid-Grading Hotkeys</div>
+                            <div class="hotkey-guide-row"><kbd>1</kbd>–<kbd>5</kbd><span>Select rating</span></div>
+                            <div class="hotkey-guide-row"><kbd>&darr;</kbd> / <kbd>J</kbd><span>Next criterion</span></div>
+                            <div class="hotkey-guide-row"><kbd>&uarr;</kbd> / <kbd>K</kbd><span>Previous criterion</span></div>
+                            <div class="hotkey-guide-row"><kbd>Ctrl</kbd>+<kbd>&crarr;</kbd><span>Submit</span></div>
+                        </div>
+                    </div>
+                    <form th:action="@{/logout}" method="post" class="sidebar-logout-form">
+                        <button type="submit" class="sidebar-link logout-btn"><span>Logout</span></button>
+                    </form>
+                </div>
             </li>
             
         </ul>
     </div>
 
+    <script th:src="@{/js/theme-switcher.js}"></script>
     <script th:src="@{/js/sidebar-toggle.js}"></script>
 
     </th:block>
