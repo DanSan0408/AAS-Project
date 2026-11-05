@@ -3,6 +3,7 @@ package com.capstone.adproject.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,6 +59,11 @@ class SuperAdminControllerTest {
         course = new Course();
         course.setId(10L);
         course.setCourseName("Advanced Software Engineering");
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
     }
 
     @Test

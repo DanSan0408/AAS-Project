@@ -319,6 +319,116 @@ body.sidebar-open {
     margin-top: auto;
 }
 
+.sidebar .sidebar-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.sidebar .sidebar-logout-form {
+    flex: 1;
+    margin: 0;
+}
+
+.sidebar .sidebar-logout-form .logout-btn {
+    width: 100%;
+}
+
+.sidebar .hotkey-guide-anchor {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar .hotkey-help-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(4, 120, 87, 0.2);
+    background: #ffffff;
+    color: var(--lecturer-secondary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.sidebar .hotkey-help-trigger:hover,
+.sidebar .hotkey-help-trigger:focus-visible {
+    color: var(--lecturer-primary);
+    border-color: var(--lecturer-primary);
+    background: rgba(4, 120, 87, 0.08);
+    outline: none;
+}
+
+.sidebar .hotkey-guide-popover {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 0;
+    width: 205px;
+    background: #ffffff;
+    border: 1px solid rgba(4, 120, 87, 0.18);
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+    z-index: 3200;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.18s;
+}
+
+.sidebar .hotkey-guide-anchor:hover .hotkey-guide-popover,
+.sidebar .hotkey-guide-anchor:focus-within .hotkey-guide-popover {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.sidebar .hotkey-guide-popover-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--lecturer-primary);
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+}
+
+.sidebar .hotkey-guide-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--lecturer-secondary);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sidebar .hotkey-guide-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sidebar .hotkey-guide-row kbd {
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-family: inherit;
+}
+
 .sidebar .logout-btn {
     font-family: inherit;
 }

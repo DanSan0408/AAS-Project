@@ -62,7 +62,7 @@
             
             <div class="page-header">
                 <h1><span th:text="${assessment.title}">Assessment Title</span></h1>
-                <p style="color: #6B7280; margin: 0; font-size: 0.95rem;">
+                <p class="page-subtitle">
                     Course: <strong th:text="${assessment.course != null ? (assessment.course.courseCode + ' - ' + assessment.course.courseName) : 'General'}">Course Code</strong>
                 </p>
             </div>
@@ -84,14 +84,13 @@
                    class="hub-tab-btn" 
                    th:classappend="${activeTab == 'submissions' ? 'active' : ''}">
                     <i class="fas fa-file-upload"></i> Report Setup &amp; Assessor Mapping
-                    <span class="tab-badge" style="background-color: #047857;" 
+                    <span class="tab-badge tab-badge-submitted" 
                           th:if="${submissionMappingData != null and submissionMappingData.stats != null}" 
                           th:text="${submissionMappingData.stats.get('totalSubmitted')} + '/' + ${submissionMappingData.stats.get('totalExpected')} + ' Submitted'">0/0</span>
                 </a>
                 <a th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/groups'}" 
-                   class="hub-tab-btn" 
-                   style="border-left: 2px solid #4A0018; color: #4A0018;">
-                    <i class="fas fa-comments" style="color: #4A0018;"></i> Group Comments &amp; Summaries
+                   class="hub-tab-btn hub-tab-special">
+                    <i class="fas fa-comments"></i> Group Comments &amp; Summaries
                 </a>
             </div>
 
@@ -120,7 +119,7 @@
                                 <th:block th:each="prog, stat : ${lecturerProgress.progressList}">
                                     <tr>
                                         <td data-label="Assessor">
-                                            <button type="button" class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: #4a5568; margin-right: 5px;" th:data-target="'#lecturer-details-' + ${stat.index}">
+                                            <button type="button" class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: var(--ui-muted, currentColor); margin-right: 5px;" th:data-target="'#lecturer-details-' + ${stat.index}">
                                                 <i class="fas fa-chevron-right toggle-icon"></i>
                                             </button>
                                             <span th:text="${prog.lecturerName}" style="font-weight: 500;">Name</span>
@@ -140,40 +139,40 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr th:id="'lecturer-details-' + ${stat.index}" class="details-row" style="display: none; background-color: #f7fafc;">
-                                        <td colspan="4" style="padding: 1.5rem; border-top: 1px dashed #e2e8f0;">
-                                            <h4 style="margin-top:0; font-size: 0.95rem; color: #4a5568; margin-bottom: 1rem;"><i class="fas fa-list-ul"></i> Granular Progress</h4>
-                                            <div th:if="${lecturerProgress.assignmentMode != 'RUBRIC'}" style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <tr th:id="'lecturer-details-' + ${stat.index}" class="details-row" style="display: none;">
+                                        <td colspan="4" class="details-cell">
+                                            <h4 class="details-title"><i class="fas fa-list-ul"></i> Granular Progress</h4>
+                                            <div th:if="${lecturerProgress.assignmentMode != 'RUBRIC'}" class="details-grid-stack">
                                                 <div th:if="${lecturerProgress.hasGroupRubrics != null and lecturerProgress.hasGroupRubrics}">
-                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                                        <strong style="font-size: 0.85rem; color: #2d3748;">Group Assessment Rubrics</strong>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:text="${prog.groupProgress} + '%'"></span>
+                                                    <div class="details-rubric-header">
+                                                        <strong class="details-rubric-name">Group Assessment Rubrics</strong>
+                                                        <span class="details-rubric-percent" th:text="${prog.groupProgress} + '%'"></span>
                                                     </div>
-                                                    <div class="progress-bar-container" style="width: 100%; height: 6px;">
-                                                        <div class="progress-bar" style="background-color: #4299e1;" th:style="'width: ' + ${prog.groupProgress} + '%'"></div>
+                                                    <div class="progress-bar-container progress-bar-thin">
+                                                        <div class="progress-bar progress-bar-blue" th:style="'width: ' + ${prog.groupProgress} + '%'"></div>
                                                     </div>
                                                 </div>
                                                 <div th:if="${lecturerProgress.hasIndividualRubrics != null and lecturerProgress.hasIndividualRubrics}">
-                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                                        <strong style="font-size: 0.85rem; color: #2d3748;">Individual Assessment Rubrics</strong>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:text="${prog.individualProgress} + '%'"></span>
+                                                    <div class="details-rubric-header">
+                                                        <strong class="details-rubric-name">Individual Assessment Rubrics</strong>
+                                                        <span class="details-rubric-percent" th:text="${prog.individualProgress} + '%'"></span>
                                                     </div>
-                                                    <div class="progress-bar-container" style="width: 100%; height: 6px;">
-                                                        <div class="progress-bar" style="background-color: #48bb78;" th:style="'width: ' + ${prog.individualProgress} + '%'"></div>
+                                                    <div class="progress-bar-container progress-bar-thin">
+                                                        <div class="progress-bar progress-bar-green" th:style="'width: ' + ${prog.individualProgress} + '%'"></div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div th:if="${lecturerProgress.assignmentMode == 'RUBRIC'}" style="display: flex; flex-direction: column; gap: 1rem;">
-                                                <div th:each="rubricDetail : ${prog.assignedRubricDetails}" style="background: #ffffff; padding: 1.25rem; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                                            <strong style="font-size: 0.95rem; color: #2d3748;" th:text="${rubricDetail.rubricName}">Rubric Name</strong>
-                                                            <span style="font-size: 0.75rem; background-color: #edf2f7; color: #4a5568; padding: 2px 6px; border-radius: 4px;" th:text="${rubricDetail.rubricType}">Type</span>
+                                            <div th:if="${lecturerProgress.assignmentMode == 'RUBRIC'}" class="details-grid-stack">
+                                                <div th:each="rubricDetail : ${prog.assignedRubricDetails}" class="details-rubric-card">
+                                                    <div class="details-rubric-header">
+                                                        <div class="details-rubric-title-wrap">
+                                                            <strong class="details-rubric-name" th:text="${rubricDetail.rubricName}">Rubric Name</strong>
+                                                            <span class="details-rubric-type" th:text="${rubricDetail.rubricType}">Type</span>
                                                         </div>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:text="${rubricDetail.progress} + '%'"></span>
+                                                        <span class="details-rubric-percent" th:text="${rubricDetail.progress} + '%'"></span>
                                                     </div>
-                                                    <div class="progress-bar-container" style="width: 100%; height: 6px; margin-bottom: 0.5rem;">
-                                                        <div class="progress-bar" style="background-color: #4299e1;" th:style="'width: ' + ${rubricDetail.progress} + '%'"></div>
+                                                    <div class="progress-bar-container progress-bar-thin">
+                                                        <div class="progress-bar progress-bar-blue" th:style="'width: ' + ${rubricDetail.progress} + '%'"></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -183,7 +182,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p th:if="${#lists.isEmpty(lecturerProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No assessors assigned to this assessment.</p>
+                    <p th:if="${#lists.isEmpty(lecturerProgress.progressList)}" class="text-muted" style="padding: 1rem; font-style: italic;">No assessors assigned to this assessment.</p>
                 </div>
 
                 <!-- Student Peer Evaluation Progress Card -->
@@ -205,7 +204,7 @@
                                 <th:block th:each="prog, stat : ${studentProgress.progressList}">
                                     <tr>
                                         <td data-label="Student">
-                                            <button type="button" class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: #4a5568; margin-right: 5px;" th:data-target="'#student-details-' + ${stat.index}">
+                                            <button type="button" class="btn btn-sm toggle-btn" style="background: none; border: none; cursor: pointer; color: var(--ui-muted, currentColor); margin-right: 5px;" th:data-target="'#student-details-' + ${stat.index}">
                                                 <i class="fas fa-chevron-right toggle-icon"></i>
                                             </button>
                                             <span th:text="${prog.studentName}" style="font-weight: 500;">Name</span>
@@ -225,32 +224,32 @@
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr th:id="'student-details-' + ${stat.index}" class="details-row" style="display: none; background-color: #f7fafc;">
-                                        <td colspan="4" style="padding: 1.5rem; border-top: 1px dashed #e2e8f0;">
-                                            <h4 style="margin-top:0; font-size: 0.95rem; color: #4a5568; margin-bottom: 1rem;"><i class="fas fa-tasks"></i> Assessment Breakdown</h4>
-                                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <tr th:id="'student-details-' + ${stat.index}" class="details-row" style="display: none;">
+                                        <td colspan="4" class="details-cell">
+                                            <h4 class="details-title"><i class="fas fa-tasks"></i> Assessment Breakdown</h4>
+                                            <div class="details-grid-stack">
                                                 <div th:if="${prog.isSelfAssigned}">
-                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                                        <strong style="font-size: 0.85rem; color: #2d3748;">Self Assessment</strong>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:class="${prog.selfStatus == 'Completed' ? 'text-success' : 'text-muted'}" th:text="${prog.selfStatus}"></span>
+                                                    <div class="details-rubric-header">
+                                                        <strong class="details-rubric-name">Self Assessment</strong>
+                                                        <span class="details-rubric-percent" th:classappend="${prog.selfStatus == 'Completed' ? 'text-success' : 'text-muted'}" th:text="${prog.selfStatus}"></span>
                                                     </div>
                                                 </div>
                                                 <div th:if="${prog.isPeerAssigned}">
-                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                                        <strong style="font-size: 0.85rem; color: #2d3748;">Peer Assessment</strong>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:text="${prog.peerProgress} + '%'"></span>
+                                                    <div class="details-rubric-header">
+                                                        <strong class="details-rubric-name">Peer Assessment</strong>
+                                                        <span class="details-rubric-percent" th:text="${prog.peerProgress} + '%'"></span>
                                                     </div>
-                                                    <div class="progress-bar-container" style="width: 100%; height: 6px;">
-                                                        <div class="progress-bar" style="background-color: #ed8936;" th:style="'width: ' + ${prog.peerProgress} + '%'"></div>
+                                                    <div class="progress-bar-container progress-bar-thin">
+                                                        <div class="progress-bar progress-bar-orange" th:style="'width: ' + ${prog.peerProgress} + '%'"></div>
                                                     </div>
                                                 </div>
                                                 <div th:if="${prog.isGroupAssigned}">
-                                                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                                                        <strong style="font-size: 0.85rem; color: #2d3748;">Group Assessment</strong>
-                                                        <span style="font-size: 0.85rem; font-weight: bold;" th:text="${prog.groupProgress} + '%'"></span>
+                                                    <div class="details-rubric-header">
+                                                        <strong class="details-rubric-name">Group Assessment</strong>
+                                                        <span class="details-rubric-percent" th:text="${prog.groupProgress} + '%'"></span>
                                                     </div>
-                                                    <div class="progress-bar-container" style="width: 100%; height: 6px;">
-                                                        <div class="progress-bar" style="background-color: #9f7aea;" th:style="'width: ' + ${prog.groupProgress} + '%'"></div>
+                                                    <div class="progress-bar-container progress-bar-thin">
+                                                        <div class="progress-bar progress-bar-purple" th:style="'width: ' + ${prog.groupProgress} + '%'"></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -260,7 +259,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p th:if="${#lists.isEmpty(studentProgress.progressList)}" style="padding: 1rem; color: #666; font-style: italic;">No students assigned to peer evaluation.</p>
+                    <p th:if="${#lists.isEmpty(studentProgress.progressList)}" class="text-muted" style="padding: 1rem; font-style: italic;">No students assigned to peer evaluation.</p>
                 </div>
             </div>
 
@@ -268,53 +267,38 @@
             <!-- TAB 2: COMMENTS & MODERATION -->
             <!-- ================================================================= -->
             <div th:if="${activeTab == 'comments'}">
-                <!-- KPI Stat Cards -->
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-total"><i class="fas fa-comments"></i></div>
-                        <div>
-                            <div class="kpi-value" id="kpi-total" th:text="${moderationStats.get('total')}">0</div>
-                            <div class="kpi-label">Total Comments</div>
-                        </div>
+                <!-- Calm Tabular Stats Strip -->
+                <div class="tracking-stats-summary">
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Total Comments</span>
+                        <span class="summary-stat-val" id="kpi-total" th:text="${moderationStats.get('total')}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-pending"><i class="fas fa-clock"></i></div>
-                        <div>
-                            <div class="kpi-value" id="kpi-pending" th:text="${moderationStats.get('pending')}">0</div>
-                            <div class="kpi-label">Pending Approval</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Pending Approval</span>
+                        <span class="summary-stat-val stat-pending" id="kpi-pending" th:text="${moderationStats.get('pending')}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-approved"><i class="fas fa-check-circle"></i></div>
-                        <div>
-                            <div class="kpi-value" id="kpi-approved" th:text="${moderationStats.get('approved')}">0</div>
-                            <div class="kpi-label">Approved &amp; Visible</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Approved &amp; Visible</span>
+                        <span class="summary-stat-val stat-approved" id="kpi-approved" th:text="${moderationStats.get('approved')}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-rejected"><i class="fas fa-eye-slash"></i></div>
-                        <div>
-                            <div class="kpi-value" id="kpi-rejected" th:text="${moderationStats.get('rejected')}">0</div>
-                            <div class="kpi-label">Rejected / Hidden</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Rejected / Hidden</span>
+                        <span class="summary-stat-val stat-rejected" id="kpi-rejected" th:text="${moderationStats.get('rejected')}">0</span>
                     </div>
                 </div>
 
-                <!-- Moderation Overview Banner & Bulk Action -->
-                <div class="moderation-banner">
-                    <div class="banner-content">
-                        <div class="banner-icon"><i class="fas fa-shield-alt"></i></div>
-                        <div>
-                            <div class="banner-title">Student Visibility Control</div>
-                            <p class="banner-desc">
-                                All feedback (peer, self, team, and assessor comments) remains <strong>completely hidden from students</strong> until approved by the administrator.
-                            </p>
-                        </div>
+                <!-- Administrative Visibility Notice Bar -->
+                <div class="moderation-notice-bar">
+                    <div class="notice-meta">
+                        <span class="notice-badge"><i class="fas fa-lock"></i> Student Visibility Guard</span>
+                        <span class="notice-text">
+                            Comments remain hidden from students until explicitly approved by an administrator.
+                        </span>
                     </div>
-                    <div class="banner-actions">
+                    <div class="notice-action">
                         <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-all'}" method="post" style="display: inline;" onsubmit="return confirm('Approve all pending comments for this assessment? All feedback will become visible to students.');">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="btn btn-primary btn-approve-all" id="btnApproveAllPending" style="background-color: #047857; color: white;" th:disabled="${moderationStats.get('pending') == 0}">
+                            <button type="submit" class="btn btn-approve-all" id="btnApproveAllPending" th:disabled="${moderationStats.get('pending') == 0}">
                                 <i class="fas fa-check-double"></i> Approve All Pending (<span id="banner-pending-count" th:text="${moderationStats.get('pending')}">0</span>)
                             </button>
                         </form>
@@ -324,30 +308,30 @@
                 <!-- Unified Filter & Search Suite -->
                 <div class="filter-card">
                     <!-- Status Segmented Tabs -->
-                    <div class="filter-subnav">
+                    <div class="filter-segmented-tabs">
                         <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='all', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
-                           class="filter-pill" 
+                           class="filter-seg-btn" 
                            th:classappend="${currentFilter == 'all' or currentFilter == null ? 'active' : ''}">
                             <i class="fas fa-list"></i> All Comments 
-                            <span id="pill-count-all" class="pill-badge" th:text="${moderationStats.get('total')}">0</span>
+                            <span id="pill-count-all" class="filter-seg-badge" th:text="${moderationStats.get('total')}">0</span>
                         </a>
                         <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='pending', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
-                           class="filter-pill pill-pending-tab" 
+                           class="filter-seg-btn seg-pending" 
                            th:classappend="${currentFilter == 'pending' ? 'active' : ''}">
                             <i class="fas fa-clock"></i> Pending Review
-                            <span id="pill-count-pending" class="pill-badge pill-badge-pending" th:text="${moderationStats.get('pending')}">0</span>
+                            <span id="pill-count-pending" class="filter-seg-badge badge-pending" th:text="${moderationStats.get('pending')}">0</span>
                         </a>
                         <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='approved', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
-                           class="filter-pill pill-approved-tab" 
+                           class="filter-seg-btn seg-approved" 
                            th:classappend="${currentFilter == 'approved' ? 'active' : ''}">
                             <i class="fas fa-check-circle"></i> Approved
-                            <span id="pill-count-approved" class="pill-badge pill-badge-approved" th:text="${moderationStats.get('approved')}">0</span>
+                            <span id="pill-count-approved" class="filter-seg-badge badge-approved" th:text="${moderationStats.get('approved')}">0</span>
                         </a>
                         <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='rejected', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
-                           class="filter-pill" 
+                           class="filter-seg-btn" 
                            th:classappend="${currentFilter == 'rejected' ? 'active' : ''}">
                             <i class="fas fa-eye-slash"></i> Rejected
-                            <span id="pill-count-rejected" class="pill-badge" th:text="${moderationStats.get('rejected')}">0</span>
+                            <span id="pill-count-rejected" class="filter-seg-badge" th:text="${moderationStats.get('rejected')}">0</span>
                         </a>
                     </div>
 
@@ -375,10 +359,10 @@
                             <option th:each="g : ${courseGroups}" th:value="${g.id}" th:text="${g.groupName}" th:selected="${currentGroupId == g.id}"></option>
                         </select>
 
-                        <button type="submit" class="btn btn-secondary" style="padding: 9px 18px;">
+                        <button type="submit" class="btn btn-secondary toolbar-btn-filter">
                             <i class="fas fa-filter"></i> Filter
                         </button>
-                        <a th:if="${currentGroupId != null}" th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/group/' + ${currentGroupId}}" class="btn btn-primary" style="background: #4A0018; color: white; border: none; padding: 9px 16px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+                        <a th:if="${currentGroupId != null}" th:href="@{'/admin/comments/view/assessment/' + ${assessment.id} + '/group/' + ${currentGroupId}}" class="btn btn-primary btn-view-group">
                             <i class="fas fa-users"></i> View Group Comments &amp; Summary
                         </a>
                         <a th:if="${(currentSearch != null and !currentSearch.trim().isEmpty()) or (currentRoleFilter != null and currentRoleFilter != 'all') or currentGroupId != null}"
@@ -403,7 +387,7 @@
                             </label>
                         </div>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <span id="selectedCountLabel" style="font-size: 0.85rem; color: #6B7280; margin-right: 4px;">0 selected</span>
+                            <span id="selectedCountLabel" class="text-muted" style="font-size: 0.85rem; margin-right: 4px;">0 selected</span>
                             <button type="button" class="btn btn-approve" id="bulkApproveBtn" disabled onclick="submitBulkAction('approve')">
                                 <i class="fas fa-check"></i> Approve Selected
                             </button>
@@ -448,7 +432,7 @@
                                     <!-- Relationship Flow -->
                                     <span class="meta-participants">
                                         <span class="participant-author">By: <strong th:text="${comment.evaluatorName != null and !comment.evaluatorName.isEmpty() ? comment.evaluatorName : (comment.displayName != null ? comment.displayName : 'Student')}">Evaluator</strong>
-                                            <span th:if="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).STUDENT and comment.anonymousIdentifier != null}" th:text="'(' + ${comment.anonymousIdentifier} + ')'" style="font-size: 0.85em; color: #6B7280; font-weight: 500;"></span>
+                                            <span th:if="${comment.evaluatorType == T(com.capstone.adproject.model.AssessmentComment.EvaluatorType).STUDENT and comment.anonymousIdentifier != null}" th:text="'(' + ${comment.anonymousIdentifier} + ')'" class="participant-anon"></span>
                                         </span>
                                         <i class="fas fa-arrow-right meta-arrow"></i>
                                         <span class="participant-target">To: <strong th:text="${comment.evaluatedStudent != null ? (comment.evaluatedStudent.username != null ? comment.evaluatedStudent.username : comment.evaluatedStudent.email) : 'Student'}">Target Student</strong></span>
@@ -465,7 +449,7 @@
                             <div class="comment-prompt-label">
                                 <i class="far fa-question-circle"></i>
                                 <span th:text="${comment.getDisplayLabel(assessment)}">Question Label</span>
-                                <span th:if="${comment.rubricAssessmentType != null}" th:text="'(' + ${comment.rubricAssessmentType} + ')'" style="color: #9CA3AF; font-weight: 400;"></span>
+                                <span th:if="${comment.rubricAssessmentType != null}" th:text="'(' + ${comment.rubricAssessmentType} + ')'" class="prompt-rubric-type"></span>
                             </div>
 
                             <!-- Comment Content -->
@@ -517,9 +501,9 @@
 
                     <!-- Empty State -->
                     <div th:if="${moderationComments == null or moderationComments.isEmpty()}" class="comments-empty-state">
-                        <i class="fas fa-comments" style="font-size: 2.8rem; color: #9CA3AF; margin-bottom: 12px;"></i>
-                        <h3 style="color: #374151; margin-bottom: 6px;">No Comments Found</h3>
-                        <p style="color: #6B7280; font-size: 0.95rem; margin: 0;">No assessment comments match the selected filter or search criteria.</p>
+                        <i class="fas fa-comments empty-state-icon"></i>
+                        <h3 class="empty-state-title">No Comments Found</h3>
+                        <p class="empty-state-desc">No assessment comments match the selected filter or search criteria.</p>
                     </div>
                 </form>
 
@@ -536,57 +520,45 @@
             <!-- TAB 3: REPORT SETUP & ASSESSOR MAPPING -->
             <!-- ================================================================= -->
             <div th:if="${activeTab == 'submissions'}">
-                <!-- 4-KPI Grid for Submissions -->
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-total"><i class="fas fa-bullseye"></i></div>
-                        <div>
-                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalExpected') : 0}">0</div>
-                            <div class="kpi-label">Expected Targets</div>
-                        </div>
+                <!-- Calm Tabular Stats Strip -->
+                <div class="tracking-stats-summary">
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Expected Targets</span>
+                        <span class="summary-stat-val" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalExpected') : 0}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-approved"><i class="fas fa-file-check"></i></div>
-                        <div>
-                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalSubmitted') : 0}">0</div>
-                            <div class="kpi-label">Reports Submitted</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Reports Submitted</span>
+                        <span class="summary-stat-val stat-approved" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalSubmitted') : 0}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon icon-pending"><i class="fas fa-hourglass-half"></i></div>
-                        <div>
-                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalPending') : 0}">0</div>
-                            <div class="kpi-label">Pending Upload</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Pending Upload</span>
+                        <span class="summary-stat-val stat-pending" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalPending') : 0}">0</span>
                     </div>
-                    <div class="kpi-card">
-                        <div class="kpi-icon" style="background-color: rgba(248, 166, 23, 0.15); color: #B45309;"><i class="fas fa-paint-brush"></i></div>
-                        <div>
-                            <div class="kpi-value" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalDoodled') : 0}">0</div>
-                            <div class="kpi-label">Doodled Reports</div>
-                        </div>
+                    <div class="summary-stat-cell">
+                        <span class="summary-stat-label">Doodled Reports</span>
+                        <span class="summary-stat-val stat-accent" th:text="${submissionMappingData != null and submissionMappingData.stats != null ? submissionMappingData.stats.get('totalDoodled') : 0}">0</span>
                     </div>
                 </div>
 
-                <!-- Section 1: Submission Configuration Status Banner -->
-                <div class="card" style="margin-bottom: 2rem; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px 24px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <!-- Section 1: Submission Configuration Status Card -->
+                <div class="card submission-config-card">
+                    <div class="submission-config-header">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                                <h2 class="card-title" style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-file-pdf" style="color: #4A0018;"></i>
+                            <div class="submission-config-title-row">
+                                <h2 class="card-title submission-title">
+                                    <i class="fas fa-file-pdf"></i>
                                     <span th:text="${assessment.getEffectiveSubmissionTitle()}">Report / Assignment Submission</span>
                                 </h2>
-                                <span class="badge" th:style="${assessment.requiresSubmission} ? 'background-color: #047857; color: white;' : 'background-color: #94a3b8; color: white;'" style="padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.78rem;">
+                                <span class="badge" th:classappend="${assessment.requiresSubmission ? 'badge-active' : 'badge-disabled'}">
                                     <i th:class="${assessment.requiresSubmission ? 'fas fa-check-circle' : 'fas fa-pause-circle'}"></i>
                                     <span th:text="${assessment.requiresSubmission ? 'ACTIVE (' + assessment.submissionScope + ')' : 'SUBMISSION DISABLED'}">STATUS</span>
                                 </span>
                             </div>
-                            <div style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                            <div class="submission-config-meta">
                                 <span><i class="fas fa-layer-group"></i> Scope: <strong th:text="${assessment.submissionScope == 'INDIVIDUAL' ? 'Individual (Per Student)' : 'Group (1 Per Team)'}">Group</strong></span>
-                                <span>&bull;</span>
+                                <span class="meta-separator">&bull;</span>
                                 <span><i class="fas fa-hdd"></i> Max Size: <strong th:text="${assessment.maxFileSizeMb != null ? assessment.maxFileSizeMb : 50} + ' MB'">50 MB</strong></span>
-                                <span th:if="${not #strings.isEmpty(assessment.submissionInstructions)}">&bull;</span>
+                                <span class="meta-separator" th:if="${not #strings.isEmpty(assessment.submissionInstructions)}">&bull;</span>
                                 <span th:if="${not #strings.isEmpty(assessment.submissionInstructions)}" th:title="${assessment.submissionInstructions}">
                                     <i class="fas fa-info-circle"></i> Instructions Configured
                                 </span>
@@ -594,9 +566,7 @@
                         </div>
 
                         <div>
-                            <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" 
-                               class="btn" 
-                               style="background-color: #4A0018; color: #ffffff; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(74,0,24,0.15);">
+                            <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" class="btn btn-primary btn-configure-submission">
                                 <i class="fas fa-sliders-h"></i> Configure Report Settings
                             </a>
                         </div>
@@ -604,33 +574,33 @@
                 </div>
 
                 <!-- Section 2: Assessor Allocation & Report Mapping Matrix Card -->
-                <div class="card" style="margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h2 class="card-title" style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-project-diagram" style="color: #4A0018;"></i> Report Allocation &amp; Assessor Mapping Matrix
+                <div class="card matrix-card">
+                    <div class="matrix-header">
+                        <div class="matrix-header-title-wrap">
+                            <h2 class="card-title matrix-title">
+                                <i class="fas fa-project-diagram"></i> Report Allocation &amp; Assessor Mapping Matrix
                             </h2>
-                            <p style="margin: 4px 0 0; color: #64748b; font-size: 0.85rem;">
+                            <p class="matrix-subtitle">
                                 Maps out which assessor is assigned to evaluate and doodle on each student/group report based on assessment configuration.
                             </p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                            <span class="badge" style="background: #1e293b; color: #f8fafc; padding: 5px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 600;">
+                        <div class="matrix-header-actions">
+                            <span class="badge badge-dark-subtle">
                                 <i class="fas fa-cog"></i> Mode: <span th:text="${submissionMappingData != null ? submissionMappingData.assignmentMode : 'GROUP'}">GROUP</span>
                             </span>
-                            <span class="badge" style="background: #e2e8f0; color: #334155; padding: 5px 12px; border-radius: 12px; font-size: 0.78rem; font-weight: 600;">
+                            <span class="badge badge-light-subtle">
                                 <i th:class="${assessment.submissionScope == 'GROUP' ? 'fas fa-users' : 'fas fa-user'}"></i>
                                 <span th:text="${assessment.submissionScope == 'GROUP' ? 'Group Reports (1/team)' : 'Individual Reports'}">Group</span>
                             </span>
-                            <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-sm" style="background: #ffffff; color: #4A0018; border: 1px solid #4A0018; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                            <a th:href="@{/admin/lecturer-assignments/{id}(id=${assessment.id})}" class="btn btn-sm btn-edit-assignments">
                                 <i class="fas fa-user-edit"></i> Edit Assessor Assignments
                             </a>
                         </div>
                     </div>
 
-                    <!-- Guidance Info Alert -->
-                    <div style="padding: 12px 16px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px; font-size: 0.88rem; color: #1e40af; margin-bottom: 20px; line-height: 1.4;">
-                        <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                    <!-- Guidance Info Note -->
+                    <div class="matrix-guide-note">
+                        <i class="fas fa-info-circle"></i>
                         <span th:if="${submissionMappingData != null and submissionMappingData.assignmentMode == 'GROUP'}">
                             <strong>Group Assignment Mode:</strong> Each assessor evaluates all rubrics for their assigned groups and doodles directly on the group's uploaded report.
                         </span>
@@ -644,113 +614,113 @@
 
                     <!-- Mapping Table -->
                     <div class="table-responsive">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <table class="matrix-table">
                             <thead>
-                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Target</th>
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Assigned Assessor(s)</th>
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Rubrics Scope</th>
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700;">Report Submission</th>
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700; text-align: center;">Lecturer Doodles</th>
-                                    <th style="padding: 12px 16px; color: #475569; font-weight: 700; text-align: center;">Actions</th>
+                                <tr>
+                                    <th class="col-target">Target</th>
+                                    <th class="col-assessors">Assigned Assessor(s)</th>
+                                    <th class="col-scope">Rubrics Scope</th>
+                                    <th class="col-submission">Report Submission</th>
+                                    <th class="col-doodles">Lecturer Doodles</th>
+                                    <th class="col-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr th:if="${submissionMappingData == null or submissionMappingData.mappings == null or submissionMappingData.mappings.isEmpty()}">
-                                    <td colspan="6" style="text-align: center; padding: 30px; color: #64748b; font-style: italic;">
-                                        <i class="fas fa-inbox" style="font-size: 2rem; display: block; margin-bottom: 8px; color: #cbd5e1;"></i>
+                                    <td colspan="6" class="matrix-empty-cell">
+                                        <i class="fas fa-inbox matrix-empty-icon"></i>
                                         No targets found for this course or assessment. Assign students or groups to view mapping.
                                     </td>
                                 </tr>
 
-                                <tr th:each="row : ${submissionMappingData.mappings}" style="border-bottom: 1px solid #f1f5f9; transition: background-color 0.15s;">
+                                <tr th:each="row : ${submissionMappingData.mappings}" class="matrix-data-row">
                                     <!-- Col 1: Target -->
-                                    <td style="padding: 14px 16px; vertical-align: top;">
-                                        <div style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-                                            <i th:class="${row.targetType == 'GROUP' ? 'fas fa-users' : 'fas fa-user'}" style="color: #4A0018;"></i>
+                                    <td class="col-target">
+                                        <div class="matrix-target-name">
+                                            <i th:class="${row.targetType == 'GROUP' ? 'fas fa-users' : 'fas fa-user'}"></i>
                                             <span th:text="${row.targetName}">Target Name</span>
                                         </div>
-                                        <div th:if="${row.targetType == 'GROUP' and row.students != null and !row.students.isEmpty()}" style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                                        <div th:if="${row.targetType == 'GROUP' and row.students != null and !row.students.isEmpty()}" class="matrix-subtext">
                                             <span th:each="std, iter : ${row.students}">
                                                 <span th:text="${not #strings.isEmpty(std.username) ? std.username : std.email}">Student</span><span th:if="${!iter.last}">, </span>
                                             </span>
                                         </div>
-                                        <div th:if="${row.targetType == 'STUDENT'}" style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+                                        <div th:if="${row.targetType == 'STUDENT'}" class="matrix-subtext">
                                             <span th:text="${row.email}">Email</span> &bull; 
                                             <span th:text="'Group: ' + ${row.groupName}">Group</span>
                                         </div>
                                     </td>
 
                                     <!-- Col 2: Assigned Assessors -->
-                                    <td style="padding: 14px 16px; vertical-align: top;">
-                                        <div th:if="${row.assignedLecturers != null and !row.assignedLecturers.isEmpty()}" style="display: flex; flex-direction: column; gap: 4px;">
-                                            <div th:each="lec : ${row.assignedLecturers}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: #334155;">
-                                                <i class="fas fa-chalkboard-teacher" style="color: #047857;"></i>
-                                                <span th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}" style="font-weight: 600;">Lecturer</span>
+                                    <td class="col-assessors">
+                                        <div th:if="${row.assignedLecturers != null and !row.assignedLecturers.isEmpty()}" class="matrix-assessor-stack">
+                                            <div th:each="lec : ${row.assignedLecturers}" class="matrix-assessor-item">
+                                                <i class="fas fa-chalkboard-teacher"></i>
+                                                <span th:text="${not #strings.isEmpty(lec.username) ? lec.username : lec.email}">Lecturer</span>
                                             </div>
                                         </div>
                                         <div th:unless="${row.assignedLecturers != null and !row.assignedLecturers.isEmpty()}">
-                                            <span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem;">
+                                            <span class="badge badge-unassigned">
                                                 <i class="fas fa-exclamation-circle"></i> Unassigned
                                             </span>
                                         </div>
                                     </td>
 
                                     <!-- Col 3: Rubrics Scope -->
-                                    <td style="padding: 14px 16px; vertical-align: top;">
-                                        <span class="badge" style="background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 8px; font-size: 0.78rem; font-weight: 500;" th:text="${row.rubricsScope}">
+                                    <td class="col-scope">
+                                        <span class="badge badge-scope" th:text="${row.rubricsScope}">
                                             All Assessment Rubrics
                                         </span>
                                     </td>
 
                                     <!-- Col 4: Report Submission -->
-                                    <td style="padding: 14px 16px; vertical-align: top;">
+                                    <td class="col-submission">
                                         <div th:if="${row.submission != null}">
-                                            <div style="display: flex; align-items: center; gap: 6px;">
-                                                <i class="fas fa-file-pdf" style="color: #dc2626;"></i>
-                                                <strong th:text="${row.submission.originalFileName}" style="color: #1e293b; font-size: 0.88rem; word-break: break-all;">file.pdf</strong>
-                                                <span class="badge" style="background: #047857; color: white; padding: 1px 6px; border-radius: 8px; font-size: 0.7rem;">v<span th:text="${row.submission.version}">1</span></span>
+                                            <div class="matrix-submission-box">
+                                                <i class="fas fa-file-pdf icon-pdf"></i>
+                                                <strong th:text="${row.submission.originalFileName}" class="matrix-filename">file.pdf</strong>
+                                                <span class="badge badge-version">v<span th:text="${row.submission.version}">1</span></span>
                                             </div>
-                                            <div style="font-size: 0.78rem; color: #64748b; margin-top: 3px;">
+                                            <div class="matrix-subtext">
                                                 <span th:text="${#numbers.formatDecimal(row.submission.fileSizeBytes / 1048576.0, 1, 2)} + ' MB'">2.1 MB</span> &bull;
                                                 <span th:text="${#temporals.format(row.submission.submittedAt, 'dd MMM yyyy, HH:mm')}">Date</span>
                                             </div>
                                         </div>
                                         <div th:unless="${row.submission != null}">
-                                            <span class="badge" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 8px; font-size: 0.78rem;">
+                                            <span class="badge badge-pending-upload">
                                                 <i class="fas fa-clock"></i> Pending Upload
                                             </span>
                                         </div>
                                     </td>
 
                                     <!-- Col 5: Lecturer Doodles -->
-                                    <td style="padding: 14px 16px; vertical-align: top; text-align: center;">
+                                    <td class="col-doodles">
                                         <div th:if="${row.doodleCount > 0}">
-                                            <span class="badge" style="background: linear-gradient(135deg, #4A0018, #6d0726); color: #F8A617; padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                            <span class="badge badge-doodle">
                                                 <i class="fas fa-paint-brush"></i> <span th:text="${row.doodleCount}">1</span> Page(s) Ink
                                             </span>
                                         </div>
                                         <div th:unless="${row.doodleCount > 0}">
-                                            <span style="color: #94a3b8; font-size: 0.82rem;">
+                                            <span class="no-doodles">
                                                 <i class="fas fa-minus"></i> No ink yet
                                             </span>
                                         </div>
                                     </td>
 
                                     <!-- Col 6: Actions -->
-                                    <td style="padding: 14px 16px; vertical-align: top; text-align: center;">
-                                        <div th:if="${row.submission != null}" style="display: inline-flex; gap: 6px; align-items: center;">
+                                    <td class="col-actions">
+                                        <div th:if="${row.submission != null}" class="matrix-action-group">
                                             <a th:href="@{/admin/submissions/{id}/file(id=${row.submission.id})}" target="_blank" 
-                                               class="btn btn-sm" style="background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; text-decoration: none;" title="Download Original PDF">
-                                                <i class="fas fa-file-pdf" style="color: #dc2626;"></i> PDF
+                                               class="btn btn-sm btn-pdf-download" title="Download Original PDF">
+                                                <i class="fas fa-file-pdf icon-pdf"></i> PDF
                                             </a>
                                             <a th:href="@{/admin/submissions/{id}/view(id=${row.submission.id})}" 
-                                               class="btn btn-sm" style="background: #4A0018; color: #ffffff; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; font-weight: 600;" title="Review Report & Lecturer Doodles">
-                                                <i class="fas fa-paint-brush" style="color: #F8A617;"></i> Review &amp; Ink
+                                               class="btn btn-sm btn-review-ink" title="Review Report & Lecturer Doodles">
+                                                <i class="fas fa-paint-brush"></i> Review &amp; Ink
                                             </a>
                                         </div>
                                         <div th:unless="${row.submission != null}">
-                                            <span style="color: #cbd5e1; font-size: 0.8rem;">&mdash;</span>
+                                            <span class="matrix-muted-dash">&mdash;</span>
                                         </div>
                                     </td>
                                 </tr>
