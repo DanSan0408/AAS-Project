@@ -32,6 +32,9 @@ public class FactorOverrideHistory {
     private String changedBy;
     private LocalDateTime changedAt;
 
+    @jakarta.persistence.Column(name = "reason", length = 500)
+    private String reason;
+
     public FactorOverrideHistory() {}
 
     public FactorOverrideHistory(Student student, Double oldFactor, Double newFactor, Double oldGrandTotal, Double newGrandTotal, String changedBy, LocalDateTime changedAt) {
@@ -42,6 +45,11 @@ public class FactorOverrideHistory {
         this.newGrandTotal = newGrandTotal;
         this.changedBy = changedBy;
         this.changedAt = changedAt;
+    }
+
+    public FactorOverrideHistory(Student student, Double oldFactor, Double newFactor, Double oldGrandTotal, Double newGrandTotal, String changedBy, LocalDateTime changedAt, String reason) {
+        this(student, oldFactor, newFactor, oldGrandTotal, newGrandTotal, changedBy, changedAt);
+        this.reason = reason;
     }
 
     public Long getId() { return id; }
@@ -67,4 +75,7 @@ public class FactorOverrideHistory {
     
     public LocalDateTime getChangedAt() { return changedAt; }
     public void setChangedAt(LocalDateTime changedAt) { this.changedAt = changedAt; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 }

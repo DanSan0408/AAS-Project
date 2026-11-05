@@ -9,6 +9,14 @@
         <li th:if="${assessment != null}" class="separator" aria-hidden="true">›</li>
         <li><span class="current-page" aria-current="page" th:text="${pageLabel}">Current Page</span></li>
     </ol>
+    <div class="theme-switcher-wrapper" aria-label="Appearance Theme">
+        <div class="theme-segmented-control" role="group" aria-label="Theme mode">
+            <button type="button" class="theme-segment-btn" data-theme-set="light" aria-pressed="true">Light</button>
+            <button type="button" class="theme-segment-btn" data-theme-set="dark" aria-pressed="false">Dark</button>
+            <button type="button" class="theme-segment-btn" data-theme-set="warm" aria-pressed="false">Warm</button>
+        </div>
+    </div>
+    <script th:src="@{/js/theme-switcher.js}"></script>
 </nav>
 </body>
 </html>

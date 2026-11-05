@@ -12,10 +12,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class LegacyColumnCleanupMigrationRunnerTest {
 
     @Mock
@@ -71,5 +74,40 @@ class LegacyColumnCleanupMigrationRunnerTest {
                 .thenThrow(new DataAccessException("Connection failed") {});
 
         assertDoesNotThrow(() -> runner.run());
+    }
+
+    @Test
+    void testRun_WhenCoursesHasLegacyCourseCodeAndName_CopiesAndDropsLegacy() {
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("course_code")))
+                .thenReturn(1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("courseCode")))
+                .thenReturn(1);
+
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("course_name")))
+                .thenReturn(1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("courseName")))
+                .thenReturn(1);
+
+        assertDoesNotThrow(() -> runner.run());
+
+        verify(jdbcTemplate).execute("UPDATE `courses` SET `courseCode` = `course_code` WHERE `courseCode` IS NULL AND `course_code` IS NOT NULL");
+        verify(jdbcTemplate).execute("ALTER TABLE `courses` DROP COLUMN `course_code`");
+        verify(jdbcTemplate).execute("UPDATE `courses` SET `courseName` = `course_name` WHERE `courseName` IS NULL AND `course_name` IS NOT NULL");
+        verify(jdbcTemplate).execute("ALTER TABLE `courses` DROP COLUMN `course_name`");
+    }
+
+    @Test
+    void testRun_WhenCourseCodeDropFails_FallsBackToModifyNullableVarchar() {
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("course_code")))
+                .thenReturn(1);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class), eq("courses"), eq("courseCode")))
+                .thenReturn(1);
+
+        org.mockito.Mockito.doThrow(new DataAccessException("Cannot drop column") {})
+                .when(jdbcTemplate).execute("ALTER TABLE `courses` DROP COLUMN `course_code`");
+
+        assertDoesNotThrow(() -> runner.run());
+
+        verify(jdbcTemplate).execute("ALTER TABLE `courses` MODIFY COLUMN `course_code` VARCHAR(255) NULL DEFAULT NULL");
     }
 }

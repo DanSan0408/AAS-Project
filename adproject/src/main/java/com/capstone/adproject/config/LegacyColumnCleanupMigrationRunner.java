@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 /**
  * Migration runner to detect and clean up legacy orphan columns in MySQL.
  * 
- * Specifically addresses the case where earlier versions created 'submittedAt' (camelCase)
- * with NOT NULL and no default value. When the entities were updated to @Column(name = "submitted_at"),
- * Hibernate ddl-auto=update added 'submitted_at' but left 'submittedAt' in place,
- * causing "Field 'submittedAt' doesn't have a default value" errors on INSERT.
+ * Specifically addresses the cases where:
+ * 1. Earlier versions created 'submittedAt' (camelCase) with NOT NULL and no default value in 'marks' / 'assessment_comments'.
+ * 2. Earlier versions or snake_case naming created 'course_code' and 'course_name' with NOT NULL and no default value in 'courses'.
+ *    When Course entity maps to courseCode / courseName under PhysicalNamingStrategyStandardImpl,
+ *    Hibernate inserts into (courseCode, courseName) without providing legacy course_code / course_name,
+ *    causing "Field 'course_code' doesn't have a default value" errors on INSERT.
  */
 @Component
 @Order(1)
@@ -29,11 +31,19 @@ public class LegacyColumnCleanupMigrationRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        cleanLegacyColumn("marks", "submittedAt", "submitted_at");
-        cleanLegacyColumn("assessment_comments", "submittedAt", "submitted_at");
+        cleanLegacyColumn("marks", "submittedAt", "submitted_at", "DATETIME");
+        cleanLegacyColumn("assessment_comments", "submittedAt", "submitted_at", "DATETIME");
+        cleanLegacyColumn("courses", "course_code", "courseCode", "VARCHAR(255)");
+        cleanLegacyColumn("courses", "course_name", "courseName", "VARCHAR(255)");
+        cleanLegacyColumn("course", "course_code", "courseCode", "VARCHAR(255)");
+        cleanLegacyColumn("course", "course_name", "courseName", "VARCHAR(255)");
     }
 
     private void cleanLegacyColumn(String tableName, String legacyColumn, String currentColumn) {
+        cleanLegacyColumn(tableName, legacyColumn, currentColumn, "VARCHAR(255)");
+    }
+
+    private void cleanLegacyColumn(String tableName, String legacyColumn, String currentColumn, String defaultType) {
         try {
             // Check if legacy column exists in MySQL table
             Integer legacyColCount = jdbcTemplate.queryForObject(
@@ -55,7 +65,30 @@ public class LegacyColumnCleanupMigrationRunner implements CommandLineRunner {
 
             logger.info("Found legacy column '{}' in table '{}'. Initiating migration...", legacyColumn, tableName);
 
-            // Check if current (snake_case) column exists
+            // Fetch actual column type if possible, or fall back to defaultType
+            String columnType = defaultType;
+            try {
+                String detectedType = jdbcTemplate.queryForObject(
+                    """
+                    SELECT column_type
+                    FROM information_schema.columns
+                    WHERE table_schema = DATABASE()
+                      AND table_name = ?
+                      AND column_name = ?
+                    LIMIT 1
+                    """,
+                    String.class,
+                    tableName,
+                    legacyColumn
+                );
+                if (detectedType != null && !detectedType.isBlank()) {
+                    columnType = detectedType;
+                }
+            } catch (Exception e) {
+                logger.debug("Could not determine column_type for {}.{}: {}", tableName, legacyColumn, e.getMessage());
+            }
+
+            // Check if current column exists
             Integer currentColCount = jdbcTemplate.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -86,11 +119,11 @@ public class LegacyColumnCleanupMigrationRunner implements CommandLineRunner {
                 } catch (Exception dropEx) {
                     logger.warn("Could not drop column '{}' from '{}', making it nullable with default NULL: {}", 
                         legacyColumn, tableName, dropEx.getMessage());
-                    jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` DATETIME NULL DEFAULT NULL");
+                    jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` " + columnType + " NULL DEFAULT NULL");
                 }
             } else {
                 // Only legacy column exists: make it nullable with default NULL so it does not block inserts
-                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` DATETIME NULL DEFAULT NULL");
+                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` " + columnType + " NULL DEFAULT NULL");
                 logger.info("Modified legacy column '{}' in table '{}' to be NULLABLE with DEFAULT NULL.", legacyColumn, tableName);
             }
         } catch (Exception ex) {

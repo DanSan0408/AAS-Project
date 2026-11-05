@@ -47,6 +47,99 @@
                 No course is assigned to this admin yet.
             </div>
         </div>
+
+        <!-- Real-Time Presentation Progress Bar via Server-Sent Events (SSE) -->
+        <div class="live-progress-card" th:if="${allAssessments != null && !allAssessments.isEmpty()}"
+             th:attr="data-assessment-id=${allAssessments[0].id}">
+            <div class="live-progress-header">
+                <div class="live-progress-title">
+                    <span class="live-status-dot" aria-hidden="true"></span>
+                    <h3>
+                        <i class="fas fa-chart-line"></i> Evaluation Progress
+                        <span class="live-assessment-label-sep">&bull;</span>
+                        <span class="active-assessment-title" th:text="${allAssessments[0].title}">Presentation 1</span>
+                    </h3>
+                </div>
+                <div class="live-progress-controls">
+                    <!-- Dropdown selector when multiple concurrent assessments exist -->
+                    <div class="live-assessment-switcher" th:if="${allAssessments.size() > 1}">
+                        <label for="liveAssessmentSelect" class="sr-only">Switch Evaluation</label>
+                        <select id="liveAssessmentSelect" class="live-assessment-select" title="Switch active live evaluation stream">
+                            <option th:each="a : ${allAssessments}" 
+                                    th:value="${a.id}" 
+                                    th:text="${a.title} + (${a.course != null} ? ' (' + ${a.course.courseCode} + ')' : '')">
+                                Presentation 1 (CS101)
+                            </option>
+                        </select>
+                    </div>
+                    <div class="live-progress-actions">
+                        <span class="live-progress-updated"><i class="far fa-clock"></i> Live updates</span>
+                        <button type="button" class="btn-toggle-multi-summary" id="btnToggleMultiSummary"
+                                th:if="${allAssessments.size() > 1}" aria-expanded="false" title="View all concurrent evaluations summary">
+                            <i class="fas fa-layer-group"></i> All Active (<span th:text="${allAssessments.size()}">1</span>)
+                        </button>
+                        <button type="button" class="btn-toggle-details" aria-expanded="false">
+                            <i class="fas fa-chevron-down"></i> Open Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p class="live-progress-subtitle">Real-time assessor completion for the active presentation assessment.</p>
+
+            <div class="live-progress-summary">
+                <div class="live-progress-bar-container">
+                    <div class="live-progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="live-progress-metrics">
+                    <span class="live-progress-count">Connecting...</span>
+                    <span class="live-progress-percent">0%</span>
+                </div>
+            </div>
+
+            <!-- Multi-Assessment Compact Overview Drawer -->
+            <div class="live-multi-summary-drawer" id="liveMultiSummaryDrawer" style="display: none;" th:if="${allAssessments.size() > 1}">
+                <div class="multi-summary-header">
+                    <h4><i class="fas fa-layer-group"></i> All Concurrent Active Evaluations</h4>
+                    <span class="multi-summary-hint">Select any assessment to monitor in real-time</span>
+                </div>
+                <div class="multi-summary-list">
+                    <div th:each="a : ${allAssessments}" class="multi-summary-row" th:attr="data-assessment-id=${a.id}">
+                        <div class="multi-summary-info">
+                            <strong class="multi-summary-title" th:text="${a.title}">Presentation 1</strong>
+                            <span class="multi-summary-course" th:if="${a.course != null}" th:text="${a.course.courseCode}">CS101</span>
+                        </div>
+                        <div class="multi-summary-status">
+                            <div class="multi-summary-bar-track">
+                                <div class="multi-summary-bar-fill" style="width: 0%;"></div>
+                            </div>
+                            <span class="multi-summary-pct">0%</span>
+                        </div>
+                        <button type="button" class="btn-switch-live" th:attr="data-assessment-id=${a.id}, data-title=${a.title}">
+                            <i class="fas fa-satellite-dish"></i> Monitor
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collapsible details drawer -->
+            <div class="live-progress-details-drawer" style="display: none;">
+                <table class="table live-details-table">
+                    <thead>
+                        <tr>
+                            <th>Assessor</th>
+                            <th>Assigned Target</th>
+                            <th>Status</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody class="live-details-tbody">
+                        <tr>
+                            <td colspan="4" class="text-center text-muted" style="padding: 12px;">Loading live evaluation status...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
         
         <div class="content-flex-container">
             
@@ -92,19 +185,19 @@
                         </div>
 
                         <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
-                             style="margin: 15px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid #dbeafe; border-left: 4px solid #3b82f6; background: #eff6ff;">
-                            <h6 style="margin: 0 0 8px 0; color: #1d4ed8; font-size: 0.95rem; font-weight: 700;">
+                             class="assessment-notes-banner assessor-notes">
+                            <h6>
                                 <i class="fas fa-note-sticky"></i> Extra Notes For Assessors
                             </h6>
-                            <p th:utext="${assessment.getExtraNotesLinkified()}" style="margin: 0; white-space: pre-line; color: #1f2937;">Extra notes</p>
+                            <p th:utext="${assessment.getExtraNotesLinkified()}" class="notes-content">Extra notes</p>
                         </div>
 
                         <div th:if="${assessment.extraNotesForStudent != null and !#strings.isEmpty(#strings.trim(assessment.extraNotesForStudent))}"
-                             style="margin: 15px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid #ccfbf1; border-left: 4px solid #16a085; background: #f0fdfa;">
-                            <h6 style="margin: 0 0 8px 0; color: #0f766e; font-size: 0.95rem; font-weight: 700;">
+                             class="assessment-notes-banner student-notes">
+                            <h6>
                                 <i class="fas fa-note-sticky"></i> Extra Notes For Students
                             </h6>
-                            <p th:utext="${assessment.getExtraNotesForStudentLinkified()}" style="margin: 0; white-space: pre-line; color: #1f2937;"></p>
+                            <p th:utext="${assessment.getExtraNotesForStudentLinkified()}" class="notes-content"></p>
                         </div>
 
                         <th:block th:with="
@@ -408,6 +501,7 @@
     </div>
     
     <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:src="@{/js/live-progress-sse.js}"></script>
     <script th:attr="nonce=${cspNonce}" th:inline="javascript"></script>
 </body>
 </html>

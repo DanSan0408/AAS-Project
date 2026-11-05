@@ -141,12 +141,14 @@ body {
     color: white !important;
 }
 
-.card-header h3 {
+.card-header h3,
+.assessment-card .card-header h3 {
     margin: 0 !important;
     font-size: 1.2rem !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    color: #ffffff !important;
 }
 
 .card-body {
@@ -363,4 +365,120 @@ body {
     body[class*="-page"] .page-header h1 {
         font-size: 1.2rem !important;
     }
+}
+
+/* ============================================================================
+ * DATA VIEWS HOME THEME EXTENSIONS: DARK & WARM MODES
+ * Guarantees assessment cards, titles, and metrics are high contrast
+ * ============================================================================ */
+html[data-theme="dark"] body.data-views-home-page,
+html[data-theme="dark"] body.progress-page {
+    background-color: var(--ui-bg-canvas, #0f0f12) !important;
+    color: var(--ui-text-body-color, #e4e4e7) !important;
+}
+
+html[data-theme="dark"] .assessment-card {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border: 1px solid var(--ui-border, #2b2b36) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+}
+
+html[data-theme="dark"] .assessment-card .card-header {
+    background-color: #22222a !important;
+    border-bottom: 2px solid var(--admin-primary, #f59e0b) !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .assessment-card .card-header h3 {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .assessment-card .card-body {
+    background-color: transparent !important;
+}
+
+html[data-theme="dark"] .assessment-card .card-footer {
+    background-color: #1a1a20 !important;
+    border-top: 1px solid var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] .info-row {
+    border-bottom: 1px dashed var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] .info-row .label {
+    color: var(--ui-text-secondary, #a1a1aa) !important;
+}
+
+html[data-theme="dark"] .info-row .value {
+    color: var(--ui-text-primary, #ffffff) !important;
+}
+
+html[data-theme="dark"] .info-row i {
+    color: var(--admin-primary, #f59e0b) !important;
+}
+
+html[data-theme="dark"] .overall-card {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border: 1px solid var(--ui-border, #2b2b36) !important;
+}
+
+html[data-theme="dark"] .empty-state {
+    background-color: var(--ui-bg-surface, #18181c) !important;
+    border: 2px dashed var(--ui-border, #2b2b36) !important;
+    color: var(--ui-text-muted, #858592) !important;
+}
+
+html[data-theme="warm"] body.data-views-home-page,
+html[data-theme="warm"] body.progress-page {
+    background-color: #f7eee4 !important;
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] .assessment-card {
+    background-color: #fffdf9 !important;
+    border: 1px solid #e5dac9 !important;
+    box-shadow: 0 4px 14px rgba(74, 0, 24, 0.06) !important;
+}
+
+html[data-theme="warm"] .assessment-card .card-header {
+    background-color: #521323 !important;
+    border-bottom: 2px solid #521323 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="warm"] .assessment-card .card-header h3 {
+    color: #ffffff !important;
+}
+
+html[data-theme="warm"] .assessment-card .card-footer {
+    background-color: #f7eee4 !important;
+    border-top: 1px solid #e5dac9 !important;
+}
+
+html[data-theme="warm"] .info-row {
+    border-bottom: 1px dashed #e5dac9 !important;
+}
+
+html[data-theme="warm"] .info-row .label {
+    color: #7c6f64 !important;
+}
+
+html[data-theme="warm"] .info-row .value {
+    color: #2c241e !important;
+}
+
+html[data-theme="warm"] .info-row i {
+    color: #521323 !important;
+}
+
+html[data-theme="warm"] .overall-card {
+    background-color: #fffdf9 !important;
+    border: 1px solid #e5dac9 !important;
+}
+
+html[data-theme="warm"] .empty-state {
+    background-color: #fffdf9 !important;
+    border: 2px dashed #e5dac9 !important;
+    color: #7c6f64 !important;
 }
