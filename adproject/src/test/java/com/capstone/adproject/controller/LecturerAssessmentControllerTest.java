@@ -107,6 +107,7 @@ class LecturerAssessmentControllerTest {
         testLecturer.setId(5L);
         testLecturer.setEmail("lecturer@utm.my");
         testLecturer.setUsername("dr_lecturer");
+        testLecturer.setCourse(testCourse);
 
         testAssessment = new Assessment();
         testAssessment.setId(10L);
@@ -253,6 +254,7 @@ class LecturerAssessmentControllerTest {
         AssessmentSubmission sub = new AssessmentSubmission();
         sub.setId(77L);
         sub.setOriginalFileName("test.pdf");
+        sub.setAssessment(testAssessment);
 
         Resource dummyResource = new InputStreamResource(new ByteArrayInputStream(new byte[]{1, 2, 3}));
         when(assessmentSubmissionService.getSubmissionById(77L)).thenReturn(Optional.of(sub));
@@ -279,6 +281,7 @@ class LecturerAssessmentControllerTest {
         when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
         AssessmentSubmission sub = new AssessmentSubmission();
         sub.setId(77L);
+        sub.setAssessment(testAssessment);
         SubmissionAnnotation ann = new SubmissionAnnotation();
         ann.setId(1L);
         ann.setPageNumber(1);
@@ -297,6 +300,7 @@ class LecturerAssessmentControllerTest {
         when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
         AssessmentSubmission sub = new AssessmentSubmission();
         sub.setId(77L);
+        sub.setAssessment(testAssessment);
         when(assessmentSubmissionService.getSubmissionById(77L)).thenReturn(Optional.of(sub));
 
         SubmissionAnnotation savedAnn = new SubmissionAnnotation();
@@ -315,5 +319,25 @@ class LecturerAssessmentControllerTest {
         assertEquals(HttpStatus.OK, resp.getStatusCode());
         assertEquals("success", resp.getBody().get("status"));
         assertEquals(101L, resp.getBody().get("annotationId"));
+    }
+
+    @Test
+    void testStreamSubmissionFile_CrossCourse_ReturnsForbidden() {
+        Course otherCourse = new Course();
+        otherCourse.setId(99L);
+        Assessment otherAssessment = new Assessment();
+        otherAssessment.setId(222L);
+        otherAssessment.setCourse(otherCourse);
+
+        AssessmentSubmission sub = new AssessmentSubmission();
+        sub.setId(88L);
+        sub.setAssessment(otherAssessment);
+
+        when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
+        when(assessmentSubmissionService.getSubmissionById(88L)).thenReturn(Optional.of(sub));
+
+        ResponseEntity<Resource> response = controller.streamSubmissionFile(88L, auth);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

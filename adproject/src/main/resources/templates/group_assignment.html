@@ -70,8 +70,8 @@
                                             <td th:text="${group.industrialSupervisor != null ? (not #strings.isEmpty(group.industrialSupervisor.username) ? group.industrialSupervisor.username : group.industrialSupervisor.email) : 'N/A'}">Supervisor Name</td>
                                             <td>
                                                 <ul th:if="${group.groupSize > 0}" class="student-list">
-                                                    <th:block th:each="student : ${allStudents}">
-                                                        <li th:if="${student.group != null and student.group.id == group.id}" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</li>
+                                                    <th:block th:each="student : ${allStudents}" th:with="resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}">
+                                                        <li th:if="${resolvedGroup != null and resolvedGroup.id == group.id}" th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</li>
                                                     </th:block>
                                                 </ul>
                                                 <span th:unless="${group.groupSize > 0}" style="font-style: italic; color: #95a5a6;">None</span>

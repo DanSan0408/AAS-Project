@@ -26,9 +26,15 @@ import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.StudentService;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -107,5 +113,31 @@ class DataViewControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("factor_display"))
                 .andExpect(model().attributeExists("groups"));
+    }
+
+    @Test
+    void testViewAssessmentData_CrossCourse_RedirectsWithError() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(20L);
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+
+        mockMvc.perform(get("/admin/data-views/assessment/100"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/data-views"));
+    }
+
+    @Test
+    void testCalculateFactor_CrossCourseAssessment_RejectsBeforeDeletingExistingWeightages() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(20L);
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+
+        mockMvc.perform(post("/admin/data-views/calculate-factor")
+                        .param("weight_100", "100")
+                        .param("type_100", "BOTH"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/data-views/calculate-factor"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        verify(factorWeightageRepository, never()).deleteAll(any());
+        verify(factorWeightageRepository, never()).saveAll(any());
     }
 }

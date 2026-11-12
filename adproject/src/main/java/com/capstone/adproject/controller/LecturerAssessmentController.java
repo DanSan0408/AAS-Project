@@ -3,6 +3,7 @@ package com.capstone.adproject.controller;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,8 @@ import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.service.AdminService;
+import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.LecturerAssessmentService;
 import com.capstone.adproject.service.RubricService;
@@ -70,6 +73,12 @@ public class LecturerAssessmentController {
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.capstone.adproject.service.AssessmentProgressStreamService progressStreamService;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CourseScopeService courseScopeService;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private AdminService adminService;
+
     public LecturerAssessmentController(
             LecturerAssessmentService lecturerAssessmentService,
             RubricService rubricService,
@@ -93,37 +102,58 @@ public class LecturerAssessmentController {
         this.studentRepository = studentRepository;
     }
 
+    private Long resolveActiveCourseId() {
+        if (courseScopeService == null) {
+            return null;
+        }
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        return activeCourseId != null && activeCourseId > 0 ? activeCourseId : null;
+    }
+
     private Lecturer getCurrentLecturer(Authentication authentication) {
-    String emailOrUsername = authentication.getName(); 
-    
-    Optional<Lecturer> lecturer = lecturerRepository.findByEmail(emailOrUsername);
-    if (lecturer.isPresent()) {
-        return lecturer.get();
+        String emailOrUsername = authentication.getName();
+        Long activeCourseId = resolveActiveCourseId();
+        return CourseScopeService.resolveLecturerForCourse(lecturerRepository, emailOrUsername, activeCourseId)
+                .orElseThrow(() -> new RuntimeException("Lecturer not found: " + emailOrUsername));
     }
-    
-    lecturer = lecturerRepository.findByUsername(emailOrUsername);
-    if (lecturer.isPresent()) {
-        return lecturer.get();
+
+    private boolean lecturerCanAccessAssessment(Lecturer lecturer, Assessment assessment) {
+        if (lecturer == null || assessment == null || assessment.getCourse() == null || assessment.getCourse().getId() == null) {
+            return false;
+        }
+        Long assessmentCourseId = assessment.getCourse().getId();
+        Long activeCourseId = resolveActiveCourseId();
+        if (activeCourseId != null && !activeCourseId.equals(assessmentCourseId)) {
+            return false;
+        }
+        return lecturer.getCourse() != null && lecturer.getCourse().getId() != null
+                && lecturer.getCourse().getId().equals(assessmentCourseId);
     }
-    
-    throw new RuntimeException("Lecturer not found: " + emailOrUsername);
-}
 
     @GetMapping
     public String showAssessments(Model model, Authentication authentication) {
         Lecturer lecturer = getCurrentLecturer(authentication);
+        Long targetCourseId = resolveActiveCourseId();
+        if (targetCourseId == null && lecturer.getCourse() != null) {
+            targetCourseId = lecturer.getCourse().getId();
+        }
+        final Long scopedCourseId = targetCourseId;
         
         List<Assessment> assignedAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
         List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
         List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer);
         Set<Long> studentAssessmentIds = studentAssessments.stream()
+            .filter(a -> scopedCourseId == null || (a.getCourse() != null && scopedCourseId.equals(a.getCourse().getId())))
             .map(Assessment::getId)
             .collect(Collectors.toSet());
         
-        Set<Assessment> combinedAssessments = new HashSet<>(assignedAssessments);
+        Set<Assessment> combinedAssessments = new HashSet<>();
+        combinedAssessments.addAll(assignedAssessments);
         combinedAssessments.addAll(rubricAssessments);
         combinedAssessments.addAll(studentAssessments);
-        List<Assessment> uniqueAssessments = new ArrayList<>(combinedAssessments);
+        List<Assessment> uniqueAssessments = combinedAssessments.stream()
+            .filter(a -> scopedCourseId == null || (a.getCourse() != null && scopedCourseId.equals(a.getCourse().getId())))
+            .collect(Collectors.toList());
 
         Map<Long, String> assessmentLaunchModes = new HashMap<>();
         for (Assessment assessment : uniqueAssessments) {
@@ -202,6 +232,12 @@ public class LecturerAssessmentController {
             RedirectAttributes redirectAttributes) {
 
         Lecturer lecturer = getCurrentLecturer(authentication);
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "You are not authorized to access this assessment for the active course.");
+            return "redirect:/lecturer/assessments";
+        }
         
         List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentId(assessmentId).stream()
             .filter(d -> d.getAssessorType() == null 
@@ -232,8 +268,6 @@ public class LecturerAssessmentController {
                 "This assessment is not currently open for evaluation.");
             return "redirect:/lecturer/assessments";
         }
-
-        Assessment assessment = rubricService.findAssessmentById(assessmentId);
         
         List<Group> assignedGroups = assignmentRepository.findGroupsByLecturerAndAssessment(lecturer, assessment);
         
@@ -273,6 +307,12 @@ public class LecturerAssessmentController {
             RedirectAttributes redirectAttributes) {
 
         Lecturer lecturer = getCurrentLecturer(authentication);
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "You are not authorized to access this assessment for the active course.");
+            return "redirect:/lecturer/assessments";
+        }
 
         List<Deadline> lecturerDeadlines = deadlineService.getDeadlinesByAssessmentId(assessmentId).stream()
             .filter(d -> d.getAssessorType() == null 
@@ -304,7 +344,6 @@ public class LecturerAssessmentController {
             return "redirect:/lecturer/assessments";
         }
 
-        Assessment assessment = rubricService.findAssessmentById(assessmentId);
         List<Student> assignedStudents = new ArrayList<>(studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment));
 
         // Sort alphabetically by username (fallback to email)
@@ -329,6 +368,7 @@ public class LecturerAssessmentController {
 
         model.addAttribute("assessment", assessment);
         model.addAttribute("assignedStudents", assignedStudents);
+        model.addAttribute("studentGroupMap", adminService != null ? adminService.getStudentGroupMapForActiveCourse(assignedStudents) : Collections.emptyMap());
         model.addAttribute("studentEvaluationStatus", studentEvaluationStatus);
 
         return "lecturer_select_student";
@@ -346,6 +386,11 @@ public class LecturerAssessmentController {
 
         Assessment assessment = rubricService.findAssessmentById(assessmentId);
         Lecturer lecturer = getCurrentLecturer(authentication);
+        if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "You are not authorized to evaluate this assessment.");
+            return "redirect:/lecturer/assessments";
+        }
 
         boolean isStudentTarget = studentId != null;
         Group selectedGroup;
@@ -574,6 +619,11 @@ public class LecturerAssessmentController {
 
         try {
             Assessment assessment = rubricService.findAssessmentById(assessmentId);
+            if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                    "You are not authorized to submit evaluations for this assessment.");
+                return "redirect:/lecturer/assessments";
+            }
             boolean isStudentTarget = studentId != null;
 
             // 1. Persist report doodle annotations if provided in form submission (supports both student & group evaluation modes)
@@ -888,13 +938,16 @@ public class LecturerAssessmentController {
             @PathVariable("submissionId") Long submissionId,
             Authentication authentication) {
 
-        getCurrentLecturer(authentication);
+        Lecturer lecturer = getCurrentLecturer(authentication);
         var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
         if (submissionOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         var submission = submissionOpt.get();
+        if (!lecturerCanAccessAssessment(lecturer, submission.getAssessment())) {
+            return ResponseEntity.status(403).build();
+        }
         Resource resource = assessmentSubmissionService.getSubmissionFileResource(submission);
 
         return ResponseEntity.ok()
@@ -910,10 +963,13 @@ public class LecturerAssessmentController {
             @PathVariable("submissionId") Long submissionId,
             Authentication authentication) {
 
-        getCurrentLecturer(authentication);
+        Lecturer lecturer = getCurrentLecturer(authentication);
         var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
         if (submissionOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
+        }
+        if (!lecturerCanAccessAssessment(lecturer, submissionOpt.get().getAssessment())) {
+            return ResponseEntity.status(403).build();
         }
 
         List<SubmissionAnnotation> annotations =
@@ -933,6 +989,9 @@ public class LecturerAssessmentController {
         var submissionOpt = assessmentSubmissionService.getSubmissionById(submissionId);
         if (submissionOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
+        }
+        if (!lecturerCanAccessAssessment(lecturer, submissionOpt.get().getAssessment())) {
+            return ResponseEntity.status(403).build();
         }
 
         Integer pageNumber = payload.get("pageNumber") != null ? Integer.valueOf(payload.get("pageNumber").toString()) : 1;

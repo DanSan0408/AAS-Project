@@ -84,6 +84,7 @@ class RubricTemplateControllerTest {
 
     @Test
     void testEditTemplateForm_Found_LoadsBuilder() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(1L);
         when(rubricTemplateService.getTemplateById(10L)).thenReturn(Optional.of(template));
 
         mockMvc.perform(get("/rubrics/templates/edit/10"))
@@ -132,11 +133,32 @@ class RubricTemplateControllerTest {
 
     @Test
     void testGetTemplateJson_Found_ReturnsJson() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(1L);
         when(rubricTemplateService.getTemplateById(10L)).thenReturn(Optional.of(template));
 
         mockMvc.perform(get("/rubrics/templates/api/10"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("{\"criteria\": []}"));
+    }
+
+    @Test
+    void testEditTemplateForm_CrossCourse_RedirectsWithError() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(2L);
+        when(rubricTemplateService.getTemplateById(10L)).thenReturn(Optional.of(template));
+
+        mockMvc.perform(get("/rubrics/templates/edit/10"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rubrics/templates/manage"))
+                .andExpect(flash().attribute("errorMessage", "Unauthorized access to this blueprint."));
+    }
+
+    @Test
+    void testGetTemplateJson_CrossCourse_ReturnsForbidden() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(2L);
+        when(rubricTemplateService.getTemplateById(10L)).thenReturn(Optional.of(template));
+
+        mockMvc.perform(get("/rubrics/templates/api/10"))
+                .andExpect(status().isForbidden());
     }
 }

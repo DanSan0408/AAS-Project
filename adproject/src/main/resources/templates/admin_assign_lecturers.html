@@ -176,16 +176,16 @@
 
             <div id="studentModeSection" th:style="${assignmentMode == 'STUDENT'} ? 'display:block;' : 'display:none;'">
                 <div class="groups-container student-mode-container">
-                    <div th:each="student : ${allStudents}" class="group-assignment-card">
+                    <div th:each="student : ${allStudents}" th:with="resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}" class="group-assignment-card">
                         <div class="group-header">
                         <h3><i class="fas fa-user"></i> <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student Name</span></h3>
-                            <span class="student-count-badge" th:text="${student.group != null ? student.group.groupName : 'No Group'}">No Group</span>
+                            <span class="student-count-badge" th:text="${resolvedGroup != null ? resolvedGroup.groupName : 'No Group'}">No Group</span>
                         </div>
 
                         <div class="card-body">
                             <div class="students-list">
                                 <strong>Group:</strong>
-                                <span th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
+                                <span th:text="${resolvedGroup != null ? resolvedGroup.groupName : 'No group assigned'}">Group Name</span>
                             </div>
 
                             <div class="lecturer-section">

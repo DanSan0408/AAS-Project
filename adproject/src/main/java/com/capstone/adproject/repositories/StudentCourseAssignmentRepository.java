@@ -16,9 +16,13 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
 
     boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
 
+    java.util.Optional<StudentCourseAssignment> findByStudentIdAndCourseId(Long studentId, Long courseId);
+
     List<StudentCourseAssignment> findByStudentId(Long studentId);
 
     List<StudentCourseAssignment> findByCourseId(Long courseId);
+
+    List<StudentCourseAssignment> findByCourseIdAndGroupId(Long courseId, Long groupId);
 
     long countByStudentId(Long studentId);
 
@@ -27,6 +31,10 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
 
     @Modifying
     void deleteByStudentId(Long studentId);
+
+    @Modifying
+    @Query("UPDATE StudentCourseAssignment sca SET sca.group = NULL WHERE sca.course.id = :courseId AND sca.group.id = :groupId")
+    void unlinkGroupFromCourseAssignments(@Param("courseId") Long courseId, @Param("groupId") Long groupId);
 
     @Query("""
         SELECT s
@@ -42,7 +50,9 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
         FROM StudentCourseAssignment sca
         JOIN sca.student s
         LEFT JOIN FETCH s.group
-        WHERE sca.course.id = :courseId AND s.group IS NULL
+        WHERE sca.course.id = :courseId
+          AND sca.group IS NULL
+          AND (s.group IS NULL OR s.group.course.id <> :courseId)
         """)
     List<Student> findStudentsWithoutGroupByCourseId(@Param("courseId") Long courseId);
 
@@ -50,7 +60,9 @@ public interface StudentCourseAssignmentRepository extends JpaRepository<Student
         SELECT COUNT(s)
         FROM StudentCourseAssignment sca
         JOIN sca.student s
-        WHERE sca.course.id = :courseId AND s.group IS NULL
+        WHERE sca.course.id = :courseId
+          AND sca.group IS NULL
+          AND (s.group IS NULL OR s.group.course.id <> :courseId)
         """)
     long countStudentsWithoutGroupByCourseId(@Param("courseId") Long courseId);
 

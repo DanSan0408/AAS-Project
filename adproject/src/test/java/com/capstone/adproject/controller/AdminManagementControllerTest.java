@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
@@ -45,6 +46,7 @@ import com.capstone.adproject.service.SuperAdminService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -365,5 +367,65 @@ class AdminManagementControllerTest {
                     String json = result.getResponse().getContentAsString();
                     org.junit.jupiter.api.Assertions.assertTrue(json.contains("\"exists\":false"));
                 });
+    }
+
+    @Test
+    void testSwitchCourse_FromResourceUrl_RedirectsToSectionRoot() throws Exception {
+        when(courseScopeService.setActiveCourseIdForCurrentUser(10L)).thenReturn(true);
+
+        mockMvc.perform(post("/admin/switch-course")
+                .param("courseId", "10")
+                .header("Referer", "http://localhost:8080/rubrics/view/5"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/rubrics/manage"));
+    }
+
+    @Test
+    void testApproveComment_CommentFromOtherAssessment_IsRejected() throws Exception {
+        Assessment activeAssessment = new Assessment();
+        activeAssessment.setId(50L);
+        activeAssessment.setCourse(course);
+
+        Course otherCourse = new Course();
+        otherCourse.setId(99L);
+        Assessment otherAssessment = new Assessment();
+        otherAssessment.setId(60L);
+        otherAssessment.setCourse(otherCourse);
+
+        AssessmentComment foreignComment = new AssessmentComment();
+        foreignComment.setId(700L);
+        foreignComment.setAssessment(otherAssessment);
+
+        when(assessmentService.getAssessmentById(50L)).thenReturn(Optional.of(activeAssessment));
+        when(courseScopeService.isActiveCourseId(10L)).thenReturn(true);
+        when(assessmentCommentService.getCommentById(700L)).thenReturn(Optional.of(foreignComment));
+
+        mockMvc.perform(post("/admin/comments/700/approve")
+                .param("assessmentId", "50"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/progress-tracking"));
+
+        verify(assessmentCommentService, never()).approveComment(eq(700L), anyString());
+    }
+
+    @Test
+    void testCreateRandomGroups_CrossCourseSupervisor_IsRejected() throws Exception {
+        Course otherCourse = new Course();
+        otherCourse.setId(99L);
+        Lecturer foreignLecturer = new Lecturer();
+        foreignLecturer.setId(88L);
+        foreignLecturer.setCourse(otherCourse);
+
+        when(adminService.findLecturerById(88L)).thenReturn(Optional.of(foreignLecturer));
+        when(courseScopeService.isActiveCourseId(99L)).thenReturn(false);
+
+        mockMvc.perform(post("/admin/group-assignment/randomize/create")
+                .param("groupName", "Random Team")
+                .param("academicSupervisorId", "88"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/group-assignment"))
+                .andExpect(flash().attributeExists("error"));
+
+        verify(adminService, never()).createSingleGroupFromRandomization(any());
     }
 }

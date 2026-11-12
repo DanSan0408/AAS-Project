@@ -144,6 +144,13 @@ private String findExistingTitleIgnoringWhitespace(String title, Long excludeId)
             redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to update this deadline.");
             return "redirect:/admin/home";
         }
+        if (deadline.getId() != null) {
+            Optional<Deadline> existingOpt = deadlineService.getDeadlineById(deadline.getId());
+            if (existingOpt.isEmpty() || existingOpt.get().getCourseId() == null || !activeCourseId.equals(existingOpt.get().getCourseId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to update this deadline.");
+                return "redirect:/admin/home";
+            }
+        }
         if (deadline.getAssessmentId() != null) {
             Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
             if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {

@@ -35,6 +35,7 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
+import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AiServiceClient;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.CalculateService;
@@ -56,6 +57,9 @@ public class GroupCommentController {
     private final CourseScopeService courseScopeService;
     private final MarkRepository markRepository;
     private final AiServiceClient aiServiceClient;
+
+    @Autowired(required = false)
+    private AdminService adminService;
 
     public GroupCommentController(
             AssessmentService assessmentService,
@@ -95,92 +99,116 @@ public class GroupCommentController {
         this.aiServiceClient = aiServiceClient;
     }
 
+    private Long getResolvedActiveCourseId() {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId != null && activeCourseId > 0) {
+            return activeCourseId;
+        }
+        Set<Long> activeCourseIds = courseScopeService.getActiveCourseIdsForCurrentUser();
+        if (activeCourseIds != null && !activeCourseIds.isEmpty()) {
+            return activeCourseIds.iterator().next();
+        }
+        return null;
+    }
+
     private Optional<Lecturer> findLecturerByAuthName(String authName) {
-        return lecturerRepository.findByEmail(authName)
-            .or(() -> lecturerRepository.findByUsername(authName));
+        Long activeCourseId = getResolvedActiveCourseId();
+        return CourseScopeService.resolveLecturerForCourse(lecturerRepository, authName, activeCourseId);
+    }
+
+    private List<Student> resolveStudentsForGroup(Group group) {
+        if (group == null) {
+            return List.of();
+        }
+        if (adminService != null) {
+            List<Student> scoped = adminService.getStudentsByGroup(group);
+            if (scoped != null) {
+                return new java.util.ArrayList<>(scoped);
+            }
+        }
+        return group.getStudents() != null ? new java.util.ArrayList<>(group.getStudents()) : List.of();
     }
 
     private List<Assessment> findAssignedAssessmentsForLecturer(Lecturer lecturer) {
+        if (lecturer == null || lecturer.getId() == null) {
+            return List.of();
+        }
+        Long targetCourseId = getResolvedActiveCourseId();
+        if (targetCourseId == null && lecturer.getCourse() != null) {
+            targetCourseId = lecturer.getCourse().getId();
+        }
+        final Long scopedCourseId = targetCourseId;
+
         Map<Long, Assessment> assignedAssessmentsById = new LinkedHashMap<>();
 
         lecturerGroupAssignmentRepository.findAssessmentsByLecturer(lecturer).forEach(assessment -> {
-            if (assessment != null && assessment.getId() != null) {
+            if (assessment != null && assessment.getId() != null
+                    && (scopedCourseId == null || (assessment.getCourse() != null && scopedCourseId.equals(assessment.getCourse().getId())))) {
                 assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
             }
         });
 
         lecturerRubricAssignmentRepository.findAssessmentsByLecturer(lecturer).forEach(assessment -> {
-            if (assessment != null && assessment.getId() != null) {
+            if (assessment != null && assessment.getId() != null
+                    && (scopedCourseId == null || (assessment.getCourse() != null && scopedCourseId.equals(assessment.getCourse().getId())))) {
                 assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
             }
         });
 
-        // Add assessments for courses where the lecturer supervises a group
-        List<Group> supervisedGroups = groupRepository.findAll().stream()
-            .filter(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
-                         (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())))
-            .collect(Collectors.toList());
+        // Add assessments for the lecturer's active/assigned course where they supervise a group
+        if (scopedCourseId != null) {
+            boolean supervisesInCourse = groupRepository.findByCourseId(scopedCourseId).stream()
+                .anyMatch(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
+                               (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())));
 
-        Set<Long> supervisedCourseIds = supervisedGroups.stream()
-            .map(g -> g.getCourse() != null ? g.getCourse().getId() : null)
-            .filter(id -> id != null)
-            .collect(Collectors.toSet());
-
-        if (!supervisedCourseIds.isEmpty()) {
-            assessmentService.findAllAssessmentsWithRubrics().forEach(assessment -> {
-                if (assessment.getCourse() != null && supervisedCourseIds.contains(assessment.getCourse().getId())) {
-                    assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
-                }
-            });
+            if (supervisesInCourse) {
+                assessmentService.findAllAssessmentsWithRubricsByCourseId(scopedCourseId).forEach(assessment -> {
+                    if (assessment != null && assessment.getId() != null) {
+                        assignedAssessmentsById.putIfAbsent(assessment.getId(), assessment);
+                    }
+                });
+            }
         }
 
         return assignedAssessmentsById.values().stream().collect(Collectors.toList());
     }
 
     private boolean isLecturerAssignedToAssessment(Lecturer lecturer, Assessment assessment) {
+        if (lecturer == null || assessment == null || assessment.getCourse() == null || assessment.getCourse().getId() == null) {
+            return false;
+        }
+        if (lecturer.getCourse() == null || lecturer.getCourse().getId() == null
+                || !lecturer.getCourse().getId().equals(assessment.getCourse().getId())) {
+            return false;
+        }
+        Long activeCourseId = getResolvedActiveCourseId();
+        if (activeCourseId != null && !activeCourseId.equals(assessment.getCourse().getId())) {
+            return false;
+        }
+
         boolean hasGroupAssignment = !lecturerGroupAssignmentRepository
             .findByLecturerAndAssessment(lecturer, assessment)
             .isEmpty();
         boolean hasRubricAssignment = lecturerRubricAssignmentRepository
             .existsByLecturerAndAssessment(lecturer, assessment);
             
-        boolean isSupervisor = false;
-        if (assessment.getCourse() != null) {
-            isSupervisor = groupRepository.findAll().stream()
-                .anyMatch(g -> g.getCourse() != null && 
-                               g.getCourse().getId().equals(assessment.getCourse().getId()) &&
-                               ((g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
-                                (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId()))));
-        }
+        boolean isSupervisor = groupRepository.findByCourseId(assessment.getCourse().getId()).stream()
+            .anyMatch(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
+                           (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())));
 
         return hasGroupAssignment || hasRubricAssignment || isSupervisor;
     }
 
     private Set<Long> getManagedCourseIdsForAdmin(String adminEmail) {
         Set<Long> activeCourseIds = courseScopeService.getActiveCourseIdsForCurrentUser();
-        if (!activeCourseIds.isEmpty()) {
+        if (activeCourseIds != null && !activeCourseIds.isEmpty()) {
             return activeCourseIds;
         }
-
-        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(adminEmail)
-            .or(() -> lecturerRepository.findByUsername(adminEmail));
-
-        if (lecturerOpt.isEmpty()) {
-            return Set.of();
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId != null && activeCourseId > 0) {
+            return Set.of(activeCourseId);
         }
-
-        Lecturer lecturer = lecturerOpt.get();
-        Set<Long> managedCourseIds = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId()).stream()
-            .map(AdminCourseAssignment::getCourse)
-            .filter(c -> c != null && c.getId() != null)
-            .map(c -> c.getId())
-            .collect(Collectors.toCollection(HashSet::new));
-
-        if (managedCourseIds.isEmpty() && lecturer.getCourse() != null && lecturer.getCourse().getId() != null) {
-            managedCourseIds.add(lecturer.getCourse().getId());
-        }
-
-        return managedCourseIds;
+        return Set.of();
     }
 
     private boolean assessmentInManagedCourses(Assessment assessment, Set<Long> managedCourseIds) {
@@ -240,14 +268,14 @@ public class GroupCommentController {
         }
 
         if (isAdmin) {
-            logger.info("selectGroup: Admin context. Fetching all groups."); // Debug log
-            groups = groupRepository.findAll().stream()
+            logger.info("selectGroup: Admin context. Fetching active-course groups.");
+            Long assessmentCourseId = assessmentOpt.get().getCourse().getId();
+            groups = groupRepository.findByCourseId(assessmentCourseId).stream()
                 .filter(g -> groupInManagedCourses(g, managedCourseIds))
                 .collect(Collectors.toList());
         } else {
             String username = auth.getName();
-            Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username)
-                .or(() -> lecturerRepository.findByUsername(username));
+            Optional<Lecturer> lecturerOpt = findLecturerByAuthName(username);
             
             if (lecturerOpt.isEmpty()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Assessor profile not found.");
@@ -255,9 +283,10 @@ public class GroupCommentController {
                 return "redirect:/";
             }
             Lecturer lecturer = lecturerOpt.get();
+            Long assessmentCourseId = assessmentOpt.get().getCourse().getId();
 
-            // Filter groups where the current lecturer is either Academic or Industrial Supervisor
-            groups = groupRepository.findAll().stream()
+            // Filter groups where the current lecturer is either Academic or Industrial Supervisor within this course
+            groups = groupRepository.findByCourseId(assessmentCourseId).stream()
                 .filter(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
                              (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())))
                 .collect(Collectors.toList());
@@ -289,11 +318,12 @@ public class GroupCommentController {
         Assessment assessment = assessmentOpt.get();
         Group group = groupOpt.get();
         Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
-        if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)) {
+        if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)
+                || !assessment.getCourse().getId().equals(group.getCourse().getId())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access to another course's comments.");
             return "redirect:/" + role + "/comments/view/assessments";
         }
-        List<Student> students = new java.util.ArrayList<>(group.getStudents());
+        List<Student> students = resolveStudentsForGroup(group);
         students.sort((s1, s2) -> {
             String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
             String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
@@ -355,8 +385,8 @@ public class GroupCommentController {
             return "redirect:/" + role + "/comments/view/assessments";
         }
 
-        // Filter groups where the current lecturer is either Academic or Industrial Supervisor
-        List<Group> supervisedGroups = groupRepository.findAll().stream()
+        // Filter groups where the current lecturer is either Academic or Industrial Supervisor within this assessment's course
+        List<Group> supervisedGroups = groupRepository.findByCourseId(assessment.getCourse().getId()).stream()
             .filter(g -> (g.getAcademicSupervisor() != null && g.getAcademicSupervisor().getId().equals(lecturer.getId())) ||
                          (g.getIndustrialSupervisor() != null && g.getIndustrialSupervisor().getId().equals(lecturer.getId())))
             .collect(Collectors.toList());
@@ -373,7 +403,7 @@ public class GroupCommentController {
 
         for (Group group : supervisedGroups) {
             Map<Student, Map<String, Object>> commentsByStudent = new LinkedHashMap<>();
-            List<Student> sortedStudents = new java.util.ArrayList<>(group.getStudents());
+            List<Student> sortedStudents = resolveStudentsForGroup(group);
             sortedStudents.sort((s1, s2) -> {
                 String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
                 String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
@@ -419,17 +449,19 @@ public class GroupCommentController {
 
         if (isAdmin) {
             Set<Long> managedCourseIds = getManagedCourseIdsForAdmin(auth.getName());
-            if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)) {
+            if (!assessmentInManagedCourses(assessment, managedCourseIds) || !groupInManagedCourses(group, managedCourseIds)
+                    || !assessment.getCourse().getId().equals(group.getCourse().getId())) {
                 return ResponseEntity.status(403).body(Map.of("message", "Unauthorized course access."));
             }
         } else {
             Optional<Lecturer> lecturerOpt = findLecturerByAuthName(auth.getName());
-            if (lecturerOpt.isEmpty() || !isLecturerAssignedToAssessment(lecturerOpt.get(), assessment)) {
+            if (lecturerOpt.isEmpty() || !isLecturerAssignedToAssessment(lecturerOpt.get(), assessment)
+                    || group.getCourse() == null || !assessment.getCourse().getId().equals(group.getCourse().getId())) {
                 return ResponseEntity.status(403).body(Map.of("message", "Unauthorized assessment access."));
             }
         }
 
-        List<Student> students = new java.util.ArrayList<>(group.getStudents());
+        List<Student> students = resolveStudentsForGroup(group);
         List<AiTeamDynamicsDtos.MemberOverview> memberOverviews = students.stream()
             .map(s -> new AiTeamDynamicsDtos.MemberOverview(
                 s.getId(),

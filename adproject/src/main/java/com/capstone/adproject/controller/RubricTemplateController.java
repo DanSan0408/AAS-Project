@@ -50,6 +50,10 @@ public class RubricTemplateController {
             redirectAttributes.addFlashAttribute("errorMessage", "Blueprint not found.");
             return "redirect:/rubrics/templates/manage";
         }
+        if (!belongsToActiveCourse(templateOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access to this blueprint.");
+            return "redirect:/rubrics/templates/manage";
+        }
         model.addAttribute("rubricTemplate", templateOpt.get());
         model.addAttribute("pageTitle", "Edit Rubric Template Blueprint");
         return "rubric_template_builder";
@@ -70,6 +74,10 @@ public class RubricTemplateController {
         Optional<RubricTemplate> templateOpt = rubricTemplateService.getTemplateById(id);
         if (templateOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Full Template not found.");
+            return "redirect:/rubrics/templates/manage";
+        }
+        if (!belongsToActiveCourse(templateOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access to this blueprint.");
             return "redirect:/rubrics/templates/manage";
         }
         model.addAttribute("rubricTemplate", templateOpt.get());
@@ -118,9 +126,23 @@ public class RubricTemplateController {
     @ResponseBody
     public ResponseEntity<String> getTemplateJson(@PathVariable Long id) {
         Optional<RubricTemplate> templateOpt = rubricTemplateService.getTemplateById(id);
-        if (templateOpt.isPresent() && templateOpt.get().getStructureData() != null) {
+        if (templateOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!belongsToActiveCourse(templateOpt.get())) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+        }
+        if (templateOpt.get().getStructureData() != null) {
             return ResponseEntity.ok().header("Content-Type", "application/json").body(templateOpt.get().getStructureData());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private boolean belongsToActiveCourse(RubricTemplate template) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        return activeCourseId != null
+                && template != null
+                && template.getCourse() != null
+                && activeCourseId.equals(template.getCourse().getId());
     }
 }

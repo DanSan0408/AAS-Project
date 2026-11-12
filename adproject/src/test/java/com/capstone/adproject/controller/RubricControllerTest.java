@@ -226,4 +226,30 @@ class RubricControllerTest {
         assertEquals("redirect:/rubrics/view/10#group-block", view);
         verify(rubricService).moveAssessmentBlock(10L, "group", "down");
     }
+
+    @Test
+    void testViewAssessmentRubrics_CrossCourse_RedirectsWithError() {
+        when(rubricService.findAssessmentById(10L)).thenReturn(testAssessment);
+        when(courseScopeService.isActiveCourseId(1L)).thenReturn(false);
+
+        Model model = new ConcurrentModel();
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        String view = rubricController.viewAssessmentRubrics(10L, model, ra);
+
+        assertEquals("redirect:/rubrics/manage", view);
+        assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));
+    }
+
+    @Test
+    void testDeleteRubric_CrossCourse_DoesNotDeleteAndRedirects() {
+        when(rubricService.findRubricById(50L)).thenReturn(testRubric);
+        when(courseScopeService.isActiveCourseId(1L)).thenReturn(false);
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        String view = rubricController.deleteRubric(50L, ra);
+
+        assertEquals("redirect:/rubrics/manage", view);
+        verify(rubricService, org.mockito.Mockito.never()).deleteRubric(50L);
+        assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));
+    }
 }

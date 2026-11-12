@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.dto.AssessmentDataDto;
 import com.capstone.adproject.dto.RubricCalculationDto;
@@ -132,13 +133,68 @@ public class DataViewController {
         return "";
     }
 
+    private Long getResolvedActiveCourseId() {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId != null && activeCourseId > 0) {
+            return activeCourseId;
+        }
+        Set<Long> activeCourseIds = courseScopeService.getActiveCourseIdsForCurrentUser();
+        if (activeCourseIds != null && !activeCourseIds.isEmpty()) {
+            return activeCourseIds.iterator().next();
+        }
+        return null;
+    }
+
     private Set<Long> getManagedCourseIdsForCurrentUser() {
-        return courseScopeService.getActiveCourseIdsForCurrentUser();
+        Set<Long> activeCourseIds = courseScopeService.getActiveCourseIdsForCurrentUser();
+        if (activeCourseIds != null && !activeCourseIds.isEmpty()) {
+            return activeCourseIds;
+        }
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        if (activeCourseId != null && activeCourseId > 0) {
+            return Set.of(activeCourseId);
+        }
+        return Collections.emptySet();
+    }
+
+    private Course getResolvedActiveCourse(Long activeCourseId) {
+        Course activeCourse = courseScopeService.getActiveCourseForCurrentUser();
+        if (activeCourse != null && activeCourse.getId() != null) {
+            return activeCourse;
+        }
+        if (activeCourseId == null) {
+            return null;
+        }
+        Course fallback = new Course();
+        fallback.setId(activeCourseId);
+        return fallback;
+    }
+
+    private List<Student> resolveStudentsForGroup(Group group) {
+        if (group == null) {
+            return new ArrayList<>();
+        }
+        List<Student> scoped = adminService.getStudentsByGroup(group);
+        return scoped != null ? new ArrayList<>(scoped) : new ArrayList<>();
+    }
+
+    private Group resolveStudentGroupForCourse(Student student, Long courseId) {
+        if (student == null || courseId == null) {
+            return null;
+        }
+        Group resolved = adminService.resolveStudentGroupForCourse(student, courseId);
+        if (resolved != null) {
+            return resolved;
+        }
+        if (student.getCourse() != null && courseId.equals(student.getCourse().getId())) {
+            return student.getGroup();
+        }
+        return null;
     }
     
     @GetMapping("/factors")
     public String showFactorDisplayPage(@RequestParam(required = false) Long groupId, Model model) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         List<Group> groups = activeCourseId == null
             ? List.of()
             : groupRepository.findByCourseId(activeCourseId);
@@ -150,10 +206,10 @@ public class DataViewController {
         List<com.capstone.adproject.dto.FactorDetailsDto> factorDetailsList = new ArrayList<>();
         List<FactorOverrideHistory> allHistory = new ArrayList<>();
         
-        if (groupId != null) {
+        if (groupId != null && activeCourseId != null) {
             Group group = groupRepository.findById(groupId).orElse(null);
             if (group != null && ownsGroup(group)) {
-                List<Student> students = new ArrayList<>(group.getStudents());
+                List<Student> students = resolveStudentsForGroup(group);
                 students.sort((s1, s2) -> {
                     String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
                     String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername() : (s2.getEmail() != null ? s2.getEmail() : "");
@@ -161,10 +217,12 @@ public class DataViewController {
                 });
                 
                 for (Student student : students) {
-                    factorDetailsList.add(calculateService.getFactorDetailsForStudent(student));
+                    factorDetailsList.add(calculateService.getFactorDetailsForStudent(student, activeCourseId));
                 }
                 
-                allHistory = factorOverrideHistoryRepository.findByStudentInOrderByChangedAtDesc(students);
+                if (!students.isEmpty()) {
+                    allHistory = factorOverrideHistoryRepository.findByStudentInAndCourseIdOrderByChangedAtDesc(students, activeCourseId);
+                }
             }
         }
         
@@ -189,15 +247,20 @@ public class DataViewController {
     }
 
     private boolean ownsStudent(Student student) {
-        return student != null
-            && student.getCourse() != null
+        if (student == null) {
+            return false;
+        }
+        if (adminService.isStudentInActiveCourse(student)) {
+            return true;
+        }
+        return student.getCourse() != null
             && student.getCourse().getId() != null
             && getManagedCourseIdsForCurrentUser().contains(student.getCourse().getId());
     }
 
     @GetMapping
     public String showDataViewsHome(Model model) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         model.addAttribute("assessments", activeCourseId == null
             ? List.of()
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId));
@@ -380,7 +443,7 @@ public class DataViewController {
             boolean paginate,
             int page,
             int size) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         List<Group> groups = activeCourseId == null
             ? List.of()
             : groupRepository.findByCourseId(activeCourseId);
@@ -400,21 +463,26 @@ public class DataViewController {
             : new ArrayList<>(adminService.getAllStudents());
 
         String normalizedSearch = studentSearch == null ? "" : studentSearch.trim().toLowerCase();
+        Map<Long, Group> studentGroupById = new HashMap<>();
         List<Student> filteredStudents = new ArrayList<>();
         for (Student student : students) {
             if (!ownsStudent(student)) {
                 continue;
             }
+            Group studentGroup = resolveStudentGroupForCourse(student, activeCourseId);
+            if (student.getId() != null) {
+                studentGroupById.put(student.getId(), studentGroup);
+            }
             if (selectedGroupId != null) {
-                if (student.getGroup() == null || student.getGroup().getId() == null || !selectedGroupId.equals(student.getGroup().getId())) {
+                if (studentGroup == null || studentGroup.getId() == null || !selectedGroupId.equals(studentGroup.getId())) {
                     continue;
                 }
             }
             if (!normalizedSearch.isEmpty()) {
                 String username = student.getUsername() != null ? student.getUsername().toLowerCase() : "";
                 String email = student.getEmail() != null ? student.getEmail().toLowerCase() : "";
-                String teamName = student.getGroup() != null && student.getGroup().getGroupName() != null
-                    ? student.getGroup().getGroupName().toLowerCase()
+                String teamName = studentGroup != null && studentGroup.getGroupName() != null
+                    ? studentGroup.getGroupName().toLowerCase()
                     : "";
                 if (!username.contains(normalizedSearch)
                         && !email.contains(normalizedSearch)
@@ -443,9 +511,11 @@ public class DataViewController {
         Map<Long, Set<Integer>> assessmentCLOsWithGroupRubrics = new HashMap<>();
         Map<Long, Map<Long, List<Mark>>> marksByAssessmentId = new HashMap<>();
         Map<Long, StudentResultOverride> overridesByStudentId = new HashMap<>();
-        for (StudentResultOverride override : overrideRepository.findByStudentIn(visibleStudents)) {
-            if (override.getStudent() != null && override.getStudent().getId() != null) {
-                overridesByStudentId.put(override.getStudent().getId(), override);
+        if (activeCourseId != null && !visibleStudents.isEmpty()) {
+            for (StudentResultOverride override : overrideRepository.findByStudentInAndCourseId(visibleStudents, activeCourseId)) {
+                if (override.getStudent() != null && override.getStudent().getId() != null) {
+                    overridesByStudentId.put(override.getStudent().getId(), override);
+                }
             }
         }
         for (Assessment assessment : assessments) {
@@ -455,9 +525,10 @@ public class DataViewController {
         
         for (Student student : visibleStudents) {
             Map<String, Object> data = new HashMap<>();
-            data.put("teamName", student.getGroup() != null ? student.getGroup().getGroupName() : "No Team");
+            Group studentGroup = student.getId() != null ? studentGroupById.get(student.getId()) : null;
+            data.put("teamName", studentGroup != null ? studentGroup.getGroupName() : "No Team");
             
-            Double resolvedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student);
+            Double resolvedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student, activeCourseId);
             Double grandTotal = 0.0;
             Map<Long, StudentAssessmentDataDto> assessmentDataById = new HashMap<>();
             for (Assessment assessment : assessments) {
@@ -533,15 +604,17 @@ public class DataViewController {
     public String showAssessmentData(
             @PathVariable Long assessmentId,
             @RequestParam(required = false) Long groupId,
-            Model model) {
+            Model model,
+            RedirectAttributes redirectAttributes) {
         
-        Assessment assessment = assessmentService.getAssessmentById(assessmentId)
-            .orElseThrow(() -> new RuntimeException("Assessment not found"));
-        if (!ownsAssessment(assessment)) {
-            throw new RuntimeException("Unauthorized assessment access");
+        Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(assessmentId);
+        if (assessmentOpt.isEmpty() || !ownsAssessment(assessmentOpt.get())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Assessment not found or outside your active course.");
+            return "redirect:/admin/data-views";
         }
+        Assessment assessment = assessmentOpt.get();
         
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         List<Group> allGroups = activeCourseId == null
             ? List.of()
             : groupRepository.findByCourseId(activeCourseId);
@@ -578,8 +651,8 @@ public class DataViewController {
             }
         }
         
-        if (selectedGroup != null && selectedGroup.getStudents() != null && !selectedGroup.getStudents().isEmpty()) {
-            List<Student> students = new ArrayList<>(selectedGroup.getStudents());
+        List<Student> students = resolveStudentsForGroup(selectedGroup);
+        if (!students.isEmpty()) {
             
             students.sort((s1, s2) -> {
                 String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
@@ -637,6 +710,7 @@ public class DataViewController {
         }
         
         model.addAttribute("assessmentData", assessmentData);
+        model.addAttribute("studentGroupMap", adminService.getStudentGroupMapForActiveCourse(students));
         model.addAttribute("rubricsByType", rubricsByType);
         model.addAttribute("studentRubricDetails", studentRubricDetails);
         model.addAttribute("uniqueEvaluators", uniqueEvaluators);
@@ -652,7 +726,7 @@ public class DataViewController {
             @RequestParam(required = false) Long groupId, 
             Model model) {
         
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         List<Group> groups = activeCourseId == null
             ? List.of()
             : groupRepository.findByCourseId(activeCourseId);
@@ -663,10 +737,10 @@ public class DataViewController {
         OverrideForm form = new OverrideForm();
         List<Student> students = new ArrayList<>();
         
-        if (groupId != null) {
+        if (groupId != null && activeCourseId != null) {
             Group group = groupRepository.findById(groupId).orElse(null);
             if (group != null && ownsGroup(group)) {
-                students = new ArrayList<>(group.getStudents());
+                students = resolveStudentsForGroup(group);
                 
                 students.sort((s1, s2) -> {
                     String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername() : (s1.getEmail() != null ? s1.getEmail() : "");
@@ -674,26 +748,26 @@ public class DataViewController {
                     return name1.compareToIgnoreCase(name2);
                 });
                 
-                List<Assessment> assessments = activeCourseId == null
-                    ? List.of()
-                    : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+                List<Assessment> assessments = assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
                 
                 for (Student student : students) {
                     Double calculatedFactor = 0.0;
-                    if(!assessments.isEmpty()) {
-                         calculatedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student);
+                    if (!assessments.isEmpty()) {
+                         calculatedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student, activeCourseId);
                     }
-                    Double calculatedTotal = calculateService.calculateGrandTotal(student, assessments);
+                    Double calculatedTotal = calculateService.calculateGrandTotal(student, assessments, activeCourseId);
                     
-                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudentAndCourseId(student, activeCourseId);
                     Double overrideFactor = overrideOpt.map(StudentResultOverride::getOverriddenFactor).orElse(null);
                     Double overrideTotal = overrideOpt.map(StudentResultOverride::getOverriddenGrandTotal).orElse(null);
                     
                     form.getUpdates().add(new StudentResultUpdate(student.getId(), overrideFactor, overrideTotal, calculatedFactor, calculatedTotal));
                 }
 
-                List<FactorOverrideHistory> auditLogs = factorOverrideHistoryRepository.findByStudentInOrderByChangedAtDesc(students);
-                model.addAttribute("recentAuditLogs", auditLogs);
+                if (!students.isEmpty()) {
+                    List<FactorOverrideHistory> auditLogs = factorOverrideHistoryRepository.findByStudentInAndCourseIdOrderByChangedAtDesc(students, activeCourseId);
+                    model.addAttribute("recentAuditLogs", auditLogs);
+                }
             }
         }
         
@@ -705,6 +779,11 @@ public class DataViewController {
 
     @PostMapping("/edit-overrides/save")
     public String saveOverrides(@ModelAttribute OverrideForm form, @RequestParam(required = false) Long groupId) {
+        Long activeCourseId = getResolvedActiveCourseId();
+        if (activeCourseId == null) {
+            return "redirect:/admin/data-views";
+        }
+        Course activeCourse = getResolvedActiveCourse(activeCourseId);
         for (StudentResultUpdate update : form.getUpdates()) {
             if (update.getStudentId() != null) {
                 Student student = studentService.findStudentById(update.getStudentId()).orElse(null);
@@ -712,7 +791,7 @@ public class DataViewController {
                     boolean hasFactorOverride = update.getFactor() != null;
                     boolean hasTotalOverride = update.getGrandTotal() != null;
                     
-                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+                    Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudentAndCourseId(student, activeCourseId);
                     
                     if (!hasFactorOverride && !hasTotalOverride) {
                         if (overrideOpt.isPresent()) {
@@ -731,6 +810,7 @@ public class DataViewController {
                                     java.time.LocalDateTime.now(),
                                     update.getReason()
                             );
+                            history.setCourse(activeCourse);
                             factorOverrideHistoryRepository.save(history);
                         }
                     } else {
@@ -745,6 +825,7 @@ public class DataViewController {
                                             !java.util.Objects.equals(oldTotal, update.getGrandTotal());
 
                         override.setStudent(student);
+                        override.setCourse(activeCourse);
                         override.setOverriddenFactor(update.getFactor());
                         override.setOverriddenGrandTotal(update.getGrandTotal());
                         
@@ -761,6 +842,7 @@ public class DataViewController {
                                     java.time.LocalDateTime.now(),
                                     update.getReason()
                             );
+                            history.setCourse(activeCourse);
                             factorOverrideHistoryRepository.save(history);
                         }
                     }
@@ -772,7 +854,7 @@ public class DataViewController {
 
     @GetMapping("/calculate-factor")
     public String showCalculateFactorPage(Model model) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        Long activeCourseId = getResolvedActiveCourseId();
         List<Assessment> assessments = activeCourseId == null
             ? List.of()
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
@@ -797,23 +879,45 @@ public class DataViewController {
     }
 
     @PostMapping("/calculate-factor")
-    public String calculateFactor(@RequestParam Map<String, String> params, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+    public String calculateFactor(@RequestParam Map<String, String> params, RedirectAttributes redirectAttributes) {
+        Long activeCourseId = getResolvedActiveCourseId();
         if (activeCourseId == null) return "redirect:/admin/data-views";
         
         Course dummyCourse = new Course();
         dummyCourse.setId(activeCourseId);
         
         double totalWeight = 0.0;
-        for (String key : params.keySet()) {
+        List<FactorWeightage> pendingWeightages = new ArrayList<>();
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            String key = entry.getKey();
             if (key.startsWith("weight_")) {
-                String val = params.get(key);
+                Long assessmentId;
+                try {
+                    assessmentId = Long.parseLong(key.substring(7));
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+                String val = entry.getValue();
                 if (val != null && !val.trim().isEmpty()) {
                     try {
                         double weight = Double.parseDouble(val);
-                        if (weight > 0) totalWeight += weight;
+                        if (weight > 0) {
+                            Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+                            if (assessment == null || !ownsAssessment(assessment)) {
+                                redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized or invalid assessment selection.");
+                                return "redirect:/admin/data-views/calculate-factor";
+                            }
+                            String typeVal = params.get("type_" + assessmentId);
+                            if (typeVal == null || typeVal.trim().isEmpty()) {
+                                typeVal = "BOTH";
+                            }
+                            totalWeight += weight;
+                            FactorWeightage fw = new FactorWeightage(assessment.getCourse(), assessment, weight);
+                            fw.setFactorContributionType(typeVal);
+                            pendingWeightages.add(fw);
+                        }
                     } catch (NumberFormatException e) {
-                        // ignore
+                        // ignore invalid input
                     }
                 }
             }
@@ -826,30 +930,7 @@ public class DataViewController {
         
         List<FactorWeightage> existing = factorWeightageRepository.findByCourse(dummyCourse);
         factorWeightageRepository.deleteAll(existing);
-        
-        for (String key : params.keySet()) {
-            if (key.startsWith("weight_")) {
-                Long assessmentId = Long.parseLong(key.substring(7));
-                String val = params.get(key);
-                String typeVal = params.get("type_" + assessmentId);
-                if (typeVal == null || typeVal.trim().isEmpty()) typeVal = "BOTH";
-                if (val != null && !val.trim().isEmpty()) {
-                    try {
-                        Double weight = Double.parseDouble(val);
-                        if (weight > 0) {
-                            Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
-                            if (assessment != null && ownsAssessment(assessment)) {
-                                FactorWeightage fw = new FactorWeightage(assessment.getCourse(), assessment, weight);
-                                fw.setFactorContributionType(typeVal);
-                                factorWeightageRepository.save(fw);
-                            }
-                        }
-                    } catch (NumberFormatException e) {
-                        // ignore invalid input
-                    }
-                }
-            }
-        }
+        factorWeightageRepository.saveAll(pendingWeightages);
         
         return "redirect:/admin/data-views/overall";
     }

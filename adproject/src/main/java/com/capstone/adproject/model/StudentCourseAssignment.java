@@ -37,4 +37,14 @@ public class StudentCourseAssignment {
     @ManyToOne(optional = false)
     @JoinColumn(name = "course_id", nullable = false, foreignKey = @ForeignKey(name = "fk_sca_course"))
     private Course course;
+
+    @ManyToOne
+    @JoinColumn(name = "group_id", foreignKey = @ForeignKey(name = "fk_sca_group"))
+    private Group group;
+
+    public StudentCourseAssignment(Long id, Student student, Course course) {
+        this.id = id;
+        this.student = student;
+        this.course = course;
+    }
 }

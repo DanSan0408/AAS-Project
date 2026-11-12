@@ -30,6 +30,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         // Enforce course scoping for admin contexts
         registry.addInterceptor(courseScopeInterceptor)
-                .addPathPatterns("/admin/**", "/rubrics/**", "/deadlines/**");
+                .addPathPatterns("/admin/**", "/rubrics/**", "/deadlines/**", "/lecturer/**", "/api/**");
     }
 }

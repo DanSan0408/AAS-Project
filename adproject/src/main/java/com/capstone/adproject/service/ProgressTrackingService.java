@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.LecturerGroupAssignment;
 import com.capstone.adproject.model.LecturerRubricAssignment;
@@ -16,10 +18,12 @@ import com.capstone.adproject.model.LecturerStudentAssignment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentAssessmentAssignment;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.repositories.StudentAssessmentAssignmentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.model.Mark;
 
@@ -33,6 +37,9 @@ public class ProgressTrackingService {
     private final LecturerAssessmentService lecturerAssessmentService;
     private final MarkService markService;
     private final MarkRepository markRepository;
+
+    @Autowired(required = false)
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     public ProgressTrackingService(
             LecturerGroupAssignmentRepository lecturerGroupAssignmentRepository,
@@ -220,8 +227,10 @@ public class ProgressTrackingService {
             int peerTotal = 0;
             int groupTotal = 0;
             
-            if (student.getGroup() != null && student.getGroup().getStudents() != null) {
-                int membersCount = student.getGroup().getStudents().size();
+            Long courseId = assessment != null && assessment.getCourse() != null ? assessment.getCourse().getId() : null;
+            Group courseGroup = resolveGroupForStudentInCourse(student, courseId);
+            if (courseGroup != null) {
+                int membersCount = countMembersInGroupForCourse(courseGroup, courseId);
                 if (isPeerAssigned) peerTotal = Math.max(0, membersCount - 1);
                 if (isGroupAssigned) groupTotal = Math.max(0, membersCount - 1);
             }
@@ -286,5 +295,53 @@ public class ProgressTrackingService {
         if (hasLecturer) return "Assessor";
         if (hasStudent) return "Student";
         return "None";
+    }
+
+    private Group resolveGroupForStudentInCourse(Student student, Long courseId) {
+        if (student == null) {
+            return null;
+        }
+        if (courseId != null && studentCourseAssignmentRepository != null && student.getId() != null) {
+            java.util.Optional<StudentCourseAssignment> scaOpt = studentCourseAssignmentRepository
+                .findByStudentIdAndCourseId(student.getId(), courseId);
+            if (scaOpt.isPresent() && scaOpt.get().getGroup() != null) {
+                Group assigned = scaOpt.get().getGroup();
+                if (assigned.getCourse() == null || courseId.equals(assigned.getCourse().getId())) {
+                    return assigned;
+                }
+            }
+        }
+        Group fallback = student.getGroup();
+        if (fallback == null) {
+            return null;
+        }
+        if (courseId != null && fallback.getCourse() != null && fallback.getCourse().getId() != null
+                && !courseId.equals(fallback.getCourse().getId())) {
+            return null;
+        }
+        return fallback;
+    }
+
+    private int countMembersInGroupForCourse(Group group, Long courseId) {
+        if (group == null) {
+            return 0;
+        }
+        java.util.Set<Long> memberIds = new java.util.HashSet<>();
+        if (group.getStudents() != null) {
+            for (Student s : group.getStudents()) {
+                if (s != null && s.getId() != null) {
+                    memberIds.add(s.getId());
+                }
+            }
+        }
+        if (courseId != null && group.getId() != null && studentCourseAssignmentRepository != null) {
+            for (StudentCourseAssignment sca : studentCourseAssignmentRepository
+                    .findByCourseIdAndGroupId(courseId, group.getId())) {
+                if (sca.getStudent() != null && sca.getStudent().getId() != null) {
+                    memberIds.add(sca.getStudent().getId());
+                }
+            }
+        }
+        return !memberIds.isEmpty() ? memberIds.size() : (group.getStudents() != null ? group.getStudents().size() : 0);
     }
 }
