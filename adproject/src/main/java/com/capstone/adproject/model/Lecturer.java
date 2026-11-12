@@ -1,7 +1,5 @@
 package com.capstone.adproject.model;
 
-import org.hibernate.annotations.Filter;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Filter(name = "courseScopeFilter", condition = "({alias}.course_id = :activeCourseId OR {alias}.course_id IS NULL)")
 @Entity
 @Table(name = "lecturer", indexes = {
     @Index(name = "idx_lecturer_course", columnList = "course_id"),

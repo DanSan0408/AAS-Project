@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -31,8 +33,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.AssessmentSubmission;
+import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.SubmissionAnnotation;
+import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentSubmissionService;
+import com.capstone.adproject.service.CourseScopeService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Mark;
@@ -98,9 +105,23 @@ public class StudentController {
     @Autowired
     private CourseRepository courseRepository;
 
+    @Autowired(required = false)
+    private AdminService adminService;
+
     private Long resolveCurrentCourseId(Student student) {
         if (student == null) {
             return null;
+        }
+
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes attrs) {
+            HttpServletRequest request = attrs.getRequest();
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Object attr = session.getAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY);
+                if (attr instanceof Number number && isStudentEnrolledInCourse(student, number.longValue())) {
+                    return number.longValue();
+                }
+            }
         }
 
         if (student.getCourse() != null && student.getCourse().getId() != null) {
@@ -111,14 +132,107 @@ public class StudentController {
             return student.getGroup().getCourse().getId();
         }
 
-        List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
-        for (StudentCourseAssignment assignment : assignments) {
-            if (assignment != null && assignment.getCourse() != null && assignment.getCourse().getId() != null) {
-                return assignment.getCourse().getId();
+        if (studentCourseAssignmentRepository != null && student.getId() != null) {
+            List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
+            if (assignments != null) {
+                for (StudentCourseAssignment assignment : assignments) {
+                    if (assignment != null && assignment.getCourse() != null && assignment.getCourse().getId() != null) {
+                        return assignment.getCourse().getId();
+                    }
+                }
             }
         }
 
         return null;
+    }
+
+    private boolean isStudentEnrolledInCourse(Student student, Long courseId) {
+        if (student == null || courseId == null) {
+            return false;
+        }
+        if (student.getCourse() != null && student.getCourse().getId() != null && courseId.equals(student.getCourse().getId())) {
+            return true;
+        }
+        if (student.getGroup() != null && student.getGroup().getCourse() != null && student.getGroup().getCourse().getId() != null
+                && courseId.equals(student.getGroup().getCourse().getId())) {
+            return true;
+        }
+        if (student.getId() == null || studentCourseAssignmentRepository == null) {
+            return false;
+        }
+        if (studentCourseAssignmentRepository.existsByStudentIdAndCourseId(student.getId(), courseId)) {
+            return true;
+        }
+        List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
+        if (assignments != null) {
+            for (StudentCourseAssignment assignment : assignments) {
+                if (assignment != null && assignment.getCourse() != null && courseId.equals(assignment.getCourse().getId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private Group resolveStudentGroupForCourse(Student student, Long courseId) {
+        if (student == null) {
+            return null;
+        }
+        if (courseId == null) {
+            return student.getGroup();
+        }
+        if (adminService != null) {
+            Group resolved = adminService.resolveStudentGroupForCourse(student, courseId);
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        if (studentCourseAssignmentRepository != null && student.getId() != null) {
+            var scaOpt = studentCourseAssignmentRepository.findByStudentIdAndCourseId(student.getId(), courseId);
+            if (scaOpt.isPresent()) {
+                return scaOpt.get().getGroup();
+            }
+        }
+        if (student.getCourse() != null && courseId.equals(student.getCourse().getId())) {
+            return student.getGroup();
+        }
+        if (student.getGroup() != null && student.getGroup().getCourse() != null && courseId.equals(student.getGroup().getCourse().getId())) {
+            return student.getGroup();
+        }
+        return null;
+    }
+
+    private List<Student> getTeamMembersForCourse(Student student, Long courseId) {
+        Group courseGroup = resolveStudentGroupForCourse(student, courseId);
+        if (courseGroup == null) {
+            return List.of();
+        }
+        List<Student> members = adminService != null
+                ? adminService.getStudentsByGroup(courseGroup)
+                : studentRepository.findByGroup(courseGroup);
+        return sortStudentsAlphabetically(members);
+    }
+
+    @PostMapping("/switch-course")
+    public String switchCourse(
+            @RequestParam("courseId") Long courseId,
+            Principal principal,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        String emailOrUsername = principal.getName();
+        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
+                .or(() -> studentRepository.findByUsername(emailOrUsername))
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        if (!isStudentEnrolledInCourse(currentStudent, courseId)) {
+            redirectAttributes.addFlashAttribute("error", "You are not enrolled in that course.");
+            return "redirect:/student/home";
+        }
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY, courseId);
+        redirectAttributes.addFlashAttribute("success", "Active course switched successfully.");
+        return "redirect:/student/home";
     }
     
     private boolean isAssessmentOpen(Assessment assessment) {
@@ -153,12 +267,7 @@ public class StudentController {
         if (student == null || assessment == null) return false;
         if (!Boolean.TRUE.equals(assessment.getRequiresSubmission())) return false;
 
-        Long currentCourseId = resolveCurrentCourseId(student);
-        if (currentCourseId == null || assessment.getCourse() == null || !currentCourseId.equals(assessment.getCourse().getId())) {
-            return false;
-        }
-
-        return true;
+        return assessment.getCourse() != null && isStudentEnrolledInCourse(student, assessment.getCourse().getId());
     }
 
     private StudentAssessmentAssignment getAssignmentForStudent(Student student, Assessment assessment) {
@@ -170,12 +279,13 @@ public class StudentController {
             .orElse(null);
     }
 
-    private List<Student> getGroupmates(Student student) {
-        if (student == null || student.getGroup() == null || student.getId() == null) {
+    private List<Student> getGroupmates(Student student, Long courseId) {
+        if (student == null || student.getId() == null) {
             return List.of();
         }
 
-        List<Student> groupmates = studentRepository.findByGroup(student.getGroup()).stream()
+        List<Student> teamMembers = getTeamMembersForCourse(student, courseId);
+        List<Student> groupmates = teamMembers.stream()
             .filter(member -> member != null && member.getId() != null && !student.getId().equals(member.getId()))
             .collect(Collectors.toList());
         return sortStudentsAlphabetically(groupmates);
@@ -362,13 +472,12 @@ public class StudentController {
             }
         }
         
+        Group currentGroup = resolveStudentGroupForCourse(currentStudent, currentCourseId);
         model.addAttribute("assessments", peerSelfAssessments);
         model.addAttribute("currentStudent", currentStudent);
-        model.addAttribute("group", currentStudent.getGroup());
+        model.addAttribute("group", currentGroup);
 
-        List<Student> teamMembers = currentStudent.getGroup() == null
-            ? List.of()
-            : sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
+        List<Student> teamMembers = getTeamMembersForCourse(currentStudent, currentCourseId);
         model.addAttribute("teamMembers", teamMembers);
         
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
@@ -514,9 +623,10 @@ public class StudentController {
         var subOpt = assessmentSubmissionService.getSubmissionForStudent(assessment, currentStudent);
         int doodleCount = subOpt.map(s -> assessmentSubmissionService.getAnnotationsForSubmission(s).size()).orElse(0);
 
+        Group currentGroup = resolveStudentGroupForCourse(currentStudent, assessment.getCourse().getId());
         model.addAttribute("assessment", assessment);
         model.addAttribute("currentStudent", currentStudent);
-        model.addAttribute("group", currentStudent.getGroup());
+        model.addAttribute("group", currentGroup);
         model.addAttribute("course", assessment.getCourse());
         model.addAttribute("isOpen", isOpen);
         model.addAttribute("deadline", deadline);
@@ -558,7 +668,8 @@ public class StudentController {
             return redirectTarget;
         }
 
-        if ("GROUP".equalsIgnoreCase(assessment.getSubmissionScope()) && currentStudent.getGroup() == null) {
+        Group submissionGroup = resolveStudentGroupForCourse(currentStudent, assessment.getCourse().getId());
+        if ("GROUP".equalsIgnoreCase(assessment.getSubmissionScope()) && submissionGroup == null) {
             redirectAttributes.addFlashAttribute("error", "This assessment requires a group submission, but you are not assigned to any group.");
             return redirectTarget;
         }
@@ -577,7 +688,7 @@ public class StudentController {
             assessmentSubmissionService.saveSubmission(
                     assessment,
                     assessment.getCourse(),
-                    currentStudent.getGroup(),
+                    submissionGroup,
                     currentStudent,
                     file
             );
@@ -697,8 +808,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
-    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
-        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+    if (assessment.getCourse() == null || !isStudentEnrolledInCourse(evaluator, assessment.getCourse().getId())) {
         redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
         return "redirect:/student/assessments";
     }
@@ -729,8 +839,10 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
     }
     
     if (!evaluator.getId().equals(evaluatedStudent.getId())) {
-        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
-            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+        Group evaluatorGroup = resolveStudentGroupForCourse(evaluator, assessment.getCourse().getId());
+        Group evaluatedGroup = resolveStudentGroupForCourse(evaluatedStudent, assessment.getCourse().getId());
+        if (evaluatorGroup == null || evaluatedGroup == null ||
+            !evaluatorGroup.getId().equals(evaluatedGroup.getId())) {
             redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
             return "redirect:/student/assessments";
         }
@@ -818,8 +930,7 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
-    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
-        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+    if (assessment.getCourse() == null || !isStudentEnrolledInCourse(evaluator, assessment.getCourse().getId())) {
         redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
         return "redirect:/student/assessments";
     }
@@ -850,8 +961,10 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     }
     
     if (!evaluator.getId().equals(evaluatedStudent.getId())) {
-        if (evaluator.getGroup() == null || evaluatedStudent.getGroup() == null ||
-            !evaluator.getGroup().getId().equals(evaluatedStudent.getGroup().getId())) {
+        Group evaluatorGroup = resolveStudentGroupForCourse(evaluator, assessment.getCourse().getId());
+        Group evaluatedGroup = resolveStudentGroupForCourse(evaluatedStudent, assessment.getCourse().getId());
+        if (evaluatorGroup == null || evaluatedGroup == null ||
+            !evaluatorGroup.getId().equals(evaluatedGroup.getId())) {
             redirectAttributes.addFlashAttribute("error", "You can only evaluate members of your own group.");
             return "redirect:/student/assessments";
         }
@@ -1108,8 +1221,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
-    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
-        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+    if (assessment.getCourse() == null || !isStudentEnrolledInCourse(evaluator, assessment.getCourse().getId())) {
         redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
         return "redirect:/student/assessments";
     }
@@ -1130,7 +1242,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
     
-    List<Student> groupmates = getGroupmates(evaluator);
+    List<Student> groupmates = getGroupmates(evaluator, assessment.getCourse().getId());
     if (groupmates.isEmpty()) {
         redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student to submit team evaluation.");
         return "redirect:/student/assessments";
@@ -1224,8 +1336,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
     
-    if (evaluator.getCourse() == null || assessment.getCourse() == null ||
-        !evaluator.getCourse().getId().equals(assessment.getCourse().getId())) {
+    if (assessment.getCourse() == null || !isStudentEnrolledInCourse(evaluator, assessment.getCourse().getId())) {
         redirectAttributes.addFlashAttribute("error", "You are not authorized to access this assessment.");
         return "redirect:/student/assessments";
     }
@@ -1246,7 +1357,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
         return "redirect:/student/assessments";
     }
     
-    List<Student> groupmates = getGroupmates(evaluator);
+    List<Student> groupmates = getGroupmates(evaluator, assessment.getCourse().getId());
     if (groupmates.isEmpty()) {
         redirectAttributes.addFlashAttribute("error", "You must be in a group with at least one other student.");
         return "redirect:/student/assessments";
@@ -1488,8 +1599,9 @@ public String viewMyComments(Model model, Principal principal) {
     Student currentStudent = studentRepository.findByEmail(emailOrUsername)
         .or(() -> studentRepository.findByUsername(emailOrUsername))
         .orElseThrow(() -> new RuntimeException("Student not found"));
+    Long currentCourseId = resolveCurrentCourseId(currentStudent);
     
-    Map<String, Object> commentsData = commentService.getCompiledCommentsForStudent(currentStudent);
+    Map<String, Object> commentsData = commentService.getCompiledCommentsForStudent(currentStudent, currentCourseId);
     
     @SuppressWarnings("unchecked")
     Map<String, Map<String, List<AssessmentComment>>> commentsByAssessment = 
@@ -1542,8 +1654,7 @@ public String viewMyComments(Model model, Principal principal) {
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));
         
-        if (currentStudent.getCourse() == null || assessment.getCourse() == null ||
-            !currentStudent.getCourse().getId().equals(assessment.getCourse().getId())) {
+        if (assessment.getCourse() == null || !isStudentEnrolledInCourse(currentStudent, assessment.getCourse().getId())) {
             return "redirect:/student/home";
         }
         

@@ -55,11 +55,11 @@ public class ProfileController {
                 displayEmail = studentOpt.get().getEmail();
             }
         } else if ("LECTURER".equals(role)) {
-            Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(username)
-                    .or(() -> lecturerRepository.findByUsername(username));
-            if (lecturerOpt.isPresent()) {
-                displayUsername = lecturerOpt.get().getUsername();
-                displayEmail = lecturerOpt.get().getEmail();
+            java.util.List<Lecturer> lecturers = com.capstone.adproject.service.CourseScopeService
+                    .resolveLecturersByIdentity(lecturerRepository, username);
+            if (!lecturers.isEmpty()) {
+                displayUsername = lecturers.get(0).getUsername();
+                displayEmail = lecturers.get(0).getEmail();
             }
         } else if ("ADMIN".equals(role)) {
             Optional<Admin> adminOpt = adminRepository.findByEmail(username)
@@ -103,10 +103,9 @@ public class ProfileController {
                     isUpdated = true;
                 }
             } else if ("LECTURER".equals(role)) {
-                Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(authName)
-                        .or(() -> lecturerRepository.findByUsername(authName));
-                if (lecturerOpt.isPresent()) {
-                    Lecturer lecturer = lecturerOpt.get();
+                java.util.List<Lecturer> lecturers = com.capstone.adproject.service.CourseScopeService
+                        .resolveLecturersByIdentity(lecturerRepository, authName);
+                for (Lecturer lecturer : lecturers) {
                     lecturer.setUsername(newUsername);
                     lecturerRepository.save(lecturer);
                     isUpdated = true;

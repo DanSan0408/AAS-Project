@@ -298,10 +298,17 @@ public class AssessmentCommentService {
     // Use submitLecturerComment method instead for supervisor comments
     
     public Map<String, Object> getCompiledCommentsForStudent(Student student) {
+        return getCompiledCommentsForStudent(student, null);
+    }
+
+    public Map<String, Object> getCompiledCommentsForStudent(Student student, Long courseId) {
     List<AssessmentComment> allComments = commentRepository
         .findByEvaluatedStudent(student)
         .stream()
         .filter(AssessmentComment::isApproved)
+        .filter(c -> courseId == null || (c.getAssessment() != null
+                && c.getAssessment().getCourse() != null
+                && courseId.equals(c.getAssessment().getCourse().getId())))
         .collect(Collectors.toList());
     
     System.out.println("===== FETCHING COMMENTS FOR STUDENT =====");

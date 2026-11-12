@@ -1,10 +1,12 @@
 package com.capstone.adproject.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -82,9 +84,9 @@ public class SuperAdminService {
             return;
         }
 
-        Optional<Lecturer> existingLecturer = lecturerRepository.findByEmail(superAdminEmail);
-        if (existingLecturer.isPresent()) {
-            Lecturer lecturer = existingLecturer.get();
+        List<Lecturer> existingLecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, superAdminEmail);
+        if (!existingLecturers.isEmpty()) {
+            Lecturer lecturer = existingLecturers.get(0);
             String roles = lecturer.getRoles() == null ? "" : lecturer.getRoles();
             boolean changed = false;
 
@@ -173,8 +175,20 @@ public class SuperAdminService {
         entityManager.flush();
         entityManager.clear();
 
-        // Delete rubric templates first (has FK to courses)
+        // Delete rubric templates and course-scoped overrides/weightages first (have FK to courses)
         entityManager.createNativeQuery("DELETE FROM `rubric_templates` WHERE course_id = :courseId")
+            .setParameter("courseId", id)
+            .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM `factor_weightages` WHERE course_id = :courseId")
+            .setParameter("courseId", id)
+            .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM `student_result_overrides` WHERE course_id = :courseId")
+            .setParameter("courseId", id)
+            .executeUpdate();
+
+        entityManager.createNativeQuery("DELETE FROM `factor_override_history` WHERE course_id = :courseId")
             .setParameter("courseId", id)
             .executeUpdate();
 
@@ -219,23 +233,26 @@ public class SuperAdminService {
     }
 
     public List<Course> getManagedCoursesForAdminEmail(String email) {
-        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmail(email);
-        if (lecturerOpt.isEmpty()) {
+        List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, email);
+        if (lecturers.isEmpty()) {
             return List.of();
         }
 
-        Lecturer lecturer = lecturerOpt.get();
-        List<Course> assigned = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())
-                .stream()
-                .map(AdminCourseAssignment::getCourse)
-                .filter(c -> c != null)
-                .collect(Collectors.toList());
+        Set<Course> result = new java.util.LinkedHashSet<>();
+        for (Lecturer lecturer : lecturers) {
+            List<Course> assigned = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())
+                    .stream()
+                    .map(AdminCourseAssignment::getCourse)
+                    .filter(c -> c != null)
+                    .collect(Collectors.toList());
 
-        if (assigned.isEmpty() && lecturer.getCourse() != null) {
-            return List.of(lecturer.getCourse());
+            if (assigned.isEmpty() && lecturer.getCourse() != null) {
+                result.add(lecturer.getCourse());
+            } else {
+                result.addAll(assigned);
+            }
         }
-
-        return assigned;
+        return new ArrayList<>(result);
     }
 
     public Map<Long, List<Course>> getAdminManagedCoursesMap(List<Lecturer> admins) {
@@ -355,15 +372,17 @@ public class SuperAdminService {
         });
 
         // Step 2: Create or find a corresponding `lecturer` record for compatibility.
-        Lecturer adminLecturer = lecturerRepository.findByEmail(email).orElseGet(() -> {
+        List<Lecturer> matchedLecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, email);
+        Lecturer adminLecturer = !matchedLecturers.isEmpty() ? matchedLecturers.get(0) : null;
+        if (adminLecturer == null) {
             Lecturer newLecturer = new Lecturer();
             newLecturer.setEmail(email);
             newLecturer.setUsername(admin.getUsername()); // Sync username
             newLecturer.setPassword(admin.getPassword()); // Sync password
             newLecturer.setIsTempPassword(true); // New lecturers created this way always start with a temp password
             newLecturer.setRoles("ROLE_LECTURER,ROLE_ADMIN"); // Assign both roles
-            return lecturerRepository.save(newLecturer);
-        });
+            adminLecturer = lecturerRepository.save(newLecturer);
+        }
 
         // Ensure roles are correct in the lecturer table
         if (adminLecturer.getRoles() == null || !adminLecturer.getRoles().contains("ROLE_ADMIN")) {
@@ -416,8 +435,13 @@ public class SuperAdminService {
             }
             course.setCreatedBy(inviter);
             courseRepository.save(course);
-        } else if (!course.getCreatedBy().getId().equals(inviter.getId())) {
-            throw new IllegalArgumentException("Only the admin who created this course can invite co-admins.");
+        } else {
+            List<Lecturer> inviterRows = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, inviterIdentity);
+            boolean matchesCreator = inviterRows.stream()
+                    .anyMatch(l -> l.getId() != null && l.getId().equals(course.getCreatedBy().getId()));
+            if (!matchesCreator) {
+                throw new IllegalArgumentException("Only the admin who created this course can invite co-admins.");
+            }
         }
 
         String normalizedEmail = invitedAdminEmail.trim().toLowerCase(Locale.ROOT);
@@ -425,7 +449,11 @@ public class SuperAdminService {
         boolean existsAsAdminAccount = adminRepository.findByEmail(normalizedEmail).isPresent()
                 || superAdminRepository.findByEmail(normalizedEmail).isPresent();
 
-        Lecturer invitedLecturer = lecturerRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+        List<Lecturer> invitedMatches = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, normalizedEmail);
+        Lecturer invitedLecturer = invitedMatches.stream()
+                .filter(l -> l.getRoles() != null && l.getRoles().contains("ROLE_ADMIN"))
+                .findFirst()
+                .orElse(invitedMatches.isEmpty() ? null : invitedMatches.get(0));
         boolean existsAsAdminLecturer = invitedLecturer != null
                 && invitedLecturer.getRoles() != null
                 && invitedLecturer.getRoles().contains("ROLE_ADMIN");
@@ -465,18 +493,14 @@ public class SuperAdminService {
         }
 
         String normalized = identity.trim();
-        Optional<Lecturer> lecturerOpt = lecturerRepository.findByEmailIgnoreCase(normalized)
-                .or(() -> lecturerRepository.findByUsernameIgnoreCase(normalized))
-                .or(() -> lecturerRepository.findByEmail(normalized))
-                .or(() -> lecturerRepository.findByUsername(normalized));
-                
+        List<Lecturer> matched = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, normalized);
+        Optional<Lecturer> lecturerOpt = matched.isEmpty() ? Optional.empty() : Optional.of(matched.get(0));
+
         if (lecturerOpt.isEmpty()) {
             try {
                 ensureSuperAdminAssignable(normalized);
-                return lecturerRepository.findByEmailIgnoreCase(normalized)
-                        .or(() -> lecturerRepository.findByUsernameIgnoreCase(normalized))
-                        .or(() -> lecturerRepository.findByEmail(normalized))
-                        .or(() -> lecturerRepository.findByUsername(normalized));
+                List<Lecturer> created = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, normalized);
+                return created.isEmpty() ? Optional.empty() : Optional.of(created.get(0));
             } catch (Exception e) {
                 // Not a super admin or missing from super admin table, ignore
             }

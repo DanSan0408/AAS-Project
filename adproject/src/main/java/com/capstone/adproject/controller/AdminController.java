@@ -214,6 +214,16 @@ public class AdminController {
                 && courseScopeService.isActiveCourseId(assessment.getCourse().getId());
     }
 
+    private boolean commentBelongsToAssessment(Long commentId, Long assessmentId) {
+        if (commentId == null || assessmentId == null) {
+            return false;
+        }
+        return assessmentCommentService.getCommentById(commentId)
+                .map(comment -> comment.getAssessment() != null
+                        && assessmentId.equals(comment.getAssessment().getId()))
+                .orElse(false);
+    }
+
     @PostMapping("/switch-course")
     public String switchCourse(
             @RequestParam("courseId") Long courseId,
@@ -230,7 +240,80 @@ public class AdminController {
 
         redirectAttributes.addFlashAttribute("successMessage", "Active course switched successfully.");
 
-        return safeRedirect(request, "/admin/home");
+        return resolvePostSwitchRedirect(request, "/admin/home");
+    }
+
+    private String resolvePostSwitchRedirect(HttpServletRequest request, String fallbackPath) {
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isBlank()) {
+            return "redirect:" + fallbackPath;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            String host = uri.getHost();
+            if (host != null && !host.equalsIgnoreCase(request.getServerName())) {
+                return "redirect:" + fallbackPath;
+            }
+            String path = uri.getRawPath();
+            if (path == null || !path.startsWith("/") || path.startsWith("//")) {
+                return "redirect:" + fallbackPath;
+            }
+            if (path.contains("/admin/switch-course")) {
+                return "redirect:" + fallbackPath;
+            }
+
+            // Strip course-specific resource IDs so course switches never land on another course's record
+            if (path.matches("^/rubrics/view/\\d+.*")
+                    || path.matches("^/rubrics/edit/\\d+.*")
+                    || path.matches("^/rubrics/assessment/edit/\\d+.*")
+                    || path.matches("^/rubrics/edit-assessment/\\d+.*")) {
+                return "redirect:/rubrics/manage";
+            }
+            if (path.matches("^/rubrics/templates/edit(?:-full)?/\\d+.*")) {
+                return "redirect:/rubrics/templates";
+            }
+            if (path.matches("^/admin/progress-tracking/\\d+.*") || path.matches("^/admin/submissions/\\d+.*")) {
+                return "redirect:/admin/progress-tracking";
+            }
+            if (path.matches("^/admin/data-views/assessment/\\d+.*")) {
+                return "redirect:/admin/data-views";
+            }
+            if (path.matches("^/admin/edit-student/\\d+.*")) {
+                return "redirect:/admin/manage-students";
+            }
+            if (path.matches("^/admin/edit-lecturer/\\d+.*")) {
+                return "redirect:/admin/manage-lecturers";
+            }
+            if (path.matches("^/admin/group/edit/\\d+.*")) {
+                return "redirect:/admin/group-assignment";
+            }
+            if (path.matches("^/admin/(?:lecturer|student)-assignments/\\d+.*")
+                    || path.matches("^/admin/assessment/assign/\\d+.*")
+                    || path.matches("^/admin/assessment/\\d+/submission-config(?:uration)?.*")
+                    || path.matches("^/admin/comment-config/\\d+.*")) {
+                return "redirect:/rubrics/manage";
+            }
+            if (path.matches("^/admin/courses/edit/\\d+.*")) {
+                return "redirect:/admin/manage-courses";
+            }
+            if (path.matches("^/admin/comments/view/assessment/\\d+.*")) {
+                return "redirect:/admin/progress-tracking?tab=comments";
+            }
+            if (path.matches("^/deadlines/edit/\\d+.*")) {
+                return "redirect:/admin/home";
+            }
+
+            if (path.startsWith("/admin/data-views/overall")
+                    || path.startsWith("/admin/data-views/factors")
+                    || path.startsWith("/admin/data-views/edit-overrides")) {
+                return "redirect:" + path;
+            }
+
+            String query = uri.getRawQuery();
+            return "redirect:" + path + (query != null && !query.isBlank() ? "?" + query : "");
+        } catch (Exception e) {
+            return "redirect:" + fallbackPath;
+        }
     }
 
     private String safeRedirect(HttpServletRequest request, String fallbackPath) {
@@ -482,7 +565,7 @@ public class AdminController {
         Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
         boolean isAjax = isAjaxRequest(request);
 
-        if (assessment == null || !ownsAssessment(assessment)) {
+        if (assessment == null || !ownsAssessment(assessment) || !commentBelongsToAssessment(commentId, assessmentId)) {
             if (isAjax) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
             }
@@ -518,7 +601,7 @@ public class AdminController {
         Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
         boolean isAjax = isAjaxRequest(request);
 
-        if (assessment == null || !ownsAssessment(assessment)) {
+        if (assessment == null || !ownsAssessment(assessment) || !commentBelongsToAssessment(commentId, assessmentId)) {
             if (isAjax) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
             }
@@ -554,7 +637,7 @@ public class AdminController {
         Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
         boolean isAjax = isAjaxRequest(request);
 
-        if (assessment == null || !ownsAssessment(assessment)) {
+        if (assessment == null || !ownsAssessment(assessment) || !commentBelongsToAssessment(commentId, assessmentId)) {
             if (isAjax) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("success", false, "message", "Unauthorized access."));
             }
@@ -627,11 +710,18 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "No comments were selected for bulk action.");
             return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
         }
+        List<Long> authorizedCommentIds = commentIds.stream()
+                .filter(id -> commentBelongsToAssessment(id, assessmentId))
+                .collect(Collectors.toList());
+        if (authorizedCommentIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "No authorized comments were selected for bulk action.");
+            return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
+        }
         if ("approve".equalsIgnoreCase(action)) {
-            int count = assessmentCommentService.bulkApproveComments(commentIds, getLoggedInUsername());
+            int count = assessmentCommentService.bulkApproveComments(authorizedCommentIds, getLoggedInUsername());
             redirectAttributes.addFlashAttribute("successMessage", "Approved " + count + " selected comment(s).");
         } else if ("reject".equalsIgnoreCase(action)) {
-            int count = assessmentCommentService.bulkRejectComments(commentIds, getLoggedInUsername());
+            int count = assessmentCommentService.bulkRejectComments(authorizedCommentIds, getLoggedInUsername());
             redirectAttributes.addFlashAttribute("successMessage", "Rejected " + count + " selected comment(s).");
         }
         return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=" + tab + "&filter=" + filter;
@@ -839,6 +929,7 @@ public class AdminController {
         model.addAttribute("assessment", assessment);
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("allStudents", allStudents);
+        model.addAttribute("studentGroupMap", adminService.getStudentGroupMapForActiveCourse(allStudents));
         model.addAttribute("allLecturers", allLecturers);
         model.addAttribute("groupLecturerMap", groupLecturerMap);
         model.addAttribute("rubricLecturerMap", rubricLecturerMap);
@@ -889,6 +980,7 @@ public class AdminController {
 
         model.addAttribute("assessment", assessment);
         model.addAttribute("allStudents", allStudents);
+        model.addAttribute("studentGroupMap", adminService.getStudentGroupMapForActiveCourse(allStudents));
         model.addAttribute("selfAssignedStudentIds", selfAssignedStudentIds);
         model.addAttribute("peerAssignedStudentIds", peerAssignedStudentIds);
         model.addAttribute("groupAssignedStudentIds", groupAssignedStudentIds);
@@ -1221,6 +1313,7 @@ public class AdminController {
         model.addAttribute("availableLecturers", managedLecturers);
         model.addAttribute("allGroups", managedGroups);
         model.addAttribute("allStudents", managedStudents);
+        model.addAttribute("studentGroupMap", adminService.getStudentGroupMapForActiveCourse(managedStudents));
 
         if (!model.containsAttribute("randomizationInput")) {
             model.addAttribute("randomizationInput", new RandomizationInputDto());
@@ -1970,6 +2063,24 @@ public class AdminController {
             if (hasUnauthorizedStudents) {
                 redirectAttributes.addFlashAttribute("error",
                         "Security validation failed: Cannot assign students from another admin's course.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
+
+        if (groupToCreate.getAcademicSupervisorId() != null) {
+            Optional<Lecturer> lecturerOpt = adminService.findLecturerById(groupToCreate.getAcademicSupervisorId());
+            if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Security validation failed: Academic supervisor is outside your active course.");
+                return "redirect:/admin/group-assignment";
+            }
+        }
+
+        if (groupToCreate.getIndustrialSupervisorId() != null) {
+            Optional<Lecturer> lecturerOpt = adminService.findLecturerById(groupToCreate.getIndustrialSupervisorId());
+            if (lecturerOpt.isEmpty() || !ownsLecturer(lecturerOpt.get())) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Security validation failed: Industrial supervisor is outside your active course.");
                 return "redirect:/admin/group-assignment";
             }
         }

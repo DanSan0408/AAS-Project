@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +20,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.capstone.adproject.dto.AssessmentDataDto;
+import com.capstone.adproject.dto.FactorDetailsDto;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.Course;
+import com.capstone.adproject.model.Group;
+import com.capstone.adproject.model.Mark;
+import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
 import com.capstone.adproject.repositories.FactorWeightageRepository;
@@ -108,5 +114,61 @@ class CalculateServiceTest {
         assertEquals(3L, result.getStudentDataList().get(2).getStudent().getId());
         assertEquals(1L, result.getStudentDataList().get(3).getStudent().getId());
         assertEquals(4L, result.getStudentDataList().get(4).getStudent().getId());
+    }
+
+    @Test
+    void testGetFactorDetailsForStudent_IgnoresPeerMarksFromOtherCourses() {
+        Course courseA = new Course();
+        courseA.setId(1L);
+        courseA.setCourseCode("CSA101");
+
+        Course courseB = new Course();
+        courseB.setId(2L);
+        courseB.setCourseCode("CSB202");
+
+        Group groupA = new Group();
+        groupA.setId(10L);
+        groupA.setCourse(courseA);
+
+        Student evaluator = new Student();
+        evaluator.setId(9L);
+        evaluator.setCourse(courseB);
+
+        Student student = new Student();
+        student.setId(10L);
+        student.setUsername("alice");
+        student.setCourse(courseA);
+        student.setGroup(groupA);
+        groupA.setStudents(List.of(student));
+
+        Assessment peerB = new Assessment();
+        peerB.setId(200L);
+        peerB.setTitle("Course B Peer Assessment");
+        peerB.setCourse(courseB);
+
+        Rubric rubricB = new Rubric();
+        rubricB.setId(22L);
+        rubricB.setAssessment(peerB);
+        rubricB.setMarks(new BigDecimal("10"));
+        rubricB.setAssessmentTypes("Peer Assessment");
+        peerB.setRubrics(List.of(rubricB));
+
+        Mark peerMarkB = new Mark();
+        peerMarkB.setEvaluatorStudent(evaluator);
+        peerMarkB.setEvaluatedStudent(student);
+        peerMarkB.setAssessment(peerB);
+        peerMarkB.setRubric(rubricB);
+        peerMarkB.setMarkValue(8.0);
+        peerMarkB.setAssessmentType("Peer Assessment");
+
+        when(overrideRepository.findByStudent(student)).thenReturn(Optional.empty());
+        when(factorWeightageRepository.findByCourse(courseA)).thenReturn(Collections.emptyList());
+        when(markRepository.findByEvaluatedStudent(student)).thenReturn(List.of(peerMarkB));
+
+        FactorDetailsDto details = calculateService.getFactorDetailsForStudent(student);
+        assertEquals(0.0, details.getFinalCalculatedFactor(), 0.001,
+                "Peer marks from Course B must never contribute to Course A factor calculation");
+        assertEquals(0, details.getBreakdowns().size(),
+                "Breakdowns for Course A must exclude Course B assessments");
     }
 }

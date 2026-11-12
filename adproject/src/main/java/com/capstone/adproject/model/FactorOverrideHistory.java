@@ -23,6 +23,10 @@ public class FactorOverrideHistory {
     @JoinColumn(name = "student_id", foreignKey = @ForeignKey(name = "fk_factor_override_history_student"))
     private Student student;
 
+    @ManyToOne
+    @JoinColumn(name = "course_id", foreignKey = @ForeignKey(name = "fk_factor_override_history_course"))
+    private Course course;
+
     private Double oldFactor;
     private Double newFactor;
     
@@ -57,6 +61,9 @@ public class FactorOverrideHistory {
     
     public Student getStudent() { return student; }
     public void setStudent(Student student) { this.student = student; }
+
+    public Course getCourse() { return course; }
+    public void setCourse(Course course) { this.course = course; }
     
     public Double getOldFactor() { return oldFactor; }
     public void setOldFactor(Double oldFactor) { this.oldFactor = oldFactor; }
