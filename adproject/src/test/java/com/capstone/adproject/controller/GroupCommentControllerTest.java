@@ -183,7 +183,7 @@ class GroupCommentControllerTest {
         when(lecturerRepository.findByEmail("lecturer@domain.com")).thenReturn(Optional.of(lecturer));
         when(lecturerGroupAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment)).thenReturn(Collections.emptyList());
         when(lecturerRubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment)).thenReturn(false);
-        when(groupRepository.findAll()).thenReturn(List.of(group));
+        when(groupRepository.findByCourseId(10L)).thenReturn(List.of(group));
 
         AiTeamDynamicsDtos.AuditResponse mockAudit = new AiTeamDynamicsDtos.AuditResponse(
                 20L,
@@ -213,16 +213,86 @@ class GroupCommentControllerTest {
         Lecturer lecturer = new Lecturer();
         lecturer.setId(5L);
         lecturer.setEmail("lecturer@domain.com");
+        lecturer.setCourse(course);
 
         when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
         when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
         when(lecturerRepository.findByEmail("lecturer@domain.com")).thenReturn(Optional.of(lecturer));
         when(lecturerGroupAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment)).thenReturn(Collections.emptyList());
         when(lecturerRubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment)).thenReturn(false);
-        when(groupRepository.findAll()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/lecturer/comments/view/assessment/100/group/20/ai-audit").principal(auth))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Unauthorized assessment access."));
+    }
+
+    @Test
+    void testViewComments_Admin_CrossCourse_Redirects() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "admin@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(99L));
+
+        mockMvc.perform(get("/admin/comments/view/assessment/100/group/20").principal(auth))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void testSelectGroup_Admin_ExcludesGroupsFromOtherCourses() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "admin@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        Course otherCourse = new Course();
+        otherCourse.setId(20L);
+        otherCourse.setCourseName("Other Course");
+
+        Group otherGroup = new Group();
+        otherGroup.setId(99L);
+        otherGroup.setGroupName("Cross-Course Beta");
+        otherGroup.setCourse(otherCourse);
+        otherGroup.setStudents(Collections.emptyList());
+
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(10L));
+        when(groupRepository.findByCourseId(10L)).thenReturn(List.of(group));
+
+        mockMvc.perform(get("/admin/comments/view/assessment/100/groups").principal(auth))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("groups", org.hamcrest.Matchers.hasSize(1)));
+    }
+
+    @Test
+    void testSelectAssessment_MultiCourseLecturer_OnlyShowsActiveCourseAssessments() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "multi@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_LECTURER")));
+
+        Course otherCourse = new Course();
+        otherCourse.setId(20L);
+        otherCourse.setCourseName("Course 20");
+
+        Assessment otherAssessment = new Assessment();
+        otherAssessment.setId(200L);
+        otherAssessment.setTitle("Course 20 Exam");
+        otherAssessment.setCourse(otherCourse);
+
+        Lecturer lecturerCourse10 = new Lecturer();
+        lecturerCourse10.setId(5L);
+        lecturerCourse10.setEmail("multi@domain.com");
+        lecturerCourse10.setCourse(course);
+
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(lecturerRepository.findAllByEmailIgnoreCase("multi@domain.com")).thenReturn(List.of(lecturerCourse10));
+        when(lecturerGroupAssignmentRepository.findAssessmentsByLecturer(lecturerCourse10))
+                .thenReturn(List.of(assessment, otherAssessment));
+        when(lecturerRubricAssignmentRepository.findAssessmentsByLecturer(lecturerCourse10))
+                .thenReturn(Collections.emptyList());
+        when(groupRepository.findByCourseId(10L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/lecturer/comments/view/assessments").principal(auth))
+                .andExpect(status().isOk())
+                .andExpect(view().name("lecturer_comment_select_assessment"))
+                .andExpect(model().attribute("assessments", org.hamcrest.Matchers.hasSize(1)));
     }
 }

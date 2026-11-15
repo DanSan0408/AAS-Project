@@ -15,7 +15,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.Deadline;
@@ -25,7 +28,11 @@ import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.DeadlineService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 @RequestMapping("/lecturer")
@@ -37,38 +44,111 @@ public class LecturerController {
     private final LecturerGroupAssignmentRepository assignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final LecturerStudentAssignmentRepository studentAssignmentRepository;
+    private final CourseScopeService courseScopeService;
+
+    public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService,
+            LecturerRepository lecturerRepository,
+            LecturerGroupAssignmentRepository assignmentRepository,
+            LecturerRubricAssignmentRepository rubricAssignmentRepository,
+            LecturerStudentAssignmentRepository studentAssignmentRepository) {
+        this(assessmentService, deadlineService, lecturerRepository, assignmentRepository,
+                rubricAssignmentRepository, studentAssignmentRepository, null);
+    }
 
     @Autowired
     public LecturerController(AssessmentService assessmentService, DeadlineService deadlineService,
             LecturerRepository lecturerRepository,
             LecturerGroupAssignmentRepository assignmentRepository,
             LecturerRubricAssignmentRepository rubricAssignmentRepository,
-            LecturerStudentAssignmentRepository studentAssignmentRepository) {
+            LecturerStudentAssignmentRepository studentAssignmentRepository,
+            @Autowired(required = false) CourseScopeService courseScopeService) {
         this.assessmentService = assessmentService;
         this.deadlineService = deadlineService;
         this.lecturerRepository = lecturerRepository;
         this.assignmentRepository = assignmentRepository;
         this.rubricAssignmentRepository = rubricAssignmentRepository;
         this.studentAssignmentRepository = studentAssignmentRepository;
+        this.courseScopeService = courseScopeService;
+    }
+
+    private Long resolveActiveCourseId() {
+        if (courseScopeService == null) {
+            return null;
+        }
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        return activeCourseId != null && activeCourseId > 0 ? activeCourseId : null;
+    }
+
+    @PostMapping("/switch-course")
+    public String switchCourse(
+            @RequestParam("courseId") Long courseId,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        if (courseScopeService == null || !courseScopeService.setActiveCourseIdForCurrentUser(courseId)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to switch to that course.");
+            return "redirect:/lecturer/home";
+        }
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY, courseId);
+        redirectAttributes.addFlashAttribute("successMessage", "Active course switched successfully.");
+        return resolvePostSwitchRedirect(request, "/lecturer/home");
+    }
+
+    private String resolvePostSwitchRedirect(HttpServletRequest request, String fallbackPath) {
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isBlank()) {
+            return "redirect:" + fallbackPath;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            String host = uri.getHost();
+            if (host != null && !host.equalsIgnoreCase(request.getServerName())) {
+                return "redirect:" + fallbackPath;
+            }
+            String path = uri.getRawPath();
+            if (path == null || !path.startsWith("/") || path.startsWith("//") || path.contains("/lecturer/switch-course")) {
+                return "redirect:" + fallbackPath;
+            }
+            if (path.matches("^/lecturer/assessments/\\d+.*") || path.matches("^/lecturer/assessments/submissions/\\d+.*")) {
+                return "redirect:/lecturer/assessments";
+            }
+            if (path.matches("^/lecturer/comments/view/assessment/\\d+.*")) {
+                return "redirect:/lecturer/comments/view/assessments";
+            }
+            String query = uri.getRawQuery();
+            return "redirect:" + path + (query != null && !query.isBlank() ? "?" + query : "");
+        } catch (Exception e) {
+            return "redirect:" + fallbackPath;
+        }
     }
     
     @GetMapping("/home")
     public String lecturerHome(Model model, Authentication authentication) {
         
-        Lecturer lecturer = lecturerRepository.findByEmail(authentication.getName())
-            .or(() -> lecturerRepository.findByUsername(authentication.getName()))
+        Long activeCourseId = resolveActiveCourseId();
+        Lecturer lecturer = CourseScopeService
+            .resolveLecturerForCourse(lecturerRepository, authentication.getName(), activeCourseId)
             .orElse(null);
             
-        Long courseId = lecturer != null && lecturer.getCourse() != null ? lecturer.getCourse().getId() : null;
+        Long courseId = activeCourseId != null
+            ? activeCourseId
+            : (lecturer != null && lecturer.getCourse() != null ? lecturer.getCourse().getId() : null);
 
         Set<Assessment> combinedAssessments = new HashSet<>();
         Map<Long, String> assessmentLaunchModes = new HashMap<>();
         Map<Long, List<String>> assessmentTargets = new HashMap<>();
         
         if (lecturer != null) {
-            List<Assessment> groupAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer);
-            List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer);
-            List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer);
+            List<Assessment> groupAssessments = assignmentRepository.findAssessmentsByLecturer(lecturer).stream()
+                .filter(a -> courseId == null || (a.getCourse() != null && courseId.equals(a.getCourse().getId())))
+                .collect(Collectors.toList());
+            List<Assessment> rubricAssessments = rubricAssignmentRepository.findAssessmentsByLecturer(lecturer).stream()
+                .filter(a -> courseId == null || (a.getCourse() != null && courseId.equals(a.getCourse().getId())))
+                .collect(Collectors.toList());
+            List<Assessment> studentAssessments = studentAssignmentRepository.findAssessmentsByLecturer(lecturer).stream()
+                .filter(a -> courseId == null || (a.getCourse() != null && courseId.equals(a.getCourse().getId())))
+                .collect(Collectors.toList());
             
             combinedAssessments.addAll(groupAssessments);
             combinedAssessments.addAll(rubricAssessments);

@@ -28,12 +28,15 @@ import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerStudentAssignmentRepository;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.DeadlineService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -59,6 +62,9 @@ class LecturerControllerTest {
 
     @Mock
     private LecturerStudentAssignmentRepository studentAssignmentRepository;
+
+    @Mock
+    private CourseScopeService courseScopeService;
 
     @InjectMocks
     private LecturerController lecturerController;
@@ -119,5 +125,52 @@ class LecturerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("lecturer_home"))
                 .andExpect(model().attributeExists("pendingTasks", "allAssessments", "assessmentTargets"));
+    }
+
+    @Test
+    void testLecturerHome_MultiCourseLecturer_ResolvesActiveCourseWithoutSingleRowCrash() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "multi@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_LECTURER")));
+
+        Course courseB = new Course();
+        courseB.setId(20L);
+        courseB.setCourseName("Course 20");
+
+        Lecturer lecturerCourseB = new Lecturer();
+        lecturerCourseB.setId(6L);
+        lecturerCourseB.setEmail("multi@domain.com");
+        lecturerCourseB.setCourse(courseB);
+
+        Assessment assessmentB = new Assessment();
+        assessmentB.setId(200L);
+        assessmentB.setTitle("Course 20 Project");
+        assessmentB.setCourse(courseB);
+
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(20L);
+        when(lecturerRepository.findAllByEmailIgnoreCase("multi@domain.com"))
+                .thenReturn(List.of(lecturer, lecturerCourseB));
+        when(assignmentRepository.findAssessmentsByLecturer(lecturerCourseB))
+                .thenReturn(List.of(assessment, assessmentB));
+        when(rubricAssignmentRepository.findAssessmentsByLecturer(lecturerCourseB))
+                .thenReturn(Collections.emptyList());
+        when(studentAssignmentRepository.findAssessmentsByLecturer(lecturerCourseB))
+                .thenReturn(Collections.emptyList());
+        when(deadlineService.getDeadlinesByCourseId(20L)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/lecturer/home").principal(auth))
+                .andExpect(status().isOk())
+                .andExpect(view().name("lecturer_home"))
+                .andExpect(model().attribute("pendingTasks", org.hamcrest.Matchers.hasSize(1)));
+    }
+
+    @Test
+    void testSwitchCourse_FromResourceUrl_RedirectsToAssessmentsList() throws Exception {
+        when(courseScopeService.setActiveCourseIdForCurrentUser(20L)).thenReturn(true);
+
+        mockMvc.perform(post("/lecturer/switch-course")
+                .param("courseId", "20")
+                .header("Referer", "http://localhost:8080/lecturer/assessments/100/select-group"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/lecturer/assessments"));
     }
 }

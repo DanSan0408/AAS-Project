@@ -514,7 +514,59 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void deleteStudentById(Long id) {
         Student student = studentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Student not found"));
-        
+
+        Optional<Long> activeCourseId = getActiveCourseId();
+        if (activeCourseId.isPresent()) {
+            Long courseId = activeCourseId.get();
+            if (!belongsToCourse(student, courseId)) {
+                throw new RuntimeException("Unauthorized: Student does not belong to the active course");
+            }
+
+            List<StudentCourseAssignment> enrollments = studentCourseAssignmentRepository.findByStudentId(id);
+            boolean hasOtherEnrolledCourse = enrollments.stream()
+                .anyMatch(sca -> sca.getCourse() != null && sca.getCourse().getId() != null
+                        && !courseId.equals(sca.getCourse().getId()));
+            boolean hasOtherPrimaryCourse = student.getCourse() != null && student.getCourse().getId() != null
+                    && !courseId.equals(student.getCourse().getId());
+            boolean hasOtherGroupCourse = student.getGroup() != null && student.getGroup().getCourse() != null
+                    && student.getGroup().getCourse().getId() != null
+                    && !courseId.equals(student.getGroup().getCourse().getId());
+
+            if (hasOtherEnrolledCourse || hasOtherPrimaryCourse || hasOtherGroupCourse) {
+                removeStudentFromGroupInCourse(student, courseId);
+
+                studentRepository.deleteCommentsByStudentIdAndCourseId(id, courseId);
+                studentRepository.deleteMarksReceivedByStudentAndCourseId(id, courseId);
+                studentRepository.deleteMarksGivenByStudentAndCourseId(id, courseId);
+                studentRepository.deleteLecturerAssignmentsByStudentIdAndCourseId(id, courseId);
+                studentRepository.deleteAssessmentAssignmentsByStudentIdAndCourseId(id, courseId);
+                studentRepository.deleteOverridesByStudentAndCourseId(id, courseId);
+                studentRepository.deleteFactorHistoryByStudentAndCourseId(id, courseId);
+
+                studentCourseAssignmentRepository.deleteByStudentIdAndCourseId(id, courseId);
+
+                if (student.getCourse() != null && courseId.equals(student.getCourse().getId())) {
+                    List<StudentCourseAssignment> remaining = studentCourseAssignmentRepository.findByStudentId(id);
+                    StudentCourseAssignment nextEnrollment = remaining.stream()
+                        .filter(sca -> sca.getCourse() != null && sca.getCourse().getId() != null
+                                && !courseId.equals(sca.getCourse().getId()))
+                        .findFirst()
+                        .orElse(null);
+                    if (nextEnrollment != null) {
+                        student.setCourse(nextEnrollment.getCourse());
+                        if (student.getGroup() == null && nextEnrollment.getGroup() != null) {
+                            student.setGroup(nextEnrollment.getGroup());
+                        }
+                    } else if (student.getGroup() != null && student.getGroup().getCourse() != null
+                            && !courseId.equals(student.getGroup().getCourse().getId())) {
+                        student.setCourse(student.getGroup().getCourse());
+                    }
+                    studentRepository.save(student);
+                }
+                return;
+            }
+        }
+
         if (student.getGroup() != null) {
             removeStudentFromGroup(id);
         }
@@ -526,30 +578,6 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         studentRepository.deleteAssessmentAssignmentsByStudentId(id);
         studentRepository.deleteOverridesByStudent(id);
 
-        Optional<Long> activeCourseId = getActiveCourseId();
-        if (activeCourseId.isPresent()
-                && studentCourseAssignmentRepository.existsByStudentIdAndCourseId(id, activeCourseId.get())
-                && studentCourseAssignmentRepository.countByStudentId(id) > 1) {
-
-            if (student.getGroup() != null
-                    && student.getGroup().getCourse() != null
-                    && activeCourseId.get().equals(student.getGroup().getCourse().getId())) {
-                removeStudentFromGroup(id);
-            }
-
-            studentCourseAssignmentRepository.deleteByStudentIdAndCourseId(id, activeCourseId.get());
-
-            if (student.getCourse() != null && activeCourseId.get().equals(student.getCourse().getId())) {
-                studentCourseAssignmentRepository.findByStudentId(id).stream()
-                    .map(StudentCourseAssignment::getCourse)
-                    .filter(c -> c != null && c.getId() != null)
-                    .findFirst()
-                    .ifPresent(student::setCourse);
-                studentRepository.save(student);
-            }
-            return;
-        }
-
         studentCourseAssignmentRepository.deleteByStudentId(id);
         studentRepository.delete(student);
     }
@@ -558,6 +586,12 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void deleteLecturerById(Long id) {
         Lecturer lecturer = lecturerRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+
+        Optional<Long> activeCourseId = getActiveCourseId();
+        if (activeCourseId.isPresent() && (lecturer.getCourse() == null
+                || !activeCourseId.get().equals(lecturer.getCourse().getId()))) {
+            throw new RuntimeException("Unauthorized: Lecturer does not belong to the active course");
+        }
 
         lecturerRepository.unlinkFromGroups(id);
 
@@ -592,19 +626,75 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public List<Student> getStudentsWithoutGroup() {
         return getActiveCourseId()
             .map(courseId -> {
-                ensureLegacyStudentEnrollmentsForCourse(courseId);
-                List<Student> directCourseStudents = studentRepository.findByCourseIdAndGroupIsNull(courseId);
-                List<Student> enrolledStudents = studentCourseAssignmentRepository.findStudentsWithoutGroupByCourseId(courseId);
-                List<Student> groupCourseStudents = studentRepository.findByGroupCourseIdWithGroupFetched(courseId).stream()
-                    .filter(student -> student.getGroup() == null)
+                List<Student> courseStudents = getAllStudents();
+                return courseStudents.stream()
+                    .filter(student -> resolveStudentGroupForCourse(student, courseId) == null)
                     .collect(Collectors.toList());
-                return mergeStudentsById(directCourseStudents, mergeStudentsById(enrolledStudents, groupCourseStudents));
             })
             .orElse(List.of());
     }
     
     public List<Student> getStudentsByGroup(Group group) {
-        return sortStudentsAlphabetically(studentRepository.findByGroup(group)); 
+        if (group == null) {
+            return List.of();
+        }
+        Long groupCourseId = group.getCourse() != null ? group.getCourse().getId() : getActiveCourseId().orElse(null);
+        List<Student> direct = studentRepository.findByGroup(group);
+        if (groupCourseId == null) {
+            return sortStudentsAlphabetically(direct);
+        }
+        List<Student> assignedViaCourse = studentCourseAssignmentRepository
+            .findByCourseIdAndGroupId(groupCourseId, group.getId())
+            .stream()
+            .map(StudentCourseAssignment::getStudent)
+            .filter(s -> s != null)
+            .toList();
+        return mergeStudentsById(direct, assignedViaCourse);
+    }
+
+    public Group resolveStudentGroupForActiveCourse(Student student) {
+        return getActiveCourseId()
+            .map(courseId -> resolveStudentGroupForCourse(student, courseId))
+            .orElse(student != null ? student.getGroup() : null);
+    }
+
+    public Group resolveStudentGroupForCourse(Student student, Long courseId) {
+        if (student == null || courseId == null || student.getId() == null) {
+            return null;
+        }
+        Optional<StudentCourseAssignment> assignmentOpt = studentCourseAssignmentRepository
+            .findByStudentIdAndCourseId(student.getId(), courseId);
+        if (assignmentOpt.isPresent() && assignmentOpt.get().getGroup() != null) {
+            Group assignedGroup = assignmentOpt.get().getGroup();
+            if (assignedGroup.getCourse() != null && courseId.equals(assignedGroup.getCourse().getId())) {
+                return assignedGroup;
+            }
+        }
+        Group fallback = student.getGroup();
+        if (fallback != null && fallback.getCourse() != null && courseId.equals(fallback.getCourse().getId())) {
+            return fallback;
+        }
+        return null;
+    }
+
+    public java.util.Map<Long, Group> getStudentGroupMapForActiveCourse(List<Student> students) {
+        java.util.Map<Long, Group> groupMap = new LinkedHashMap<>();
+        if (students == null) {
+            return groupMap;
+        }
+        Optional<Long> activeCourseId = getActiveCourseId();
+        for (Student student : students) {
+            if (student == null || student.getId() == null) {
+                continue;
+            }
+            Group resolved = activeCourseId.isPresent()
+                ? resolveStudentGroupForCourse(student, activeCourseId.get())
+                : student.getGroup();
+            if (resolved != null) {
+                groupMap.put(student.getId(), resolved);
+            }
+        }
+        return groupMap;
     }
     
     public List<Group> getAllGroups() {
@@ -617,43 +707,90 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         return groupRepository.findById(id);
     }
 
+    private Optional<Lecturer> findLecturerInCourse(Long lecturerId, Long courseId) {
+        if (lecturerId == null || courseId == null) {
+            return Optional.empty();
+        }
+        return lecturerRepository.findById(lecturerId)
+            .filter(l -> l.getCourse() != null && courseId.equals(l.getCourse().getId()));
+    }
+
+    private void assignStudentToCourseGroup(Student student, Group targetGroup, Course course) {
+        if (student == null || targetGroup == null || course == null || course.getId() == null) {
+            return;
+        }
+        ensureStudentEnrollment(student, course);
+        studentCourseAssignmentRepository.findByStudentIdAndCourseId(student.getId(), course.getId())
+            .ifPresent(sca -> {
+                sca.setGroup(targetGroup);
+                studentCourseAssignmentRepository.save(sca);
+            });
+
+        boolean shouldUpdateDirectGroup = student.getGroup() == null
+            || student.getGroup().getCourse() == null
+            || course.getId().equals(student.getGroup().getCourse().getId())
+            || (student.getCourse() != null && course.getId().equals(student.getCourse().getId()));
+        if (shouldUpdateDirectGroup) {
+            student.setGroup(targetGroup);
+        }
+        if (student.getCourse() == null) {
+            student.setCourse(course);
+        }
+    }
+
+    private void removeStudentFromGroupInCourse(Student student, Long courseId) {
+        if (student == null || student.getId() == null || courseId == null) {
+            return;
+        }
+        Group affectedGroup = resolveStudentGroupForCourse(student, courseId);
+        studentCourseAssignmentRepository.findByStudentIdAndCourseId(student.getId(), courseId)
+            .ifPresent(sca -> {
+                if (sca.getGroup() != null) {
+                    sca.setGroup(null);
+                    studentCourseAssignmentRepository.save(sca);
+                }
+            });
+        if (student.getGroup() != null && student.getGroup().getCourse() != null
+                && courseId.equals(student.getGroup().getCourse().getId())) {
+            student.setGroup(null);
+            studentRepository.save(student);
+        }
+        if (affectedGroup != null) {
+            affectedGroup.setGroupSize(getStudentsByGroup(affectedGroup).size());
+            groupRepository.save(affectedGroup);
+        }
+    }
+
     @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
+        Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected."));
+        Long courseId = activeCourse.getId();
+
         Group newGroup = new Group();
         String groupName = dto.getGroupName();
         if (groupName == null || groupName.trim().isEmpty()) {
             groupName = "Random Group " + java.util.UUID.randomUUID().toString().substring(0, 5).toUpperCase();
         }
         newGroup.setGroupName(groupName);
-        resolveCurrentAdminCourse().ifPresent(newGroup::setCourse);
+        newGroup.setCourse(activeCourse);
 
         if (dto.getAcademicSupervisorId() != null) {
-            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(newGroup::setAcademicSupervisor);
+            findLecturerInCourse(dto.getAcademicSupervisorId(), courseId).ifPresent(newGroup::setAcademicSupervisor);
         }
         if (dto.getIndustrialSupervisorId() != null) {
-            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(newGroup::setIndustrialSupervisor);
+            findLecturerInCourse(dto.getIndustrialSupervisorId(), courseId).ifPresent(newGroup::setIndustrialSupervisor);
         }
 
         Group savedGroup = groupRepository.save(newGroup);
 
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
-            List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
-
-            if (newGroup.getCourse() == null) {
-                studentsToAssign.stream()
-                        .map(Student::getCourse)
-                        .filter(c -> c != null)
-                        .findFirst()
-                        .ifPresent(newGroup::setCourse);
-            }
-
-            groupRepository.save(savedGroup);
+            List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds()).stream()
+                .filter(student -> belongsToCourse(student, courseId))
+                .toList();
 
             for (Student student : studentsToAssign) {
-                student.setGroup(savedGroup);
-                if (student.getCourse() == null && savedGroup.getCourse() != null) {
-                    student.setCourse(savedGroup.getCourse());
-                }
+                assignStudentToCourseGroup(student, savedGroup, activeCourse);
                 if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
                     student.setUsername(student.getEmail() != null ? student.getEmail().split("@")[0] : "student" + student.getId());
                 }
@@ -673,44 +810,49 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         Group existingGroup = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
+        Optional<Long> activeCourseId = getActiveCourseId();
+        if (activeCourseId.isPresent() && existingGroup.getCourse() != null
+                && !activeCourseId.get().equals(existingGroup.getCourse().getId())) {
+            throw new RuntimeException("Unauthorized: Group does not belong to the active course");
+        }
+
         if (existingGroup.getCourse() == null) {
             resolveCurrentAdminCourse().ifPresent(existingGroup::setCourse);
         }
+        Course groupCourse = existingGroup.getCourse();
+        Long courseId = groupCourse != null ? groupCourse.getId() : activeCourseId.orElse(null);
 
         existingGroup.setGroupName(dto.getGroupName());
         
-        if (dto.getAcademicSupervisorId() != null) {
-            lecturerRepository.findById(dto.getAcademicSupervisorId()).ifPresent(existingGroup::setAcademicSupervisor);
+        if (dto.getAcademicSupervisorId() != null && courseId != null) {
+            findLecturerInCourse(dto.getAcademicSupervisorId(), courseId)
+                .ifPresent(existingGroup::setAcademicSupervisor);
         } else {
             existingGroup.setAcademicSupervisor(null);
         }
         
-        if (dto.getIndustrialSupervisorId() != null) {
-            lecturerRepository.findById(dto.getIndustrialSupervisorId()).ifPresent(existingGroup::setIndustrialSupervisor);
+        if (dto.getIndustrialSupervisorId() != null && courseId != null) {
+            findLecturerInCourse(dto.getIndustrialSupervisorId(), courseId)
+                .ifPresent(existingGroup::setIndustrialSupervisor);
         } else {
             existingGroup.setIndustrialSupervisor(null);
         }
         
         groupRepository.save(existingGroup);
 
-        if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
+        if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty() && groupCourse != null) {
             List<Student> newStudentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
             
             List<Student> studentsToSave = newStudentsToAssign.stream()
-                .filter(student -> student.getGroup() == null)
-                .peek(student -> {
-                    student.setGroup(existingGroup);
-                    if (student.getCourse() == null && existingGroup.getCourse() != null) {
-                        student.setCourse(existingGroup.getCourse());
-                    }
-                })
+                .filter(student -> belongsToCourse(student, groupCourse.getId()))
+                .filter(student -> resolveStudentGroupForCourse(student, groupCourse.getId()) == null)
+                .peek(student -> assignStudentToCourseGroup(student, existingGroup, groupCourse))
                 .toList();
             
             studentRepository.saveAll(studentsToSave);
         }
         
-        long currentGroupSize = studentRepository.countByGroup(existingGroup);
-        existingGroup.setGroupSize((int) currentGroupSize);
+        existingGroup.setGroupSize(getStudentsByGroup(existingGroup).size());
         groupRepository.save(existingGroup);
     }
     
@@ -718,9 +860,14 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void removeStudentFromGroup(Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+
+        Optional<Long> activeCourseId = getActiveCourseId();
+        if (activeCourseId.isPresent()) {
+            removeStudentFromGroupInCourse(student, activeCourseId.get());
+            return;
+        }
         
         Group group = student.getGroup();
-        
         if (group != null) {
             student.setGroup(null);
             studentRepository.save(student);
@@ -735,6 +882,17 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     public void deleteGroupById(Long groupId) {
         Group groupToDelete = groupRepository.findById(groupId)
             .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+
+        Optional<Long> activeCourseId = getActiveCourseId();
+        if (activeCourseId.isPresent() && groupToDelete.getCourse() != null
+                && !activeCourseId.get().equals(groupToDelete.getCourse().getId())) {
+            throw new RuntimeException("Unauthorized: Group does not belong to the active course");
+        }
+
+        if (groupToDelete.getCourse() != null && groupToDelete.getCourse().getId() != null) {
+            studentCourseAssignmentRepository.unlinkGroupFromCourseAssignments(
+                groupToDelete.getCourse().getId(), groupId);
+        }
         
         List<Student> studentsToUnlink = studentRepository.findByGroup(groupToDelete);
         for (Student student : studentsToUnlink) {
@@ -756,27 +914,13 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
                 List<Student> enrolledStudents = studentCourseAssignmentRepository.findStudentsByCourseId(courseId);
                 List<Student> groupCourseStudents = studentRepository.findByGroupCourseIdWithGroupFetched(courseId);
                 List<Student> groupCourseStudentsNative = studentRepository.findByGroupCourseIdNative(courseId);
-                List<Student> merged = mergeStudentsById(
+                return mergeStudentsById(
                     directCourseStudents,
                     mergeStudentsById(
                         enrolledStudents,
                         mergeStudentsById(groupCourseStudents, groupCourseStudentsNative)
                     )
                 );
-
-                List<Long> visibleGroupIds = merged.stream()
-                    .map(Student::getGroup)
-                    .filter(g -> g != null && g.getId() != null)
-                    .map(Group::getId)
-                    .distinct()
-                    .toList();
-
-                if (!visibleGroupIds.isEmpty()) {
-                    List<Student> groupPeers = studentRepository.findByGroupIdIn(visibleGroupIds);
-                    merged = mergeStudentsById(merged, groupPeers);
-                }
-
-                return merged;
             })
             .orElse(List.of());
     }
@@ -867,7 +1011,10 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         String normalizedEmail = email.trim().toLowerCase();
 
         if ("LECTURER".equalsIgnoreCase(targetRole)) {
-            Optional<Lecturer> existingLecturerOpt = lecturerRepository.findByEmail(normalizedEmail);
+            Optional<Long> activeCourseId = getActiveCourseId();
+            Optional<Lecturer> existingLecturerOpt = activeCourseId.isPresent()
+                ? lecturerRepository.findByCourseIdAndEmailIgnoreCase(activeCourseId.get(), normalizedEmail)
+                : CourseScopeService.resolveLecturersByIdentity(lecturerRepository, normalizedEmail).stream().findFirst();
             Lecturer lecturerToUpdate;
             if (existingLecturerOpt.isPresent()) {
                 lecturerToUpdate = existingLecturerOpt.get();
@@ -888,10 +1035,14 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
 
     public List<Lecturer> searchLecturers(String query) {
-        if (query == null || query.trim().isEmpty()) {
-            return lecturerRepository.findAll();
-        }
-        return lecturerRepository.findByEmailContainingIgnoreCase(query);
+        return getActiveCourseId()
+            .map(courseId -> {
+                if (query == null || query.trim().isEmpty()) {
+                    return lecturerRepository.findByCourseId(courseId);
+                }
+                return lecturerRepository.findByCourseIdAndEmailContainingIgnoreCase(courseId, query.trim());
+            })
+            .orElse(List.of());
     }
     
     @Transactional

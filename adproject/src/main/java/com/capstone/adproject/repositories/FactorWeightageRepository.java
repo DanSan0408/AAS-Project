@@ -11,5 +11,6 @@ import com.capstone.adproject.model.FactorWeightage;
 @Repository
 public interface FactorWeightageRepository extends JpaRepository<FactorWeightage, Long> {
     List<FactorWeightage> findByCourse(Course course);
+    List<FactorWeightage> findByCourseId(Long courseId);
     void deleteByCourse(Course course);
 }

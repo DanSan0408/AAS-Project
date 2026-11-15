@@ -159,6 +159,7 @@ class DeadlineControllerTest {
 
     @Test
     void testUpdateDeadline_Authorized_UpdatesSuccessfully() throws Exception {
+        when(deadlineService.getDeadlineById(500L)).thenReturn(Optional.of(deadline));
         when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
 
         mockMvc.perform(post("/deadlines/update")
@@ -170,6 +171,23 @@ class DeadlineControllerTest {
                 .andExpect(flash().attribute("successMessage", "Deadline updated successfully!"));
 
         verify(deadlineService).save(any(Deadline.class));
+    }
+
+    @Test
+    void testUpdateDeadline_CrossCourseIdWithMissingCourseIdParam_IsRejected() throws Exception {
+        Deadline foreignDeadline = new Deadline();
+        foreignDeadline.setId(500L);
+        foreignDeadline.setCourseId(99L);
+
+        when(deadlineService.getDeadlineById(500L)).thenReturn(Optional.of(foreignDeadline));
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+
+        mockMvc.perform(post("/deadlines/update")
+                .param("id", "500")
+                .param("title", "Hijacked Milestone"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/home"))
+                .andExpect(flash().attribute("errorMessage", "Unauthorized to update this deadline."));
     }
 
     @Test

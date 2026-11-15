@@ -18,26 +18,39 @@ public class AssessmentService {
 
     private final AssessmentRepository assessmentRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CourseScopeService courseScopeService;
+
     public AssessmentService(AssessmentRepository assessmentRepository) {
         this.assessmentRepository = assessmentRepository;
     }
 
     @Transactional(readOnly = true)
     public boolean isAssessmentTitleDuplicate(String title, Long assessmentIdToExclude) {
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        return isAssessmentTitleDuplicate(title, assessmentIdToExclude, activeCourseId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isAssessmentTitleDuplicate(String title, Long assessmentIdToExclude, Long courseId) {
         if (title == null || title.trim().isEmpty()) {
             return false;
         }
-        
+
         String normalizedTitle = title.replaceAll("\\s+", "").toLowerCase();
-        
-        List<Assessment> allAssessments = assessmentRepository.findAll();
-        
-        for (Assessment assessment : allAssessments) {
-            
+
+        List<Assessment> candidateAssessments = courseId != null
+                ? assessmentRepository.findByCourseId(courseId)
+                : assessmentRepository.findAll();
+
+        for (Assessment assessment : candidateAssessments) {
             if (assessmentIdToExclude != null && assessment.getId().equals(assessmentIdToExclude)) {
                 continue;
             }
-            
+            if (courseId != null && (assessment.getCourse() == null || !courseId.equals(assessment.getCourse().getId()))) {
+                continue;
+            }
+
             if (assessment.getTitle() != null) {
                 String normalizedExisting = assessment.getTitle().replaceAll("\\s+", "").toLowerCase();
                 if (normalizedExisting.equals(normalizedTitle)) {
@@ -45,17 +58,21 @@ public class AssessmentService {
                 }
             }
         }
-        
+
         return false;
     }
 
     public List<Assessment> findAllAssessmentsWithRubrics() {
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        if (activeCourseId != null) {
+            return findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        }
         List<Assessment> assessments = assessmentRepository.findAll();
-        
+
         for (Assessment assessment : assessments) {
             calculateAssessmentMarks(assessment);
         }
-        
+
         return assessments;
     }
 

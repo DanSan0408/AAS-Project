@@ -2950,3 +2950,23 @@ JPA repositories for all domain entities including:
 - Test all functionality after changes
 - Ensure group assignment with industrial supervisor role works correctly
 - Verify authentication and authorization for all roles
+
+---
+
+## Multi-Course Segregation Hardening (Course-Scoped Isolation)
+
+Strict per-course isolation has been enforced across persistence filters, services, controllers, SSE endpoints, and Thymeleaf views so multi-course admins, lecturers, and students never see bundled or cross-course records:
+
+1. **Entities, Hibernate Filter & Repositories**:
+   - Tightened `@Filter(name = "courseScopeFilter")` in `Assessment`, `Group`, `RubricTemplate`, and `Student` (removed legacy `OR course_id IS NULL` fallback) and removed the filter from `Lecturer`.
+   - Added per-course student group assignments (`StudentCourseAssignment`, `StudentCourseAssignmentRepository`) and per-course overrides/history (`StudentResultOverride`, `FactorOverrideHistory`, `StudentResultOverrideRepository`, `FactorOverrideHistoryRepository`) with schema constraints in `CourseEmailConstraintMigrationRunner`.
+   - Scoped repository queries in `AssessmentRepository`, `StudentRepository`, `LecturerRepository`, and `FactorWeightageRepository`, plus `CourseScopeService`, `AdminService`, and `CalculateService`.
+
+2. **Controller & SSE Scoping**:
+   - `AdminController`: Active course switching redirects safely (`resolvePostSwitchRedirect`), strict course checks on comment moderation (`commentBelongsToAssessment`) and random group creation, and per-course `studentGroupMap` resolution for group/student/lecturer assignment views.
+   - `DataViewController`, `GroupCommentController`, `DeadlineController`, `RubricController`, `RubricTemplateController`, and `AssessmentProgressSseController`: Enforced active-course ownership on assessments, groups, students, overrides, factor weightages, compiled comments, deadlines, rubric templates, and SSE progress streams.
+   - `LecturerController` & `LecturerAssessmentController`: Resolved active-course lecturer accounts via `CourseScopeService.resolveLecturerForCourse`, filtered assessments and student selections per course (`studentGroupMap`), added `POST /lecturer/switch-course`, and guarded submission file/annotation endpoints with course-level 403 checks.
+   - `StudentController`: Added `POST /student/switch-course`, session active course resolution, per-course enrollment and group resolution (`StudentCourseAssignmentRepository` + `AdminService`), and course-scoped comment compilation.
+
+3. **View Updates**:
+   - Updated `admin_assign_students.html`, `group_assignment.html`, `lecturer_select_student.html`, `assessment_data_view.html`, and `admin_assign_lecturers.html` to render `resolvedGroup` from `studentGroupMap` with fallback to `student.group`.

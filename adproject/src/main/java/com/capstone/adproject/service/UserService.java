@@ -42,9 +42,10 @@ public class UserService {
             .map(u -> (Object)u)
             .orElseGet(() -> studentRepo.findByEmail(email)
                 .map(u -> (Object)u)
-                .orElseGet(() -> lecturerRepo.findByEmail(email)
-                    .map(u -> (Object)u)
-                    .orElse(null))));
+                .orElseGet(() -> {
+                    java.util.List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepo, email);
+                    return lecturers.isEmpty() ? null : (Object) lecturers.get(0);
+                })));
     }
 
     public Object findUserByResetToken(String token) {
@@ -155,13 +156,14 @@ public class UserService {
                 s.setResetPasswordTokenExpiry(null);
                 studentRepo.save(s);
             });
-            lecturerRepo.findByEmail(finalEmail).ifPresent(l -> {
+            java.util.List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepo, finalEmail);
+            for (Lecturer l : lecturers) {
                 l.setPassword(encodedPassword);
                 l.setResetPasswordToken(null);
                 l.setResetPasswordTokenExpiry(null);
                 l.setIsTempPassword(false); // Password is no longer temporary
                 lecturerRepo.save(l);
-            });
+            }
         }
     }
 

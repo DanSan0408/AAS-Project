@@ -37,6 +37,9 @@ public class RubricService {
     private final EntityManager entityManager;
     private final JdbcTemplate jdbcTemplate;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CourseScopeService courseScopeService;
+
     public RubricService(AssessmentRepository assessmentRepository, 
                          RubricRepository rubricRepository,
                          SubRubricRepository subRubricRepository,
@@ -129,7 +132,10 @@ public class RubricService {
     }
 
     public List<Assessment> findAllAssessments() {
-        List<Assessment> assessments = assessmentRepository.findAll();
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        List<Assessment> assessments = activeCourseId != null
+                ? assessmentRepository.findAllWithRubricsByCourseId(activeCourseId)
+                : assessmentRepository.findAll();
         for (Assessment assessment : assessments) {
             calculateAssessmentMarks(assessment);
         }

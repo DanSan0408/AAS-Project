@@ -61,28 +61,56 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     void deleteCalculatedResultsByStudentId(@Param("studentId") Long studentId);
 
     @Modifying
-    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatedStudent.id = :studentId")
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatedStudent.id = :studentId OR (ac.evaluatorType = 'STUDENT' AND ac.evaluatorId = :studentId)")
     void deleteCommentsByStudentId(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE (ac.evaluatedStudent.id = :studentId OR (ac.evaluatorType = 'STUDENT' AND ac.evaluatorId = :studentId)) AND ac.assessment.course.id = :courseId")
+    void deleteCommentsByStudentIdAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     @Modifying
     @Query("DELETE FROM Mark m WHERE m.evaluatedStudent.id = :studentId")
     void deleteMarksReceivedByStudent(@Param("studentId") Long studentId);
 
     @Modifying
+    @Query("DELETE FROM Mark m WHERE m.evaluatedStudent.id = :studentId AND m.assessment.course.id = :courseId")
+    void deleteMarksReceivedByStudentAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    @Modifying
     @Query("DELETE FROM Mark m WHERE m.evaluatorStudent.id = :studentId")
     void deleteMarksGivenByStudent(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.evaluatorStudent.id = :studentId AND m.assessment.course.id = :courseId")
+    void deleteMarksGivenByStudentAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     @Modifying
     @Query("DELETE FROM LecturerStudentAssignment lsa WHERE lsa.student.id = :studentId")
     void deleteLecturerAssignmentsByStudentId(@Param("studentId") Long studentId);
 
     @Modifying
+    @Query("DELETE FROM LecturerStudentAssignment lsa WHERE lsa.student.id = :studentId AND lsa.assessment.course.id = :courseId")
+    void deleteLecturerAssignmentsByStudentIdAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    @Modifying
     @Query("DELETE FROM StudentAssessmentAssignment saa WHERE saa.student.id = :studentId")
     void deleteAssessmentAssignmentsByStudentId(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("DELETE FROM StudentAssessmentAssignment saa WHERE saa.student.id = :studentId AND saa.assessment.course.id = :courseId")
+    void deleteAssessmentAssignmentsByStudentIdAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
     
     @Modifying
     @Query("DELETE FROM StudentResultOverride o WHERE o.student.id = :studentId")
     void deleteOverridesByStudent(@Param("studentId") Long studentId);
+
+    @Modifying
+    @Query("DELETE FROM StudentResultOverride o WHERE o.student.id = :studentId AND o.course.id = :courseId")
+    void deleteOverridesByStudentAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM FactorOverrideHistory foh WHERE foh.student.id = :studentId AND foh.course.id = :courseId")
+    void deleteFactorHistoryByStudentAndCourseId(@Param("studentId") Long studentId, @Param("courseId") Long courseId);
 
     @Modifying
     @Query(value = "UPDATE student SET course_id = NULL WHERE id = :studentId", nativeQuery = true)

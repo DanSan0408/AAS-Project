@@ -68,5 +68,22 @@ class CourseEntityMappingTest {
         Set<ConstraintViolation<Course>> violations = validator.validate(course);
         assertTrue(violations.isEmpty(), "Valid course should have no constraint violations");
     }
+
+    @Test
+    void testCourseScopedFiltersDoNotAllowNullCourseOrphans() {
+        Class<?>[] scopedEntities = new Class<?>[] {
+                Assessment.class,
+                Group.class,
+                RubricTemplate.class,
+                Student.class
+        };
+        for (Class<?> entityClass : scopedEntities) {
+            org.hibernate.annotations.Filter filter = entityClass.getAnnotation(org.hibernate.annotations.Filter.class);
+            assertNotNull(filter, entityClass.getSimpleName() + " should have @Filter(courseScopeFilter)");
+            assertFalse(filter.condition().toLowerCase().contains("is null"),
+                    entityClass.getSimpleName() + " @Filter must never expose null-course orphans across courses: "
+                            + filter.condition());
+        }
+    }
 }
 

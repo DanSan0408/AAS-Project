@@ -3,8 +3,10 @@ package com.capstone.adproject.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -56,47 +58,44 @@ public class CourseScopeService {
             return Collections.emptyList();
         }
 
-        // Get courses managed by the current user (admin assignments + courses they created)
-        List<Course> managed = findCurrentLecturer(username)
-            .map(lecturer -> {
-                Set<Course> allManagedCourses = new LinkedHashSet<>();
+        List<Lecturer> lecturers = resolveLecturersByIdentity(lecturerRepository, username);
+        if (lecturers.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-                // Step 1: Try to get courses from admin_course_assignment table via direct SQL
-                Set<Long> assignedCourseIds = findAssignedCourseIdsForLecturer(lecturer.getId());
-                List<Course> assignments = loadCoursesByIds(assignedCourseIds).stream()
+        Set<Course> allManagedCourses = new LinkedHashSet<>();
+        List<Course> allCourses = superAdminService.getAllCourses();
+
+        for (Lecturer lecturer : lecturers) {
+            Set<Long> assignedCourseIds = findAssignedCourseIdsForLecturer(lecturer.getId());
+            List<Course> assignments = loadCoursesByIds(assignedCourseIds).stream()
+                .filter(c -> c != null && c.getId() != null)
+                .collect(Collectors.toList());
+
+            if (assignments.isEmpty()) {
+                assignments = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())
+                    .stream()
+                    .map(this::safeCourseFromAssignment)
                     .filter(c -> c != null && c.getId() != null)
                     .collect(Collectors.toList());
+            }
 
-                // Step 2: If no assignments found, try JPA fallback
-                if (assignments.isEmpty()) {
-                    assignments = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())
-                        .stream()
-                        .map(this::safeCourseFromAssignment)
-                        .filter(c -> c != null && c.getId() != null)
-                        .collect(Collectors.toList());
-                }
+            Course legacyCourse = safeCourseFromLecturer(lecturer);
+            if (assignments.isEmpty() && legacyCourse != null && legacyCourse.getId() != null) {
+                assignments = List.of(legacyCourse);
+            }
 
-                // Step 3: If still empty, check if lecturer has a direct course link
-                Course legacyCourse = safeCourseFromLecturer(lecturer);
-                if (assignments.isEmpty() && legacyCourse != null && legacyCourse.getId() != null) {
-                    assignments = List.of(legacyCourse);
-                }
+            allManagedCourses.addAll(deduplicateById(assignments));
 
-                allManagedCourses.addAll(deduplicateById(assignments));
+            List<Course> createdCourses = allCourses.stream()
+                .filter(c -> c != null && c.getId() != null && c.getCreatedBy() != null
+                          && c.getCreatedBy().getId() != null
+                          && c.getCreatedBy().getId().equals(lecturer.getId()))
+                .collect(Collectors.toList());
+            allManagedCourses.addAll(createdCourses);
+        }
 
-                // Step 4: Add courses created by this lecturer (superadmins can only manage courses they create)
-                List<Course> createdCourses = superAdminService.getAllCourses().stream()
-                    .filter(c -> c != null && c.getId() != null && c.getCreatedBy() != null 
-                              && c.getCreatedBy().getId() != null 
-                              && c.getCreatedBy().getId().equals(lecturer.getId()))
-                    .collect(Collectors.toList());
-                allManagedCourses.addAll(createdCourses);
-
-                return new ArrayList<>(allManagedCourses);
-            })
-            .orElse(new ArrayList<>());
-
-        return sortCourses(deduplicateById(managed));
+        return sortCourses(deduplicateById(new ArrayList<>(allManagedCourses)));
     }
 
     public Set<Long> getManagedCourseIdsForCurrentUser() {
@@ -239,28 +238,90 @@ public class CourseScopeService {
             .values());
     }
 
-    private Optional<Lecturer> findCurrentLecturer(String username) {
+    public static List<Lecturer> resolveLecturersByIdentity(LecturerRepository repository, String identifier) {
+        if (repository == null || identifier == null || identifier.isBlank()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Lecturer> found = new LinkedHashMap<>();
+        addLecturers(found, repository.findAllByEmailIgnoreCase(identifier));
+        addLecturers(found, repository.findAllByUsernameIgnoreCase(identifier));
+
+        if (found.isEmpty()) {
+            safeSingleLookup(() -> repository.findByEmailIgnoreCase(identifier)).ifPresent(l -> addLecturer(found, l));
+            safeSingleLookup(() -> repository.findByUsernameIgnoreCase(identifier)).ifPresent(l -> addLecturer(found, l));
+            safeSingleLookup(() -> repository.findByEmail(identifier)).ifPresent(l -> addLecturer(found, l));
+            safeSingleLookup(() -> repository.findByUsername(identifier)).ifPresent(l -> addLecturer(found, l));
+        }
+
+        if (found.isEmpty()) {
+            int atIndex = identifier.indexOf('@');
+            if (atIndex > 0) {
+                String localPart = identifier.substring(0, atIndex);
+                addLecturers(found, repository.findAllByUsernameIgnoreCase(localPart));
+                if (found.isEmpty()) {
+                    safeSingleLookup(() -> repository.findByUsernameIgnoreCase(localPart)).ifPresent(l -> addLecturer(found, l));
+                    safeSingleLookup(() -> repository.findByUsername(localPart)).ifPresent(l -> addLecturer(found, l));
+                }
+            }
+        }
+        return new ArrayList<>(found.values());
+    }
+
+    public static Optional<Lecturer> resolveLecturerForCourse(LecturerRepository repository, String identifier, Long courseId) {
+        List<Lecturer> candidates = resolveLecturersByIdentity(repository, identifier);
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+        if (courseId != null) {
+            for (Lecturer candidate : candidates) {
+                if (candidate.getCourse() != null && courseId.equals(candidate.getCourse().getId())) {
+                    return Optional.of(candidate);
+                }
+            }
+            return Optional.empty();
+        }
+        return Optional.of(candidates.get(0));
+    }
+
+    public Optional<Lecturer> getActiveLecturerForCurrentUser() {
+        String username = getLoggedInUsername();
         if (username == null || username.isBlank()) {
             return Optional.empty();
         }
+        Long activeCourseId = getActiveCourseIdForCurrentUser();
+        Optional<Lecturer> inActive = resolveLecturerForCourse(lecturerRepository, username, activeCourseId);
+        return inActive.isPresent() ? inActive : findCurrentLecturer(username);
+    }
 
-        Optional<Lecturer> found = lecturerRepository.findByEmailIgnoreCase(username)
-            .or(() -> lecturerRepository.findByUsernameIgnoreCase(username))
-            .or(() -> lecturerRepository.findByEmail(username))
-            .or(() -> lecturerRepository.findByUsername(username));
-
-        if (found.isPresent()) {
-            return found;
+    private static void addLecturers(Map<Long, Lecturer> target, List<Lecturer> source) {
+        if (source == null) {
+            return;
         }
-
-        int atIndex = username.indexOf('@');
-        if (atIndex > 0) {
-            String localPart = username.substring(0, atIndex);
-            return lecturerRepository.findByUsernameIgnoreCase(localPart)
-                .or(() -> lecturerRepository.findByUsername(localPart));
+        for (Lecturer lecturer : source) {
+            addLecturer(target, lecturer);
         }
+    }
 
-        return Optional.empty();
+    private static void addLecturer(Map<Long, Lecturer> target, Lecturer lecturer) {
+        if (lecturer == null) {
+            return;
+        }
+        Long key = lecturer.getId() != null ? lecturer.getId() : -1L - target.size();
+        target.putIfAbsent(key, lecturer);
+    }
+
+    private static Optional<Lecturer> safeSingleLookup(java.util.function.Supplier<Optional<Lecturer>> supplier) {
+        try {
+            Optional<Lecturer> result = supplier.get();
+            return result != null ? result : Optional.empty();
+        } catch (RuntimeException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Lecturer> findCurrentLecturer(String username) {
+        List<Lecturer> candidates = resolveLecturersByIdentity(lecturerRepository, username);
+        return candidates.isEmpty() ? Optional.empty() : Optional.of(candidates.get(0));
     }
 
     private Long getPreferredActiveCourseIdFromProfile(Set<Long> managedIds) {
@@ -306,33 +367,8 @@ public class CourseScopeService {
     }
 
     private void persistPreferredActiveCourse(Long courseId) {
-        String username = getLoggedInUsername();
-        if (username == null || username.isBlank() || courseId == null) {
-            return;
-        }
-
-        findCurrentLecturer(username).ifPresent(lecturer -> {
-            Course current = lecturer.getCourse();
-            if (current != null && courseId.equals(current.getId())) {
-                return;
-            }
-
-            // Before persisting, ensure the course exists in the FK target table (courses table)
-            try {
-                ensureCourseForeignKeyExists(courseId);
-
-                Course selected = superAdminService.getCourseById(courseId).orElse(null);
-                if (selected == null) {
-                    return;
-                }
-
-                lecturer.setCourse(selected);
-                lecturerRepository.save(lecturer);
-            } catch (RuntimeException e) {
-                // Silently skip if FK constraint would fail; session tracking is sufficient
-                // The admin can still work with the course in the current session
-            }
-        });
+        // Active course selection is session-scoped only so switching courses
+        // never mutates lecturer.course_id in the database.
     }
 
     private List<Course> sortCourses(List<Course> courses) {

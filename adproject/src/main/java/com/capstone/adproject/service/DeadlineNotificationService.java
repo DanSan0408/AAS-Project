@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import com.capstone.adproject.model.Deadline;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRubricAssignmentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
 @Service
@@ -31,6 +33,9 @@ public class DeadlineNotificationService {
     private final LecturerGroupAssignmentRepository groupAssignmentRepository;
     private final LecturerRubricAssignmentRepository rubricAssignmentRepository;
     private final EmailService emailService;
+
+    @Autowired(required = false)
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     public DeadlineNotificationService(
             DeadlineService deadlineService,
@@ -86,12 +91,15 @@ public class DeadlineNotificationService {
 
         // 1. Collect students if the assessment targets students or everyone (null)
         if (assessorType == null || "STUDENT".equalsIgnoreCase(assessorType)) {
-            if (assessment.getCourse() != null) {
-                List<Student> students = studentRepository.findAll().stream()
-                    .filter(s -> s.getCourse() != null && s.getCourse().getId().equals(assessment.getCourse().getId()))
-                    .collect(Collectors.toList());
-                for (Student s : students) {
+            if (assessment.getCourse() != null && assessment.getCourse().getId() != null) {
+                Long courseId = assessment.getCourse().getId();
+                for (Student s : studentRepository.findByCourseId(courseId)) {
                     if (s.getEmail() != null) recipientEmails.add(s.getEmail());
+                }
+                if (studentCourseAssignmentRepository != null) {
+                    for (Student s : studentCourseAssignmentRepository.findStudentsByCourseId(courseId)) {
+                        if (s.getEmail() != null) recipientEmails.add(s.getEmail());
+                    }
                 }
             }
         }
