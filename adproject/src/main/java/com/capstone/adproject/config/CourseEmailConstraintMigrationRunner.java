@@ -23,6 +23,30 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
     public void run(String... args) {
         migrateTable("student", "uk_student_email_course");
         migrateTable("lecturer", "uk_lecturer_email_course");
+        migrateStudentResultOverrides();
+    }
+
+    private void migrateStudentResultOverrides() {
+        try {
+            dropLegacySingleColumnUniqueIndexes("student_result_overrides", "student_id", "uk_override_student_course");
+            jdbcTemplate.execute(
+                    """
+                    UPDATE `student_result_overrides` sro
+                    JOIN `student` s ON sro.student_id = s.id
+                    SET sro.course_id = s.course_id
+                    WHERE sro.course_id IS NULL
+                    """);
+            jdbcTemplate.execute(
+                    """
+                    UPDATE `factor_override_history` foh
+                    JOIN `student` s ON foh.student_id = s.id
+                    SET foh.course_id = s.course_id
+                    WHERE foh.course_id IS NULL
+                    """);
+            ensureCompositeUniqueIndex("student_result_overrides", "uk_override_student_course", "(`student_id`, `course_id`)");
+        } catch (Exception ex) {
+            logger.warn("Skipping override course-constraint migration: {}", ex.getMessage());
+        }
     }
 
     private void migrateTable(String tableName, String targetCompositeIndexName) {
@@ -35,6 +59,10 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
     }
 
     private void dropLegacySingleColumnEmailUniqueIndexes(String tableName, String targetCompositeIndexName) {
+        dropLegacySingleColumnUniqueIndexes(tableName, "email", targetCompositeIndexName);
+    }
+
+    private void dropLegacySingleColumnUniqueIndexes(String tableName, String columnName, String targetCompositeIndexName) {
         List<String> indexNames = jdbcTemplate.queryForList(
                 """
                 SELECT index_name
@@ -44,20 +72,25 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
                 GROUP BY index_name
                 HAVING MIN(non_unique) = 0
                    AND COUNT(*) = 1
-                   AND SUM(CASE WHEN column_name = 'email' THEN 1 ELSE 0 END) = 1
+                   AND SUM(CASE WHEN column_name = ? THEN 1 ELSE 0 END) = 1
                    AND index_name <> ?
                 """,
                 String.class,
                 tableName,
+                columnName,
                 targetCompositeIndexName);
 
         for (String indexName : indexNames) {
             jdbcTemplate.execute("ALTER TABLE `" + tableName + "` DROP INDEX `" + indexName + "`");
-            logger.info("Dropped legacy single-column email unique index {} on {}", indexName, tableName);
+            logger.info("Dropped legacy single-column {} unique index {} on {}", columnName, indexName, tableName);
         }
     }
 
     private void ensureCompositeEmailCourseUniqueIndex(String tableName, String targetCompositeIndexName) {
+        ensureCompositeUniqueIndex(tableName, targetCompositeIndexName, "(`email`, `course_id`)");
+    }
+
+    private void ensureCompositeUniqueIndex(String tableName, String targetCompositeIndexName, String columnsSql) {
         Integer existing = jdbcTemplate.queryForObject(
                 """
                 SELECT COUNT(*)
@@ -76,7 +109,7 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
 
         jdbcTemplate.execute(
                 "ALTER TABLE `" + tableName + "` ADD CONSTRAINT `" + targetCompositeIndexName
-                        + "` UNIQUE (`email`, `course_id`)");
-        logger.info("Created composite unique index {} on {}(email, course_id)", targetCompositeIndexName, tableName);
+                        + "` UNIQUE " + columnsSql);
+        logger.info("Created composite unique index {} on {}{}", targetCompositeIndexName, tableName, columnsSql);
     }
 }

@@ -51,7 +51,7 @@ public class AdminCourseContextAdvice {
 
         return authentication.getAuthorities().stream().anyMatch(a -> {
             String role = a.getAuthority();
-            return "ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role);
+            return "ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role) || "ROLE_LECTURER".equals(role);
         });
     }
 }

@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.capstone.adproject.dto.AssessmentDataDto;
@@ -21,16 +22,20 @@ import com.capstone.adproject.dto.RubricCalculationDto;
 import com.capstone.adproject.dto.StudentAssessmentDataDto;
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
+import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.FactorWeightage;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.model.StudentResultOverride;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.FactorWeightageRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.MarkRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
 
 @Service
@@ -43,6 +48,12 @@ public class CalculateService {
     private final AssessmentCommentRepository commentRepository;
     private final StudentResultOverrideRepository overrideRepository;
     private final FactorWeightageRepository factorWeightageRepository;
+
+    @Autowired(required = false)
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
+
+    @Autowired(required = false)
+    private CourseRepository courseRepository;
 
     public CalculateService(
             MarkRepository markRepository,
@@ -175,15 +186,24 @@ public class CalculateService {
     }
 
     public Double calculateGrandTotal(Student student, List<Assessment> assessments) {
-        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+        Long inferredCourseId = inferCourseId(student, assessments);
+        return calculateGrandTotal(student, assessments, inferredCourseId);
+    }
+
+    public Double calculateGrandTotal(Student student, List<Assessment> assessments, Long courseId) {
+        Optional<StudentResultOverride> overrideOpt = resolveCourseOverride(student, courseId);
         if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenGrandTotal() != null) {
             return overrideOpt.get().getOverriddenGrandTotal();
         }
 
-        Double factor = resolveStudentFactor(student);
+        Double factor = resolveStudentFactor(student, courseId);
         double grandTotal = 0.0;
         if (assessments != null) {
             for (Assessment assessment : assessments) {
+                if (courseId != null && assessment.getCourse() != null && assessment.getCourse().getId() != null
+                        && !courseId.equals(assessment.getCourse().getId())) {
+                    continue;
+                }
                 StudentAssessmentDataDto studentData = calculateStudentAssessmentData(student, assessment, factor);
                 grandTotal += studentData.getTotalMarks(); 
             }
@@ -192,12 +212,17 @@ public class CalculateService {
     }
 
     public com.capstone.adproject.dto.FactorDetailsDto getFactorDetailsForStudent(Student student) {
+        Long defaultCourseId = student != null && student.getCourse() != null ? student.getCourse().getId() : null;
+        return getFactorDetailsForStudent(student, defaultCourseId);
+    }
+
+    public com.capstone.adproject.dto.FactorDetailsDto getFactorDetailsForStudent(Student student, Long courseId) {
         com.capstone.adproject.dto.FactorDetailsDto dto = new com.capstone.adproject.dto.FactorDetailsDto();
         dto.setStudentId(student.getId());
         dto.setStudentName(student.getUsername());
         dto.setStudentEmail(student.getEmail());
         
-        List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(student.getCourse());
+        List<FactorWeightage> weightages = resolveCourseWeightages(student, courseId);
         List<com.capstone.adproject.dto.AssessmentFactorBreakdown> breakdowns = new ArrayList<>();
         
         double finalFactor = 0.0;
@@ -214,6 +239,7 @@ public class CalculateService {
         } else {
             List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
             List<Mark> peerMarks = allMarks.stream()
+                .filter(m -> belongsToCourseId(m, courseId))
                 .filter(m -> m.getEvaluatorStudent() != null)
                 .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
                 .filter(m -> m.getLecturer() == null)
@@ -233,7 +259,7 @@ public class CalculateService {
         
         dto.setBreakdowns(breakdowns);
         
-        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+        Optional<StudentResultOverride> overrideOpt = resolveCourseOverride(student, courseId);
         if (overrideOpt.isPresent()) {
             dto.setIsOverridden(true);
             dto.setCurrentOverriddenFactor(overrideOpt.get().getOverriddenFactor());
@@ -254,10 +280,9 @@ public class CalculateService {
         breakdown.setGroupAverage(0.0);
         breakdown.setCalculatedFactor(0.0);
         
-        Group group = student.getGroup();
-        if (group == null || group.getStudents() == null || group.getStudents().isEmpty()) return breakdown;
-        
-        List<Student> groupMembers = new ArrayList<>(group.getStudents());
+        Group group = resolveGroupForAssessment(student, peerAssessment);
+        List<Student> groupMembers = resolveGroupMembersForCourse(group, peerAssessment != null && peerAssessment.getCourse() != null ? peerAssessment.getCourse().getId() : null);
+        if (group == null || groupMembers.isEmpty()) return breakdown;
         Map<Long, Double> individualAverages = new HashMap<>();
         
         for (Student member : groupMembers) {
@@ -324,7 +349,12 @@ public class CalculateService {
     }
 
     public Double calculatePeerAssessmentFactorForStudent(Student student) {
-        List<FactorWeightage> weightages = factorWeightageRepository.findByCourse(student.getCourse());
+        Long defaultCourseId = student != null && student.getCourse() != null ? student.getCourse().getId() : null;
+        return calculatePeerAssessmentFactorForStudent(student, defaultCourseId);
+    }
+
+    public Double calculatePeerAssessmentFactorForStudent(Student student, Long courseId) {
+        List<FactorWeightage> weightages = resolveCourseWeightages(student, courseId);
         
         if (!weightages.isEmpty()) {
             double finalFactor = 0.0;
@@ -337,6 +367,7 @@ public class CalculateService {
 
         List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
         List<Mark> peerMarks = allMarks.stream()
+            .filter(m -> belongsToCourseId(m, courseId))
             .filter(m -> m.getEvaluatorStudent() != null)
             .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
             .filter(m -> m.getLecturer() == null)
@@ -349,10 +380,9 @@ public class CalculateService {
     }
 
     private Double calculateStudentFactorFromPeerAssessment(Student student, Assessment peerAssessment, String factorContributionType) {
-        Group group = student.getGroup();
-        if (group == null || group.getStudents() == null || group.getStudents().isEmpty()) return 0.0;
-        
-        List<Student> groupMembers = new ArrayList<>(group.getStudents());
+        Group group = resolveGroupForAssessment(student, peerAssessment);
+        List<Student> groupMembers = resolveGroupMembersForCourse(group, peerAssessment != null && peerAssessment.getCourse() != null ? peerAssessment.getCourse().getId() : null);
+        if (group == null || groupMembers.isEmpty()) return 0.0;
         Map<Long, Double> individualAverages = new HashMap<>();
         
         for (Student member : groupMembers) {
@@ -630,11 +660,138 @@ public class CalculateService {
     }
 
     private Double resolveStudentFactor(Student student) {
-        Optional<StudentResultOverride> overrideOpt = overrideRepository.findByStudent(student);
+        Long defaultCourseId = student != null && student.getCourse() != null ? student.getCourse().getId() : null;
+        return resolveStudentFactor(student, defaultCourseId);
+    }
+
+    private Double resolveStudentFactor(Student student, Long courseId) {
+        Optional<StudentResultOverride> overrideOpt = resolveCourseOverride(student, courseId);
         if (overrideOpt.isPresent() && overrideOpt.get().getOverriddenFactor() != null) {
             return overrideOpt.get().getOverriddenFactor();
         }
-        return calculatePeerAssessmentFactorForStudent(student);
+        return calculatePeerAssessmentFactorForStudent(student, courseId);
+    }
+
+    private Long inferCourseId(Student student, List<Assessment> assessments) {
+        if (assessments != null) {
+            for (Assessment a : assessments) {
+                if (a != null && a.getCourse() != null && a.getCourse().getId() != null) {
+                    return a.getCourse().getId();
+                }
+            }
+        }
+        return student != null && student.getCourse() != null ? student.getCourse().getId() : null;
+    }
+
+    private boolean belongsToCourseId(Mark mark, Long courseId) {
+        if (courseId == null || mark == null) {
+            return true;
+        }
+        if (mark.getAssessment() == null || mark.getAssessment().getCourse() == null
+                || mark.getAssessment().getCourse().getId() == null) {
+            return false;
+        }
+        return courseId.equals(mark.getAssessment().getCourse().getId());
+    }
+
+    private Optional<StudentResultOverride> resolveCourseOverride(Student student, Long courseId) {
+        if (student == null) {
+            return Optional.empty();
+        }
+        if (courseId != null) {
+            Optional<StudentResultOverride> scoped = overrideRepository.findByStudentAndCourseId(student, courseId);
+            if (scoped.isPresent()) {
+                return scoped;
+            }
+        }
+        Optional<StudentResultOverride> legacy = overrideRepository.findByStudent(student);
+        if (legacy.isPresent() && courseId != null) {
+            Course overrideCourse = legacy.get().getCourse();
+            if (overrideCourse != null && overrideCourse.getId() != null && !courseId.equals(overrideCourse.getId())) {
+                return Optional.empty();
+            }
+        }
+        return legacy;
+    }
+
+    private List<FactorWeightage> resolveCourseWeightages(Student student, Long courseId) {
+        if (courseId != null) {
+            List<FactorWeightage> byCourseId = factorWeightageRepository.findByCourseId(courseId);
+            if (byCourseId != null && !byCourseId.isEmpty()) {
+                return byCourseId;
+            }
+            if (courseRepository != null) {
+                Optional<Course> courseOpt = courseRepository.findById(courseId);
+                if (courseOpt.isPresent()) {
+                    List<FactorWeightage> byCourse = factorWeightageRepository.findByCourse(courseOpt.get());
+                    if (byCourse != null && !byCourse.isEmpty()) {
+                        return byCourse;
+                    }
+                }
+            }
+            if (student != null && student.getCourse() != null && courseId.equals(student.getCourse().getId())) {
+                List<FactorWeightage> byStudentCourse = factorWeightageRepository.findByCourse(student.getCourse());
+                return byStudentCourse != null ? byStudentCourse : List.of();
+            }
+            return List.of();
+        }
+        if (student != null && student.getCourse() != null) {
+            List<FactorWeightage> byStudentCourse = factorWeightageRepository.findByCourse(student.getCourse());
+            return byStudentCourse != null ? byStudentCourse : List.of();
+        }
+        return List.of();
+    }
+
+    private Group resolveGroupForAssessment(Student student, Assessment assessment) {
+        if (student == null) {
+            return null;
+        }
+        Long courseId = assessment != null && assessment.getCourse() != null ? assessment.getCourse().getId() : null;
+        if (courseId != null && studentCourseAssignmentRepository != null && student.getId() != null) {
+            Optional<StudentCourseAssignment> scaOpt = studentCourseAssignmentRepository
+                .findByStudentIdAndCourseId(student.getId(), courseId);
+            if (scaOpt.isPresent() && scaOpt.get().getGroup() != null) {
+                Group assigned = scaOpt.get().getGroup();
+                if (assigned.getCourse() == null || courseId.equals(assigned.getCourse().getId())) {
+                    return assigned;
+                }
+            }
+        }
+        Group fallback = student.getGroup();
+        if (fallback == null) {
+            return null;
+        }
+        if (courseId != null && fallback.getCourse() != null && fallback.getCourse().getId() != null
+                && !courseId.equals(fallback.getCourse().getId())) {
+            return null;
+        }
+        return fallback;
+    }
+
+    private List<Student> resolveGroupMembersForCourse(Group group, Long courseId) {
+        if (group == null) {
+            return List.of();
+        }
+        java.util.Map<Long, Student> uniqueMembers = new java.util.LinkedHashMap<>();
+        if (group.getStudents() != null) {
+            for (Student member : group.getStudents()) {
+                if (member != null && member.getId() != null) {
+                    uniqueMembers.putIfAbsent(member.getId(), member);
+                }
+            }
+        }
+        if (courseId != null && group.getId() != null && studentCourseAssignmentRepository != null) {
+            List<StudentCourseAssignment> courseAssignments = studentCourseAssignmentRepository
+                .findByCourseIdAndGroupId(courseId, group.getId());
+            if (courseAssignments != null) {
+                for (StudentCourseAssignment sca : courseAssignments) {
+                    if (sca.getStudent() != null && sca.getStudent().getId() != null) {
+                        uniqueMembers.putIfAbsent(sca.getStudent().getId(), sca.getStudent());
+                    }
+                }
+            }
+        }
+        return new ArrayList<>(uniqueMembers.values());
     }
 
     private Map<Long, List<Mark>> groupMarksByEvaluatedStudent(List<Mark> marks) {

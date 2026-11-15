@@ -82,12 +82,8 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
             // If account is also a Lecturer, safely append lecturer roles (e.g. ROLE_LECTURER) without altering admin password
-            Optional<Lecturer> linkedLecturer = lecturerRepository.findByEmail(identifier);
-            if (linkedLecturer.isEmpty()) {
-                linkedLecturer = lecturerRepository.findByUsername(identifier);
-            }
-            if (linkedLecturer.isPresent()) {
-                Lecturer lec = linkedLecturer.get();
+            List<Lecturer> linkedLecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, identifier);
+            for (Lecturer lec : linkedLecturers) {
                 if (lec.getRoles() != null && !lec.getRoles().isBlank()) {
                     Arrays.stream(lec.getRoles().split(","))
                             .map(String::trim)
@@ -105,19 +101,19 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // 3. Strict Priority 3: Lecturer
-        Optional<Lecturer> lecturer = lecturerRepository.findByEmail(identifier);
-        if (lecturer.isEmpty()) {
-            lecturer = lecturerRepository.findByUsername(identifier);
-        }
-        if (lecturer.isPresent()) {
-            Lecturer lec = lecturer.get();
+        List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, identifier);
+        if (!lecturers.isEmpty()) {
+            Lecturer lec = lecturers.get(0);
             List<GrantedAuthority> authorities = new ArrayList<>();
-            if (lec.getRoles() != null && !lec.getRoles().isBlank()) {
-                Arrays.stream(lec.getRoles().split(","))
-                        .map(String::trim)
-                        .filter(role -> !role.isEmpty())
-                        .map(SimpleGrantedAuthority::new)
-                        .forEach(authorities::add);
+            for (Lecturer row : lecturers) {
+                if (row.getRoles() != null && !row.getRoles().isBlank()) {
+                    Arrays.stream(row.getRoles().split(","))
+                            .map(String::trim)
+                            .filter(role -> !role.isEmpty())
+                            .filter(role -> authorities.stream().noneMatch(a -> a.getAuthority().equals(role)))
+                            .map(SimpleGrantedAuthority::new)
+                            .forEach(authorities::add);
+                }
             }
             if (authorities.stream().noneMatch(a -> "ROLE_LECTURER".equals(a.getAuthority()))) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_LECTURER"));

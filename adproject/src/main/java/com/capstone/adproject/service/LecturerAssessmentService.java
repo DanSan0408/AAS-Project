@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,12 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 public class LecturerAssessmentService {
 
     private final MarkRepository markRepository;
+
+    @Autowired(required = false)
+    private CourseScopeService courseScopeService;
+
+    @Autowired(required = false)
+    private com.capstone.adproject.repositories.StudentCourseAssignmentRepository studentCourseAssignmentRepository;
     private final AssessmentRepository assessmentRepository;
     private final GroupRepository groupRepository;
     private final StudentRepository studentRepository;
@@ -78,7 +85,10 @@ public class LecturerAssessmentService {
     }
 
     public List<Assessment> getAssessmentsForLecturerEvaluation() {
-        List<Assessment> allAssessments = assessmentRepository.findAll();
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        List<Assessment> allAssessments = activeCourseId != null
+                ? assessmentRepository.findAllWithRubricsByCourseId(activeCourseId)
+                : assessmentRepository.findAll();
         
         return allAssessments.stream()
             .filter(assessment -> {
@@ -92,7 +102,10 @@ public class LecturerAssessmentService {
 
     @Transactional(readOnly = true)
     public List<Group> getAllGroups() {
-        List<Group> groups = groupRepository.findAll();
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        List<Group> groups = activeCourseId != null
+                ? groupRepository.findByCourseId(activeCourseId)
+                : groupRepository.findAll();
         groups.forEach(g -> {
             if (g.getStudents() != null) {
                 g.getStudents().size();
@@ -114,12 +127,41 @@ public class LecturerAssessmentService {
 
     @Transactional(readOnly = true)
     public List<Student> getAllStudents() {
+        Long activeCourseId = courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null;
+        if (activeCourseId != null) {
+            java.util.Map<Long, Student> byId = new java.util.LinkedHashMap<>();
+            for (Student s : studentRepository.findByCourseId(activeCourseId)) {
+                if (s != null && s.getId() != null) byId.putIfAbsent(s.getId(), s);
+            }
+            if (studentCourseAssignmentRepository != null) {
+                for (Student s : studentCourseAssignmentRepository.findStudentsByCourseId(activeCourseId)) {
+                    if (s != null && s.getId() != null) byId.putIfAbsent(s.getId(), s);
+                }
+            }
+            return sortStudentsAlphabetically(new java.util.ArrayList<>(byId.values()));
+        }
         return sortStudentsAlphabetically(studentRepository.findAll());
     }
 
     @Transactional(readOnly = true)
     public List<Student> getStudentsByGroup(Long groupId) {
-        return sortStudentsAlphabetically(studentRepository.findByGroupId(groupId));
+        java.util.Map<Long, Student> byId = new java.util.LinkedHashMap<>();
+        for (Student s : studentRepository.findByGroupId(groupId)) {
+            if (s != null && s.getId() != null) byId.putIfAbsent(s.getId(), s);
+        }
+        if (studentCourseAssignmentRepository != null) {
+            groupRepository.findById(groupId).ifPresent(group -> {
+                if (group.getCourse() != null && group.getCourse().getId() != null) {
+                    for (com.capstone.adproject.model.StudentCourseAssignment sca : studentCourseAssignmentRepository
+                            .findByCourseIdAndGroupId(group.getCourse().getId(), groupId)) {
+                        if (sca.getStudent() != null && sca.getStudent().getId() != null) {
+                            byId.putIfAbsent(sca.getStudent().getId(), sca.getStudent());
+                        }
+                    }
+                }
+            });
+        }
+        return sortStudentsAlphabetically(new java.util.ArrayList<>(byId.values()));
     }
 
     public String getGroupEvaluationStatus(Assessment assessment, Lecturer lecturer, Long groupId) {

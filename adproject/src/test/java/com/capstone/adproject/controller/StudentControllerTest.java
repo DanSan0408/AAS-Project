@@ -23,6 +23,7 @@ import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Mark;
 import com.capstone.adproject.model.Rating;
 import com.capstone.adproject.model.Rubric;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentAssessmentAssignment;
 import com.capstone.adproject.repositories.AssessmentRepository;
@@ -263,7 +264,7 @@ class StudentControllerTest {
     @Test
     void testViewMyComments_LoadsCompiledComments() throws Exception {
         when(studentRepository.findByEmail("student1@example.com")).thenReturn(Optional.of(student1));
-        when(commentService.getCompiledCommentsForStudent(student1)).thenReturn(Map.of(
+        when(commentService.getCompiledCommentsForStudent(student1, 1L)).thenReturn(Map.of(
                 "commentsByAssessment", Map.of(),
                 "totalComments", 0
         ));
@@ -294,5 +295,29 @@ class StudentControllerTest {
                 .andExpect(view().name("assessment_results"))
                 .andExpect(model().attribute("totalMarks", 90.0))
                 .andExpect(model().attributeExists("receivedMarks", "averageScores", "cloMarks"));
+    }
+
+    @Test
+    void testViewAssessmentResults_MultiCourseEnrolledStudent_CanViewSecondaryCourseResults() throws Exception {
+        Course courseB = new Course();
+        courseB.setId(20L);
+        courseB.setCourseName("Secondary Course");
+
+        Assessment assessmentB = new Assessment();
+        assessmentB.setId(88L);
+        assessmentB.setTitle("Course B Lab");
+        assessmentB.setCourse(courseB);
+
+        when(studentRepository.findByEmail("student1@example.com")).thenReturn(Optional.of(student1));
+        when(assessmentRepository.findById(88L)).thenReturn(Optional.of(assessmentB));
+        when(studentCourseAssignmentRepository.existsByStudentIdAndCourseId(student1.getId(), 20L)).thenReturn(true);
+        when(markRepository.findByEvaluatedStudentAndAssessment(student1, assessmentB)).thenReturn(Collections.emptyList());
+        when(markService.calculateTotalMarks(student1, assessmentB)).thenReturn(85.0);
+        when(markService.calculateCloMarks(student1, assessmentB)).thenReturn(Map.of(1, 8.5));
+
+        mockMvc.perform(get("/student/assessment/88/results").principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(view().name("assessment_results"))
+                .andExpect(model().attribute("totalMarks", 85.0));
     }
 }

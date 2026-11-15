@@ -44,13 +44,13 @@
                 </div>
 
                 <div class="students-list" style="margin-top: 20px; display: flex; flex-direction: column;">
-                    <div th:each="student : ${assignedStudents}" class="list-item-card" th:attr="data-name=${student.username}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
+                    <div th:each="student : ${assignedStudents}" th:with="resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}" class="list-item-card" th:attr="data-name=${student.username}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
 
                         <div class="list-item-info" style="flex: 1; min-width: 250px;">
                             <h3 th:text="${student.username}" style="margin: 0 0 8px 0; color: var(--ui-primary, #047857); font-size: 1.1rem;">Student Name</h3>
                             <div style="color: #6B7280; font-size: 0.95rem;">
                                 <span style="font-weight: 500;">Group:</span> 
-                                <span th:text="${student.group != null ? student.group.groupName : 'No group assigned'}">Group Name</span>
+                                <span th:text="${resolvedGroup != null ? resolvedGroup.groupName : 'No group assigned'}">Group Name</span>
                             </div>
                         </div>
 

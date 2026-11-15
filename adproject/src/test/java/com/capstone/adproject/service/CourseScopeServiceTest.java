@@ -185,5 +185,20 @@ class CourseScopeServiceTest {
         assertTrue(courseScopeService.isActiveCourseId(2L));
         assertFalse(courseScopeService.isActiveCourseId(1L));
     }
+
+    @Test
+    void testSetActiveCourseIdForCurrentUser_DoesNotMutateLecturerCourseInDatabase() {
+        AdminCourseAssignment assignment = new AdminCourseAssignment(200L, lecturer, course2);
+        when(courseRepository.findById(2L)).thenReturn(Optional.of(course2));
+        when(superAdminService.getCourseById(2L)).thenReturn(Optional.of(course2));
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(assignment));
+        when(superAdminService.getAllCourses()).thenReturn(Collections.emptyList());
+
+        boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(2L);
+        assertTrue(switched);
+        assertEquals(2L, session.getAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY));
+        assertEquals(1L, lecturer.getCourse().getId(), "Switching active course must not overwrite lecturer.course");
+        verify(lecturerRepository, never()).save(any());
+    }
 }
 
