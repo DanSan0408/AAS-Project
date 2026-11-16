@@ -130,6 +130,11 @@ body.manage-users-page .user-editing-container {
     display: flex !important;
     gap: 30px !important;
     align-items: flex-start !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
 }
 
 body.manage-users-page .user-editing-sidebar {
@@ -169,7 +174,12 @@ body.manage-users-page .user-editing-sidebar a.active {
 }
 
 body.manage-users-page .user-editing-main {
-    flex-grow: 1 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     background-color: var(--color-surface) !important;
     padding: 20px !important;
     border-radius: 10px !important;

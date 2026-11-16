@@ -3,6 +3,7 @@ package com.capstone.adproject.service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -81,15 +82,16 @@ public class AssessmentSubmissionService {
     public Optional<AssessmentSubmission> getSubmissionForTarget(Assessment assessment, Group group, Student student) {
         if (assessment == null)
             return Optional.empty();
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
         if (group != null) {
-            Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(assessment, group);
+            Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(effective, group);
             if (groupSub.isPresent())
                 return groupSub;
 
             // Fallback for individual submissions if students in this group uploaded individually
             if (group.getStudents() != null) {
                 for (Student s : group.getStudents()) {
-                    Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(assessment, s);
+                    Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(effective, s);
                     if (studentSub.isPresent()) {
                         return studentSub;
                     }
@@ -98,12 +100,12 @@ public class AssessmentSubmissionService {
         }
         if (student != null) {
             if (student.getGroup() != null) {
-                Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(assessment,
+                Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(effective,
                         student.getGroup());
                 if (groupSub.isPresent())
                     return groupSub;
             }
-            Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(assessment,
+            Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(effective,
                     student);
             if (studentSub.isPresent())
                 return studentSub;
@@ -115,19 +117,20 @@ public class AssessmentSubmissionService {
     public Optional<AssessmentSubmission> getSubmissionForStudent(Assessment assessment, Student student) {
         if (assessment == null || student == null)
             return Optional.empty();
-        if ("GROUP".equalsIgnoreCase(assessment.getSubmissionScope()) && student.getGroup() != null) {
-            Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(assessment,
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
+        if ("GROUP".equalsIgnoreCase(effective.getSubmissionScope()) && student.getGroup() != null) {
+            Optional<AssessmentSubmission> groupSub = submissionRepository.findByAssessmentAndGroup(effective,
                     student.getGroup());
             if (groupSub.isPresent())
                 return groupSub;
         }
-        Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(assessment,
+        Optional<AssessmentSubmission> studentSub = submissionRepository.findByAssessmentAndStudent(effective,
                 student);
         if (studentSub.isPresent()) {
             return studentSub;
         }
         if (student.getGroup() != null) {
-            return submissionRepository.findByAssessmentAndGroup(assessment, student.getGroup());
+            return submissionRepository.findByAssessmentAndGroup(effective, student.getGroup());
         }
         return Optional.empty();
     }
@@ -292,10 +295,11 @@ public class AssessmentSubmissionService {
         }
         result.put("assignmentMode", assignmentMode);
 
-        String submissionScope = assessment.getSubmissionScope() != null ? assessment.getSubmissionScope() : "GROUP";
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
+        String submissionScope = effective.getSubmissionScope() != null ? effective.getSubmissionScope() : "GROUP";
         result.put("submissionScope", submissionScope);
 
-        List<AssessmentSubmission> submissions = submissionRepository.findByAssessment(assessment);
+        List<AssessmentSubmission> submissions = submissionRepository.findByAssessment(effective);
         Map<Long, AssessmentSubmission> groupSubmissionMap = new HashMap<>();
         Map<Long, AssessmentSubmission> studentSubmissionMap = new HashMap<>();
         Map<Long, Integer> doodleCountMap = new HashMap<>();
@@ -436,5 +440,35 @@ public class AssessmentSubmissionService {
         result.put("stats", stats);
 
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, AssessmentSubmission> getGroupSubmissionsMap(Assessment assessment) {
+        if (assessment == null)
+            return Collections.emptyMap();
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
+        List<AssessmentSubmission> submissions = submissionRepository.findByAssessment(effective);
+        Map<Long, AssessmentSubmission> map = new HashMap<>();
+        for (AssessmentSubmission sub : submissions) {
+            if (sub.getGroup() != null && sub.getGroup().getId() != null) {
+                map.put(sub.getGroup().getId(), sub);
+            }
+        }
+        return map;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, AssessmentSubmission> getStudentSubmissionsMap(Assessment assessment) {
+        if (assessment == null)
+            return Collections.emptyMap();
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
+        List<AssessmentSubmission> submissions = submissionRepository.findByAssessment(effective);
+        Map<Long, AssessmentSubmission> map = new HashMap<>();
+        for (AssessmentSubmission sub : submissions) {
+            if (sub.getStudent() != null && sub.getStudent().getId() != null) {
+                map.put(sub.getStudent().getId(), sub);
+            }
+        }
+        return map;
     }
 }

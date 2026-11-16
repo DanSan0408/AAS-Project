@@ -20,8 +20,11 @@ import lombok.NoArgsConstructor;
 @Table(name = "lecturer", indexes = {
     @Index(name = "idx_lecturer_course", columnList = "course_id"),
     @Index(name = "idx_lecturer_email_course", columnList = "email,course_id", unique = true),
-    @Index(name = "idx_lecturer_username", columnList = "username", unique = true)
-}, uniqueConstraints = @UniqueConstraint(name = "uk_lecturer_email_course", columnNames = {"email", "course_id"}))
+    @Index(name = "idx_lecturer_username_course", columnList = "username,course_id", unique = true)
+}, uniqueConstraints = {
+    @UniqueConstraint(name = "uk_lecturer_email_course", columnNames = {"email", "course_id"}),
+    @UniqueConstraint(name = "uk_lecturer_username_course", columnNames = {"username", "course_id"})
+})
 
 @Data
 @NoArgsConstructor
@@ -33,7 +36,7 @@ public class Lecturer {
     private Long id;
 
     @NotBlank
-    @Column(unique = true, nullable = true)
+    @Column(nullable = true)
     private String username;
 
     @Column(nullable = false)

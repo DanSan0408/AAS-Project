@@ -99,6 +99,14 @@
                     <span th:text="${assessment.submissionInstructions}">Instructions text</span>
                 </div>
 
+                <!-- Multi-assessment Shared Report Info Banner -->
+                <div th:if="${assessment.submissionSourceAssessment != null}" 
+                     class="simple-instructions-box" 
+                     style="background: #f0fdf4; border-left-color: #10b981; color: #065f46;">
+                    <i class="fas fa-link" style="color: #10b981;"></i>
+                    <span>Shared Report: This assessment uses the report submitted for <strong th:text="${assessment.submissionSourceAssessment.title}">Source Assessment</strong>. Uploaded files and assessor annotations are automatically synchronized across both assessments.</span>
+                </div>
+
                 <!-- STATE 1: ALREADY SUBMITTED -->
                 <div th:if="${submission != null}" class="submitted-box">
                     <div class="file-summary-row">

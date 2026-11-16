@@ -24,8 +24,12 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,6 +44,8 @@ public class CourseScopeService {
     private final AdminCourseAssignmentRepository adminCourseAssignmentRepository;
     private final SuperAdminService superAdminService;
     private final JdbcTemplate jdbcTemplate;
+    private StudentRepository studentRepository;
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     public CourseScopeService(
             LecturerRepository lecturerRepository,
@@ -52,6 +58,22 @@ public class CourseScopeService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    public CourseScopeService(
+            LecturerRepository lecturerRepository,
+            AdminCourseAssignmentRepository adminCourseAssignmentRepository,
+            SuperAdminService superAdminService,
+            JdbcTemplate jdbcTemplate,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) StudentRepository studentRepository,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) StudentCourseAssignmentRepository studentCourseAssignmentRepository) {
+        this.lecturerRepository = lecturerRepository;
+        this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
+        this.superAdminService = superAdminService;
+        this.jdbcTemplate = jdbcTemplate;
+        this.studentRepository = studentRepository;
+        this.studentCourseAssignmentRepository = studentCourseAssignmentRepository;
+    }
+
     public List<Course> getManagedCoursesForCurrentUser() {
         String username = getLoggedInUsername();
         if (username == null || username.isBlank()) {
@@ -60,19 +82,24 @@ public class CourseScopeService {
 
         List<Lecturer> lecturers = resolveLecturersByIdentity(lecturerRepository, username);
         if (lecturers.isEmpty()) {
-            return Collections.emptyList();
+            return getEnrolledCoursesForStudent(username);
         }
 
         Set<Course> allManagedCourses = new LinkedHashSet<>();
-        List<Course> allCourses = superAdminService.getAllCourses();
+        List<Course> allCourses = superAdminService != null ? superAdminService.getAllCourses() : Collections.emptyList();
 
         for (Lecturer lecturer : lecturers) {
+            Course directCourse = safeCourseFromLecturer(lecturer);
+            if (directCourse != null && directCourse.getId() != null) {
+                allManagedCourses.add(directCourse);
+            }
+
             Set<Long> assignedCourseIds = findAssignedCourseIdsForLecturer(lecturer.getId());
             List<Course> assignments = loadCoursesByIds(assignedCourseIds).stream()
                 .filter(c -> c != null && c.getId() != null)
                 .collect(Collectors.toList());
 
-            if (assignments.isEmpty()) {
+            if (assignments.isEmpty() && adminCourseAssignmentRepository != null) {
                 assignments = adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())
                     .stream()
                     .map(this::safeCourseFromAssignment)
@@ -80,22 +107,71 @@ public class CourseScopeService {
                     .collect(Collectors.toList());
             }
 
-            Course legacyCourse = safeCourseFromLecturer(lecturer);
-            if (assignments.isEmpty() && legacyCourse != null && legacyCourse.getId() != null) {
-                assignments = List.of(legacyCourse);
-            }
-
             allManagedCourses.addAll(deduplicateById(assignments));
 
-            List<Course> createdCourses = allCourses.stream()
-                .filter(c -> c != null && c.getId() != null && c.getCreatedBy() != null
-                          && c.getCreatedBy().getId() != null
-                          && c.getCreatedBy().getId().equals(lecturer.getId()))
-                .collect(Collectors.toList());
-            allManagedCourses.addAll(createdCourses);
+            if (allCourses != null) {
+                List<Course> createdCourses = allCourses.stream()
+                    .filter(c -> c != null && c.getId() != null && c.getCreatedBy() != null
+                              && c.getCreatedBy().getId() != null
+                              && c.getCreatedBy().getId().equals(lecturer.getId()))
+                    .collect(Collectors.toList());
+                allManagedCourses.addAll(createdCourses);
+            }
         }
 
+        List<Course> studentCourses = getEnrolledCoursesForStudent(username);
+        allManagedCourses.addAll(studentCourses);
+
         return sortCourses(deduplicateById(new ArrayList<>(allManagedCourses)));
+    }
+
+    public List<Course> getEnrolledCoursesForStudent(String username) {
+        if (studentRepository == null || username == null || username.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        Set<Course> courses = new LinkedHashSet<>();
+        List<Student> students = new ArrayList<>();
+        
+        try {
+            List<Student> byEmail = studentRepository.findAllByEmailIgnoreCase(username);
+            if (byEmail != null) students.addAll(byEmail);
+        } catch (Exception ignored) {
+            studentRepository.findByEmail(username).ifPresent(students::add);
+        }
+        try {
+            List<Student> byUsername = studentRepository.findAllByUsernameIgnoreCase(username);
+            if (byUsername != null) {
+                for (Student s : byUsername) {
+                    if (!students.contains(s)) students.add(s);
+                }
+            }
+        } catch (Exception ignored) {
+            studentRepository.findByUsername(username).ifPresent(s -> {
+                if (!students.contains(s)) students.add(s);
+            });
+        }
+
+        for (Student student : students) {
+            if (student.getCourse() != null && student.getCourse().getId() != null) {
+                courses.add(student.getCourse());
+            }
+            if (student.getGroup() != null && student.getGroup().getCourse() != null && student.getGroup().getCourse().getId() != null) {
+                courses.add(student.getGroup().getCourse());
+            }
+            if (studentCourseAssignmentRepository != null && student.getId() != null) {
+                List<StudentCourseAssignment> assignments = studentCourseAssignmentRepository.findByStudentId(student.getId());
+                if (assignments != null) {
+                    for (StudentCourseAssignment sca : assignments) {
+                        if (sca.getCourse() != null && sca.getCourse().getId() != null) {
+                            courses.add(sca.getCourse());
+                        }
+                    }
+                }
+            }
+        }
+
+        return sortCourses(deduplicateById(new ArrayList<>(courses)));
     }
 
     public Set<Long> getManagedCourseIdsForCurrentUser() {

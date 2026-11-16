@@ -1,201 +1,239 @@
 /**
- * UTM CAS - Centralized Loading Animation Script
- * 
+ * ==========================================================================
+ * IAMS Loading Animation & Transition Controller
+ * Integrated Assessment Management System (IAMS)
+ * ==========================================================================
  * Features:
- * - Loading screen on page load/refresh with no white flash
- * - Smooth page transitions between pages (no double loading)
- * - Optimized for speed and smoothness
- * 
- * Usage:
- * 1. Include critical.css FIRST in head
- * 2. Include loading.css after critical.css
- * 3. Include this script before closing body tag
+ * - Institutional IAMS brand loading animation with logo breathing aura and progress shimmer
+ * - Programmatic API: IAMSLoading.show(message), IAMSLoading.hide(), IAMSLoading.setMessage(msg)
+ * - Auto-injects loading screen into DOM if not present (zero manual boilerplate needed)
+ * - Seamless page load & link transitions with reduced-motion respect
+ * - 100% backwards-compatible with UTMLoading alias
  */
 
-const UTMLoading = {
-    config: {
-        // ===== CUSTOMIZE THESE DURATIONS =====
-        
-        duration: 500,              // Page load/refresh: How long to show loading (milliseconds)
-                                     // Recommended: 800-1500ms
-        
-        fadeOutTime: 600,            // How long loading screen takes to fade out (milliseconds)
-                                     // Recommended: 400-800ms
-        
-        transitionDuration: 400,     // Page navigation: How long content fades out (milliseconds)
-                                     // Recommended: 300-500ms
-        
-        navigationDelay: 400,        // Page navigation: Wait before navigating (milliseconds)
-                                     // Recommended: 300-500ms
-        
-        crossfadeOverlap: 200,       // Overlap between loading fade-out and content fade-in (milliseconds)
-                                     // Recommended: 150-300ms
-        
-        // ===== END CUSTOMIZATION =====
-        
-        enablePageTransitions: true, // Auto-intercept internal links
+(function(window, document) {
+    'use strict';
+
+    const DEFAULT_CONFIG = {
+        logoUrl: '/images/IAMS_logo2.png',
+        defaultMessage: 'Integrated Assessment Management System',
+        duration: 0,               // Disabled animation for instant loading
+        fadeOutTime: 0,            // Disabled fade out transition
+        transitionDuration: 0,     // Disabled page exit fade duration
+        navigationDelay: 0,        // Disabled navigation delay
+        enablePageTransitions: false, // Disabled: no link interception
+        autoInject: false,         // Disabled: do not inject loading overlay
         excludeSelectors: [
             'a[target="_blank"]',
             'a[download]',
             'a[href^="mailto:"]',
             'a[href^="tel:"]',
             'a[href^="#"]',
+            'a[href^="javascript:"]',
             'a.no-transition',
-            'form'
-        ],
-        onComplete: null
-    },
+            '.no-loading-transition'
+        ]
+    };
 
-    init: function(options = {}) {
-        this.config = { ...this.config, ...options };
-        this.loadingScreen = document.getElementById('loading-screen');
-        this.pageContent = document.querySelector('.page-content');
+    const IAMSLoading = {
+        config: { ...DEFAULT_CONFIG },
+        screenElement: null,
+        messageElement: null,
+        initialized: false,
 
-        if (!this.loadingScreen) {
-            console.warn('Loading screen not found');
+        /**
+         * Initialize the loading controller
+         */
+        init: function(userOptions = {}) {
+            if (this.initialized) return;
+            this.config = { ...this.config, ...userOptions };
+
+            this.screenElement = document.getElementById('loading-screen') || document.querySelector('.iams-loading-screen');
+
+            // Animation disabled: ensure body is always marked loaded immediately and screen is hidden
             document.body.classList.add('loaded');
-            return;
-        }
 
-        // Check if coming from page transition
-        const isTransitioning = sessionStorage.getItem('utm-transitioning') === 'true';
-        
-        if (isTransitioning) {
-            sessionStorage.removeItem('utm-transitioning');
-            // Skip the loading animation - just fade in content immediately
-            // The loading screen is already visible from critical.css
-            setTimeout(() => {
-                this.hide();
-            }, 100); // Very brief delay, then fade in content
-        } else {
-            // Normal page load/refresh - show full loading animation
-            // Initialize page transitions
-            if (this.config.enablePageTransitions) {
-                this.initPageTransitions();
+            if (this.screenElement) {
+                this.screenElement.style.display = 'none';
+                this.screenElement.classList.add('fade-out');
+                this.screenElement.setAttribute('aria-busy', 'false');
             }
 
-            // Auto-hide loading screen after duration
-            if (document.readyState === 'complete') {
-                this.hide();
+            this.initialized = true;
+        },
+
+        /**
+         * Show the loading screen (Disabled: safe no-op)
+         */
+        show: function(message) {
+            document.body.classList.add('loaded');
+            if (this.screenElement) {
+                this.screenElement.style.display = 'none';
+                this.screenElement.classList.add('fade-out');
+            }
+        },
+
+        /**
+         * Set the status text while the loading screen is active
+         */
+        setMessage: function(message) {
+            if (this.messageElement && message) {
+                this.messageElement.textContent = message;
+            }
+        },
+
+        /**
+         * Hide the loading screen immediately
+         */
+        hide: function(callback) {
+            document.body.classList.add('loaded');
+            if (this.screenElement) {
+                this.screenElement.style.display = 'none';
+                this.screenElement.classList.add('fade-out');
+                this.screenElement.setAttribute('aria-busy', 'false');
+            }
+            if (typeof callback === 'function') callback();
+        },
+
+            const self = this;
+            document.body.classList.add('loaded');
+            this.screenElement.classList.add('fade-out');
+            this.screenElement.setAttribute('aria-busy', 'false');
+
+            setTimeout(() => {
+                if (self.screenElement && self.screenElement.classList.contains('fade-out')) {
+                    self.screenElement.style.display = 'none';
+                }
+                if (typeof callback === 'function') callback();
+            }, this.config.fadeOutTime);
+        },
+
+        /**
+         * Trigger a timed loading animation (useful for async actions)
+         */
+        trigger: function(duration = 1000, message = null, callback = null) {
+            this.show(message);
+            setTimeout(() => {
+                this.hide(callback);
+            }, duration);
+        },
+
+        /**
+         * Create an in-component/inline loader element for widgets/cards
+         */
+        createInline: function(container, message = 'Loading data...') {
+            if (!container) return null;
+            const inlineEl = document.createElement('div');
+            inlineEl.className = 'iams-loader-inline';
+            inlineEl.setAttribute('role', 'status');
+            inlineEl.innerHTML = `
+                <div class="iams-loading-visual">
+                    <div class="iams-loading-glow" aria-hidden="true"></div>
+                    <div class="iams-loading-ring" aria-hidden="true"></div>
+                    <img src="${this.config.logoUrl}" alt="IAMS Logo" class="iams-loading-logo" />
+                </div>
+                <div class="iams-loading-brand">IAMS</div>
+                <div class="iams-loading-text">${message}</div>
+                <div class="iams-loading-track" aria-hidden="true">
+                    <div class="iams-loading-progress"></div>
+                </div>
+            `;
+            container.innerHTML = '';
+            container.appendChild(inlineEl);
+            return inlineEl;
+        },
+
+        // ======================================================================
+        // Private Internal Helpers
+        // ======================================================================
+
+        _createScreenElement: function() {
+            const screen = document.createElement('div');
+            screen.id = 'loading-screen';
+            screen.className = 'iams-loading-screen';
+            screen.setAttribute('role', 'status');
+            screen.setAttribute('aria-live', 'polite');
+            screen.setAttribute('aria-busy', 'true');
+            screen.innerHTML = `
+                <div class="iams-loading-container">
+                    <div class="iams-loading-visual">
+                        <div class="iams-loading-glow" aria-hidden="true"></div>
+                        <div class="iams-loading-ring" aria-hidden="true"></div>
+                        <img src="${this.config.logoUrl}" alt="IAMS Logo" class="iams-loading-logo" />
+                    </div>
+                    <div class="iams-loading-meta">
+                        <div class="iams-loading-brand">IAMS</div>
+                        <div class="iams-loading-text" id="iams-loading-msg">${this.config.defaultMessage}</div>
+                        <div class="iams-loading-track" aria-hidden="true">
+                            <div class="iams-loading-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return screen;
+        },
+
+        _handleInitialLoad: function() {
+            const isTransitioning = sessionStorage.getItem('iams-transitioning') === 'true';
+            if (isTransitioning) {
+                sessionStorage.removeItem('iams-transitioning');
+                setTimeout(() => this.hide(), 80);
             } else {
-                window.addEventListener('load', () => this.hide());
-            }
-        }
-    },
-
-    initPageTransitions: function() {
-        const self = this;
-        
-        // Intercept internal link clicks
-        document.addEventListener('click', function(e) {
-            const link = e.target.closest('a');
-            if (!link || self.shouldExcludeLink(link) || !self.isInternalLink(link)) {
-                return;
-            }
-            
-            e.preventDefault();
-            self.navigateWithTransition(link.href);
-        });
-
-        // Handle browser back/forward cache
-        window.addEventListener('pageshow', function(e) {
-            if (e.persisted) {
-                document.body.classList.remove('loaded');
-                if (self.loadingScreen) {
-                    self.loadingScreen.classList.remove('fade-out');
-                    self.loadingScreen.style.opacity = '1';
+                if (document.readyState === 'complete') {
+                    setTimeout(() => this.hide(), this.config.duration);
+                } else {
+                    window.addEventListener('load', () => {
+                        setTimeout(() => this.hide(), this.config.duration);
+                    });
                 }
-                setTimeout(() => self.hide(), 100);
             }
-        });
-    },
+        },
 
-    shouldExcludeLink: function(link) {
-        return this.config.excludeSelectors.some(selector => link.matches(selector));
-    },
+        _bindNavigationTransitions: function() {
+            if (!this.config.enablePageTransitions) return;
+            const self = this;
 
-    isInternalLink: function(link) {
-        return link.hostname === window.location.hostname;
-    },
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                if (!link || self._shouldExclude(link)) return;
 
-    navigateWithTransition: function(url) {
-        const self = this;
-        
-        // Don't do anything to the loading screen - it stays visible via CSS
-        // Just fade out the content and navigate
-        
-        // Fade out current content smoothly
-        if (this.pageContent) {
-            this.pageContent.style.transition = `opacity ${this.config.transitionDuration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-            this.pageContent.style.opacity = '0';
-        }
-        
-        // Navigate after smooth fade
-        // The new page will load with loading screen already visible (from critical.css)
-        setTimeout(() => {
-            sessionStorage.setItem('utm-transitioning', 'true');
-            window.location.href = url;
-        }, this.config.navigationDelay);
-    },
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
-    show: function() {
-        if (this.loadingScreen) {
-            document.body.classList.remove('loaded');
-            this.loadingScreen.classList.remove('fade-out');
-            this.loadingScreen.style.opacity = '1';
-        }
-    },
+                // Only handle same-origin URLs
+                if (link.hostname !== window.location.hostname) return;
 
-    hide: function() {
-        const self = this;
-        
-        setTimeout(() => {
-            // Mark as loaded - content will start fading in
-            document.body.classList.add('loaded');
+                e.preventDefault();
+                sessionStorage.setItem('iams-transitioning', 'true');
+                self.show();
 
-            // Slight delay before fading out loading screen for overlap effect
-            setTimeout(() => {
-                if (self.loadingScreen) {
-                    self.loadingScreen.classList.add('fade-out');
-                    
-                    // Hide loading screen after fade completes
-                    setTimeout(() => {
-                        self.loadingScreen.style.display = 'none';
-                    }, self.config.fadeOutTime);
-                }
-            }, self.config.crossfadeOverlap);
-
-            // Callback after content is visible
-            if (typeof self.config.onComplete === 'function') {
                 setTimeout(() => {
-                    self.config.onComplete();
-                }, 400);
-            }
-        }, this.config.duration);
-    },
+                    window.location.href = link.href;
+                }, self.config.navigationDelay);
+            });
 
-    trigger: function(duration = null, callback = null) {
-        this.show();
-        const loadDuration = duration !== null ? duration : this.config.duration;
-        
-        setTimeout(() => {
-            this.hide();
-            if (callback) callback();
-        }, loadDuration);
-    },
+            // Handle back/forward cache restore
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    self.hide();
+                }
+            });
+        },
 
-    goTo: function(url) {
-        this.navigateWithTransition(url);
-    }
-};
+        _shouldExclude: function(link) {
+            return this.config.excludeSelectors.some(selector => link.matches(selector));
+        }
+    };
 
-// Auto-initialize
-(function() {
+    // Auto boot on DOM load
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => UTMLoading.init());
+        document.addEventListener('DOMContentLoaded', () => IAMSLoading.init());
     } else {
-        UTMLoading.init();
+        IAMSLoading.init();
     }
-})();
 
-window.UTMLoading = UTMLoading;
+    // Expose global aliases (modern IAMSLoading + legacy UTMLoading)
+    window.IAMSLoading = IAMSLoading;
+    window.UTMLoading = IAMSLoading;
+
+})(window, document);

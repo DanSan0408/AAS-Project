@@ -194,10 +194,14 @@ public class AdminController {
     }
 
     private boolean ownsLecturer(Lecturer lecturer) {
-        return lecturer != null
-                && lecturer.getCourse() != null
-                && lecturer.getCourse().getId() != null
-                && courseScopeService.isActiveCourseId(lecturer.getCourse().getId());
+        if (lecturer == null) {
+            return false;
+        }
+        if (lecturer.getCourse() != null && lecturer.getCourse().getId() != null
+                && courseScopeService.isActiveCourseId(lecturer.getCourse().getId())) {
+            return true;
+        }
+        return adminService.isLecturerInActiveCourse(lecturer);
     }
 
     private boolean ownsGroup(Group group) {
@@ -425,6 +429,16 @@ public class AdminController {
     // check component tu rubric ke tak
     public boolean isRubricType(Object component) {
         return component instanceof Rubric;
+    }
+
+    @GetMapping("/manage-assessments")
+    public String manageAssessmentsRedirect() {
+        return "redirect:/rubrics/manage";
+    }
+
+    @GetMapping("/assessments/manage")
+    public String assessmentsManageRedirect() {
+        return "redirect:/rubrics/manage";
     }
 
     // gathering data from various services and pass it to admin_home
@@ -739,7 +753,16 @@ public class AdminController {
             return "redirect:/rubrics/manage";
         }
 
+        List<Assessment> courseAssessments = List.of();
+        if (assessment.getCourse() != null && assessment.getCourse().getId() != null) {
+            courseAssessments = assessmentService.findAllAssessmentsWithRubricsByCourseId(assessment.getCourse().getId())
+                    .stream()
+                    .filter(a -> a != null && !a.getId().equals(assessment.getId()))
+                    .collect(Collectors.toList());
+        }
+
         model.addAttribute("assessment", assessment);
+        model.addAttribute("courseAssessments", courseAssessments);
         model.addAttribute("adminUsername", getLoggedInUsername());
 
         return "assessment_submission_configuration";
@@ -749,6 +772,8 @@ public class AdminController {
     public String saveAssessmentSubmissionConfig(
             @PathVariable Long assessmentId,
             @RequestParam(value = "requiresSubmission", defaultValue = "false") boolean requiresSubmission,
+            @RequestParam(value = "submissionMode", defaultValue = "DIRECT") String submissionMode,
+            @RequestParam(value = "submissionSourceAssessmentId", required = false) Long submissionSourceAssessmentId,
             @RequestParam(value = "submissionTitle", required = false) String submissionTitle,
             @RequestParam(value = "submissionScope", defaultValue = "GROUP") String submissionScope,
             @RequestParam(value = "maxFileSizeMb", defaultValue = "50") Integer maxFileSizeMb,
@@ -763,6 +788,17 @@ public class AdminController {
         }
 
         assessment.setRequiresSubmission(requiresSubmission);
+        if (requiresSubmission && "SHARED".equalsIgnoreCase(submissionMode) && submissionSourceAssessmentId != null && submissionSourceAssessmentId > 0) {
+            Assessment sourceAssessment = assessmentService.getAssessmentById(submissionSourceAssessmentId).orElse(null);
+            if (sourceAssessment != null && ownsAssessment(sourceAssessment) && !sourceAssessment.getId().equals(assessment.getId())) {
+                assessment.setSubmissionSourceAssessment(sourceAssessment);
+            } else {
+                assessment.setSubmissionSourceAssessment(null);
+            }
+        } else {
+            assessment.setSubmissionSourceAssessment(null);
+        }
+
         assessment.setSubmissionTitle(submissionTitle != null && !submissionTitle.trim().isEmpty() ? HtmlSanitizerUtil.sanitizePlainText(submissionTitle.trim()) : null);
         assessment.setSubmissionScope(submissionScope != null ? submissionScope : "GROUP");
         assessment.setSubmissionInstructions(submissionInstructions != null ? HtmlSanitizerUtil.sanitizePlainText(submissionInstructions.trim()) : null);

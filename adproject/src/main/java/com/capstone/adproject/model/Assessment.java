@@ -13,6 +13,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -45,10 +46,12 @@ public class Assessment {
     @Column(name = "extra_notes_for_student", columnDefinition = "TEXT")
     private String extraNotesForStudent;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne
     @JoinColumn(name = "course_id")
     private Course course;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "assessment", cascade = CascadeType.ALL, orphanRemoval = true)
     @Filter(name = "courseScopeFilter", condition = "1=1")
     private List<Rubric> rubrics = new ArrayList<>();
@@ -113,6 +116,11 @@ public class Assessment {
 
     @Column(name = "max_file_size_mb")
     private Integer maxFileSizeMb = 50;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submission_source_assessment_id")
+    private Assessment submissionSourceAssessment;
     
     @Transient
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -139,9 +147,11 @@ public class Assessment {
         return com.capstone.adproject.util.HtmlSanitizerUtil.linkify(this.extraNotesForStudent);
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Course getCourse() { return course; }
     public void setCourse(Course course) { this.course = course; }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public List<Rubric> getRubrics() { 
         if (rubrics == null) { 
             rubrics = new ArrayList<>(); 
@@ -175,7 +185,14 @@ public class Assessment {
     }
     
     public void setGroupCommentLabels(List<String> groupCommentLabels) {
-        this.groupCommentLabels = groupCommentLabels;
+        if (this.groupCommentLabels == null) {
+            this.groupCommentLabels = new ArrayList<>();
+        } else {
+            this.groupCommentLabels.clear();
+        }
+        if (groupCommentLabels != null) {
+            this.groupCommentLabels.addAll(groupCommentLabels);
+        }
     }
     
     public String getGroupCommentLabel(int index) {
@@ -291,7 +308,14 @@ public class Assessment {
     }
     
     public void setIndividualCommentLabels(List<String> individualCommentLabels) {
-        this.individualCommentLabels = individualCommentLabels;
+        if (this.individualCommentLabels == null) {
+            this.individualCommentLabels = new ArrayList<>();
+        } else {
+            this.individualCommentLabels.clear();
+        }
+        if (individualCommentLabels != null) {
+            this.individualCommentLabels.addAll(individualCommentLabels);
+        }
     }
     
     public String getIndividualCommentLabel(int index) {
@@ -515,10 +539,50 @@ public class Assessment {
         this.submissionTitle = submissionTitle;
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Assessment getSubmissionSourceAssessment() {
+        return submissionSourceAssessment;
+    }
+
+    public void setSubmissionSourceAssessment(Assessment submissionSourceAssessment) {
+        this.submissionSourceAssessment = submissionSourceAssessment;
+    }
+
+    public boolean isSubmissionShared() {
+        return Boolean.TRUE.equals(this.getRequiresSubmission()) && this.submissionSourceAssessment != null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    public Assessment getEffectiveSubmissionAssessment() {
+        return this.submissionSourceAssessment != null ? this.submissionSourceAssessment : this;
+    }
+
     public String getEffectiveSubmissionTitle() {
-        return (submissionTitle != null && !submissionTitle.trim().isEmpty())
-                ? submissionTitle.trim()
-                : "Report / Assignment Submission";
+        if (submissionTitle != null && !submissionTitle.trim().isEmpty()) {
+            return submissionTitle.trim();
+        }
+        if (submissionSourceAssessment != null && submissionSourceAssessment.getSubmissionTitle() != null
+                && !submissionSourceAssessment.getSubmissionTitle().trim().isEmpty()) {
+            return submissionSourceAssessment.getSubmissionTitle().trim();
+        }
+        return "Report / Assignment Submission";
+    }
+
+    public String getEffectiveSubmissionScope() {
+        if (submissionSourceAssessment != null && submissionSourceAssessment.getSubmissionScope() != null) {
+            return submissionSourceAssessment.getSubmissionScope();
+        }
+        return getSubmissionScope();
+    }
+
+    public String getEffectiveSubmissionInstructions() {
+        if (submissionInstructions != null && !submissionInstructions.trim().isEmpty()) {
+            return submissionInstructions.trim();
+        }
+        if (submissionSourceAssessment != null && submissionSourceAssessment.getSubmissionInstructions() != null) {
+            return submissionSourceAssessment.getSubmissionInstructions().trim();
+        }
+        return "";
     }
 
     public Integer getMaxFileSizeMb() {

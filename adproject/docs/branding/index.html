@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAMS Brand Guidelines & Loading Animation Showcase</title>
+    <link rel="stylesheet" href="../../adproject/src/main/resources/static/css/loading.css">
+    <style>
+        :root {
+            --brand-maroon: #4A0018;
+            --brand-gold: #F8A617;
+            --brand-bg: #F4F2EE;
+            --brand-surface: #FFFFFF;
+            --brand-text: #18181B;
+            --brand-subtext: #52525B;
+            --brand-border: #E2E8F0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--brand-bg);
+            color: var(--brand-text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header.showcase-header {
+            background: linear-gradient(135deg, #4A0018 0%, #2D000E 100%);
+            color: #FFFFFF;
+            padding: 40px 24px;
+            text-align: center;
+            border-bottom: 4px solid var(--brand-gold);
+        }
+
+        header.showcase-header img {
+            max-width: 220px;
+            height: auto;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        header.showcase-header h1 {
+            margin: 0 0 8px 0;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        header.showcase-header p {
+            margin: 0 auto;
+            max-width: 650px;
+            color: #E4E4E7;
+            font-size: 1.05rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        .section-card {
+            background: var(--brand-surface);
+            border-radius: 16px;
+            border: 1px solid var(--brand-border);
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .section-card h2 {
+            margin-top: 0;
+            color: var(--brand-maroon);
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #F4F2EE;
+            padding-bottom: 12px;
+        }
+
+        /* Color Swatches Grid */
+        .swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .swatch-card {
+            border: 1px solid var(--brand-border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #FAFAFA;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease;
+            cursor: pointer;
+        }
+
+        .swatch-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .swatch-color {
+            height: 90px;
+            width: 100%;
+        }
+
+        .swatch-info {
+            padding: 12px 14px;
+        }
+
+        .swatch-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-bottom: 2px;
+        }
+
+        .swatch-hex {
+            font-family: monospace;
+            font-size: 0.82rem;
+            color: var(--brand-subtext);
+        }
+
+        /* Interactive Animation Playground */
+        .preview-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 20px;
+            background: #F4F2EE;
+            border-radius: 14px;
+            border: 2px dashed #D4D4D8;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-brand {
+            background: var(--brand-maroon);
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-brand:hover {
+            background: #6B0025;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 0, 24, 0.25);
+        }
+
+        .btn-secondary {
+            background: #FFFFFF;
+            color: var(--brand-text);
+            border: 1px solid #D4D4D8;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #F4F4F5;
+        }
+
+        .custom-text-input {
+            padding: 10px 14px;
+            border: 1px solid #D4D4D8;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            width: 280px;
+            max-width: 100%;
+        }
+
+        /* Asset Cards Grid */
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .asset-card {
+            border: 1px solid var(--brand-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: #FAFAFA;
+        }
+
+        .asset-preview-box {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .asset-preview-box img {
+            max-height: 90px;
+            max-width: 90%;
+            object-fit: contain;
+        }
+
+        .asset-card h3 {
+            margin: 0 0 4px 0;
+            font-size: 1.05rem;
+        }
+
+        .asset-meta {
+            font-size: 0.8rem;
+            color: var(--brand-subtext);
+            margin-bottom: 12px;
+        }
+
+        pre.code-block {
+            background: #18181B;
+            color: #FAFAFA;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            overflow-x: auto;
+            margin-top: 14px;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #18181B;
+            color: #FFFFFF;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: none;
+            z-index: 9999999;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="showcase-header">
+        <img src="assets/IAMS_logo2.png" alt="IAMS Official Logo">
+        <h1>IAMS BRAND IDENTITY &amp; DESIGN SYSTEM</h1>
+        <p>Official Institutional Reference for Assets, Typography, Colors, and Interactive Loading Animations.</p>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. Interactive Loading Animation Showcase -->
+        <div class="section-card">
+            <h2>✨ Interactive IAMS Loading Animation Showcase</h2>
+            <p>The official IAMS loading animation integrates the primary emblem with a luminous breathing halo, a dual-tone orbital ring, and a gradient shimmer progress bar.</p>
+
+            <div class="preview-stage" id="previewStage">
+                <div class="iams-loading-container" style="box-shadow: 0 10px 30px rgba(74, 0, 24, 0.08);">
+                    <div class="iams-loading-visual">
+                        <div class="iams-loading-glow"></div>
+                        <div class="iams-loading-ring"></div>
+                        <img src="assets/IAMS_logo2.png" alt="IAMS Logo" class="iams-loading-logo">
+                    </div>
+                    <div class="iams-loading-meta">
+                        <div class="iams-loading-brand">IAMS</div>
+                        <div class="iams-loading-text" id="demoLoadingText">Integrated Assessment Management System</div>
+                        <div class="iams-loading-track">
+                            <div class="iams-loading-progress"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-controls">
+                <button type="button" class="btn-brand" onclick="triggerFullscreenDemo()">
+                    🚀 Launch Fullscreen Overlay Demo (3s)
+                </button>
+                <input type="text" id="customMessageInput" class="custom-text-input" placeholder="Type custom status message..." value="Calculating final capstone marks...">
+                <button type="button" class="btn-secondary" onclick="updateCustomText()">
+                    Apply Status Text
+                </button>
+                <button type="button" class="btn-secondary" onclick="toggleStageTheme()">
+                    🌗 Toggle Light / Dark Background
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Official Brand Assets -->
+        <div class="section-card">
+            <h2>📁 Official Brand Assets</h2>
+            <p>Assets are cataloged in <code>docs/branding/assets/</code> and deployed to <code>adproject/src/main/resources/static/images/</code>.</p>
+
+            <div class="assets-grid">
+                <div class="asset-card">
+                    <div class="asset-preview-box">
+                        <img src="assets/IAMS_logo2.png" alt="IAMS Primary Logo">
+                    </div>
+                    <h3>IAMS_logo2.png</h3>
+                    <div class="asset-meta">666 × 375 PNG • Alpha Transparent</div>
+                    <p style="font-size: 0.85rem; color: #52525B;">Primary institutional mark for headers, cards, and loading screens.</p>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview-box">
+                        <img src="assets/IAMS_logo.jpeg" alt="IAMS Master Graphic">
+                    </div>
+                    <h3>IAMS_logo.jpeg</h3>
+                    <div class="asset-meta">1280 × 720 JPEG • Solid Background</div>
+                    <p style="font-size: 0.85rem; color: #52525B;">High-resolution banner graphic for covers and presentations.</p>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview-box">
+                        <img src="assets/utmlogo.png" alt="UTM Logo">
+                    </div>
+                    <h3>utmlogo.png</h3>
+                    <div class="asset-meta">887 × 300 PNG • Alpha Transparent</div>
+                    <p style="font-size: 0.85rem; color: #52525B;">University partner mark for footer and accreditation.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Official Palette & Swatches -->
+        <div class="section-card">
+            <h2>🎨 Institutional Color Palette</h2>
+            <p>Click any swatch to copy its hex value to the clipboard.</p>
+
+            <div class="swatch-grid">
+                <div class="swatch-card" onclick="copyHex('#4A0018', 'Institutional Maroon')">
+                    <div class="swatch-color" style="background: #4A0018;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Maroon (Brand Primary)</div>
+                        <div class="swatch-hex">#4A0018</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#6B0025', 'Maroon Light')">
+                    <div class="swatch-color" style="background: #6B0025;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Maroon Light (Hover)</div>
+                        <div class="swatch-hex">#6B0025</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#F8A617', 'Institutional Gold')">
+                    <div class="swatch-color" style="background: #F8A617;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Gold (Brand Accent)</div>
+                        <div class="swatch-hex">#F8A617</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#047857', 'Evaluator Emerald')">
+                    <div class="swatch-color" style="background: #047857;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Evaluator Emerald</div>
+                        <div class="swatch-hex">#047857</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#002B5B', 'Supervisor Navy')">
+                    <div class="swatch-color" style="background: #002B5B;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Supervisor Navy</div>
+                        <div class="swatch-hex">#002B5B</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#7A1E2D', 'Student Crimson')">
+                    <div class="swatch-color" style="background: #7A1E2D;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Student Crimson</div>
+                        <div class="swatch-hex">#7A1E2D</div>
+                    </div>
+                </div>
+
+                <div class="swatch-card" onclick="copyHex('#F4F2EE', 'Canvas Neutral')">
+                    <div class="swatch-color" style="background: #F4F2EE; border-bottom: 1px solid #E2E8F0;"></div>
+                    <div class="swatch-info">
+                        <div class="swatch-name">Canvas Neutral</div>
+                        <div class="swatch-hex">#F4F2EE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Implementation Code Snippets -->
+        <div class="section-card">
+            <h2>💻 Developer Quickstart &amp; API</h2>
+            <p>Incorporate the branded loading animation in any template with simple HTML or JavaScript calls:</p>
+
+            <h4 style="margin: 16px 0 6px 0; color: #4A0018;">Option A: JavaScript Programmatic API</h4>
+            <pre class="code-block"><code>// Show loading screen with custom operation text
+IAMSLoading.show('Calculating final capstone marks...');
+
+// Dynamically update status message during multi-stage actions
+IAMSLoading.setMessage('Generating summary report...');
+
+// Hide loading screen when operation completes
+IAMSLoading.hide();
+
+// Trigger a timed operation
+IAMSLoading.trigger(2000, 'Saving assessment changes...', function() {
+    console.log('Complete!');
+});</code></pre>
+
+            <h4 style="margin: 20px 0 6px 0; color: #4A0018;">Option B: Thymeleaf Reusable Fragment</h4>
+            <pre class="code-block"><code>&lt;!-- Pre-rendered fragment in templates/fragments/loading_screen.html --&gt;
+&lt;div th:replace="~{fragments/loading_screen :: loadingScreen}"&gt;&lt;/div&gt;
+
+&lt;!-- Link stylesheets and controller script --&gt;
+&lt;link rel="stylesheet" th:href="@{/css/loading.css}"&gt;
+&lt;script th:src="@{/js/loading.js}"&gt;&lt;/script&gt;</code></pre>
+        </div>
+
+    </div>
+
+    <!-- Fullscreen Loading Overlay for Interactive Demo -->
+    <div id="loading-screen" class="iams-loading-screen fade-out" style="display: none;">
+        <div class="iams-loading-container">
+            <div class="iams-loading-visual">
+                <div class="iams-loading-glow"></div>
+                <div class="iams-loading-ring"></div>
+                <img src="assets/IAMS_logo2.png" alt="IAMS Logo" class="iams-loading-logo">
+            </div>
+            <div class="iams-loading-meta">
+                <div class="iams-loading-brand">IAMS</div>
+                <div class="iams-loading-text" id="iams-loading-msg">Integrated Assessment Management System</div>
+                <div class="iams-loading-track">
+                    <div class="iams-loading-progress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-toast" id="copyToast">Copied to clipboard!</div>
+
+    <script src="../../adproject/src/main/resources/static/js/loading.js"></script>
+    <script>
+        function triggerFullscreenDemo() {
+            var msg = document.getElementById('customMessageInput').value || 'Processing assessment data...';
+            IAMSLoading.show(msg);
+            setTimeout(function() {
+                IAMSLoading.hide();
+            }, 3000);
+        }
+
+        function updateCustomText() {
+            var msg = document.getElementById('customMessageInput').value;
+            if (msg) {
+                document.getElementById('demoLoadingText').textContent = msg;
+                showToast('Status text updated on preview card!');
+            }
+        }
+
+        var isDarkStage = false;
+        function toggleStageTheme() {
+            var stage = document.getElementById('previewStage');
+            isDarkStage = !isDarkStage;
+            if (isDarkStage) {
+                stage.style.background = '#18181B';
+                stage.style.borderColor = '#3F3F46';
+                stage.setAttribute('data-theme', 'dark');
+            } else {
+                stage.style.background = '#F4F2EE';
+                stage.style.borderColor = '#D4D4D8';
+                stage.removeAttribute('data-theme');
+            }
+        }
+
+        function copyHex(hex, name) {
+            navigator.clipboard.writeText(hex).then(function() {
+                showToast('Copied ' + name + ' (' + hex + ') to clipboard!');
+            });
+        }
+
+        function showToast(text) {
+            var toast = document.getElementById('copyToast');
+            toast.textContent = text;
+            toast.style.display = 'block';
+            setTimeout(function() {
+                toast.style.display = 'none';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

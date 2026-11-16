@@ -21,7 +21,15 @@ public class AdminCourseContextAdvice {
 
     @ModelAttribute("managedCourses")
     public List<Course> managedCourses() {
-        if (!isAdminOrSuperAdmin()) {
+        if (!hasCourseContext()) {
+            return List.of();
+        }
+        return courseScopeService.getManagedCoursesForCurrentUser();
+    }
+
+    @ModelAttribute("studentCourses")
+    public List<Course> studentCourses() {
+        if (!hasCourseContext()) {
             return List.of();
         }
         return courseScopeService.getManagedCoursesForCurrentUser();
@@ -29,7 +37,7 @@ public class AdminCourseContextAdvice {
 
     @ModelAttribute("activeCourseId")
     public Long activeCourseId() {
-        if (!isAdminOrSuperAdmin()) {
+        if (!hasCourseContext()) {
             return null;
         }
         return courseScopeService.getActiveCourseIdForCurrentUser();
@@ -37,13 +45,13 @@ public class AdminCourseContextAdvice {
 
     @ModelAttribute("activeCourse")
     public Course activeCourse() {
-        if (!isAdminOrSuperAdmin()) {
+        if (!hasCourseContext()) {
             return null;
         }
         return courseScopeService.getActiveCourseForCurrentUser();
     }
 
-    private boolean isAdminOrSuperAdmin() {
+    private boolean hasCourseContext() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getAuthorities() == null) {
             return false;
@@ -51,7 +59,7 @@ public class AdminCourseContextAdvice {
 
         return authentication.getAuthorities().stream().anyMatch(a -> {
             String role = a.getAuthority();
-            return "ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role) || "ROLE_LECTURER".equals(role);
+            return "ROLE_ADMIN".equals(role) || "ROLE_SUPER_ADMIN".equals(role) || "ROLE_LECTURER".equals(role) || "ROLE_STUDENT".equals(role);
         });
     }
 }

@@ -17,7 +17,9 @@ import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentCourseAssignment;
+import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.AdminRepository;
+import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
@@ -27,6 +29,7 @@ import com.capstone.adproject.repositories.StudentRepository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -52,6 +55,12 @@ class AdminServiceTest {
     private AdminRepository adminRepository;
     @Mock
     private CourseScopeService courseScopeService;
+    @Mock
+    private AdminCourseAssignmentRepository adminCourseAssignmentRepository;
+    @Mock
+    private CourseRepository courseRepository;
+    @Mock
+    private SuperAdminService superAdminService;
 
     @InjectMocks
     private AdminService adminService;
@@ -138,14 +147,29 @@ class AdminServiceTest {
         lecturerB.setCourse(courseB);
 
         when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(20L);
-        when(lecturerRepository.findByCourseIdAndEmailContainingIgnoreCase(20L, "lec")).thenReturn(List.of(lecturerB));
+        when(lecturerRepository.findByCourseId(20L)).thenReturn(List.of(lecturerB));
 
         List<Lecturer> results = adminService.searchLecturers("lec");
 
         assertEquals(1, results.size());
         assertEquals(9L, results.get(0).getId());
-        verify(lecturerRepository).findByCourseIdAndEmailContainingIgnoreCase(20L, "lec");
+        verify(lecturerRepository).findByCourseId(20L);
         verify(lecturerRepository, never()).findByEmailContainingIgnoreCase("lec");
+    }
+
+    @Test
+    void testIsLecturerInActiveCourse_AdminAssignedViaAdminCourseAssignment() {
+        Lecturer adminLecturer = new Lecturer();
+        adminLecturer.setId(55L);
+        adminLecturer.setEmail("admin@example.com");
+        adminLecturer.setCourse(courseA); // Assigned directly to course A, but managing course B
+
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(20L);
+        when(adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(55L, 20L)).thenReturn(true);
+
+        boolean inCourse = adminService.isLecturerInActiveCourse(adminLecturer);
+
+        assertTrue(inCourse);
     }
 
     @Test

@@ -1,118 +1,320 @@
+/* ==========================================================================
+   IAMS Brand Loading Screen & Animation
+   Integrated Assessment Management System (IAMS)
+   ========================================================================== */
+
 :root {
-    --primary-maroon: #5C001F;
-    --secondary-gold: #F8A617;
-    --bg-moccasin: #FFE6BF;
+    --iams-brand-maroon: #4A0018;
+    --iams-brand-maroon-dark: #2D000E;
+    --iams-brand-maroon-light: #6B0025;
+    --iams-brand-gold: #F8A617;
+    --iams-brand-gold-glow: rgba(248, 166, 23, 0.35);
+    --iams-loading-bg: rgba(244, 242, 238, 0.94);
+    --iams-loading-text: #27272A;
+    --iams-loading-subtext: #52525B;
+    --iams-loading-card-bg: rgba(255, 255, 255, 0.92);
+    --iams-loading-card-border: rgba(74, 0, 24, 0.12);
+    --iams-loading-shadow: 0 20px 45px rgba(74, 0, 24, 0.12);
 }
 
-.loading-screen {
+/* Theme Adaptive Overrides */
+html[data-theme="dark"] {
+    --iams-loading-bg: rgba(18, 18, 22, 0.96);
+    --iams-loading-text: #FAFAFA;
+    --iams-loading-subtext: #A1A1AA;
+    --iams-loading-card-bg: rgba(30, 30, 36, 0.92);
+    --iams-loading-card-border: rgba(255, 255, 255, 0.1);
+    --iams-loading-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="warm"] {
+    --iams-loading-bg: rgba(245, 240, 232, 0.96);
+    --iams-loading-text: #2C2623;
+    --iams-loading-subtext: #6E6259;
+    --iams-loading-card-bg: rgba(255, 252, 247, 0.94);
+    --iams-loading-card-border: rgba(92, 60, 40, 0.14);
+    --iams-loading-shadow: 0 20px 45px rgba(92, 60, 40, 0.12);
+}
+
+/* Fullscreen Loading Overlay (Disabled as requested) */
+.iams-loading-screen,
+#loading-screen {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('/images/utmbg.png') center center / cover no-repeat fixed;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    transition: opacity 0.5s ease;
+    inset: 0;
+    width: 0 !important;
+    height: 0 !important;
 }
 
-.loading-screen::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 1;
+.iams-loading-screen.fade-out,
+#loading-screen.fade-out {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
-.loading-container {
+/* Floating Institutional Loading Card */
+.iams-loading-container {
     position: relative;
-    z-index: 2;
-    perspective: 1000px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 20px;
-}
-
-.loading-logo {
-    width: 350px;
-    height: 350px;
-    border-radius: 50%;
-    object-fit: cover;
-    animation: rotate360 6s infinite ease-in-out;
-    box-shadow: 0 8px 32px rgba(92, 0, 31, 0.2);
-    transform-style: preserve-3d;
-}
-
-.loading-text {
-    color: var(--primary-maroon);
-    font-size: 1.2em;
-    font-weight: 600;
+    padding: 36px 42px;
+    background: var(--iams-loading-card-bg);
+    border: 1px solid var(--iams-loading-card-border);
+    border-radius: 20px;
+    box-shadow: var(--iams-loading-shadow);
+    max-width: 90vw;
+    width: 360px;
+    box-sizing: border-box;
     text-align: center;
-    margin-top: 20px;
-    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+    transform: translateY(0);
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes rotate360 {
-    0% { 
-        transform: rotateY(0deg) scale(1);
-        box-shadow: 0 8px 32px rgba(92, 0, 31, 0.2);
-    }
-    25% {
-        transform: rotateY(90deg) scale(1.05);
-        box-shadow: 0 12px 48px rgba(248, 166, 23, 0.3), 0 0 40px rgba(248, 166, 23, 0.2);
-    }
-    50% { 
-        transform: rotateY(180deg) scale(1.08);
-        box-shadow: 0 16px 56px rgba(92, 0, 31, 0.3), 0 0 50px rgba(248, 166, 23, 0.3);
-    }
-    75% {
-        transform: rotateY(270deg) scale(1.05);
-        box-shadow: 0 12px 48px rgba(248, 166, 23, 0.3), 0 0 40px rgba(248, 166, 23, 0.2);
-    }
-    100% { 
-        transform: rotateY(360deg) scale(1);
-        box-shadow: 0 8px 32px rgba(92, 0, 31, 0.2);
-    }
+/* Logo Visual Wrapper with Luminous Halo */
+.iams-loading-visual {
+    position: relative;
+    width: 180px;
+    height: 105px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.loading-screen.fade-out {
-    opacity: 0;
+/* Soft breathing aura background */
+.iams-loading-glow {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--iams-brand-gold-glow) 0%, rgba(74, 0, 24, 0.08) 55%, transparent 75%);
+    animation: iamsGlowPulse 2.8s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
 }
 
-.page-content {
-    opacity: 0;
-    transition: opacity 0.5s ease;
+/* Subtle orbital spinning ring */
+.iams-loading-ring {
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--iams-brand-gold);
+    border-right-color: rgba(74, 0, 24, 0.25);
+    border-bottom-color: var(--iams-brand-maroon);
+    border-left-color: transparent;
+    animation: iamsRingSpin 2.4s linear infinite;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.85;
 }
 
-.page-content.fade-in {
-    opacity: 1;
+/* IAMS Brand Logo */
+.iams-loading-logo {
+    position: relative;
+    z-index: 3;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(74, 0, 24, 0.15));
+    animation: iamsLogoBreathe 2.8s ease-in-out infinite;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-@media (max-width: 768px) {
-    .loading-logo {
-        width: 280px;
-        height: 280px;
+/* Text & Progress Section */
+.iams-loading-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.iams-loading-brand {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--iams-brand-maroon);
+    margin: 0;
+    line-height: 1.2;
+}
+
+html[data-theme="dark"] .iams-loading-brand {
+    color: #F8A617;
+}
+
+.iams-loading-text {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--iams-loading-subtext);
+    margin: 0;
+    line-height: 1.4;
+    min-height: 1.4em;
+    max-width: 280px;
+}
+
+/* Animated Shimmer Progress Track */
+.iams-loading-track {
+    position: relative;
+    width: 160px;
+    height: 4px;
+    background: rgba(74, 0, 24, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+html[data-theme="dark"] .iams-loading-track {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.iams-loading-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 45%;
+    background: linear-gradient(90deg, var(--iams-brand-maroon) 0%, var(--iams-brand-gold) 50%, var(--iams-brand-maroon) 100%);
+    border-radius: 4px;
+    animation: iamsIndeterminateBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ==========================================================================
+   Inline / In-Component Loader Variant
+   ========================================================================== */
+.iams-loader-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
+    gap: 12px;
+}
+
+.iams-loader-inline .iams-loading-visual {
+    width: 120px;
+    height: 70px;
+}
+
+.iams-loader-inline .iams-loading-ring {
+    width: 90px;
+    height: 90px;
+}
+
+.iams-loader-inline .iams-loading-brand {
+    font-size: 1rem;
+    letter-spacing: 2px;
+}
+
+.iams-loader-inline .iams-loading-text {
+    font-size: 0.82rem;
+}
+
+.iams-loader-inline .iams-loading-track {
+    width: 120px;
+    height: 3px;
+}
+
+/* ==========================================================================
+   Keyframe Animations
+   ========================================================================== */
+
+@keyframes iamsLogoBreathe {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 4px 10px rgba(74, 0, 24, 0.15));
     }
-    
-    .loading-text {
-        font-size: 1.1em;
+    50% {
+        transform: scale(1.035);
+        filter: drop-shadow(0 6px 16px rgba(248, 166, 23, 0.35));
     }
 }
 
+@keyframes iamsGlowPulse {
+    0%, 100% {
+        transform: scale(0.92);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.12);
+        opacity: 1;
+    }
+}
+
+@keyframes iamsRingSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes iamsIndeterminateBar {
+    0% {
+        left: -45%;
+        width: 35%;
+    }
+    50% {
+        left: 30%;
+        width: 55%;
+    }
+    100% {
+        left: 105%;
+        width: 35%;
+    }
+}
+
+/* ==========================================================================
+   Reduced Motion Accessibility
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .iams-loading-logo,
+    .iams-loading-glow,
+    .iams-loading-ring,
+    .iams-loading-progress {
+        animation: none !important;
+    }
+    .iams-loading-ring {
+        display: none;
+    }
+    .iams-loading-progress {
+        width: 100%;
+        left: 0;
+    }
+}
+
+/* ==========================================================================
+   Mobile Responsive Adjustments
+   ========================================================================== */
 @media (max-width: 480px) {
-    .loading-logo {
-        width: 220px;
-        height: 220px;
+    .iams-loading-container {
+        width: calc(100vw - 32px);
+        padding: 28px 20px;
     }
-    
-    .loading-text {
-        font-size: 1em;
+    .iams-loading-visual {
+        width: 150px;
+        height: 85px;
+    }
+    .iams-loading-ring {
+        width: 110px;
+        height: 110px;
+    }
+    .iams-loading-brand {
+        font-size: 1.15rem;
+    }
+    .iams-loading-text {
+        font-size: 0.82rem;
     }
 }

@@ -61,7 +61,7 @@
                         <p>No comment questions defined yet.</p>
                     </div>
 
-                    <div th:if="${configType == 'group'}">
+                    <th:block th:if="${configType == 'group'}">
                         <div th:each="label, iterStat : ${assessment.groupCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
                             <div class="comment-header">
                                 <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
@@ -81,7 +81,8 @@
 
                                 <div class="form-group setting-check">
                                     <label class="toggle-label">
-                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isGroupCommentAnonymous(iterStat.index)}">
+                                        <input type="hidden" th:name="'commentAnonymous[' + ${iterStat.index} + ']'" value="false" class="anonymous-hidden-input">
+                                        <input type="checkbox" th:name="'commentAnonymous[' + ${iterStat.index} + ']'" th:id="'commentAnonymous_' + ${iterStat.index}" value="true" th:checked="${assessment.isGroupCommentAnonymous(iterStat.index)}" class="anonymous-checkbox">
                                         <span class="toggle-text">
                                             <i class="fas fa-user-secret"></i> Anonymous
                                         </span>
@@ -89,9 +90,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </th:block>
 
-                    <div th:if="${configType == 'individual'}">
+                    <th:block th:if="${configType == 'individual'}">
                         <div th:each="label, iterStat : ${assessment.individualCommentLabels}" class="comment-card" th:attr="data-id=${iterStat.index + 1}">
                             <div class="comment-header">
                                 <span class="badge">Q<span class="comment-num" th:text="${iterStat.index + 1}">1</span></span>
@@ -111,7 +112,8 @@
 
                                 <div class="form-group setting-check">
                                     <label class="toggle-label">
-                                        <input type="checkbox" name="commentAnonymous" value="true" th:checked="${assessment.isIndividualCommentAnonymous(iterStat.index)}">
+                                        <input type="hidden" th:name="'commentAnonymous[' + ${iterStat.index} + ']'" value="false" class="anonymous-hidden-input">
+                                        <input type="checkbox" th:name="'commentAnonymous[' + ${iterStat.index} + ']'" th:id="'commentAnonymous_' + ${iterStat.index}" value="true" th:checked="${assessment.isIndividualCommentAnonymous(iterStat.index)}" class="anonymous-checkbox">
                                         <span class="toggle-text">
                                             <i class="fas fa-user-secret"></i> Anonymous
                                         </span>
@@ -119,7 +121,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </th:block>
                 </div>
                 
                 <div class="add-action">

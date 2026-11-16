@@ -91,5 +91,30 @@ class CommentConfigControllerTest {
         verify(assessmentRepository).save(testAssessment);
         assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
     }
+
+    @Test
+    void testSaveTypeSpecificConfig_MultipleQuestions_IndexedParams() {
+        when(assessmentService.getAssessmentById(10L)).thenReturn(Optional.of(testAssessment));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(1L));
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        String view = commentConfigController.saveTypeSpecificConfig(
+            10L,
+            "group",
+            List.of("Teamwork Analysis", "Milestone Delivery", "Code Quality"),
+            List.of(25, 30, 40),
+            null,
+            java.util.Map.of("commentAnonymous[0]", "true", "commentAnonymous[1]", "false", "commentAnonymous[2]", "true"),
+            ra
+        );
+
+        assertEquals("redirect:/rubrics/manage", view);
+        verify(assessmentRepository).save(testAssessment);
+        assertEquals(3, testAssessment.getGroupCommentLabels().size());
+        assertEquals("Teamwork Analysis", testAssessment.getGroupCommentLabels().get(0));
+        assertEquals("Milestone Delivery", testAssessment.getGroupCommentLabels().get(1));
+        assertEquals("Code Quality", testAssessment.getGroupCommentLabels().get(2));
+        assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
+    }
 }
 
