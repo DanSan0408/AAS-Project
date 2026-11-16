@@ -47,6 +47,16 @@ public class AuthController {
         return "redirect:/login";
     }
 
+    @GetMapping("/manage-assessments")
+    public String rootManageAssessmentsRedirect() {
+        return "redirect:/rubrics/manage";
+    }
+
+    @GetMapping("/assessments/manage")
+    public String rootAssessmentsManageRedirect() {
+        return "redirect:/rubrics/manage";
+    }
+
     @GetMapping("/login")
     public String showLoginPage(
             @RequestParam(value = "error", required = false) String error, 

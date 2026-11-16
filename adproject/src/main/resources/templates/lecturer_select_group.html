@@ -25,9 +25,16 @@
         <div class="content-flex-container">
             
             <div class="selection-container">
-                <div class="dashboard-header">
-                    <h2 th:text="${assessment.title}">Assessment Title</h2>
-                    <p class="subtitle">Select a group below to begin or continue your evaluation.</p>
+                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 th:text="${assessment.title}">Assessment Title</h2>
+                        <p class="subtitle">Select a group below to begin or continue your evaluation.</p>
+                    </div>
+                    <div th:if="${assessment.requiresSubmission}">
+                        <a th:href="@{/lecturer/assessments/{id}/reports(id=${assessment.id})}" target="_blank" class="btn-reports-tab">
+                            <i class="fas fa-file-pdf"></i> View All Reports (New Tab)
+                        </a>
+                    </div>
                 </div>
 
                 <div class="alert-container">
@@ -72,9 +79,15 @@
                             </div>
                         </div>
 
-                        <div class="card-footer">
+                        <div class="card-footer" style="display: flex; flex-direction: column; gap: 8px;">
+                            <a th:if="${groupSubmissions != null and groupSubmissions.get(group.id) != null}"
+                               th:href="@{/lecturer/assessments/submissions/{subId}/file(subId=${groupSubmissions.get(group.id).id})}"
+                               target="_blank"
+                               class="btn-report-view">
+                                <i class="fas fa-external-link-alt"></i> View Report (New Tab)
+                            </a>
                             <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, groupId=${group.id})}" 
-                               class="btn-action">
+                               class="btn-action" style="position: static; width: 100%; box-sizing: border-box; text-align: center;">
                                 <span th:if="${groupEvaluationStatus.get(group.id) == 'completed'}">Review Evaluation</span>
                                 <span th:if="${groupEvaluationStatus.get(group.id) == 'in_progress'}">Continue</span>
                                 <span th:if="${groupEvaluationStatus.get(group.id) == 'not_started'}">Start Evaluation</span>

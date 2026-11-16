@@ -2,9 +2,9 @@ package com.capstone.adproject.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -26,14 +26,17 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 @RequestMapping("/admin/comment-config")
 public class CommentConfigController {
 
-    @Autowired
-    private AssessmentService assessmentService;
-    
-    @Autowired
-    private AssessmentRepository assessmentRepository;
+    private final AssessmentService assessmentService;
+    private final AssessmentRepository assessmentRepository;
+    private final CourseScopeService courseScopeService;
 
-    @Autowired
-    private CourseScopeService courseScopeService;
+    public CommentConfigController(AssessmentService assessmentService,
+                                   AssessmentRepository assessmentRepository,
+                                   CourseScopeService courseScopeService) {
+        this.assessmentService = assessmentService;
+        this.assessmentRepository = assessmentRepository;
+        this.courseScopeService = courseScopeService;
+    }
     
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -274,6 +277,16 @@ public class CommentConfigController {
         return "redirect:/rubrics/manage";
     }
     
+    public String saveTypeSpecificConfig(
+            Long assessmentId,
+            String type,
+            List<String> commentLabels,
+            List<Integer> commentMinLengths,
+            List<String> commentAnonymousFlags,
+            RedirectAttributes redirectAttributes) {
+        return saveTypeSpecificConfig(assessmentId, type, commentLabels, commentMinLengths, commentAnonymousFlags, null, redirectAttributes);
+    }
+
     @PostMapping("/{assessmentId}/{type}/save")
     public String saveTypeSpecificConfig(
             @PathVariable("assessmentId") Long assessmentId,
@@ -281,6 +294,7 @@ public class CommentConfigController {
             @RequestParam(value = "commentLabels", required = false) List<String> commentLabels,
             @RequestParam(value = "commentMinLengths", required = false) List<Integer> commentMinLengths,
             @RequestParam(value = "commentAnonymous", required = false) List<String> commentAnonymousFlags,
+            @RequestParam(required = false) Map<String, String> allParams,
             RedirectAttributes redirectAttributes) {
         
         try {
@@ -295,19 +309,35 @@ public class CommentConfigController {
                     String label = commentLabels.get(i);
                     if (label == null || label.trim().isEmpty()) continue;
                     
+                    int rawIndex = i;
                     processedLabels.add(HtmlSanitizerUtil.sanitizePlainText(label.trim()));
                     
                     Integer minLength = 20;
-                    if (commentMinLengths != null && i < commentMinLengths.size() && commentMinLengths.get(i) != null) {
-                        minLength = commentMinLengths.get(i);
+                    if (commentMinLengths != null && rawIndex < commentMinLengths.size() && commentMinLengths.get(rawIndex) != null) {
+                        minLength = commentMinLengths.get(rawIndex);
                         if (minLength < 10) minLength = 10;
                         if (minLength > 500) minLength = 500;
                     }
                     processedMinLengths.add(minLength);
                     
-                    Boolean isAnonymous = (commentAnonymousFlags != null && 
-                                          commentAnonymousFlags.size() > i && 
-                                          "true".equals(commentAnonymousFlags.get(i)));
+                    Boolean isAnonymous = null;
+                    if (allParams != null) {
+                        String indexedKey1 = "commentAnonymous[" + rawIndex + "]";
+                        String indexedKey2 = "commentAnonymous_" + rawIndex;
+                        String indexedKey3 = "commentAnonymous-" + rawIndex;
+                        if (allParams.containsKey(indexedKey1)) {
+                            isAnonymous = "true".equalsIgnoreCase(allParams.get(indexedKey1));
+                        } else if (allParams.containsKey(indexedKey2)) {
+                            isAnonymous = "true".equalsIgnoreCase(allParams.get(indexedKey2));
+                        } else if (allParams.containsKey(indexedKey3)) {
+                            isAnonymous = "true".equalsIgnoreCase(allParams.get(indexedKey3));
+                        }
+                    }
+                    if (isAnonymous == null) {
+                        isAnonymous = (commentAnonymousFlags != null && 
+                                      commentAnonymousFlags.size() > rawIndex && 
+                                      "true".equalsIgnoreCase(commentAnonymousFlags.get(rawIndex)));
+                    }
                     processedAnonymousFlags.add(isAnonymous);
                 }
             }

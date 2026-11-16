@@ -225,13 +225,43 @@ body[data-ui-role="supervisor"] {
 
     body[data-ui-role] .sidebar a {
         font-size: var(--ui-text-nav);
-        font-weight: var(--ui-weight-semibold);
+        font-weight: var(--ui-weight-medium);
     }
 
     body[data-ui-role] .sidebar {
         box-sizing: border-box;
         width: var(--ui-sidebar-width) !important;
         font-family: var(--ui-font);
+    }
+
+    /* Standardized institutional sidebar typography across all roles and pages (Admin Home standard) */
+    :is(body[data-ui-role], body) .sidebar :is(.sidebar-link, .menu-list li a) {
+        font-size: 15px !important;
+        font-weight: 500 !important;
+    }
+
+    :is(body[data-ui-role], body) .sidebar .sidebar-group-btn {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;
+    }
+
+    :is(body[data-ui-role], body) .sidebar .sidebar-subitem :is(.sidebar-link, a) {
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+    }
+
+    :is(body[data-ui-role], body) .sidebar :is(.sidebar-link.active, .menu-list li a.active, .sidebar-subitem .sidebar-link.active) {
+        font-weight: 600 !important;
+    }
+
+    :is(body[data-ui-role], body) .sidebar .user-profile :is(span, p, strong) {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+    }
+
+    :is(body[data-ui-role], body) .sidebar :is(.course-switch-form label, .course-switcher-form label) {
+        font-size: 12px !important;
+        font-weight: 600 !important;
     }
 
     body[data-ui-role] .main-content .header {

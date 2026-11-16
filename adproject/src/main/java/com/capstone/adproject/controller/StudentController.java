@@ -108,6 +108,9 @@ public class StudentController {
     @Autowired(required = false)
     private AdminService adminService;
 
+    @Autowired(required = false)
+    private CourseScopeService courseScopeService;
+
     private Long resolveCurrentCourseId(Student student) {
         if (student == null) {
             return null;
@@ -121,6 +124,13 @@ public class StudentController {
                 if (attr instanceof Number number && isStudentEnrolledInCourse(student, number.longValue())) {
                     return number.longValue();
                 }
+            }
+        }
+
+        if (courseScopeService != null) {
+            Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+            if (activeCourseId != null && isStudentEnrolledInCourse(student, activeCourseId)) {
+                return activeCourseId;
             }
         }
 
@@ -147,6 +157,29 @@ public class StudentController {
     }
 
     private boolean isStudentEnrolledInCourse(Student student, Long courseId) {
+        if (student == null || courseId == null) {
+            return false;
+        }
+        if (isStudentDirectlyEnrolled(student, courseId)) {
+            return true;
+        }
+        if (student.getEmail() != null) {
+            try {
+                List<Student> matchingStudents = studentRepository.findAllByEmailIgnoreCase(student.getEmail());
+                if (matchingStudents != null) {
+                    for (Student match : matchingStudents) {
+                        if (isStudentDirectlyEnrolled(match, courseId)) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return false;
+    }
+
+    private boolean isStudentDirectlyEnrolled(Student student, Long courseId) {
         if (student == null || courseId == null) {
             return false;
         }
@@ -229,10 +262,35 @@ public class StudentController {
             return "redirect:/student/home";
         }
 
+        if (courseScopeService != null) {
+            courseScopeService.setActiveCourseIdForCurrentUser(courseId);
+        }
         HttpSession session = request.getSession(true);
         session.setAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY, courseId);
         redirectAttributes.addFlashAttribute("success", "Active course switched successfully.");
-        return "redirect:/student/home";
+        return resolvePostSwitchRedirect(request, "/student/home");
+    }
+
+    private String resolvePostSwitchRedirect(HttpServletRequest request, String fallbackPath) {
+        String referer = request.getHeader("Referer");
+        if (referer == null || referer.isBlank()) {
+            return "redirect:" + fallbackPath;
+        }
+        try {
+            java.net.URI uri = java.net.URI.create(referer.trim());
+            String host = uri.getHost();
+            if (host != null && !host.equalsIgnoreCase(request.getServerName())) {
+                return "redirect:" + fallbackPath;
+            }
+            String path = uri.getRawPath();
+            if (path == null || !path.startsWith("/") || path.startsWith("//") || path.contains("/student/switch-course")) {
+                return "redirect:" + fallbackPath;
+            }
+            String query = uri.getRawQuery();
+            return "redirect:" + path + (query != null && !query.isBlank() ? "?" + query : "");
+        } catch (Exception e) {
+            return "redirect:" + fallbackPath;
+        }
     }
     
     private boolean isAssessmentOpen(Assessment assessment) {
@@ -378,12 +436,13 @@ public class StudentController {
             .filter(d -> d.getDate() != null && (d.getDate().getTime() + 86399999L) >= nowMillis)
             .collect(Collectors.toList());
         
-        boolean hasGroup = currentStudent.getGroup() != null;
+        Group currentCourseGroup = resolveStudentGroupForCourse(currentStudent, currentCourseId);
+        boolean hasGroup = currentCourseGroup != null;
         
         if (hasGroup) {
             Map<Long, Map<String, Object>> assessmentProgress = new HashMap<>();
+            List<Student> teamMembers = getTeamMembersForCourse(currentStudent, currentCourseId);
             for (Assessment assessment : allAssessments) { 
-                List<Student> teamMembers = sortStudentsAlphabetically(studentRepository.findByGroup(currentStudent.getGroup()));
                 Map<String, Object> progress = markService.getAssessmentProgress(currentStudent, assessment, teamMembers);
                 assessmentProgress.put(assessment.getId(), progress);
             }
@@ -974,9 +1033,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
     List<String> commentLabels = assessment.getIndividualCommentLabels();
     
     if (commentLabels != null && !commentLabels.isEmpty()) {
-        int minLength = assessment.getIndividualCommentMinLength();
-        
         for (int i = 0; i < commentLabels.size(); i++) {
+            int minLength = assessment.getIndividualCommentMinLength(i);
             String commentKey = "comment_" + i;
             String commentText = formData.get(commentKey);
             
@@ -1367,9 +1425,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
     List<String> commentLabels = assessment.getGroupCommentLabels();
     
     if (commentLabels != null && !commentLabels.isEmpty()) {
-        int minLength = assessment.getGroupCommentMinLength();
-        
         for (int i = 0; i < commentLabels.size(); i++) {
+            int minLength = assessment.getGroupCommentMinLength(i);
             String commentKey = "comment_" + i;
             String commentText = formData.get(commentKey);
             

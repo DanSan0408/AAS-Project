@@ -88,12 +88,12 @@
                             <td data-label="ID" th:text="${assessment.id}">1</td>
                             <td data-label="Title" style="font-weight: 600;">
                                 <span th:text="${assessment.title}">Final Year Project</span>
-                                <a th:if="${assessment.requiresSubmission}" 
+                                <a th:if="${assessment.requiresSubmission == true}" 
                                    th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}"
                                    class="badge" 
                                    style="background-color: #047857; color: #fff; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; margin-left: 8px; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;"
-                                   th:title="'Click to edit Report Submission Settings (' + ${assessment.submissionScope} + ')'">
-                                    <i class="fas fa-file-pdf"></i> <span th:text="${assessment.submissionScope}">GROUP</span> REPORT
+                                   th:title="'Click to edit Report Submission Settings (' + (${assessment.submissionScope != null ? assessment.submissionScope : 'GROUP'}) + ')'">
+                                    <i class="fas fa-file-pdf"></i> <span th:text="${assessment.submissionScope != null ? assessment.submissionScope : 'GROUP'}">GROUP</span> REPORT
                                 </a>
                             </td>
                             <td data-label="Status" style="text-align: center;">
@@ -115,8 +115,8 @@
 
                                     <a th:href="@{/admin/assessment/{id}/submission-config(id=${assessment.id})}" 
                                        class="btn btn-sm btn-submission"
-                                       th:classappend="${assessment.requiresSubmission} ? '' : 'inactive'"
-                                       th:title="${assessment.requiresSubmission} ? 'Report Submission Setup (Enabled)' : 'Configure Report Submission'">
+                                       th:classappend="${assessment.requiresSubmission == true} ? '' : 'inactive'"
+                                       th:title="${assessment.requiresSubmission == true} ? 'Report Submission Setup (Enabled)' : 'Configure Report Submission'">
                                         <i class="fas fa-file-upload"></i>
                                     </a>
 
@@ -201,15 +201,10 @@
         const saveButton = document.getElementById('saveButton');
         const confirmedInput = document.getElementById('duplicateConfirmed');
 
-        const duplicateFound = /*[[${duplicateFound}]]*/ false;
+        const duplicateFound = /*[[${duplicateFound ?: false}]]*/ false;
 
         if (duplicateFound) {
-            const assessmentObject = /*[[${newAssessment}]]*/ null;
-            let currentTitle = 'Untitled Assessment';
-            
-            if (assessmentObject && assessmentObject.title) {
-                currentTitle = assessmentObject.title;
-            }
+            const currentTitle = /*[[${newAssessment != null && newAssessment.title != null ? newAssessment.title : 'Untitled Assessment'}]]*/ 'Untitled Assessment';
 
             saveButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Confirm Duplicate';
             saveButton.classList.remove('btn-primary');

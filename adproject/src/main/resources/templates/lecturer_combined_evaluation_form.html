@@ -179,8 +179,8 @@
                 <span class="badge" style="background: #047857; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem;">
                     v<span th:text="${submission.version}">1</span>
                 </span>
-                <a th:href="@{/lecturer/assessments/submissions/{id}/file(id=${submission.id})}" target="_blank" class="workstation-action-link" title="Open PDF in new tab">
-                    <i class="fas fa-external-link-alt"></i> Pop Out PDF
+                <a th:href="@{/lecturer/assessments/submissions/{id}/file(id=${submission.id})}" target="_blank" class="workstation-action-link" title="Open PDF report in a new tab" style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <i class="fas fa-external-link-alt"></i> View Report (New Tab)
                 </a>
             </div>
 

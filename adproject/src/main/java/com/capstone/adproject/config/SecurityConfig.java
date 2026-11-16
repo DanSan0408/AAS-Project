@@ -124,6 +124,7 @@ public class SecurityConfig {
                 .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages
                 .requestMatchers("/rubrics/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access rubric pages
+                .requestMatchers("/manage-assessments", "/assessments/manage").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/deadlines/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Explicitly lock orphaned controllers
                 .requestMatchers("/api/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "LECTURER") // Protect future REST calls
                 .requestMatchers("/*/comments/view/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "LECTURER") // Prevent {role} dynamic path bypass
