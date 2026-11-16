@@ -8,10 +8,20 @@
             if (num) {
                 num.textContent = String(index + 1);
             }
+            var hidden = card.querySelector('.anonymous-hidden-input');
+            if (hidden) {
+                hidden.name = 'commentAnonymous[' + index + ']';
+            }
+            var checkbox = card.querySelector('.anonymous-checkbox');
+            if (checkbox) {
+                checkbox.name = 'commentAnonymous[' + index + ']';
+                checkbox.id = 'commentAnonymous_' + index;
+            }
         });
     }
 
     function createCommentItem(nextIndex) {
+        var zeroIndex = nextIndex - 1;
         var div = document.createElement('div');
         div.className = 'comment-card';
         div.setAttribute('data-id', String(nextIndex));
@@ -32,7 +42,8 @@
             '  </div>',
             '  <div class="form-group setting-check">',
             '    <label class="toggle-label">',
-            '      <input type="checkbox" name="commentAnonymous" value="true" checked>',
+            '      <input type="hidden" name="commentAnonymous[' + zeroIndex + ']" value="false" class="anonymous-hidden-input">',
+            '      <input type="checkbox" name="commentAnonymous[' + zeroIndex + ']" id="commentAnonymous_' + zeroIndex + '" value="true" checked class="anonymous-checkbox">',
             '      <span class="toggle-text"><i class="fas fa-user-secret"></i> Anonymous</span>',
             '    </label>',
             '  </div>',
@@ -46,6 +57,7 @@
         var commentsContainer = document.getElementById('commentsContainer');
         var emptyState = document.getElementById('emptyState');
         var addCommentBtn = document.getElementById('addCommentBtn');
+        var commentConfigForm = document.getElementById('commentConfigForm');
 
         if (!commentsContainer || !emptyState || !addCommentBtn) {
             return;
@@ -79,6 +91,12 @@
                 syncEmptyState();
             }
         });
+
+        if (commentConfigForm) {
+            commentConfigForm.addEventListener('submit', function () {
+                renumber(getCards());
+            });
+        }
 
         renumber(getCards());
         syncEmptyState();

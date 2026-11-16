@@ -45,6 +45,7 @@ public class Rubric {
     @Column(name = "display_order")
     private Integer displayOrder = 0;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assessment_id")
     private Assessment assessment;
@@ -82,6 +83,7 @@ public class Rubric {
     public BigDecimal getMarks() { return marks; }
     public void setMarks(BigDecimal marks) { this.marks = marks; }
     
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public Assessment getAssessment() { return assessment; }
     public void setAssessment(Assessment assessment) { this.assessment = assessment; }
     

@@ -4,6 +4,8 @@ body.admin-page .manage-courses-container {
     margin: 24px auto 0;
     width: 100%;
     max-width: 1200px;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
 }
 
 body.admin-page .manage-course-card {
@@ -15,12 +17,14 @@ body.admin-page .manage-course-card {
     border-radius: 12px;
     margin-bottom: 24px;
     box-shadow: 0 3px 10px rgba(74, 0, 24, 0.08);
+    box-sizing: border-box !important;
 }
 
 body.admin-page .manage-course-card .card-body {
     width: 100%;
     margin: 0 auto;
     padding: 24px;
+    box-sizing: border-box !important;
 }
 
 body.admin-page .main-content {
@@ -29,7 +33,7 @@ body.admin-page .main-content {
     margin-left: 270px !important;
     margin-right: 0 !important;
     box-sizing: border-box !important;
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
 }
 
 body.admin-page .manage-course-card .card-title {
@@ -54,8 +58,14 @@ body.admin-page .form-group label {
     margin-bottom: 6px;
 }
 
-body.admin-page .form-control {
+body.admin-page .form-control,
+body.admin-page input[type="text"],
+body.admin-page input[type="email"],
+body.admin-page textarea,
+body.admin-page select {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box !important;
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid var(--color-border);
@@ -64,7 +74,10 @@ body.admin-page .form-control {
     background: #fff;
 }
 
-body.admin-page .form-control:focus {
+body.admin-page .form-control:focus,
+body.admin-page input:focus,
+body.admin-page textarea:focus,
+body.admin-page select:focus {
     outline: none;
     border-color: var(--color-primary-light);
     box-shadow: 0 0 0 3px rgba(74, 0, 24, 0.12);

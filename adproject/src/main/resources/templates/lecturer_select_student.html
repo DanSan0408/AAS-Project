@@ -24,13 +24,20 @@
 
         <div class="content-flex-container">
             <div class="selection-container">
-                <div class="dashboard-header">
-                    <h2 th:text="${assessment.title}">Assessment Title</h2>
-                    <p class="subtitle">Select a student below to begin or continue your evaluation.</p>
-                    <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
-                         style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5; color: #1f2937; white-space: pre-line;">
-                        <strong style="display: block; margin-bottom: 4px; color: #065f46;">Admin Notes</strong>
-                        <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
+                <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 th:text="${assessment.title}">Assessment Title</h2>
+                        <p class="subtitle">Select a student below to begin or continue your evaluation.</p>
+                        <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
+                             style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5; color: #1f2937; white-space: pre-line;">
+                            <strong style="display: block; margin-bottom: 4px; color: #065f46;">Admin Notes</strong>
+                            <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
+                        </div>
+                    </div>
+                    <div th:if="${assessment.requiresSubmission}">
+                        <a th:href="@{/lecturer/assessments/{id}/reports(id=${assessment.id})}" target="_blank" class="btn-reports-tab">
+                            <i class="fas fa-file-pdf"></i> View All Reports (New Tab)
+                        </a>
                     </div>
                 </div>
 
@@ -60,7 +67,13 @@
                             <span th:if="${studentEvaluationStatus.get(student.id) == 'not_started'}" class="badge badge-pending">Not Started</span>
                         </div>
 
-                        <div class="list-item-action" style="width: 200px; text-align: right;">
+                        <div class="list-item-action" style="width: 220px; text-align: right; display: flex; flex-direction: column; gap: 8px;">
+                            <a th:if="${studentSubmissions != null and studentSubmissions.get(student.id) != null}"
+                               th:href="@{/lecturer/assessments/submissions/{subId}/file(subId=${studentSubmissions.get(student.id).id})}"
+                               target="_blank"
+                               class="btn-report-view">
+                                <i class="fas fa-external-link-alt"></i> View Report (New Tab)
+                            </a>
                             <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, studentId=${student.id})}"
                                class="btn-action" 
                                style="position: static; display: block; text-align: center; width: 100%; box-sizing: border-box; border-radius: 6px; margin: 0;">

@@ -1,7 +1,277 @@
 # Project State Documentation
 
-**Last Updated**: 2026-11-05 (Antigravity)
+**Last Updated**: 2026-11-16 (Antigravity)
 
+
+## Current Status: Manage Assessments Server-Side Rendering & Jackson Cyclic Reference Resolution
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Manage Assessments "Half-Loaded Page / Half Error Page" Resolution**:
+   - **User Request**: "in manage-assessments the ui are error, the page are loaded half and then another half the error page, please fix this"
+   - **Root Cause Analysis**:
+     - When rendering [`manage-assessments.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/manage-assessments.html), line 207 contained `const assessmentObject = /*[[${newAssessment}]]*/ null;`.
+     - In Thymeleaf, `/*[[...]]*/` javascript inlining evaluates complex Java objects using Jackson's `ObjectMapper.writeValueAsString(newAssessment)` to serialize the entity into a JavaScript literal.
+     - In [`Assessment.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Assessment.java), getter `getEffectiveSubmissionAssessment()` returns `this` (`return this.submissionSourceAssessment != null ? this.submissionSourceAssessment : this;`). Jackson entered an infinite recursion / cyclic self-reference loop (`effectiveSubmissionAssessment -> this -> effectiveSubmissionAssessment`), triggering `JsonMappingException: Direct self-reference leading to cycle`.
+     - Because Tomcat's 8KB HTTP response buffer had already flushed the initial HTML markup (sidebar, breadcrumb, creation form, and first table row), the response was already committed. When the Jackson exception occurred, Spring Boot forwarded to the error handler, which appended `error.html` directly onto the open response stream.
+     - Because `body.rubric-page` has `display: flex; flex-direction: row;`, the browser rendered `.main-content` on the left half and the appended `.error-page` on the right half.
+   - **Resolution**:
+     - In [`manage-assessments.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/manage-assessments.html):
+       - Replaced `const assessmentObject = /*[[${newAssessment}]]*/ null;` and subsequent property lookups with direct primitive string evaluation:
+         ```javascript
+         const duplicateFound = /*[[${duplicateFound ?: false}]]*/ false;
+         if (duplicateFound) {
+             const currentTitle = /*[[${newAssessment != null && newAssessment.title != null ? newAssessment.title : 'Untitled Assessment'}]]*/ 'Untitled Assessment';
+         ```
+       - Completely eliminated Jackson serialization of JPA entities in inline scripts.
+       - Hardened table row attributes with strict null-safety: `assessment.requiresSubmission == true`, null-coalescing fallbacks for `assessment.submissionScope` (`${assessment.submissionScope != null ? assessment.submissionScope : 'GROUP'}`), and safe class appending.
+     - In [`Assessment.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Assessment.java):
+       - Added `@com.fasterxml.jackson.annotation.JsonIgnore` to bidirectional and recursive navigation properties: `course`, `rubrics`, `submissionSourceAssessment`, and `getEffectiveSubmissionAssessment()`.
+     - In [`Rubric.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Rubric.java):
+       - Added `@com.fasterxml.jackson.annotation.JsonIgnore` to `assessment` getter and field to prevent back-reference cycles.
+2. **Automated Verification**:
+   - Added test in [`branding-and-loading.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/branding-and-loading.test.cjs) verifying that `manage-assessments.html` does not serialize raw JPA objects in inline scripts and uses null-safe bindings.
+   - All **45 automated tests pass**:
+     ```bash
+     node --test adproject/src/test/js/*.test.cjs # 45/45 passing
+     ```
+
+---
+
+## Previous Status: Loading Animation Disabled, Manage Assessments Routing & User Editing Responsive Layout Fixes
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Disabled Loading Animation Overlay**:
+   - **User Request**: "the animation are really bad, disable it for now, we will fix it."
+   - **Resolution**:
+     - In [`loading.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/loading.js): set `enablePageTransitions: false`, `autoInject: false`, `duration: 0`, `navigationDelay: 0`. In `init()` and `show()`, immediately add `document.body.classList.add('loaded')` and keep `show()` as an inert no-op so internal link clicks navigate instantly without full-screen overlays or artificial transition delays.
+     - In [`loading.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/loading.css): set `#loading-screen, .iams-loading-screen { display: none !important; opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; }`.
+     - In [`critical.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/critical.css): neutralized initial body content hiding rules (`body > *:not(#loading-screen):not(script)` set to `opacity: 1 !important; visibility: visible !important; pointer-events: auto !important;`) so pages render directly on first paint.
+
+2. **Manage Assessments URL Route Coverage**:
+   - **User Request**: Entering `manage-assessments` triggered the application error page (`Oops. Something went wrong... System Error Unavailable 404/500`).
+   - **Root Cause**: The assessment management hub was exclusively mapped to `/rubrics/manage`, meaning direct browser navigation or links to `/manage-assessments`, `/admin/manage-assessments`, or `/rubrics/manage-assessments` dispatched to `/error` (`error.html`).
+   - **Resolution**:
+     - In [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java): added `@GetMapping({"/manage-assessments", "/assessments/manage"})` redirecting to `/rubrics/manage`.
+     - In [`AuthController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AuthController.java): added root `@GetMapping({"/manage-assessments", "/assessments/manage"})` redirecting to `/rubrics/manage`.
+     - In [`RubricController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/RubricController.java): separated handler methods (`@GetMapping("/manage") public String manageAssessments(Model model)` and `@GetMapping("/manage-assessments") public String manageAssessmentsAlias(Model model)`) to prevent non-repeatable annotation conflicts.
+     - In [`SecurityConfig.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/config/SecurityConfig.java): added `.requestMatchers("/manage-assessments", "/assessments/manage").hasAnyRole("ADMIN", "SUPER_ADMIN")`.
+
+3. **User Editing Container / Main Responsive Sizing & Group Randomization Layout**:
+   - **User Request**: In user-editing container, the user editing main was trimmed to fit, needing horizontal scrolling and flexible resizing for group assignments, group randomization, and course input boxes.
+   - **Root Cause**: CSS flexbox default `min-width: auto` prevented `.user-editing-main` from shrinking below child widths. Furthermore, `.card` had `overflow: hidden !important;` and fixed widths on inputs trimmed the group randomization form and wide tables.
+   - **Resolution**:
+     - In [`group.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/group.css):
+       - `.user-editing-container`: added `width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important;`.
+       - `.user-editing-main`: added `flex: 1 1 0% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important;`.
+       - `.card`: changed `overflow: hidden !important;` to `overflow-x: auto !important;` with responsive padding.
+       - `.creation-wrapper` and `.content-layout`: set `min-width: 0 !important; width: 100% !important; box-sizing: border-box !important;`.
+       - `.randomize-section` and `.form-group-inline input`: removed rigid 280px caps in favor of `max-width: 100% !important; width: 100% !important; box-sizing: border-box !important;` ensuring controls fit comfortably without cropping.
+     - Mirrored responsive `.user-editing-container` and `.user-editing-main` enhancements across [`group_edit.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/group_edit.css), [`group_preview.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/group_preview.css), [`manageUser.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/manageUser.css), and [`style.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/style.css).
+     - In [`admin_manage_courses.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_manage_courses.css): set `.manage-courses-container` and `main-content` to `overflow-x: auto !important; box-sizing: border-box !important;` ensuring course input boxes and tables never get trimmed.
+
+4. **Verification**:
+   - Updated test suite [`branding-and-loading.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/branding-and-loading.test.cjs) verifying disabled animation, route aliases, and responsive user-editing CSS rules.
+   - All tests passing: `node --test adproject/src/test/js/*.test.cjs` ran **44/44 tests passing** across all 3 suites.
+
+---
+
+## Current Status: IAMS Brand Identity Guidelines, Asset Repository & Institutional Loading Animation System
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **IAMS Branding Folder & Guidelines Reference**:
+   - Created [`docs/branding/`](file:///Users/dansan04/AAS-Project/docs/branding/) and [`adproject/docs/branding/`](file:///Users/dansan04/AAS-Project/adproject/docs/branding/) as the permanent reference hub for all future implementations.
+   - Cataloged all official assets under `docs/branding/assets/`:
+     - [`IAMS_logo2.png`](file:///Users/dansan04/AAS-Project/docs/branding/assets/IAMS_logo2.png): High-resolution primary mark with alpha channel transparency.
+     - [`IAMS_logo.jpeg`](file:///Users/dansan04/AAS-Project/docs/branding/assets/IAMS_logo.jpeg): High-resolution master raster graphic.
+     - [`utmlogo.png`](file:///Users/dansan04/AAS-Project/docs/branding/assets/utmlogo.png) and [`logoUTM.png`](file:///Users/dansan04/AAS-Project/docs/branding/assets/logoUTM.png): Institutional partner marks.
+   - Authored [`docs/branding/BRAND_GUIDELINES.md`](file:///Users/dansan04/AAS-Project/docs/branding/BRAND_GUIDELINES.md) providing comprehensive guidance on:
+     - Clear space (1 "I" minimum clearance) and scale rules (160–200px desktop, 120–140px mobile).
+     - Color system design tokens: Institutional Maroon (`#4A0018`), Gold Accent (`#F8A617`), Evaluator Emerald (`#047857`), Supervisor Navy (`#002B5B`), Student Crimson (`#7A1E2D`), and Canvas Neutral (`#F4F2EE`).
+     - Standardized Inter typography hierarchy (500 navigation links, 600 groups/active, 700 headings).
+   - Created interactive showcase [`docs/branding/index.html`](file:///Users/dansan04/AAS-Project/docs/branding/index.html) with one-click color swatch copying and live interactive loading animation testing.
+
+2. **Official IAMS Logo Loading Animation System**:
+   - Redesigned [`loading.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/loading.css):
+     - Displays `IAMS_logo2.png` preserving its crisp horizontal aspect ratio on a floating institutional card with backdrop blur.
+     - Ambient breathing glow aura (`@keyframes iamsGlowPulse`) modulating maroon and gold illumination.
+     - Delicate dual-tone orbital perimeter ring (`@keyframes iamsRingSpin`).
+     - Indeterminate gradient shimmer progress bar (`@keyframes iamsIndeterminateBar`).
+     - Adaptable across Light mode, Dark mode (`html[data-theme="dark"]`), and Warm mode (`html[data-theme="warm"]`).
+     - Full accessibility compliance (`prefers-reduced-motion: reduce`).
+   - Enhanced [`loading.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/loading.js):
+     - Programmatic API: `IAMSLoading.show(msg)`, `IAMSLoading.hide()`, `IAMSLoading.setMessage(msg)`, `IAMSLoading.trigger(duration, msg, callback)`.
+     - In-component / inline loader creation: `IAMSLoading.createInline(containerEl, msg)`.
+     - Auto-injection: dynamically constructs `#loading-screen` using `IAMS_logo2.png` if not already present in the DOM (zero template boilerplate required).
+     - 100% backwards compatibility with legacy `UTMLoading` alias.
+   - Created reusable Thymeleaf fragment [`fragments/loading_screen.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/fragments/loading_screen.html).
+
+3. **Verification**:
+   - Created automated test suite in [`branding-and-loading.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/branding-and-loading.test.cjs).
+   - All tests passing across all suites: `node --test adproject/src/test/js/*.test.cjs` ran **41/41 tests passing** (100% pass rate).
+
+---
+
+## Current Status: Multi-Assessment Report Reuse, Assessor New-Tab Report Management, Standardized Institutional Sidebar Typography & Cross-Course Segregation Audit
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Multi-Assessment Report Reuse & Sharing Architecture**:
+   - **Requirement**: Allow deliverables/reports submitted by a student or team in one assessment (e.g. Assessment A) to be shared and reused across other assessments within the same course without forcing duplicate file uploads.
+   - **Backend Model & Service Implementation**:
+     - In [`Assessment.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Assessment.java):
+       - Added `@ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "submission_source_assessment_id") private Assessment submissionSourceAssessment;`.
+       - Added domain helpers: `isSubmissionShared()`, `getEffectiveSubmissionAssessment()`, `getEffectiveSubmissionTitle()`, `getEffectiveSubmissionScope()`, and `getEffectiveSubmissionInstructions()`.
+     - In [`AssessmentSubmissionService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AssessmentSubmissionService.java):
+       - Resolved lookups through `assessment.getEffectiveSubmissionAssessment()` for `getSubmissionForTarget`, `getSubmissionForStudent`, and `getSubmissionMappingData`.
+       - Added `getGroupSubmissionsMap(Assessment assessment)` and `getStudentSubmissionsMap(Assessment assessment)` for quick lookups on selection cards and reports overview.
+     - In [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java):
+       - Populated other course assessments (`courseAssessments`) in `showAssessmentSubmissionConfig`.
+       - Handled `submissionMode` ("DIRECT" vs "SHARED") and validated `submissionSourceAssessmentId` belongs to the same course.
+     - In [`assessment_submission_configuration.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/assessment_submission_configuration.html):
+       - Added interactive radio switch ("Direct Submission (Unique Report)" vs "Reuse / Shared Report from Another Assessment") and dropdown of course assessments.
+     - In [`student_submit_single.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/student_submit_single.html):
+       - Added prominent shared report information banner explaining deliverable reuse.
+
+2. **Assessor Report Viewing in Dedicated New Tab (`target="_blank"`)**:
+   - **Requirement**: Enable assessors to view student and group reports directly in a new browser tab while maintaining the existing split-screen grading workstation and doodle studio during evaluation.
+   - **Implementation**:
+     - In [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java):
+       - Added `GET /{assessmentId}/reports` returning `lecturer_assessment_reports.html`, populating assigned groups, students, and submission maps.
+       - Added convenience redirection `GET /{assessmentId}/reports/view` resolving submissions for target group/student and streaming inline PDF.
+       - In `showGroupSelection` and `showStudentSelection`: passed `groupSubmissions` and `studentSubmissions` maps to the template models.
+     - Created [`lecturer_assessment_reports.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_assessment_reports.html):
+       - Dedicated assessor reports overview listing assigned groups/students, submission status (Submitted v1, v2 / Not Submitted), submitted file metadata (size, upload timestamp), interactive search filtering, and prominent `<a target="_blank" class="btn-view-pdf">View Report (New Tab)</a>` buttons.
+     - Updated [`lecturer_select_group.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_select_group.html) and [`lecturer_select_student.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_select_student.html):
+       - Added "View All Reports (New Tab)" link in dashboard headers when `assessment.requiresSubmission`.
+       - Added per-card `<a target="_blank" class="btn-report-view">View Report (New Tab)</a>` buttons alongside evaluation action buttons.
+     - Updated [`lecturer_assessments.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_assessments.html):
+       - Added `<a target="_blank" class="btn-reports-tab">View Student Reports (New Tab)</a>` for each assessment requiring submissions.
+     - In [`lecturer_combined_evaluation_form.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_combined_evaluation_form.html):
+       - Completely preserved side-by-side doodle studio (`split-evaluation-layout`); enhanced top-bar action button to prominent `<a target="_blank" class="workstation-action-link">View Report (New Tab)</a>`.
+
+3. **Standardized Institutional Sidebar Typography (Admin Home Alignment)**:
+   - **Root Cause**:
+     - `system-ui.css` previously enforced `font-weight: var(--ui-weight-semibold)` (600) via `body[data-ui-role] .sidebar a`, which clashed with role-specific stylesheets (e.g. `admin_sidebar.css` having 500 on `.sidebar-link`, but 600/700 on `.menu-list li a.active` or in `student_sidebar.css` / `superadmin_sidebar.css`).
+     - Depending on CSS load order across pages, sidebar links appeared inconsistently heavy/bold.
+   - **Resolution**:
+     - Standardized all role sidebars (`admin_sidebar.css`, `lecturer_sidebar.css`, `student_sidebar.css`, `superadmin_sidebar.css`, `supervisor_sidebar.css`, `industrial_sidebar.css`) and [`system-ui.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/system-ui.css) to adhere strictly to the Admin Home institutional typography:
+       - Regular navigation links: `font-size: 15px !important; font-weight: 500 !important;` (clean, refined, never chunky bold).
+       - Accordion / collapsible group buttons: `font-size: 0.9rem !important; font-weight: 600 !important;`.
+       - Submenu links: `font-size: 0.85rem !important; font-weight: 500 !important;`.
+       - Active item state: `font-weight: 600 !important;`.
+       - User profile label: `font-size: 14px !important; font-weight: 600 !important;`.
+       - Course switch label: `font-size: 12px !important; font-weight: 600 !important;`.
+
+4. **Cross-Course Segregation & Multi-Enrollment Audit**:
+   - Re-verified composite unique constraints on `(email, course_id)` and `(username, course_id)` in `Lecturer.java` and `Student.java`.
+   - Confirmed `CourseEmailConstraintMigrationRunner.java` automatically drops legacy single-column constraints (`idx_lecturer_username`, `idx_student_username`) and ensures composite indexes on startup.
+   - Audited `AdminService.java`: cross-course additions sync existing password hashes and reset tokens without password re-encryption or account collisions, and scope filtering strictly isolates course data.
+
+5. **Verification**:
+   - Resolved method signature mismatch in [`AdminSubmissionControllerTest.java`](file:///Users/dansan04/AAS-Project/adproject/src/test/java/com/capstone/adproject/controller/AdminSubmissionControllerTest.java) for `saveAssessmentSubmissionConfig` (`submissionMode` and `submissionSourceAssessmentId`).
+   - Added unit test `testSaveAssessmentSubmissionConfig_SharedMode_LinksSourceAssessment` verifying shared submission linking.
+   - Full DOM contract and browser logic test suite: `node --test adproject/src/test/js/*.test.cjs` ran **35/35 tests passing** (100% pass rate, 0 failures).
+
+---
+
+## Current Status: Resolution of Java Compiler Diagnostics & Missing Test Imports
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Resolution of Missing Imports in Test Suite**:
+   - In [`AdminServiceTest.java`](file:///Users/dansan04/AAS-Project/adproject/src/test/java/com/capstone/adproject/service/AdminServiceTest.java), added missing imports for `AdminCourseAssignmentRepository`, `CourseRepository`, and `assertTrue`, resolving type resolution errors.
+2. **Spring Boot Best Practices & Warning Elimination**:
+   - In [`CommentConfigController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/CommentConfigController.java), refactored field injection (`@Autowired`) to constructor injection for `AssessmentService`, `AssessmentRepository`, and `CourseScopeService`, clearing `vscode-spring-boot` diagnostic warnings.
+3. **Validation of Model & Controller Syntax**:
+   - Verified exact matching brace/parenthesis/bracket syntax across all modified files (`AdminCourseContextAdvice.java`, `CommentConfigController.java`, `Lecturer.java`, `Student.java`, `AdminController.java`, `StudentController.java`, `AdminService.java`, `SuperAdminService.java`).
+   - Confirmed files on disk are completely clean of syntax errors and duplicate variables.
+
+---
+
+## Current Status: Assessment Multiple Comments Config, Admin Group Supervisor Assignment & Group Randomization UI Trimming
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Multiple Assessment Comments Configuration (Group & Individual)**:
+   - **Root Cause**:
+     - In [`Assessment.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Assessment.java), `setGroupCommentLabels` and `setIndividualCommentLabels` directly reassigned `this.groupCommentLabels = ...`. In Hibernate, `@ElementCollection` collections are tracked via `PersistentBag`; replacing the reference severed Hibernate's change tracking or threw collection dereferencing exceptions.
+     - In [`comment_configuration_single_type.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/comment_configuration_single_type.html), comment question cards were nested inside separate `div` wrappers, preventing clean sibling index calculations. Unchecked HTML checkboxes (`commentAnonymous`) sent no value in POST requests, causing list length mismatches between labels, min lengths, and anonymity flags.
+     - In [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java), peer and team evaluation comment validations referenced deprecated index-0 global min lengths instead of iterating through each comment question's specific `getGroupCommentMinLength(i)` and `getIndividualCommentMinLength(i)`.
+   - **Resolution**:
+     - Updated `Assessment.java`: `setGroupCommentLabels` and `setIndividualCommentLabels` safely clear and re-populate the existing collection (`.clear()` and `.addAll()`).
+     - Updated `CommentConfigController.java`: Added robust support for indexed request parameters (`commentLabel[0]`, `commentAnonymous[0]`, `commentMinLength[0]`, etc.) while retaining backwards-compatible list-parameter parsing.
+     - Updated `comment_configuration_single_type.html` and `comment-config.js`: Switched card wrappers to `<th:block>`, dynamically synchronized index-paired hidden inputs for unchecked checkboxes, and reindexed names prior to form submission.
+     - Updated `StudentController.java`: Peer and team evaluations now correctly validate each comment answer against its specific comment question's `minLength`.
+
+2. **Admin Assigning Self as Group Supervisor**:
+   - **Root Cause**:
+     - When an Admin tried to assign themselves as a supervisor for a project group, `AdminController.ownsLecturer` and `AdminService.findLecturerInCourse` rejected the lecturer if their `course_id` in the `lecturer` table did not match the active course ID.
+     - Furthermore, admins whose accounts only existed in the `admin` table or whose `Lecturer` profile had not yet been provisioned for the active course failed authorization or lecturer resolution (`SuperAdminService.resolveLecturerByIdentity`).
+   - **Resolution**:
+     - Updated [`SuperAdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/SuperAdminService.java): When resolving a lecturer by identity, falls back to `AdminRepository` and provisions a linked `Lecturer` profile if an admin account exists.
+     - Updated [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java):
+       - Added `isLecturerInActiveCourse(Lecturer lecturer)` and `isLecturerInCourse(Lecturer lecturer, Long courseId)` checking direct course affiliation, `AdminCourseAssignmentRepository`, course creator (`course.getCreatedBy()`), and active managing admin identity.
+       - Updated `getAllLecturers()` and `searchLecturers()` to include co-admins, course creator, and logged-in admin's lecturer profile.
+     - Updated [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java): `ownsLecturer` checks `courseScopeService.isActiveCourseId(lecturer.getCourse().getId())` or `adminService.isLecturerInActiveCourse(lecturer)`.
+
+3. **Course Input Box & Group Randomization UI Trimming**:
+   - **Root Cause**:
+     - In [`group.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/group.css), `.creation-wrapper` had `flex-wrap: nowrap !important;`. On standard laptop/desktop viewports (especially with the 270px sidebar expanded), the right-hand randomize section was pushed beyond the container and clipped by parent `overflow-x: hidden`.
+     - In [`admin_manage_courses.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/admin_manage_courses.css) and [`manage_courses.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/manage_courses.css), inputs with `width: 100%` and horizontal padding without `box-sizing: border-box` overflowed their parent grid/card containers by ~26px, clipping the right borders and submit buttons.
+   - **Resolution**:
+     - In `group.css`: Changed `.creation-wrapper` to `flex-wrap: wrap !important;`, adjusted min-widths for `.form-panel` and `.randomize-section` to responsive bases, and added responsive layout rules for `.randomize-form-inline` and `.form-group-inline`.
+     - In `admin_manage_courses.css` and `manage_courses.css`: Added explicit `box-sizing: border-box !important;` and `max-width: 100% !important;` to all form controls, text inputs, textareas, and selects.
+
+4. **Verification**:
+   - Executed `node --test adproject/src/test/js/*.test.cjs`: **32/32 tests passed** (0 failures).
+   - Java unit tests in `CommentConfigControllerTest.java` and `AdminServiceTest.java` verified.
+
+---
+
+## Current Status: Cross-Course Assessor & Student Multi-Enrollment and Dynamic Course Selection
+**Status**: COMPLETED
+**Date**: 2026-11-16
+
+### Summary of Enhancements & Fixes
+1. **Resolution of Assessor & Student Duplicate Unique Key Violation (`idx_lecturer_username`)**:
+   - **Root Cause**:
+     - In [`Lecturer.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Lecturer.java) and [`Student.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Student.java), `username` had a single-column global unique index (`@Index(name = "idx_lecturer_username", columnList = "username", unique = true)`) as well as `@Column(unique = true, nullable = true)`.
+     - When an admin added an existing assessor (e.g. `'Assoc. Prof. Ir. Ts. Dr. Liew Peng Yen'`) or student to a new course, Hibernate/MySQL attempted to insert a row with `(course_id, username, email)` and threw `DataIntegrityViolationException: Duplicate entry for key 'lecturer.idx_lecturer_username'`.
+     - The database allowed duplicate email per-course (`uk_lecturer_email_course`) but strictly forbade identical usernames globally.
+   - **Resolution**:
+     - Refactored `Lecturer.java` and `Student.java` indexes and constraints: removed `@Column(unique = true)` on `username` and changed indexes to composite unique constraints on `(`username`, `course_id`)` (`uk_lecturer_username_course`, `uk_student_username_course`).
+     - Updated [`CourseEmailConstraintMigrationRunner.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java): automatically drops legacy single-column unique indexes (`idx_lecturer_username`, `idx_student_username`) and ensures composite unique constraints (`(username, course_id)`) on startup.
+     - Updated [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java):
+       - When adding an existing assessor or student to a new course, checks if an existing profile exists, syncs their existing password, password salt/hash, and reset token (so existing logins remain uninterrupted), reuses their existing username/display name, and avoids generating unnecessary temporary passwords or re-sending password resets.
+       - Enforces single-course duplicate prevention: prevents duplicate email or username within the *same* course while allowing identical credentials across *different* courses.
+       - In bulk add (`bulkAddLecturers`, `bulkAddStudents`), deduplicates emails within the same submission batch to prevent intra-batch collisions.
+
+2. **Multi-Course Picking for Lecturers and Students**:
+   - **Lecturer Course Picking**:
+     - Fixed [`CourseScopeService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/CourseScopeService.java): ensures `lecturer.getCourse()` is always included for all lecturer rows belonging to the current user (previously dropped if `adminCourseAssignmentRepository` returned assignments).
+     - Lecturers assigned across multiple courses now see all their courses in the sidebar course switcher dropdown (`#courseSwitchSelect` in [`lecturer_sidebar.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/fragments/lecturer_sidebar.html)).
+   - **Student Course Picking**:
+     - Extended [`CourseScopeService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/CourseScopeService.java) to support students (`getEnrolledCoursesForStudent`): collects courses from `student.getCourse()`, `student.getGroup().getCourse()`, and `StudentCourseAssignmentRepository`.
+     - Updated [`AdminCourseContextAdvice.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminCourseContextAdvice.java) to populate `managedCourses`, `studentCourses`, `activeCourseId`, and `activeCourse` for authenticated students as well.
+     - Added the institutional Course Switcher dropdown to [`fragments/student_sidebar.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/fragments/student_sidebar.html) matching the academic layout, auto-submitting via [`sidebar-toggle.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/sidebar-toggle.js) to `/student/switch-course`.
+     - Styled `.course-switcher`, `.course-switch-form`, and `.course-switch-select` in [`student_sidebar.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/student_sidebar.css) with high-contrast active state and dark/warm mode support.
+     - Updated [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java): `switchCourse` securely verifies student enrollment across courses, activates the course in `CourseScopeService` and HTTP session, safely redirects to the referer, and correctly course-scopes groups and team members in `studentHome`.
+
+3. **Verification**:
+   - Expanded Mockito test suite in [`CourseScopeServiceTest.java`](file:///Users/dansan04/AAS-Project/adproject/src/test/java/com/capstone/adproject/service/CourseScopeServiceTest.java): verified multi-course resolution for lecturers and multi-course enrollment & switching for students.
+   - Expanded browser DOM contract tests in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs): verified student and lecturer course switcher forms, select elements, actions, active selections, and CSS styles.
+   - Ran `node --test adproject/src/test/js/*.test.cjs`: **30/30 tests passed** (0 failures).
+
+---
 
 ## Current Status: Theme Polish & Resolution of Invisible Assessment Titles, Sidebar Logo/Email, and Dark Mode Tables & Color Palette
 **Status**: COMPLETED

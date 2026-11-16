@@ -142,6 +142,8 @@ class AdminSubmissionControllerTest {
         String view = adminController.saveAssessmentSubmissionConfig(
             100L,
             true,
+            "DIRECT",
+            null,
             "Final Software Architecture Document",
             "INDIVIDUAL",
             100, // Exceeds 50MB ceiling, should be capped to 50
@@ -157,6 +159,39 @@ class AdminSubmissionControllerTest {
         assertEquals("INDIVIDUAL", testAssessment.getSubmissionScope());
         assertEquals(50, testAssessment.getMaxFileSizeMb()); // Verified capped to 50
         assertEquals("Submit IEEE format report", testAssessment.getSubmissionInstructions());
+        assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
+    }
+
+    @Test
+    void testSaveAssessmentSubmissionConfig_SharedMode_LinksSourceAssessment() {
+        Assessment sourceAssessment = new Assessment();
+        sourceAssessment.setId(200L);
+        sourceAssessment.setTitle("Milestone 1 Report");
+        sourceAssessment.setCourse(testCourse);
+
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(testAssessment));
+        when(assessmentService.getAssessmentById(200L)).thenReturn(Optional.of(sourceAssessment));
+        when(courseScopeService.isActiveCourseId(10L)).thenReturn(true);
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        String view = adminController.saveAssessmentSubmissionConfig(
+            100L,
+            true,
+            "SHARED",
+            200L,
+            "Shared Milestone 1 Report",
+            "GROUP",
+            30,
+            "Shared from Milestone 1",
+            null,
+            ra
+        );
+
+        assertEquals("redirect:/admin/assessment/100/submission-config", view);
+        verify(rubricService).saveAssessment(testAssessment);
+        assertEquals(true, testAssessment.getRequiresSubmission());
+        assertEquals(sourceAssessment, testAssessment.getSubmissionSourceAssessment());
+        assertTrue(testAssessment.isSubmissionShared());
         assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
     }
 
