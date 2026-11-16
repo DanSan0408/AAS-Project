@@ -152,7 +152,7 @@ body.sidebar-open {
 .sidebar .menu-list li a.active {
     background: linear-gradient(135deg, var(--supervisor-primary) 0%, var(--supervisor-primary-light) 100%);
     color: var(--supervisor-text-light);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: 0 4px 12px rgba(0, 43, 91, 0.25);
 }
 

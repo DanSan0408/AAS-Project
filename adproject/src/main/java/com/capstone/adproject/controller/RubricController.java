@@ -87,6 +87,11 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
         return "manage-assessments";
     }
 
+    @GetMapping("/manage-assessments")
+    public String manageAssessmentsAlias(Model model) {
+        return manageAssessments(model);
+    }
+
     @PostMapping("/assessment/save")
     public String saveAssessment(@ModelAttribute Assessment assessment,
             @RequestParam(value = "duplicateConfirmed", defaultValue = "false") boolean duplicateConfirmed,

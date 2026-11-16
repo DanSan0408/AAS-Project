@@ -29,9 +29,13 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Lecturer;
+import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
+import com.capstone.adproject.repositories.StudentRepository;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -45,6 +49,12 @@ class CourseScopeServiceTest {
 
     @Mock
     private LecturerRepository lecturerRepository;
+
+    @Mock
+    private StudentRepository studentRepository;
+
+    @Mock
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     @Mock
     private SuperAdminService superAdminService;
@@ -199,6 +209,57 @@ class CourseScopeServiceTest {
         assertEquals(2L, session.getAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY));
         assertEquals(1L, lecturer.getCourse().getId(), "Switching active course must not overwrite lecturer.course");
         verify(lecturerRepository, never()).save(any());
+    }
+
+    @Test
+    void testGetManagedCoursesForCurrentUser_LecturerInMultipleCourses() {
+        Lecturer lecturer2 = new Lecturer();
+        lecturer2.setId(11L);
+        lecturer2.setEmail("lecturer@example.com");
+        lecturer2.setCourse(course2);
+
+        when(lecturerRepository.findAllByEmailIgnoreCase("lecturer@example.com")).thenReturn(List.of(lecturer, lecturer2));
+        when(adminCourseAssignmentRepository.findByLecturerId(anyLong())).thenReturn(Collections.emptyList());
+
+        List<Course> managed = courseScopeService.getManagedCoursesForCurrentUser();
+        assertEquals(2, managed.size());
+        assertTrue(managed.stream().anyMatch(c -> c.getId().equals(1L)));
+        assertTrue(managed.stream().anyMatch(c -> c.getId().equals(2L)));
+    }
+
+    @Test
+    void testGetManagedCoursesForCurrentUser_StudentEnrolledInMultipleCourses() {
+        SecurityContextHolder.clearContext();
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                "student@example.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_STUDENT")));
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+
+        when(lecturerRepository.findAllByEmailIgnoreCase("student@example.com")).thenReturn(Collections.emptyList());
+        when(lecturerRepository.findAllByUsernameIgnoreCase("student@example.com")).thenReturn(Collections.emptyList());
+
+        Student student = new Student();
+        student.setId(50L);
+        student.setEmail("student@example.com");
+        student.setCourse(course1);
+
+        StudentCourseAssignment sca = new StudentCourseAssignment();
+        sca.setId(501L);
+        sca.setStudent(student);
+        sca.setCourse(course2);
+
+        when(studentRepository.findAllByEmailIgnoreCase("student@example.com")).thenReturn(List.of(student));
+        when(studentCourseAssignmentRepository.findByStudentId(50L)).thenReturn(List.of(sca));
+
+        List<Course> courses = courseScopeService.getManagedCoursesForCurrentUser();
+        assertEquals(2, courses.size());
+        assertTrue(courses.stream().anyMatch(c -> c.getId().equals(1L)));
+        assertTrue(courses.stream().anyMatch(c -> c.getId().equals(2L)));
+
+        boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(2L);
+        assertTrue(switched);
+        assertEquals(2L, session.getAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY));
     }
 }
 

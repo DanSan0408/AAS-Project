@@ -53,6 +53,14 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
 
+    List<Student> findAllByEmailIgnoreCase(String email);
+
+    List<Student> findAllByUsernameIgnoreCase(String username);
+
+    Optional<Student> findByCourseIdAndEmailIgnoreCase(Long courseId, String email);
+
+    Optional<Student> findByCourseIdAndUsernameIgnoreCase(Long courseId, String username);
+
     // **New Method for Forgot Password - Find by Token**
     Optional<Student> findByResetPasswordToken(String resetPasswordToken);
 

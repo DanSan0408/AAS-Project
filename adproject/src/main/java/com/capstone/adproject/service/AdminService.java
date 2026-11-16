@@ -1,24 +1,32 @@
 package com.capstone.adproject.service;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
+import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Student;
 import com.capstone.adproject.model.StudentCourseAssignment;
+import com.capstone.adproject.repositories.AdminCourseAssignmentRepository;
 import com.capstone.adproject.repositories.AdminRepository;
+import com.capstone.adproject.repositories.CourseRepository;
 import com.capstone.adproject.repositories.GroupRepository;
 import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
@@ -73,6 +81,23 @@ public class AdminService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired(required = false)
+    private CourseRepository courseRepository;
+
+    @Autowired(required = false)
+    private AdminCourseAssignmentRepository adminCourseAssignmentRepository;
+
+    @Autowired(required = false)
+    private SuperAdminService superAdminService;
+
+    private String getLoggedInUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null) {
+            return authentication.getName();
+        }
+        return "";
+    }
+
     @org.springframework.beans.factory.annotation.Value("${app.public-base-url:http://localhost:8080}")
     private String publicBaseUrl;
 
@@ -116,6 +141,9 @@ public class AdminService {
             .orElseThrow(() -> new RuntimeException("No active course selected for student creation"));
 
         Optional<Student> existingStudentOpt = studentRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
+        if (existingStudentOpt.isEmpty() && student.getUsername() != null && !student.getUsername().trim().isEmpty()) {
+            existingStudentOpt = studentRepository.findByUsername(student.getUsername().trim());
+        }
         if (existingStudentOpt.isPresent()) {
             Student existingStudent = existingStudentOpt.get();
             ensureStudentEnrollment(existingStudent, activeCourse);
@@ -271,6 +299,19 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
             resetToken = existingAdmin.get().getResetPasswordToken();
         }
 
+        Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
+        if (existingLecturer.isPresent()) {
+            existingPassword = existingLecturer.get().getPassword();
+            isTemp = existingLecturer.get().getIsTempPassword();
+            resetToken = existingLecturer.get().getResetPasswordToken();
+            if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
+                lecturer.setUsername(existingLecturer.get().getUsername());
+            }
+            if (lecturer.getRoles() == null || lecturer.getRoles().trim().isEmpty()) {
+                lecturer.setRoles(existingLecturer.get().getRoles());
+            }
+        }
+
         if (existingPassword != null) {
             lecturer.setPassword(existingPassword);
             lecturer.setIsTempPassword(isTemp);
@@ -290,8 +331,17 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         
         if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
             String baseUsername = normalizedEmail.split("@")[0];
-            lecturer.setUsername(generateUniqueLecturerUsername(baseUsername));
+            lecturer.setUsername(generateUniqueLecturerUsername(baseUsername, activeCourse.getId()));
+        } else {
+            lecturer.setUsername(lecturer.getUsername().trim());
         }
+
+        // Prevent duplicate username within the same active course
+        Optional<Lecturer> duplicateInCourse = lecturerRepository.findByCourseIdAndUsernameIgnoreCase(activeCourse.getId(), lecturer.getUsername());
+        if (duplicateInCourse.isPresent() && (lecturer.getId() == null || !duplicateInCourse.get().getId().equals(lecturer.getId()))) {
+            throw new RuntimeException("An assessor with the name/username '" + lecturer.getUsername() + "' is already enrolled in this course.");
+        }
+
         lecturerRepository.save(lecturer);
         return;
     }
@@ -304,9 +354,13 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
 public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServletRequest request) {
     List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
+    java.util.Set<String> processedEmails = new java.util.HashSet<>();
     for (BulkUserInput user : users) {
         String trimmedEmail = user.email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
+            if (!processedEmails.add(trimmedEmail)) {
+                continue;
+            }
             if (checkStudentEmailDuplicate(trimmedEmail, null) == null) {
                 Student student = new Student();
                 student.setEmail(trimmedEmail);
@@ -325,9 +379,13 @@ public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServ
 public int bulkAddLecturers(List<String> emails, List<String> usernames, HttpServletRequest request) {
     List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
+    java.util.Set<String> processedEmails = new java.util.HashSet<>();
     for (BulkUserInput user : users) {
         String trimmedEmail = user.email.trim().toLowerCase();
         if (!trimmedEmail.isEmpty()) {
+            if (!processedEmails.add(trimmedEmail)) {
+                continue;
+            }
             if (checkLecturerEmailDuplicate(trimmedEmail, null) == null) {
                 Lecturer lecturer = new Lecturer();
                 lecturer.setEmail(trimmedEmail);
@@ -358,13 +416,15 @@ private List<BulkUserInput> buildBulkInputs(List<String> emails, List<String> us
     return rows;
 }
 
-public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {    if (email == null || email.trim().isEmpty()) {
+public String checkStudentEmailDuplicate(String email, Long studentIdToExclude) {
+    if (email == null || email.trim().isEmpty()) {
         return "Email is required";
     }
     
     String normalizedEmail = email.replaceAll("\\s+", "").toLowerCase();
     Optional<Long> activeCourseId = getActiveCourseId();
     if (activeCourseId.isEmpty()) return null;
+    ensureLegacyStudentEnrollmentsForCourse(activeCourseId.get());
 
     if (studentIdToExclude != null) {
         Optional<Student> excluded = studentRepository.findById(studentIdToExclude);
@@ -392,10 +452,16 @@ private String generateUniqueStudentUsername(String baseUsername) {
 }
 
 private String generateUniqueLecturerUsername(String baseUsername) {
+    return generateUniqueLecturerUsername(baseUsername, getActiveCourseId().orElse(null));
+}
+
+private String generateUniqueLecturerUsername(String baseUsername, Long courseId) {
     String sanitizedBase = (baseUsername == null || baseUsername.isBlank()) ? "lecturer" : baseUsername.trim().toLowerCase();
     String candidate = sanitizedBase;
     int suffix = 1;
-    while (lecturerRepository.findByUsernameIgnoreCase(candidate).isPresent()) {
+    while (courseId != null 
+            ? lecturerRepository.findByCourseIdAndUsernameIgnoreCase(courseId, candidate).isPresent()
+            : lecturerRepository.findByUsernameIgnoreCase(candidate).isPresent()) {
         candidate = sanitizedBase + suffix;
         suffix++;
     }
@@ -707,12 +773,53 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         return groupRepository.findById(id);
     }
 
+    public boolean isLecturerInActiveCourse(Lecturer lecturer) {
+        if (lecturer == null || lecturer.getId() == null) {
+            return false;
+        }
+        return getActiveCourseId()
+            .map(activeId -> isLecturerInCourse(lecturer, activeId))
+            .orElse(false);
+    }
+
+    public boolean isLecturerInCourse(Lecturer lecturer, Long courseId) {
+        if (lecturer == null || lecturer.getId() == null || courseId == null) {
+            return false;
+        }
+        if (lecturer.getCourse() != null && courseId.equals(lecturer.getCourse().getId())) {
+            return true;
+        }
+        if (adminCourseAssignmentRepository != null
+                && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(lecturer.getId(), courseId)) {
+            return true;
+        }
+        if (courseRepository != null) {
+            boolean isCreator = courseRepository.findById(courseId)
+                .map(c -> c.getCreatedBy() != null && lecturer.getId().equals(c.getCreatedBy().getId()))
+                .orElse(false);
+            if (isCreator) {
+                return true;
+            }
+        }
+        String currentUsername = getLoggedInUsername();
+        if (currentUsername != null && !currentUsername.isBlank() && courseScopeService != null
+                && courseScopeService.isManagedCourseId(courseId)) {
+            String lecturerEmail = lecturer.getEmail();
+            String lecturerUsername = lecturer.getUsername();
+            if ((lecturerEmail != null && lecturerEmail.equalsIgnoreCase(currentUsername.trim())) ||
+                (lecturerUsername != null && lecturerUsername.equalsIgnoreCase(currentUsername.trim()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private Optional<Lecturer> findLecturerInCourse(Long lecturerId, Long courseId) {
         if (lecturerId == null || courseId == null) {
             return Optional.empty();
         }
         return lecturerRepository.findById(lecturerId)
-            .filter(l -> l.getCourse() != null && courseId.equals(l.getCourse().getId()));
+            .filter(l -> isLecturerInCourse(l, courseId));
     }
 
     private void assignStudentToCourseGroup(Student student, Group targetGroup, Course course) {
@@ -926,9 +1033,33 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
 
     public List<Lecturer> getAllLecturers() {
-        return getActiveCourseId()
-            .map(lecturerRepository::findByCourseId)
-            .orElse(List.of());
+        Optional<Long> activeCourseIdOpt = getActiveCourseId();
+        if (activeCourseIdOpt.isEmpty()) {
+            return List.of();
+        }
+        Long courseId = activeCourseIdOpt.get();
+        Set<Lecturer> result = new LinkedHashSet<>();
+        result.addAll(lecturerRepository.findByCourseId(courseId));
+        if (adminCourseAssignmentRepository != null) {
+            List<AdminCourseAssignment> assignments = adminCourseAssignmentRepository.findByCourseId(courseId);
+            for (AdminCourseAssignment aca : assignments) {
+                if (aca.getLecturer() != null) {
+                    result.add(aca.getLecturer());
+                }
+            }
+        }
+        if (courseRepository != null) {
+            courseRepository.findById(courseId).ifPresent(c -> {
+                if (c.getCreatedBy() != null) {
+                    result.add(c.getCreatedBy());
+                }
+            });
+        }
+        String currentUsername = getLoggedInUsername();
+        if (currentUsername != null && !currentUsername.isBlank() && superAdminService != null) {
+            superAdminService.resolveLecturerByIdentity(currentUsername).ifPresent(result::add);
+        }
+        return new ArrayList<>(result);
     }
 
 
@@ -1035,14 +1166,15 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     }
 
     public List<Lecturer> searchLecturers(String query) {
-        return getActiveCourseId()
-            .map(courseId -> {
-                if (query == null || query.trim().isEmpty()) {
-                    return lecturerRepository.findByCourseId(courseId);
-                }
-                return lecturerRepository.findByCourseIdAndEmailContainingIgnoreCase(courseId, query.trim());
-            })
-            .orElse(List.of());
+        List<Lecturer> all = getAllLecturers();
+        if (query == null || query.trim().isEmpty()) {
+            return all;
+        }
+        String q = query.trim().toLowerCase();
+        return all.stream()
+            .filter(l -> (l.getEmail() != null && l.getEmail().toLowerCase().contains(q)) ||
+                         (l.getUsername() != null && l.getUsername().toLowerCase().contains(q)))
+            .collect(Collectors.toList());
     }
     
     @Transactional

@@ -163,4 +163,129 @@ describe('course-validation.js Client-Side Logic Tests', () => {
         assert.ok(elements.courseCode.classList.contains('invalid-code'));
         assert.ok(!elements.courseCode.classList.contains('valid-code'));
     });
+
+    test('student_sidebar.html and lecturer_sidebar.html define course switcher with active course selection and CSRF', () => {
+        const studentSidebarPath = path.join(TEMPLATES_DIR, 'fragments/student_sidebar.html');
+        assert.ok(fs.existsSync(studentSidebarPath), 'student_sidebar.html must exist');
+        const studentContent = fs.readFileSync(studentSidebarPath, 'utf-8');
+
+        assert.match(studentContent, /th:action="@\{(?:\/student)?\/switch-course\}"/, 'Student switcher must post to /student/switch-course');
+        assert.match(studentContent, /id="courseSwitchForm"/, 'Student switcher form must have id="courseSwitchForm"');
+        assert.match(studentContent, /id="courseSwitchSelect"/, 'Student switcher select must have id="courseSwitchSelect"');
+        assert.match(studentContent, /name="courseId"/, 'Select must bind name="courseId"');
+        assert.match(studentContent, /th:selected="\$\{activeCourseId == course\.id\}"/, 'Must mark active course as selected');
+        assert.match(studentContent, /th:name="\$\{\_csrf\.parameterName\}"/, 'Must include CSRF token parameter in student switcher');
+
+        const lecturerSidebarPath = path.join(TEMPLATES_DIR, 'fragments/lecturer_sidebar.html');
+        assert.ok(fs.existsSync(lecturerSidebarPath), 'lecturer_sidebar.html must exist');
+        const lecturerContent = fs.readFileSync(lecturerSidebarPath, 'utf-8');
+
+        assert.match(lecturerContent, /th:action="@\{(?:\/lecturer)?\/switch-course\}"/, 'Lecturer switcher must post to /lecturer/switch-course');
+        assert.match(lecturerContent, /id="courseSwitchSelect"/, 'Lecturer switcher select must have id="courseSwitchSelect"');
+
+        const studentCssPath = path.join(STATIC_CSS_DIR, 'student_sidebar.css');
+        assert.ok(fs.existsSync(studentCssPath), 'student_sidebar.css must exist');
+        const studentCss = fs.readFileSync(studentCssPath, 'utf-8');
+        assert.ok(studentCss.includes('.course-switcher'), 'student_sidebar.css must style .course-switcher');
+        assert.ok(studentCss.includes('.course-switch-select'), 'student_sidebar.css must style .course-switch-select');
+    });
+
+    test('comment_configuration_single_type.html and comment-config.js support multiple comments with index-safe inputs', () => {
+        const commentHtmlPath = path.join(TEMPLATES_DIR, 'comment_configuration_single_type.html');
+        assert.ok(fs.existsSync(commentHtmlPath), 'comment_configuration_single_type.html must exist');
+        const commentHtml = fs.readFileSync(commentHtmlPath, 'utf-8');
+
+        assert.ok(commentHtml.includes('th:block th:if="${configType == \'group\'}"'), 'Must use th:block for group comment container');
+        assert.ok(commentHtml.includes('th:block th:if="${configType == \'individual\'}"'), 'Must use th:block for individual comment container');
+        assert.ok(commentHtml.includes('anonymous-hidden-input'), 'Must include hidden fallback input for anonymous checkboxes');
+        assert.ok(commentHtml.includes('anonymous-checkbox'), 'Must classify anonymous checkbox');
+
+        const commentJsPath = path.join(STATIC_JS_DIR, 'comment-config.js');
+        assert.ok(fs.existsSync(commentJsPath), 'comment-config.js must exist');
+        const commentJs = fs.readFileSync(commentJsPath, 'utf-8');
+
+        assert.ok(commentJs.includes('anonymous-hidden-input'), 'JS renumber must update hidden anonymous fallback input');
+        assert.ok(commentJs.includes('anonymous-checkbox'), 'JS renumber must update checkbox input');
+        assert.ok(commentJs.includes('commentConfigForm'), 'JS must renumber all question cards on submit');
+    });
+
+    test('group.css and group_assignment.html prevent group randomization trimming and input overflow', () => {
+        const groupCssPath = path.join(STATIC_CSS_DIR, 'group.css');
+        assert.ok(fs.existsSync(groupCssPath), 'group.css must exist');
+        const groupCss = fs.readFileSync(groupCssPath, 'utf-8');
+
+        assert.ok(groupCss.includes('flex-wrap: wrap'), 'creation-wrapper must allow wrapping to prevent trimming');
+        assert.ok(groupCss.includes('randomize-form-inline'), 'randomize-form-inline styling must be defined');
+        assert.ok(groupCss.includes('form-group-inline'), 'form-group-inline styling must be defined');
+
+        const adminCourseCssPath = path.join(STATIC_CSS_DIR, 'admin_manage_courses.css');
+        assert.ok(fs.existsSync(adminCourseCssPath), 'admin_manage_courses.css must exist');
+        const adminCourseCss = fs.readFileSync(adminCourseCssPath, 'utf-8');
+        assert.ok(adminCourseCss.includes('box-sizing: border-box'), 'admin_manage_courses.css must apply box-sizing: border-box to prevent trimmed inputs');
+
+        const superCourseCssPath = path.join(STATIC_CSS_DIR, 'manage_courses.css');
+        assert.ok(fs.existsSync(superCourseCssPath), 'manage_courses.css must exist');
+        const superCourseCss = fs.readFileSync(superCourseCssPath, 'utf-8');
+        assert.ok(superCourseCss.includes('box-sizing: border-box'), 'manage_courses.css must apply box-sizing: border-box to prevent trimmed inputs');
+    });
+
+    test('assessment_submission_configuration.html supports multi-assessment report reuse and shared submission source selection', () => {
+        const configPath = path.join(TEMPLATES_DIR, 'assessment_submission_configuration.html');
+        assert.ok(fs.existsSync(configPath), 'assessment_submission_configuration.html must exist');
+        const content = fs.readFileSync(configPath, 'utf-8');
+
+        assert.ok(content.includes('submissionMode'), 'Must include submissionMode radio/options');
+        assert.ok(content.includes('submissionSourceAssessmentId'), 'Must include submissionSourceAssessmentId select');
+        assert.ok(content.includes('courseAssessments'), 'Must iterate over courseAssessments for shared selection');
+        assert.ok(content.includes('updateModeVisibility'), 'Must include JavaScript toggle for shared submission mode');
+    });
+
+    test('assessor report viewing in new tab is available on reports overview, group/student select, and evaluation workstation', () => {
+        // 1. Dedicated reports management overview template
+        const reportsHtmlPath = path.join(TEMPLATES_DIR, 'lecturer_assessment_reports.html');
+        assert.ok(fs.existsSync(reportsHtmlPath), 'lecturer_assessment_reports.html must exist');
+        const reportsContent = fs.readFileSync(reportsHtmlPath, 'utf-8');
+
+        assert.match(reportsContent, /target="_blank"/, 'Report overview must open PDF in new tab');
+        assert.ok(reportsContent.includes('/lecturer/assessments/submissions/'), 'Must link to submission file stream');
+        assert.ok(reportsContent.includes('isShared'), 'Must support shared report indicators');
+        assert.ok(reportsContent.includes('filterReportRows'), 'Must include interactive search filter');
+
+        // 2. Select group and student templates include new-tab report buttons
+        const selectGroupPath = path.join(TEMPLATES_DIR, 'lecturer_select_group.html');
+        const selectGroupContent = fs.readFileSync(selectGroupPath, 'utf-8');
+        assert.ok(selectGroupContent.includes('target="_blank"'), 'Select group must include target="_blank" for report viewing');
+        assert.ok(selectGroupContent.includes('btn-report-view'), 'Select group cards must include btn-report-view');
+        assert.ok(selectGroupContent.includes('reports'), 'Select group header must link to reports overview');
+
+        const selectStudentPath = path.join(TEMPLATES_DIR, 'lecturer_select_student.html');
+        const selectStudentContent = fs.readFileSync(selectStudentPath, 'utf-8');
+        assert.ok(selectStudentContent.includes('target="_blank"'), 'Select student must include target="_blank" for report viewing');
+        assert.ok(selectStudentContent.includes('btn-report-view'), 'Select student cards must include btn-report-view');
+        assert.ok(selectStudentContent.includes('reports'), 'Select student header must link to reports overview');
+
+        // 3. Evaluation studio maintains split view and has prominent report in new tab button
+        const evalPath = path.join(TEMPLATES_DIR, 'lecturer_combined_evaluation_form.html');
+        const evalContent = fs.readFileSync(evalPath, 'utf-8');
+        assert.ok(evalContent.includes('split-evaluation-layout'), 'Split evaluation container must be preserved');
+        assert.match(evalContent, /target="_blank"[^>]*class="workstation-action-link"/, 'Evaluation workstation must preserve target="_blank" pop-out link');
+    });
+
+    test('system-ui.css and role sidebars enforce standardized typography aligned to Admin Home (500 link weight, 600 active)', () => {
+        const systemUiPath = path.join(STATIC_CSS_DIR, 'system-ui.css');
+        assert.ok(fs.existsSync(systemUiPath), 'system-ui.css must exist');
+        const systemUiContent = fs.readFileSync(systemUiPath, 'utf-8');
+
+        assert.ok(systemUiContent.includes('font-weight: 500 !important;'), 'system-ui.css must enforce font-weight: 500 on regular sidebar links');
+        assert.ok(systemUiContent.includes('.sidebar-group-btn'), 'system-ui.css must standardize .sidebar-group-btn');
+        assert.ok(systemUiContent.includes('.sidebar-subitem'), 'system-ui.css must standardize .sidebar-subitem');
+
+        const adminSidebarPath = path.join(STATIC_CSS_DIR, 'admin_sidebar.css');
+        const adminSidebarContent = fs.readFileSync(adminSidebarPath, 'utf-8');
+        assert.ok(adminSidebarContent.includes('font-weight: 500;'), 'admin_sidebar.css must use font-weight: 500 for sidebar-link');
+
+        const lecturerSidebarPath = path.join(STATIC_CSS_DIR, 'lecturer_sidebar.css');
+        const lecturerSidebarContent = fs.readFileSync(lecturerSidebarPath, 'utf-8');
+        assert.ok(lecturerSidebarContent.includes('font-weight: 500;'), 'lecturer_sidebar.css must use font-weight: 500 for menu-list li a');
+    });
 });

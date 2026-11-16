@@ -447,3 +447,51 @@ body.lecturer-page .btn-action:hover {
         font-size: 1.2rem !important;
     }
 }
+
+/* Student Report Viewing Buttons */
+.btn-report-view {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #ecfdf5;
+    color: #047857 !important;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn-report-view:hover {
+    background: #d1fae5;
+    border-color: #6ee7b7;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(4, 120, 87, 0.15);
+}
+
+.btn-reports-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    background: #e0f2fe;
+    color: #0369a1 !important;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-reports-tab:hover {
+    background: #bae6fd;
+    border-color: #7dd3fc;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(3, 105, 161, 0.15);
+}

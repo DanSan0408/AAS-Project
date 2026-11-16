@@ -134,7 +134,7 @@
     background: linear-gradient(90deg, rgba(248, 166, 23, 0.25) 0%, rgba(248, 166, 23, 0.1) 100%);
     color: var(--supervisor-accent);
     border-left: 4px solid var(--supervisor-accent);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .sidebar .menu-list li a.switch-role-btn {

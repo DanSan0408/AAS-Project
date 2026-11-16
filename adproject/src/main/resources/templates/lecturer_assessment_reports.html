@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Reports - [[${assessment.title}]]</title>
+    <link rel="stylesheet" th:href="@{/css/lecturer_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
+    <link rel="stylesheet" th:href="@{/css/lecturer_select.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <style>
+        .reports-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .reports-header-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px 28px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border-left: 5px solid #047857;
+        }
+        .reports-header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .reports-header-title h2 {
+            margin: 0 0 6px 0;
+            color: #111827;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        .reports-header-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .badge-scope {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge-shared {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .shared-info-banner {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-top: 16px;
+            color: #92400e;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .reports-table-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .reports-table-toolbar {
+            padding: 16px 20px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .search-box {
+            position: relative;
+            min-width: 260px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 34px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: left;
+        }
+        .reports-table th {
+            background: #f9fafb;
+            padding: 14px 18px;
+            color: #4b5563;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+        .reports-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+        .reports-table tr:hover {
+            background-color: #fcfdfd;
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-submitted {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .btn-view-pdf {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: #047857;
+            color: #ffffff !important;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-view-pdf:hover {
+            background: #065f46;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+        }
+        .btn-evaluate-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: #f3f4f6;
+            color: #374151 !important;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .btn-evaluate-link:hover {
+            background: #e5e7eb;
+        }
+        .file-meta-sub {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body data-ui-role="lecturer" class="lecturer-page">
+
+    <div th:insert="~{fragments/lecturer_sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Assess Students', '/lecturer/assessments', 'Student Reports')}"></nav>
+
+        <div class="reports-dashboard">
+            
+            <div class="reports-header-card">
+                <div class="reports-header-title">
+                    <div>
+                        <h2 th:text="${assessment.title}">Assessment Title</h2>
+                        <div class="reports-header-meta">
+                            <span class="badge-scope" th:text="${assessment.submissionScope != null ? assessment.submissionScope + ' Submission' : 'Submission'}">Group Submission</span>
+                            <span th:if="${isShared}" class="badge-shared">
+                                <i class="fas fa-link"></i> Reusing Reports from: <strong th:text="${effectiveAssessment.title}">Original Assessment</strong>
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <a th:href="@{/lecturer/assessments}" class="btn-evaluate-link">
+                            <i class="fas fa-arrow-left"></i> Back to Assessments
+                        </a>
+                    </div>
+                </div>
+
+                <div th:if="${isShared}" class="shared-info-banner">
+                    <i class="fas fa-info-circle fa-lg"></i>
+                    <div>
+                        <strong>Shared Report Management:</strong> This assessment is configured to share submissions uploaded for 
+                        <strong th:text="${effectiveAssessment.title}">source assessment</strong>. You can view all submitted documents directly in new tabs below.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Reports View -->
+            <div th:if="${assessment.submissionScope == 'GROUP' or (assessment.submissionScope == null and !assignedGroups.isEmpty())}" class="reports-table-card">
+                <div class="reports-table-toolbar">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #374151;"><i class="fas fa-users"></i> Assigned Group Reports</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="reportSearchInput" placeholder="Filter by group name or file..." onkeyup="filterReportRows()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="reports-table" id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Members</th>
+                                <th>Status</th>
+                                <th>Submitted Report</th>
+                                <th>Submitted On</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="group : ${assignedGroups}" th:with="sub=${groupSubmissions.get(group.id)}" class="report-row">
+                                <td>
+                                    <strong th:text="${group.groupName}" class="target-name">Group Name</strong>
+                                </td>
+                                <td>
+                                    <span th:if="${group.students != null and !group.students.isEmpty()}" 
+                                          th:text="${#strings.listJoin(group.students.![username], ', ')}" 
+                                          style="color: #4b5563; font-size: 0.85rem;">Members</span>
+                                    <span th:if="${group.students == null or group.students.isEmpty()}" style="color: #9ca3af; font-style: italic;">No members</span>
+                                </td>
+                                <td>
+                                    <span th:if="${sub != null}" class="status-pill status-submitted">
+                                        <i class="fas fa-check-circle"></i> Submitted (v<span th:text="${sub.version}">1</span>)
+                                    </span>
+                                    <span th:if="${sub == null}" class="status-pill status-pending">
+                                        <i class="fas fa-clock"></i> Not Submitted
+                                    </span>
+                                </td>
+                                <td>
+                                    <div th:if="${sub != null}">
+                                        <div style="font-weight: 500; color: #111827;" th:text="${sub.originalFileName}" class="file-name">Report.pdf</div>
+                                        <div class="file-meta-sub" th:if="${sub.fileSizeBytes != null}">
+                                            <span th:text="${#numbers.formatDecimal(sub.fileSizeBytes / 1024.0 / 1024.0, 1, 2)}">1.2</span> MB
+                                        </div>
+                                    </div>
+                                    <div th:if="${sub == null}" style="color: #9ca3af; font-style: italic;">—</div>
+                                </td>
+                                <td>
+                                    <div th:if="${sub != null and sub.submittedAt != null}" 
+                                         th:text="${#temporals.format(sub.submittedAt, 'dd MMM yyyy, HH:mm')}" 
+                                         style="color: #4b5563; font-size: 0.85rem;">01 Jan 2026</div>
+                                    <div th:if="${sub == null or sub.submittedAt == null}" style="color: #9ca3af; font-style: italic;">—</div>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <div style="display: inline-flex; gap: 8px; align-items: center;">
+                                        <a th:if="${sub != null}" 
+                                           th:href="@{/lecturer/assessments/submissions/{id}/file(id=${sub.id})}" 
+                                           target="_blank" 
+                                           class="btn-view-pdf"
+                                           title="Open student report in new tab">
+                                            <i class="fas fa-external-link-alt"></i> View Report (New Tab)
+                                        </a>
+                                        <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, groupId=${group.id})}" 
+                                           class="btn-evaluate-link"
+                                           title="Open grading evaluation form">
+                                            <i class="fas fa-pen-to-square"></i> Evaluate
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(assignedGroups)}">
+                                <td colspan="6" style="text-align: center; padding: 36px; color: #6b7280;">
+                                    No assigned groups found for this assessment.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Individual Reports View -->
+            <div th:if="${assessment.submissionScope == 'INDIVIDUAL' or (assignedGroups.isEmpty() and !assignedStudents.isEmpty())}" class="reports-table-card">
+                <div class="reports-table-toolbar">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #374151;"><i class="fas fa-user"></i> Assigned Student Reports</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="reportStudentSearchInput" placeholder="Filter by student name or email..." onkeyup="filterStudentReportRows()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="reports-table" id="studentReportsTable">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Group</th>
+                                <th>Status</th>
+                                <th>Submitted Report</th>
+                                <th>Submitted On</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="student : ${assignedStudents}" 
+                                th:with="sub=${studentSubmissions.get(student.id)}, resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}" 
+                                class="student-report-row">
+                                <td>
+                                    <strong th:text="${student.username}" class="target-name">Student Name</strong>
+                                    <div class="file-meta-sub" th:text="${student.email}">student@example.com</div>
+                                </td>
+                                <td>
+                                    <span th:text="${resolvedGroup != null ? resolvedGroup.groupName : 'No group assigned'}" style="color: #4b5563;">Group Name</span>
+                                </td>
+                                <td>
+                                    <span th:if="${sub != null}" class="status-pill status-submitted">
+                                        <i class="fas fa-check-circle"></i> Submitted (v<span th:text="${sub.version}">1</span>)
+                                    </span>
+                                    <span th:if="${sub == null}" class="status-pill status-pending">
+                                        <i class="fas fa-clock"></i> Not Submitted
+                                    </span>
+                                </td>
+                                <td>
+                                    <div th:if="${sub != null}">
+                                        <div style="font-weight: 500; color: #111827;" th:text="${sub.originalFileName}" class="file-name">Report.pdf</div>
+                                        <div class="file-meta-sub" th:if="${sub.fileSizeBytes != null}">
+                                            <span th:text="${#numbers.formatDecimal(sub.fileSizeBytes / 1024.0 / 1024.0, 1, 2)}">1.2</span> MB
+                                        </div>
+                                    </div>
+                                    <div th:if="${sub == null}" style="color: #9ca3af; font-style: italic;">—</div>
+                                </td>
+                                <td>
+                                    <div th:if="${sub != null and sub.submittedAt != null}" 
+                                         th:text="${#temporals.format(sub.submittedAt, 'dd MMM yyyy, HH:mm')}" 
+                                         style="color: #4b5563; font-size: 0.85rem;">01 Jan 2026</div>
+                                    <div th:if="${sub == null or sub.submittedAt == null}" style="color: #9ca3af; font-style: italic;">—</div>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    <div style="display: inline-flex; gap: 8px; align-items: center;">
+                                        <a th:if="${sub != null}" 
+                                           th:href="@{/lecturer/assessments/submissions/{id}/file(id=${sub.id})}" 
+                                           target="_blank" 
+                                           class="btn-view-pdf"
+                                           title="Open student report in new tab">
+                                            <i class="fas fa-external-link-alt"></i> View Report (New Tab)
+                                        </a>
+                                        <a th:href="@{/lecturer/assessments/{id}/evaluate(id=${assessment.id}, studentId=${student.id})}" 
+                                           class="btn-evaluate-link"
+                                           title="Open grading evaluation form">
+                                            <i class="fas fa-pen-to-square"></i> Evaluate
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(assignedStudents)}">
+                                <td colspan="6" style="text-align: center; padding: 36px; color: #6b7280;">
+                                    No assigned students found for this assessment.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function filterReportRows() {
+            var input = document.getElementById('reportSearchInput');
+            var filter = input.value.toLowerCase();
+            var rows = document.querySelectorAll('#reportsTable tbody tr.report-row');
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.indexOf(filter) > -1 ? '' : 'none';
+            });
+        }
+
+        function filterStudentReportRows() {
+            var input = document.getElementById('reportStudentSearchInput');
+            var filter = input.value.toLowerCase();
+            var rows = document.querySelectorAll('#studentReportsTable tbody tr.student-report-row');
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                row.style.display = text.indexOf(filter) > -1 ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

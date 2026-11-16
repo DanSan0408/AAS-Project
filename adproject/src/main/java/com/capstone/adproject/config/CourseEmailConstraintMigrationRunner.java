@@ -23,7 +23,31 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
     public void run(String... args) {
         migrateTable("student", "uk_student_email_course");
         migrateTable("lecturer", "uk_lecturer_email_course");
+        migrateUsernameTable("student", "uk_student_username_course");
+        migrateUsernameTable("lecturer", "uk_lecturer_username_course");
         migrateStudentResultOverrides();
+    }
+
+    private void migrateUsernameTable(String tableName, String targetCompositeIndexName) {
+        try {
+            if ("lecturer".equalsIgnoreCase(tableName)) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `lecturer` DROP INDEX `idx_lecturer_username`");
+                    logger.info("Explicitly dropped idx_lecturer_username on lecturer");
+                } catch (Exception ignored) {
+                }
+            } else if ("student".equalsIgnoreCase(tableName)) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `student` DROP INDEX `idx_student_username`");
+                    logger.info("Explicitly dropped idx_student_username on student");
+                } catch (Exception ignored) {
+                }
+            }
+            dropLegacySingleColumnUniqueIndexes(tableName, "username", targetCompositeIndexName);
+            ensureCompositeUniqueIndex(tableName, targetCompositeIndexName, "(`username`, `course_id`)");
+        } catch (Exception ex) {
+            logger.warn("Skipping username-constraint migration for table {}: {}", tableName, ex.getMessage());
+        }
     }
 
     private void migrateStudentResultOverrides() {

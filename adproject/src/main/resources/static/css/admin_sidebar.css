@@ -181,7 +181,7 @@ body.sidebar-open {
     color: var(--admin-secondary);
     text-decoration: none;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 10px;
     position: relative;
@@ -197,7 +197,7 @@ body.sidebar-open {
 .sidebar .menu-list li a.active {
     background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-light) 100%);
     color: var(--admin-text);
-    font-weight: 700;
+    font-weight: 600;
     box-shadow: 0 4px 12px rgba(74, 0, 24, 0.25);
 }
 

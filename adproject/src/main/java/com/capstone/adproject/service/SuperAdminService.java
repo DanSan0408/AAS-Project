@@ -497,6 +497,23 @@ public class SuperAdminService {
         Optional<Lecturer> lecturerOpt = matched.isEmpty() ? Optional.empty() : Optional.of(matched.get(0));
 
         if (lecturerOpt.isEmpty()) {
+            Optional<Admin> adminOpt = adminRepository.findByEmail(normalized);
+            if (adminOpt.isEmpty()) {
+                adminOpt = adminRepository.findByUsername(normalized);
+            }
+            if (adminOpt.isPresent()) {
+                Admin admin = adminOpt.get();
+                Lecturer newLecturer = new Lecturer();
+                newLecturer.setEmail(admin.getEmail());
+                newLecturer.setUsername(admin.getUsername());
+                newLecturer.setPassword(admin.getPassword());
+                newLecturer.setRoles("ROLE_ADMIN,ROLE_LECTURER");
+                newLecturer.setIsTempPassword(false);
+                newLecturer.setResetPasswordToken(admin.getResetPasswordToken());
+                Lecturer saved = lecturerRepository.save(newLecturer);
+                return Optional.of(saved);
+            }
+
             try {
                 ensureSuperAdminAssignable(normalized);
                 List<Lecturer> created = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, normalized);

@@ -206,7 +206,6 @@
                                         <label for="maxStudentsPerGroup">Max Students Per Group:</label>
                                         <input type="number" id="maxStudentsPerGroup" th:field="*{maxStudentsPerGroup}" min="1" required />
                                     </div>
-                                    <br>
                                     <button type="submit" class="btn btn-warning" th:disabled="${availableStudentsCount == 0}">Generate Preview</button>
                                 </form>
                             </div>

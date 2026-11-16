@@ -292,9 +292,12 @@ public class LecturerAssessmentController {
             groupEvaluationStatus.put(group.getId(), status);
         }
         
+        Map<Long, AssessmentSubmission> groupSubmissions = assessmentSubmissionService.getGroupSubmissionsMap(assessment);
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("assignedGroups", assignedGroups);
         model.addAttribute("groupEvaluationStatus", groupEvaluationStatus);
+        model.addAttribute("groupSubmissions", groupSubmissions);
 
         return "lecturer_select_group";
     }
@@ -366,10 +369,13 @@ public class LecturerAssessmentController {
             studentEvaluationStatus.put(student.getId(), status);
         }
 
+        Map<Long, AssessmentSubmission> studentSubmissions = assessmentSubmissionService.getStudentSubmissionsMap(assessment);
+
         model.addAttribute("assessment", assessment);
         model.addAttribute("assignedStudents", assignedStudents);
         model.addAttribute("studentGroupMap", adminService != null ? adminService.getStudentGroupMapForActiveCourse(assignedStudents) : Collections.emptyMap());
         model.addAttribute("studentEvaluationStatus", studentEvaluationStatus);
+        model.addAttribute("studentSubmissions", studentSubmissions);
 
         return "lecturer_select_student";
     }
@@ -931,6 +937,80 @@ public class LecturerAssessmentController {
         return studentId != null
             ? "redirect:/lecturer/assessments/" + assessmentId + "/select-student"
             : "redirect:/lecturer/assessments/" + assessmentId + "/select-group";
+    }
+
+    @GetMapping("/{assessmentId}/reports")
+    public String showAssessmentReports(
+            @PathVariable("assessmentId") Long assessmentId,
+            Model model,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                "You are not authorized to view reports for this assessment.");
+            return "redirect:/lecturer/assessments";
+        }
+
+        Assessment effectiveAssessment = assessment.getEffectiveSubmissionAssessment();
+        boolean isShared = assessment.isSubmissionShared();
+
+        List<Group> assignedGroups = assignmentRepository.findGroupsByLecturerAndAssessment(lecturer, assessment);
+        boolean hasRubricAssignment = rubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment);
+        if (hasRubricAssignment && assessment.getCourse() != null) {
+            List<Group> allGroupsWithStudents = groupRepository.findAllWithStudentsByCourseId(assessment.getCourse().getId());
+            Set<Group> combinedGroups = new HashSet<>(assignedGroups);
+            combinedGroups.addAll(allGroupsWithStudents);
+            assignedGroups = new ArrayList<>(combinedGroups);
+        }
+
+        List<Student> assignedStudents = new ArrayList<>(studentAssignmentRepository.findStudentsByLecturerAndAssessment(lecturer, assessment));
+        assignedStudents.sort((s1, s2) -> {
+            String name1 = (s1.getUsername() != null && !s1.getUsername().trim().isEmpty()) ? s1.getUsername().trim() : (s1.getEmail() != null ? s1.getEmail() : "");
+            String name2 = (s2.getUsername() != null && !s2.getUsername().trim().isEmpty()) ? s2.getUsername().trim() : (s2.getEmail() != null ? s2.getEmail() : "");
+            return name1.compareToIgnoreCase(name2);
+        });
+
+        Map<Long, AssessmentSubmission> groupSubmissions = assessmentSubmissionService.getGroupSubmissionsMap(assessment);
+        Map<Long, AssessmentSubmission> studentSubmissions = assessmentSubmissionService.getStudentSubmissionsMap(assessment);
+
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("effectiveAssessment", effectiveAssessment);
+        model.addAttribute("isShared", isShared);
+        model.addAttribute("assignedGroups", assignedGroups);
+        model.addAttribute("assignedStudents", assignedStudents);
+        model.addAttribute("groupSubmissions", groupSubmissions);
+        model.addAttribute("studentSubmissions", studentSubmissions);
+        model.addAttribute("studentGroupMap", adminService != null ? adminService.getStudentGroupMapForActiveCourse(assignedStudents) : Collections.emptyMap());
+
+        return "lecturer_assessment_reports";
+    }
+
+    @GetMapping("/{assessmentId}/reports/view")
+    public String viewReportForTarget(
+            @PathVariable("assessmentId") Long assessmentId,
+            @RequestParam(value = "groupId", required = false) Long groupId,
+            @RequestParam(value = "studentId", required = false) Long studentId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        Lecturer lecturer = getCurrentLecturer(authentication);
+        Assessment assessment = rubricService.findAssessmentById(assessmentId);
+        if (!lecturerCanAccessAssessment(lecturer, assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Not authorized.");
+            return "redirect:/lecturer/assessments";
+        }
+
+        Group group = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;
+        Student student = studentId != null ? studentRepository.findById(studentId).orElse(null) : null;
+        Optional<AssessmentSubmission> subOpt = assessmentSubmissionService.getSubmissionForTarget(assessment, group, student);
+        if (subOpt.isPresent()) {
+            return "redirect:/lecturer/assessments/submissions/" + subOpt.get().getId() + "/file";
+        }
+        redirectAttributes.addFlashAttribute("errorMessage", "No report submission found for this target.");
+        return "redirect:/lecturer/assessments/" + assessmentId + "/reports";
     }
 
     @GetMapping("/submissions/{submissionId}/file")
