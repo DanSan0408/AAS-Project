@@ -288,4 +288,28 @@ describe('course-validation.js Client-Side Logic Tests', () => {
         const lecturerSidebarContent = fs.readFileSync(lecturerSidebarPath, 'utf-8');
         assert.ok(lecturerSidebarContent.includes('font-weight: 500;'), 'lecturer_sidebar.css must use font-weight: 500 for menu-list li a');
     });
+
+    test('group assignment form allows optional supervisor assignments, handles errors safely, and preserves multi-course students', () => {
+        const groupAssignmentHtml = fs.readFileSync(path.join(TEMPLATES_DIR, 'group_assignment.html'), 'utf-8');
+        assert.ok(!groupAssignmentHtml.includes('<select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>'),
+            'group_assignment.html must not force required on industrialSupervisorId');
+        assert.ok(groupAssignmentHtml.includes('Select Industrial Supervisor (Optional)'),
+            'group_assignment.html must provide an optional choice for industrial supervisor');
+
+        const editGroupHtml = fs.readFileSync(path.join(TEMPLATES_DIR, 'edit_group.html'), 'utf-8');
+        assert.ok(!editGroupHtml.includes('<select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>'),
+            'edit_group.html must not force required on industrialSupervisorId');
+
+        const adminCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/AdminController.java'), 'utf-8');
+        assert.ok(adminCtrl.includes('Group created and assigned successfully!'),
+            'AdminController.createAndAssignGroup must set success flash attribute');
+        assert.ok(adminCtrl.includes('Error creating group:'),
+            'AdminController.createAndAssignGroup must catch exceptions and provide helpful flash error');
+
+        const adminService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/AdminService.java'), 'utf-8');
+        assert.ok(adminService.includes('findByIdNative'),
+            'AdminService must check native student lookup to support cross-course enrolled students');
+        assert.ok(adminService.includes('isPrimaryCourse'),
+            'AdminService must isolate primary course direct group updates from secondary course enrollments');
+    });
 });
