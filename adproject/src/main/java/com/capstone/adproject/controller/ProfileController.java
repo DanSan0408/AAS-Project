@@ -1,5 +1,6 @@
 package com.capstone.adproject.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,6 +22,7 @@ import com.capstone.adproject.repositories.AdminRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.repositories.SuperAdminRepository;
+import com.capstone.adproject.service.CourseScopeService;
 
 @Controller
 @RequestMapping("/profile")
@@ -48,15 +50,13 @@ public class ProfileController {
         String displayEmail = "";
 
         if ("STUDENT".equals(role)) {
-            Optional<Student> studentOpt = studentRepository.findByEmail(username)
-                    .or(() -> studentRepository.findByUsername(username));
-            if (studentOpt.isPresent()) {
-                displayUsername = studentOpt.get().getUsername();
-                displayEmail = studentOpt.get().getEmail();
+            List<Student> students = CourseScopeService.resolveStudentsByIdentity(studentRepository, username);
+            if (!students.isEmpty()) {
+                displayUsername = students.get(0).getUsername();
+                displayEmail = students.get(0).getEmail();
             }
         } else if ("LECTURER".equals(role)) {
-            java.util.List<Lecturer> lecturers = com.capstone.adproject.service.CourseScopeService
-                    .resolveLecturersByIdentity(lecturerRepository, username);
+            List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, username);
             if (!lecturers.isEmpty()) {
                 displayUsername = lecturers.get(0).getUsername();
                 displayEmail = lecturers.get(0).getEmail();
@@ -94,17 +94,14 @@ public class ProfileController {
 
         try {
             if ("STUDENT".equals(role)) {
-                Optional<Student> studentOpt = studentRepository.findByEmail(authName)
-                        .or(() -> studentRepository.findByUsername(authName));
-                if (studentOpt.isPresent()) {
-                    Student student = studentOpt.get();
+                List<Student> students = CourseScopeService.resolveStudentsByIdentity(studentRepository, authName);
+                for (Student student : students) {
                     student.setUsername(newUsername);
                     studentRepository.save(student);
                     isUpdated = true;
                 }
             } else if ("LECTURER".equals(role)) {
-                java.util.List<Lecturer> lecturers = com.capstone.adproject.service.CourseScopeService
-                        .resolveLecturersByIdentity(lecturerRepository, authName);
+                List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepository, authName);
                 for (Lecturer lecturer : lecturers) {
                     lecturer.setUsername(newUsername);
                     lecturerRepository.save(lecturer);

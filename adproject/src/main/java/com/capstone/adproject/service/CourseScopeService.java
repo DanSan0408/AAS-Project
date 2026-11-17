@@ -354,9 +354,63 @@ public class CourseScopeService {
                     return Optional.of(candidate);
                 }
             }
-            return Optional.empty();
         }
         return Optional.of(candidates.get(0));
+    }
+
+    public static List<Student> resolveStudentsByIdentity(StudentRepository repository, String identifier) {
+        if (repository == null || identifier == null || identifier.isBlank()) {
+            return Collections.emptyList();
+        }
+        Map<Long, Student> found = new LinkedHashMap<>();
+        addStudents(found, repository.findAllByEmailIgnoreCase(identifier));
+        addStudents(found, repository.findAllByUsernameIgnoreCase(identifier));
+
+        if (found.isEmpty()) {
+            safeSingleLookupStudent(() -> repository.findFirstByEmailIgnoreCaseOrderByIdAsc(identifier)).ifPresent(s -> addStudent(found, s));
+            safeSingleLookupStudent(() -> repository.findByEmail(identifier)).ifPresent(s -> addStudent(found, s));
+            safeSingleLookupStudent(() -> repository.findByUsername(identifier)).ifPresent(s -> addStudent(found, s));
+        }
+
+        if (found.isEmpty()) {
+            int atIndex = identifier.indexOf('@');
+            if (atIndex > 0) {
+                String localPart = identifier.substring(0, atIndex);
+                addStudents(found, repository.findAllByUsernameIgnoreCase(localPart));
+                if (found.isEmpty()) {
+                    safeSingleLookupStudent(() -> repository.findByUsername(localPart)).ifPresent(s -> addStudent(found, s));
+                }
+            }
+        }
+        return new ArrayList<>(found.values());
+    }
+
+    public static Optional<Student> resolveStudentForCourse(StudentRepository repository, String identifier, Long courseId) {
+        List<Student> candidates = resolveStudentsByIdentity(repository, identifier);
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+        if (courseId != null) {
+            for (Student candidate : candidates) {
+                if (candidate.getCourse() != null && courseId.equals(candidate.getCourse().getId())) {
+                    return Optional.of(candidate);
+                }
+                if (candidate.getGroup() != null && candidate.getGroup().getCourse() != null
+                        && courseId.equals(candidate.getGroup().getCourse().getId())) {
+                    return Optional.of(candidate);
+                }
+            }
+        }
+        return Optional.of(candidates.get(0));
+    }
+
+    public Optional<Student> getActiveStudentForCurrentUser() {
+        String username = getLoggedInUsername();
+        if (username == null || username.isBlank()) {
+            return Optional.empty();
+        }
+        Long activeCourseId = getActiveCourseIdForCurrentUser();
+        return resolveStudentForCourse(studentRepository, username, activeCourseId);
     }
 
     public Optional<Lecturer> getActiveLecturerForCurrentUser() {
@@ -389,6 +443,32 @@ public class CourseScopeService {
     private static Optional<Lecturer> safeSingleLookup(java.util.function.Supplier<Optional<Lecturer>> supplier) {
         try {
             Optional<Lecturer> result = supplier.get();
+            return result != null ? result : Optional.empty();
+        } catch (RuntimeException ex) {
+            return Optional.empty();
+        }
+    }
+
+    private static void addStudents(Map<Long, Student> target, List<Student> source) {
+        if (source == null) {
+            return;
+        }
+        for (Student student : source) {
+            addStudent(target, student);
+        }
+    }
+
+    private static void addStudent(Map<Long, Student> target, Student student) {
+        if (student == null) {
+            return;
+        }
+        Long key = student.getId() != null ? student.getId() : -1L - target.size();
+        target.putIfAbsent(key, student);
+    }
+
+    private static Optional<Student> safeSingleLookupStudent(java.util.function.Supplier<Optional<Student>> supplier) {
+        try {
+            Optional<Student> result = supplier.get();
             return result != null ? result : Optional.empty();
         } catch (RuntimeException ex) {
             return Optional.empty();
@@ -461,15 +541,63 @@ public class CourseScopeService {
             return Collections.emptySet();
         }
 
-        List<Long> ids = jdbcTemplate.query(
-            "SELECT DISTINCT course_id FROM admin_course_assignment WHERE lecturer_id = ? AND course_id IS NOT NULL",
-            (rs, rowNum) -> rs.getLong(1),
-            lecturerId
-        );
+        Set<Long> result = new LinkedHashSet<>();
+        try {
+            List<Long> ids = jdbcTemplate.query(
+                "SELECT DISTINCT course_id FROM admin_course_assignment WHERE lecturer_id = ? AND course_id IS NOT NULL",
+                (rs, rowNum) -> rs.getLong(1),
+                lecturerId
+            );
+            if (ids != null) {
+                ids.stream().filter(Objects::nonNull).forEach(result::add);
+            }
+        } catch (Exception ignored) {}
 
-        return ids.stream()
-            .filter(Objects::nonNull)
-            .collect(Collectors.toCollection(LinkedHashSet::new));
+        try {
+            List<Long> evalCourseIds = jdbcTemplate.query(
+                "SELECT DISTINCT a.course_id FROM lecturer_student_assignment lsa JOIN assessment a ON a.id = lsa.assessment_id WHERE lsa.lecturer_id = ? AND a.course_id IS NOT NULL",
+                (rs, rowNum) -> rs.getLong(1),
+                lecturerId
+            );
+            if (evalCourseIds != null) {
+                evalCourseIds.stream().filter(Objects::nonNull).forEach(result::add);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            List<Long> rubricCourseIds = jdbcTemplate.query(
+                "SELECT DISTINCT a.course_id FROM lecturer_rubric_assignments lra JOIN assessment a ON a.id = lra.assessment_id WHERE lra.lecturer_id = ? AND a.course_id IS NOT NULL",
+                (rs, rowNum) -> rs.getLong(1),
+                lecturerId
+            );
+            if (rubricCourseIds != null) {
+                rubricCourseIds.stream().filter(Objects::nonNull).forEach(result::add);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            List<Long> groupAssignedIds = jdbcTemplate.query(
+                "SELECT DISTINCT a.course_id FROM lecturer_group_assignment lga JOIN assessment a ON a.id = lga.assessment_id WHERE lga.lecturer_id = ? AND a.course_id IS NOT NULL",
+                (rs, rowNum) -> rs.getLong(1),
+                lecturerId
+            );
+            if (groupAssignedIds != null) {
+                groupAssignedIds.stream().filter(Objects::nonNull).forEach(result::add);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            List<Long> supervisorCourseIds = jdbcTemplate.query(
+                "SELECT DISTINCT course_id FROM project_group WHERE (academic_supervisor_id = ? OR industrial_supervisor_id = ?) AND course_id IS NOT NULL",
+                (rs, rowNum) -> rs.getLong(1),
+                lecturerId, lecturerId
+            );
+            if (supervisorCourseIds != null) {
+                supervisorCourseIds.stream().filter(Objects::nonNull).forEach(result::add);
+            }
+        } catch (Exception ignored) {}
+
+        return result;
     }
 
     private List<Course> loadCoursesByIds(Set<Long> courseIds) {

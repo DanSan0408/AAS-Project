@@ -27,7 +27,7 @@ body.assign-lecturer-page {
 
 body.assign-lecturer-page .main-content {
     margin-left: 270px !important;
-    padding: 30px 40px 100px 40px !important; 
+    padding: 30px 40px 140px 40px !important; 
     flex-grow: 1 !important;
     background-color: var(--color-background) !important;
     display: flex !important;
@@ -96,12 +96,22 @@ body.assign-lecturer-page .page-header p {
     color: #666 !important;
 }
 
+body.assign-lecturer-page #rubricModeSection,
+body.assign-lecturer-page #groupModeSection,
+body.assign-lecturer-page #studentModeSection {
+    width: 100% !important;
+    max-width: 1000px !important;
+    margin-bottom: 25px !important;
+    box-sizing: border-box !important;
+}
+
 body.assign-lecturer-page .groups-container {
     width: 100% !important;
     max-width: 1000px !important;
     display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)) !important;
     gap: 25px !important;
+    box-sizing: border-box !important;
 }
 
 body.assign-lecturer-page .student-mode-container {
@@ -109,11 +119,13 @@ body.assign-lecturer-page .student-mode-container {
     flex-direction: column !important;
     align-items: center !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 body.assign-lecturer-page .student-mode-container .group-assignment-card {
     width: 100% !important;
     max-width: 760px !important;
+    box-sizing: border-box !important;
 }
 
 body.assign-lecturer-page .group-assignment-card {
@@ -124,6 +136,9 @@ body.assign-lecturer-page .group-assignment-card {
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
 }
 
 body.assign-lecturer-page .group-header {
@@ -155,6 +170,15 @@ body.assign-lecturer-page .student-count-badge {
 
 body.assign-lecturer-page .card-body {
     padding: 20px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+body.assign-lecturer-page .lecturer-assignments-container {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
 }
 
 body.assign-lecturer-page .students-list {
@@ -181,17 +205,27 @@ body.assign-lecturer-page .lecturer-section label {
 
 body.assign-lecturer-page .lecturer-row {
     display: flex !important;
+    align-items: center !important;
     gap: 10px !important;
     margin-bottom: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 body.assign-lecturer-page .form-select {
-    flex-grow: 1 !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: auto !important;
     padding: 10px !important;
     border: 1px solid var(--color-border) !important;
     border-radius: 6px !important;
     color: var(--color-secondary) !important;
     background-color: white !important;
+    box-sizing: border-box !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
 }
 
 body.assign-lecturer-page .btn-icon-remove {
@@ -199,12 +233,22 @@ body.assign-lecturer-page .btn-icon-remove {
     border: 1px solid var(--color-alert) !important;
     color: var(--color-alert) !important;
     width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    flex: 0 0 38px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
     border-radius: 6px !important;
     cursor: pointer !important;
     transition: all 0.2s !important;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    box-sizing: border-box !important;
 }
 
 body.assign-lecturer-page .btn-icon-remove:hover {
@@ -265,6 +309,22 @@ body.assign-lecturer-page .button-container {
     margin: 0 !important;
 }
 
+body.assign-lecturer-page.sidebar-collapsed .button-container {
+    left: 20px !important;
+}
+
+body.assign-lecturer-page .save-bar-spacer {
+    display: block !important;
+    width: 100% !important;
+    height: 120px !important;
+    min-height: 120px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+    flex-shrink: 0 !important;
+}
+
 body.assign-lecturer-page .btn {
     padding: 10px 30px !important;
     border-radius: 6px !important;
@@ -294,7 +354,11 @@ body.assign-lecturer-page .alert-danger { background-color: #fee2e2 !important; 
 
 @media (max-width: 1279px) {
     .main-content,
-    body.assign-lecturer-page .main-content { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
+    body.assign-lecturer-page .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px 20px 140px 20px !important;
+    }
     
     body.assign-lecturer-page .button-container { 
         left: 20px !important; 
@@ -306,7 +370,9 @@ body.assign-lecturer-page .alert-danger { background-color: #fee2e2 !important; 
 
 @media (max-width: 768px) {
     .main-content,
-    body.assign-lecturer-page .main-content { padding: 84px 15px 100px 15px !important; }
+    body.assign-lecturer-page .main-content {
+        padding: 84px 15px 140px 15px !important;
+    }
     body.assign-lecturer-page .header-container { flex-direction: column !important; text-align: center !important; gap: 10px !important; }
     body.assign-lecturer-page .header-container img { max-width: 120px !important; }
     body.assign-lecturer-page .header-container h1 { font-size: 1.8rem !important; }
@@ -442,3 +508,9 @@ body.assign-lecturer-page .alert-danger { background-color: #fee2e2 !important; 
         font-size: 1.2rem !important;
     }
 }
+
+body.assign-lecturer-page .main-content,
+body.assign-lecturer-page.main-content {
+    padding-bottom: 140px !important;
+}
+

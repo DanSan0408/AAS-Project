@@ -4,15 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.capstone.adproject.service.MonitoringService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
 
 @ControllerAdvice
@@ -23,6 +26,23 @@ public class GlobalExceptionHandler {
 
     public GlobalExceptionHandler(MonitoringService monitoringService) {
         this.monitoringService = monitoringService;
+    }
+
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    public ModelAndView handleAsyncTimeout(AsyncRequestTimeoutException ex, HttpServletRequest request) {
+        // SSE connections timeout normally when clients disconnect; do not attempt to write an HTML error page
+        logger.debug("Async request timeout for URL: {}", request.getRequestURL());
+        return null;
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ModelAndView handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest request) {
+        logger.warn("Missing request parameter for URL {}: {}", request.getRequestURL(), ex.getMessage());
+        ModelAndView modelAndView = new ModelAndView("error");
+        modelAndView.addObject("errorMessage", "A required parameter was missing or invalid: " + ex.getParameterName());
+        modelAndView.addObject("status", HttpStatus.BAD_REQUEST.value());
+        return modelAndView;
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -58,7 +78,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ModelAndView handleGenericException(Exception ex, HttpServletRequest request) {
+    public ModelAndView handleGenericException(Exception ex, HttpServletRequest request, HttpServletResponse response) {
+        if (ex instanceof AsyncRequestTimeoutException) {
+            return null;
+        }
+        if (response != null && response.isCommitted()) {
+            logger.warn("Response already committed for URL: {}. Skipping error view: {}", request.getRequestURL(), ex.getMessage());
+            return null;
+        }
+
         // Increment the critical error counter for any unexpected exception (5xx)
         monitoringService.incrementCriticalErrorCount();
 
