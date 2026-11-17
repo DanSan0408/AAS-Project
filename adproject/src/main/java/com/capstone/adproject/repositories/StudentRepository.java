@@ -15,6 +15,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     
     Optional<Student> findByUsername(String username);
 
+    @Query(value = "SELECT * FROM student WHERE id = :id", nativeQuery = true)
+    Optional<Student> findByIdNative(@Param("id") Long id);
+
     List<Student> findByGroupIsNull();
 
     @Query("SELECT s FROM Student s LEFT JOIN FETCH s.group")

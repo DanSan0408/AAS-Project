@@ -811,6 +811,11 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
                 return true;
             }
         }
+        Long activeCourseId = getActiveCourseId().orElse(null);
+        if (courseId.equals(activeCourseId)) {
+            return getAllLecturers().stream()
+                .anyMatch(l -> l.getId() != null && l.getId().equals(lecturer.getId()));
+        }
         return false;
     }
 
@@ -818,8 +823,13 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         if (lecturerId == null || courseId == null) {
             return Optional.empty();
         }
-        return lecturerRepository.findById(lecturerId)
-            .filter(l -> isLecturerInCourse(l, courseId));
+        Optional<Lecturer> opt = lecturerRepository.findById(lecturerId);
+        if (opt.isPresent() && isLecturerInCourse(opt.get(), courseId)) {
+            return opt;
+        }
+        return getAllLecturers().stream()
+            .filter(l -> l.getId() != null && l.getId().equals(lecturerId))
+            .findFirst();
     }
 
     private void assignStudentToCourseGroup(Student student, Group targetGroup, Course course) {
@@ -833,15 +843,13 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
                 studentCourseAssignmentRepository.save(sca);
             });
 
-        boolean shouldUpdateDirectGroup = student.getGroup() == null
-            || student.getGroup().getCourse() == null
-            || course.getId().equals(student.getGroup().getCourse().getId())
-            || (student.getCourse() != null && course.getId().equals(student.getCourse().getId()));
-        if (shouldUpdateDirectGroup) {
+        boolean isPrimaryCourse = student.getCourse() == null
+            || (student.getCourse().getId() != null && course.getId().equals(student.getCourse().getId()));
+        if (isPrimaryCourse) {
             student.setGroup(targetGroup);
-        }
-        if (student.getCourse() == null) {
-            student.setCourse(course);
+            if (student.getCourse() == null) {
+                student.setCourse(course);
+            }
         }
     }
 
@@ -892,17 +900,32 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         Group savedGroup = groupRepository.save(newGroup);
 
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
-            List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds()).stream()
+            List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
+            if (studentsToAssign.isEmpty() || studentsToAssign.size() < dto.getSelectedStudentIds().size()) {
+                studentsToAssign = dto.getSelectedStudentIds().stream()
+                    .map(this::findStudentById)
+                    .flatMap(Optional::stream)
+                    .toList();
+            }
+            studentsToAssign = studentsToAssign.stream()
                 .filter(student -> belongsToCourse(student, courseId))
                 .toList();
 
+            List<Student> primaryStudentsToSave = new ArrayList<>();
             for (Student student : studentsToAssign) {
                 assignStudentToCourseGroup(student, savedGroup, activeCourse);
-                if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
-                    student.setUsername(student.getEmail() != null ? student.getEmail().split("@")[0] : "student" + student.getId());
+                boolean isPrimary = student.getCourse() == null
+                        || (student.getCourse().getId() != null && courseId.equals(student.getCourse().getId()));
+                if (isPrimary) {
+                    if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
+                        student.setUsername(student.getEmail() != null ? student.getEmail().split("@")[0] : "student" + student.getId());
+                    }
+                    primaryStudentsToSave.add(student);
                 }
             }
-            studentRepository.saveAll(studentsToAssign);
+            if (!primaryStudentsToSave.isEmpty()) {
+                studentRepository.saveAll(primaryStudentsToSave);
+            }
 
             savedGroup.setGroupSize(studentsToAssign.size());
             groupRepository.save(savedGroup);
@@ -949,14 +972,30 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
 
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty() && groupCourse != null) {
             List<Student> newStudentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
+            if (newStudentsToAssign.isEmpty() || newStudentsToAssign.size() < dto.getSelectedStudentIds().size()) {
+                newStudentsToAssign = dto.getSelectedStudentIds().stream()
+                    .map(this::findStudentById)
+                    .flatMap(Optional::stream)
+                    .toList();
+            }
             
-            List<Student> studentsToSave = newStudentsToAssign.stream()
+            List<Student> studentsToAssign = newStudentsToAssign.stream()
                 .filter(student -> belongsToCourse(student, groupCourse.getId()))
                 .filter(student -> resolveStudentGroupForCourse(student, groupCourse.getId()) == null)
-                .peek(student -> assignStudentToCourseGroup(student, existingGroup, groupCourse))
                 .toList();
-            
-            studentRepository.saveAll(studentsToSave);
+
+            List<Student> primaryToSave = new ArrayList<>();
+            for (Student student : studentsToAssign) {
+                assignStudentToCourseGroup(student, existingGroup, groupCourse);
+                boolean isPrimary = student.getCourse() == null
+                        || (student.getCourse().getId() != null && groupCourse.getId().equals(student.getCourse().getId()));
+                if (isPrimary) {
+                    primaryToSave.add(student);
+                }
+            }
+            if (!primaryToSave.isEmpty()) {
+                studentRepository.saveAll(primaryToSave);
+            }
         }
         
         existingGroup.setGroupSize(getStudentsByGroup(existingGroup).size());
@@ -1064,11 +1103,33 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
 
 
     public Optional<Student> findStudentById(Long id) {
-        return studentRepository.findById(id);
+        if (id == null) {
+            return Optional.empty();
+        }
+        Optional<Student> opt = studentRepository.findById(id);
+        if (opt.isPresent()) {
+            return opt;
+        }
+        Optional<Student> nativeOpt = studentRepository.findByIdNative(id);
+        if (nativeOpt.isPresent()) {
+            return nativeOpt;
+        }
+        return getAllStudents().stream()
+            .filter(s -> s.getId() != null && s.getId().equals(id))
+            .findFirst();
     }
 
     public Optional<Lecturer> findLecturerById(Long id) {
-        return lecturerRepository.findById(id);
+        if (id == null) {
+            return Optional.empty();
+        }
+        Optional<Lecturer> opt = lecturerRepository.findById(id);
+        if (opt.isPresent()) {
+            return opt;
+        }
+        return getAllLecturers().stream()
+            .filter(l -> l.getId() != null && l.getId().equals(id))
+            .findFirst();
     }
 
 
@@ -1126,7 +1187,11 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         }
 
         ensureLegacyStudentEnrollmentsForCourse(activeCourseId.get());
-        return belongsToCourse(student, activeCourseId.get());
+        if (belongsToCourse(student, activeCourseId.get())) {
+            return true;
+        }
+        return getAllStudents().stream()
+            .anyMatch(s -> s.getId() != null && s.getId().equals(student.getId()));
     }
 
     public Optional<Admin> findAdminByEmail(String email) {
