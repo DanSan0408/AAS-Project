@@ -3,7 +3,103 @@
 **Last Updated**: 2026-11-17 (Antigravity)
 
 
-## Current Status: Legacy Database Duplicate Assessor Consolidation & Multi-Course Segregation
+## Current Status: Student Multi-Course Identity Resolution & Assessor Assignment UI Fixes
+**Status**: COMPLETED
+**Date**: 2026-11-17
+
+### Summary of Enhancements & Fixes
+1. **Student Identity Resolution & Multi-Course Protection**:
+   - **Root Cause**:
+     - `StudentController`, `CustomUserDetailsService`, and `ProfileController` directly invoked `studentRepository.findByEmail(identifier)`.
+     - In the legacy database or when students are enrolled in multiple courses (`uk_student_email_course` constraint on `(email, course_id)`), students can have multiple rows with the same email.
+     - Calling `Optional<Student> findByEmail` caused Spring Data JPA to execute `query.getSingleResult()`, throwing `jakarta.persistence.NonUniqueResultException: Query did not return a unique result: 2 results were returned`, or throwing `Student not found` when email case did not match.
+   - **Fixes**:
+     - In [`CourseScopeService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/CourseScopeService.java):
+       - Added `resolveStudentsByIdentity(studentRepository, identifier)` to lookup student rows across case-insensitive email and username.
+       - Added `resolveStudentForCourse(studentRepository, identifier, courseId)` to prioritize the record matching the active course ID (or enrolled group course), falling back safely to the primary candidate row.
+     - In [`CustomUserDetailsService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/CustomUserDetailsService.java):
+       - Updated student authentication to use `CourseScopeService.resolveStudentsByIdentity(studentRepository, identifier)`, completely preventing login failures caused by `NonUniqueResultException`.
+     - In [`ProfileController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/ProfileController.java):
+       - Updated student profile display and username update to use `CourseScopeService.resolveStudentsByIdentity`.
+     - In [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java):
+       - Added helper `getCurrentStudent(principal)` and refactored all 15 endpoints (`switchCourse`, `studentHome`, `listAssessments`, `listStudentSubmissions`, `showAssessmentSubmitPage`, `uploadAssessmentSubmission`, `downloadSubmissionFile`, `getSubmissionAnnotations`, `viewSubmissionWithDoodles`, `showPeerAssessmentForm`, `submitPeerAssessment`, `showTeamEvaluationForm`, `submitTeamEvaluation`, `viewMyComments`, `viewAssessmentResults`).
+       - In `isStudentAssignedToAssessment` and `getAssignmentForStudent`: checked both student ID and student email matches so students assigned across multi-course records are never locked out.
+       - In `home` and `listAssessments`: added safe fallback to return all assigned assessments if course-filtered list is empty.
+     - Standardized `th:replace="~{fragments/student_sidebar :: sidebar}"` syntax across `peer_assessment_form.html`, `student_assessments.html`, `student_comments.html`, `student_home.html`, `student_submissions.html`, `student_submit_single.html`, and `student_submission_view.html`.
+
+2. **Assessor Assignment UI: Delete Button Trimming & Bottom Clearance Fixes**:
+   - **Root Causes**:
+     - On `/admin/assessments/{id}/assign-lecturers` ([`admin_assign_lecturers.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_assign_lecturers.html)), `.btn-icon-remove` had `width: 38px !important;` but no `flex-shrink: 0`, `min-width: 38px`, or `height: 38px`.
+     - The `<select>` element (`.form-select`) lacked `min-width: 0 !important;`. In flexbox, long assessor emails expanded the `<select>` to its intrinsic width, which squished or pushed the delete button off the card edge where `overflow: hidden` trimmed it.
+     - The "Save Assignments" bar (`.button-container`) is `position: fixed; bottom: 20px; z-index: 1000`. When users scrolled to the bottom of the page, the fixed bar floated directly over the last team/group/student cards, completely blocking the "+ Add Another Assessor" button and assessor dropdowns.
+   - **Fixes**:
+     - In [`assign_lecturers.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/assign_lecturers.css):
+       - On `.btn-icon-remove`: Added `flex: 0 0 38px !important; flex-shrink: 0 !important; min-width: 38px !important; max-width: 38px !important; height: 38px !important; min-height: 38px !important; box-sizing: border-box !important;`. The delete button now preserves its exact dimensions and never gets trimmed or squished.
+       - On `.form-select`: Added `flex: 1 1 0% !important; min-width: 0 !important; text-overflow: ellipsis !important; white-space: nowrap !important; overflow: hidden !important;`. Long assessor emails smoothly truncate with an ellipsis rather than overflowing.
+       - On `.lecturer-row`: Added `align-items: center !important; width: 100% !important; box-sizing: border-box !important;`.
+       - On `.card-body` and `.lecturer-assignments-container`: Added `overflow: visible !important; width: 100% !important;`.
+       - On `#rubricModeSection`, `#groupModeSection`, and `#studentModeSection`: Added `margin-bottom: 25px !important;`.
+       - On `.button-container`: Added `sidebar-collapsed` positioning override (`left: 20px !important;`).
+     - Bottom Clearance:
+       - In [`admin_assign_lecturers.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/admin_assign_lecturers.html): Added dedicated `<div class="save-bar-spacer" aria-hidden="true"></div>` before `.button-container`.
+       - In [`assign_lecturers.css`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/css/assign_lecturers.css): Styled `.save-bar-spacer` with `height: 120px !important; min-height: 120px !important;`, and enforced `padding-bottom: 140px !important;` on `.main-content` across all desktop and responsive viewports (`1279px`, `768px`, `480px`). The last team cards now scroll fully clear of the fixed "Save Assignments" bar.
+
+3. **Automated Verification**:
+   - Added automated regression tests in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs) verifying student identity resolution, multi-course access safeguards, and assign assessors UI layout guarantees.
+   - All **50 automated tests pass** (`node --test adproject/src/test/js/*.test.cjs`).
+
+---
+
+## Previous Status: Assessor Assessment Access Resolution, Course Switcher Parameter Safeguards & SSE Stability
+**Status**: COMPLETED
+**Date**: 2026-11-17
+
+### Summary of Enhancements & Fixes
+1. **Assessor Assessment Access Resolution (`Lecturer not found: pyliew@utm.my`)**:
+   - **Root Cause**:
+     - `LecturerAssessmentController.getCurrentLecturer()` called `CourseScopeService.resolveLecturerForCourse(lecturerRepository, emailOrUsername, activeCourseId)`.
+     - When `activeCourseId` was provided, `resolveLecturerForCourse` checked candidate rows for `courseId.equals(candidate.getCourse().getId())`. If the assessor had `course_id IS NULL` (common for multi-course or legacy assessors) or was associated via assignment tables rather than primary `course_id`, it returned `Optional.empty()`, causing `getCurrentLecturer` to throw `RuntimeException: Lecturer not found: <email>` on `/lecturer/assessments`.
+   - **Fixes**:
+     - In [`CourseScopeService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/CourseScopeService.java):
+       - Updated `resolveLecturerForCourse` to fall back to `candidates.get(0)` if none of the candidate rows match `candidate.getCourse().getId().equals(courseId)`, rather than returning empty.
+       - Expanded `findAssignedCourseIdsForLecturer` to query `lecturer_student_assignment`, `lecturer_rubric_assignments`, `lecturer_group_assignment`, and `project_group` (supervisor roles). Now any assessor assigned to evaluate any assessment or student group automatically has that course visible in their course switcher.
+     - In [`LecturerAssessmentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerAssessmentController.java):
+       - Added fallback to `getCurrentLecturer`: `.or(() -> CourseScopeService.resolveLecturersByIdentity(lecturerRepository, emailOrUsername).stream().findFirst())`.
+       - Updated `lecturerCanAccessAssessment` to permit access if the lecturer is assigned to the assessment via `isLecturerAssignedToAssessment` (group, rubric, or student assignments) or `isManagedCourseId`, eliminating unnecessary 403s.
+       - In `showAssessments`: Added safe fallback to return all assigned assessments if course-filtered list is empty.
+
+2. **Course Switcher Missing/Null Parameter Safeguards**:
+   - **Root Cause**:
+     - In `sidebar.html`, `lecturer_sidebar.html`, and `student_sidebar.html`, `<select id="courseSwitchSelect">` has a placeholder `<option value="">Switch Course</option>`.
+     - When selected or submitted without a value, Spring converted `courseId=""` to `null` and threw `MissingServletRequestParameterException: Required request parameter 'courseId' for method parameter type Long is present but converted to null` (500/400 error).
+   - **Fixes**:
+     - In [`LecturerController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/LecturerController.java), [`StudentController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/StudentController.java), and [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java):
+       - Changed `@RequestParam("courseId") Long courseId` to `@RequestParam(value = "courseId", required = false) Long courseId`.
+       - Added null-check guard `if (courseId == null)` that redirects back safely with an informative flash message without throwing an exception.
+     - In [`sidebar-toggle.js`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/static/js/sidebar-toggle.js):
+       - Added guard `if (this.value && this.value.trim() !== '')` before `form.requestSubmit()`, preventing unnecessary empty form submissions from the client side.
+
+3. **SSE Connection Timeout & Response Committed Exception Handling**:
+   - **Root Cause**:
+     - `/api/progress/stream/{id}` uses `SseEmitter`. When client connections time out, Spring raises `AsyncRequestTimeoutException`.
+     - `GlobalExceptionHandler` caught this under `Exception.class` and attempted to render Thymeleaf's `error.html` via `getWriter()`, colliding with Tomcat's open `ServletOutputStream` and throwing `IllegalStateException: getOutputStream() has already been called for this response`.
+   - **Fixes**:
+     - In [`GlobalExceptionHandler.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/exception/GlobalExceptionHandler.java):
+       - Added explicit handler for `AsyncRequestTimeoutException` returning `null`.
+       - Added `response != null && response.isCommitted()` check in `handleGenericException` to bypass error view rendering on already committed streaming responses.
+       - Added dedicated `@ExceptionHandler(MissingServletRequestParameterException.class)` for user-friendly 400 Bad Request responses.
+
+4. **Template & Compilation Cleanups**:
+   - Fixed missing `import java.util.Map;` in [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java).
+   - Standardized Thymeleaf fragment syntax in [`lecturer_home.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_home.html) and [`lecturer_assessments.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/lecturer_assessments.html) to `~{fragments/lecturer_sidebar :: sidebar}`.
+
+5. **Automated Verification**:
+   - Added automated test in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs) asserting all course switch null guards, assessor resolution fallbacks, and SSE exception handlers.
+   - All **48 automated tests pass** (`node --test adproject/src/test/js/*.test.cjs`).
+
+---
+
+## Previous Status: Legacy Database Duplicate Assessor Consolidation & Multi-Course Segregation
 **Status**: COMPLETED
 **Date**: 2026-11-17
 
