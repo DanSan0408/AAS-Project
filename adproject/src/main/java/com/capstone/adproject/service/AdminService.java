@@ -90,6 +90,9 @@ public class AdminService {
     @Autowired(required = false)
     private SuperAdminService superAdminService;
 
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     private String getLoggedInUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getName() != null) {
@@ -301,14 +304,24 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
 
         Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
         if (existingLecturer.isPresent()) {
-            existingPassword = existingLecturer.get().getPassword();
-            isTemp = existingLecturer.get().getIsTempPassword();
-            resetToken = existingLecturer.get().getResetPasswordToken();
-            if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
-                lecturer.setUsername(existingLecturer.get().getUsername());
+            Lecturer existing = existingLecturer.get();
+            boolean inCourseDirect = existing.getCourse() != null && activeCourse.getId().equals(existing.getCourse().getId());
+            boolean inCourseAssigned = adminCourseAssignmentRepository != null 
+                && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(existing.getId(), activeCourse.getId());
+            if (inCourseDirect || inCourseAssigned) {
+                throw new RuntimeException("An assessor with email '" + normalizedEmail + "' is already enrolled in this course.");
             }
-            if (lecturer.getRoles() == null || lecturer.getRoles().trim().isEmpty()) {
-                lecturer.setRoles(existingLecturer.get().getRoles());
+            if (existing.getCourse() == null) {
+                existing.setCourse(activeCourse);
+                if (lecturer.getUsername() != null && !lecturer.getUsername().isBlank()) {
+                    existing.setUsername(lecturer.getUsername().trim());
+                }
+                lecturerRepository.save(existing);
+                return;
+            }
+            if (adminCourseAssignmentRepository != null) {
+                adminCourseAssignmentRepository.save(new AdminCourseAssignment(null, existing, activeCourse));
+                return;
             }
         }
 
@@ -513,9 +526,8 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
     if (activeCourseId.isEmpty()) return null;
     ensureLegacyStudentEnrollmentsForCourse(activeCourseId.get());
     
-    List<Lecturer> lecturersInCourse = lecturerRepository.findByCourseId(activeCourseId.get());
-    for (Lecturer lecturer : lecturersInCourse) {
-        if (lecturerIdToExclude != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
+    for (Lecturer lecturer : getAllLecturers()) {
+        if (lecturerIdToExclude != null && lecturer.getId() != null && lecturer.getId().equals(lecturerIdToExclude)) continue;
         if (lecturer.getEmail() != null) {
             String existingNormalized = lecturer.getEmail().replaceAll("\\s+", "").toLowerCase();
             if (existingNormalized.equals(normalizedEmail)) {
@@ -654,9 +666,22 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
 
         Optional<Long> activeCourseId = getActiveCourseId();
-        if (activeCourseId.isPresent() && (lecturer.getCourse() == null
-                || !activeCourseId.get().equals(lecturer.getCourse().getId()))) {
-            throw new RuntimeException("Unauthorized: Lecturer does not belong to the active course");
+        if (activeCourseId.isPresent()) {
+            Long courseId = activeCourseId.get();
+            boolean isAssignedViaCourse = lecturer.getCourse() != null && courseId.equals(lecturer.getCourse().getId());
+            boolean isAssignedViaJoinTable = adminCourseAssignmentRepository != null
+                && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(id, courseId);
+            if (!isAssignedViaCourse && !isAssignedViaJoinTable) {
+                throw new RuntimeException("Unauthorized: Lecturer does not belong to the active course");
+            }
+            if (isAssignedViaJoinTable && adminCourseAssignmentRepository != null) {
+                adminCourseAssignmentRepository.findByCourseId(courseId).stream()
+                    .filter(aca -> aca.getLecturer() != null && aca.getLecturer().getId().equals(id))
+                    .forEach(adminCourseAssignmentRepository::delete);
+                if (!isAssignedViaCourse) {
+                    return;
+                }
+            }
         }
 
         lecturerRepository.unlinkFromGroups(id);
@@ -668,6 +693,10 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         lecturerRepository.deleteMarksGiven(id);
         
         lecturerRepository.deleteCommentsByLecturer(id);
+
+        if (adminCourseAssignmentRepository != null) {
+            adminCourseAssignmentRepository.findByLecturerId(id).forEach(adminCourseAssignmentRepository::delete);
+        }
 
         lecturerRepository.delete(lecturer);
     }
@@ -876,11 +905,54 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         }
     }
 
+    private void ensureProjectGroupColumnsHaveDefaults() {
+        if (jdbcTemplate != null) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE `project_group` ALTER COLUMN `group_size` SET DEFAULT 0");
+            } catch (Exception ignored) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `project_group` MODIFY COLUMN `group_size` INT DEFAULT 0");
+                } catch (Exception ignored2) {}
+            }
+            try {
+                jdbcTemplate.execute("ALTER TABLE `project_group` ALTER COLUMN `groupsize` SET DEFAULT 0");
+            } catch (Exception ignored) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `project_group` MODIFY COLUMN `groupsize` INT DEFAULT 0");
+                } catch (Exception ignored2) {}
+            }
+            try {
+                jdbcTemplate.execute("ALTER TABLE `project_group` ALTER COLUMN `group_name` SET DEFAULT NULL");
+            } catch (Exception ignored) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `project_group` MODIFY COLUMN `group_name` VARCHAR(255) DEFAULT NULL");
+                } catch (Exception ignored2) {}
+            }
+            try {
+                jdbcTemplate.execute("ALTER TABLE `project_group` ALTER COLUMN `groupname` SET DEFAULT NULL");
+            } catch (Exception ignored) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `project_group` MODIFY COLUMN `groupname` VARCHAR(255) DEFAULT NULL");
+                } catch (Exception ignored2) {}
+            }
+        }
+    }
+
+    private void syncProjectGroupDualColumns(Long groupId, int groupSize, String groupName) {
+        if (jdbcTemplate != null && groupId != null) {
+            try {
+                jdbcTemplate.update("UPDATE `project_group` SET `group_size` = ?, `group_name` = ? WHERE `id` = ?", groupSize, groupName, groupId);
+            } catch (Exception ignored) {}
+        }
+    }
+
     @Transactional
     public void assignStudentsToNewGroup(GroupAssignmentDto dto) {
         Course activeCourse = resolveCurrentAdminCourse()
             .orElseThrow(() -> new RuntimeException("No active course selected."));
         Long courseId = activeCourse.getId();
+
+        ensureProjectGroupColumnsHaveDefaults();
 
         Group newGroup = new Group();
         String groupName = dto.getGroupName();
@@ -889,6 +961,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         }
         newGroup.setGroupName(groupName);
         newGroup.setCourse(activeCourse);
+        newGroup.setGroupSize(0);
 
         if (dto.getAcademicSupervisorId() != null) {
             findLecturerInCourse(dto.getAcademicSupervisorId(), courseId).ifPresent(newGroup::setAcademicSupervisor);
@@ -898,6 +971,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         }
 
         Group savedGroup = groupRepository.save(newGroup);
+        syncProjectGroupDualColumns(savedGroup.getId(), 0, groupName);
 
         if (dto.getSelectedStudentIds() != null && !dto.getSelectedStudentIds().isEmpty()) {
             List<Student> studentsToAssign = studentRepository.findAllById(dto.getSelectedStudentIds());
@@ -929,9 +1003,11 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
 
             savedGroup.setGroupSize(studentsToAssign.size());
             groupRepository.save(savedGroup);
+            syncProjectGroupDualColumns(savedGroup.getId(), savedGroup.getGroupSize(), savedGroup.getGroupName());
         } else {
             savedGroup.setGroupSize(0);
             groupRepository.save(savedGroup);
+            syncProjectGroupDualColumns(savedGroup.getId(), 0, savedGroup.getGroupName());
         }
     }
     
@@ -1000,6 +1076,7 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         
         existingGroup.setGroupSize(getStudentsByGroup(existingGroup).size());
         groupRepository.save(existingGroup);
+        syncProjectGroupDualColumns(existingGroup.getId(), existingGroup.getGroupSize(), existingGroup.getGroupName());
     }
     
     @Transactional
@@ -1077,28 +1154,51 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
             return List.of();
         }
         Long courseId = activeCourseIdOpt.get();
-        Set<Lecturer> result = new LinkedHashSet<>();
-        result.addAll(lecturerRepository.findByCourseId(courseId));
+        List<Lecturer> raw = new ArrayList<>();
+        raw.addAll(lecturerRepository.findByCourseId(courseId));
         if (adminCourseAssignmentRepository != null) {
             List<AdminCourseAssignment> assignments = adminCourseAssignmentRepository.findByCourseId(courseId);
             for (AdminCourseAssignment aca : assignments) {
                 if (aca.getLecturer() != null) {
-                    result.add(aca.getLecturer());
+                    raw.add(aca.getLecturer());
                 }
             }
         }
         if (courseRepository != null) {
             courseRepository.findById(courseId).ifPresent(c -> {
                 if (c.getCreatedBy() != null) {
-                    result.add(c.getCreatedBy());
+                    raw.add(c.getCreatedBy());
                 }
             });
         }
         String currentUsername = getLoggedInUsername();
         if (currentUsername != null && !currentUsername.isBlank() && superAdminService != null) {
-            superAdminService.resolveLecturerByIdentity(currentUsername).ifPresent(result::add);
+            superAdminService.resolveLecturerByIdentity(currentUsername).ifPresent(raw::add);
         }
-        return new ArrayList<>(result);
+
+        Map<String, Lecturer> distinct = new LinkedHashMap<>();
+        for (Lecturer l : raw) {
+            if (l == null) continue;
+            String key = (l.getEmail() != null && !l.getEmail().isBlank())
+                    ? l.getEmail().trim().toLowerCase()
+                    : (l.getUsername() != null && !l.getUsername().isBlank()
+                            ? l.getUsername().trim().toLowerCase()
+                            : String.valueOf(l.getId()));
+
+            if (!distinct.containsKey(key)) {
+                distinct.put(key, l);
+            } else {
+                Lecturer existing = distinct.get(key);
+                boolean currentBelongsToCourse = l.getCourse() != null && courseId.equals(l.getCourse().getId());
+                boolean existingBelongsToCourse = existing.getCourse() != null && courseId.equals(existing.getCourse().getId());
+                if (currentBelongsToCourse && !existingBelongsToCourse) {
+                    distinct.put(key, l);
+                } else if (!existingBelongsToCourse && l.getId() != null && existing.getId() != null && l.getId() < existing.getId()) {
+                    distinct.put(key, l);
+                }
+            }
+        }
+        return new ArrayList<>(distinct.values());
     }
 
 

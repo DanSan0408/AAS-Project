@@ -311,5 +311,35 @@ describe('course-validation.js Client-Side Logic Tests', () => {
             'AdminService must check native student lookup to support cross-course enrolled students');
         assert.ok(adminService.includes('isPrimaryCourse'),
             'AdminService must isolate primary course direct group updates from secondary course enrollments');
+        assert.ok(adminService.includes('ensureProjectGroupColumnsHaveDefaults'),
+            'AdminService must set default on group_size/groupsize to prevent Field group_size does not have a default value');
+        assert.ok(adminService.includes('syncProjectGroupDualColumns'),
+            'AdminService must synchronize group_size and groupsize columns');
+
+        const migrationRunner = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java'), 'utf-8');
+        assert.ok(migrationRunner.includes('migrateProjectGroupColumns'),
+            'CourseEmailConstraintMigrationRunner must define migrateProjectGroupColumns');
+        assert.ok(migrationRunner.includes('group_size'),
+            'CourseEmailConstraintMigrationRunner must set defaults on group_size');
+    });
+
+    test('legacy duplicate assessor consolidation migration and AdminService assessor deduplication', () => {
+        const migrationRunner = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java'), 'utf-8');
+        assert.ok(migrationRunner.includes('migrateDuplicateLecturers'),
+            'CourseEmailConstraintMigrationRunner must define migrateDuplicateLecturers');
+        assert.ok(migrationRunner.includes('consolidateDuplicateLecturersForEmail'),
+            'CourseEmailConstraintMigrationRunner must define consolidateDuplicateLecturersForEmail');
+        assert.ok(migrationRunner.includes('repointLecturerReferences'),
+            'CourseEmailConstraintMigrationRunner must repoint foreign keys before deleting duplicate assessor rows');
+        assert.ok(migrationRunner.includes('academic_supervisor_id') && migrationRunner.includes('industrial_supervisor_id'),
+            'Migration runner must repoint group supervisors');
+        assert.ok(migrationRunner.includes('admin_course_assignment') && migrationRunner.includes('lecturer_student_assignment'),
+            'Migration runner must repoint course and student assignments');
+
+        const adminService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/AdminService.java'), 'utf-8');
+        assert.ok(adminService.includes('distinct.put(key, l)'),
+            'AdminService.getAllLecturers must deduplicate assessors by normalized identity');
+        assert.ok(adminService.includes('adminCourseAssignmentRepository.save(new AdminCourseAssignment'),
+            'AdminService.saveLecturer must reuse existing lecturer records across courses via AdminCourseAssignment instead of duplicating');
     });
 });
