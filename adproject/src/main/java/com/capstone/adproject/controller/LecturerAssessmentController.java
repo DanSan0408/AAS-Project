@@ -114,6 +114,7 @@ public class LecturerAssessmentController {
         String emailOrUsername = authentication.getName();
         Long activeCourseId = resolveActiveCourseId();
         return CourseScopeService.resolveLecturerForCourse(lecturerRepository, emailOrUsername, activeCourseId)
+                .or(() -> CourseScopeService.resolveLecturersByIdentity(lecturerRepository, emailOrUsername).stream().findFirst())
                 .orElseThrow(() -> new RuntimeException("Lecturer not found: " + emailOrUsername));
     }
 
@@ -124,10 +125,36 @@ public class LecturerAssessmentController {
         Long assessmentCourseId = assessment.getCourse().getId();
         Long activeCourseId = resolveActiveCourseId();
         if (activeCourseId != null && !activeCourseId.equals(assessmentCourseId)) {
+            boolean isAssigned = isLecturerAssignedToAssessment(lecturer, assessment);
+            boolean managesCourse = courseScopeService != null && courseScopeService.isManagedCourseId(assessmentCourseId);
+            if (!isAssigned && !managesCourse) {
+                return false;
+            }
+        }
+        if (lecturer.getCourse() != null && assessmentCourseId.equals(lecturer.getCourse().getId())) {
+            return true;
+        }
+        if (courseScopeService != null && courseScopeService.isManagedCourseId(assessmentCourseId)) {
+            return true;
+        }
+        return isLecturerAssignedToAssessment(lecturer, assessment);
+    }
+
+    private boolean isLecturerAssignedToAssessment(Lecturer lecturer, Assessment assessment) {
+        if (lecturer == null || assessment == null || assessment.getId() == null) {
             return false;
         }
-        return lecturer.getCourse() != null && lecturer.getCourse().getId() != null
-                && lecturer.getCourse().getId().equals(assessmentCourseId);
+        Long assessmentId = assessment.getId();
+        if (assignmentRepository != null && assignmentRepository.findAssessmentsByLecturer(lecturer).stream().anyMatch(a -> assessmentId.equals(a.getId()))) {
+            return true;
+        }
+        if (rubricAssignmentRepository != null && rubricAssignmentRepository.findAssessmentsByLecturer(lecturer).stream().anyMatch(a -> assessmentId.equals(a.getId()))) {
+            return true;
+        }
+        if (studentAssignmentRepository != null && studentAssignmentRepository.findAssessmentsByLecturer(lecturer).stream().anyMatch(a -> assessmentId.equals(a.getId()))) {
+            return true;
+        }
+        return false;
     }
 
     @GetMapping
@@ -154,6 +181,9 @@ public class LecturerAssessmentController {
         List<Assessment> uniqueAssessments = combinedAssessments.stream()
             .filter(a -> scopedCourseId == null || (a.getCourse() != null && scopedCourseId.equals(a.getCourse().getId())))
             .collect(Collectors.toList());
+        if (uniqueAssessments.isEmpty() && !combinedAssessments.isEmpty()) {
+            uniqueAssessments = new ArrayList<>(combinedAssessments);
+        }
 
         Map<Long, String> assessmentLaunchModes = new HashMap<>();
         for (Assessment assessment : uniqueAssessments) {

@@ -246,16 +246,33 @@ public class StudentController {
         return sortStudentsAlphabetically(members);
     }
 
+    private Student getCurrentStudent(Principal principal) {
+        return getCurrentStudent(principal, null);
+    }
+
+    private Student getCurrentStudent(Principal principal, Long preferredCourseId) {
+        if (principal == null || principal.getName() == null) {
+            throw new RuntimeException("Student not authenticated");
+        }
+        String emailOrUsername = principal.getName();
+        Long activeCourseId = preferredCourseId != null ? preferredCourseId
+                : (courseScopeService != null ? courseScopeService.getActiveCourseIdForCurrentUser() : null);
+        return CourseScopeService.resolveStudentForCourse(studentRepository, emailOrUsername, activeCourseId)
+                .or(() -> CourseScopeService.resolveStudentsByIdentity(studentRepository, emailOrUsername).stream().findFirst())
+                .orElseThrow(() -> new RuntimeException("Student not found: " + emailOrUsername));
+    }
+
     @PostMapping("/switch-course")
     public String switchCourse(
-            @RequestParam("courseId") Long courseId,
+            @RequestParam(value = "courseId", required = false) Long courseId,
             Principal principal,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        if (courseId == null) {
+            redirectAttributes.addFlashAttribute("error", "Please select a valid course.");
+            return resolvePostSwitchRedirect(request, "/student/home");
+        }
+        Student currentStudent = getCurrentStudent(principal);
 
         if (!isStudentEnrolledInCourse(currentStudent, courseId)) {
             redirectAttributes.addFlashAttribute("error", "You are not enrolled in that course.");
@@ -318,7 +335,23 @@ public class StudentController {
     }
 
     private boolean isStudentAssignedToAssessment(Student student, Assessment assessment) {
-        return studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student);
+        if (student == null || assessment == null) return false;
+        if (studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, student)) {
+            return true;
+        }
+        if (student.getEmail() != null) {
+            try {
+                List<Student> candidates = studentRepository.findAllByEmailIgnoreCase(student.getEmail());
+                if (candidates != null) {
+                    for (Student s : candidates) {
+                        if (studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(assessment, s)) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return false;
     }
 
     private boolean isStudentEligibleForSubmission(Student student, Assessment assessment) {
@@ -331,10 +364,19 @@ public class StudentController {
     private StudentAssessmentAssignment getAssignmentForStudent(Student student, Assessment assessment) {
         if (assessment == null || student == null) return null;
         List<StudentAssessmentAssignment> assignments = studentAssessmentAssignmentRepository.findByAssessment(assessment);
-        return assignments.stream()
-            .filter(a -> a.getStudent() != null && a.getStudent().getId().equals(student.getId()))
-            .findFirst()
-            .orElse(null);
+        if (assignments == null) return null;
+        for (StudentAssessmentAssignment a : assignments) {
+            if (a.getStudent() != null) {
+                if (student.getId() != null && student.getId().equals(a.getStudent().getId())) {
+                    return a;
+                }
+                if (student.getEmail() != null && a.getStudent().getEmail() != null
+                        && student.getEmail().equalsIgnoreCase(a.getStudent().getEmail())) {
+                    return a;
+                }
+            }
+        }
+        return null;
     }
 
     private List<Student> getGroupmates(Student student, Long courseId) {
@@ -414,18 +456,18 @@ public class StudentController {
             return finalGroup;
         };
         
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-            .or(() -> studentRepository.findByUsername(emailOrUsername))
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
         Long currentCourseId = resolveCurrentCourseId(currentStudent);
         
-        List<Assessment> allAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
-            .filter(a -> currentCourseId != null
-                && a.getCourse() != null
-                && currentCourseId.equals(a.getCourse().getId()))
+        List<Assessment> allAssignedAssessments = assessmentService.findAllAssessmentsWithRubrics().stream()
             .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
             .collect(Collectors.toList());
+        List<Assessment> allAssessments = allAssignedAssessments.stream()
+            .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
+            .collect(Collectors.toList());
+        if (allAssessments.isEmpty() && !allAssignedAssessments.isEmpty()) {
+            allAssessments = allAssignedAssessments;
+        }
         List<Deadline> allDeadlines = currentCourseId == null
             ? List.of()
             : deadlineService.getDeadlinesByCourseId(currentCourseId);
@@ -505,18 +547,18 @@ public class StudentController {
     @GetMapping("/assessments")
     public String listAssessments(Model model, Principal principal) {
         
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-            .or(() -> studentRepository.findByUsername(emailOrUsername))
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
         Long currentCourseId = resolveCurrentCourseId(currentStudent);
         
-        List<Assessment> assessments = assessmentRepository.findAll().stream()
-            .filter(a -> currentCourseId != null
-                && a.getCourse() != null
-                && currentCourseId.equals(a.getCourse().getId()))
+        List<Assessment> allAssigned = assessmentRepository.findAll().stream()
             .filter(a -> isStudentAssignedToAssessment(currentStudent, a))
             .collect(Collectors.toList());
+        List<Assessment> assessments = allAssigned.stream()
+            .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
+            .collect(Collectors.toList());
+        if (assessments.isEmpty() && !allAssigned.isEmpty()) {
+            assessments = allAssigned;
+        }
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
         for (Assessment assessment : assessments) {
@@ -582,20 +624,20 @@ public class StudentController {
 
     @GetMapping("/submissions")
     public String listStudentSubmissions(Model model, Principal principal) {
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
         Long currentCourseId = resolveCurrentCourseId(currentStudent);
 
-        List<Assessment> submissionAssessments = assessmentRepository.findAll().stream()
-                .filter(a -> currentCourseId != null
-                        && a.getCourse() != null
-                        && currentCourseId.equals(a.getCourse().getId()))
+        List<Assessment> allEligible = assessmentRepository.findAll().stream()
                 .filter(a -> Boolean.TRUE.equals(a.getRequiresSubmission()))
                 .filter(a -> isStudentEligibleForSubmission(currentStudent, a))
                 .sorted(Comparator.comparing(Assessment::getId))
                 .collect(Collectors.toList());
+        List<Assessment> submissionAssessments = allEligible.stream()
+                .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
+                .collect(Collectors.toList());
+        if (submissionAssessments.isEmpty() && !allEligible.isEmpty()) {
+            submissionAssessments = allEligible;
+        }
 
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
         Map<Long, Boolean> assessmentOpenMap = new HashMap<>();
@@ -661,10 +703,7 @@ public class StudentController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
 
         Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
         if (assessment == null || !Boolean.TRUE.equals(assessment.getRequiresSubmission())) {
@@ -709,10 +748,7 @@ public class StudentController {
                         ? "redirect:/student/assessment/" + assessmentId + "/submit"
                         : "redirect:/student/submissions");
 
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
 
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElse(null);
@@ -766,10 +802,7 @@ public class StudentController {
             @PathVariable("assessmentId") Long assessmentId,
             Principal principal) {
 
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
 
         Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
         if (assessment == null) {
@@ -797,10 +830,7 @@ public class StudentController {
             @PathVariable("assessmentId") Long assessmentId,
             Principal principal) {
 
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
 
         Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
         if (assessment == null) {
@@ -825,10 +855,7 @@ public class StudentController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-                .or(() -> studentRepository.findByUsername(emailOrUsername))
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
 
         Assessment assessment = assessmentRepository.findById(assessmentId).orElse(null);
         if (assessment == null) {
@@ -859,10 +886,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
                                      Principal principal,
                                      RedirectAttributes redirectAttributes) {
     
-    String emailOrUsername = principal.getName();
-    Student evaluator = studentRepository.findByEmail(emailOrUsername)
-        .or(() -> studentRepository.findByUsername(emailOrUsername))
-        .orElseThrow(() -> new RuntimeException("Student not found"));
+    Student evaluator = getCurrentStudent(principal);
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -981,10 +1005,7 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                                    Principal principal,
                                    RedirectAttributes redirectAttributes) {
     
-    String emailOrUsername = principal.getName();
-    Student evaluator = studentRepository.findByEmail(emailOrUsername)
-        .or(() -> studentRepository.findByUsername(emailOrUsername))
-        .orElseThrow(() -> new RuntimeException("Student not found"));
+    Student evaluator = getCurrentStudent(principal);
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -1271,10 +1292,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
                                       Principal principal,
                                       RedirectAttributes redirectAttributes) {
     
-    String emailOrUsername = principal.getName();
-    Student evaluator = studentRepository.findByEmail(emailOrUsername)
-        .or(() -> studentRepository.findByUsername(emailOrUsername))
-        .orElseThrow(() -> new RuntimeException("Student not found"));
+    Student evaluator = getCurrentStudent(principal);
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -1386,10 +1404,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                                     Principal principal,
                                     RedirectAttributes redirectAttributes) {
     
-    String emailOrUsername = principal.getName();
-    Student evaluator = studentRepository.findByEmail(emailOrUsername)
-        .or(() -> studentRepository.findByUsername(emailOrUsername))
-        .orElseThrow(() -> new RuntimeException("Student not found"));
+    Student evaluator = getCurrentStudent(principal);
     
     Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -1652,10 +1667,7 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
    @GetMapping("/comments")
 public String viewMyComments(Model model, Principal principal) {
     
-    String emailOrUsername = principal.getName();
-    Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-        .or(() -> studentRepository.findByUsername(emailOrUsername))
-        .orElseThrow(() -> new RuntimeException("Student not found"));
+    Student currentStudent = getCurrentStudent(principal);
     Long currentCourseId = resolveCurrentCourseId(currentStudent);
     
     Map<String, Object> commentsData = commentService.getCompiledCommentsForStudent(currentStudent, currentCourseId);
@@ -1703,10 +1715,7 @@ public String viewMyComments(Model model, Principal principal) {
                                              Model model,
                                              Principal principal) {
         
-        String emailOrUsername = principal.getName();
-        Student currentStudent = studentRepository.findByEmail(emailOrUsername)
-            .or(() -> studentRepository.findByUsername(emailOrUsername))
-            .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student currentStudent = getCurrentStudent(principal);
         
         Assessment assessment = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new RuntimeException("Assessment not found"));

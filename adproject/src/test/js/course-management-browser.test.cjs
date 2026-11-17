@@ -342,4 +342,82 @@ describe('course-validation.js Client-Side Logic Tests', () => {
         assert.ok(adminService.includes('adminCourseAssignmentRepository.save(new AdminCourseAssignment'),
             'AdminService.saveLecturer must reuse existing lecturer records across courses via AdminCourseAssignment instead of duplicating');
     });
+
+    test('course switcher and assessor assessment access safeguards', () => {
+        const sidebarToggleJs = fs.readFileSync(path.join(STATIC_JS_DIR, 'sidebar-toggle.js'), 'utf-8');
+        assert.ok(sidebarToggleJs.includes("this.value && this.value.trim() !== ''"),
+            'sidebar-toggle.js must guard against submitting empty course switcher values');
+
+        const lecturerCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/LecturerController.java'), 'utf-8');
+        assert.ok(lecturerCtrl.includes('@RequestParam(value = "courseId", required = false) Long courseId'),
+            'LecturerController.switchCourse must allow required = false for courseId');
+        assert.ok(lecturerCtrl.includes('if (courseId == null)'),
+            'LecturerController.switchCourse must guard null courseId');
+
+        const studentCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/StudentController.java'), 'utf-8');
+        assert.ok(studentCtrl.includes('@RequestParam(value = "courseId", required = false) Long courseId'),
+            'StudentController.switchCourse must allow required = false for courseId');
+        assert.ok(studentCtrl.includes('if (courseId == null)'),
+            'StudentController.switchCourse must guard null courseId');
+
+        const adminCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/AdminController.java'), 'utf-8');
+        assert.ok(adminCtrl.includes('@RequestParam(value = "courseId", required = false) Long courseId'),
+            'AdminController.switchCourse must allow required = false for courseId');
+        assert.ok(adminCtrl.includes('if (courseId == null)'),
+            'AdminController.switchCourse must guard null courseId');
+
+        const courseScopeService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/CourseScopeService.java'), 'utf-8');
+        assert.ok(courseScopeService.includes('Optional.of(candidates.get(0))'),
+            'CourseScopeService.resolveLecturerForCourse must fall back to candidate when specific courseId candidate is not matched directly');
+        assert.ok(courseScopeService.includes('lecturer_student_assignment') && courseScopeService.includes('lecturer_rubric_assignments'),
+            'CourseScopeService.findAssignedCourseIdsForLecturer must discover courses across all assignment types');
+
+        const globalEx = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/exception/GlobalExceptionHandler.java'), 'utf-8');
+        assert.ok(globalEx.includes('AsyncRequestTimeoutException'),
+            'GlobalExceptionHandler must handle AsyncRequestTimeoutException without crashing SSE streams');
+        assert.ok(globalEx.includes('response.isCommitted()'),
+            'GlobalExceptionHandler must guard against committed responses to avoid IllegalStateException getOutputStream');
+    });
+
+    test('student identity resolution and multi-course access safeguards', () => {
+        const courseScopeService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/CourseScopeService.java'), 'utf-8');
+        assert.ok(courseScopeService.includes('resolveStudentsByIdentity'),
+            'CourseScopeService must define resolveStudentsByIdentity for multi-course student resolution');
+        assert.ok(courseScopeService.includes('resolveStudentForCourse'),
+            'CourseScopeService must define resolveStudentForCourse to match active course');
+
+        const studentCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/StudentController.java'), 'utf-8');
+        assert.ok(studentCtrl.includes('getCurrentStudent(Principal principal)'),
+            'StudentController must use getCurrentStudent helper for identity resolution');
+        assert.ok(studentCtrl.includes('isStudentAssignedToAssessment(currentStudent, a)'),
+            'StudentController must verify assignment access for assessments');
+
+        const userDetailsService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/CustomUserDetailsService.java'), 'utf-8');
+        assert.ok(userDetailsService.includes('CourseScopeService.resolveStudentsByIdentity(studentRepository, identifier)'),
+            'CustomUserDetailsService must resolve students via CourseScopeService to handle duplicate rows and case sensitivity');
+
+        const profileCtrl = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/ProfileController.java'), 'utf-8');
+        assert.ok(profileCtrl.includes('CourseScopeService.resolveStudentsByIdentity(studentRepository'),
+            'ProfileController must resolve students safely via CourseScopeService');
+    });
+
+    test('assign assessors UI layout and delete button trimming safeguards', () => {
+        const assignHtml = fs.readFileSync(path.join(TEMPLATES_DIR, 'admin_assign_lecturers.html'), 'utf-8');
+        assert.ok(assignHtml.includes('class="save-bar-spacer"'),
+            'admin_assign_lecturers.html must contain save-bar-spacer to prevent blocking the last teams');
+        assert.ok(assignHtml.includes('class="button-container"'),
+            'admin_assign_lecturers.html must define fixed button-container');
+
+        const assignCss = fs.readFileSync(path.join(STATIC_CSS_DIR, 'assign_lecturers.css'), 'utf-8');
+        assert.ok(assignCss.includes('.save-bar-spacer'),
+            'assign_lecturers.css must define .save-bar-spacer');
+        assert.ok(assignCss.includes('padding-bottom: 140px') || assignCss.includes('140px'),
+            'assign_lecturers.css must provide generous bottom clearance for the fixed save bar');
+        assert.ok(assignCss.includes('min-width: 38px') && assignCss.includes('flex-shrink: 0'),
+            'assign_lecturers.css must set min-width: 38px and flex-shrink: 0 on .btn-icon-remove to prevent trimming');
+        assert.ok(assignCss.includes('min-width: 0') && assignCss.includes('text-overflow: ellipsis'),
+            'assign_lecturers.css must prevent form-select from overflowing and squishing delete button');
+        assert.ok(assignCss.includes('sidebar-collapsed .button-container'),
+            'assign_lecturers.css must adjust button-container position when sidebar is collapsed');
+    });
 });

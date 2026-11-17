@@ -230,9 +230,13 @@ public class AdminController {
 
     @PostMapping("/switch-course")
     public String switchCourse(
-            @RequestParam("courseId") Long courseId,
+            @RequestParam(value = "courseId", required = false) Long courseId,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
+        if (courseId == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please select a valid course.");
+            return resolvePostSwitchRedirect(request, "/admin/home");
+        }
         boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(courseId);
         if (!switched) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to switch to that course.");

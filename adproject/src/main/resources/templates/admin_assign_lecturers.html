@@ -232,6 +232,9 @@
                 </div>
             </div>
 
+            <!-- Bottom safe-area spacer so the last team/group/student cards and "+ Add Another Assessor" buttons are never obscured by the fixed Save Assignments bar -->
+            <div class="save-bar-spacer" aria-hidden="true"></div>
+
             <div class="button-container">
                 <a th:href="@{/rubrics/view/{id}(id=${assessment.id})}" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">Save Assignments</button>
