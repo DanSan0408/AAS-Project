@@ -1,9 +1,45 @@
 # Project State Documentation
 
-**Last Updated**: 2026-11-16 (Antigravity)
+**Last Updated**: 2026-11-17 (Antigravity)
 
 
-## Current Status: Manage Assessments Server-Side Rendering & Jackson Cyclic Reference Resolution
+## Current Status: Group Creation & Assignment Error Resolution and Multi-Course Student Segregation
+**Status**: COMPLETED
+**Date**: 2026-11-17
+
+### Summary of Enhancements & Fixes
+1. **Group Creation & Assignment Root Cause Analysis**:
+   - **User Request**: "right now please check, the group still cant be add, error when trying to add them."
+   - **Root Causes**:
+     1. **HTML5 Form Validation Block**: In [`group_assignment.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/group_assignment.html) and [`edit_group.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/edit_group.html), the `<select id="industrialSupervisorId">` element had `required` enforced. When courses did not utilize an industrial supervisor or only assigned an academic supervisor (assessor), the browser refused to submit the form, presenting a blocking validation tooltip.
+     2. **Supervisor Ownership Rejection**: In [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java), `ownsLecturer(...)` verified whether supervisors belonged to the active course. For co-admins, invited lecturers, or supervisors assigned via `admin_course_assignment`, `isLecturerInCourse` failed to recognize valid course-scoped assessors, causing `AdminController` to redirect with `"Cannot assign an academic/industrial supervisor outside your managed courses."`.
+     3. **Cross-Course Student Query & Direct Overwrite Violation**:
+        - In [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java), `assignStudentsToNewGroup` used `studentRepository.findAllById(...)` which, when scoped by Hibernate's `courseScopeFilter`, failed to retrieve students enrolled via `student_course_assignment`.
+        - Furthermore, when assigning groups, `studentRepository.saveAll(studentsToAssign)` was executed indiscriminately on all students. For multi-course students, updating `student.group` directly caused Hibernate to attempt modifying the primary entity's foreign key, clobbering their primary course group and risking constraint violations instead of isolating the group assignment to `student_course_assignment.group_id`.
+     4. **Missing Try-Catch & Success Feedback**: In [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java), `createAndAssignGroup` lacked a `try-catch` wrapper and never set `success` flash attributes, meaning any unexpected exception crashed straight to `error.html` without informative user feedback. Additionally, GET `/admin/group-assignment` unconditionally reinitialized `groupAssignmentDto`, destroying user form values on validation errors.
+2. **Key Changes Applied**:
+   - In [`group_assignment.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/group_assignment.html) & [`edit_group.html`](file:///Users/dansan04/AAS-Project/adproject/src/main/resources/templates/edit_group.html):
+     - Removed strict `required` attributes on `academicSupervisorId` and `industrialSupervisorId` dropdowns.
+     - Updated options to clearly state optional status (`-- Select Assessor (Optional) --`, `-- Select Industrial Supervisor (Optional) --`).
+   - In [`StudentRepository.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/repositories/StudentRepository.java):
+     - Added native SQL lookup `@Query(value = "SELECT * FROM student WHERE id = :id", nativeQuery = true) Optional<Student> findByIdNative(@Param("id") Long id);` to safely retrieve students regardless of Hibernate filter state.
+   - In [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java):
+     - Enforced `@Transactional` on `assignStudentsToNewGroup`.
+     - In `isLecturerInCourse(...)`: recognized any lecturer present in `getAllLecturers()` for the active course.
+     - In `findLecturerInCourse(...)` & `findLecturerById(...)`: added fallback to `getAllLecturers()`.
+     - In `findStudentById(...)`: added native query and `getAllStudents()` fallback.
+     - In `isStudentInActiveCourse(...)`: verified active course membership against both `belongsToCourse` and `getAllStudents()`.
+     - In `assignStudentToCourseGroup(...)` & `assignStudentsToNewGroup(...)`: strictly isolated primary course student updates (`student.setGroup(...)` and `studentRepository.saveAll`) from multi-course students enrolled in secondary courses (where group assignments are exclusively recorded in `student_course_assignment.setGroup(targetGroup)`).
+   - In [`AdminController.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/controller/AdminController.java):
+     - Preserved `groupAssignmentDto` in model when returning from flash redirects (`if (!model.containsAttribute("groupAssignmentDto"))`).
+     - Wrapped `adminService.assignStudentsToNewGroup` in `try-catch` with clear user-facing error messages and `"Group created and assigned successfully!"` flash success.
+3. **Verification**:
+   - Added automated tests in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs) verifying form optional selects, controller error handling, native query fallbacks, and multi-course student isolation.
+   - All **46 automated tests pass** (`node --test adproject/src/test/js/*.test.cjs`).
+
+---
+
+## Previous Status: Manage Assessments Server-Side Rendering & Jackson Cyclic Reference Resolution
 **Status**: COMPLETED
 **Date**: 2026-11-16
 

@@ -1344,7 +1344,9 @@ public class AdminController {
         List<Student> managedStudents = adminService.getAllStudents();
 
         model.addAttribute("adminUsername", getLoggedInUsername());
-        model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
+        if (!model.containsAttribute("groupAssignmentDto")) {
+            model.addAttribute("groupAssignmentDto", new GroupAssignmentDto());
+        }
         model.addAttribute("availableStudents", unassignedStudents);
         model.addAttribute("availableLecturers", managedLecturers);
         model.addAttribute("allGroups", managedGroups);
@@ -1374,7 +1376,7 @@ public class AdminController {
             return "redirect:/admin/group-assignment";
         }
 
-        if (groupAssignmentDto.getSelectedStudentIds() != null) {
+        if (groupAssignmentDto.getSelectedStudentIds() != null && !groupAssignmentDto.getSelectedStudentIds().isEmpty()) {
             boolean hasUnauthorizedStudents = groupAssignmentDto.getSelectedStudentIds().stream()
                     .map(adminService::findStudentById)
                     .anyMatch(studentOpt -> studentOpt.isEmpty() || !ownsStudent(studentOpt.get()));
@@ -1404,7 +1406,12 @@ public class AdminController {
             }
         }
 
-        adminService.assignStudentsToNewGroup(groupAssignmentDto);
+        try {
+            adminService.assignStudentsToNewGroup(groupAssignmentDto);
+            redirectAttributes.addFlashAttribute("success", "Group created and assigned successfully!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error creating group: " + e.getMessage());
+        }
         return "redirect:/admin/group-assignment";
     }
 
