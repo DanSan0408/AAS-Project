@@ -3,7 +3,74 @@
 **Last Updated**: 2026-11-17 (Antigravity)
 
 
-## Current Status: Group Creation & Assignment Error Resolution and Multi-Course Student Segregation
+## Current Status: Legacy Database Duplicate Assessor Consolidation & Multi-Course Segregation
+**Status**: COMPLETED
+**Date**: 2026-11-17
+
+### Summary of Enhancements & Fixes
+1. **Legacy Duplicate Assessor Consolidation Migration**:
+   - **Root Cause in Legacy Database**:
+     - In MySQL, `UNIQUE (email, course_id)` does not prevent multiple rows with the same email when `course_id IS NULL` because SQL treats `NULL != NULL`.
+     - Prior to the multi-course assignment architecture (`admin_course_assignment`), adding an assessor to multiple courses resulted in inserting separate `lecturer` rows with different `course_id`s or duplicate rows inserted before unique indexes were applied.
+     - When `getAllLecturers()` aggregated records from `lecturer`, `admin_course_assignment`, course creator, and logged-in user, `Set<Lecturer>` (which differentiates instances by primary key ID) returned multiple duplicate entries for the exact same real person. This caused duplicate assessor rows in `/admin/manage-lecturers`, duplicated dropdown options in group and rubric assignments, and fragmented marks.
+   - **Database Consolidation Runner**:
+     - In [`CourseEmailConstraintMigrationRunner.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java):
+       - Added `migrateDuplicateLecturers()` executing at startup before unique constraints are applied.
+       - Discovers duplicate email groups: `SELECT LOWER(TRIM(email)) FROM lecturer GROUP BY LOWER(TRIM(email)) HAVING COUNT(*) > 1`.
+       - Ranks candidate rows with a scoring heuristic (`scoreLecturerRow`): prioritizes rows with existing evaluated marks (`marks.lecturer_id`), supervisor assignments (`project_group`), hashed bcrypt credentials, and active roles to select the canonical **Primary ID**.
+       - Merges credentials and roles (`mergeLecturerAttributes`) into the Primary ID.
+       - Safely repoints all foreign keys across child tables from secondary IDs to the Primary ID:
+         1. `marks.lecturer_id`
+         2. `assessment_comments.evaluator_id` (where `evaluatorType IN ('LECTURER', 'SUPERVISOR')`)
+         3. `project_group.academic_supervisor_id` & `project_group.industrial_supervisor_id`
+         4. `courses.created_by_lecturer_id` & legacy `courses.created_by_id`
+         5. `lecturer_student_assignment.lecturer_id` (deleting redundant duplicate assignments before repointing)
+         6. `lecturer_rubric_assignments.lecturer_id` (deleting redundant duplicate assignments before repointing)
+         7. `lecturer_group_assignment.lecturer_id` (deleting redundant duplicate assignments before repointing)
+         8. `admin_course_assignment.lecturer_id` (deleting duplicate assignments, and preserving multi-course access by ensuring an `admin_course_assignment` exists for courses where secondary rows were active)
+         9. `submission_annotation.lecturer_id`
+       - Deletes secondary duplicate `lecturer` rows with zero FK constraint violations.
+       - Disambiguates duplicate usernames (`migrateDuplicateLecturerUsernames`) to guarantee composite unique index `uk_lecturer_username_course` succeeds.
+2. **In-Memory Assessor Deduplication & Creation Safeguards**:
+   - In [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java):
+     - In `getAllLecturers()`: Deduplicates returned `Lecturer` list using a `LinkedHashMap<String, Lecturer>` keyed by normalized identity (`email.trim().toLowerCase()` or username), preferring records directly associated with the active course or with the lowest ID.
+     - In `checkLecturerEmailDuplicate()`: Verifies whether the email is already present in the active course across all active course assessors (both direct and assigned via `admin_course_assignment`).
+     - In `saveLecturer()`: If an assessor with the given email already exists in the database, instead of inserting a duplicate row in `lecturer`, the existing record is reused and linked to the active course via `AdminCourseAssignment`.
+     - In `deleteLecturerById()`: Properly supports deleting/unassigning lecturers enrolled via `admin_course_assignment` without breaking access in other courses.
+3. **Automated Verification**:
+   - Added automated tests in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs) verifying migration runners, reference repointing, and deduplication logic.
+   - All **47 automated tests pass** (`node --test adproject/src/test/js/*.test.cjs`).
+
+---
+
+## Previous Status: Project Group Schema Alignment (`group_size` / `groupsize`) and Dual-Column Synchronization
+**Status**: COMPLETED
+**Date**: 2026-11-17
+
+### Summary of Enhancements & Fixes
+1. **`Field 'group_size' doesn't have a default value` Error Resolution**:
+   - **User Error**: `Error creating group: could not execute statement [Field 'group_size' doesn't have a default value] [insert into project_group (academic_supervisor_id,course_id,groupname,groupsize,industrial_supervisor_id) values (?,?,?,?,?)]`
+   - **Root Cause**:
+     - In [`Group.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/model/Group.java), field `groupSize` was explicitly mapped to `@Column(name = "groupsize")` and `groupName` to `@Column(name = "groupname")`.
+     - In MySQL, the live database table `project_group` historically had or generated `group_size` (snake_case from standard Spring Boot physical naming) defined as `INT NOT NULL` without a `DEFAULT` clause.
+     - When Hibernate executed `insert into project_group (..., groupsize, ...) values (...)`, MySQL strict mode rejected the insertion with MySQL Error 1364 because the unsupplied `group_size` column had no default value.
+   - **Resolution**:
+     - In [`CourseEmailConstraintMigrationRunner.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java):
+       - Added `migrateProjectGroupColumns()` running on application startup.
+       - Discovers all column variants in `project_group` (`group_size`, `groupsize`, `groupSize`, `group_name`, `groupname`, `groupName`).
+       - Alters `group_size` and `groupsize` to ensure `DEFAULT 0`.
+       - Alters `group_name` and `groupname` to ensure `DEFAULT NULL`.
+       - Bidirectionally synchronizes values between `group_size` and `groupsize`, and between `group_name` and `groupname`.
+     - In [`AdminService.java`](file:///Users/dansan04/AAS-Project/adproject/src/main/java/com/capstone/adproject/service/AdminService.java):
+       - Added `ensureProjectGroupColumnsHaveDefaults()` called immediately prior to group persistence to dynamically set defaults even if startup migrations were delayed.
+       - Added `syncProjectGroupDualColumns(groupId, groupSize, groupName)` invoked on both group creation and group updates to ensure `group_size` and `groupsize` remain perfectly in sync in MySQL.
+2. **Automated Verification**:
+   - Added automated tests in [`course-management-browser.test.cjs`](file:///Users/dansan04/AAS-Project/adproject/src/test/js/course-management-browser.test.cjs) verifying migration runners, default configuration, and synchronization routines.
+   - All **46 automated tests pass** (`node --test adproject/src/test/js/*.test.cjs`).
+
+---
+
+## Previous Status: Group Creation & Assignment Error Resolution and Multi-Course Student Segregation
 **Status**: COMPLETED
 **Date**: 2026-11-17
 
