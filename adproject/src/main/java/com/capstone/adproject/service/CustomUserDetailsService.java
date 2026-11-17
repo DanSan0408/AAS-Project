@@ -123,12 +123,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // 4. Strict Priority 4: Student
-        Optional<Student> student = studentRepository.findByEmail(identifier);
-        if (student.isEmpty()) {
-            student = studentRepository.findByUsername(identifier);
-        }
-        if (student.isPresent()) {
-            Student stu = student.get();
+        List<Student> students = CourseScopeService.resolveStudentsByIdentity(studentRepository, identifier);
+        if (!students.isEmpty()) {
+            Student stu = students.get(0);
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_STUDENT"));
             String email = stu.getEmail() != null ? stu.getEmail() : stu.getUsername();
             return new User(email, stu.getPassword(), authorities);

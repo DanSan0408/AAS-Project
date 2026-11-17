@@ -190,6 +190,10 @@
     const form = document.getElementById('courseSwitchForm');
     const select = document.getElementById('courseSwitchSelect');
     if (form && select && !select.hasAttribute('onchange')) {
-        select.addEventListener('change', function () { form.requestSubmit(); });
+        select.addEventListener('change', function () {
+            if (this.value && this.value.trim() !== '') {
+                form.requestSubmit();
+            }
+        });
     }
 })();

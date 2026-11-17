@@ -120,7 +120,7 @@
 </head>
 <body th:attr="data-ui-role=${isAdminView != null and isAdminView ? 'admin' : 'student'}" th:class="${isAdminView != null and isAdminView ? 'admin-page' : 'student-page student-submissions-page'}">
     <div th:if="${isAdminView != null and isAdminView}" class="sidebar" th:replace="~{fragments/sidebar :: sidebar}"></div>
-    <div th:unless="${isAdminView != null and isAdminView}" th:replace="fragments/student_sidebar :: sidebar"></div>
+    <div th:unless="${isAdminView != null and isAdminView}" th:replace="~{fragments/student_sidebar :: sidebar}"></div>
 
     <div class="main-content">
         <div class="header">
