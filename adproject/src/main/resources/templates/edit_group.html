@@ -60,8 +60,8 @@
                                         <input type="text" id="academicSupervisorSearch" placeholder="Search assessor by email..." class="search-input" data-target-select="academicSupervisorId">
                                         <div id="academicSupervisorResults" class="search-results"></div>
                                     </div>
-                                    <select id="academicSupervisorId" th:field="*{academicSupervisorId}" required>
-                                        <option value="">-- Select Assessor --</option>
+                                    <select id="academicSupervisorId" th:field="*{academicSupervisorId}">
+                                        <option value="">-- Select Assessor (Optional) --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
@@ -78,8 +78,8 @@
                                         <input type="text" id="industrialSupervisorSearch" placeholder="Search assessor by email..." class="search-input" data-target-select="industrialSupervisorId">
                                         <div id="industrialSupervisorResults" class="search-results"></div>
                                     </div>
-                                    <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}" required>
-                                        <option value="">-- Select Assessor --</option>
+                                    <select id="industrialSupervisorId" th:field="*{industrialSupervisorId}">
+                                        <option value="">-- Select Industrial Supervisor (Optional) --</option>
                                         <option th:each="lecturer : ${availableLecturers}"
                                                 th:value="${lecturer.id}"
                                                 th:text="${not #strings.isEmpty(lecturer.username) ? lecturer.username : lecturer.email}"
