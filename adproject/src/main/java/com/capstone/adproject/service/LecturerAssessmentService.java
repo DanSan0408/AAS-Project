@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -697,7 +696,8 @@ public class LecturerAssessmentService {
     public void saveEvaluationScores(Long assessmentId, Long lecturerId, String lecturerName,
                                    Long targetId, boolean isGroupTarget, String rubricType,
                                    Map<String, String> scores, Map<Integer, String> comments,
-                                   Map<Long, Map<Integer, String>> rubricComments) {
+                                   Map<Long, Map<Integer, String>> rubricComments,
+                                   boolean isDraft) {
 
         Assessment assessment = assessmentRepository.findById(assessmentId)
             .orElseThrow(() -> new RuntimeException("Assessment not found"));
@@ -779,7 +779,9 @@ public class LecturerAssessmentService {
                 mark.setComments("LECTURER:" + lecturerId);
                 mark.setLecturer(lecturer);
                 mark.setAssessmentType(rubricType);
-                mark.setStatus(Mark.SubmissionStatus.FINAL);
+                mark.setStatus(isDraft
+                    ? Mark.SubmissionStatus.DRAFT
+                    : Mark.SubmissionStatus.FINAL);
                 
                 if (key.startsWith("subRubric_")) {
                     Long subRubricId = Long.parseLong(key.substring(10));
@@ -845,18 +847,21 @@ public class LecturerAssessmentService {
                             continue;
                         }
 
-                        Optional<AssessmentComment> existingComment = assessmentCommentRepository
+                        AssessmentComment existingComment = assessmentCommentRepository
                             .findByEvaluatorAndStudentAndAssessmentAndIndex(
                                 lecturerId,
                                 AssessmentComment.EvaluatorType.LECTURER,
                                 student,
                                 assessment,
-                                commentEntry.getKey());
-
-                        AssessmentComment comment = existingComment
+                                commentEntry.getKey()).stream()
                             .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
                             .filter(c -> c.getRubricId() == null)
-                            .orElseGet(AssessmentComment::new);
+                            .findFirst()
+                            .orElse(null);
+
+                        AssessmentComment comment = existingComment != null
+                            ? existingComment
+                            : new AssessmentComment();
 
                         if (comment.getId() == null) {
                             comment.setEvaluatorId(lecturerId);
@@ -915,17 +920,20 @@ public class LecturerAssessmentService {
                             continue;
                         }
 
-                        Optional<AssessmentComment> existingComment = assessmentCommentRepository
+                        AssessmentComment existingComment = assessmentCommentRepository
                             .findByEvaluatorAndStudentAndAssessmentAndIndex(
                                 lecturerId,
                                 AssessmentComment.EvaluatorType.LECTURER,
                                 student,
                                 assessment,
-                                commentIndex);
-
-                        AssessmentComment comment = existingComment
+                                commentIndex).stream()
                             .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubricId))
-                            .orElseGet(AssessmentComment::new);
+                            .findFirst()
+                            .orElse(null);
+
+                        AssessmentComment comment = existingComment != null
+                            ? existingComment
+                            : new AssessmentComment();
 
                         if (comment.getId() == null) {
                             comment.setEvaluatorId(lecturerId);

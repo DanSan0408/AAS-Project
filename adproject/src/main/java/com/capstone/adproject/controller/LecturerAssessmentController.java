@@ -647,6 +647,7 @@ public class LecturerAssessmentController {
             @PathVariable("assessmentId") Long assessmentId,
             @RequestParam(value = "groupId", required = false) Long groupId,
             @RequestParam(value = "studentId", required = false) Long studentId,
+            @RequestParam(value = "action", defaultValue = "save") String action,
             @RequestParam Map<String, String> allParams,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -745,7 +746,8 @@ public class LecturerAssessmentController {
                         "Group Assessment",
                         groupScores,
                         groupComments,
-                        groupRubricComments
+                        groupRubricComments,
+                        "save".equalsIgnoreCase(action)
                     );
                 }
 
@@ -798,12 +800,34 @@ public class LecturerAssessmentController {
                         "Individual Assessment",
                         studentScores,
                         studentComments,
-                        studentRubricComments
+                        studentRubricComments,
+                        "save".equalsIgnoreCase(action)
                     );
+                }
+
+                if ("save".equalsIgnoreCase(action)) {
+                    redirectAttributes.addFlashAttribute("successMessage",
+                        "✓ Progress saved. You can continue this evaluation later.");
+                    if (progressStreamService != null) {
+                        try {
+                            progressStreamService.broadcastProgress(assessmentId);
+                        } catch (Exception ex) {
+                            logger.debug("Failed to broadcast SSE progress for assessment {}", assessmentId, ex);
+                        }
+                    }
+                    return "redirect:/lecturer/assessments/" + assessmentId
+                        + "/evaluate?studentId=" + selectedStudent.getId();
                 }
 
                 boolean isComplete = lecturerAssessmentService.isStudentEvaluationComplete(
                     assessment, lecturer, selectedStudent.getId());
+
+                if ("submit".equalsIgnoreCase(action) && !isComplete) {
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                        "Please complete all required marks and comments before submitting.");
+                    return "redirect:/lecturer/assessments/" + assessmentId
+                        + "/evaluate?studentId=" + selectedStudent.getId();
+                }
 
                 if (isComplete) {
                     redirectAttributes.addFlashAttribute("successMessage",
@@ -874,7 +898,8 @@ public class LecturerAssessmentController {
                     "Group Assessment",
                     groupScores,
                     groupComments,
-                    groupRubricComments
+                    groupRubricComments,
+                    "save".equalsIgnoreCase(action)
                 );
             }
 
@@ -929,13 +954,35 @@ public class LecturerAssessmentController {
                         "Individual Assessment",
                         studentScores,
                         studentComments,
-                        studentRubricComments
+                        studentRubricComments,
+                        "save".equalsIgnoreCase(action)
                     );
                 }
             }
 
+            if ("save".equalsIgnoreCase(action)) {
+                redirectAttributes.addFlashAttribute("successMessage",
+                    "✓ Progress saved. You can continue this evaluation later.");
+                if (progressStreamService != null) {
+                    try {
+                        progressStreamService.broadcastProgress(assessmentId);
+                    } catch (Exception ex) {
+                        logger.debug("Failed to broadcast SSE progress for assessment {}", assessmentId, ex);
+                    }
+                }
+                return "redirect:/lecturer/assessments/" + assessmentId
+                    + "/evaluate?groupId=" + groupId;
+            }
+
             boolean isComplete = lecturerAssessmentService.isGroupEvaluationComplete(
                 assessment, lecturer, groupId);
+
+            if ("submit".equalsIgnoreCase(action) && !isComplete) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                    "Please complete all required marks and comments before submitting.");
+                return "redirect:/lecturer/assessments/" + assessmentId
+                    + "/evaluate?groupId=" + groupId;
+            }
 
             if (isComplete) {
                 redirectAttributes.addFlashAttribute("successMessage",
