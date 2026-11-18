@@ -68,6 +68,7 @@ public class AdminService {
             PasswordEncoder passwordEncoder,
             LecturerGroupAssignmentRepository assignmentRepository,
             AdminRepository adminRepository,
+            AdminCourseAssignmentRepository adminCourseAssignmentRepository,
             CourseScopeService courseScopeService) {
         this.studentRepository = studentRepository;
         this.lecturerRepository = lecturerRepository;
@@ -76,6 +77,7 @@ public class AdminService {
         this.passwordEncoder = passwordEncoder;
         this.assignmentRepository = assignmentRepository;
         this.adminRepository = adminRepository;
+        this.adminCourseAssignmentRepository = adminCourseAssignmentRepository;
         this.courseScopeService = courseScopeService;
     }
 
@@ -85,7 +87,6 @@ public class AdminService {
     @Autowired(required = false)
     private CourseRepository courseRepository;
 
-    @Autowired(required = false)
     private AdminCourseAssignmentRepository adminCourseAssignmentRepository;
 
     @Autowired(required = false)
