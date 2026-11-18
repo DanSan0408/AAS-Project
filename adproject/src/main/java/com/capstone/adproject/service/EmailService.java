@@ -20,13 +20,35 @@ public class EmailService {
 
     @Value("${spring.mail.from:${spring.mail.username:admin@example.com}}")
     private String mailFrom;
+
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
     
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    private boolean mailIsConfigured() {
+        if (mailUsername == null || mailUsername.isBlank()
+                || mailPassword == null || mailPassword.isBlank()) {
+            logger.error("Email delivery is disabled: SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD must be configured");
+            return false;
+        }
+        if (mailFrom == null || mailFrom.isBlank()
+                || "admin@example.com".equalsIgnoreCase(mailFrom.trim())) {
+            mailFrom = mailUsername.trim();
+        }
+        return true;
+    }
+
     @Async("emailTaskExecutor")
     public void sendResetPasswordEmail(String userEmail, String link) {
+        if (!mailIsConfigured()) {
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); 
@@ -56,6 +78,7 @@ public class EmailService {
             helper.addInline("logo", logoResource);
 
             mailSender.send(message);
+            logger.info("Sent password reset email to {}", userEmail);
         } catch (Exception e) {
             logger.error("Failed to send HTML password reset email to: {}", userEmail, e);
         }
@@ -63,6 +86,9 @@ public class EmailService {
 
     @Async("emailTaskExecutor")
     public void sendWelcomeEmailWithPassword(String userEmail, String temporaryPassword, String userType, String resetLink) {
+        if (!mailIsConfigured()) {
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -99,6 +125,7 @@ public class EmailService {
             helper.addInline("logo", logoResource);
 
             mailSender.send(message);
+            logger.info("Sent welcome email to {}", userEmail);
         } catch (Exception e) {
             logger.error("Failed to send welcome email with password to: {}", userEmail, e);
         }
@@ -106,6 +133,9 @@ public class EmailService {
 
     @Async("emailTaskExecutor")
     public void sendDeadlineEmail(String userEmail, String subject, String textMessage) {
+        if (!mailIsConfigured()) {
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -136,6 +166,7 @@ public class EmailService {
             helper.addInline("logo", logoResource);
 
             mailSender.send(message);
+            logger.info("Sent deadline email to {}", userEmail);
         } catch (Exception e) {
             logger.error("Failed to send deadline email to: {}", userEmail, e);
         }
@@ -150,6 +181,9 @@ public class EmailService {
      */
     @Async("emailTaskExecutor")
     public void sendAlertEmail(String userEmail, String subject, String textMessage) {
+        if (!mailIsConfigured()) {
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -171,6 +205,7 @@ public class EmailService {
                 + "</div></body></html>";
             helper.setText(htmlContent, true);
             mailSender.send(message);
+            logger.info("Sent alert email to {}", userEmail);
         } catch (Exception e) {
             logger.error("Failed to send alert email to {}: {}", userEmail, e.getMessage(), e);
         }

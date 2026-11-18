@@ -2,6 +2,27 @@
 
 **Last Updated**: 2026-11-17 (Antigravity)
 
+## Current Status: Course-Scoped Group Members & SMTP Failure Visibility
+**Status**: COMPLETED
+**Date**: 2026-11-18
+
+### Fixes
+1. **Reused Students Missing from Assessor Group Cards**
+   - Added `groupStudentsMap` in `AdminController.showLecturerAssignmentPage`.
+   - The assessor assignment template now renders each group's members through `AdminService.getStudentsByGroup`, which merges direct `student.group_id` members with course-scoped `student_course_assignment.group_id` enrollments.
+   - This preserves the primary course relationship of reused students while showing their correct group assignment in every course.
+
+2. **Email Delivery Diagnostics**
+   - Added an SMTP credential guard to `EmailService`.
+   - Reset, welcome, deadline, and alert messages now stop explicitly and log configuration errors when `SPRING_MAIL_USERNAME` or `SPRING_MAIL_PASSWORD` is empty.
+   - Added a sender fallback so `mailFrom` uses the authenticated SMTP username instead of `admin@example.com`.
+   - Successful sends now produce delivery logs.
+   - Current local `.env` check: `SPRING_MAIL_USERNAME` and `SPRING_MAIL_PASSWORD` are empty, so SMTP is currently disabled until valid credentials are supplied.
+
+### Verification
+- Focused course-management browser tests pass.
+- Java tests could not run in this shell because no Java runtime is available.
+
 
 ## Current Status: Student Multi-Course Identity Resolution & Assessor Assignment UI Fixes
 **Status**: COMPLETED
