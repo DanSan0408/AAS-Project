@@ -915,6 +915,12 @@ public class AdminController {
                 : groupRepository.findAllWithStudentsByCourseId(activeCourseId);
         List<Student> allStudents = adminService.getAllStudents();
         List<Lecturer> allLecturers = adminService.getAllLecturers();
+        Map<Long, List<Student>> groupStudentsMap = allGroups.stream()
+                .collect(Collectors.toMap(
+                        Group::getId,
+                        group -> adminService.getStudentsByGroup(group),
+                        (left, right) -> left,
+                        java.util.LinkedHashMap::new));
 
         List<LecturerGroupAssignment> existingAssignments = assignmentRepository.findByAssessment(assessment);
         List<LecturerRubricAssignment> existingRubricAssignments = rubricAssignmentRepository
@@ -969,6 +975,7 @@ public class AdminController {
         model.addAttribute("assessment", assessment);
         model.addAttribute("allGroups", allGroups);
         model.addAttribute("allStudents", allStudents);
+        model.addAttribute("groupStudentsMap", groupStudentsMap);
         model.addAttribute("studentGroupMap", adminService.getStudentGroupMapForActiveCourse(allStudents));
         model.addAttribute("allLecturers", allLecturers);
         model.addAttribute("groupLecturerMap", groupLecturerMap);

@@ -124,6 +124,9 @@ public class AssessmentComment {
         if (submittedAt == null) {
             submittedAt = LocalDateTime.now();
         }
+        if (commentText == null) {
+            commentText = "";
+        }
         if (commentIndex == null) {
             commentIndex = 0;
         }

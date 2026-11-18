@@ -403,6 +403,8 @@ describe('course-validation.js Client-Side Logic Tests', () => {
 
     test('assign assessors UI layout and delete button trimming safeguards', () => {
         const assignHtml = fs.readFileSync(path.join(TEMPLATES_DIR, 'admin_assign_lecturers.html'), 'utf-8');
+        assert.ok(assignHtml.includes('groupStudentsMap.get(group.id)'),
+            'assign assessor group cards must use course-aware student assignments instead of only student.group');
         assert.ok(assignHtml.includes('class="save-bar-spacer"'),
             'admin_assign_lecturers.html must contain save-bar-spacer to prevent blocking the last teams');
         assert.ok(assignHtml.includes('class="button-container"'),
@@ -419,5 +421,38 @@ describe('course-validation.js Client-Side Logic Tests', () => {
             'assign_lecturers.css must prevent form-select from overflowing and squishing delete button');
         assert.ok(assignCss.includes('sidebar-collapsed .button-container'),
             'assign_lecturers.css must adjust button-container position when sidebar is collapsed');
+    });
+
+    test('email service checks SMTP credentials before delivery', () => {
+        const emailService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/EmailService.java'), 'utf-8');
+        assert.ok(emailService.includes('SPRING_MAIL_USERNAME'),
+            'EmailService must read injected SMTP username configuration');
+        assert.ok(emailService.includes('SPRING_MAIL_PASSWORD'),
+            'EmailService must validate injected SMTP password configuration');
+        assert.ok(emailService.includes('Email delivery is disabled'),
+            'EmailService must emit an explicit configuration error instead of silently appearing to send');
+        assert.ok(emailService.includes('mailFrom = mailUsername.trim()'),
+            'EmailService must use the authenticated SMTP username as the sender fallback');
+    });
+
+    test('evaluation mark persistence handles legacy CLO mark columns', () => {
+        const migration = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/config/CourseEmailConstraintMigrationRunner.java'), 'utf-8');
+        const lecturerService = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/service/LecturerAssessmentService.java'), 'utf-8');
+        assert.ok(migration.includes('migrateMarksColumns'),
+            'startup migration must normalize legacy marks CLO columns');
+        assert.ok(migration.includes('clo_marks'),
+            'startup migration must support snake_case clo_marks legacy databases');
+        assert.ok(lecturerService.includes('if (mark.getCloMarks() == null)'),
+            'evaluation persistence must prevent null CLO mark values');
+        assert.ok(lecturerService.includes('mark.setCloMarks(mark.getMarkValue()'),
+            'evaluation persistence must provide a safe CLO mark fallback');
+        assert.ok(migration.includes('migrateAssessmentCommentColumns'),
+            'startup migration must normalize legacy assessment comment text columns');
+        assert.ok(migration.includes('MODIFY COLUMN `" + column + "` TEXT NULL'),
+            'legacy comment text columns must allow NULL so partial comment-only and mark-only saves work');
+        assert.ok(lecturerService.includes('if (hasScores)'),
+            'mark-only saves must not delete existing comments');
+        assert.ok(lecturerService.includes('if (hasGeneralComments)'),
+            'comment-only saves must not delete existing marks');
     });
 });
