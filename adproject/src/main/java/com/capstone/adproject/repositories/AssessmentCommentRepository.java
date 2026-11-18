@@ -36,7 +36,7 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
            "AND c.evaluatedStudent = :student " +
            "AND c.assessment = :assessment " +
            "AND c.commentIndex = :commentIndex")
-    Optional<AssessmentComment> findByEvaluatorAndStudentAndAssessmentAndIndex(
+    List<AssessmentComment> findByEvaluatorAndStudentAndAssessmentAndIndex(
             @Param("evaluatorId") Long evaluatorId,
             @Param("evaluatorType") AssessmentComment.EvaluatorType evaluatorType,
             @Param("student") Student student,
