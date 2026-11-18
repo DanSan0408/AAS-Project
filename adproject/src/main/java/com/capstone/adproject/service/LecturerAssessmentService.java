@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -165,7 +166,7 @@ public class LecturerAssessmentService {
     }
 
     public String getGroupEvaluationStatus(Assessment assessment, Lecturer lecturer, Long groupId) {
-        List<Student> groupMembers = studentRepository.findByGroupId(groupId);
+        List<Student> groupMembers = getStudentsByGroup(groupId);
         if (groupMembers.isEmpty()) {
             return "not_started";
         }
@@ -180,7 +181,12 @@ public class LecturerAssessmentService {
                         m.getComments().startsWith("LECTURER:" + lecturer.getId()))
             .collect(Collectors.toList());
         
-        if (lecturerMarks.isEmpty()) {
+        boolean hasLecturerComments = !assessmentCommentRepository
+            .findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
+                sampleStudent, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
+            .isEmpty();
+
+        if (lecturerMarks.isEmpty() && !hasLecturerComments) {
             return "not_started";
         }
         
@@ -204,7 +210,13 @@ public class LecturerAssessmentService {
             .collect(Collectors.toList());
 
         if (lecturerMarks.isEmpty()) {
-            return "not_started";
+            boolean hasLecturerComments = !assessmentCommentRepository
+                .findByEvaluatedStudentAndAssessmentAndEvaluatorIdAndEvaluatorType(
+                    student, assessment, lecturer.getId(), AssessmentComment.EvaluatorType.LECTURER)
+                .isEmpty();
+            if (!hasLecturerComments) {
+                return "not_started";
+            }
         }
 
         boolean isComplete = isStudentEvaluationComplete(assessment, lecturer, studentId);
@@ -212,7 +224,7 @@ public class LecturerAssessmentService {
     }
 
     public boolean isGroupRubricsCompleteForGroup(Assessment assessment, Lecturer lecturer, Long groupId) {
-        List<Student> groupMembers = studentRepository.findByGroupId(groupId);
+        List<Student> groupMembers = getStudentsByGroup(groupId);
         if (groupMembers.isEmpty()) return false;
         Group group = groupRepository.findById(groupId).orElse(null);
         boolean isAssignedToGroup = groupAssignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer);
@@ -240,7 +252,7 @@ public class LecturerAssessmentService {
     }
 
     public boolean isIndividualRubricsCompleteForGroup(Assessment assessment, Lecturer lecturer, Long groupId) {
-        List<Student> groupMembers = studentRepository.findByGroupId(groupId);
+        List<Student> groupMembers = getStudentsByGroup(groupId);
         if (groupMembers.isEmpty()) return false;
         Group group = groupRepository.findById(groupId).orElse(null);
         boolean isAssignedToGroup = groupAssignmentRepository.existsByAssessmentAndGroupAndLecturer(assessment, group, lecturer);
@@ -311,7 +323,7 @@ public class LecturerAssessmentService {
     }
 
     public boolean isGroupEvaluationComplete(Assessment assessment, Lecturer lecturer, Long groupId) {
-        List<Student> groupMembers = studentRepository.findByGroupId(groupId);
+        List<Student> groupMembers = getStudentsByGroup(groupId);
         if (groupMembers.isEmpty()) {
             return false;
         }
@@ -363,6 +375,8 @@ public class LecturerAssessmentService {
                         return false;
                     }
                 }
+                assessmentCommentRepository.flush();
+                markRepository.flush();
             }
         }
         
@@ -695,10 +709,29 @@ public class LecturerAssessmentService {
         if (isGroupTarget) {
             Group group = groupRepository.findById(targetId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
-            targetStudents = studentRepository.findByGroup(group);
+            if (assessment.getCourse() == null
+                    || group.getCourse() == null
+                    || !assessment.getCourse().getId().equals(group.getCourse().getId())) {
+                throw new RuntimeException("Unauthorized: Group does not belong to this assessment course");
+            }
+            targetStudents = getStudentsByGroup(group.getId());
         } else {
             Student student = studentRepository.findById(targetId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+            Long assessmentCourseId = assessment.getCourse() != null
+                ? assessment.getCourse().getId() : null;
+            boolean belongsToCourse = assessmentCourseId != null
+                && ((student.getCourse() != null
+                    && assessmentCourseId.equals(student.getCourse().getId()))
+                    || (student.getGroup() != null
+                    && student.getGroup().getCourse() != null
+                    && assessmentCourseId.equals(student.getGroup().getCourse().getId()))
+                    || (studentCourseAssignmentRepository != null
+                    && studentCourseAssignmentRepository.existsByStudentIdAndCourseId(
+                        student.getId(), assessmentCourseId)));
+            if (!belongsToCourse) {
+                throw new RuntimeException("Unauthorized: Student does not belong to this assessment course");
+            }
             targetStudents = List.of(student);
         }
         
@@ -723,18 +756,7 @@ public class LecturerAssessmentService {
             }
 
             if (hasGeneralComments) {
-                List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
-                        lecturerId,
-                        AssessmentComment.EvaluatorType.LECTURER,
-                        student,
-                        assessment).stream()
-                    .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-                    .filter(c -> c.getRubricId() == null)
-                    .collect(Collectors.toList());
-
-                if (!existingComments.isEmpty()) {
-                    assessmentCommentRepository.deleteAll(existingComments);
-                }
+                // Upsert submitted comment indexes; never delete previously saved comments wholesale.
             }
             
             List<Mark> newMarks = new ArrayList<>();
@@ -822,17 +844,32 @@ public class LecturerAssessmentService {
                         if (commentEntry.getValue() == null || commentEntry.getValue().trim().isEmpty()) {
                             continue;
                         }
-                        
-                        AssessmentComment comment = new AssessmentComment();
-                        comment.setEvaluatorId(lecturerId);
+
+                        Optional<AssessmentComment> existingComment = assessmentCommentRepository
+                            .findByEvaluatorAndStudentAndAssessmentAndIndex(
+                                lecturerId,
+                                AssessmentComment.EvaluatorType.LECTURER,
+                                student,
+                                assessment,
+                                commentEntry.getKey());
+
+                        AssessmentComment comment = existingComment
+                            .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                            .filter(c -> c.getRubricId() == null)
+                            .orElseGet(AssessmentComment::new);
+
+                        if (comment.getId() == null) {
+                            comment.setEvaluatorId(lecturerId);
+                            comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+                            comment.setEvaluatedStudent(student);
+                            comment.setAssessment(assessment);
+                            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+                            comment.setCommentIndex(commentEntry.getKey());
+                            comment.setRubricAssessmentType(rubricType);
+                        }
                         comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
                         comment.setEvaluatorName(lecturerName);
-                        comment.setEvaluatedStudent(student);
-                        comment.setAssessment(assessment);
                         comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentEntry.getValue().trim()));
-                        comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
-                        comment.setCommentIndex(commentEntry.getKey());
-                        comment.setRubricAssessmentType(rubricType);
                         comment.setRubricId(null);
                         
                         String label = rubricType.equalsIgnoreCase("Group Assessment") ?
@@ -870,18 +907,6 @@ public class LecturerAssessmentService {
                     Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found"));
                     
-                    List<AssessmentComment> existingRubricComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
-                            lecturerId,
-                            AssessmentComment.EvaluatorType.LECTURER,
-                            student,
-                            assessment).stream()
-                        .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubricId))
-                        .collect(Collectors.toList());
-                    
-                    if (!existingRubricComments.isEmpty()) {
-                        assessmentCommentRepository.deleteAll(existingRubricComments);
-                    }
-                    
                     for (Map.Entry<Integer, String> commentEntry : rubricCommentMap.entrySet()) {
                         Integer commentIndex = commentEntry.getKey();
                         String commentText = commentEntry.getValue();
@@ -889,17 +914,32 @@ public class LecturerAssessmentService {
                         if (commentText == null || commentText.trim().isEmpty()) {
                             continue;
                         }
-                        
-                        AssessmentComment comment = new AssessmentComment();
-                        comment.setEvaluatorId(lecturerId);
+
+                        Optional<AssessmentComment> existingComment = assessmentCommentRepository
+                            .findByEvaluatorAndStudentAndAssessmentAndIndex(
+                                lecturerId,
+                                AssessmentComment.EvaluatorType.LECTURER,
+                                student,
+                                assessment,
+                                commentIndex);
+
+                        AssessmentComment comment = existingComment
+                            .filter(c -> c.getRubricId() != null && c.getRubricId().equals(rubricId))
+                            .orElseGet(AssessmentComment::new);
+
+                        if (comment.getId() == null) {
+                            comment.setEvaluatorId(lecturerId);
+                            comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
+                            comment.setEvaluatedStudent(student);
+                            comment.setAssessment(assessment);
+                            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
+                            comment.setCommentIndex(commentIndex);
+                            comment.setRubricAssessmentType(rubricType);
+                            comment.setRubricId(rubricId);
+                        }
                         comment.setEvaluatorType(AssessmentComment.EvaluatorType.LECTURER);
                         comment.setEvaluatorName(lecturerName);
-                        comment.setEvaluatedStudent(student);
-                        comment.setAssessment(assessment);
                         comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
-                        comment.setAssessmentType(AssessmentComment.CommentAssessmentType.LECTURER_EVALUATION);
-                        comment.setCommentIndex(commentIndex);
-                        comment.setRubricAssessmentType(rubricType);
                         comment.setRubricId(rubricId);
                         comment.setCommentLabel(rubric.getRubricCommentLabel(commentIndex));
                         

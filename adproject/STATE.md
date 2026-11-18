@@ -6,6 +6,19 @@
 **Status**: COMPLETED
 **Date**: 2026-11-18
 
+### Database & Reuse Safety Audit
+- Comment-only evaluations now count as `in_progress`, so reopening the evaluation reloads persisted comments.
+- General and rubric comments are upserted by evaluator/student/assessment/comment index; blank partial submissions no longer delete saved feedback.
+- Evaluation saves now enforce that the target student/group belongs to the assessment course.
+- Added startup synchronization for legacy `marks.mark_value`, `marks.markvalue`, and `marks.markValue` columns after the live log showed `mark_value` rejects inserts without a default.
+- Audited the local Docker MySQL snapshot: 11 students, 12 course enrollments, 4 courses, and 3 groups.
+- No duplicate student or lecturer email rows were found.
+- No orphaned student-course assignments, cross-course lecturer/group assignments, or cross-course lecturer/student assignments were found.
+- Existing 63 marks and 2 comments contain non-null required data; the legacy-column migrations are constrained to defaults/nullability and do not delete or rewrite existing mark/comment values.
+- The reused student `zizan@gmail.com` is enrolled in course 19 but has no course-19 `student_course_assignment.group_id`. It is therefore not assignable to a course-19 assessor until explicitly assigned to a course-19 group.
+- Legacy/dual columns were audited: live snapshot has `marks.cloMarks`, `assessment_comments.commentText/comment_text`, and modern `project_group.groupSize/groupName`. The startup migrations cover both camelCase and snake_case variants.
+- Java compilation and 19 focused course/evaluation browser regressions pass.
+
 ### Fixes
 1. **Reused Students Missing from Assessor Group Cards**
    - Added `groupStudentsMap` in `AdminController.showLecturerAssignmentPage`.
