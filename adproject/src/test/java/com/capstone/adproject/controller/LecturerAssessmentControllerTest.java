@@ -238,12 +238,12 @@ class LecturerAssessmentControllerTest {
         );
 
         RedirectAttributes ra = new RedirectAttributesModelMap();
-        String redirect = controller.submitCombinedEvaluation(10L, null, 100L, params, auth, ra);
+        String redirect = controller.submitCombinedEvaluation(10L, null, 100L, "submit", params, auth, ra);
 
         assertEquals("redirect:/lecturer/assessments/10/select-student", redirect);
         verify(lecturerAssessmentService).saveEvaluationScores(
             eq(10L), eq(5L), eq("lecturer@utm.my"), eq(100L), eq(false), eq("Individual Assessment"),
-            any(), any(), any()
+            any(), any(), any(), eq(false)
         );
         assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
     }

@@ -467,4 +467,17 @@ describe('course-validation.js Client-Side Logic Tests', () => {
         assert.ok(migration.includes('mark_value'),
             'startup migration must prevent legacy mark_value from rejecting inserts');
     });
+
+    test('save progress remains on evaluation and submits remain full', () => {
+        const controller = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/controller/LecturerAssessmentController.java'), 'utf-8');
+        const template = fs.readFileSync(path.join(TEMPLATES_DIR, 'lecturer_combined_evaluation_form.html'), 'utf-8');
+        assert.ok(template.includes('name="action" value="save"'),
+            'save progress button must submit an explicit save action');
+        assert.ok(controller.includes('@RequestParam(value = "action", defaultValue = "save") String action'),
+            'controller must distinguish save progress from full submission');
+        assert.ok(controller.includes('return "redirect:/lecturer/assessments/" + assessmentId'),
+            'save progress must return to the evaluation path');
+        assert.ok(controller.includes('Please complete all required marks and comments before submitting'),
+            'full submission must reject incomplete evaluations');
+    });
 });
