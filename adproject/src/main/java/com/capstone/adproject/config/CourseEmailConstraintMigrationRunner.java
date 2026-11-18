@@ -32,6 +32,8 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
         migrateUsernameTable("lecturer", "uk_lecturer_username_course");
         migrateStudentResultOverrides();
         migrateProjectGroupColumns();
+        migrateMarksColumns();
+        migrateAssessmentCommentColumns();
     }
 
     public void migrateDuplicateLecturers() {
@@ -442,12 +444,8 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
     private boolean hasTable(String tableName) {
         try {
             Integer count = jdbcTemplate.queryForObject(
-                    """
-                    SELECT COUNT(*)
-                    FROM information_schema.tables
-                    WHERE table_schema = DATABASE()
-                      AND table_name = ?
-                    """,
+                    "SELECT COUNT(*) FROM information_schema.tables "
+                    + "WHERE table_schema = DATABASE() AND table_name = ?",
                     Integer.class,
                     tableName);
             return count != null && count > 0;
@@ -508,16 +506,77 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
         }
     }
 
+    private void migrateAssessmentCommentColumns() {
+        try {
+            if (!hasTable("assessment_comments")) {
+                return;
+            }
+            for (String column : List.of("commentText", "comment_text")) {
+                if (!hasColumn("assessment_comments", column)) {
+                    continue;
+                }
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `assessment_comments` MODIFY COLUMN `" + column + "` TEXT NULL");
+                } catch (Exception ignored) {}
+            }
+            if (hasColumn("assessment_comments", "commentText")
+                    && hasColumn("assessment_comments", "comment_text")) {
+                jdbcTemplate.execute("UPDATE `assessment_comments` SET `comment_text` = `commentText` "
+                        + "WHERE `comment_text` IS NULL AND `commentText` IS NOT NULL");
+                jdbcTemplate.execute("UPDATE `assessment_comments` SET `commentText` = `comment_text` "
+                        + "WHERE `commentText` IS NULL AND `comment_text` IS NOT NULL");
+            }
+            logger.info("Migrated assessment comment text columns");
+        } catch (Exception ex) {
+            logger.warn("Skipping assessment comment text column migration: {}", ex.getMessage());
+        }
+    }
+
+    private void migrateMarksColumns() {
+        try {
+            if (!hasTable("marks")) {
+                return;
+            }
+
+            List<String> markColumns = List.of("cloMarks", "clomarks", "clo_marks");
+            for (String column : markColumns) {
+                if (!hasColumn("marks", column)) {
+                    continue;
+                }
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `marks` ALTER COLUMN `" + column + "` SET DEFAULT 0");
+                } catch (Exception ex) {
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE `marks` MODIFY COLUMN `" + column + "` DOUBLE NOT NULL DEFAULT 0");
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (hasColumn("marks", "cloMarks") && hasColumn("marks", "clomarks")) {
+                jdbcTemplate.execute("UPDATE `marks` SET `cloMarks` = `clomarks` WHERE `cloMarks` IS NULL");
+                jdbcTemplate.execute("UPDATE `marks` SET `clomarks` = `cloMarks` WHERE `clomarks` IS NULL");
+            }
+            if (hasColumn("marks", "clomarks") && hasColumn("marks", "clo_marks")) {
+                jdbcTemplate.execute("UPDATE `marks` SET `clomarks` = `clo_marks` WHERE `clomarks` IS NULL");
+                jdbcTemplate.execute("UPDATE `marks` SET `clo_marks` = `clomarks` WHERE `clo_marks` IS NULL");
+            }
+            if (hasColumn("marks", "cloMarks") && hasColumn("marks", "clo_marks")) {
+                jdbcTemplate.execute("UPDATE `marks` SET `cloMarks` = `clo_marks` WHERE `cloMarks` IS NULL");
+                jdbcTemplate.execute("UPDATE `marks` SET `clo_marks` = `cloMarks` WHERE `clo_marks` IS NULL");
+            }
+            logger.info("Migrated marks CLO columns and defaults");
+        } catch (Exception ex) {
+            logger.warn("Skipping marks CLO column migration: {}", ex.getMessage());
+        }
+    }
+
     private boolean hasColumn(String tableName, String columnName) {
         try {
             Integer count = jdbcTemplate.queryForObject(
-                    """
-                    SELECT COUNT(*)
-                    FROM information_schema.columns
-                    WHERE table_schema = DATABASE()
-                      AND table_name = ?
-                      AND column_name = ?
-                    """,
+                    "SELECT COUNT(*) FROM information_schema.columns "
+                    + "WHERE table_schema = DATABASE() "
+                    + "AND table_name = ? "
+                    + "AND column_name = ?",
                     Integer.class,
                     tableName,
                     columnName);
