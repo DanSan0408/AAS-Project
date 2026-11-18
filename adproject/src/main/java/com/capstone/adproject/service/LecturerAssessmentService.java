@@ -703,32 +703,47 @@ public class LecturerAssessmentService {
         }
         
         for (Student student : targetStudents) {
-            List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
-                    student, student, assessment).stream()
-                .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
-                .filter(m -> rubricType.equalsIgnoreCase(m.getAssessmentType()))
-                .collect(Collectors.toList());
-            
-            if (!existingMarks.isEmpty()) {
-                markRepository.deleteAll(existingMarks);
+            boolean hasScores = scores != null && scores.entrySet().stream()
+                .anyMatch(entry -> entry.getValue() != null
+                        && !entry.getValue().trim().isEmpty()
+                        && !"none".equalsIgnoreCase(entry.getValue().trim()));
+            boolean hasGeneralComments = comments != null && comments.entrySet().stream()
+                .anyMatch(entry -> entry.getValue() != null && !entry.getValue().trim().isEmpty());
+
+            if (hasScores) {
+                List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
+                        student, student, assessment).stream()
+                    .filter(m -> m.getComments() != null && m.getComments().equals("LECTURER:" + lecturerId))
+                    .filter(m -> rubricType.equalsIgnoreCase(m.getAssessmentType()))
+                    .collect(Collectors.toList());
+
+                if (!existingMarks.isEmpty()) {
+                    markRepository.deleteAll(existingMarks);
+                }
             }
-            
-            List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
-                    lecturerId,
-                    AssessmentComment.EvaluatorType.LECTURER,
-                    student,
-                    assessment).stream()
-                .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
-                .filter(c -> c.getRubricId() == null)
-                .collect(Collectors.toList());
-            
-            if (!existingComments.isEmpty()) {
-                assessmentCommentRepository.deleteAll(existingComments);
+
+            if (hasGeneralComments) {
+                List<AssessmentComment> existingComments = assessmentCommentRepository.findByEvaluatorAndStudentAndAssessment(
+                        lecturerId,
+                        AssessmentComment.EvaluatorType.LECTURER,
+                        student,
+                        assessment).stream()
+                    .filter(c -> rubricType.equalsIgnoreCase(c.getRubricAssessmentType()))
+                    .filter(c -> c.getRubricId() == null)
+                    .collect(Collectors.toList());
+
+                if (!existingComments.isEmpty()) {
+                    assessmentCommentRepository.deleteAll(existingComments);
+                }
             }
             
             List<Mark> newMarks = new ArrayList<>();
-            for (Map.Entry<String, String> entry : scores.entrySet()) {
+            for (Map.Entry<String, String> entry : scores == null ? Map.<String, String>of().entrySet() : scores.entrySet()) {
                 String key = entry.getKey();
+                if (entry.getValue() == null || entry.getValue().trim().isEmpty()
+                        || "none".equalsIgnoreCase(entry.getValue().trim())) {
+                    continue;
+                }
                 Long ratingId = Long.parseLong(entry.getValue());
                 
                 Rating rating = ratingRepository.findById(ratingId)
@@ -781,6 +796,13 @@ public class LecturerAssessmentService {
                     mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
                     mark.setClo(rubric.getClo());
                     mark.setCloMarks(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
+                }
+
+                if (mark.getClo() == null) {
+                    mark.setClo(0);
+                }
+                if (mark.getCloMarks() == null) {
+                    mark.setCloMarks(mark.getMarkValue() != null ? mark.getMarkValue() : 0.0);
                 }
                 
                 newMarks.add(mark);
@@ -838,6 +860,12 @@ public class LecturerAssessmentService {
                 for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                     Long rubricId = rubricEntry.getKey();
                     Map<Integer, String> rubricCommentMap = rubricEntry.getValue();
+                    boolean hasNonblankRubricComment = rubricCommentMap != null
+                            && rubricCommentMap.values().stream()
+                                .anyMatch(value -> value != null && !value.trim().isEmpty());
+                    if (!hasNonblankRubricComment) {
+                        continue;
+                    }
                     
                     Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found"));
