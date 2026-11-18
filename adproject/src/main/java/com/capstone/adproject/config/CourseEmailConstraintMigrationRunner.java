@@ -564,6 +564,29 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
                 jdbcTemplate.execute("UPDATE `marks` SET `cloMarks` = `clo_marks` WHERE `cloMarks` IS NULL");
                 jdbcTemplate.execute("UPDATE `marks` SET `clo_marks` = `cloMarks` WHERE `clo_marks` IS NULL");
             }
+
+            List<String> markValueColumns = List.of("markValue", "markvalue", "mark_value");
+            for (String column : markValueColumns) {
+                if (!hasColumn("marks", column)) {
+                    continue;
+                }
+                try {
+                    jdbcTemplate.execute("ALTER TABLE `marks` ALTER COLUMN `" + column + "` SET DEFAULT 0");
+                } catch (Exception ex) {
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE `marks` MODIFY COLUMN `" + column + "` DOUBLE NOT NULL DEFAULT 0");
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            if (hasColumn("marks", "markValue") && hasColumn("marks", "mark_value")) {
+                jdbcTemplate.execute("UPDATE `marks` SET `markValue` = `mark_value` WHERE `markValue` IS NULL");
+                jdbcTemplate.execute("UPDATE `marks` SET `mark_value` = `markValue` WHERE `mark_value` IS NULL");
+            }
+            if (hasColumn("marks", "markvalue") && hasColumn("marks", "mark_value")) {
+                jdbcTemplate.execute("UPDATE `marks` SET `markvalue` = `mark_value` WHERE `markvalue` IS NULL");
+                jdbcTemplate.execute("UPDATE `marks` SET `mark_value` = `markvalue` WHERE `mark_value` IS NULL");
+            }
             logger.info("Migrated marks CLO columns and defaults");
         } catch (Exception ex) {
             logger.warn("Skipping marks CLO column migration: {}", ex.getMessage());

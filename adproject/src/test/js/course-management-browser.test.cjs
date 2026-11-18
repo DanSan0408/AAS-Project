@@ -456,5 +456,15 @@ describe('course-validation.js Client-Side Logic Tests', () => {
             'comment-only saves must not delete existing marks');
         assert.ok(lecturerService.includes('if (!hasNonblankRubricComment)'),
             'blank rubric comments must not erase previously saved rubric feedback');
+        assert.ok(lecturerService.includes('findByEvaluatorAndStudentAndAssessmentAndIndex'),
+            'comments must be persisted by evaluator/student/assessment/comment index');
+        assert.ok(lecturerService.includes('assessmentCommentRepository.flush()'),
+            'comment saves must be flushed before the evaluation response completes');
+        assert.ok(lecturerService.includes('hasLecturerComments'),
+            'comment-only evaluations must count as started and reload existing comments');
+        assert.ok(lecturerService.includes('does not belong to this assessment course'),
+            'course ownership must be enforced before evaluation persistence');
+        assert.ok(migration.includes('mark_value'),
+            'startup migration must prevent legacy mark_value from rejecting inserts');
     });
 });
