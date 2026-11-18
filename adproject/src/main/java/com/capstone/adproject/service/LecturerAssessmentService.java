@@ -703,8 +703,12 @@ public class LecturerAssessmentService {
         }
         
         for (Student student : targetStudents) {
-            boolean hasScores = scores != null && !scores.isEmpty();
-            boolean hasGeneralComments = comments != null && !comments.isEmpty();
+            boolean hasScores = scores != null && scores.entrySet().stream()
+                .anyMatch(entry -> entry.getValue() != null
+                        && !entry.getValue().trim().isEmpty()
+                        && !"none".equalsIgnoreCase(entry.getValue().trim()));
+            boolean hasGeneralComments = comments != null && comments.entrySet().stream()
+                .anyMatch(entry -> entry.getValue() != null && !entry.getValue().trim().isEmpty());
 
             if (hasScores) {
                 List<Mark> existingMarks = markRepository.findByEvaluatorStudentAndEvaluatedStudentAndAssessment(
@@ -734,8 +738,12 @@ public class LecturerAssessmentService {
             }
             
             List<Mark> newMarks = new ArrayList<>();
-            for (Map.Entry<String, String> entry : scores.entrySet()) {
+            for (Map.Entry<String, String> entry : scores == null ? Map.<String, String>of().entrySet() : scores.entrySet()) {
                 String key = entry.getKey();
+                if (entry.getValue() == null || entry.getValue().trim().isEmpty()
+                        || "none".equalsIgnoreCase(entry.getValue().trim())) {
+                    continue;
+                }
                 Long ratingId = Long.parseLong(entry.getValue());
                 
                 Rating rating = ratingRepository.findById(ratingId)
@@ -852,6 +860,12 @@ public class LecturerAssessmentService {
                 for (Map.Entry<Long, Map<Integer, String>> rubricEntry : rubricComments.entrySet()) {
                     Long rubricId = rubricEntry.getKey();
                     Map<Integer, String> rubricCommentMap = rubricEntry.getValue();
+                    boolean hasNonblankRubricComment = rubricCommentMap != null
+                            && rubricCommentMap.values().stream()
+                                .anyMatch(value -> value != null && !value.trim().isEmpty());
+                    if (!hasNonblankRubricComment) {
+                        continue;
+                    }
                     
                     Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found"));

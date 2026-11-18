@@ -454,5 +454,7 @@ describe('course-validation.js Client-Side Logic Tests', () => {
             'mark-only saves must not delete existing comments');
         assert.ok(lecturerService.includes('if (hasGeneralComments)'),
             'comment-only saves must not delete existing marks');
+        assert.ok(lecturerService.includes('if (!hasNonblankRubricComment)'),
+            'blank rubric comments must not erase previously saved rubric feedback');
     });
 });
