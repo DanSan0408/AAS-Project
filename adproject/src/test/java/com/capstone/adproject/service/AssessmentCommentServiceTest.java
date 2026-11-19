@@ -52,6 +52,32 @@ public class AssessmentCommentServiceTest {
     }
 
     @Test
+    public void testTeamCommentsUseTeamTypeAndEvaluatedMember() {
+        Student evaluator = new Student();
+        evaluator.setId(2L);
+        evaluator.setUsername("Bob");
+        evaluator.setEmail("bob@example.com");
+
+        when(commentRepository.findByEvaluatorAndStudentAndAssessment(
+                2L,
+                AssessmentComment.EvaluatorType.STUDENT,
+                student,
+                assessment)).thenReturn(List.of());
+        when(commentRepository.save(any(AssessmentComment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<AssessmentComment> saved = commentService.submitTeamComments(
+                evaluator, student, assessment, List.of("Good team contribution"));
+
+        assertEquals(1, saved.size());
+        AssessmentComment savedComment = saved.get(0);
+        assertEquals(AssessmentComment.CommentAssessmentType.TEAM, savedComment.getAssessmentType());
+        assertEquals("Group Assessment", savedComment.getRubricAssessmentType());
+        assertEquals(student, savedComment.getEvaluatedStudent());
+        assertEquals(2L, savedComment.getEvaluatorId());
+    }
+
+    @Test
     public void testStudentOnlyReceivesApprovedComments() {
         AssessmentComment approvedComment = new AssessmentComment();
         approvedComment.setId(101L);

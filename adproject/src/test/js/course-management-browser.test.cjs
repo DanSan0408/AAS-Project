@@ -466,6 +466,15 @@ describe('course-validation.js Client-Side Logic Tests', () => {
             'course ownership must be enforced before evaluation persistence');
         assert.ok(migration.includes('mark_value'),
             'startup migration must prevent legacy mark_value from rejecting inserts');
+        assert.ok(migration.includes('migrateLegacyDualColumns'),
+            'startup migration must synchronize legacy/canonical dual columns without overwriting canonical values');
+        assert.ok(migration.includes('commentText') && migration.includes('comment_text'),
+            'comment migration must preserve legacy comment text into the canonical column');
+        const studentModel = fs.readFileSync(path.join(__dirname, '../../main/java/com/capstone/adproject/model/Student.java'), 'utf-8');
+        assert.ok(studentModel.includes('@Column(name = "resetPasswordToken")'),
+            'student reset tokens must map to the canonical live resetPasswordToken column');
+        assert.ok(studentModel.includes('@Column(name = "isTempPassword"'),
+            'student temp-password state must map to the canonical live isTempPassword column');
     });
 
     test('save progress remains on evaluation and submits remain full', () => {

@@ -55,6 +55,10 @@ public class Lecturer {
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
 
+    /** When the welcome/account-setup email was last confirmed as handed to the mail server. Null = never confirmed. */
+    @Column(name = "welcomeEmailSentAt")
+    private java.time.LocalDateTime welcomeEmailSentAt;
+
     private String roles; // Added for multi-role support
     @ManyToOne
     @JoinColumn(name = "course_id")

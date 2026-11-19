@@ -1,10 +1,48 @@
 # Project State Documentation
 
-**Last Updated**: 2026-11-17 (Antigravity)
+**Last Updated**: 2026-11-19 (Claude Code)
 
 ## Current Status: Course-Scoped Group Members & SMTP Failure Visibility
 **Status**: COMPLETED
 **Date**: 2026-11-18
+
+### Welcome Email Delivery Tracking & Resend (2026-11-19)
+- Finished the interrupted welcome-email refactor in `AdminService`: restored username auto-generation for new students and the duplicate-username check for new assessors, both of which the half-done edit had bypassed.
+- New accounts are now saved before the welcome email is sent, so credentials are never emailed for an account that failed to save.
+- Added nullable `welcomeEmailSentAt` to `student` and `lecturer` (created by `ddl-auto=update`). It is set only when the mail server accepts the message.
+- Bulk add no longer sends emails inside the request/transaction. Emails go out in the background after commit and each confirmed delivery is recorded.
+- Manage Students / Manage Assessors show accounts with no confirmed welcome email and can resend to one or all (`POST /admin/welcome-emails/resend`). A resend reuses the welcome email with a 7-day set-password link and never changes the stored password.
+- `UserService.updatePassword` now clears `isTempPassword` for students (previously only assessors).
+- Temp passwords are HTML-escaped in the welcome email.
+- Not verified: real delivery through the production SMTP account. Local `.env` has no `SPRING_MAIL_USERNAME` / `SPRING_MAIL_PASSWORD`, so email is disabled locally.
+- Build in a clean checkout when verifying: Maven run in place can be masked by the IDE's compiled classes in `target/`.
+
+### CI/CD Pipeline
+- Added parallel pull-request validation for Java, browser/static contracts, AI Python compilation, and both Docker images.
+- Added main-branch image publication to GHCR with immutable Git SHA tags.
+- Added manual staging/production deployment workflow with environment approval, app/AI parallel deployment, smoke checks, Telegram notification, and rollback webhook hooks.
+- Added public `/actuator/health` and `/health` smoke targets for deployment verification.
+- Added `CICD.md` with required GitHub/Dokploy secrets and webhook payload responsibilities.
+
+### UI Refinement
+- Balanced the admin dashboard rubric and deadline columns with stretch-height layout and removed independent rubric-height clipping.
+- Added missing action icons on admin rubric/deadline controls and across common save/cancel, invitation, group, profile, comment, and course actions.
+- Added complete 2px borders to login fields and AA-compliant placeholder contrast.
+- Added public favicon handling via `/favicon.ico` forwarding to the IAMS logo.
+- Verified desktop/mobile login renders, complete field borders, no horizontal overflow, and no browser console errors.
+- Impeccable detector returns no findings for the login surface.
+
+### Full Legacy Database Column Audit
+- Audited 35 tables and 30 live key table counts from the local Docker/MySQL snapshot and SQL dump.
+- Canonical live columns confirmed: camelCase names such as `commentText`, `assessmentType`, `evaluatorType`, `markValue`, `cloMarks`, `groupSize`, `groupName`, `courseCode`, `courseName`, `resetPasswordToken`, `isTempPassword`, and deadline/factor camelCase fields.
+- Legacy/unused dual variants found: `comment_text`, `evaluator_type`, `assessment_type`, snake-case deadline/factor/override columns, rubric `clo_marks`/`assessment_type`, reset/temp snake-case fields, and duplicate legacy element-collection tables.
+- Data mismatches found in 2 comment rows: `commentText` contained feedback while `comment_text` was blank. Canonical column access is already `commentText`, so no comment data was lost.
+- All 8 rubric rows use canonical `cloMarks`; `clo_marks` is empty/absent. All 4 deadlines use canonical camelCase columns and leave snake-case counterparts empty.
+- Factor override and student override records likewise retain values in canonical camelCase columns while snake-case counterparts are empty.
+- Added null-only canonical/legacy synchronization. Canonical populated values are never overwritten.
+- Hardened legacy-column cleanup so it verifies migration before dropping a legacy column; copy failure leaves the legacy column intact.
+- Fixed `Student.resetPasswordToken` and `Student.isTempPassword` entity mappings to canonical live columns.
+- Java suite and all 53 browser/static regressions pass.
 
 ### Database & Reuse Safety Audit
 - Comment-only evaluations now count as `in_progress`, so reopening the evaluation reloads persisted comments.

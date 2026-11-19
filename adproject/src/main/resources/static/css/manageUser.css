@@ -683,3 +683,42 @@ body.manage-users-page th input[type="checkbox"] {
         font-size: 1.2rem !important;
     }
 }
+
+/* Accounts with no confirmed welcome email (Manage Students / Manage Assessors) */
+body.manage-users-page .welcome-pending-title {
+    margin: 0 0 8px;
+    font-size: 1rem;
+}
+
+body.manage-users-page .welcome-pending-note {
+    margin: 0 0 16px;
+    font-weight: 400;
+}
+
+body.manage-users-page .welcome-pending-details {
+    margin-top: 16px;
+    font-weight: 400;
+}
+
+body.manage-users-page .welcome-pending-details summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+body.manage-users-page .welcome-pending-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+body.manage-users-page .welcome-pending-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 0;
+    border-top: 1px solid var(--color-warning, currentColor);
+    overflow-wrap: anywhere;
+}

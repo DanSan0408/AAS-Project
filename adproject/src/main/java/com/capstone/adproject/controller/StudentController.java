@@ -999,6 +999,7 @@ public String showPeerAssessmentForm(@PathVariable Long assessmentId,
 
     
    @PostMapping("/assessment/{assessmentId}/evaluate/{studentId}/submit")
+   @Transactional
 public String submitPeerAssessment(@PathVariable Long assessmentId,
                                    @PathVariable Long studentId,
                                    @RequestParam Map<String, String> formData,
@@ -1399,6 +1400,7 @@ public String showTeamEvaluationForm(@PathVariable Long assessmentId,
 }
 
 @PostMapping("/assessment/{assessmentId}/team-evaluate/submit")
+@Transactional
 public String submitTeamEvaluation(@PathVariable Long assessmentId,
                                     @RequestParam Map<String, String> formData,
                                     Principal principal,
@@ -1599,13 +1601,22 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
             } catch (NumberFormatException e) {
             }
         }
+
+        boolean hasGroupRubrics = assessment.getRubrics().stream()
+            .anyMatch(r -> r.getAssessmentTypes() != null
+                && r.getAssessmentTypes().equalsIgnoreCase("Group Assessment"));
+        if (hasGroupRubrics && marks.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error",
+                "Please select at least one rating before submitting team evaluation!");
+            return "redirect:/student/assessment/" + assessmentId + "/team-evaluate";
+        }
         
         if (!marks.isEmpty()) {
             markService.saveAllMarks(marks);
         }
 
         if (!commentTexts.isEmpty()) {
-            commentService.submitPeerComments(evaluator, member, assessment, commentTexts);
+            commentService.submitTeamComments(evaluator, member, assessment, commentTexts);
         }
     }
 
