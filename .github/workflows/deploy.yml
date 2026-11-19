@@ -1,0 +1,160 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment target
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+      image_tag:
+        description: Immutable Git SHA or image tag
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  preflight:
+    name: Verify deployment request
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    outputs:
+      approved_tag: ${{ steps.validate.outputs.tag }}
+    steps:
+      - id: validate
+        shell: bash
+        run: |
+          TAG="${{ inputs.image_tag }}"
+          if [[ -z "$TAG" || "$TAG" == "latest" ]]; then
+            echo "A non-empty immutable SHA or release tag is required." >&2
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve container image names
+        run: |
+          echo "APP_IMAGE=ghcr.io/dansan0408/aas-project-app:${{ steps.validate.outputs.tag }}"
+          echo "AI_IMAGE=ghcr.io/dansan0408/aas-project-ai:${{ steps.validate.outputs.tag }}"
+
+  deploy-app:
+    name: Deploy IAMS app
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Trigger Dokploy app deployment
+        shell: bash
+        env:
+          WEBHOOK_URL: ${{ inputs.environment == 'production' && secrets.DOKPLOY_APP_PRODUCTION_WEBHOOK || secrets.DOKPLOY_APP_STAGING_WEBHOOK }}
+          DEPLOY_TAG: ${{ needs.preflight.outputs.approved_tag }}
+        run: |
+          if [[ -z "$WEBHOOK_URL" ]]; then
+            echo "Missing Dokploy app webhook secret for ${{ inputs.environment }}." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --max-time 60 \
+            -H "Content-Type: application/json" \
+            --data "{\"imageTag\":\"$DEPLOY_TAG\",\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\"}" \
+            "$WEBHOOK_URL"
+
+  deploy-ai:
+    name: Deploy AI service
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Trigger Dokploy AI deployment
+        shell: bash
+        env:
+          WEBHOOK_URL: ${{ inputs.environment == 'production' && secrets.DOKPLOY_AI_PRODUCTION_WEBHOOK || secrets.DOKPLOY_AI_STAGING_WEBHOOK }}
+          DEPLOY_TAG: ${{ needs.preflight.outputs.approved_tag }}
+        run: |
+          if [[ -z "$WEBHOOK_URL" ]]; then
+            echo "Missing Dokploy AI webhook secret for ${{ inputs.environment }}." >&2
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error \
+            --max-time 60 \
+            -H "Content-Type: application/json" \
+            --data "{\"imageTag\":\"$DEPLOY_TAG\",\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\"}" \
+            "$WEBHOOK_URL"
+
+  verify:
+    name: Deployment smoke checks
+    needs: [deploy-app, deploy-ai]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run deployment health checks
+        shell: bash
+        env:
+          APP_URL: ${{ secrets.IAMS_APP_HEALTH_URL }}
+          AI_URL: ${{ secrets.IAMS_AI_HEALTH_URL }}
+        run: |
+          if [[ -z "$APP_URL" || -z "$AI_URL" ]]; then
+            echo "Missing IAMS_APP_HEALTH_URL or IAMS_AI_HEALTH_URL secret." >&2
+            exit 1
+          fi
+          bash scripts/deployment-smoke.sh "$APP_URL" "$AI_URL"
+
+  notify:
+    name: Telegram deployment status
+    needs: [verify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram deployment result
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_DEPLOY_CHAT_ID: ${{ secrets.TELEGRAM_DEPLOY_CHAT_ID }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
+        run: |
+          if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_DEPLOY_CHAT_ID" ]]; then
+            echo "Telegram deployment notifications are not configured."
+            exit 0
+          fi
+          STATUS="FAILED"
+          [[ "$VERIFY_RESULT" == "success" ]] && STATUS="SUCCESS"
+          MESSAGE=$'IAMS deployment '"$STATUS"$'\nEnvironment: '"${{ inputs.environment }}"$'\nTag: '"${{ inputs.image_tag }}"$'\nCommit: '"${{ github.sha }}"
+          curl --fail --silent --show-error --max-time 30 \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_DEPLOY_CHAT_ID}" \
+            --data-urlencode "text=$MESSAGE"
+
+  rollback:
+    name: Roll back failed deployment
+    needs: verify
+    if: failure()
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Trigger Dokploy rollback
+        shell: bash
+        env:
+          APP_WEBHOOK: ${{ inputs.environment == 'production' && secrets.DOKPLOY_APP_PRODUCTION_ROLLBACK_WEBHOOK || secrets.DOKPLOY_APP_STAGING_ROLLBACK_WEBHOOK }}
+          AI_WEBHOOK: ${{ inputs.environment == 'production' && secrets.DOKPLOY_AI_PRODUCTION_ROLLBACK_WEBHOOK || secrets.DOKPLOY_AI_STAGING_ROLLBACK_WEBHOOK }}
+        run: |
+          [[ -n "$APP_WEBHOOK" ]] && curl --fail-with-body --silent --show-error --max-time 60 \
+            -H "Content-Type: application/json" \
+            --data "{\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\",\"reason\":\"Smoke check failed\"}" \
+            "$APP_WEBHOOK" || true
+          [[ -n "$AI_WEBHOOK" ]] && curl --fail-with-body --silent --show-error --max-time 60 \
+            -H "Content-Type: application/json" \
+            --data "{\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\",\"reason\":\"Smoke check failed\"}" \
+            "$AI_WEBHOOK" || true
+

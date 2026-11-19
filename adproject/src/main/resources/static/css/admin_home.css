@@ -192,18 +192,20 @@ body.admin-page .managed-courses-empty {
 body.admin-page .content-flex-container {
     display: flex !important;
     gap: 35px !important;
-    align-items: flex-start !important;
+    align-items: stretch !important;
 }
 
 body.admin-page .rubric-section {
-    flex: 2.5 !important;
+    flex: 2.5 1 0 !important;
+    align-self: stretch !important;
+    min-height: 100% !important;
     background: none !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    max-height: calc(100vh - 200px) !important;
-    overflow-y: auto !important;
-    padding-right: 15px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    padding-right: 0 !important;
 }
 
 body.admin-page .rubric-section h2 {
@@ -221,7 +223,8 @@ body.admin-page .rubric-section h2 {
 }
 
 body.admin-page .deadline-section {
-    flex: 1 !important;
+    flex: 1 1 0 !important;
+    align-self: stretch !important;
     min-width: 350px !important;
     max-width: 400px !important;
     background: none !important;

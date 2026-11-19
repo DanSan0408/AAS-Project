@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Randomized Group</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/group_preview.css}">
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/manageUser.css}">
@@ -111,8 +112,8 @@
                         </div>
                         
                         <div class="action-buttons">
-                            <button type="submit" class="btn btn-primary" id="createGroupButton">Approve & Create Group</button>
-                            <a th:href="@{/admin/group-assignment}" class="btn btn-secondary">Cancel & Go Back</a>
+                            <button type="submit" class="btn btn-primary" id="createGroupButton"><i class="fas fa-check"></i> Approve & Create Group</button>
+                            <a th:href="@{/admin/group-assignment}" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel & Go Back</a>
                         </div>
                     </form>
                 </div>

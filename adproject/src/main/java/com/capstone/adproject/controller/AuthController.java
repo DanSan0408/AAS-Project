@@ -52,6 +52,11 @@ public class AuthController {
         return "redirect:/rubrics/manage";
     }
 
+    @GetMapping("/favicon.ico")
+    public String favicon() {
+        return "forward:/images/IAMS_logo2.png";
+    }
+
     @GetMapping("/assessments/manage")
     public String rootAssessmentsManageRedirect() {
         return "redirect:/rubrics/manage";

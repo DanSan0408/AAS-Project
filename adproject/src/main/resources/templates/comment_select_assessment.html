@@ -132,7 +132,7 @@
                             <td th:text="${assessment.id}"></td>
                             <td th:text="${assessment.title}"></td>
                             <td>
-                                <a th:href="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/groups'}" class="btn btn-primary btn-sm">Select Groups</a>
+                                <a th:href="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/groups'}" class="btn btn-primary btn-sm"><i class="fas fa-users"></i> Select Groups</a>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(assessments)}">

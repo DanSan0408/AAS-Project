@@ -1,15 +1,21 @@
 package com.capstone.adproject.service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Course;
@@ -25,13 +31,20 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.service.EmailService.WelcomeEmail;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,6 +74,10 @@ class AdminServiceTest {
     private CourseRepository courseRepository;
     @Mock
     private SuperAdminService superAdminService;
+    @Mock
+    private EmailService emailService;
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private AdminService adminService;
@@ -184,5 +201,174 @@ class AdminServiceTest {
 
         assertThrows(RuntimeException.class, () -> adminService.deleteLecturerById(5L));
         verify(lecturerRepository, never()).deleteById(5L);
+    }
+
+    // ---- Welcome email delivery tracking ----
+
+    /** These collaborators are field-injected in AdminService, which @InjectMocks skips after constructor injection. */
+    private MockHttpServletRequest wireWelcomeEmailCollaborators() {
+        ReflectionTestUtils.setField(adminService, "emailService", emailService);
+        ReflectionTestUtils.setField(adminService, "userService", userService);
+        ReflectionTestUtils.setField(adminService, "publicBaseUrl", "https://cas.example/");
+        return new MockHttpServletRequest();
+    }
+
+    private void stubNewStudentCreation() {
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(courseA);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(studentRepository.save(any(Student.class))).thenAnswer(inv -> {
+            Student saved = inv.getArgument(0);
+            if (saved.getId() == null) {
+                saved.setId(77L);
+            }
+            return saved;
+        });
+    }
+
+    @Test
+    void saveStudent_NewStudent_SavesBeforeEmailingAndRecordsConfirmedDelivery() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        stubNewStudentCreation();
+        when(emailService.sendWelcomeEmailWithPassword(eq("new.student@example.com"), anyString(), eq("Student"), anyString()))
+            .thenReturn(true);
+
+        Student student = new Student();
+        student.setEmail(" New.Student@Example.com ");
+
+        boolean emailSent = adminService.saveStudent(student, request);
+
+        assertTrue(emailSent);
+        assertEquals("new.student", student.getUsername(), "blank username must be generated before saving");
+        assertNotNull(student.getWelcomeEmailSentAt());
+
+        ArgumentCaptor<String> link = ArgumentCaptor.forClass(String.class);
+        InOrder order = inOrder(studentRepository, emailService);
+        order.verify(studentRepository).save(student);
+        order.verify(emailService).sendWelcomeEmailWithPassword(
+            eq("new.student@example.com"), anyString(), eq("Student"), link.capture());
+        assertEquals("https://cas.example/reset_password?token=" + student.getResetPasswordToken(), link.getValue());
+    }
+
+    @Test
+    void saveStudent_EmailFails_KeepsStudentAndLeavesDeliveryUnconfirmed() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        stubNewStudentCreation();
+        when(emailService.sendWelcomeEmailWithPassword(anyString(), anyString(), anyString(), anyString()))
+            .thenReturn(false);
+
+        Student student = new Student();
+        student.setEmail("unlucky@example.com");
+
+        boolean emailSent = adminService.saveStudent(student, request);
+
+        assertFalse(emailSent);
+        assertNull(student.getWelcomeEmailSentAt());
+        verify(studentRepository).save(student);
+        assertTrue(AdminService.isAwaitingWelcomeEmail(student), "a failed welcome email must stay re-sendable");
+    }
+
+    @Test
+    void saveLecturer_NewAssessorWithDuplicateUsername_IsRejectedBeforeAnythingIsSavedOrEmailed() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(courseA);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(lecturerRepository.findByCourseIdAndUsernameIgnoreCase(10L, "Dr Tan")).thenReturn(Optional.of(new Lecturer()));
+
+        Lecturer lecturer = new Lecturer();
+        lecturer.setEmail("tan@example.com");
+        lecturer.setUsername("Dr Tan");
+
+        assertThrows(RuntimeException.class, () -> adminService.saveLecturer(lecturer, request));
+        verify(lecturerRepository, never()).save(any(Lecturer.class));
+        verify(emailService, never()).sendWelcomeEmailWithPassword(any(), any(), any(), any());
+    }
+
+    @Test
+    void bulkAddStudents_QueuesWelcomeEmailsForBackgroundDeliveryInsteadOfSendingInline() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        stubNewStudentCreation();
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+
+        int added = adminService.bulkAddStudents(List.of("a@example.com", "b@example.com", "A@example.com"), null, request);
+
+        assertEquals(2, added);
+        verify(emailService, never()).sendWelcomeEmailWithPassword(any(), any(), any(), any());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<WelcomeEmail>> batch = ArgumentCaptor.forClass(List.class);
+        verify(emailService).sendWelcomeEmailsInBackground(batch.capture(), any());
+        assertEquals(List.of("a@example.com", "b@example.com"),
+            batch.getValue().stream().map(WelcomeEmail::email).toList());
+        assertTrue(batch.getValue().stream().allMatch(mail -> mail.temporaryPassword() != null));
+    }
+
+    @Test
+    void resendStudentWelcomeEmails_OnlyTargetsUnconfirmedAccountsAndNeverChangesPasswords() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+
+        Student neverEmailed = welcomeStudent(1L, "never@example.com", true, "raw-token", null);
+        Student alreadyConfirmed = welcomeStudent(2L, "confirmed@example.com", true, "raw-token-2", LocalDateTime.now());
+        Student setOwnPassword = welcomeStudent(3L, "active@example.com", true, null, null);
+        Student sharedLogin = welcomeStudent(4L, "shared@example.com", false, "raw-token-4", null);
+
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(studentRepository.findByCourseId(10L))
+            .thenReturn(List.of(neverEmailed, alreadyConfirmed, setOwnPassword, sharedLogin));
+        when(userService.generateResetToken(neverEmailed, Duration.ofDays(7))).thenReturn("fresh-token");
+
+        int queued = adminService.resendStudentWelcomeEmails(null, request);
+
+        assertEquals(1, queued);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<WelcomeEmail>> batch = ArgumentCaptor.forClass(List.class);
+        verify(emailService).sendWelcomeEmailsInBackground(batch.capture(), any());
+        WelcomeEmail mail = batch.getValue().get(0);
+        assertEquals(1, batch.getValue().size());
+        assertEquals("never@example.com", mail.email());
+        assertNull(mail.temporaryPassword(), "a re-sent welcome must not carry or reset a password");
+        assertEquals("https://cas.example/reset_password?token=fresh-token", mail.resetLink());
+        assertEquals("existing-hash", neverEmailed.getPassword());
+        verify(userService, never()).generateResetToken(eq(alreadyConfirmed), any());
+        verify(userService, never()).generateResetToken(eq(setOwnPassword), any());
+        verify(userService, never()).generateResetToken(eq(sharedLogin), any());
+    }
+
+    @Test
+    void resendStudentWelcomeEmails_WithNothingPending_QueuesNothing() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(studentRepository.findByCourseId(10L))
+            .thenReturn(List.of(welcomeStudent(2L, "confirmed@example.com", true, "t", LocalDateTime.now())));
+
+        assertEquals(0, adminService.resendStudentWelcomeEmails(null, request));
+        verify(emailService, never()).sendWelcomeEmailsInBackground(any(), any());
+    }
+
+    @Test
+    void saveStudent_Update_PreservesWelcomeEmailTimestamp() {
+        LocalDateTime sentAt = LocalDateTime.of(2026, 11, 1, 9, 0);
+        Student existing = welcomeStudent(5L, "kept@example.com", true, "tok", sentAt);
+        existing.setUsername("kept");
+        when(studentRepository.findById(5L)).thenReturn(Optional.of(existing));
+
+        Student submitted = new Student();
+        submitted.setId(5L);
+        submitted.setEmail("kept@example.com");
+        submitted.setUsername("renamed");
+
+        adminService.saveStudent(submitted, new MockHttpServletRequest());
+
+        assertEquals(sentAt, submitted.getWelcomeEmailSentAt());
+        verify(studentRepository).save(submitted);
+    }
+
+    private static Student welcomeStudent(Long id, String email, boolean tempPassword, String token, LocalDateTime sentAt) {
+        Student student = new Student();
+        student.setId(id);
+        student.setEmail(email);
+        student.setPassword("existing-hash");
+        student.setIsTempPassword(tempPassword);
+        student.setResetPasswordToken(token);
+        student.setWelcomeEmailSentAt(sentAt);
+        return student;
     }
 }
