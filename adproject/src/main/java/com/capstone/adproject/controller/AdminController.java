@@ -1768,7 +1768,9 @@ public class AdminController {
 
     @GetMapping("/manage-students")
     public String manageStudents(Model model, @ModelAttribute("student") Student student) {
-        model.addAttribute("students", adminService.getAllStudents());
+        List<Student> students = adminService.getAllStudents();
+        model.addAttribute("students", students);
+        model.addAttribute("pendingWelcomeEmails", students.stream().filter(AdminService::isAwaitingWelcomeEmail).toList());
 
         if (student == null || student.getId() == null &&
                 (student.getEmail() == null || student.getEmail().isEmpty())) {
@@ -1848,13 +1850,16 @@ public class AdminController {
                 }
             }
 
-            adminService.saveStudent(student, request);
+            boolean emailSent = adminService.saveStudent(student, request);
 
             if (isUpdate) {
                 redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
-            } else {
+            } else if (emailSent) {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Student created successfully! Welcome email sent.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Student created successfully, but the welcome email could not be sent.");
             }
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
@@ -1864,7 +1869,9 @@ public class AdminController {
 
     @GetMapping("/manage-lecturers")
     public String manageLecturers(Model model, @ModelAttribute("lecturer") Lecturer lecturer) {
-        model.addAttribute("lecturers", adminService.getAllLecturers());
+        List<Lecturer> lecturers = adminService.getAllLecturers();
+        model.addAttribute("lecturers", lecturers);
+        model.addAttribute("pendingWelcomeEmails", lecturers.stream().filter(AdminService::isAwaitingWelcomeEmail).toList());
 
         if (lecturer == null || lecturer.getId() == null &&
                 (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
@@ -1949,13 +1956,16 @@ public class AdminController {
                 adminService.ensureAdminUserExists(lecturer);
             }
 
-            adminService.saveLecturer(lecturer, request);
+            boolean emailSent = adminService.saveLecturer(lecturer, request);
 
             if (isUpdate) {
                 redirectAttributes.addFlashAttribute("successMessage", "Lecturer updated successfully!");
-            } else {
+            } else if (emailSent) {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Lecturer created successfully! Welcome email sent.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Lecturer created successfully, but the welcome email could not be sent.");
             }
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
@@ -2356,7 +2366,8 @@ public class AdminController {
             RedirectAttributes redirectAttributes) {
         try {
             int count = adminService.bulkAddLecturers(emails, usernames, request);
-            redirectAttributes.addFlashAttribute("successMessage", count + " lecturers successfully added!");
+            redirectAttributes.addFlashAttribute("successMessage", count + " lecturers successfully added! "
+                    + "Welcome emails are being sent in the background; any that fail are listed on this page as having no confirmed welcome email.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
         }
@@ -2371,11 +2382,39 @@ public class AdminController {
             RedirectAttributes redirectAttributes) {
         try {
             int count = adminService.bulkAddStudents(emails, usernames, request);
-            redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added!");
+            redirectAttributes.addFlashAttribute("successMessage", count + " students successfully added! "
+                    + "Welcome emails are being sent in the background; any that fail are listed on this page as having no confirmed welcome email.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Bulk add failed: " + e.getMessage());
         }
         return "redirect:/admin/manage-students";
+    }
+
+    /**
+     * Re-invites accounts in the active course that have no confirmed welcome email. With {@code id} only that
+     * account is emailed; without it, every pending account of that audience is.
+     */
+    @PostMapping("/welcome-emails/resend")
+    public String resendWelcomeEmails(
+            @RequestParam("audience") String audience,
+            @RequestParam(name = "id", required = false) Long id,
+            HttpServletRequest request,
+            RedirectAttributes redirectAttributes) {
+        boolean lecturers = "lecturers".equals(audience);
+        try {
+            int queued = lecturers
+                    ? adminService.resendLecturerWelcomeEmails(id, request)
+                    : adminService.resendStudentWelcomeEmails(id, request);
+            if (queued == 0) {
+                redirectAttributes.addFlashAttribute("successMessage", "No accounts are waiting for a welcome email.");
+            } else {
+                redirectAttributes.addFlashAttribute("successMessage", queued + " welcome email(s) are being sent in the background. "
+                        + "Refresh this page in a minute; any that fail stay listed as having no confirmed welcome email.");
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not queue the emails: " + e.getMessage());
+        }
+        return lecturers ? "redirect:/admin/manage-lecturers" : "redirect:/admin/manage-students";
     }
 
     @GetMapping("/search-lecturers")

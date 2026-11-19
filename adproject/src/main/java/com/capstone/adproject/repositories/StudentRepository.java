@@ -67,6 +67,11 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // **New Method for Forgot Password - Find by Token**
     Optional<Student> findByResetPasswordToken(String resetPasswordToken);
 
+    @org.springframework.transaction.annotation.Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Student s SET s.welcomeEmailSentAt = :sentAt WHERE LOWER(s.email) = LOWER(:email)")
+    int markWelcomeEmailSent(@Param("email") String email, @Param("sentAt") java.time.LocalDateTime sentAt);
+
     @Modifying
     @Query(value = "DELETE FROM calculated_results WHERE student_id = :studentId", nativeQuery = true)
     void deleteCalculatedResultsByStudentId(@Param("studentId") Long studentId);

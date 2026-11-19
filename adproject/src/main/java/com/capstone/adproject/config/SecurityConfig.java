@@ -119,7 +119,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
                 .requestMatchers(HttpMethod.OPTIONS).permitAll()
-                .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**",
+                .requestMatchers("/", "/login", "/favicon.ico", "/actuator/health", "/css/**", "/js/**", "/images/**",
                     "/forgot_password", "/reset_password/**", "/csp-violations", "/error", "/error/**").permitAll()
                 .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages

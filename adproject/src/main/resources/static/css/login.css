@@ -70,7 +70,7 @@ body {
 .form-control {
     width: 100%;
     padding: 14px 16px;
-    border: 2px solid var(--border-grey);
+    border: 2px solid var(--border-grey) !important;
     border-radius: 10px;
     background-color: #FFFFFF;
     color: var(--text-charcoal);
@@ -86,7 +86,7 @@ body {
 }
 
 .form-control::placeholder {
-    color: var(--border-grey);
+    color: #6B7280;
 }
 
 .form-group label.inline-flex {

@@ -351,12 +351,13 @@ public class SuperAdminService {
     }
 
     @Transactional
-    public void inviteAdmin(String email, String name, Long courseId, HttpServletRequest request) {
+    public boolean inviteAdmin(String email, String name, Long courseId, HttpServletRequest request) {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("Email cannot be empty.");
         }
 
         // Step 1: Create or find the user in the `admin` table. This is the new source of truth.
+        boolean[] emailSent = {false};
         Admin admin = adminRepository.findByEmail(email).orElseGet(() -> {
             Admin newAdmin = new Admin();
             newAdmin.setEmail(email);
@@ -364,9 +365,10 @@ public class SuperAdminService {
 
             String tempPassword = PasswordGenerator.generateRandomPassword();
             newAdmin.setPassword(passwordEncoder.encode(tempPassword));
+            newAdmin.setResetPasswordToken(java.util.UUID.randomUUID().toString());
             
             String resetLink = getBaseUrl(request) + "/reset_password?token=" + newAdmin.getResetPasswordToken();
-            emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", resetLink);
+            emailSent[0] = emailService.sendWelcomeEmailWithPassword(email, tempPassword, "Admin", resetLink);
             
             return adminRepository.save(newAdmin);
         });
@@ -381,6 +383,9 @@ public class SuperAdminService {
             newLecturer.setPassword(admin.getPassword()); // Sync password
             newLecturer.setIsTempPassword(true); // New lecturers created this way always start with a temp password
             newLecturer.setRoles("ROLE_LECTURER,ROLE_ADMIN"); // Assign both roles
+            if (emailSent[0]) {
+                newLecturer.setWelcomeEmailSentAt(java.time.LocalDateTime.now());
+            }
             adminLecturer = lecturerRepository.save(newLecturer);
         }
 
@@ -393,6 +398,7 @@ public class SuperAdminService {
         if (courseId != null) {
             assignAdminToCourse(adminLecturer.getId(), courseId);
         }
+        return emailSent[0];
     }
 
     private String getBaseUrl(HttpServletRequest request) {

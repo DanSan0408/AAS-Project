@@ -104,22 +104,35 @@ public class LegacyColumnCleanupMigrationRunner implements CommandLineRunner {
 
             if (currentColCount != null && currentColCount > 0) {
                 // Both columns exist: copy any non-null legacy values if current is null, then drop or nullify legacy
+                boolean copyVerified = false;
                 try {
                     jdbcTemplate.execute(
                         "UPDATE `" + tableName + "` SET `" + currentColumn + "` = `" + legacyColumn + "` " +
                         "WHERE `" + currentColumn + "` IS NULL AND `" + legacyColumn + "` IS NOT NULL"
                     );
+                    Integer remainingLegacyOnly = jdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM `" + tableName + "` "
+                        + "WHERE `" + legacyColumn + "` IS NOT NULL "
+                        + "AND `" + currentColumn + "` IS NULL",
+                        Integer.class
+                    );
+                    copyVerified = remainingLegacyOnly == null || remainingLegacyOnly == 0;
                 } catch (Exception e) {
                     logger.debug("Could not copy legacy data from {} to {}: {}", legacyColumn, currentColumn, e.getMessage());
                 }
 
-                try {
-                    jdbcTemplate.execute("ALTER TABLE `" + tableName + "` DROP COLUMN `" + legacyColumn + "`");
-                    logger.info("Successfully dropped legacy column '{}' from table '{}'.", legacyColumn, tableName);
-                } catch (Exception dropEx) {
-                    logger.warn("Could not drop column '{}' from '{}', making it nullable with default NULL: {}", 
-                        legacyColumn, tableName, dropEx.getMessage());
+                if (copyVerified) {
+                    try {
+                        jdbcTemplate.execute("ALTER TABLE `" + tableName + "` DROP COLUMN `" + legacyColumn + "`");
+                        logger.info("Successfully dropped legacy column '{}' from table '{}'.", legacyColumn, tableName);
+                    } catch (Exception dropEx) {
+                        logger.warn("Could not drop column '{}' from '{}', making it nullable with default NULL: {}",
+                            legacyColumn, tableName, dropEx.getMessage());
+                        jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` " + columnType + " NULL DEFAULT NULL");
+                    }
+                } else {
                     jdbcTemplate.execute("ALTER TABLE `" + tableName + "` MODIFY COLUMN `" + legacyColumn + "` " + columnType + " NULL DEFAULT NULL");
+                    logger.warn("Preserved legacy column '{}' in table '{}' because migration copy could not be fully verified.", legacyColumn, tableName);
                 }
             } else {
                 // Only legacy column exists: make it nullable with default NULL so it does not block inserts

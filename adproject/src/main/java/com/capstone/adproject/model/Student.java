@@ -54,14 +54,18 @@ public class Student {
     @Column(nullable = false)
     private String email;
     
-    @Column(name = "resetpasswordtoken")
+    @Column(name = "resetPasswordToken")
     private String resetPasswordToken;
 
     @Column(name = "resetpasswordtokenexpiry")
     private java.time.LocalDateTime resetPasswordTokenExpiry;
 
-    @Column(name = "istemppassword", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    @Column(name = "isTempPassword", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isTempPassword = false;
+
+    /** When the welcome/account-setup email was last confirmed as handed to the mail server. Null = never confirmed. */
+    @Column(name = "welcomeEmailSentAt")
+    private java.time.LocalDateTime welcomeEmailSentAt;
 
     @ManyToOne
     @JoinColumn(name = "course_id")

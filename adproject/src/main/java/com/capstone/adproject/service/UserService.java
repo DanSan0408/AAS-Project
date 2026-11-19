@@ -98,9 +98,14 @@ public class UserService {
     }
 
     public String generateResetToken(Object user) {
+        return generateResetToken(user, java.time.Duration.ofMinutes(30));
+    }
+
+    /** Issues a single-use password link token that stays valid for {@code validity}. Only the hash is stored. */
+    public String generateResetToken(Object user, java.time.Duration validity) {
         String rawToken = UUID.randomUUID().toString();
         String hashedToken = hashToken(rawToken);
-        LocalDateTime expiry = LocalDateTime.now().plusMinutes(30);
+        LocalDateTime expiry = LocalDateTime.now().plus(validity);
         
         if (user instanceof Admin admin) {
             admin.setResetPasswordToken(hashedToken);
@@ -154,6 +159,7 @@ public class UserService {
                 s.setPassword(encodedPassword);
                 s.setResetPasswordToken(null);
                 s.setResetPasswordTokenExpiry(null);
+                s.setIsTempPassword(false); // Password is no longer temporary
                 studentRepo.save(s);
             });
             java.util.List<Lecturer> lecturers = CourseScopeService.resolveLecturersByIdentity(lecturerRepo, finalEmail);

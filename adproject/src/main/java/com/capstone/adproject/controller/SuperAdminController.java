@@ -144,8 +144,13 @@ public class SuperAdminController {
                               HttpServletRequest request,
                               RedirectAttributes redirectAttributes) {
         try {
-            superAdminService.inviteAdmin(email, name, courseId, request);
-            redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
+            boolean emailSent = superAdminService.inviteAdmin(email, name, courseId, request);
+            if (emailSent) {
+                redirectAttributes.addFlashAttribute("successMessage", "Admin invitation sent to " + email);
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Admin account created, but the welcome email could not be sent. Check SMTP configuration.");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error inviting admin: " + e.getMessage());
         }
