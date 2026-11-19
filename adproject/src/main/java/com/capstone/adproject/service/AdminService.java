@@ -1,12 +1,11 @@
 package com.capstone.adproject.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -16,6 +15,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.capstone.adproject.dto.GroupAssignmentDto;
 import com.capstone.adproject.model.Admin;
@@ -33,12 +34,15 @@ import com.capstone.adproject.repositories.LecturerGroupAssignmentRepository;
 import com.capstone.adproject.repositories.LecturerRepository;
 import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
+import com.capstone.adproject.service.EmailService.WelcomeEmail;
 import com.capstone.adproject.util.PasswordGenerator;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class AdminService {
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdminService.class);
 
     private static class BulkUserInput {
         private final String email;
@@ -59,7 +63,6 @@ public class AdminService {
     private final AdminRepository adminRepository;
     private final CourseScopeService courseScopeService;
 
-    @Autowired
     public AdminService(
             StudentRepository studentRepository, 
             LecturerRepository lecturerRepository, 
@@ -84,6 +87,15 @@ public class AdminService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserService userService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
+
+    /** How long the set-password link in a re-sent welcome email stays valid. */
+    private static final java.time.Duration RESENT_WELCOME_LINK_VALIDITY = java.time.Duration.ofDays(7);
+
     @Autowired(required = false)
     private CourseRepository courseRepository;
 
@@ -103,45 +115,53 @@ public class AdminService {
         return "";
     }
 
-    @org.springframework.beans.factory.annotation.Value("${app.public-base-url:http://localhost:8080}")
-    private String publicBaseUrl;
-
-    public void saveStudent(Student student, HttpServletRequest request) {
-    if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
-        throw new RuntimeException("Email is required");
+    public boolean saveStudent(Student student, HttpServletRequest request) {
+        return saveStudent(student, request, null);
     }
+
+    /**
+     * Creates or updates a student.
+     *
+     * @param deferredWelcomeEmails when non-null, a new account's welcome email is added to this list for the
+     *        caller to send after its transaction commits, instead of being sent inline
+     * @return true only when a welcome email was sent during this call
+     */
+    private boolean saveStudent(Student student, HttpServletRequest request, List<WelcomeEmail> deferredWelcomeEmails) {
+        if (student.getEmail() == null || student.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
 
         String normalizedEmail = student.getEmail().trim().toLowerCase();
         student.setEmail(normalizedEmail);
 
-    if (student.getId() != null) {
-        Student existingStudent = studentRepository.findById(student.getId())
-            .orElseThrow(() -> new RuntimeException("Student not found"));
-        
-        String submittedUsername = student.getUsername();
-        student.setPassword(existingStudent.getPassword());
-        student.setIsTempPassword(existingStudent.getIsTempPassword());
-        student.setResetPasswordToken(existingStudent.getResetPasswordToken());
-        student.setCourse(existingStudent.getCourse());
-        
-        if (!existingStudent.getEmail().equals(student.getEmail())) {
-            student.setEmail(student.getEmail());
-        }
+        if (student.getId() != null) {
+            Student existingStudent = studentRepository.findById(student.getId())
+                .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        if (submittedUsername == null || submittedUsername.trim().isEmpty()) {
-            if (existingStudent.getUsername() == null || existingStudent.getUsername().trim().isEmpty()) {
-                String baseUsername = normalizedEmail.split("@")[0];
-                student.setUsername(generateUniqueStudentUsername(baseUsername));
+            String submittedUsername = student.getUsername();
+            student.setPassword(existingStudent.getPassword());
+            student.setIsTempPassword(existingStudent.getIsTempPassword());
+            student.setResetPasswordToken(existingStudent.getResetPasswordToken());
+            student.setResetPasswordTokenExpiry(existingStudent.getResetPasswordTokenExpiry());
+            student.setWelcomeEmailSentAt(existingStudent.getWelcomeEmailSentAt());
+            student.setCourse(existingStudent.getCourse());
+
+            if (submittedUsername == null || submittedUsername.trim().isEmpty()) {
+                if (existingStudent.getUsername() == null || existingStudent.getUsername().trim().isEmpty()) {
+                    String baseUsername = normalizedEmail.split("@")[0];
+                    student.setUsername(generateUniqueStudentUsername(baseUsername));
+                } else {
+                    student.setUsername(existingStudent.getUsername());
+                }
             } else {
-                student.setUsername(existingStudent.getUsername());
+                student.setUsername(submittedUsername.trim());
             }
-        } else {
-            student.setUsername(submittedUsername.trim());
+
+            resolveCurrentAdminCourse().ifPresent(course -> ensureStudentEnrollment(existingStudent, course));
+            studentRepository.save(student);
+            return false;
         }
 
-        resolveCurrentAdminCourse().ifPresent(course -> ensureStudentEnrollment(existingStudent, course));
-        
-    } else {
         Course activeCourse = resolveCurrentAdminCourse()
             .orElseThrow(() -> new RuntimeException("No active course selected for student creation"));
 
@@ -155,7 +175,7 @@ public class AdminService {
 
             // Avoid touching legacy student rows during re-enrollment to prevent validation
             // failures on old nullable username data.
-            return;
+            return false;
         }
 
         student.setCourse(activeCourse);
@@ -164,14 +184,14 @@ public class AdminService {
         String existingPassword = null;
         Boolean isTemp = true;
         String resetToken = UUID.randomUUID().toString();
-        
+
         Optional<Admin> existingAdmin = adminRepository.findByEmail(normalizedEmail);
         if (existingAdmin.isPresent()) {
             existingPassword = existingAdmin.get().getPassword();
             isTemp = false;
             resetToken = existingAdmin.get().getResetPasswordToken();
         }
-        
+
         Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
         if (existingLecturer.isPresent()) {
             existingPassword = existingLecturer.get().getPassword();
@@ -179,6 +199,7 @@ public class AdminService {
             resetToken = existingLecturer.get().getResetPasswordToken();
         }
 
+        WelcomeEmail welcomeEmail = null;
         if (existingPassword != null) {
             student.setPassword(existingPassword);
             student.setIsTempPassword(isTemp);
@@ -188,21 +209,25 @@ public class AdminService {
             student.setPassword(passwordEncoder.encode(tempPassword));
             student.setIsTempPassword(true);
             student.setResetPasswordToken(resetToken);
-            
-            sendWelcomeEmail(student.getEmail(), tempPassword, "Student", resetToken, request);
+            welcomeEmail = buildWelcomeEmail(student.getEmail(), tempPassword, "Student", resetToken, request);
         }
-        
+
         if (student.getUsername() == null || student.getUsername().trim().isEmpty()) {
             String baseUsername = normalizedEmail.split("@")[0];
             student.setUsername(generateUniqueStudentUsername(baseUsername));
         }
+
+        // Save before emailing so credentials are never sent for an account that failed to save.
         Student savedStudent = studentRepository.save(student);
         ensureStudentEnrollment(savedStudent, activeCourse);
-        return; 
+
+        boolean emailSent = sendWelcomeEmailNowOrDefer(welcomeEmail, deferredWelcomeEmails);
+        if (emailSent) {
+            savedStudent.setWelcomeEmailSentAt(LocalDateTime.now());
+            studentRepository.save(savedStudent);
+        }
+        return emailSent;
     }
-    
-    studentRepository.save(student);
-}
 
 private void ensureStudentEnrollment(Student student, Course course) {
     if (student == null || student.getId() == null || course == null || course.getId() == null) {
@@ -236,28 +261,153 @@ public Optional<Course> getCurrentAdminCourse() {
     return resolveCurrentAdminCourse();
 }
 
-private void sendWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
+private String welcomeLink(String resetToken, HttpServletRequest request) {
     String baseUrl = (publicBaseUrl != null && !publicBaseUrl.isBlank())
             ? publicBaseUrl.replaceAll("/+$", "")
-            : request.getScheme() + "://" + request.getServerName() 
-                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort()) 
+            : request.getScheme() + "://" + request.getServerName()
+                + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort())
                 + request.getContextPath();
-    String resetLink = baseUrl + "/reset_password?token=" + resetToken;
-    
+    return baseUrl + "/reset_password?token=" + resetToken;
+}
+
+private WelcomeEmail buildWelcomeEmail(String email, String tempPassword, String role, String resetToken, HttpServletRequest request) {
+    // The link is resolved now because the request is no longer usable once emails are sent in the background.
+    return new WelcomeEmail(email, tempPassword, role, welcomeLink(resetToken, request));
+}
+
+/**
+ * Sends the welcome email immediately, or hands it to {@code deferred} when the caller batches delivery.
+ *
+ * @return true only when the email was sent now
+ */
+private boolean sendWelcomeEmailNowOrDefer(WelcomeEmail welcomeEmail, List<WelcomeEmail> deferred) {
+    if (welcomeEmail == null) {
+        return false;
+    }
+    if (deferred != null) {
+        deferred.add(welcomeEmail);
+        return false;
+    }
     try {
-        emailService.sendWelcomeEmailWithPassword(
-            email,
-            tempPassword,
-            role,
-            resetLink
-        );
-    } catch (Exception e) {
-        System.err.println("Failed to send welcome email to: " + email);
-        e.printStackTrace();
+        return emailService.sendWelcomeEmailWithPassword(
+            welcomeEmail.email(), welcomeEmail.temporaryPassword(), welcomeEmail.userType(), welcomeEmail.resetLink());
+    } catch (RuntimeException e) {
+        logger.error("Failed to send welcome email to: {}", welcomeEmail.email(), e);
+        return false;
     }
 }
 
-public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
+/**
+ * Sends the emails in the background once the surrounding transaction has committed, recording each confirmed
+ * delivery. Nothing is sent if the transaction rolls back, so nobody is emailed credentials for an account that
+ * was never saved. Accounts whose email fails keep a null {@code welcomeEmailSentAt} and can be re-sent.
+ */
+private void sendWelcomeEmailsAfterCommit(List<WelcomeEmail> welcomeEmails) {
+    if (welcomeEmails.isEmpty()) {
+        return;
+    }
+    List<WelcomeEmail> batch = List.copyOf(welcomeEmails);
+    Runnable send = () -> {
+        try {
+            emailService.sendWelcomeEmailsInBackground(batch, this::markWelcomeEmailSent);
+        } catch (RuntimeException e) {
+            logger.error("Could not queue {} welcome email(s) for delivery", batch.size(), e);
+        }
+    };
+    if (TransactionSynchronizationManager.isSynchronizationActive()) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                send.run();
+            }
+        });
+    } else {
+        send.run();
+    }
+}
+
+private void markWelcomeEmailSent(String email) {
+    LocalDateTime now = LocalDateTime.now();
+    studentRepository.markWelcomeEmailSent(email, now);
+    lecturerRepository.markWelcomeEmailSent(email, now);
+}
+
+/**
+ * A student given a system-generated password, with no confirmed welcome email, who has not yet set a password
+ * through an emailed link (doing so clears the token).
+ */
+public static boolean isAwaitingWelcomeEmail(Student student) {
+    return student != null
+            && student.getEmail() != null && !student.getEmail().isBlank()
+            && student.getWelcomeEmailSentAt() == null
+            && Boolean.TRUE.equals(student.getIsTempPassword())
+            && student.getResetPasswordToken() != null;
+}
+
+/** An assessor/admin still on a system-generated password with no confirmed welcome email. */
+public static boolean isAwaitingWelcomeEmail(Lecturer lecturer) {
+    return lecturer != null
+            && lecturer.getEmail() != null && !lecturer.getEmail().isBlank()
+            && lecturer.getWelcomeEmailSentAt() == null
+            && Boolean.TRUE.equals(lecturer.getIsTempPassword());
+}
+
+public List<Student> getStudentsAwaitingWelcomeEmail() {
+    return getAllStudents().stream().filter(AdminService::isAwaitingWelcomeEmail).toList();
+}
+
+public List<Lecturer> getLecturersAwaitingWelcomeEmail() {
+    return getAllLecturers().stream().filter(AdminService::isAwaitingWelcomeEmail).toList();
+}
+
+/**
+ * Re-sends the welcome email to students of the active course who have no confirmed delivery. Each gets a fresh
+ * set-password link; existing passwords are left untouched.
+ *
+ * @param studentId only this student, or null for everyone awaiting one
+ * @return how many emails were queued
+ */
+@Transactional
+public int resendStudentWelcomeEmails(Long studentId, HttpServletRequest request) {
+    Map<String, WelcomeEmail> byEmail = new LinkedHashMap<>();
+    for (Student student : getStudentsAwaitingWelcomeEmail()) {
+        String key = student.getEmail().trim().toLowerCase();
+        if ((studentId != null && !studentId.equals(student.getId())) || byEmail.containsKey(key)) {
+            continue;
+        }
+        String token = userService.generateResetToken(student, RESENT_WELCOME_LINK_VALIDITY);
+        byEmail.put(key, buildWelcomeEmail(student.getEmail().trim(), null, "Student", token, request));
+    }
+    sendWelcomeEmailsAfterCommit(new ArrayList<>(byEmail.values()));
+    return byEmail.size();
+}
+
+/** Assessor counterpart of {@link #resendStudentWelcomeEmails}. */
+@Transactional
+public int resendLecturerWelcomeEmails(Long lecturerId, HttpServletRequest request) {
+    Map<String, WelcomeEmail> byEmail = new LinkedHashMap<>();
+    for (Lecturer lecturer : getLecturersAwaitingWelcomeEmail()) {
+        String key = lecturer.getEmail().trim().toLowerCase();
+        if ((lecturerId != null && !lecturerId.equals(lecturer.getId())) || byEmail.containsKey(key)) {
+            continue;
+        }
+        String role = lecturer.getRoles() != null && lecturer.getRoles().contains("ROLE_ADMIN") ? "Admin" : "Assessor";
+        String token = userService.generateResetToken(lecturer, RESENT_WELCOME_LINK_VALIDITY);
+        byEmail.put(key, buildWelcomeEmail(lecturer.getEmail().trim(), null, role, token, request));
+    }
+    sendWelcomeEmailsAfterCommit(new ArrayList<>(byEmail.values()));
+    return byEmail.size();
+}
+
+public boolean saveLecturer(Lecturer lecturer, HttpServletRequest request) {
+    return saveLecturer(lecturer, request, null);
+}
+
+/**
+ * Creates or updates an assessor. See {@link #saveStudent(Student, HttpServletRequest, List)} for
+ * {@code deferredWelcomeEmails} and the return value.
+ */
+private boolean saveLecturer(Lecturer lecturer, HttpServletRequest request, List<WelcomeEmail> deferredWelcomeEmails) {
     if (lecturer.getEmail() == null || lecturer.getEmail().trim().isEmpty()) {
         throw new RuntimeException("Email is required");
     }
@@ -268,11 +418,13 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
     if (lecturer.getId() != null) {
         Lecturer existingLecturer = lecturerRepository.findById(lecturer.getId())
             .orElseThrow(() -> new RuntimeException("Lecturer not found"));
-        
+
         String submittedUsername = lecturer.getUsername();
         lecturer.setPassword(existingLecturer.getPassword());
         lecturer.setIsTempPassword(existingLecturer.getIsTempPassword());
         lecturer.setResetPasswordToken(existingLecturer.getResetPasswordToken());
+        lecturer.setResetPasswordTokenExpiry(existingLecturer.getResetPasswordTokenExpiry());
+        lecturer.setWelcomeEmailSentAt(existingLecturer.getWelcomeEmailSentAt());
         lecturer.setRoles(existingLecturer.getRoles()); // Preserve existing roles
         lecturer.setCourse(existingLecturer.getCourse());
 
@@ -286,82 +438,92 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
         } else {
             lecturer.setUsername(submittedUsername.trim());
         }
-        
-    } else {
-        Course activeCourse = resolveCurrentAdminCourse()
-            .orElseThrow(() -> new RuntimeException("No active course selected for lecturer creation"));
-        lecturer.setCourse(activeCourse);
-
-        // Check if user already exists in other tables to sync password
-        String existingPassword = null;
-        Boolean isTemp = true;
-        String resetToken = UUID.randomUUID().toString();
-        
-        Optional<Admin> existingAdmin = adminRepository.findByEmail(normalizedEmail);
-        if (existingAdmin.isPresent()) {
-            existingPassword = existingAdmin.get().getPassword();
-            isTemp = false;
-            resetToken = existingAdmin.get().getResetPasswordToken();
-        }
-
-        Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
-        if (existingLecturer.isPresent()) {
-            Lecturer existing = existingLecturer.get();
-            boolean inCourseDirect = existing.getCourse() != null && activeCourse.getId().equals(existing.getCourse().getId());
-            boolean inCourseAssigned = adminCourseAssignmentRepository != null 
-                && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(existing.getId(), activeCourse.getId());
-            if (inCourseDirect || inCourseAssigned) {
-                throw new RuntimeException("An assessor with email '" + normalizedEmail + "' is already enrolled in this course.");
-            }
-            if (existing.getCourse() == null) {
-                existing.setCourse(activeCourse);
-                if (lecturer.getUsername() != null && !lecturer.getUsername().isBlank()) {
-                    existing.setUsername(lecturer.getUsername().trim());
-                }
-                lecturerRepository.save(existing);
-                return;
-            }
-            if (adminCourseAssignmentRepository != null) {
-                adminCourseAssignmentRepository.save(new AdminCourseAssignment(null, existing, activeCourse));
-                return;
-            }
-        }
-
-        if (existingPassword != null) {
-            lecturer.setPassword(existingPassword);
-            lecturer.setIsTempPassword(isTemp);
-            lecturer.setResetPasswordToken(resetToken);
-            if (lecturer.getRoles() == null || lecturer.getRoles().trim().isEmpty()) {
-                lecturer.setRoles("ROLE_LECTURER");
-            }
-        } else {
-            String tempPassword = PasswordGenerator.generateRandomPassword();
-            lecturer.setPassword(passwordEncoder.encode(tempPassword));
-            lecturer.setIsTempPassword(true);
-            lecturer.setResetPasswordToken(resetToken);
-            lecturer.setRoles("ROLE_LECTURER"); // Default role for new lecturer
-            
-            sendWelcomeEmail(lecturer.getEmail(), tempPassword, "Assessor", resetToken, request);
-        }
-        
-        if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
-            String baseUsername = normalizedEmail.split("@")[0];
-            lecturer.setUsername(generateUniqueLecturerUsername(baseUsername, activeCourse.getId()));
-        } else {
-            lecturer.setUsername(lecturer.getUsername().trim());
-        }
-
-        // Prevent duplicate username within the same active course
-        Optional<Lecturer> duplicateInCourse = lecturerRepository.findByCourseIdAndUsernameIgnoreCase(activeCourse.getId(), lecturer.getUsername());
-        if (duplicateInCourse.isPresent() && (lecturer.getId() == null || !duplicateInCourse.get().getId().equals(lecturer.getId()))) {
-            throw new RuntimeException("An assessor with the name/username '" + lecturer.getUsername() + "' is already enrolled in this course.");
-        }
 
         lecturerRepository.save(lecturer);
-        return;
+        return false;
     }
-    
-    lecturerRepository.save(lecturer);
+
+    Course activeCourse = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new RuntimeException("No active course selected for lecturer creation"));
+    lecturer.setCourse(activeCourse);
+
+    // Check if user already exists in other tables to sync password
+    String existingPassword = null;
+    Boolean isTemp = true;
+    String resetToken = UUID.randomUUID().toString();
+
+    Optional<Admin> existingAdmin = adminRepository.findByEmail(normalizedEmail);
+    if (existingAdmin.isPresent()) {
+        existingPassword = existingAdmin.get().getPassword();
+        isTemp = false;
+        resetToken = existingAdmin.get().getResetPasswordToken();
+    }
+
+    Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
+    if (existingLecturer.isPresent()) {
+        Lecturer existing = existingLecturer.get();
+        boolean inCourseDirect = existing.getCourse() != null && activeCourse.getId().equals(existing.getCourse().getId());
+        boolean inCourseAssigned = adminCourseAssignmentRepository != null
+            && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(existing.getId(), activeCourse.getId());
+        if (inCourseDirect || inCourseAssigned) {
+            throw new RuntimeException("An assessor with email '" + normalizedEmail + "' is already enrolled in this course.");
+        }
+        if (existing.getCourse() == null) {
+            existing.setCourse(activeCourse);
+            if (lecturer.getUsername() != null && !lecturer.getUsername().isBlank()) {
+                existing.setUsername(lecturer.getUsername().trim());
+            }
+            lecturerRepository.save(existing);
+            return false;
+        }
+        if (adminCourseAssignmentRepository != null) {
+            adminCourseAssignmentRepository.save(new AdminCourseAssignment(null, existing, activeCourse));
+            return false;
+        }
+    }
+
+    WelcomeEmail welcomeEmail = null;
+    if (existingPassword != null) {
+        lecturer.setPassword(existingPassword);
+        lecturer.setIsTempPassword(isTemp);
+        lecturer.setResetPasswordToken(resetToken);
+        if (lecturer.getRoles() == null || lecturer.getRoles().trim().isEmpty()) {
+            lecturer.setRoles("ROLE_LECTURER");
+        }
+    } else {
+        String tempPassword = PasswordGenerator.generateRandomPassword();
+        lecturer.setPassword(passwordEncoder.encode(tempPassword));
+        lecturer.setIsTempPassword(true);
+        lecturer.setResetPasswordToken(resetToken);
+        lecturer.setRoles("ROLE_LECTURER"); // Default role for new lecturer
+        welcomeEmail = buildWelcomeEmail(lecturer.getEmail(), tempPassword, "Assessor", resetToken, request);
+    }
+
+    if (lecturer.getUsername() == null || lecturer.getUsername().trim().isEmpty()) {
+        String baseUsername = normalizedEmail.split("@")[0];
+        lecturer.setUsername(generateUniqueLecturerUsername(baseUsername, activeCourse.getId()));
+    } else {
+        lecturer.setUsername(lecturer.getUsername().trim());
+    }
+
+    // Prevent duplicate username within the same active course
+    Optional<Lecturer> duplicateInCourse =
+        lecturerRepository.findByCourseIdAndUsernameIgnoreCase(activeCourse.getId(), lecturer.getUsername());
+    if (duplicateInCourse.isPresent()) {
+        throw new RuntimeException(
+            "An assessor with the name/username '" + lecturer.getUsername()
+            + "' is already enrolled in this course.");
+    }
+
+    // Save before emailing so credentials are never sent for an account that failed to save.
+    Lecturer savedLecturer = lecturerRepository.save(lecturer);
+
+    boolean emailSent = sendWelcomeEmailNowOrDefer(welcomeEmail, deferredWelcomeEmails);
+    if (emailSent) {
+        savedLecturer.setWelcomeEmailSentAt(LocalDateTime.now());
+        lecturerRepository.save(savedLecturer);
+    }
+    return emailSent;
 }
 
 
@@ -369,6 +531,7 @@ public void saveLecturer(Lecturer lecturer, HttpServletRequest request) {
 public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServletRequest request) {
     List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
+    List<WelcomeEmail> welcomeEmails = new ArrayList<>();
     java.util.Set<String> processedEmails = new java.util.HashSet<>();
     for (BulkUserInput user : users) {
         String trimmedEmail = user.email.trim().toLowerCase();
@@ -382,11 +545,13 @@ public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServ
                 if (user.username != null && !user.username.trim().isEmpty()) {
                     student.setUsername(user.username.trim());
                 }
-                saveStudent(student, request);
+                saveStudent(student, request, welcomeEmails);
                 count++;
             }
         }
     }
+    // Sent in the background once this transaction commits; a rolled-back import emails nobody.
+    sendWelcomeEmailsAfterCommit(welcomeEmails);
     return count;
 }
 
@@ -394,6 +559,7 @@ public int bulkAddStudents(List<String> emails, List<String> usernames, HttpServ
 public int bulkAddLecturers(List<String> emails, List<String> usernames, HttpServletRequest request) {
     List<BulkUserInput> users = buildBulkInputs(emails, usernames);
     int count = 0;
+    List<WelcomeEmail> welcomeEmails = new ArrayList<>();
     java.util.Set<String> processedEmails = new java.util.HashSet<>();
     for (BulkUserInput user : users) {
         String trimmedEmail = user.email.trim().toLowerCase();
@@ -407,11 +573,13 @@ public int bulkAddLecturers(List<String> emails, List<String> usernames, HttpSer
                 if (user.username != null && !user.username.trim().isEmpty()) {
                     lecturer.setUsername(user.username.trim());
                 }
-                saveLecturer(lecturer, request);
+                saveLecturer(lecturer, request, welcomeEmails);
                 count++;
             }
         }
     }
+    // Sent in the background once this transaction commits; a rolled-back import emails nobody.
+    sendWelcomeEmailsAfterCommit(welcomeEmails);
     return count;
 }
 

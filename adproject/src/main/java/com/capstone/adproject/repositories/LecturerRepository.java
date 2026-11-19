@@ -35,6 +35,11 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     List<Lecturer> findByCourseId(Long courseId);
     long countByCourseId(Long courseId);
 
+    @org.springframework.transaction.annotation.Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Lecturer l SET l.welcomeEmailSentAt = :sentAt WHERE LOWER(l.email) = LOWER(:email)")
+    int markWelcomeEmailSent(@Param("email") String email, @Param("sentAt") java.time.LocalDateTime sentAt);
+
     @Modifying
     @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId")
     void unlinkFromGroups(@Param("lecturerId") Long lecturerId);

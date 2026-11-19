@@ -258,6 +258,51 @@ public class AssessmentCommentService {
         
         return savedComments;
     }
+
+    @Transactional
+    public List<AssessmentComment> submitTeamComments(Student evaluator, Student evaluatedStudent,
+                                                       Assessment assessment, List<String> commentTexts) {
+        List<AssessmentComment> savedComments = new ArrayList<>();
+
+        List<AssessmentComment> existingComments = commentRepository.findByEvaluatorAndStudentAndAssessment(
+                evaluator.getId(),
+                AssessmentComment.EvaluatorType.STUDENT,
+                evaluatedStudent,
+                assessment).stream()
+                .filter(c -> "Group Assessment".equalsIgnoreCase(c.getRubricAssessmentType()))
+                .filter(c -> c.getRubricId() == null)
+                .collect(Collectors.toList());
+
+        if (!existingComments.isEmpty()) {
+            commentRepository.deleteAll(existingComments);
+        }
+
+        for (int i = 0; i < commentTexts.size(); i++) {
+            String commentText = commentTexts.get(i);
+            if (commentText == null || commentText.trim().isEmpty()) {
+                continue;
+            }
+
+            AssessmentComment comment = new AssessmentComment();
+            comment.setEvaluatorId(evaluator.getId());
+            comment.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+            comment.setEvaluatorName(evaluator.getUsername() != null
+                && !evaluator.getUsername().trim().isEmpty()
+                    ? evaluator.getUsername()
+                    : evaluator.getEmail());
+            comment.setEvaluatedStudent(evaluatedStudent);
+            comment.setAssessment(assessment);
+            comment.setCommentText(HtmlSanitizerUtil.sanitizePlainText(commentText.trim()));
+            comment.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
+            comment.setAnonymousIdentifier("You (Team Evaluation)");
+            comment.setCommentIndex(i);
+            comment.setCommentLabel(assessment.getGroupCommentLabel(i));
+            comment.setRubricAssessmentType("Group Assessment");
+            savedComments.add(commentRepository.save(comment));
+        }
+
+        return savedComments;
+    }
     
     @Transactional
     public AssessmentComment submitLecturerComment(Long lecturerId, String lecturerName,

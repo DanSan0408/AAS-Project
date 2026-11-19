@@ -34,6 +34,7 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
         migrateProjectGroupColumns();
         migrateMarksColumns();
         migrateAssessmentCommentColumns();
+        migrateLegacyDualColumns();
     }
 
     public void migrateDuplicateLecturers() {
@@ -503,6 +504,70 @@ public class CourseEmailConstraintMigrationRunner implements CommandLineRunner {
             logger.info("Migrated project_group columns: synchronized group_size/groupsize and group_name/groupname defaults");
         } catch (Exception ex) {
             logger.warn("Skipping project_group columns migration: {}", ex.getMessage());
+        }
+    }
+
+    private void migrateLegacyDualColumns() {
+        syncNullableDualColumn("assessment_comments", "commentText", "comment_text", true);
+        syncNullableDualColumn("assessment_comments", "evaluatorType", "evaluator_type", true);
+        syncNullableDualColumn("assessment_comments", "assessmentType", "assessment_type", true);
+        syncNullableDualColumn("deadlines", "assessmentId", "assessment_id", false);
+        syncNullableDualColumn("deadlines", "assessorType", "assessor_type", true);
+        syncNullableDualColumn("deadlines", "courseId", "course_id", false);
+        syncNullableDualColumn("deadlines", "openDate", "open_date", false);
+        syncNullableDualColumn("factor_override_history", "changedAt", "changed_at", false);
+        syncNullableDualColumn("factor_override_history", "changedBy", "changed_by", true);
+        syncNullableDualColumn("factor_override_history", "newFactor", "new_factor", false);
+        syncNullableDualColumn("factor_override_history", "oldFactor", "old_factor", false);
+        syncNullableDualColumn("factor_override_history", "newGrandTotal", "new_grand_total", false);
+        syncNullableDualColumn("factor_override_history", "oldGrandTotal", "old_grand_total", false);
+        syncNullableDualColumn("factor_override_history", "course_id", "courseId", false);
+        syncNullableDualColumn("student_result_overrides", "overriddenFactor", "overridden_factor", false);
+        syncNullableDualColumn("student_result_overrides", "overriddenGrandTotal", "overridden_grand_total", false);
+        syncNullableDualColumn("student_result_overrides", "course_id", "courseId", false);
+        syncNullableDualColumn("rubric", "cloMarks", "clo_marks", false);
+        syncNullableDualColumn("rubric", "assessmentTypes", "assessment_type", true);
+        syncNullableDualColumn("student", "resetPasswordToken", "reset_password_token", true);
+        syncNullableDualColumn("student", "isTempPassword", "is_temp_password", false);
+        syncNullableDualColumn("lecturer", "resetPasswordToken", "reset_password_token", true);
+        syncNullableDualColumn("lecturer", "isTempPassword", "is_temp_password", false);
+        syncNullableDualColumn("admin", "resetPasswordToken", "reset_password_token", true);
+        syncNullableDualColumn("super_admin", "resetPasswordToken", "reset_password_token", true);
+    }
+
+    private void syncNullableDualColumn(String tableName, String canonicalColumn,
+                                        String legacyColumn, boolean textColumn) {
+        if (!hasTable(tableName) || !hasColumn(tableName, canonicalColumn)
+                || !hasColumn(tableName, legacyColumn)) {
+            return;
+        }
+        try {
+            if (textColumn) {
+                jdbcTemplate.execute(
+                    "UPDATE `" + tableName + "` SET `" + canonicalColumn + "` = `" + legacyColumn + "` "
+                    + "WHERE (`" + canonicalColumn + "` IS NULL "
+                    + "OR TRIM(`" + canonicalColumn + "`) = '') "
+                    + "AND `" + legacyColumn + "` IS NOT NULL "
+                    + "AND TRIM(`" + legacyColumn + "`) <> ''");
+                jdbcTemplate.execute(
+                    "UPDATE `" + tableName + "` SET `" + legacyColumn + "` = `" + canonicalColumn + "` "
+                    + "WHERE (`" + legacyColumn + "` IS NULL "
+                    + "OR TRIM(`" + legacyColumn + "`) = '') "
+                    + "AND `" + canonicalColumn + "` IS NOT NULL "
+                    + "AND TRIM(`" + canonicalColumn + "`) <> ''");
+            } else {
+                jdbcTemplate.execute(
+                    "UPDATE `" + tableName + "` SET `" + canonicalColumn + "` = `" + legacyColumn + "` "
+                    + "WHERE `" + canonicalColumn + "` IS NULL "
+                    + "AND `" + legacyColumn + "` IS NOT NULL");
+                jdbcTemplate.execute(
+                    "UPDATE `" + tableName + "` SET `" + legacyColumn + "` = `" + canonicalColumn + "` "
+                    + "WHERE `" + legacyColumn + "` IS NULL "
+                    + "AND `" + canonicalColumn + "` IS NOT NULL");
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not synchronize legacy dual columns {}.{} / {}.{}: {}",
+                tableName, canonicalColumn, tableName, legacyColumn, ex.getMessage());
         }
     }
 

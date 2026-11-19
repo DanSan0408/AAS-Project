@@ -48,6 +48,35 @@
                         <p th:text="${duplicateWarning}">Duplicate Warning</p>
                     </div>
 
+                    <section th:if="${!#lists.isEmpty(pendingWelcomeEmails)}" class="alert alert-warning welcome-pending" aria-labelledby="welcomePendingTitle">
+                        <h3 id="welcomePendingTitle" class="welcome-pending-title"
+                            th:text="|${#lists.size(pendingWelcomeEmails)} assessor account(s) with no confirmed welcome email|">No confirmed welcome email</h3>
+                        <p class="welcome-pending-note">
+                            These accounts were created, but there is no record that a welcome email was sent and they have not set a password yet.
+                            Sending again emails each of them a new set-password link. Their current passwords are not changed.
+                        </p>
+                        <form th:action="@{/admin/welcome-emails/resend}" method="post"
+                              data-action="confirm-submit"
+                              th:attr="data-confirm-message=|Send the welcome email to ${#lists.size(pendingWelcomeEmails)} account(s)?|">
+                            <input type="hidden" name="audience" value="lecturers" />
+                            <button type="submit" class="action-button promote">Send welcome email to all</button>
+                        </form>
+                        <details class="welcome-pending-details">
+                            <summary>Show accounts</summary>
+                            <ul class="welcome-pending-list">
+                                <li th:each="pending : ${pendingWelcomeEmails}">
+                                    <span th:text="${pending.email}">user@example.com</span>
+                                    <form th:action="@{/admin/welcome-emails/resend}" method="post">
+                                        <input type="hidden" name="audience" value="lecturers" />
+                                        <input type="hidden" name="id" th:value="${pending.id}" />
+                                        <button type="submit" class="action-button"
+                                                th:attr="aria-label=|Send welcome email to ${pending.email}|">Send</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </details>
+                    </section>
+
                     <div class="add-form-container">
                         <h3 th:text="${lecturer.id != null ? 'Update Assessor' : 'Add New Assessor'}">Add New Assessor</h3>
                         
