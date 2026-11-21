@@ -90,6 +90,27 @@ public class AssessmentComment {
     @Column(name = "sentiment_score")
     private Double sentimentScore = 0.0;
 
+    /** What the AI comment check said (see AiCommentDtos). Advice for the moderator only; approval is always a person's decision. */
+    @Column(name = "ai_label", length = 30)
+    private String aiLabel;
+
+    @Column(name = "ai_confidence")
+    private Double aiConfidence;
+
+    @Column(name = "ai_reason", length = 300)
+    private String aiReason;
+
+    @Column(name = "ai_checked_at")
+    private LocalDateTime aiCheckedAt;
+
+    /** Hash of the text the check read, so an edited comment is checked again. */
+    @Column(name = "ai_text_hash", length = 64)
+    private String aiTextHash;
+
+    /** True when the comment was approved in bulk ("approve all" or "approve the ones the scan found fine"), not read one by one. */
+    @Column(name = "bulk_decision")
+    private Boolean bulkDecision = false;
+
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
@@ -315,5 +336,38 @@ public class AssessmentComment {
 
     public String getDisplayLabel() {
         return getDisplayLabel(this.assessment, null);
+    }
+
+    public boolean isBulkDecision() { return Boolean.TRUE.equals(bulkDecision); }
+    public void setBulkDecision(Boolean bulkDecision) { this.bulkDecision = bulkDecision; }
+
+    public String getAiLabel() { return aiLabel; }
+    public void setAiLabel(String aiLabel) { this.aiLabel = aiLabel; }
+    public Double getAiConfidence() { return aiConfidence; }
+    public void setAiConfidence(Double aiConfidence) { this.aiConfidence = aiConfidence; }
+    public String getAiReason() { return aiReason; }
+    public void setAiReason(String aiReason) { this.aiReason = aiReason; }
+    public LocalDateTime getAiCheckedAt() { return aiCheckedAt; }
+    public void setAiCheckedAt(LocalDateTime aiCheckedAt) { this.aiCheckedAt = aiCheckedAt; }
+    public String getAiTextHash() { return aiTextHash; }
+    public void setAiTextHash(String aiTextHash) { this.aiTextHash = aiTextHash; }
+
+    /** A plain-language name for the check's finding, for the moderator. */
+    public String getAiLabelText() {
+        if (aiLabel == null) return null;
+        return switch (aiLabel) {
+            case "ok" -> "AI check: no concern";
+            case "negative_constructive" -> "Critical but civil";
+            case "abusive" -> "Possible insult or abuse";
+            case "sarcastic" -> "Possible sarcasm";
+            case "inappropriate" -> "Possibly inappropriate";
+            case "injection_attempt" -> "Tries to instruct the system";
+            case "unclear" -> "Needs a human look";
+            default -> null;
+        };
+    }
+
+    public Integer getAiConfidencePercent() {
+        return aiConfidence == null ? null : (int) Math.round(aiConfidence * 100);
     }
 }

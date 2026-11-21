@@ -161,8 +161,9 @@ public class AdminController {
         return courseScopeService.getManagedCoursesForCurrentUser();
     }
 
+    /** Course-level authority (edit, delete, invite): admin of the course, not merely an assessor or student in it. */
     private boolean isManagedCourseId(Long courseId) {
-        return courseScopeService.isManagedCourseId(courseId);
+        return courseScopeService.isAdminOfCourse(courseId);
     }
 
     private boolean isCourseCreatedByCurrentAdmin(Course course) {
@@ -237,7 +238,8 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "Please select a valid course.");
             return resolvePostSwitchRedirect(request, "/admin/home");
         }
-        boolean switched = courseScopeService.setActiveCourseIdForCurrentUser(courseId);
+        boolean switched = courseScopeService.canActAsAdminInCourse(courseId)
+                && courseScopeService.setActiveCourseIdForCurrentUser(courseId);
         if (!switched) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to switch to that course.");
             return "redirect:/admin/home";
@@ -532,6 +534,9 @@ public class AdminController {
             @RequestParam(value = "roleFilter", required = false, defaultValue = "all") String roleFilter,
             @RequestParam(value = "groupId", required = false) Long groupId,
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
+            @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
+            @RequestParam(value = "evalRubricId", required = false) Long evalRubricId,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -542,6 +547,10 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Assessment not found or you are not authorized to view it.");
             return "redirect:/admin/progress-tracking";
+        }
+
+        if ("evaluations".equals(tab)) {
+            addEvaluationsTabModel(model, assessment, evalGroupId, evalStudentId, evalRubricId);
         }
 
         Map<String, Object> lecturerProgress = progressTrackingService.getLecturerProgress(assessment);
@@ -571,6 +580,85 @@ public class AdminController {
         model.addAttribute("adminUsername", getLoggedInUsername());
 
         return "admin_progress_tracking_view";
+    }
+
+    /** The assessment picker on the Evaluations tab: switching assessment starts afresh, otherwise keep the filters. */
+    @GetMapping("/progress-tracking/evaluations")
+    public String pickEvaluations(
+            @RequestParam("assessmentId") Long assessmentId,
+            @RequestParam(value = "currentAssessmentId", required = false) Long currentAssessmentId,
+            @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
+            @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
+            @RequestParam(value = "evalRubricId", required = false) Long evalRubricId) {
+        boolean sameAssessment = assessmentId.equals(currentAssessmentId);
+        return "redirect:" + evaluationsUrl(assessmentId,
+                sameAssessment ? evalGroupId : null,
+                sameAssessment ? evalStudentId : null,
+                sameAssessment ? evalRubricId : null);
+    }
+
+    /** Permanently deletes one finished evaluation. Admins can read and delete evaluations, never edit them. */
+    @PostMapping("/progress-tracking/{assessmentId}/evaluations/delete")
+    public String deleteEvaluation(
+            @PathVariable Long assessmentId,
+            @RequestParam("evaluatorKind") String evaluatorKind,
+            @RequestParam("evaluatorId") Long evaluatorId,
+            @RequestParam(value = "rubricId", required = false) Long rubricId,
+            @RequestParam("assessmentType") String assessmentType,
+            @RequestParam("targetIds") List<Long> targetIds,
+            @RequestParam(value = "reason", required = false) String reason,
+            @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
+            @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
+            @RequestParam(value = "evalRubricId", required = false) Long evalRubricId,
+            RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        try {
+            int removed = progressTrackingService.deleteEvaluation(assessment, evaluatorKind, evaluatorId, rubricId,
+                    assessmentType, targetIds, reason, getLoggedInUsername());
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Evaluation deleted (" + removed + " mark" + (removed == 1 ? "" : "s") + "). It is kept in the deletion record below.");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + evaluationsUrl(assessmentId, evalGroupId, evalStudentId, evalRubricId);
+    }
+
+    private String evaluationsUrl(Long assessmentId, Long groupId, Long studentId, Long rubricId) {
+        StringBuilder url = new StringBuilder("/admin/progress-tracking/").append(assessmentId).append("?tab=evaluations");
+        if (groupId != null) {
+            url.append("&evalGroupId=").append(groupId);
+        }
+        if (studentId != null) {
+            url.append("&evalStudentId=").append(studentId);
+        }
+        if (rubricId != null) {
+            url.append("&evalRubricId=").append(rubricId);
+        }
+        return url.toString();
+    }
+
+    private void addEvaluationsTabModel(Model model, Assessment assessment, Long groupId, Long studentId, Long rubricId) {
+        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        List<Assessment> courseAssessments = activeCourseId == null
+                ? List.of()
+                : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
+        boolean picked = groupId != null || studentId != null || rubricId != null;
+
+        model.addAttribute("courseAssessments", courseAssessments);
+        model.addAttribute("evaluationStudents", progressTrackingService.getEvaluationStudents(assessment));
+        model.addAttribute("evaluationRubrics", assessment.getRubrics());
+        model.addAttribute("evalGroupId", groupId);
+        model.addAttribute("evalStudentId", studentId);
+        model.addAttribute("evalRubricId", rubricId);
+        model.addAttribute("evaluationsPicked", picked);
+        model.addAttribute("evaluations", picked
+                ? progressTrackingService.findEvaluations(assessment, groupId, studentId, rubricId)
+                : List.of());
+        model.addAttribute("recentDeletions", progressTrackingService.recentDeletions(assessment.getId()));
     }
 
     @PostMapping("/comments/{commentId}/approve")
@@ -709,7 +797,55 @@ public class AdminController {
     @PostMapping("/comments/assessment/{assessmentId}/bulk-approve-safe")
     public String bulkApproveSafeComments(@PathVariable Long assessmentId,
                                           RedirectAttributes redirectAttributes) {
-        return bulkApproveAllComments(assessmentId, redirectAttributes);
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        int count = assessmentCommentService.bulkApproveSafeComments(assessmentId, getLoggedInUsername());
+        redirectAttributes.addFlashAttribute("successMessage", count == 0
+                ? "No comment qualified. Only comments the AI scan read and found fine, with high confidence, are approved this way."
+                : "Approved " + count + " comment(s) the AI scan found fine. Flagged and unscanned comments were left for you.");
+        return "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=all";
+    }
+
+    /** Has the AI read the pending comments and mark the ones that need a person's look. It never approves or rejects. */
+    @PostMapping("/comments/assessment/{assessmentId}/ai-scan")
+    public String aiScanComments(@PathVariable Long assessmentId, RedirectAttributes redirectAttributes) {
+        Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
+        if (assessment == null || !ownsAssessment(assessment)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized access.");
+            return "redirect:/admin/progress-tracking";
+        }
+        String back = "redirect:/admin/progress-tracking/" + assessmentId + "?tab=comments&filter=flagged";
+        try {
+            AssessmentCommentService.ScanResult result = assessmentCommentService.scanPendingComments(assessmentId);
+            StringBuilder message = new StringBuilder();
+            if (result.checked() == 0 && result.notChecked() == 0) {
+                message.append("Nothing to scan: every pending comment has already been read.");
+            } else {
+                message.append("Read ").append(result.checked()).append(" comment(s); ").append(result.flagged())
+                        .append(" flagged for your attention.");
+                if (result.notChecked() > 0) {
+                    message.append(' ').append(result.notChecked()).append(" could not be checked and stay unscanned.");
+                }
+            }
+            if (result.remaining() > 0) {
+                message.append(' ').append(result.remaining()).append(" more are waiting; scan again to continue.");
+            }
+            if (!result.notes().isEmpty()) {
+                message.append(' ').append(String.join(" ", result.notes()));
+            }
+            boolean trouble = "UNAVAILABLE".equals(result.aiStatus()) || "PARTIAL".equals(result.aiStatus()) || result.notChecked() > 0;
+            redirectAttributes.addFlashAttribute(trouble ? "errorMessage" : "successMessage", message.toString());
+        } catch (com.capstone.adproject.service.AiServiceClient.RateLimitedException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "The AI service is not set up on this server.");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "The AI scan could not run right now. Comments are unchanged; try again later.");
+        }
+        return back;
     }
 
     @PostMapping("/comments/assessment/{assessmentId}/bulk-action")
@@ -1701,6 +1837,10 @@ public class AdminController {
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this course.");
                 return "redirect:/admin/manage-courses";
             }
+            if (!isCourseCreatedByCurrentAdmin(course)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Only the admin who created this course can edit it.");
+                return "redirect:/admin/manage-courses";
+            }
             model.addAttribute("course", course);
             model.addAttribute("adminUsername", getLoggedInUsername());
             return "admin_edit_course";
@@ -1722,11 +1862,26 @@ public class AdminController {
             return "redirect:/admin/courses/edit/" + course.getId();
         }
         try {
-            if (course.getId() == null || !isManagedCourseId(course.getId())) {
+            Course existing = course.getId() == null ? null : superAdminService.getCourseById(course.getId()).orElse(null);
+            if (existing == null || !isManagedCourseId(existing.getId())) {
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this course.");
                 return "redirect:/admin/manage-courses";
             }
-            superAdminService.saveCourse(course);
+            if (!isCourseCreatedByCurrentAdmin(existing)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Only the admin who created this course can change it.");
+                return "redirect:/admin/manage-courses";
+            }
+            // Change only what the form edits, on the stored course: saving the bound form would blank the creator.
+            if (!isPercentage(course.getPassMark()) || !isPercentage(course.getCloTargetPercent())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "The pass mark and the learning outcome target must be between 0 and 100.");
+                return "redirect:/admin/courses/edit/" + course.getId();
+            }
+            existing.setCourseName(course.getCourseName());
+            existing.setCourseCode(course.getCourseCode());
+            existing.setDescription(course.getDescription());
+            existing.setPassMark(course.getPassMark());
+            existing.setCloTargetPercent(course.getCloTargetPercent());
+            superAdminService.saveCourse(existing);
             redirectAttributes.addFlashAttribute("successMessage", "Course updated successfully!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error updating course: " + e.getMessage());
@@ -1734,11 +1889,20 @@ public class AdminController {
         return "redirect:/admin/manage-courses";
     }
 
+    private static boolean isPercentage(Double value) {
+        return value == null || (!value.isNaN() && value >= 0 && value <= 100);
+    }
+
     @PostMapping("/courses/delete/{id}")
     public String deleteCourse(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
         try {
-            if (!isManagedCourseId(id)) {
+            Course existing = superAdminService.getCourseById(id).orElse(null);
+            if (existing == null || !isManagedCourseId(id)) {
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to delete this course.");
+                return "redirect:/admin/manage-courses";
+            }
+            if (!isCourseCreatedByCurrentAdmin(existing)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Only the admin who created this course can delete it.");
                 return "redirect:/admin/manage-courses";
             }
             superAdminService.deleteCourse(id);
@@ -1771,6 +1935,8 @@ public class AdminController {
         List<Student> students = adminService.getAllStudents();
         model.addAttribute("students", students);
         model.addAttribute("pendingWelcomeEmails", students.stream().filter(AdminService::isAwaitingWelcomeEmail).toList());
+        model.addAttribute("unactivatedIds", students.stream().filter(AdminService::isUnactivated)
+                .map(Student::getId).collect(java.util.stream.Collectors.toSet()));
 
         if (student == null || student.getId() == null &&
                 (student.getEmail() == null || student.getEmail().isEmpty())) {
@@ -1826,6 +1992,13 @@ public class AdminController {
                 }
 
                 Student existingStudent = existingStudentOpt.get();
+                boolean detailsChanged = !java.util.Objects.equals(existingStudent.getEmail(), student.getEmail() == null ? null : student.getEmail().trim().toLowerCase())
+                        || !java.util.Objects.equals(existingStudent.getUsername(), student.getUsername());
+                if (detailsChanged && adminService.studentBelongsToOtherCourses(existingStudent)) {
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "This student is also in other courses, so their name and email cannot be changed here. They can update their own profile.");
+                    return "redirect:/admin/manage-students";
+                }
                 existingStudent.setEmail(student.getEmail());
                 existingStudent.setUsername(student.getUsername());
                 // Merge the form object into the fetched entity to prevent overwriting other
@@ -1835,6 +2008,13 @@ public class AdminController {
                 // Phase 4: Mutation Guarding - Force new students into the active course,
                 // ignoring any payload manipulation
                 student.setCourse(courseScopeService.getActiveCourseForCurrentUser());
+                // The form only supplies an email and a name. Anything else a crafted request carries (a group in another
+                // course, a password, a reset token) is dropped.
+                student.setGroup(null);
+                student.setPassword(null);
+                student.setResetPasswordToken(null);
+                student.setResetPasswordTokenExpiry(null);
+                student.setWelcomeEmailSentAt(null);
             }
 
             if (!confirmDuplicate) {
@@ -1850,10 +2030,15 @@ public class AdminController {
                 }
             }
 
+            Optional<Student> alreadyRegistered = isUpdate
+                    ? Optional.empty()
+                    : adminService.findExistingStudent(student.getEmail(), student.getUsername());
             boolean emailSent = adminService.saveStudent(student, request);
 
             if (isUpdate) {
                 redirectAttributes.addFlashAttribute("successMessage", "Student updated successfully!");
+            } else if (alreadyRegistered.isPresent()) {
+                redirectAttributes.addFlashAttribute("successMessage", existingUserAddedMessage(alreadyRegistered.get().getUsername(), "student"));
             } else if (emailSent) {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Student created successfully! Welcome email sent.");
@@ -1872,6 +2057,8 @@ public class AdminController {
         List<Lecturer> lecturers = adminService.getAllLecturers();
         model.addAttribute("lecturers", lecturers);
         model.addAttribute("pendingWelcomeEmails", lecturers.stream().filter(AdminService::isAwaitingWelcomeEmail).toList());
+        model.addAttribute("unactivatedIds", lecturers.stream().filter(AdminService::isUnactivated)
+                .map(Lecturer::getId).collect(java.util.stream.Collectors.toSet()));
 
         if (lecturer == null || lecturer.getId() == null &&
                 (lecturer.getEmail() == null || lecturer.getEmail().isEmpty())) {
@@ -1918,6 +2105,16 @@ public class AdminController {
                 return "redirect:/admin/manage-lecturers";
             }
 
+            if (!isUpdate) {
+                // The form only supplies an email and a name. A role or password in the request is dropped, so a form
+                // cannot create an admin account or choose its own credentials.
+                lecturer.setRoles(null);
+                lecturer.setPassword(null);
+                lecturer.setResetPasswordToken(null);
+                lecturer.setResetPasswordTokenExpiry(null);
+                lecturer.setWelcomeEmailSentAt(null);
+            }
+
             if (isUpdate) {
                 Optional<Lecturer> existingLecturerOpt = adminService.findLecturerById(lecturer.getId());
                 if (existingLecturerOpt.isEmpty() || !ownsLecturer(existingLecturerOpt.get())) {
@@ -1927,6 +2124,13 @@ public class AdminController {
                 }
 
                 Lecturer existingLecturer = existingLecturerOpt.get();
+                boolean detailsChanged = !java.util.Objects.equals(existingLecturer.getEmail(), lecturer.getEmail() == null ? null : lecturer.getEmail().trim().toLowerCase())
+                        || !java.util.Objects.equals(existingLecturer.getUsername(), lecturer.getUsername());
+                if (detailsChanged && adminService.lecturerBelongsToOtherCourses(existingLecturer)) {
+                    redirectAttributes.addFlashAttribute("errorMessage",
+                            "This assessor also works in other courses, so their name and email cannot be changed here. They can update their own profile.");
+                    return "redirect:/admin/manage-lecturers";
+                }
                 existingLecturer.setEmail(lecturer.getEmail());
                 existingLecturer.setUsername(lecturer.getUsername());
                 // Merge the form object into the fetched entity to prevent overwriting other
@@ -1956,10 +2160,15 @@ public class AdminController {
                 adminService.ensureAdminUserExists(lecturer);
             }
 
+            Optional<Lecturer> alreadyRegistered = isUpdate
+                    ? Optional.empty()
+                    : adminService.findExistingLecturer(lecturer.getEmail());
             boolean emailSent = adminService.saveLecturer(lecturer, request);
 
             if (isUpdate) {
                 redirectAttributes.addFlashAttribute("successMessage", "Lecturer updated successfully!");
+            } else if (alreadyRegistered.isPresent()) {
+                redirectAttributes.addFlashAttribute("successMessage", existingUserAddedMessage(alreadyRegistered.get().getUsername(), "assessor"));
             } else if (emailSent) {
                 redirectAttributes.addFlashAttribute("successMessage",
                         "Lecturer created successfully! Welcome email sent.");
@@ -1969,6 +2178,52 @@ public class AdminController {
             }
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error: Email already exists.");
+        }
+        return "redirect:/admin/manage-lecturers";
+    }
+
+    private static String existingUserAddedMessage(String name, String kind) {
+        String who = name == null || name.isBlank() ? "This " + kind : name;
+        return who + " already had an account, so they were added to this course. No new account or welcome email was created.";
+    }
+
+    /** Hints while typing: existing accounts that look like the person being added (3+ characters, at most 5). */
+    @GetMapping("/users/suggestions")
+    @ResponseBody
+    public ResponseEntity<List<AdminService.UserSuggestion>> suggestExistingUsers(
+            @RequestParam("type") String type,
+            @RequestParam("q") String query) {
+        List<AdminService.UserSuggestion> found;
+        if ("student".equalsIgnoreCase(type)) {
+            found = adminService.suggestStudents(query);
+        } else if ("lecturer".equalsIgnoreCase(type)) {
+            found = adminService.suggestLecturers(query);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(found);
+    }
+
+    @PostMapping("/manage-students/add-existing")
+    public String addExistingStudent(@RequestParam("studentId") Long studentId, RedirectAttributes redirectAttributes) {
+        try {
+            Student student = adminService.enrollExistingStudent(studentId);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    existingUserAddedMessage(student.getUsername(), "student"));
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/manage-students";
+    }
+
+    @PostMapping("/manage-lecturers/add-existing")
+    public String addExistingLecturer(@RequestParam("lecturerId") Long lecturerId, RedirectAttributes redirectAttributes) {
+        try {
+            Lecturer lecturer = adminService.enrollExistingLecturer(lecturerId);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    existingUserAddedMessage(lecturer.getUsername(), "assessor"));
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/admin/manage-lecturers";
     }
@@ -2391,22 +2646,28 @@ public class AdminController {
     }
 
     /**
-     * Re-invites accounts in the active course that have no confirmed welcome email. With {@code id} only that
-     * account is emailed; without it, every pending account of that audience is.
+     * Re-invites accounts in the active course that have not set a password yet. With {@code id} only that account is
+     * emailed. Without it, {@code scope=pending} (default) emails accounts with no confirmed welcome email and
+     * {@code scope=all} emails every account that has not set a password, including ones whose earlier email was
+     * accepted by the mail server (for broken links).
      */
     @PostMapping("/welcome-emails/resend")
     public String resendWelcomeEmails(
             @RequestParam("audience") String audience,
             @RequestParam(name = "id", required = false) Long id,
+            @RequestParam(name = "scope", defaultValue = "pending") String scope,
             HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
         boolean lecturers = "lecturers".equals(audience);
+        boolean includeConfirmed = "all".equals(scope);
         try {
             int queued = lecturers
-                    ? adminService.resendLecturerWelcomeEmails(id, request)
-                    : adminService.resendStudentWelcomeEmails(id, request);
+                    ? adminService.resendLecturerWelcomeEmails(id, includeConfirmed, request)
+                    : adminService.resendStudentWelcomeEmails(id, includeConfirmed, request);
             if (queued == 0) {
-                redirectAttributes.addFlashAttribute("successMessage", "No accounts are waiting for a welcome email.");
+                redirectAttributes.addFlashAttribute("successMessage", id != null
+                        ? "That account has already set its password, so no welcome email was sent."
+                        : "No accounts are waiting for a welcome email.");
             } else {
                 redirectAttributes.addFlashAttribute("successMessage", queued + " welcome email(s) are being sent in the background. "
                         + "Refresh this page in a minute; any that fail stay listed as having no confirmed welcome email.");
@@ -2419,8 +2680,13 @@ public class AdminController {
 
     @GetMapping("/search-lecturers")
     @ResponseBody
-    public List<Lecturer> searchLecturers(@RequestParam("query") String query) {
-        return adminService.searchLecturers(query);
+    public List<LecturerOption> searchLecturers(@RequestParam("query") String query) {
+        // Never return the Lecturer entity itself: it carries the password hash and reset token.
+        return adminService.searchLecturers(query).stream()
+                .map(l -> new LecturerOption(l.getId(), l.getEmail(), l.getUsername()))
+                .collect(Collectors.toList());
     }
+
+    public record LecturerOption(Long id, String email, String username) {}
 
 }

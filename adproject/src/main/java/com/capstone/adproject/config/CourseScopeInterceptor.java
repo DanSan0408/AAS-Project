@@ -23,7 +23,10 @@ public class CourseScopeInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
+        // Admin pages only ever work on a course the person administers, never one they merely assess or study in.
+        Long activeCourseId = isAdminArea(request)
+                ? courseScopeService.ensureAdminActiveCourse()
+                : courseScopeService.getActiveCourseIdForCurrentUser();
         
         Session session = entityManager.unwrap(Session.class);
         if (activeCourseId != null) {
@@ -35,5 +38,21 @@ public class CourseScopeInterceptor implements HandlerInterceptor {
         }
         
         return true;
+    }
+
+    /** The paths only admins reach (see SecurityConfig). */
+    public static boolean isAdminArea(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        if (path == null) {
+            return false;
+        }
+        String context = request.getContextPath();
+        if (context != null && !context.isEmpty() && path.startsWith(context)) {
+            path = path.substring(context.length());
+        }
+        return path.equals("/admin") || path.startsWith("/admin/")
+                || path.equals("/rubrics") || path.startsWith("/rubrics/")
+                || path.startsWith("/deadlines/")
+                || path.equals("/manage-assessments") || path.equals("/assessments/manage");
     }
 }

@@ -72,6 +72,9 @@
     </div>
 
     <script th:src="@{/js/sidebar-toggle.js}"></script>
-    </th:block>
+
+    <script th:src="@{/js/ui-core.js}" defer></script>
+        <th:block th:replace="~{fragments/announcement_popup :: popup}"></th:block>
+</th:block>
 </body>
 </html>

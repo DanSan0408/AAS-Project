@@ -1,0 +1,83 @@
+/*
+ * Shared interaction layer, loaded by system-ui.css so every page gets it.
+ * Colour comes only from tokens (see system-ui.css); nothing here changes layout or the look at rest.
+ * It adds what pages were missing: press feedback, busy buttons, one focus ring, a route progress bar,
+ * soft entrances, and one reduced-motion rule.
+ */
+
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+@keyframes ui-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ui-route-progress { 0% { transform: scaleX(0); } 20% { transform: scaleX(0.45); } 100% { transform: scaleX(0.92); } }
+
+/* ---- Route progress: a thin bar at the top while the next page loads (see js/ui-core.js) ------------------- */
+.ui-route-progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    z-index: 10000;
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: left center;
+    background: var(--ui-primary, var(--ui-brand));
+    box-shadow: 0 0 8px var(--ui-primary, var(--ui-brand));
+    opacity: 0;
+}
+.ui-route-progress.is-active {
+    opacity: 1;
+    animation: ui-route-progress 10s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
+/* ---- Pages arrive softly instead of popping in ---------------------------------------------------------------- */
+@media screen {
+    body[data-ui-role] .main-content { animation: ui-fade-in 0.18s ease-out; }
+    .alert, .flash-alert { animation: ui-rise-in 0.22s ease-out; }
+}
+
+/* ---- Buttons: instant tactile feedback, no accidental layout animation ---------------------------------------- */
+body[data-ui-role] :is(button, .btn, a.btn, .action-button, [class*="btn-"]):not(.theme-segment-btn) {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+body[data-ui-role] :is(button, .btn, a.btn, .action-button):active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+}
+body[data-ui-role] :is(button, .btn, a.btn, .action-button):disabled { cursor: not-allowed; }
+
+/* A button whose form is being sent: a small spinner after its label (set by js/event-delegation.js). */
+button[aria-busy="true"] { cursor: progress; }
+button[aria-busy="true"]::after {
+    content: "";
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    margin-left: 0.55em;
+    vertical-align: -0.1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ui-spin 0.7s linear infinite;
+}
+
+/* ---- One focus ring everywhere ---------------------------------------------------------------------------------- */
+body[data-ui-role] :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--ui-accent);
+    outline-offset: 2px;
+}
+
+/* ---- Tables and numbers ------------------------------------------------------------------------------------------ */
+body[data-ui-role] :is(td, th) { font-variant-numeric: tabular-nums; }
+body[data-ui-role] .table-responsive tbody tr { transition: background-color 0.12s ease; }
+body[data-ui-role] .table-responsive tbody tr:hover { background-color: var(--ui-bg-subtle); }
+
+/* ---- Tab bars wrap instead of hiding their last tabs behind a sideways scroll ----------------------------------- */
+body[data-ui-role] .hub-tabs { flex-wrap: wrap; overflow-x: visible; }
+
+/* ---- Reduced motion: one rule for every transition and animation on the site ------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

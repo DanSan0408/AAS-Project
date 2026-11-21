@@ -25,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.capstone.adproject.dto.ai.AiTeamDynamicsDtos;
 import com.capstone.adproject.model.AdminCourseAssignment;
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Lecturer;
 import com.capstone.adproject.model.Mark;
@@ -459,6 +460,13 @@ public class GroupCommentController {
                     || group.getCourse() == null || !assessment.getCourse().getId().equals(group.getCourse().getId())) {
                 return ResponseEntity.status(403).body(Map.of("message", "Unauthorized assessment access."));
             }
+            // The comment view only lists the groups an assessor supervises; the audit follows the same rule.
+            Long lecturerId = lecturerOpt.get().getId();
+            boolean supervises = (group.getAcademicSupervisor() != null && lecturerId.equals(group.getAcademicSupervisor().getId()))
+                    || (group.getIndustrialSupervisor() != null && lecturerId.equals(group.getIndustrialSupervisor().getId()));
+            if (!supervises) {
+                return ResponseEntity.status(403).body(Map.of("message", "You do not supervise this group."));
+            }
         }
 
         List<Student> students = resolveStudentsForGroup(group);
@@ -474,6 +482,11 @@ public class GroupCommentController {
         if (markRepository != null && !students.isEmpty()) {
             List<Mark> marks = markRepository.findByGroupMembersAndAssessment(students, assessment);
             for (Mark m : marks) {
+                // Only finished ratings given by students. An assessor's marks are stored with the student as both evaluator and
+                // evaluated (see LecturerAssessmentService), so without this they would be read as that student's self-rating.
+                if (m.getLecturer() != null || !CalculateService.isFinished(m)) {
+                    continue;
+                }
                 if (m.getEvaluatorStudent() != null && m.getEvaluatedStudent() != null) {
                     double earned = m.getMarkValue() != null ? m.getMarkValue() : 0.0;
                     double possible = (m.getSubRubric() != null && m.getSubRubric().getMarks() != null)
@@ -495,23 +508,17 @@ public class GroupCommentController {
             }
         }
 
+        // Approved teammate comments only. Who wrote each one is not sent: the analysis does not need it, and anonymous comments stay so.
         List<AiTeamDynamicsDtos.PeerCommentItem> peerComments = new java.util.ArrayList<>();
         for (Student student : students) {
             String studentName = (student.getUsername() != null && !student.getUsername().trim().isEmpty()) ? student.getUsername() : student.getEmail();
-            Map<String, Map<String, List<String>>> commentsMap = calculateService.getAllAssessmentComments(student, assessment);
-            for (Map.Entry<String, Map<String, List<String>>> qEntry : commentsMap.entrySet()) {
-                String question = qEntry.getKey();
-                for (Map.Entry<String, List<String>> eEntry : qEntry.getValue().entrySet()) {
-                    String evaluatorName = eEntry.getKey();
-                    for (String text : eEntry.getValue()) {
-                        peerComments.add(new AiTeamDynamicsDtos.PeerCommentItem(
-                            evaluatorName,
-                            studentName,
-                            question,
-                            text
-                        ));
-                    }
-                }
+            for (AssessmentComment comment : calculateService.getApprovedPeerComments(student, assessment)) {
+                peerComments.add(new AiTeamDynamicsDtos.PeerCommentItem(
+                    "Teammate",
+                    studentName,
+                    comment.getDisplayLabel(assessment),
+                    comment.getCommentText()
+                ));
             }
         }
 
@@ -528,8 +535,11 @@ public class GroupCommentController {
         try {
             var response = aiServiceClient.auditTeamDynamics(request);
             return ResponseEntity.ok(response);
+        } catch (AiServiceClient.RateLimitedException ex) {
+            return ResponseEntity.status(429).body(Map.of("message", "You have asked for several AI analyses in a short time. Please wait a few minutes and try again."));
         } catch (Exception ex) {
-            return ResponseEntity.status(500).body(Map.of("message", "AI Audit Error: " + ex.getMessage()));
+            logger.warn("AI team audit failed for group {} on assessment {}: {}", groupId, assessmentId, ex.getClass().getSimpleName());
+            return ResponseEntity.status(502).body(Map.of("message", "The AI analysis is unavailable right now. Try again in a few minutes."));
         }
     }
 }

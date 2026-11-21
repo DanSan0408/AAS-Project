@@ -56,6 +56,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
 
+    /** For the "is this person already registered?" suggestions while an admin types. */
+    java.util.List<Student> findTop5ByEmailContainingIgnoreCaseOrUsernameContainingIgnoreCaseOrderByUsernameAsc(String email, String username);
+
     List<Student> findAllByEmailIgnoreCase(String email);
 
     List<Student> findAllByUsernameIgnoreCase(String username);

@@ -18,6 +18,9 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
 
     Optional<Lecturer> findByEmail(String email);
     Optional<Lecturer> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
+
+    /** For the "is this person already registered?" suggestions while an admin types. */
+    java.util.List<Lecturer> findTop5ByEmailContainingIgnoreCaseOrUsernameContainingIgnoreCaseOrderByUsernameAsc(String email, String username);
     Optional<Lecturer> findByEmailIgnoreCase(String email);
     List<Lecturer> findAllByEmailIgnoreCase(String email);
     List<Lecturer> findAllByUsernameIgnoreCase(String username);
@@ -59,4 +62,33 @@ public interface LecturerRepository extends JpaRepository<Lecturer, Long> {
     @Modifying
     @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :lecturerId AND ac.evaluatorType = 'LECTURER'")
     void deleteCommentsByLecturer(@Param("lecturerId") Long lecturerId);
+
+    // Course-scoped variants, used when the assessor also belongs to other courses and only one is being left.
+    @Modifying
+    @Query("UPDATE Group g SET g.academicSupervisor = null WHERE g.academicSupervisor.id = :lecturerId AND g.course.id = :courseId")
+    void unlinkFromGroupsInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM LecturerGroupAssignment lga WHERE lga.lecturer.id = :lecturerId AND lga.assessment.course.id = :courseId")
+    void deleteGroupAssignmentsInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM LecturerStudentAssignment lsa WHERE lsa.lecturer.id = :lecturerId AND lsa.assessment.course.id = :courseId")
+    void deleteStudentAssignmentsInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM LecturerRubricAssignment lra WHERE lra.lecturer.id = :lecturerId AND lra.assessment.course.id = :courseId")
+    void deleteRubricAssignmentsInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM Mark m WHERE m.lecturer.id = :lecturerId AND m.assessment.course.id = :courseId")
+    void deleteMarksGivenInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM AssessmentComment ac WHERE ac.evaluatorId = :lecturerId AND ac.evaluatorType = 'LECTURER' AND ac.assessment.course.id = :courseId")
+    void deleteCommentsByLecturerInCourse(@Param("lecturerId") Long lecturerId, @Param("courseId") Long courseId);
+
+    @Modifying
+    @Query("DELETE FROM LecturerRubricAssignment lra WHERE lra.lecturer.id = :lecturerId")
+    void deleteRubricAssignmentsForLecturer(@Param("lecturerId") Long lecturerId);
 }

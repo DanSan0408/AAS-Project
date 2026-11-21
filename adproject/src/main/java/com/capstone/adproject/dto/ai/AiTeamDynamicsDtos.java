@@ -45,6 +45,8 @@ public class AiTeamDynamicsDtos {
             @JsonProperty("studentName") String studentName,
             @JsonProperty("selfScoreAvg") Double selfScoreAvg,
             @JsonProperty("peerScoreAvg") Double peerScoreAvg,
+            @JsonProperty("peerRatingCount") Integer peerRatingCount,
+            @JsonProperty("peerRaterCount") Integer peerRaterCount,
             @JsonProperty("selfInflationGap") Double selfInflationGap,
             @JsonProperty("status") String status,
             @JsonProperty("contributionSummary") String contributionSummary
@@ -54,7 +56,9 @@ public class AiTeamDynamicsDtos {
             @JsonProperty("type") String type,
             @JsonProperty("severity") String severity,
             @JsonProperty("targetStudent") String targetStudent,
-            @JsonProperty("description") String description
+            @JsonProperty("description") String description,
+            @JsonProperty("evidence") String evidence,
+            @JsonProperty("source") String source
     ) {}
 
     public record AuditResponse(
@@ -62,6 +66,10 @@ public class AiTeamDynamicsDtos {
             @JsonProperty("groupName") String groupName,
             @JsonProperty("teamHealthScore") Integer teamHealthScore,
             @JsonProperty("collaborationStatus") String collaborationStatus,
+            @JsonProperty("groupPeerAverage") Double groupPeerAverage,
+            @JsonProperty("peerRatingCount") Integer peerRatingCount,
+            @JsonProperty("aiStatus") String aiStatus,
+            @JsonProperty("aiNotes") List<String> aiNotes,
             @JsonProperty("executiveSummary") String executiveSummary,
             @JsonProperty("memberMetrics") List<MemberMetric> memberMetrics,
             @JsonProperty("anomalyFlags") List<AnomalyFlag> anomalyFlags,

@@ -1,5 +1,14 @@
 name: Build and publish
 
+# Runs on every push to main. Everything that can run at the same time does:
+#
+#   t=0   tests (Java, browser/static, AI) ........ in parallel
+#   t=0   build the app image, build the AI image .. in parallel with the tests, NOT pushed; they warm the build cache
+#   then  publish: re-runs the same build, which is now all cache hits (seconds), and pushes. Publishing waits for
+#         the tests, so an image only reaches the registry (and Deploy) when its tests passed.
+#
+# The wait is the slower of "tests" and "build", not tests followed by build.
+
 on:
   push:
     branches: [main]
@@ -21,6 +30,7 @@ jobs:
   java:
     name: Java tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: adproject
@@ -31,11 +41,12 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: ./mvnw test
+      - run: ./mvnw -B -ntp test
 
   browser-contract:
     name: Browser/static tests
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,6 +57,7 @@ jobs:
   ai:
     name: AI service checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ai-service
@@ -58,12 +70,47 @@ jobs:
           cache-dependency-path: ai-service/requirements.txt
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements.txt
-      - run: python -m compileall app
+      - run: python -m compileall -q app
+      - run: python -m unittest discover -s tests
+
+  # Not pushed: only builds, so the layers are cached before the tests finish.
+  build-app:
+    name: Build app image (warm cache)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./adproject
+          file: ./adproject/Dockerfile
+          build-args: |
+            APP_REVISION=${{ github.sha }}
+          push: false
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,scope=app,mode=max
+
+  build-ai:
+    name: Build AI image (warm cache)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./ai-service
+          file: ./ai-service/Dockerfile
+          push: false
+          cache-from: type=gha,scope=ai
+          cache-to: type=gha,scope=ai,mode=max
 
   publish-app:
     name: Publish app image
-    needs: [java, browser-contract]
+    needs: [java, browser-contract, build-app]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -79,17 +126,20 @@ jobs:
         with:
           context: ./adproject
           file: ./adproject/Dockerfile
+          build-args: |
+            APP_REVISION=${{ github.sha }}
           push: true
           tags: |
             ${{ env.APP_IMAGE }}:${{ github.sha }}
             ${{ env.APP_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Read only: the cache was written by build-app; if it is missing the image is simply built from scratch.
+          cache-from: type=gha,scope=app
 
   publish-ai:
     name: Publish AI image
-    needs: [ai]
+    needs: [ai, build-ai]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -109,6 +159,4 @@ jobs:
           tags: |
             ${{ env.AI_IMAGE }}:${{ github.sha }}
             ${{ env.AI_IMAGE }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
+          cache-from: type=gha,scope=ai

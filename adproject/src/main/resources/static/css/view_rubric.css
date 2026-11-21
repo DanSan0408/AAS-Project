@@ -1098,37 +1098,37 @@ body.view-rubric-page .notes-display-body {
 
 /* Multi-Theme Support for View Rubrics: Dark Mode */
 html[data-theme="dark"] body.view-rubric-page {
-    background-color: #121214 !important;
-    color: #f4f4f5 !important;
-    --color-background: #121214;
-    --color-surface: #1e1e24;
-    --color-border: #2e2e38;
-    --color-secondary: #d4d4d8;
-    --color-primary: #f59e0b;
+    background-color: var(--ui-bg-canvas) !important;
+    color: var(--ui-text-primary) !important;
+    --color-background: var(--ui-bg-canvas);
+    --color-surface: var(--ui-bg-surface);
+    --color-border: var(--ui-border);
+    --color-secondary: var(--ui-text-secondary);
+    --color-primary: var(--ui-primary);
 }
 
 html[data-theme="dark"] body.view-rubric-page .main-content {
-    background-color: #121214 !important;
+    background-color: var(--ui-bg-canvas) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .page-header h1,
 html[data-theme="dark"] body.view-rubric-page :is(h1, h2, h3, h4, h5, h6) {
     color: #ffffff !important;
-    border-color: #2e2e38 !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .assessment-summary,
 html[data-theme="dark"] body.view-rubric-page .rubric-box,
 html[data-theme="dark"] body.view-rubric-page .rubric-item {
-    background-color: #1e1e24 !important;
-    border-color: #2e2e38 !important;
-    color: #f4f4f5 !important;
+    background-color: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text-primary) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .notes-display-box {
-    background: #18181c !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-surface) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .notes-display-title {
@@ -1136,20 +1136,20 @@ html[data-theme="dark"] body.view-rubric-page .notes-display-title {
 }
 
 html[data-theme="dark"] body.view-rubric-page .notes-display-body {
-    color: #d4d4d8 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page textarea,
 html[data-theme="dark"] body.view-rubric-page input,
 html[data-theme="dark"] body.view-rubric-page select {
-    background-color: #26262e !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-color: #3f3f46 !important;
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .summary-details,
 html[data-theme="dark"] body.view-rubric-page .rubric-details {
-    color: #d4d4d8 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page .summary-item strong {
@@ -1157,18 +1157,18 @@ html[data-theme="dark"] body.view-rubric-page .summary-item strong {
 }
 
 html[data-theme="dark"] body.view-rubric-page table {
-    border-color: #2e2e38 !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page th {
-    background-color: #26262e !important;
-    color: #f4f4f5 !important;
-    border-color: #2e2e38 !important;
+    background-color: var(--ui-bg-subtle) !important;
+    color: var(--ui-text-primary) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.view-rubric-page td {
-    color: #d4d4d8 !important;
-    border-color: #2e2e38 !important;
+    color: var(--ui-text-secondary) !important;
+    border-color: var(--ui-border) !important;
 }
 
 /* Multi-Theme Support for View Rubrics: Warm Mode */

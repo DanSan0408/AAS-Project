@@ -483,9 +483,13 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
                 updateSubRubricRatings(targetSubRubric, formSubRubric.getRatings());
                 
             } else {
+                // Not one of this rubric's own sub-rubrics: it is new. Keeping a client-supplied id would let the save
+                // take over (and overwrite) a sub-rubric that belongs to some other rubric, possibly in another course.
                 targetSubRubric = formSubRubric;
+                targetSubRubric.setId(null);
                 if (targetSubRubric.getRatings() != null) {
                     targetSubRubric.getRatings().forEach(r -> {
+                        r.setId(null);
                         r.setSubRubric(targetSubRubric);
                         r.setRubric(null);
                     });
@@ -532,6 +536,7 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
                 entityToSave.setRubric(null);
             } else {
                 entityToSave = formRating;
+                entityToSave.setId(null); // not this sub-rubric's own rating: new, never someone else's row
                 entityToSave.setSubRubric(targetSubRubric); 
                 entityToSave.setRubric(null);
             }
@@ -575,6 +580,7 @@ private void autoCalculateSubRubricMarks(Rubric rubric) {
                 entityToSave.setSubRubric(null);
             } else {
                 entityToSave = formRating;
+                entityToSave.setId(null); // not this rubric's own rating: new, never someone else's row
                 entityToSave.setRubric(existingRubric); 
                 entityToSave.setSubRubric(null);
             }

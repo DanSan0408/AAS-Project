@@ -722,3 +722,59 @@ body.manage-users-page .welcome-pending-list li {
     border-top: 1px solid var(--color-warning, currentColor);
     overflow-wrap: anywhere;
 }
+
+/* Always-visible "send to everyone who has not set a password" bar above the user table */
+body.manage-users-page .welcome-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--ui-border, #e2e8f0);
+    border-radius: 10px;
+    background: var(--ui-bg-subtle, #f8f9fa);
+}
+
+body.manage-users-page .welcome-bulk-text {
+    margin: 0;
+}
+
+body.manage-users-page .table-actions .action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- "Already registered?" hint while adding a user ---------------------------------------------------------- */
+body.manage-users-page .user-suggestions {
+    margin: 12px 0 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--ui-border, #e2e8f0);
+    border-left: 4px solid var(--ui-info, #2563eb);
+    border-radius: 10px;
+    background: var(--ui-bg-subtle, #f8f9fa);
+}
+body.manage-users-page .user-suggestions[hidden] { display: none; }
+body.manage-users-page .suggest-heading { margin: 0 0 8px; font-weight: 600; }
+body.manage-users-page .suggest-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+body.manage-users-page .suggest-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--ui-border, #e2e8f0); border-radius: 8px; background: var(--ui-bg-surface, #fff);
+}
+body.manage-users-page .suggest-who { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+body.manage-users-page .suggest-email { color: var(--ui-text-muted, #71717a); font-size: 0.875rem; }
+body.manage-users-page .suggest-status { color: var(--ui-text-muted, #71717a); font-size: 0.875rem; font-weight: 600; }
+body.manage-users-page .suggest-add { margin: 0; }
+body.manage-users-page .suggest-add-btn {
+    min-height: 44px; padding: 0 16px; border: 1px solid var(--ui-brand, #4a0018); border-radius: 8px;
+    background: transparent; color: var(--ui-brand, #4a0018); font: inherit; font-weight: 600; cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+body.manage-users-page .suggest-add-btn:hover { background: var(--ui-brand, #4a0018); color: #fff; }
+body.manage-users-page .suggest-add-btn:focus-visible { outline: 3px solid var(--ui-accent, #f8a617); outline-offset: 2px; }
+body.manage-users-page .suggest-note { margin: 8px 0 0; font-size: 0.8125rem; color: var(--ui-text-muted, #71717a); }
+
+@media (prefers-reduced-motion: reduce) {
+    body.manage-users-page .suggest-add-btn { transition: none; }
+}

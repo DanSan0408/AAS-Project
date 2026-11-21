@@ -1,0 +1,50 @@
+/* Super Admin monitoring page. Status is never colour-only: every state also carries a text label. */
+.monitoring { display: grid; gap: 32px; }
+
+.mon-section-title { margin: 0 0 12px; font-size: 1.125rem; font-weight: 700; color: var(--ui-text-primary); }
+.mon-num { font-variant-numeric: tabular-nums; }
+
+.mon-overview { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; }
+.mon-overall { display: flex; flex-direction: column; gap: 2px; padding: 14px 20px; border-radius: 12px; border: 1px solid var(--ui-border); border-left-width: 6px; background: var(--ui-bg-surface); }
+.mon-overall-label { font-weight: 700; font-size: 1.125rem; }
+.mon-overall-time { font-size: 0.875rem; color: var(--ui-text-muted); }
+.mon-overall.mon-up { border-left-color: var(--ui-success); }
+.mon-overall.mon-warn { border-left-color: var(--ui-warning); }
+.mon-overall.mon-down { border-left-color: var(--ui-danger); }
+
+.mon-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.mon-autorefresh { font-size: 0.9rem; color: var(--ui-text-secondary); display: inline-flex; gap: 8px; align-items: center; }
+
+.mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.mon-card { background: var(--ui-bg-surface); border: 1px solid var(--ui-border); border-top-width: 4px; border-radius: 12px; padding: 16px 18px; }
+.mon-card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mon-card h3 { margin: 0; font-size: 1rem; }
+.mon-card p { margin: 0 0 6px; font-size: 0.9rem; color: var(--ui-text-secondary); line-height: 1.5; overflow-wrap: anywhere; }
+.mon-card small { color: var(--ui-text-muted); }
+.mon-card.mon-up { border-top-color: var(--ui-success); }
+.mon-card.mon-warn { border-top-color: var(--ui-warning); }
+.mon-card.mon-down { border-top-color: var(--ui-danger); }
+
+.mon-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }
+.mon-card.mon-up .mon-badge, .mon-badge.mon-up { background: var(--ui-success-soft); color: var(--ui-success); }
+.mon-card.mon-warn .mon-badge, .mon-badge.mon-warn { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.mon-card.mon-down .mon-badge, .mon-badge.mon-down { background: var(--ui-danger-soft); color: var(--ui-danger); }
+
+.mon-vitals { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 0; }
+.mon-vitals div { background: var(--ui-bg-surface); border: 1px solid var(--ui-border); border-radius: 10px; padding: 12px 16px; }
+.mon-vitals dt { font-size: 0.8125rem; color: var(--ui-text-muted); margin-bottom: 4px; }
+.mon-vitals dd { margin: 0; font-weight: 600; color: var(--ui-text-primary); }
+
+.mon-panel { background: var(--ui-bg-surface); border: 1px solid var(--ui-border); border-radius: 12px; padding: 18px 20px; display: grid; gap: 14px; }
+.mon-note { margin: 0; font-size: 0.9rem; color: var(--ui-text-muted); line-height: 1.5; }
+.mon-empty { margin: 0; padding: 14px 16px; border-radius: 8px; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }
+.mon-channels { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mon-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; background: var(--ui-border-strong); }
+.mon-dot.mon-up { background: var(--ui-success); }
+.mon-dot.mon-warn { background: var(--ui-warning); }
+
+.mon-table-wrap { overflow-x: auto; }
+.mon-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.mon-table th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--ui-border-strong); color: var(--ui-text-secondary); white-space: nowrap; }
+.mon-table td { padding: 8px 10px; border-bottom: 1px solid var(--ui-border); vertical-align: top; overflow-wrap: anywhere; }
+.mon-table code { padding: 1px 6px; border-radius: 4px; background: var(--ui-bg-inset); }

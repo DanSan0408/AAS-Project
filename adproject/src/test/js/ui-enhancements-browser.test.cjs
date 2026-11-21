@@ -122,7 +122,7 @@ test('UI Enhancements & Themes Test Suite', async (t) => {
         assert.ok(systemUiCss.includes('--admin-primary: #f59e0b;'), 'Dark mode must define accessible amber admin primary');
         assert.ok(systemUiCss.includes('--lecturer-primary: #34d399;'), 'Dark mode must define accessible emerald lecturer primary');
         assert.ok(systemUiCss.includes('--supervisor-primary: #60a5fa;'), 'Dark mode must define accessible sky supervisor primary');
-        assert.ok(systemUiCss.includes('--student-primary: #f59e0b;'), 'Dark mode must define accessible student primary');
+        assert.ok(systemUiCss.includes('--student-primary: #a78bfa;'), 'Dark mode must give students their own accessible violet primary, distinct from admin amber');
         assert.ok(systemUiCss.includes('--ui-background: var(--ui-bg-canvas);'), 'body[data-ui-role] must reference dynamic canvas token');
         assert.ok(!systemUiCss.includes('#fb7185'), 'Dark mode must not contain disliked neon pink #fb7185');
         assert.ok(!systemUiCss.includes('#f43f5e'), 'Dark mode must not contain disliked neon rose #f43f5e');

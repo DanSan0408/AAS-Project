@@ -199,18 +199,40 @@
     document.addEventListener('submit', event => {
         const form = event.target.closest('form');
         if (form && !event.defaultPrevented) {
-            // Find all submit buttons and disable them
+            // Disable after the browser has collected the form: a disabled button's name and value are not sent,
+            // and some forms rely on them (for example name="action" value="save").
             const submitButtons = form.querySelectorAll('button[type="submit"]');
-            submitButtons.forEach(button => {
-                button.disabled = true;
-                button.classList.add('disabled');
-                // Optionally change the button text to indicate processing
-                if (button.dataset.loadingText) {
-                    button.dataset.originalText = button.textContent;
-                    button.textContent = button.dataset.loadingText;
-                }
-            });
+            window.setTimeout(() => {
+                submitButtons.forEach(button => {
+                    button.disabled = true;
+                    button.dataset.uiSubmitting = 'true';
+                    button.setAttribute('aria-busy', 'true');
+                    button.classList.add('disabled');
+                    // Optionally change the button text to indicate processing
+                    if (button.dataset.loadingText) {
+                        button.dataset.originalText = button.textContent;
+                        button.textContent = button.dataset.loadingText;
+                    }
+                });
+            }, 0);
         }
+    });
+
+    // Back/forward restores the page from memory with its buttons still disabled: give them back.
+    window.addEventListener('pageshow', event => {
+        if (!event.persisted) {
+            return;
+        }
+        document.querySelectorAll('button[data-ui-submitting="true"]').forEach(button => {
+            button.disabled = false;
+            button.removeAttribute('aria-busy');
+            button.classList.remove('disabled');
+            delete button.dataset.uiSubmitting;
+            if (button.dataset.originalText) {
+                button.textContent = button.dataset.originalText;
+                delete button.dataset.originalText;
+            }
+        });
     });
 
     /**

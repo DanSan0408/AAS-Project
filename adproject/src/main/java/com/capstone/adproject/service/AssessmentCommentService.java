@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.capstone.adproject.model.Assessment;
+import com.capstone.adproject.dto.ai.AiCommentDtos;
 import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
@@ -34,6 +35,9 @@ public class AssessmentCommentService {
     
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired(required = false)
+    private AiServiceClient aiServiceClient;
     
     @Transactional
     public AssessmentComment saveComment(AssessmentComment comment) {
@@ -551,6 +555,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
     @Transactional
     public boolean approveComment(Long commentId, String adminUsername) {
         return commentRepository.findById(commentId).map(comment -> {
+            comment.setBulkDecision(false);
             comment.setIsApproved(true);
             comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
             comment.setApprovedAt(LocalDateTime.now());
@@ -563,6 +568,7 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
     @Transactional
     public boolean rejectComment(Long commentId, String adminUsername) {
         return commentRepository.findById(commentId).map(comment -> {
+            comment.setBulkDecision(false);
             comment.setIsApproved(false);
             comment.setApprovalStatus(AssessmentComment.ApprovalStatus.REJECTED);
             comment.setApprovedAt(LocalDateTime.now());
@@ -593,26 +599,162 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         }).orElse(false);
     }
 
+    /** Approves every comment still waiting for a decision. A comment a moderator rejected stays rejected. */
     @Transactional
     public int bulkApproveAllComments(Long assessmentId, String adminUsername) {
-        List<AssessmentComment> comments = commentRepository.findByAssessmentId(assessmentId);
         int count = 0;
-        for (AssessmentComment comment : comments) {
-            if (!comment.isApproved()) {
-                comment.setIsApproved(true);
-                comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
-                comment.setApprovedAt(LocalDateTime.now());
-                comment.setApprovedBy(adminUsername);
-                commentRepository.save(comment);
+        for (AssessmentComment comment : commentRepository.findByAssessmentId(assessmentId)) {
+            if (comment.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !comment.isApproved()) {
+                markApproved(comment, adminUsername);
                 count++;
             }
         }
         return count;
     }
 
+    /**
+     * Approves only the pending comments the AI check read and found no concern with, at high confidence, and that have not been
+     * edited since. Anything flagged, unclear or not yet checked is left for a person.
+     */
     @Transactional
     public int bulkApproveSafeComments(Long assessmentId, String adminUsername) {
-        return bulkApproveAllComments(assessmentId, adminUsername);
+        int count = 0;
+        for (AssessmentComment comment : commentRepository.findByAssessmentId(assessmentId)) {
+            if (isScannedSafe(comment)) {
+                markApproved(comment, adminUsername);
+                count++;
+            }
+        }
+        return count;
+    }
+
+    static boolean isScannedSafe(AssessmentComment c) {
+        return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !c.isApproved()
+                && "ok".equals(c.getAiLabel()) && c.getAiConfidence() != null && c.getAiConfidence() >= SAFE_CONFIDENCE
+                && !Boolean.TRUE.equals(c.getIsFlaggedNegative()) && !needsScan(c);
+    }
+
+    private void markApproved(AssessmentComment comment, String adminUsername) {
+        comment.setBulkDecision(true);
+        comment.setIsApproved(true);
+        comment.setApprovalStatus(AssessmentComment.ApprovalStatus.APPROVED);
+        comment.setApprovedAt(LocalDateTime.now());
+        comment.setApprovedBy(adminUsername);
+        commentRepository.save(comment);
+    }
+
+    /** How often the AI check and the moderators agreed, over every comment a person has decided on after it was read. */
+    @Transactional(readOnly = true)
+    public AiAgreement.Report aiAgreementReport() {
+        return AiAgreement.compare(commentRepository.findByAiCheckedAtIsNotNullAndApprovalStatusIn(
+                List.of(AssessmentComment.ApprovalStatus.APPROVED, AssessmentComment.ApprovalStatus.REJECTED)));
+    }
+
+    public long pendingReadByAi() {
+        return commentRepository.countByApprovalStatusAndAiCheckedAtIsNotNull(AssessmentComment.ApprovalStatus.PENDING);
+    }
+
+    public long pendingNotReadByAi() {
+        return commentRepository.countByApprovalStatusAndAiCheckedAtIsNull(AssessmentComment.ApprovalStatus.PENDING);
+    }
+
+    // --- AI comment check (advice only) -----------------------------------------------------------------------------
+
+    static final double SAFE_CONFIDENCE = 0.8;
+    private static final int SCAN_BATCH = 20;
+    private static final int SCAN_LIMIT = 100;
+
+    /** What a scan did: how many comments it read, how many it marked for a look, and what was left. */
+    public record ScanResult(int checked, int flagged, int notChecked, int remaining, String aiStatus, List<String> notes) {}
+
+    static String textHash(String text) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                .digest((text == null ? "" : text).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : digest) hex.append(String.format("%02x", b));
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** A comment needs reading by the AI check when it never was, or when its text changed since. */
+    static boolean needsScan(AssessmentComment c) {
+        return c.getAiCheckedAt() == null || c.getAiTextHash() == null || !c.getAiTextHash().equals(textHash(c.getCommentText()));
+    }
+
+    /**
+     * Reads the pending comments of an assessment that have not been checked (up to 100 at a time, 20 per request) and records
+     * the finding on each. The finding is advice: a comment stays pending until a person approves or rejects it.
+     */
+    @Transactional
+    public ScanResult scanPendingComments(Long assessmentId) {
+        if (aiServiceClient == null) {
+            throw new IllegalStateException("The AI service is not configured.");
+        }
+        List<AssessmentComment> todo = commentRepository.findByAssessmentId(assessmentId).stream()
+            .filter(c -> c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !c.isApproved())
+            .filter(c -> c.getCommentText() != null && !c.getCommentText().isBlank())
+            .filter(AssessmentCommentService::needsScan)
+            .sorted(java.util.Comparator.comparing(AssessmentComment::getId))
+            .collect(Collectors.toList());
+        int remaining = Math.max(0, todo.size() - SCAN_LIMIT);
+        if (todo.size() > SCAN_LIMIT) todo = todo.subList(0, SCAN_LIMIT);
+
+        int checked = 0, flagged = 0, notChecked = 0;
+        boolean anyBatchDone = false;
+        String worst = "NOT_USED";
+        List<String> notes = new java.util.ArrayList<>();
+        for (int from = 0; from < todo.size(); from += SCAN_BATCH) {
+            List<AssessmentComment> batch = todo.subList(from, Math.min(from + SCAN_BATCH, todo.size()));
+            AiCommentDtos.CheckResponse response;
+            try {
+                response = aiServiceClient.checkComments(new AiCommentDtos.CheckRequest(batch.stream()
+                    .map(c -> new AiCommentDtos.Item(String.valueOf(c.getId()), c.getCommentText())).collect(Collectors.toList())));
+            } catch (RuntimeException e) {
+                if (!anyBatchDone) throw e;     // nothing was read: tell the caller
+                remaining += todo.size() - from;
+                notes.add("The scan stopped early; run it again to continue.");
+                break;
+            }
+            anyBatchDone = true;
+            worst = worse(worst, response.aiStatus());
+            if (response.aiNotes() != null) notes.addAll(response.aiNotes());
+            Map<String, AiCommentDtos.Verdict> byId = new HashMap<>();
+            if (response.results() != null) response.results().forEach(v -> byId.put(v.id(), v));
+            for (AssessmentComment comment : batch) {
+                AiCommentDtos.Verdict verdict = byId.get(String.valueOf(comment.getId()));
+                if (verdict == null || "not_checked".equals(verdict.label())) {
+                    notChecked++;
+                    continue;            // left unchecked, so a later scan tries again
+                }
+                applyVerdict(comment, verdict);
+                commentRepository.save(comment);
+                checked++;
+                if (Boolean.TRUE.equals(verdict.flagged())) flagged++;
+            }
+        }
+        return new ScanResult(checked, flagged, notChecked, remaining, worst, notes.stream().distinct().collect(Collectors.toList()));
+    }
+
+    private static String worse(String a, String b) {
+        java.util.List<String> order = List.of("NOT_USED", "OK", "PARTIAL", "UNAVAILABLE");
+        return order.indexOf(b == null ? "OK" : b) > order.indexOf(a) ? (b == null ? "OK" : b) : a;
+    }
+
+    private void applyVerdict(AssessmentComment comment, AiCommentDtos.Verdict verdict) {
+        comment.setAiLabel(verdict.label());
+        comment.setAiConfidence(verdict.confidence());
+        comment.setAiReason(verdict.reason() == null ? null : (verdict.reason().length() > 300 ? verdict.reason().substring(0, 300) : verdict.reason()));
+        comment.setAiCheckedAt(LocalDateTime.now());
+        comment.setAiTextHash(textHash(comment.getCommentText()));
+        boolean manuallyFlagged = comment.getFlagReason() != null && comment.getFlagReason().startsWith("Manually flagged");
+        if (!manuallyFlagged) {           // an admin's own flag is never overwritten by the AI
+            boolean flag = Boolean.TRUE.equals(verdict.flagged());
+            comment.setIsFlaggedNegative(flag);
+            comment.setFlagReason(flag ? "AI check: " + (verdict.reason() == null ? "needs a look" : verdict.reason()) : null);
+        }
     }
 
     @Transactional
@@ -648,6 +790,8 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         long pending = 0;
         long approved = 0;
         long rejected = 0;
+        long flagged = 0;
+        long notScanned = 0;
 
         for (AssessmentComment c : comments) {
             if (c.getApprovalStatus() == AssessmentComment.ApprovalStatus.APPROVED || Boolean.TRUE.equals(c.getIsApproved())) {
@@ -656,6 +800,8 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
                 rejected++;
             } else {
                 pending++;
+                if (Boolean.TRUE.equals(c.getIsFlaggedNegative())) flagged++;
+                if (needsScan(c)) notScanned++;
             }
         }
 
@@ -663,7 +809,8 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
         stats.put("pending", pending);
         stats.put("approved", approved);
         stats.put("rejected", rejected);
-        stats.put("flagged", 0L);
+        stats.put("flagged", flagged);               // pending comments the AI check (or an admin) marked for a closer look
+        stats.put("notScanned", notScanned);         // pending comments the AI check has not read yet (or that were edited since)
         logger.info("Comment moderation totals: assessmentId={}, total={}, pending={}, approved={}, rejected={}",
             assessmentId, total, pending, approved, rejected);
         return stats;
@@ -679,6 +826,8 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
                 if ("pending".equalsIgnoreCase(filter)) return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !Boolean.TRUE.equals(c.getIsApproved());
                 if ("approved".equalsIgnoreCase(filter)) return c.isApproved();
                 if ("rejected".equalsIgnoreCase(filter)) return c.getApprovalStatus() == AssessmentComment.ApprovalStatus.REJECTED;
+                if ("flagged".equalsIgnoreCase(filter)) return Boolean.TRUE.equals(c.getIsFlaggedNegative()) && !c.isApproved()
+                        && c.getApprovalStatus() != AssessmentComment.ApprovalStatus.REJECTED;
                 return true;
             })
             .filter(c -> {
@@ -711,5 +860,15 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
             assessmentId, comments.size(), filteredComments.size(), filter, roleFilter, groupId,
             search != null && !search.isBlank());
         return filteredComments;
+    }
+
+    /** Assessors' own comments on an assessment, for the moderation briefing. Comments a moderator rejected are left out. */
+    public List<AssessmentComment> getAssessorCommentsForBriefing(Assessment assessment) {
+        return commentRepository.findByAssessmentAndEvaluatorType(assessment, AssessmentComment.EvaluatorType.LECTURER).stream()
+            .filter(c -> c.getApprovalStatus() != AssessmentComment.ApprovalStatus.REJECTED)
+            .filter(c -> c.getCommentText() != null && !c.getCommentText().trim().isEmpty())
+            .filter(c -> c.getEvaluatedStudent() != null)
+            .limit(60)
+            .collect(java.util.stream.Collectors.toList());
     }
 }

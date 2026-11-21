@@ -7,6 +7,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.capstone.adproject.config.CourseScopeInterceptor;
 import com.capstone.adproject.model.Course;
 import com.capstone.adproject.service.CourseScopeService;
 
@@ -20,11 +23,14 @@ public class AdminCourseContextAdvice {
     }
 
     @ModelAttribute("managedCourses")
-    public List<Course> managedCourses() {
+    public List<Course> managedCourses(HttpServletRequest request) {
         if (!hasCourseContext()) {
             return List.of();
         }
-        return courseScopeService.getManagedCoursesForCurrentUser();
+        // The admin pages offer only the courses the person administers.
+        return CourseScopeInterceptor.isAdminArea(request)
+                ? courseScopeService.getAdminAreaCoursesForCurrentUser()
+                : courseScopeService.getManagedCoursesForCurrentUser();
     }
 
     @ModelAttribute("studentCourses")

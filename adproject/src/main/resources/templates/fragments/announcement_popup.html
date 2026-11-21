@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Sign-in announcements from the Super Admin. Rendered by every sidebar; empty unless there is something to read. -->
+    <th:block th:fragment="popup">
+        <th:block th:if="${pendingAnnouncements != null and !pendingAnnouncements.isEmpty()}">
+            <link rel="stylesheet" th:href="@{/css/announcements.css}">
+            <dialog id="announcementDialog" class="iams-announce" aria-labelledby="announcementHeading">
+                <form method="post" th:action="@{/announcements/dismiss}" class="iams-announce-form">
+                    <header class="iams-announce-head">
+                        <h2 id="announcementHeading">Announcements</h2>
+                        <p th:text="${pendingAnnouncements.size() == 1} ? 'One thing to know before you continue.' : |${pendingAnnouncements.size()} things to know before you continue.|">One thing to know before you continue.</p>
+                    </header>
+                    <div class="iams-announce-list">
+                        <article class="iams-announce-item" th:each="a : ${pendingAnnouncements}"
+                                 th:classappend="|iams-announce-item--${a.categoryKey}|">
+                            <div class="iams-announce-meta">
+                                <span class="iams-announce-tag" th:text="${a.categoryLabel}">Maintenance</span>
+                                <span class="iams-announce-date" th:text="${a.postedOn}">19 Nov 2026</span>
+                            </div>
+                            <h3 th:text="${a.title}">Title</h3>
+                            <p th:text="${a.message}">Message</p>
+                        </article>
+                    </div>
+                    <footer class="iams-announce-foot">
+                        <button type="submit" class="iams-announce-btn" autofocus>Got it</button>
+                    </footer>
+                </form>
+            </dialog>
+            <script th:src="@{/js/announcement-popup.js}"></script>
+        </th:block>
+    </th:block>
+</body>
+</html>

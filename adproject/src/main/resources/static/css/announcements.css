@@ -1,0 +1,84 @@
+/* Sign-in announcement pop-up and the Super Admin announcement manager. Colours come from the shared UI tokens. */
+
+/* ---- Pop-up ---------------------------------------------------------------------------------------------- */
+.iams-announce {
+    width: min(560px, calc(100vw - 32px));
+    max-height: min(80vh, 680px);
+    padding: 0;
+    border: 1px solid var(--ui-border);
+    border-radius: 16px;
+    background: var(--ui-bg-surface);
+    color: var(--ui-text-body-color);
+    box-shadow: 0 24px 64px rgb(0 0 0 / 28%);
+}
+.iams-announce::backdrop { background: rgb(0 0 0 / 55%); }
+.iams-announce[open] { display: flex; flex-direction: column; }
+.iams-announce-form { display: flex; flex-direction: column; min-height: 0; max-height: inherit; }
+
+.iams-announce-head { padding: 24px 28px 8px; }
+.iams-announce-head h2 { margin: 0 0 4px; font-size: 1.375rem; color: var(--ui-text-primary); }
+.iams-announce-head p { margin: 0; font-size: 0.9375rem; color: var(--ui-text-muted); }
+
+.iams-announce-list { padding: 8px 28px 16px; overflow-y: auto; display: grid; gap: 12px; }
+.iams-announce-item { border: 1px solid var(--ui-border); border-left-width: 5px; border-radius: 10px; padding: 14px 16px; background: var(--ui-bg-subtle); }
+.iams-announce-item h3 { margin: 6px 0 6px; font-size: 1.0625rem; color: var(--ui-text-primary); overflow-wrap: anywhere; }
+.iams-announce-item p { margin: 0; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; color: var(--ui-text-secondary); }
+.iams-announce-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.iams-announce-date { font-size: 0.8125rem; color: var(--ui-text-muted); font-variant-numeric: tabular-nums; }
+.iams-announce-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }
+
+.iams-announce-item--maintenance { border-left-color: var(--ui-warning); }
+.iams-announce-item--maintenance .iams-announce-tag { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.iams-announce-item--release { border-left-color: var(--ui-info); }
+.iams-announce-item--release .iams-announce-tag { background: var(--ui-info-soft); color: var(--ui-info); }
+.iams-announce-item--improvement { border-left-color: var(--ui-success); }
+.iams-announce-item--improvement .iams-announce-tag { background: var(--ui-success-soft); color: var(--ui-success); }
+.iams-announce-item--notice { border-left-color: var(--ui-brand); }
+.iams-announce-item--notice .iams-announce-tag { background: var(--ui-brand-soft); color: var(--ui-brand); }
+
+.iams-announce-foot { padding: 12px 28px 24px; display: flex; justify-content: flex-end; }
+.iams-announce-btn { min-height: 44px; padding: 0 28px; border: 0; border-radius: 8px; background: var(--ui-brand); color: #fff; font: inherit; font-weight: 600; cursor: pointer; transition: background-color 0.15s ease, transform 0.1s ease; }
+.iams-announce-btn:hover { background: var(--ui-brand-light); }
+.iams-announce-btn:active { transform: translateY(1px); }
+.iams-announce-btn:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .iams-announce-btn { transition: none; }
+}
+
+/* ---- Super Admin manager --------------------------------------------------------------------------------- */
+.ann-manager { display: grid; gap: 32px; }
+.ann-section-title { margin: 0 0 12px; font-size: 1.125rem; font-weight: 700; color: var(--ui-text-primary); }
+.ann-panel { background: var(--ui-bg-surface); border: 1px solid var(--ui-border); border-radius: 12px; padding: 20px 24px; }
+.ann-note { margin: 0 0 16px; font-size: 0.9rem; color: var(--ui-text-muted); line-height: 1.5; }
+
+.ann-form { display: grid; gap: 16px; }
+.ann-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.ann-field { display: grid; gap: 6px; }
+.ann-field label { font-size: 0.875rem; font-weight: 600; color: var(--ui-text-secondary); }
+.ann-field input[type="text"], .ann-field input[type="datetime-local"], .ann-field select, .ann-field textarea {
+    width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ui-border-strong); border-radius: 8px;
+    background: var(--ui-bg-surface); color: var(--ui-text-body-color); font: inherit; box-sizing: border-box;
+}
+.ann-field textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+.ann-field input:focus-visible, .ann-field select:focus-visible, .ann-field textarea:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 1px; }
+.ann-hint { font-size: 0.8125rem; color: var(--ui-text-muted); }
+.ann-check { display: inline-flex; gap: 10px; align-items: center; font-weight: 600; }
+.ann-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.ann-table-wrap { overflow-x: auto; }
+.ann-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.ann-table th { text-align: left; padding: 10px; border-bottom: 2px solid var(--ui-border-strong); color: var(--ui-text-secondary); white-space: nowrap; }
+.ann-table td { padding: 10px; border-bottom: 1px solid var(--ui-border); vertical-align: top; overflow-wrap: anywhere; }
+.ann-table .ann-title { font-weight: 600; color: var(--ui-text-primary); }
+.ann-table .ann-excerpt { display: block; margin-top: 2px; color: var(--ui-text-muted); font-size: 0.8125rem; }
+.ann-window { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ann-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.ann-row-actions form { margin: 0; }
+
+.ann-status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }
+.ann-status--live { background: var(--ui-success-soft); color: var(--ui-success); }
+.ann-status--scheduled { background: var(--ui-info-soft); color: var(--ui-info); }
+.ann-status--expired, .ann-status--off { background: var(--ui-bg-inset); color: var(--ui-text-muted); }
+
+.ann-empty { margin: 0; padding: 18px; border-radius: 8px; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }

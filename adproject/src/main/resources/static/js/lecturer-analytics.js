@@ -477,6 +477,16 @@
                         badgeLabel = 'Moderate Discrepancy';
                     }
 
+                    function aiBannerHtml(data) {
+                        if (!data || (data.aiStatus !== 'UNAVAILABLE' && data.aiStatus !== 'PARTIAL')) { return ''; }
+                        const notes = (data.aiNotes || []).map(n => '<li>' + escapeHtml(n) + '</li>').join('');
+                        const lead = data.aiStatus === 'UNAVAILABLE'
+                            ? 'The AI was not available, so nothing below was written by it. The summary is composed from the calculated differences.'
+                            : 'Part of the AI analysis was not available. The summary is composed from the calculated differences.';
+                        return '<div role="status" style="background:#fff7ed; border:1px solid #fed7aa; border-left:3px solid #ea580c; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem; color:#7c2d12;">'
+                            + '<strong>' + lead + '</strong>' + (notes ? '<ul style="margin:6px 0 0 0; padding-left:18px;">' + notes + '</ul>' : '') + '</div>';
+                    }
+
                     function escapeHtml(str) {
                         if (!str) return '';
                         return (str + '').replace(/[&<"']/g, function(m) {
@@ -490,14 +500,14 @@
                         });
                     }
 
-                    let html = `
+                    let html = aiBannerHtml(data) + `
                         <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:14px 18px; margin-bottom:14px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                                 <span style="background:${badgeBg}; color:${badgeColor}; font-weight:600; font-size:0.8rem; padding:3px 10px; border-radius:9999px;">
                                     ${badgeLabel}
                                 </span>
                                 <span style="font-size:0.875rem; color:#64748b; font-weight:600;">
-                                    Mean Cohort Gap: <strong style="color:#1e293b;">${data.meanCohortGapPct}%</strong>
+                                    Average gap between two assessors: <strong style="color:#1e293b;">${data.meanCohortGapSteps !== null && data.meanCohortGapSteps !== undefined ? data.meanCohortGapSteps + ' rating steps' : data.meanCohortGapPct + ' points'}</strong>
                                 </span>
                             </div>
                             <p style="margin:0; font-size:0.925rem; line-height:1.6; color:#334155;">${escapeHtml(data.executiveSummary)}</p>

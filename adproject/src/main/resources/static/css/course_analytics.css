@@ -1,0 +1,54 @@
+/* Course Analytics: a short page of plain-language cards. Colour comes from the shared theme tokens only. */
+.ca-page { display: grid; gap: 24px; }
+.ca-intro { margin: 0 0 16px; color: var(--ui-text-secondary); max-width: 70ch; line-height: 1.5; }
+
+.ca-filters { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; padding: 16px 24px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-bg-surface); }
+.ca-filters .ca-field { display: grid; gap: 4px; min-width: 200px; }
+.ca-filters label { font-size: 0.8125rem; font-weight: 600; color: var(--ui-text-secondary); }
+.ca-filters select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--ui-border-strong); border-radius: 8px; background: var(--ui-bg-surface); color: var(--ui-text-body-color); font: inherit; }
+.ca-filters .ca-apply { min-height: 44px; padding: 0 24px; border: 0; border-radius: 8px; background: var(--ui-primary); color: var(--ui-on-brand); font: inherit; font-weight: 600; cursor: pointer; }
+
+.ca-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.ca-card { padding: 24px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-bg-surface); display: grid; gap: 8px; align-content: start; }
+.ca-card h2, .ca-section h2 { margin: 0; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ui-text-secondary); }
+.ca-card p { margin: 0; }
+.ca-figure { font-size: 2.25rem; font-weight: 700; line-height: 1.1; color: var(--ui-text-primary); font-variant-numeric: tabular-nums; }
+.ca-figure small { font-size: 1rem; font-weight: 600; color: var(--ui-text-muted); }
+.ca-sub { margin: 0; font-size: 0.875rem; color: var(--ui-text-secondary); line-height: 1.4; }
+.ca-hint { margin: 0; font-size: 0.8125rem; color: var(--ui-text-muted); }
+.ca-light { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 2px 12px; border-radius: 999px; font-size: 0.8125rem; font-weight: 700; }
+.ca-light::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.ca-light--good { background: var(--ui-success-soft); color: var(--ui-success); }
+.ca-light--watch { background: var(--ui-warning-soft); color: var(--ui-warning); }
+.ca-light--act { background: var(--ui-danger-soft); color: var(--ui-danger); }
+.ca-light--unknown { background: var(--ui-bg-inset); color: var(--ui-text-muted); }
+
+.ca-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+.ca-section { padding: 24px; border: 1px solid var(--ui-border); border-radius: 12px; background: var(--ui-bg-surface); display: grid; gap: 16px; align-content: start; }
+
+.ca-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.ca-bar { display: grid; gap: 4px; }
+.ca-bar-head { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; font-size: 0.9375rem; }
+.ca-bar-head strong { color: var(--ui-text-primary); overflow-wrap: anywhere; }
+.ca-bar-head span { color: var(--ui-text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ca-track { position: relative; height: 12px; border-radius: 999px; background: var(--ui-bg-inset); overflow: hidden; }
+.ca-fill { display: block; height: 100%; border-radius: 999px; background: var(--ui-primary); }
+.ca-fill--ok { background: var(--ui-success); }
+.ca-fill--low { background: var(--ui-danger); }
+.ca-target { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ui-text-primary); opacity: 0.6; }
+.ca-bar-note { font-size: 0.8125rem; color: var(--ui-text-muted); }
+
+.ca-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--ui-bg-inset); color: var(--ui-text-secondary); }
+.ca-tag--hard { background: var(--ui-danger-soft); color: var(--ui-danger); }
+.ca-tag--easy { background: var(--ui-info-soft); color: var(--ui-info); }
+.ca-tag--ok { background: var(--ui-success-soft); color: var(--ui-success); }
+
+.ca-table-wrap { overflow-x: auto; }
+.ca-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.ca-table th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--ui-border-strong); color: var(--ui-text-secondary); font-size: 0.8125rem; }
+.ca-table td { padding: 12px; border-bottom: 1px solid var(--ui-border); vertical-align: top; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.ca-reasons { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+
+.ca-empty { margin: 0; padding: 24px; border-radius: 12px; background: var(--ui-bg-subtle); color: var(--ui-text-secondary); line-height: 1.5; }
+.ca-note { margin: 0; font-size: 0.8125rem; color: var(--ui-text-muted); line-height: 1.5; }
+.ca-link { color: var(--ui-primary); font-weight: 600; }

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Comment Check - IAMS</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/monitoring.css}">
+</head>
+<body data-ui-role="super_admin" class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/superadmin/home', 'AI Comment Check')}"></nav>
+
+        <div class="page-header">
+            <h1>AI comment check</h1>
+            <p>How the AI's findings compare with what moderators decided, across every course. For tuning; moderators do not see this page.</p>
+        </div>
+
+        <div class="container mt-4 monitoring">
+            <div th:if="${successMessage}" class="alert alert-success" role="status"><span th:text="${successMessage}"></span></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert"><span th:text="${errorMessage}"></span></div>
+
+            <!-- Agreement -->
+            <section aria-labelledby="agreeTitle">
+                <h2 id="agreeTitle" class="mon-section-title">Agreement with moderators</h2>
+                <div class="mon-panel">
+                    <p th:if="${report.compared == 0}" class="mon-empty">
+                        Nothing to compare yet. A comment counts once the AI has read it and a moderator has approved or rejected it one by one.
+                    </p>
+                    <th:block th:unless="${report.compared == 0}">
+                        <dl class="mon-vitals">
+                            <div><dt>Compared</dt><dd class="mon-num" th:text="${report.compared}">0</dd></div>
+                            <div><dt>Agreed</dt><dd class="mon-num" th:text="|${report.agreed} (${#numbers.formatDecimal(report.agreementPercent, 1, 0)}%)|">0</dd></div>
+                            <div><dt>AI flagged, moderator approved</dt><dd class="mon-num" th:text="${report.flaggedButApproved}">0</dd></div>
+                            <div><dt>AI said fine, moderator rejected</dt><dd class="mon-num" th:text="${report.missedButRejected}">0</dd></div>
+                            <div><dt>AI flagged, moderator rejected</dt><dd class="mon-num" th:text="${report.flaggedAndRejected}">0</dd></div>
+                            <div><dt>AI said fine, moderator approved</dt><dd class="mon-num" th:text="${report.fineAndApproved}">0</dd></div>
+                        </dl>
+                        <p th:unless="${report.enough}" class="mon-empty">
+                            Only <span th:text="${report.compared}">0</span> decisions so far. Treat the percentages as a first look, not a measure.
+                        </p>
+                        <div class="mon-table-wrap">
+                            <table class="mon-table">
+                                <caption class="mon-note">What moderators did, by what the AI said</caption>
+                                <thead><tr><th>AI finding</th><th>Approved</th><th>Rejected</th><th>Total</th></tr></thead>
+                                <tbody>
+                                    <tr th:each="row : ${report.labels}">
+                                        <td th:text="${row.text}">Fine</td>
+                                        <td class="mon-num" th:text="${row.approved}">0</td>
+                                        <td class="mon-num" th:text="${row.rejected}">0</td>
+                                        <td class="mon-num" th:text="${row.total}">0</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </th:block>
+                    <p class="mon-note">
+                        Not counted: <span class="mon-num" th:text="${report.skippedBulk}">0</span> approved in bulk (nobody read them one by one) and
+                        <span class="mon-num" th:text="${report.skippedEdited}">0</span> edited after the AI read them.
+                        A rejection is not always about tone and an approval can be leniency, so this shows where the AI and people diverge. It is not
+                        accuracy; use the labelled sample (<code>tools/eval_comments.py</code>) for that.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Scan activity -->
+            <section aria-labelledby="scanTitle">
+                <h2 id="scanTitle" class="mon-section-title">Automatic scan</h2>
+                <div class="mon-panel">
+                    <ul class="mon-channels">
+                        <li><span class="mon-dot" th:classappend="${scanEnabled} ? 'mon-up' : 'mon-warn'"></span>
+                            Scheduled scan: <strong th:text="${scanEnabled ? 'on (every 15 minutes by default)' : 'off (set COMMENT_SCAN_ENABLED=true)'}">on</strong></li>
+                        <li>Pending comments the AI has read: <strong class="mon-num" th:text="${pendingRead}">0</strong></li>
+                        <li>Pending comments not read yet: <strong class="mon-num" th:text="${pendingUnread}">0</strong></li>
+                    </ul>
+                    <p th:if="${lastRun == null}" class="mon-empty">No scan has run since the application started.</p>
+                    <dl class="mon-vitals" th:unless="${lastRun == null}">
+                        <div><dt>Last run</dt><dd class="mon-num" th:text="${#temporals.format(lastRun.at.atZone(T(java.time.ZoneId).systemDefault()), 'dd MMM yyyy, HH:mm')} + (${lastRun.manual} ? ' (manual)' : '')">now</dd></div>
+                        <div><dt>Status</dt><dd th:text="${lastRun.status}">OK</dd></div>
+                        <div><dt>Read</dt><dd class="mon-num" th:text="${lastRun.read}">0</dd></div>
+                        <div><dt>Flagged</dt><dd class="mon-num" th:text="${lastRun.flagged}">0</dd></div>
+                        <div><dt>Could not check</dt><dd class="mon-num" th:text="${lastRun.notChecked}">0</dd></div>
+                        <div><dt>Left for next time</dt><dd class="mon-num" th:text="${lastRun.remaining}">0</dd></div>
+                    </dl>
+                    <p th:if="${lastRun != null and !lastRun.note.isEmpty()}" class="mon-note" th:text="${lastRun.note}">note</p>
+                    <p class="mon-note">
+                        The scan only records what the AI found; it never approves, rejects or hides a comment. It sends the text of new pending comments
+                        to the AI service.
+                    </p>
+                    <form th:action="@{/superadmin/ai-comments/scan-now}" method="post">
+                        <button type="submit" class="btn btn-secondary">Run a scan now</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

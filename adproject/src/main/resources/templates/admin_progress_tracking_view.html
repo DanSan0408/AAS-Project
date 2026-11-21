@@ -74,6 +74,11 @@
                    th:classappend="${activeTab == 'progress' ? 'active' : ''}">
                     <i class="fas fa-chart-line"></i> Evaluation Progress
                 </a>
+                <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=evaluations'}"
+                   class="hub-tab-btn"
+                   th:classappend="${activeTab == 'evaluations' ? 'active' : ''}">
+                    <i class="fas fa-clipboard-check"></i> Finished Evaluations
+                </a>
                 <a th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=comments'}" 
                    class="hub-tab-btn" 
                    th:classappend="${activeTab == 'comments' ? 'active' : ''}">
@@ -296,6 +301,21 @@
                         </span>
                     </div>
                     <div class="notice-action">
+                        <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/ai-scan'}" method="post" style="display: inline;"
+                              onsubmit="return confirm('Have the AI read the pending comments that have not been checked yet? The comment text is sent to the AI service. It only marks comments for your attention; it never approves or rejects anything.');">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit" class="btn-ai-scan" id="btnAiScan" th:disabled="${moderationStats.get('notScanned') == 0}"
+                                    title="The AI marks comments that look abusive, sarcastic or inappropriate. You decide what happens to them.">
+                                <i class="fas fa-magnifying-glass"></i> Scan pending with AI (<span th:text="${moderationStats.get('notScanned')}">0</span>)
+                            </button>
+                        </form>
+                        <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-safe'}" method="post" style="display: inline;"
+                              onsubmit="return confirm('Approve only the pending comments the AI scan found fine? Flagged and unscanned comments stay pending.');">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <button type="submit" class="btn-approve-scanned" id="btnApproveScannedSafe" th:disabled="${moderationStats.get('pending') == 0}">
+                                <i class="fas fa-circle-check"></i> Approve comments the scan found fine
+                            </button>
+                        </form>
                         <form th:action="@{'/admin/comments/assessment/' + ${assessment.id} + '/bulk-approve-all'}" method="post" style="display: inline;" onsubmit="return confirm('Approve all pending comments for this assessment? All feedback will become visible to students.');">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                             <button type="submit" class="btn btn-approve-all" id="btnApproveAllPending" th:disabled="${moderationStats.get('pending') == 0}">
@@ -320,6 +340,12 @@
                            th:classappend="${currentFilter == 'pending' ? 'active' : ''}">
                             <i class="fas fa-clock"></i> Pending Review
                             <span id="pill-count-pending" class="filter-seg-badge badge-pending" th:text="${moderationStats.get('pending')}">0</span>
+                        </a>
+                        <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='flagged', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}"
+                           class="filter-seg-btn"
+                           th:classappend="${currentFilter == 'flagged' ? 'active' : ''}">
+                            <i class="fas fa-flag"></i> Needs a look
+                            <span id="pill-count-flagged" class="filter-seg-badge" th:text="${moderationStats.get('flagged')}">0</span>
                         </a>
                         <a th:href="@{'/admin/progress-tracking/' + ${assessment.id}(tab='comments', filter='approved', search=${currentSearch}, roleFilter=${currentRoleFilter}, groupId=${currentGroupId})}" 
                            class="filter-seg-btn seg-approved" 
@@ -452,6 +478,14 @@
                                 <span th:if="${comment.rubricAssessmentType != null}" th:text="'(' + ${comment.rubricAssessmentType} + ')'" class="prompt-rubric-type"></span>
                             </div>
 
+                            <!-- AI check finding (advice only) -->
+                            <div th:if="${comment.aiLabelText != null}" class="ai-flag"
+                                 th:classappend="${comment.aiLabel == 'ok' ? 'ai-flag--ok' : (comment.aiLabel == 'negative_constructive' or comment.aiLabel == 'unclear' ? 'ai-flag--info' : 'ai-flag--review')}">
+                                <span class="ai-flag-title"><i class="fas fa-robot"></i> <span th:text="${comment.aiLabelText}">Finding</span></span>
+                                <span class="ai-flag-confidence" th:if="${comment.aiConfidencePercent != null}" th:text="${comment.aiConfidencePercent} + '% sure'">80% sure</span>
+                                <span class="ai-flag-reason" th:if="${comment.aiReason != null and !comment.aiReason.isEmpty()}" th:text="${comment.aiReason}">Reason</span>
+                            </div>
+
                             <!-- Comment Content -->
                             <div class="comment-text-box" th:text="${comment.commentText}">
                                 Comment text content...
@@ -512,6 +546,143 @@
                     <div id="toastCard" class="toast-card">
                         <i id="toastIcon" class="fas fa-check-circle"></i>
                         <span id="toastMsg">Action completed successfully.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================================= -->
+            <!-- TAB: FINISHED EVALUATIONS (read and delete, never edit) -->
+            <!-- ================================================================= -->
+            <div th:if="${activeTab == 'evaluations'}">
+                <div class="card eval-picker-card">
+                    <h2 class="card-title"><i class="fas fa-filter"></i> Choose what to look at</h2>
+                    <p class="eval-help">Pick the assessment, then a group, a student or a rubric. Finished evaluations that match are listed below. You can read them and delete them, but not edit them. Changing the assessment clears the other choices.</p>
+                    <form method="get" th:action="@{/admin/progress-tracking/evaluations}" class="eval-picker">
+                        <input type="hidden" name="currentAssessmentId" th:value="${assessment.id}">
+                        <div class="eval-field">
+                            <label for="evalAssessment">Assessment</label>
+                            <select id="evalAssessment" name="assessmentId">
+                                <option th:each="a : ${courseAssessments}" th:value="${a.id}" th:text="${a.title}"
+                                        th:selected="${a.id == assessment.id}">Assessment</option>
+                            </select>
+                        </div>
+                        <div class="eval-field">
+                            <label for="evalGroup">Group</label>
+                            <select id="evalGroup" name="evalGroupId">
+                                <option value="">Any group</option>
+                                <option th:each="g : ${courseGroups}" th:value="${g.id}" th:text="${g.groupName}"
+                                        th:selected="${evalGroupId != null and g.id == evalGroupId}">Group</option>
+                            </select>
+                        </div>
+                        <div class="eval-field">
+                            <label for="evalStudent">Student</label>
+                            <select id="evalStudent" name="evalStudentId">
+                                <option value="">Any student</option>
+                                <option th:each="st : ${evaluationStudents}" th:value="${st.id}"
+                                        th:text="${st.username != null and !st.username.isBlank() ? st.username : st.email}"
+                                        th:selected="${evalStudentId != null and st.id == evalStudentId}">Student</option>
+                            </select>
+                        </div>
+                        <div class="eval-field">
+                            <label for="evalRubric">Rubric</label>
+                            <select id="evalRubric" name="evalRubricId">
+                                <option value="">Any rubric</option>
+                                <option th:each="r : ${evaluationRubrics}" th:value="${r.id}" th:text="${r.name}"
+                                        th:selected="${evalRubricId != null and r.id == evalRubricId}">Rubric</option>
+                            </select>
+                        </div>
+                        <div class="eval-actions">
+                            <button type="submit" class="btn-eval btn-eval-primary">Show evaluations</button>
+                            <a class="btn-eval btn-eval-quiet" th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=evaluations'}">Clear choices</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card" th:unless="${evaluationsPicked}">
+                    <p class="eval-empty">Choose a group, a student or a rubric above to see its finished evaluations.</p>
+                </div>
+
+                <div class="card" th:if="${evaluationsPicked}">
+                    <h2 class="card-title"><i class="fas fa-clipboard-check"></i> Finished evaluations
+                        <span class="eval-count" th:text="${evaluations.size()}">0</span></h2>
+                    <p class="eval-empty" th:if="${evaluations.isEmpty()}">No finished evaluations match your choice.</p>
+
+                    <details class="eval-item" th:each="e : ${evaluations}">
+                        <summary>
+                            <span class="eval-main">
+                                <strong th:text="${e.targetName}">Target</strong>
+                                <span class="eval-sub"><span th:text="${e.rubricName}">Rubric</span> &middot; <span th:text="${e.assessmentType}">Type</span></span>
+                            </span>
+                            <span class="eval-who">
+                                <span class="eval-role" th:text="${e.evaluatorRole}">Assessor</span>
+                                <span th:text="${e.evaluatorName}">Name</span>
+                            </span>
+                            <span class="eval-score">
+                                <span th:text="${#numbers.formatDecimal(e.totalMarks, 1, 2)}">0.00</span><span th:if="${e.maxMarks != null}"> / <span th:text="${#numbers.formatDecimal(e.maxMarks, 1, 2)}">0.00</span></span>
+                            </span>
+                            <span class="eval-date" th:text="${e.submittedAt != null ? #temporals.format(e.submittedAt, 'dd MMM yyyy HH:mm') : ''}">date</span>
+                            <span class="eval-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                        </summary>
+
+                        <div class="eval-body">
+                            <h3 class="eval-body-title">Summary</h3>
+                            <div class="table-responsive">
+                                <table class="eval-lines">
+                                    <thead><tr><th>Criterion</th><th>Rating given</th><th class="eval-num">Marks</th></tr></thead>
+                                    <tbody>
+                                        <tr th:each="line : ${e.lines}">
+                                            <td th:text="${line.subRubric}">Criterion</td>
+                                            <td th:text="${line.rating}">Rating</td>
+                                            <td class="eval-num"><span th:text="${#numbers.formatDecimal(line.marks, 1, 2)}">0.00</span><span th:if="${line.maxMarks != null}"> / <span th:text="${#numbers.formatDecimal(line.maxMarks, 1, 2)}">0.00</span></span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="eval-comments" th:if="${not #lists.isEmpty(e.comments)}">
+                                <h3 class="eval-body-title">Comments</h3>
+                                <p class="eval-comment" th:each="c : ${e.comments}"><strong th:text="${c.label}">Label</strong> <span th:text="${c.text}">Text</span></p>
+                            </div>
+
+                            <form class="eval-delete" method="post"
+                                  th:action="@{'/admin/progress-tracking/' + ${assessment.id} + '/evaluations/delete'}"
+                                  data-action="confirm-submit"
+                                  data-confirm-message="Delete this evaluation permanently? The marks and comments are removed and cannot be restored from the app. A record of the deletion is kept.">
+                                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                                <input type="hidden" name="evaluatorKind" th:value="${e.evaluatorKind}">
+                                <input type="hidden" name="evaluatorId" th:value="${e.evaluatorId}">
+                                <input type="hidden" name="rubricId" th:value="${e.rubricId}">
+                                <input type="hidden" name="assessmentType" th:value="${e.assessmentType}">
+                                <input type="hidden" name="targetIds" th:value="${e.targetIdsCsv}">
+                                <input type="hidden" name="evalGroupId" th:value="${evalGroupId}">
+                                <input type="hidden" name="evalStudentId" th:value="${evalStudentId}">
+                                <input type="hidden" name="evalRubricId" th:value="${evalRubricId}">
+                                <label>Reason for deleting (kept in the deletion record)</label>
+                                <div class="eval-delete-row">
+                                    <input type="text" name="reason" maxlength="300" required placeholder="For example: entered against the wrong student">
+                                    <button type="submit" class="btn-eval btn-eval-danger"><i class="fas fa-trash"></i> Delete evaluation</button>
+                                </div>
+                            </form>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="card" th:if="${not #lists.isEmpty(recentDeletions)}">
+                    <h2 class="card-title"><i class="fas fa-history"></i> Recently deleted evaluations</h2>
+                    <div class="table-responsive">
+                        <table class="eval-lines">
+                            <thead><tr><th>When</th><th>By</th><th>Evaluator</th><th>About</th><th>Rubric</th><th>Reason</th></tr></thead>
+                            <tbody>
+                                <tr th:each="d : ${recentDeletions}">
+                                    <td th:text="${#temporals.format(d.deletedAt, 'dd MMM yyyy HH:mm')}">date</td>
+                                    <td th:text="${d.deletedBy}">admin</td>
+                                    <td th:text="${d.evaluatorName}">Evaluator</td>
+                                    <td th:text="${d.evaluatedNames}">Student</td>
+                                    <td th:text="${d.rubricName}">Rubric</td>
+                                    <td th:text="${d.reason}">Reason</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

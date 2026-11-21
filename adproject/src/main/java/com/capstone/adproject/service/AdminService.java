@@ -165,9 +165,11 @@ public class AdminService {
         Course activeCourse = resolveCurrentAdminCourse()
             .orElseThrow(() -> new RuntimeException("No active course selected for student creation"));
 
+        // Same email = same person. A matching name alone is not: it must not enrol (or later edit) someone else's account.
         Optional<Student> existingStudentOpt = studentRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
-        if (existingStudentOpt.isEmpty() && student.getUsername() != null && !student.getUsername().trim().isEmpty()) {
-            existingStudentOpt = studentRepository.findByUsername(student.getUsername().trim());
+        if (existingStudentOpt.isEmpty() && student.getUsername() != null && !student.getUsername().trim().isEmpty()
+                && studentRepository.findByUsername(student.getUsername().trim()).isPresent()) {
+            student.setUsername(generateUniqueStudentUsername(student.getUsername().trim()));
         }
         if (existingStudentOpt.isPresent()) {
             Student existingStudent = existingStudentOpt.get();
@@ -228,6 +230,164 @@ public class AdminService {
         }
         return emailSent;
     }
+
+/** A matching account the admin may bring into this course. The email is masked unless it was typed in full. */
+public record UserSuggestion(Long id, String username, String email, boolean inThisCourse) {}
+
+private static final int SUGGESTION_MIN_LENGTH = 3;
+
+private static String maskEmail(String email) {
+    if (email == null || email.isBlank()) {
+        return "";
+    }
+    int at = email.indexOf('@');
+    if (at < 0) {
+        return email.substring(0, Math.min(2, email.length())) + "***";
+    }
+    String local = email.substring(0, at);
+    return local.substring(0, Math.min(2, local.length())) + "***" + email.substring(at);
+}
+
+private static String suggestionEmail(String email, String typed) {
+    return email != null && email.equalsIgnoreCase(typed) ? email : maskEmail(email);
+}
+
+/** Existing students whose email or name contains what the admin is typing, for the "already registered?" hint. */
+public List<UserSuggestion> suggestStudents(String query) {
+    String typed = query == null ? "" : query.trim();
+    if (typed.length() < SUGGESTION_MIN_LENGTH) {
+        return List.of();
+    }
+    Long courseId = resolveCurrentAdminCourse().map(Course::getId).orElse(null);
+    List<UserSuggestion> found = new ArrayList<>();
+    for (Student s : studentRepository.findTop5ByEmailContainingIgnoreCaseOrUsernameContainingIgnoreCaseOrderByUsernameAsc(typed, typed)) {
+        boolean inCourse = courseId != null && (studentCourseAssignmentRepository.existsByStudentIdAndCourseId(s.getId(), courseId)
+                || (s.getCourse() != null && courseId.equals(s.getCourse().getId())));
+        found.add(new UserSuggestion(s.getId(), s.getUsername(), suggestionEmail(s.getEmail(), typed), inCourse));
+    }
+    return found;
+}
+
+/** Existing assessors whose email or name contains what the admin is typing. */
+public List<UserSuggestion> suggestLecturers(String query) {
+    String typed = query == null ? "" : query.trim();
+    if (typed.length() < SUGGESTION_MIN_LENGTH) {
+        return List.of();
+    }
+    Long courseId = resolveCurrentAdminCourse().map(Course::getId).orElse(null);
+    List<UserSuggestion> found = new ArrayList<>();
+    for (Lecturer l : lecturerRepository.findTop5ByEmailContainingIgnoreCaseOrUsernameContainingIgnoreCaseOrderByUsernameAsc(typed, typed)) {
+        found.add(new UserSuggestion(l.getId(), l.getUsername(), suggestionEmail(l.getEmail(), typed), lecturerInCourse(l, courseId)));
+    }
+    return found;
+}
+
+private boolean lecturerInCourse(Lecturer lecturer, Long courseId) {
+    if (courseId == null || lecturer == null) {
+        return false;
+    }
+    boolean direct = lecturer.getCourse() != null && courseId.equals(lecturer.getCourse().getId());
+    return direct || (adminCourseAssignmentRepository != null
+            && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(lecturer.getId(), courseId));
+}
+
+public Optional<Student> findExistingStudent(String email, String username) {
+    String normalized = email == null ? "" : email.trim().toLowerCase();
+    return normalized.isEmpty() ? Optional.empty() : studentRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalized);
+}
+
+/** True when the student is also in a course other than the active one, so their record is shared and not this course's to edit. */
+public boolean studentBelongsToOtherCourses(Student student) {
+    Long courseId = getActiveCourseId().orElse(null);
+    if (student == null || student.getId() == null || courseId == null) {
+        return false;
+    }
+    boolean otherEnrolment = studentCourseAssignmentRepository.findByStudentId(student.getId()).stream()
+        .anyMatch(sca -> sca.getCourse() != null && sca.getCourse().getId() != null && !courseId.equals(sca.getCourse().getId()));
+    boolean otherPrimary = student.getCourse() != null && student.getCourse().getId() != null
+        && !courseId.equals(student.getCourse().getId());
+    boolean otherGroup = student.getGroup() != null && student.getGroup().getCourse() != null
+        && student.getGroup().getCourse().getId() != null && !courseId.equals(student.getGroup().getCourse().getId());
+    return otherEnrolment || otherPrimary || otherGroup;
+}
+
+/** True when the assessor also works in a course other than the active one, so their record is shared. */
+public boolean lecturerBelongsToOtherCourses(Lecturer lecturer) {
+    Long courseId = getActiveCourseId().orElse(null);
+    if (lecturer == null || lecturer.getId() == null || courseId == null) {
+        return false;
+    }
+    boolean otherHome = lecturer.getCourse() != null && lecturer.getCourse().getId() != null
+        && !courseId.equals(lecturer.getCourse().getId());
+    boolean otherJoin = adminCourseAssignmentRepository != null
+        && adminCourseAssignmentRepository.findByLecturerId(lecturer.getId()).stream()
+            .anyMatch(j -> j.getCourse() != null && !courseId.equals(j.getCourse().getId()));
+    return otherHome || otherJoin;
+}
+
+public Optional<Lecturer> findExistingLecturer(String email) {
+    String normalized = email == null ? "" : email.trim().toLowerCase();
+    return normalized.isEmpty() ? Optional.empty() : lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalized);
+}
+
+/** Brings an existing student into the admin's active course. No new account, no email. */
+@Transactional
+public Student enrollExistingStudent(Long studentId) {
+    Course course = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new IllegalArgumentException("No active course selected."));
+    Student student = studentId == null ? null : studentRepository.findById(studentId).orElse(null);
+    if (student == null) {
+        throw new IllegalArgumentException("That student account no longer exists.");
+    }
+    boolean alreadyIn = studentCourseAssignmentRepository.existsByStudentIdAndCourseId(student.getId(), course.getId())
+            || (student.getCourse() != null && course.getId().equals(student.getCourse().getId()));
+    if (alreadyIn) {
+        throw new IllegalArgumentException("This student is already enrolled in this course.");
+    }
+    ensureStudentEnrollment(student, course);
+    return student;
+}
+
+/** Brings an existing assessor into the admin's active course. No new account, no email. */
+@Transactional
+public Lecturer enrollExistingLecturer(Long lecturerId) {
+    Course course = resolveCurrentAdminCourse()
+            .orElseThrow(() -> new IllegalArgumentException("No active course selected."));
+    Lecturer lecturer = lecturerId == null ? null : lecturerRepository.findById(lecturerId).orElse(null);
+    if (lecturer == null) {
+        throw new IllegalArgumentException("That assessor account no longer exists.");
+    }
+    if (!bringLecturerIntoCourse(lecturer, course, null)) {
+        throw new IllegalArgumentException("That assessor could not be added to this course.");
+    }
+    return lecturer;
+}
+
+/**
+ * Enrols an existing assessor in a course: as their home course if they have none, otherwise as an extra course.
+ *
+ * @return false only when there is nowhere to record an extra course
+ * @throws RuntimeException when they are already in the course
+ */
+private boolean bringLecturerIntoCourse(Lecturer existing, Course course, String submittedUsername) {
+    if (lecturerInCourse(existing, course.getId())) {
+        throw new RuntimeException("An assessor with email '" + existing.getEmail() + "' is already enrolled in this course.");
+    }
+    boolean isAdminAccount = existing.getRoles() != null && existing.getRoles().contains("ROLE_ADMIN");
+    if (existing.getCourse() == null && !isAdminAccount) {
+        existing.setCourse(course);
+        if (submittedUsername != null && !submittedUsername.isBlank()) {
+            existing.setUsername(submittedUsername.trim());
+        }
+        lecturerRepository.save(existing);
+        return true;
+    }
+    if (adminCourseAssignmentRepository != null) {
+        adminCourseAssignmentRepository.save(new AdminCourseAssignment(null, existing, course));
+        return true;
+    }
+    return false;
+}
 
 private void ensureStudentEnrollment(Student student, Course course) {
     if (student == null || student.getId() == null || course == null || course.getId() == null) {
@@ -333,23 +493,30 @@ private void markWelcomeEmailSent(String email) {
 }
 
 /**
- * A student given a system-generated password, with no confirmed welcome email, who has not yet set a password
- * through an emailed link (doing so clears the token).
+ * A student who still has to set a password: given a system-generated password and the set-password link has not
+ * been used (using it clears the token).
  */
-public static boolean isAwaitingWelcomeEmail(Student student) {
+public static boolean isUnactivated(Student student) {
     return student != null
             && student.getEmail() != null && !student.getEmail().isBlank()
-            && student.getWelcomeEmailSentAt() == null
             && Boolean.TRUE.equals(student.getIsTempPassword())
             && student.getResetPasswordToken() != null;
 }
 
-/** An assessor/admin still on a system-generated password with no confirmed welcome email. */
-public static boolean isAwaitingWelcomeEmail(Lecturer lecturer) {
+/** An assessor/admin still on a system-generated password. */
+public static boolean isUnactivated(Lecturer lecturer) {
     return lecturer != null
             && lecturer.getEmail() != null && !lecturer.getEmail().isBlank()
-            && lecturer.getWelcomeEmailSentAt() == null
             && Boolean.TRUE.equals(lecturer.getIsTempPassword());
+}
+
+/** Not yet activated and there is no record that a welcome email reached the mail server. */
+public static boolean isAwaitingWelcomeEmail(Student student) {
+    return isUnactivated(student) && student.getWelcomeEmailSentAt() == null;
+}
+
+public static boolean isAwaitingWelcomeEmail(Lecturer lecturer) {
+    return isUnactivated(lecturer) && lecturer.getWelcomeEmailSentAt() == null;
 }
 
 public List<Student> getStudentsAwaitingWelcomeEmail() {
@@ -360,19 +527,38 @@ public List<Lecturer> getLecturersAwaitingWelcomeEmail() {
     return getAllLecturers().stream().filter(AdminService::isAwaitingWelcomeEmail).toList();
 }
 
+public List<Student> getUnactivatedStudents() {
+    return getAllStudents().stream().filter(AdminService::isUnactivated).toList();
+}
+
+public List<Lecturer> getUnactivatedLecturers() {
+    return getAllLecturers().stream().filter(AdminService::isUnactivated).toList();
+}
+
+/** Re-sends to students who have no confirmed welcome email; see {@link #resendStudentWelcomeEmails(Long, boolean, HttpServletRequest)}. */
+@Transactional
+public int resendStudentWelcomeEmails(Long studentId, HttpServletRequest request) {
+    return resendStudentWelcomeEmails(studentId, false, request);
+}
+
 /**
- * Re-sends the welcome email to students of the active course who have no confirmed delivery. Each gets a fresh
- * set-password link; existing passwords are left untouched.
+ * Re-sends the welcome email to students of the active course who have not set a password yet. Each gets a fresh
+ * set-password link; existing passwords are left untouched. Students who already set their password are never
+ * emailed.
  *
- * @param studentId only this student, or null for everyone awaiting one
+ * @param studentId only this student (regardless of earlier delivery), or null for several at once
+ * @param includeConfirmed when {@code studentId} is null: also re-send to students whose earlier email was
+ *        accepted by the mail server (useful when those links were broken, for example a wrong site address)
  * @return how many emails were queued
  */
 @Transactional
-public int resendStudentWelcomeEmails(Long studentId, HttpServletRequest request) {
+public int resendStudentWelcomeEmails(Long studentId, boolean includeConfirmed, HttpServletRequest request) {
     Map<String, WelcomeEmail> byEmail = new LinkedHashMap<>();
-    for (Student student : getStudentsAwaitingWelcomeEmail()) {
+    for (Student student : getUnactivatedStudents()) {
         String key = student.getEmail().trim().toLowerCase();
-        if ((studentId != null && !studentId.equals(student.getId())) || byEmail.containsKey(key)) {
+        boolean wanted = studentId != null ? studentId.equals(student.getId())
+                : includeConfirmed || student.getWelcomeEmailSentAt() == null;
+        if (!wanted || byEmail.containsKey(key)) {
             continue;
         }
         String token = userService.generateResetToken(student, RESENT_WELCOME_LINK_VALIDITY);
@@ -382,13 +568,21 @@ public int resendStudentWelcomeEmails(Long studentId, HttpServletRequest request
     return byEmail.size();
 }
 
-/** Assessor counterpart of {@link #resendStudentWelcomeEmails}. */
+/** Assessor counterpart of {@link #resendStudentWelcomeEmails(Long, HttpServletRequest)}. */
 @Transactional
 public int resendLecturerWelcomeEmails(Long lecturerId, HttpServletRequest request) {
+    return resendLecturerWelcomeEmails(lecturerId, false, request);
+}
+
+/** Assessor counterpart of {@link #resendStudentWelcomeEmails(Long, boolean, HttpServletRequest)}. */
+@Transactional
+public int resendLecturerWelcomeEmails(Long lecturerId, boolean includeConfirmed, HttpServletRequest request) {
     Map<String, WelcomeEmail> byEmail = new LinkedHashMap<>();
-    for (Lecturer lecturer : getLecturersAwaitingWelcomeEmail()) {
+    for (Lecturer lecturer : getUnactivatedLecturers()) {
         String key = lecturer.getEmail().trim().toLowerCase();
-        if ((lecturerId != null && !lecturerId.equals(lecturer.getId())) || byEmail.containsKey(key)) {
+        boolean wanted = lecturerId != null ? lecturerId.equals(lecturer.getId())
+                : includeConfirmed || lecturer.getWelcomeEmailSentAt() == null;
+        if (!wanted || byEmail.containsKey(key)) {
             continue;
         }
         String role = lecturer.getRoles() != null && lecturer.getRoles().contains("ROLE_ADMIN") ? "Admin" : "Assessor";
@@ -460,26 +654,9 @@ private boolean saveLecturer(Lecturer lecturer, HttpServletRequest request, List
     }
 
     Optional<Lecturer> existingLecturer = lecturerRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(normalizedEmail);
-    if (existingLecturer.isPresent()) {
-        Lecturer existing = existingLecturer.get();
-        boolean inCourseDirect = existing.getCourse() != null && activeCourse.getId().equals(existing.getCourse().getId());
-        boolean inCourseAssigned = adminCourseAssignmentRepository != null
-            && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(existing.getId(), activeCourse.getId());
-        if (inCourseDirect || inCourseAssigned) {
-            throw new RuntimeException("An assessor with email '" + normalizedEmail + "' is already enrolled in this course.");
-        }
-        if (existing.getCourse() == null) {
-            existing.setCourse(activeCourse);
-            if (lecturer.getUsername() != null && !lecturer.getUsername().isBlank()) {
-                existing.setUsername(lecturer.getUsername().trim());
-            }
-            lecturerRepository.save(existing);
-            return false;
-        }
-        if (adminCourseAssignmentRepository != null) {
-            adminCourseAssignmentRepository.save(new AdminCourseAssignment(null, existing, activeCourse));
-            return false;
-        }
+    if (existingLecturer.isPresent()
+            && bringLecturerIntoCourse(existingLecturer.get(), activeCourse, lecturer.getUsername())) {
+        return false;
     }
 
     WelcomeEmail welcomeEmail = null;
@@ -838,22 +1015,43 @@ public String checkLecturerEmailDuplicate(String email, Long lecturerIdToExclude
         Optional<Long> activeCourseId = getActiveCourseId();
         if (activeCourseId.isPresent()) {
             Long courseId = activeCourseId.get();
-            boolean isAssignedViaCourse = lecturer.getCourse() != null && courseId.equals(lecturer.getCourse().getId());
-            boolean isAssignedViaJoinTable = adminCourseAssignmentRepository != null
-                && adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(id, courseId);
-            if (!isAssignedViaCourse && !isAssignedViaJoinTable) {
+            if (!lecturerInCourse(lecturer, courseId)) {
                 throw new RuntimeException("Unauthorized: Lecturer does not belong to the active course");
             }
-            if (isAssignedViaJoinTable && adminCourseAssignmentRepository != null) {
-                adminCourseAssignmentRepository.findByCourseId(courseId).stream()
-                    .filter(aca -> aca.getLecturer() != null && aca.getLecturer().getId().equals(id))
+
+            List<AdminCourseAssignment> joins = adminCourseAssignmentRepository != null
+                ? adminCourseAssignmentRepository.findByLecturerId(id) : List.of();
+            boolean homeIsThisCourse = lecturer.getCourse() != null && courseId.equals(lecturer.getCourse().getId());
+            List<AdminCourseAssignment> otherCourseJoins = joins.stream()
+                .filter(j -> j.getCourse() != null && !courseId.equals(j.getCourse().getId()))
+                .collect(Collectors.toList());
+            boolean belongsElsewhere = (lecturer.getCourse() != null && !homeIsThisCourse) || !otherCourseJoins.isEmpty();
+
+            if (belongsElsewhere) {
+                // The person also works in other courses: leave this one only. Their account and their other courses stay.
+                lecturerRepository.unlinkFromGroupsInCourse(id, courseId);
+                lecturerRepository.deleteGroupAssignmentsInCourse(id, courseId);
+                lecturerRepository.deleteStudentAssignmentsInCourse(id, courseId);
+                lecturerRepository.deleteRubricAssignmentsInCourse(id, courseId);
+                lecturerRepository.deleteMarksGivenInCourse(id, courseId);
+                lecturerRepository.deleteCommentsByLecturerInCourse(id, courseId);
+
+                joins.stream()
+                    .filter(j -> j.getCourse() != null && courseId.equals(j.getCourse().getId()))
                     .forEach(adminCourseAssignmentRepository::delete);
-                if (!isAssignedViaCourse) {
-                    return;
+
+                if (homeIsThisCourse) {
+                    // Their home course was this one: promote another course they belong to, so the account stays reachable.
+                    AdminCourseAssignment next = otherCourseJoins.get(0);
+                    lecturer.setCourse(next.getCourse());
+                    adminCourseAssignmentRepository.delete(next);
+                    lecturerRepository.save(lecturer);
                 }
+                return;
             }
         }
 
+        lecturerRepository.deleteRubricAssignmentsForLecturer(id);
         lecturerRepository.unlinkFromGroups(id);
 
         lecturerRepository.deleteGroupAssignments(id);

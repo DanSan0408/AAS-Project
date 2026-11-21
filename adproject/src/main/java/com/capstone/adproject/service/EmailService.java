@@ -48,6 +48,39 @@ public class EmailService {
         return true;
     }
 
+    /** The From address that will actually be used (mirrors the fallback in {@link #mailIsConfigured()}). */
+    public String effectiveFromAddress() {
+        boolean fallsBack = mailFrom == null || mailFrom.isBlank() || "admin@example.com".equalsIgnoreCase(mailFrom.trim());
+        return fallsBack ? (mailUsername == null ? "" : mailUsername.trim()) : mailFrom.trim();
+    }
+
+    /**
+     * Describes why outgoing mail cannot work, or returns null when the setup looks usable. Shown on the Super Admin
+     * monitoring page and logged at startup, so a bad SPRING_MAIL_* value is visible straight after a deploy instead
+     * of only in the mail provider's own log.
+     */
+    public String mailConfigProblem() {
+        if (mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
+            return "SPRING_MAIL_USERNAME / SPRING_MAIL_PASSWORD are not set, so no email can be sent.";
+        }
+        String from = effectiveFromAddress();
+        if (from.equalsIgnoreCase(mailUsername.trim()) && mailUsername.trim().toLowerCase().endsWith("@smtp-brevo.com")) {
+            return "The From address is the Brevo SMTP login (" + from + "), which Brevo rejects as an invalid sender. "
+                    + "Set SPRING_MAIL_FROM to a verified sender on your authenticated domain and redeploy.";
+        }
+        return null;
+    }
+
+    @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
+    public void logMailConfiguration() {
+        String problem = mailConfigProblem();
+        if (problem == null) {
+            logger.info("Mail configured: sending as {}", effectiveFromAddress());
+        } else {
+            logger.warn("MAIL CONFIGURATION PROBLEM: {}", problem);
+        }
+    }
+
     @Async("emailTaskExecutor")
     public void sendResetPasswordEmail(String userEmail, String link) {
         if (!mailIsConfigured()) {

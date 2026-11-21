@@ -118,26 +118,25 @@ public class LecturerAssessmentController {
                 .orElseThrow(() -> new RuntimeException("Lecturer not found: " + emailOrUsername));
     }
 
+    /**
+     * An assessor can open an assessment only when they are assigned to it (by group, rubric or student). Belonging to
+     * the course, or managing it as an admin, is not enough: admins use the admin pages, and assessors see only their own work.
+     */
     private boolean lecturerCanAccessAssessment(Lecturer lecturer, Assessment assessment) {
         if (lecturer == null || assessment == null || assessment.getCourse() == null || assessment.getCourse().getId() == null) {
             return false;
         }
-        Long assessmentCourseId = assessment.getCourse().getId();
-        Long activeCourseId = resolveActiveCourseId();
-        if (activeCourseId != null && !activeCourseId.equals(assessmentCourseId)) {
-            boolean isAssigned = isLecturerAssignedToAssessment(lecturer, assessment);
-            boolean managesCourse = courseScopeService != null && courseScopeService.isManagedCourseId(assessmentCourseId);
-            if (!isAssigned && !managesCourse) {
-                return false;
-            }
-        }
-        if (lecturer.getCourse() != null && assessmentCourseId.equals(lecturer.getCourse().getId())) {
-            return true;
-        }
-        if (courseScopeService != null && courseScopeService.isManagedCourseId(assessmentCourseId)) {
-            return true;
-        }
         return isLecturerAssignedToAssessment(lecturer, assessment);
+    }
+
+    private static boolean submissionBelongsTo(AssessmentSubmission submission, Assessment assessment) {
+        if (submission == null || submission.getAssessment() == null || submission.getAssessment().getId() == null
+                || assessment == null) {
+            return false;
+        }
+        Long owner = submission.getAssessment().getId();
+        Assessment effective = assessment.getEffectiveSubmissionAssessment();
+        return owner.equals(assessment.getId()) || (effective != null && owner.equals(effective.getId()));
     }
 
     private boolean isLecturerAssignedToAssessment(Lecturer lecturer, Assessment assessment) {
@@ -181,9 +180,6 @@ public class LecturerAssessmentController {
         List<Assessment> uniqueAssessments = combinedAssessments.stream()
             .filter(a -> scopedCourseId == null || (a.getCourse() != null && scopedCourseId.equals(a.getCourse().getId())))
             .collect(Collectors.toList());
-        if (uniqueAssessments.isEmpty() && !combinedAssessments.isEmpty()) {
-            uniqueAssessments = new ArrayList<>(combinedAssessments);
-        }
 
         Map<Long, String> assessmentLaunchModes = new HashMap<>();
         for (Assessment assessment : uniqueAssessments) {
@@ -673,6 +669,11 @@ public class LecturerAssessmentController {
                             Long subId = Long.parseLong(allParams.get("submissionId"));
                             sub = assessmentSubmissionService.getSubmissionById(subId).orElse(null);
                         } catch (NumberFormatException ignored) {}
+                        // The id comes from the form: only accept a submission that belongs to this assessment (or its shared source).
+                        if (sub != null && !submissionBelongsTo(sub, assessment)) {
+                            logger.warn("Ignoring doodles for submission {}: it does not belong to assessment {}", sub.getId(), assessmentId);
+                            sub = null;
+                        }
                     }
                     if (sub == null) {
                         Group grp = groupId != null ? groupRepository.findById(groupId).orElse(null) : null;

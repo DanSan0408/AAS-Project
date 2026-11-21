@@ -181,4 +181,15 @@ public interface AssessmentCommentRepository extends JpaRepository<AssessmentCom
 
     List<AssessmentComment> findByEvaluatedStudentAndApprovalStatus(
             Student student, AssessmentComment.ApprovalStatus approvalStatus);
+
+    /** Assessments that still have comments waiting for a decision (the scheduled AI scan looks at these). */
+    @Query("SELECT DISTINCT c.assessment.id FROM AssessmentComment c WHERE c.approvalStatus = com.capstone.adproject.model.AssessmentComment$ApprovalStatus.PENDING AND c.assessment IS NOT NULL")
+    List<Long> findAssessmentIdsWithPendingComments();
+
+    /** Comments the AI check has read and a person has since decided on (for the agreement report). */
+    List<AssessmentComment> findByAiCheckedAtIsNotNullAndApprovalStatusIn(java.util.Collection<AssessmentComment.ApprovalStatus> statuses);
+
+    long countByApprovalStatusAndAiCheckedAtIsNull(AssessmentComment.ApprovalStatus status);
+
+    long countByApprovalStatusAndAiCheckedAtIsNotNull(AssessmentComment.ApprovalStatus status);
 }
