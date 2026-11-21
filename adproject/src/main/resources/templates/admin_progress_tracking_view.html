@@ -593,19 +593,30 @@
                         </div>
                         <div class="eval-actions">
                             <button type="submit" class="btn-eval btn-eval-primary">Show evaluations</button>
+                            <button type="submit" class="btn-eval btn-eval-quiet" name="evalAll" value="true"
+                                    title="List every finished evaluation of this assessment, ignoring the group, student and rubric choices">Show all</button>
                             <a class="btn-eval btn-eval-quiet" th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=evaluations'}">Clear choices</a>
                         </div>
                     </form>
                 </div>
 
                 <div class="card" th:unless="${evaluationsPicked}">
-                    <p class="eval-empty">Choose a group, a student or a rubric above to see its finished evaluations.</p>
+                    <p class="eval-empty">Choose a group, a student or a rubric above to see its finished evaluations, or press <strong>Show all</strong>.</p>
+                    <p class="eval-help" th:if="${markCounts != null}">
+                        This assessment has <strong th:text="${markCounts.finished}">0</strong> finished mark(s)<span th:if="${markCounts.drafts > 0}"> and <strong th:text="${markCounts.drafts}">0</strong> draft mark(s) that were saved but not submitted</span>.
+                    </p>
                 </div>
 
                 <div class="card" th:if="${evaluationsPicked}">
                     <h2 class="card-title"><i class="fas fa-clipboard-check"></i> Finished evaluations
                         <span class="eval-count" th:text="${evaluations.size()}">0</span></h2>
                     <p class="eval-empty" th:if="${evaluations.isEmpty()}">No finished evaluations match your choice.</p>
+                    <p class="eval-help" th:if="${evaluations.isEmpty() and markCounts != null}">
+                        This assessment has <strong th:text="${markCounts.finished}">0</strong> finished mark(s) in total<span th:if="${markCounts.drafts > 0}"> and <strong th:text="${markCounts.drafts}">0</strong> draft mark(s) that were saved but not submitted yet, which are not listed here</span>. Try <strong>Show all</strong> to ignore the choices above.
+                    </p>
+                    <p class="eval-help" th:if="${evaluationsTruncated}">
+                        Showing the first <span th:text="${evaluations.size()}">200</span> of <span th:text="${evaluationsTotal}">0</span>. Pick a group, student or rubric to narrow the list.
+                    </p>
 
                     <details class="eval-item" th:each="e : ${evaluations}">
                         <summary>
@@ -657,6 +668,7 @@
                                 <input type="hidden" name="evalGroupId" th:value="${evalGroupId}">
                                 <input type="hidden" name="evalStudentId" th:value="${evalStudentId}">
                                 <input type="hidden" name="evalRubricId" th:value="${evalRubricId}">
+                                <input type="hidden" name="evalAll" th:value="${evalAll != null and evalAll}">
                                 <label>Reason for deleting (kept in the deletion record)</label>
                                 <div class="eval-delete-row">
                                     <input type="text" name="reason" maxlength="300" required placeholder="For example: entered against the wrong student">

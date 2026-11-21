@@ -393,13 +393,31 @@ public class ProgressTrackingService {
         }
     }
 
+    /**
+     * The marks that count as finished: the same rule the results use (FINAL, SUBMITTED, or an old row with no status).
+     * Reading only FINAL hid evaluations that were submitted but not yet marked final.
+     */
+    private List<Mark> finishedMarks(Assessment assessment) {
+        return markRepository.findByAssessment(assessment).stream().filter(CalculateService::isFinished).collect(Collectors.toList());
+    }
+
+    /** How many marks are finished and how many are still drafts (saved but not submitted), for the Evaluations tab. */
+    public record MarkCounts(long finished, long drafts) {}
+
+    @Transactional(readOnly = true)
+    public MarkCounts markCounts(Assessment assessment) {
+        List<Mark> all = markRepository.findByAssessment(assessment);
+        long finished = all.stream().filter(CalculateService::isFinished).count();
+        return new MarkCounts(finished, all.size() - finished);
+    }
+
     /** Finished evaluations for an assessment, optionally narrowed to a group, an evaluated student or a rubric. */
     @Transactional(readOnly = true)
     public List<EvaluationRow> findEvaluations(Assessment assessment, Long groupId, Long studentId, Long rubricId) {
         Long courseId = courseIdOf(assessment);
         Map<String, List<Mark>> buckets = new LinkedHashMap<>();
         Map<String, Group> bucketGroups = new HashMap<>();
-        for (Mark mark : markRepository.findByAssessmentAndStatus(assessment, Mark.SubmissionStatus.FINAL)) {
+        for (Mark mark : finishedMarks(assessment)) {
             if (mark.getEvaluatedStudent() == null || evaluatorIdOf(mark) == null) {
                 continue;
             }
@@ -466,7 +484,7 @@ public class ProgressTrackingService {
         }
 
         Set<Long> targets = new HashSet<>(targetIds);
-        List<Mark> finalMarks = markRepository.findByAssessmentAndStatus(assessment, Mark.SubmissionStatus.FINAL);
+        List<Mark> finalMarks = finishedMarks(assessment);
         List<Mark> matches = finalMarks.stream()
                 .filter(m -> m.getEvaluatedStudent() != null && targets.contains(m.getEvaluatedStudent().getId()))
                 .filter(m -> kindOf(m).equals(evaluatorKind) && evaluatorId.equals(evaluatorIdOf(m)))

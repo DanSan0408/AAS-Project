@@ -108,4 +108,20 @@ class SchemaGuardMappingTest {
                 "legacy course_code must read as unmapped so the guard can relax it");
         assertEquals(mapped.get("courses"), mapped.get("courses"));
     }
+
+    /**
+     * A plain list of values (an element collection without an order column) is stored as a table of its owner's id and the
+     * value; Hibernate creates no "id" column for it. The guard once expected one and reported five tables as damaged.
+     */
+    @Test
+    void aPlainValueCollectionIsExpectedToHaveOnlyItsKeyAndValueColumns() {
+        Map<String, Set<String>> mapped = LegacyColumnCleanupMigrationRunner.mappedColumns(sessionFactory);
+
+        assertEquals(Set.of("rubric_id", "comment_label"), mapped.get("rubric_comment_labels"));
+        assertEquals(Set.of("rubric_id", "comment_min_length"), mapped.get("rubric_comment_min_lengths"));
+        assertEquals(Set.of("rubric_id", "comment_anonymous"), mapped.get("rubric_comment_anonymous_flags"));
+        for (String table : Set.of("assessment_groupcommentlabels", "assessment_individualcommentlabels")) {
+            assertFalse(mapped.get(table).contains("id"), table + " has no id column: " + mapped.get(table));
+        }
+    }
 }
