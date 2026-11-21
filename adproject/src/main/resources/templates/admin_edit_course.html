@@ -48,6 +48,16 @@
                             <label for="description">Description</label>
                             <textarea id="description" th:field="*{description}" class="form-control"></textarea>
                         </div>
+                        <div class="form-group">
+                            <label for="passMark">Pass mark (out of 100)</label>
+                            <input type="number" id="passMark" th:field="*{passMark}" class="form-control" min="0" max="100" step="0.5" placeholder="50">
+                            <small class="text-muted">Used by Course Analytics for the pass rate and to find students close to failing. Empty means 50.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="cloTargetPercent">Learning outcome target (%)</label>
+                            <input type="number" id="cloTargetPercent" th:field="*{cloTargetPercent}" class="form-control" min="0" max="100" step="0.5" placeholder="50">
+                            <small class="text-muted">The share of a learning outcome's marks the class should reach. Empty means 50.</small>
+                        </div>
                         <div class="edit-course-actions">
                             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Course</button>
                             <a th:href="@{/admin/manage-courses}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancel</a>

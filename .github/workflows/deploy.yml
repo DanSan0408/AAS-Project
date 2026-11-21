@@ -1,160 +1,160 @@
 name: Deploy
 
+# Production only: changes are tested locally, then CI ("Build and publish") tests and publishes immutable images,
+# and this workflow rolls those exact images out to Dokploy. There is no staging environment.
+#
+#  * Automatic: runs after "Build and publish" succeeds on main.
+#  * Manual:    Actions > Deploy > Run workflow, with any published image tag. Use it to redeploy, or to roll back
+#               to an older release on purpose.
 on:
+  workflow_run:
+    workflows: ["Build and publish"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
-      environment:
-        description: Deployment target
-        required: true
-        type: choice
-        options:
-          - staging
-          - production
-        default: staging
       image_tag:
-        description: Immutable Git SHA or image tag
+        description: Image tag (git SHA) to deploy. Must already be published to GHCR.
         required: true
         type: string
 
 concurrency:
-  group: deploy-${{ inputs.environment }}
+  group: deploy-production
   cancel-in-progress: false
 
 permissions:
   contents: read
-  actions: read
+  packages: read
+
+env:
+  APP_IMAGE: ghcr.io/dansan0408/aas-project-app
+  AI_IMAGE: ghcr.io/dansan0408/aas-project-ai
 
 jobs:
-  preflight:
-    name: Verify deployment request
+  deploy:
+    name: Deploy to production
+    # Never deploy a commit whose tests failed.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    outputs:
-      approved_tag: ${{ steps.validate.outputs.tag }}
-    steps:
-      - id: validate
-        shell: bash
-        run: |
-          TAG="${{ inputs.image_tag }}"
-          if [[ -z "$TAG" || "$TAG" == "latest" ]]; then
-            echo "A non-empty immutable SHA or release tag is required." >&2
-            exit 1
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Resolve container image names
-        run: |
-          echo "APP_IMAGE=ghcr.io/dansan0408/aas-project-app:${{ steps.validate.outputs.tag }}"
-          echo "AI_IMAGE=ghcr.io/dansan0408/aas-project-ai:${{ steps.validate.outputs.tag }}"
-
-  deploy-app:
-    name: Deploy IAMS app
-    needs: preflight
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - name: Trigger Dokploy app deployment
-        shell: bash
-        env:
-          WEBHOOK_URL: ${{ inputs.environment == 'production' && secrets.DOKPLOY_APP_PRODUCTION_WEBHOOK || secrets.DOKPLOY_APP_STAGING_WEBHOOK }}
-          DEPLOY_TAG: ${{ needs.preflight.outputs.approved_tag }}
-        run: |
-          if [[ -z "$WEBHOOK_URL" ]]; then
-            echo "Missing Dokploy app webhook secret for ${{ inputs.environment }}." >&2
-            exit 1
-          fi
-          curl --fail-with-body --silent --show-error \
-            --max-time 60 \
-            -H "Content-Type: application/json" \
-            --data "{\"imageTag\":\"$DEPLOY_TAG\",\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\"}" \
-            "$WEBHOOK_URL"
-
-  deploy-ai:
-    name: Deploy AI service
-    needs: preflight
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - name: Trigger Dokploy AI deployment
-        shell: bash
-        env:
-          WEBHOOK_URL: ${{ inputs.environment == 'production' && secrets.DOKPLOY_AI_PRODUCTION_WEBHOOK || secrets.DOKPLOY_AI_STAGING_WEBHOOK }}
-          DEPLOY_TAG: ${{ needs.preflight.outputs.approved_tag }}
-        run: |
-          if [[ -z "$WEBHOOK_URL" ]]; then
-            echo "Missing Dokploy AI webhook secret for ${{ inputs.environment }}." >&2
-            exit 1
-          fi
-          curl --fail-with-body --silent --show-error \
-            --max-time 60 \
-            -H "Content-Type: application/json" \
-            --data "{\"imageTag\":\"$DEPLOY_TAG\",\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\"}" \
-            "$WEBHOOK_URL"
-
-  verify:
-    name: Deployment smoke checks
-    needs: [deploy-app, deploy-ai]
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: production
+    timeout-minutes: 25
+    env:
+      DOKPLOY_URL: ${{ secrets.DOKPLOY_URL }}
+      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+      DOKPLOY_APP_ID: ${{ secrets.DOKPLOY_APP_ID }}
+      DOKPLOY_AI_ID: ${{ secrets.DOKPLOY_AI_ID }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_DEPLOY_CHAT_ID: ${{ secrets.TELEGRAM_DEPLOY_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run deployment health checks
+      - name: Resolve the tag to deploy
+        id: tag
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.image_tag }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="$HEAD_SHA"
+          fi
+          if [[ -z "$TAG" || "$TAG" == "latest" || ! "$TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "A non-empty, immutable image tag (git SHA) is required; 'latest' is not allowed." >&2
+            exit 1
+          fi
+          echo "new=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Check the images exist before touching production
+        shell: bash
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker buildx imagetools inspect "$APP_IMAGE:${{ steps.tag.outputs.new }}" > /dev/null
+          docker buildx imagetools inspect "$AI_IMAGE:${{ steps.tag.outputs.new }}" > /dev/null
+          echo "Both images exist for ${{ steps.tag.outputs.new }}"
+
+      - name: Read what production is running now (rollback target)
+        id: current
+        shell: bash
+        run: |
+          for v in DOKPLOY_URL DOKPLOY_API_KEY DOKPLOY_APP_ID DOKPLOY_AI_ID; do
+            if [[ -z "${!v}" ]]; then echo "Missing secret $v" >&2; exit 1; fi
+          done
+          PREV_APP=$(bash Scripts/dokploy-image.sh get "$DOKPLOY_APP_ID")
+          PREV_AI=$(bash Scripts/dokploy-image.sh get "$DOKPLOY_AI_ID")
+          echo "app_image=$PREV_APP" >> "$GITHUB_OUTPUT"
+          echo "ai_image=$PREV_AI" >> "$GITHUB_OUTPUT"
+          echo "app=${PREV_APP##*:}" >> "$GITHUB_OUTPUT"
+          echo "Previously deployed: app=${PREV_APP:-none (not a Docker-image application yet)} ai=${PREV_AI:-none}"
+
+      - name: Deploy the new tag
+        id: deploy
+        shell: bash
+        run: |
+          # The AI service first, so the app never starts against an older AI service than it expects.
+          bash Scripts/dokploy-image.sh set "$DOKPLOY_AI_ID" "$AI_IMAGE:${{ steps.tag.outputs.new }}"
+          bash Scripts/dokploy-image.sh set "$DOKPLOY_APP_ID" "$APP_IMAGE:${{ steps.tag.outputs.new }}"
+
+      - name: Smoke checks (new version must be the one answering)
+        id: smoke
         shell: bash
         env:
           APP_URL: ${{ secrets.IAMS_APP_HEALTH_URL }}
           AI_URL: ${{ secrets.IAMS_AI_HEALTH_URL }}
+          EXPECTED_REVISION: ${{ steps.tag.outputs.new }}
         run: |
-          if [[ -z "$APP_URL" || -z "$AI_URL" ]]; then
-            echo "Missing IAMS_APP_HEALTH_URL or IAMS_AI_HEALTH_URL secret." >&2
+          if [[ -z "$APP_URL" ]]; then
+            echo "Missing IAMS_APP_HEALTH_URL secret." >&2
             exit 1
           fi
-          bash scripts/deployment-smoke.sh "$APP_URL" "$AI_URL"
+          bash Scripts/deployment-smoke.sh "$APP_URL" "$AI_URL"
 
-  notify:
-    name: Telegram deployment status
-    needs: [verify]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Telegram deployment result
+      - name: Roll back to the previous release
+        id: rollback
+        if: always() && (steps.smoke.outcome == 'failure' || steps.deploy.outcome == 'failure') && (steps.current.outputs.app_image != '' || steps.current.outputs.ai_image != '')
         shell: bash
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_DEPLOY_CHAT_ID: ${{ secrets.TELEGRAM_DEPLOY_CHAT_ID }}
-          VERIFY_RESULT: ${{ needs.verify.result }}
+          APP_URL: ${{ secrets.IAMS_APP_HEALTH_URL }}
+          AI_URL: ${{ secrets.IAMS_AI_HEALTH_URL }}
+          PREV_APP_IMAGE: ${{ steps.current.outputs.app_image }}
+          PREV_AI_IMAGE: ${{ steps.current.outputs.ai_image }}
+          # Older images may not record their version, so prove the rollback by "the failed release is gone".
+          UNEXPECTED_REVISION: ${{ steps.tag.outputs.new }}
+        run: |
+          echo "Release failed; rolling back."
+          if [[ -n "$PREV_AI_IMAGE" ]]; then bash Scripts/dokploy-image.sh set "$DOKPLOY_AI_ID" "$PREV_AI_IMAGE"; fi
+          if [[ -n "$PREV_APP_IMAGE" ]]; then bash Scripts/dokploy-image.sh set "$DOKPLOY_APP_ID" "$PREV_APP_IMAGE"; fi
+          bash Scripts/deployment-smoke.sh "$APP_URL" "$AI_URL"
+
+      - name: Telegram deployment status
+        if: always()
+        shell: bash
+        env:
+          NEW_TAG: ${{ steps.tag.outputs.new }}
+          PREV_TAG: ${{ steps.current.outputs.app }}
+          SMOKE: ${{ steps.smoke.outcome }}
+          ROLLBACK: ${{ steps.rollback.outcome }}
+          DEPLOY: ${{ steps.deploy.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ -z "$TELEGRAM_BOT_TOKEN" || -z "$TELEGRAM_DEPLOY_CHAT_ID" ]]; then
             echo "Telegram deployment notifications are not configured."
             exit 0
           fi
-          STATUS="FAILED"
-          [[ "$VERIFY_RESULT" == "success" ]] && STATUS="SUCCESS"
-          MESSAGE=$'IAMS deployment '"$STATUS"$'\nEnvironment: '"${{ inputs.environment }}"$'\nTag: '"${{ inputs.image_tag }}"$'\nCommit: '"${{ github.sha }}"
+          if [[ "$SMOKE" == "success" ]]; then
+            MESSAGE=$'IAMS deploy SUCCEEDED\nVersion: '"${NEW_TAG:0:12}"$'\nPrevious: '"${PREV_TAG:0:12}"
+          elif [[ "$ROLLBACK" == "success" ]]; then
+            MESSAGE=$'IAMS deploy FAILED and was ROLLED BACK\nTried: '"${NEW_TAG:0:12}"$'\nRunning again: '"${PREV_TAG:0:12}"$'\n'"$RUN_URL"
+          elif [[ "$ROLLBACK" == "failure" ]]; then
+            MESSAGE=$'IAMS deploy FAILED and the ROLLBACK FAILED too. Production needs attention NOW.\nTried: '"${NEW_TAG:0:12}"$'\n'"$RUN_URL"
+          elif [[ "$SMOKE" == "failure" || "$DEPLOY" == "failure" ]]; then
+            MESSAGE=$'IAMS deploy FAILED and no previous release is known, so NO rollback was possible. Check production.\nTried: '"${NEW_TAG:0:12}"$'\n'"$RUN_URL"
+          else
+            MESSAGE=$'IAMS deploy FAILED before any change reached production.\nTag: '"${NEW_TAG:0:12}"$'\n'"$RUN_URL"
+          fi
           curl --fail --silent --show-error --max-time 30 \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_DEPLOY_CHAT_ID}" \
-            --data-urlencode "text=$MESSAGE"
-
-  rollback:
-    name: Roll back failed deployment
-    needs: verify
-    if: failure()
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - name: Trigger Dokploy rollback
-        shell: bash
-        env:
-          APP_WEBHOOK: ${{ inputs.environment == 'production' && secrets.DOKPLOY_APP_PRODUCTION_ROLLBACK_WEBHOOK || secrets.DOKPLOY_APP_STAGING_ROLLBACK_WEBHOOK }}
-          AI_WEBHOOK: ${{ inputs.environment == 'production' && secrets.DOKPLOY_AI_PRODUCTION_ROLLBACK_WEBHOOK || secrets.DOKPLOY_AI_STAGING_ROLLBACK_WEBHOOK }}
-        run: |
-          [[ -n "$APP_WEBHOOK" ]] && curl --fail-with-body --silent --show-error --max-time 60 \
-            -H "Content-Type: application/json" \
-            --data "{\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\",\"reason\":\"Smoke check failed\"}" \
-            "$APP_WEBHOOK" || true
-          [[ -n "$AI_WEBHOOK" ]] && curl --fail-with-body --silent --show-error --max-time 60 \
-            -H "Content-Type: application/json" \
-            --data "{\"environment\":\"${{ inputs.environment }}\",\"commit\":\"${{ github.sha }}\",\"reason\":\"Smoke check failed\"}" \
-            "$AI_WEBHOOK" || true
-
+            --data-urlencode "text=$MESSAGE" > /dev/null

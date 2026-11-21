@@ -29,19 +29,25 @@ public class LecturerAnalyticsController {
     private final CourseScopeService scope;
     private final LecturerAnalyticsService analytics;
     private final AiServiceClient aiServiceClient;
+    private final com.capstone.adproject.service.AssessmentService assessmentService;
+    private final com.capstone.adproject.service.AssessmentCommentService commentService;
 
     public LecturerAnalyticsController(CourseScopeService scope, LecturerAnalyticsService analytics) {
-        this(scope, analytics, null);
+        this(scope, analytics, null, null, null);
     }
 
     @Autowired
     public LecturerAnalyticsController(
             CourseScopeService scope,
             LecturerAnalyticsService analytics,
-            @Autowired(required = false) AiServiceClient aiServiceClient) {
+            @Autowired(required = false) AiServiceClient aiServiceClient,
+            @Autowired(required = false) com.capstone.adproject.service.AssessmentService assessmentService,
+            @Autowired(required = false) com.capstone.adproject.service.AssessmentCommentService commentService) {
         this.scope = scope;
         this.analytics = analytics;
         this.aiServiceClient = aiServiceClient;
+        this.assessmentService = assessmentService;
+        this.commentService = commentService;
     }
 
     @GetMapping
@@ -87,7 +93,8 @@ public class LecturerAnalyticsController {
                     "label", c.label() != null ? c.label() : "",
                     "clo", c.clo() != null ? c.clo() : 0,
                     "scope", c.scope() != null ? c.scope() : "",
-                    "possible", c.possible()
+                    "possible", c.possible(),
+                    "step", c.step()
                 )).toList();
 
             List<Map<String, Object>> scoresList = data.scores().stream()
@@ -113,7 +120,7 @@ public class LecturerAnalyticsController {
                 data.assessmentTitle(),
                 criteriaList,
                 scoresList,
-                List.of()
+                briefingComments(assessmentId, data)
             );
 
             AiModerationDtos.BriefingResponse briefing = aiServiceClient.generateModerationBriefing(request);
@@ -121,9 +128,51 @@ public class LecturerAnalyticsController {
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(404).cacheControl(CacheControl.noStore())
                 .body(Map.of("message", "This assessment is not available in your active course."));
+        } catch (AiServiceClient.RateLimitedException ex) {
+            return ResponseEntity.status(429).cacheControl(CacheControl.noStore())
+                .body(Map.of("message", "You have asked for several AI analyses in a short time. Please wait a few minutes and try again."));
         } catch (Exception ex) {
-            return ResponseEntity.status(500).cacheControl(CacheControl.noStore())
-                .body(Map.of("message", "AI Moderation Briefing error: " + ex.getMessage()));
+            return ResponseEntity.status(502).cacheControl(CacheControl.noStore())
+                .body(Map.of("message", "The AI briefing is unavailable right now. The calculated figures on this page are not affected."));
         }
+    }
+
+    /**
+     * Assessors' comments on the work being compared, each tied to the same target name the scores use (a team, or one student),
+     * so the briefing can put the comments about the most contested work first. Comments that cannot be tied to a target are left out.
+     */
+    private List<AiModerationDtos.CommentItem> briefingComments(Long assessmentId, LecturerComparisonData data) {
+        if (assessmentService == null || commentService == null) {
+            return List.of();
+        }
+        var assessment = assessmentService.getAssessmentById(assessmentId);
+        if (assessment.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, String> targetByStudent = new HashMap<>();
+        Map<Long, String> targetByTeam = new HashMap<>();
+        data.scores().forEach(s -> {
+            if (s.studentId() != null) {
+                targetByStudent.putIfAbsent(s.studentId(), s.targetName());
+            } else if (s.teamId() != null) {
+                targetByTeam.putIfAbsent(s.teamId(), s.targetName());
+            }
+        });
+        List<AiModerationDtos.CommentItem> items = new java.util.ArrayList<>();
+        for (var comment : commentService.getAssessorCommentsForBriefing(assessment.get())) {
+            var student = comment.getEvaluatedStudent();
+            String target = targetByStudent.get(student.getId());
+            if (target == null && student.getGroup() != null) {
+                target = targetByTeam.get(student.getGroup().getId());
+            }
+            if (target != null) {
+                items.add(new AiModerationDtos.CommentItem(
+                    comment.getEvaluatorName() != null ? comment.getEvaluatorName() : "Assessor",
+                    target,
+                    comment.getCommentLabel(),
+                    comment.getCommentText()));
+            }
+        }
+        return items;
     }
 }

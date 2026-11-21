@@ -261,5 +261,96 @@ class CourseScopeServiceTest {
         assertTrue(switched);
         assertEquals(2L, session.getAttribute(CourseScopeService.ACTIVE_COURSE_SESSION_KEY));
     }
-}
 
+    // --- Working in a course is not the same as administering it ---------------------------------------------------
+
+    @Test
+    void anAdminAdministersTheirOwnCourseAndOnesTheyCreated() {
+        Course created = new Course();
+        created.setId(3L);
+        created.setCreatedBy(lecturer);
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(Collections.emptyList());
+        when(superAdminService.getAllCourses()).thenReturn(List.of(created));
+
+        assertTrue(courseScopeService.isAdminOfCourse(1L));   // their own course
+        assertTrue(courseScopeService.isAdminOfCourse(3L));   // created
+        assertFalse(courseScopeService.isAdminOfCourse(99L));
+    }
+
+    @Test
+    void aCourseTheyWereInvitedToAsAnAdminCountsAndSoDoesALegacyRowWithNoRoleRecorded() {
+        AdminCourseAssignment invited = new AdminCourseAssignment(1L, lecturer, course2, Boolean.TRUE);
+        Course course3 = new Course();
+        course3.setId(3L);
+        AdminCourseAssignment legacy = new AdminCourseAssignment(2L, lecturer, course3, null);
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(invited, legacy));
+
+        assertTrue(courseScopeService.isAdminOfCourse(2L));
+        assertTrue(courseScopeService.isAdminOfCourse(3L));
+    }
+
+    @Test
+    void aCourseTheyOnlyJoinedAsAnAssessorIsOneTheyCanWorkInButNotAdminister() {
+        AdminCourseAssignment asAssessor = new AdminCourseAssignment(1L, lecturer, course2); // three-argument = assessor
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(asAssessor));
+
+        assertTrue(courseScopeService.getManagedCourseIdsForCurrentUser().contains(2L), "they can still switch to it and work in it");
+        assertFalse(courseScopeService.isAdminOfCourse(2L), "but they do not administer it");
+    }
+
+    @Test
+    void aCourseTheyAreOnlyEnrolledInAsAStudentIsNotOneTheyAdminister() {
+        Student asStudent = new Student();
+        asStudent.setId(77L);
+        asStudent.setEmail("lecturer@example.com");
+        Course studentCourse = new Course();
+        studentCourse.setId(5L);
+        StudentCourseAssignment enrolment = new StudentCourseAssignment(null, asStudent, studentCourse);
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(Collections.emptyList());
+        when(studentRepository.findAllByEmailIgnoreCase("lecturer@example.com")).thenReturn(List.of(asStudent));
+        when(studentCourseAssignmentRepository.findByStudentId(77L)).thenReturn(List.of(enrolment));
+
+        assertTrue(courseScopeService.getManagedCourseIdsForCurrentUser().contains(5L));
+        assertFalse(courseScopeService.isAdminOfCourse(5L));
+    }
+
+    // --- The admin area only ever works on a course the person administers --------------------------------------------
+
+    private AdminCourseAssignment assessorOnly(Course c) {
+        return new AdminCourseAssignment(5L, lecturer, c);
+    }
+
+    @Test
+    void adminPagesMoveAnAssessorOnlyCourseBackToTheAdminsOwnCourse() {
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(assessorOnly(course2)));
+        courseScopeService.setActiveCourseIdForCurrentUser(2L);   // they were working as an assessor in course 2
+        assertEquals(2L, courseScopeService.getActiveCourseIdForCurrentUser());
+
+        Long active = courseScopeService.ensureAdminActiveCourse();
+
+        assertEquals(1L, active);                                  // their own course
+        assertEquals(1L, courseScopeService.getActiveCourseIdForCurrentUser());
+    }
+
+    @Test
+    void adminPagesLeaveAnAdminCourseAsIs() {
+        AdminCourseAssignment invited = new AdminCourseAssignment(6L, lecturer, course2, Boolean.TRUE);
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(invited));
+        courseScopeService.setActiveCourseIdForCurrentUser(2L);
+
+        assertEquals(2L, courseScopeService.ensureAdminActiveCourse());
+    }
+
+    @Test
+    void theAdminAreaOffersOnlyTheCoursesThePersonAdministers() {
+        when(adminCourseAssignmentRepository.findByLecturerId(10L)).thenReturn(List.of(assessorOnly(course2)));
+
+        List<Course> offered = courseScopeService.getAdminAreaCoursesForCurrentUser();
+
+        assertEquals(List.of(1L), offered.stream().map(Course::getId).toList());
+        assertTrue(courseScopeService.getManagedCoursesForCurrentUser().stream().anyMatch(c -> c.getId().equals(2L)),
+                "they can still work in course 2 from the assessor side");
+        assertFalse(courseScopeService.canActAsAdminInCourse(2L));
+        assertTrue(courseScopeService.canActAsAdminInCourse(1L));
+    }
+}

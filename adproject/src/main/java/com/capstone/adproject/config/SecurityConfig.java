@@ -1,5 +1,6 @@
 package com.capstone.adproject.config;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -12,7 +13,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.csrf.CsrfException;
 import static org.springframework.security.config.Customizer.withDefaults;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,10 +36,13 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.capstone.adproject.exception.GlobalExceptionHandler;
 import com.capstone.adproject.service.CustomUserDetailsService;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 
 @Configuration
@@ -184,22 +192,55 @@ public class SecurityConfig {
         return provider;
     }
 
+    /**
+     * Unauthenticated access to a protected URL. A browser page navigation is sent to the login page (and the
+     * original URL is remembered by the request cache so the user lands back on it after signing in); a script or
+     * API call gets a bare 401 it can react to. Showing an error page here is what made expired sessions look like
+     * a system fault.
+     */
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
-        return (request, response, authException) -> {
-            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.UNAUTHORIZED.value());
-            request.setAttribute(RequestDispatcher.ERROR_MESSAGE, authException.getMessage());
-            request.getRequestDispatcher("/error").forward(request, response);
-        };
+        return (request, response, authException) -> rejectUnauthenticated(request, response);
     }
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            boolean signedIn = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
+            // A CSRF failure with no live session is an expired session, not a forbidden action.
+            if (accessDeniedException instanceof CsrfException && (!signedIn || !request.isRequestedSessionIdValid())) {
+                rejectUnauthenticated(request, response);
+                return;
+            }
+            if (accessDeniedException instanceof CsrfException) {
+                request.setAttribute(GlobalExceptionHandler.CUSTOM_MESSAGE_ATTRIBUTE,
+                        "This page was open for too long and its security token expired. Reload the page and try again.");
+            }
             request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
-            request.setAttribute(RequestDispatcher.ERROR_MESSAGE, accessDeniedException.getMessage());
             request.getRequestDispatcher("/error").forward(request, response);
         };
+    }
+
+    private static void rejectUnauthenticated(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        if (GlobalExceptionHandler.wantsJson(request) || isEventStream(request)) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            if (!isEventStream(request)) {
+                response.setContentType("application/json");
+                response.getWriter().write("{\"status\":401,\"error\":\"session_expired\","
+                        + "\"message\":\"Your session has expired. Please sign in again.\"}");
+            }
+            return;
+        }
+        // A session cookie that no longer maps to a live session means it expired; no cookie means never signed in.
+        boolean expired = request.getRequestedSessionId() != null && !request.isRequestedSessionIdValid();
+        response.sendRedirect(request.getContextPath() + (expired ? "/login?expired" : "/login"));
+    }
+
+    private static boolean isEventStream(HttpServletRequest request) {
+        String accept = request.getHeader("Accept");
+        return accept != null && accept.contains("text/event-stream");
     }
 
     @Bean

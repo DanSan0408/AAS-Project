@@ -252,4 +252,57 @@ class RubricControllerTest {
         verify(rubricService, org.mockito.Mockito.never()).deleteRubric(50L);
         assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));
     }
+
+    @Test
+    void testSaveNewAssessment_IgnoresASubmissionSourceFromAnotherCourse() {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(1L);
+        when(courseScopeService.isManagedCourseId(1L)).thenReturn(true);
+        com.capstone.adproject.model.Course course = new com.capstone.adproject.model.Course();
+        course.setId(1L);
+        when(superAdminService.getCourseById(1L)).thenReturn(java.util.Optional.of(course));
+        com.capstone.adproject.model.Assessment foreign = new com.capstone.adproject.model.Assessment();
+        foreign.setId(999L);
+        com.capstone.adproject.model.Assessment created = new com.capstone.adproject.model.Assessment();
+        created.setTitle("New");
+        created.setSubmissionSourceAssessment(foreign);
+
+        rubricController.saveAssessment(created, false, new RedirectAttributesModelMap());
+
+        org.mockito.ArgumentCaptor<com.capstone.adproject.model.Assessment> saved =
+                org.mockito.ArgumentCaptor.forClass(com.capstone.adproject.model.Assessment.class);
+        verify(rubricService).saveAssessment(saved.capture());
+        org.junit.jupiter.api.Assertions.assertNull(saved.getValue().getSubmissionSourceAssessment());
+    }
+
+    @Test
+    void testSaveOrUpdateRubric_ZeroTotalMarks_IsAccepted() {
+        when(rubricService.findAssessmentById(10L)).thenReturn(testAssessment);
+        when(rubricService.findRubricById(50L)).thenReturn(testRubric);
+        when(courseScopeService.isActiveCourseId(1L)).thenReturn(true);
+        when(rubricService.saveRubric(any(Rubric.class))).thenReturn(testRubric);
+        testRubric.setAssessment(testAssessment);
+        testRubric.setMarks(java.math.BigDecimal.ZERO);
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        rubricController.saveOrUpdateRubric(testRubric, false, Collections.emptyMap(), ra, new ConcurrentModel());
+
+        verify(rubricService).saveRubric(any(Rubric.class));
+        assertTrue(ra.getFlashAttributes().containsKey("successMessage"));
+    }
+
+    @Test
+    void testSaveOrUpdateRubric_NegativeTotalMarks_IsRefused() {
+        when(rubricService.findAssessmentById(10L)).thenReturn(testAssessment);
+        when(rubricService.findRubricById(50L)).thenReturn(testRubric);
+        when(courseScopeService.isActiveCourseId(1L)).thenReturn(true);
+        testRubric.setAssessment(testAssessment);
+        testRubric.setMarks(new java.math.BigDecimal("-5"));
+
+        RedirectAttributes ra = new RedirectAttributesModelMap();
+        String view = rubricController.saveOrUpdateRubric(testRubric, false, Collections.emptyMap(), ra, new ConcurrentModel());
+
+        assertEquals("redirect:/rubrics/edit/50", view);
+        assertTrue(ra.getFlashAttributes().containsKey("errorMessage"));
+        org.mockito.Mockito.verify(rubricService, org.mockito.Mockito.never()).saveRubric(any(Rubric.class));
+    }
 }

@@ -95,19 +95,6 @@
             if (typeof callback === 'function') callback();
         },
 
-            const self = this;
-            document.body.classList.add('loaded');
-            this.screenElement.classList.add('fade-out');
-            this.screenElement.setAttribute('aria-busy', 'false');
-
-            setTimeout(() => {
-                if (self.screenElement && self.screenElement.classList.contains('fade-out')) {
-                    self.screenElement.style.display = 'none';
-                }
-                if (typeof callback === 'function') callback();
-            }, this.config.fadeOutTime);
-        },
-
         /**
          * Trigger a timed loading animation (useful for async actions)
          */

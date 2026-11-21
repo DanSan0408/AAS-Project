@@ -373,18 +373,18 @@ body {
  * ============================================================================ */
 html[data-theme="dark"] body.data-views-home-page,
 html[data-theme="dark"] body.progress-page {
-    background-color: var(--ui-bg-canvas, #0f0f12) !important;
-    color: var(--ui-text-body-color, #e4e4e7) !important;
+    background-color: var(--ui-bg-canvas, var(--ui-bg-canvas)) !important;
+    color: var(--ui-text-body-color, var(--ui-text-body-color)) !important;
 }
 
 html[data-theme="dark"] .assessment-card {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border: 1px solid var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border: 1px solid var(--ui-border, var(--ui-border)) !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
 }
 
 html[data-theme="dark"] .assessment-card .card-header {
-    background-color: #22222a !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-bottom: 2px solid var(--admin-primary, #f59e0b) !important;
     color: #ffffff !important;
 }
@@ -398,16 +398,16 @@ html[data-theme="dark"] .assessment-card .card-body {
 }
 
 html[data-theme="dark"] .assessment-card .card-footer {
-    background-color: #1a1a20 !important;
-    border-top: 1px solid var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface) !important;
+    border-top: 1px solid var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] .info-row {
-    border-bottom: 1px dashed var(--ui-border, #2b2b36) !important;
+    border-bottom: 1px dashed var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] .info-row .label {
-    color: var(--ui-text-secondary, #a1a1aa) !important;
+    color: var(--ui-text-secondary, var(--ui-text-secondary)) !important;
 }
 
 html[data-theme="dark"] .info-row .value {
@@ -419,14 +419,14 @@ html[data-theme="dark"] .info-row i {
 }
 
 html[data-theme="dark"] .overall-card {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border: 1px solid var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border: 1px solid var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] .empty-state {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border: 2px dashed var(--ui-border, #2b2b36) !important;
-    color: var(--ui-text-muted, #858592) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border: 2px dashed var(--ui-border, var(--ui-border)) !important;
+    color: var(--ui-text-muted, var(--ui-text-muted)) !important;
 }
 
 html[data-theme="warm"] body.data-views-home-page,

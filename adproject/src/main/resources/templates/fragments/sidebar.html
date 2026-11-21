@@ -60,7 +60,8 @@
                 </button>
                 <ul class="sidebar-submenu" id="submenuDataManagement">
                     <li class="sidebar-subitem"><a class="sidebar-link" href="/admin/data-views"><span>Data Views</span></a></li>
-                    <li class="sidebar-subitem"><a class="sidebar-link" th:href="@{/admin/analytics/lecturer-comparison}"><span>Data Analytics</span></a></li>
+                    <li class="sidebar-subitem"><a class="sidebar-link" th:href="@{/admin/data-views/course-analytics}"><span>Course Analytics</span></a></li>
+                    <li class="sidebar-subitem"><a class="sidebar-link" th:href="@{/admin/analytics/lecturer-comparison}"><span>Marking Consistency</span></a></li>
                     <li class="sidebar-subitem"><a th:href="@{/admin/progress-tracking}" class="sidebar-link"><span>Progress &amp; Comments</span></a></li>
                 </ul>
             </li>
@@ -98,7 +99,9 @@
 
     <script th:src="@{/js/theme-switcher.js}"></script>
     <script th:src="@{/js/sidebar-toggle.js}"></script>
+    <script th:src="@{/js/ui-core.js}" defer></script>
 
-    </th:block>
+        <th:block th:replace="~{fragments/announcement_popup :: popup}"></th:block>
+</th:block>
 </body>
 </html>

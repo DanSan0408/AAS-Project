@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcements - IAMS</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/announcements.css}">
+</head>
+<body data-ui-role="super_admin" class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/superadmin/home', 'Announcements')}"></nav>
+
+        <div class="page-header">
+            <h1>Announcements</h1>
+            <p>Messages shown in a pop-up when people sign in: maintenance windows, new releases and improvements.</p>
+        </div>
+
+        <div class="container mt-4 ann-manager">
+            <div th:if="${successMessage}" class="alert alert-success" role="status"><span th:text="${successMessage}"></span></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert"><span th:text="${errorMessage}"></span></div>
+
+            <!-- Write / edit -->
+            <section aria-labelledby="formTitle">
+                <h2 id="formTitle" class="ann-section-title" th:text="${form.id == null} ? 'New announcement' : 'Edit announcement'">New announcement</h2>
+                <div class="ann-panel">
+                    <p class="ann-note">People see it once each time they sign in, while it is switched on and inside its dates. Someone who is already signed in sees it at their next sign-in. The text is shown exactly as typed.</p>
+                    <form class="ann-form" method="post" th:action="@{/superadmin/announcements}">
+                        <input type="hidden" name="id" th:if="${form.id != null}" th:value="${form.id}">
+                        <div class="ann-field">
+                            <label for="annTitle">Title</label>
+                            <input type="text" id="annTitle" name="title" maxlength="120" required th:value="${form.title}" placeholder="Nightly maintenance from 02:00">
+                        </div>
+                        <div class="ann-field">
+                            <label for="annMessage">Message</label>
+                            <textarea id="annMessage" name="message" maxlength="2000" required placeholder="What is happening, when, and what people need to do." th:text="${form.message}"></textarea>
+                            <span class="ann-hint">Up to 2000 characters. Line breaks are kept.</span>
+                        </div>
+                        <div class="ann-row">
+                            <div class="ann-field">
+                                <label for="annCategory">Type</label>
+                                <select id="annCategory" name="category">
+                                    <option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}" th:selected="${c == form.category}">Notice</option>
+                                </select>
+                            </div>
+                            <div class="ann-field">
+                                <label for="annAudience">Who sees it</label>
+                                <select id="annAudience" name="audience">
+                                    <option th:each="a : ${audiences}" th:value="${a}" th:text="${a.label}" th:selected="${a == form.audience}">Everyone</option>
+                                </select>
+                            </div>
+                            <div class="ann-field">
+                                <label for="annCourse">Course</label>
+                                <select id="annCourse" name="courseId">
+                                    <option value="">All courses</option>
+                                    <option th:each="c : ${courses}" th:value="${c.id}" th:text="${courseNames.get(c.id)}"
+                                            th:selected="${form.courseId != null and form.courseId == c.id}">Course</option>
+                                </select>
+                                <span class="ann-hint">Only people working in this course see it.</span>
+                            </div>
+                        </div>
+                        <div class="ann-row">
+                            <div class="ann-field">
+                                <label for="annStarts">Show from (optional)</label>
+                                <input type="datetime-local" id="annStarts" name="startsAt" th:value="${startsAtInput}">
+                                <span class="ann-hint">Server time, <span th:text="${serverZone}">UTC</span>. Leave empty to start now.</span>
+                            </div>
+                            <div class="ann-field">
+                                <label for="annEnds">Show until (optional)</label>
+                                <input type="datetime-local" id="annEnds" name="endsAt" th:value="${endsAtInput}">
+                                <span class="ann-hint">Server time, <span th:text="${serverZone}">UTC</span>. Leave empty to keep showing it.</span>
+                            </div>
+                        </div>
+                        <label class="ann-check"><input type="checkbox" name="active" value="true" th:checked="${form.active}"> Switched on</label>
+                        <div class="ann-actions">
+                            <button type="submit" class="btn btn-primary" th:text="${form.id == null} ? 'Publish announcement' : 'Save changes'">Publish announcement</button>
+                            <a th:if="${form.id != null}" th:href="@{/superadmin/announcements}" class="btn btn-secondary">Cancel editing</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Existing -->
+            <section aria-labelledby="listTitle">
+                <h2 id="listTitle" class="ann-section-title">All announcements</h2>
+                <p class="ann-empty" th:if="${announcements.isEmpty()}">No announcements yet. Write the first one above and it will appear for the people you choose the next time they sign in.</p>
+                <div class="ann-panel" th:unless="${announcements.isEmpty()}">
+                    <div class="ann-table-wrap">
+                        <table class="ann-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Announcement</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Who</th>
+                                    <th scope="col">Course</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Dates</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="a : ${announcements}">
+                                    <td>
+                                        <span class="ann-title" th:text="${a.title}">Title</span>
+                                        <span class="ann-excerpt" th:text="${#strings.abbreviate(a.message, 110)}">Message</span>
+                                        <span class="ann-excerpt">By <span th:text="${a.createdBy}">root</span>, <span th:text="${#temporals.format(a.createdAt, 'dd MMM yyyy HH:mm')}">date</span></span>
+                                    </td>
+                                    <td th:text="${a.category.label}">Notice</td>
+                                    <td th:text="${a.audience.label}">Everyone</td>
+                                    <td th:text="${a.courseId == null ? 'All courses' : (courseNames.get(a.courseId) != null ? courseNames.get(a.courseId) : 'Deleted course')}">All courses</td>
+                                    <td><span class="ann-status" th:classappend="|ann-status--${#strings.toLowerCase(a.statusAt(now).name())}|" th:text="${a.statusAt(now).label}">Live</span></td>
+                                    <td class="ann-window">
+                                        <span th:if="${a.startsAt == null and a.endsAt == null}">Always</span>
+                                        <span th:if="${a.startsAt != null}">From <span th:text="${#temporals.format(a.startsAt, 'dd MMM yyyy HH:mm')}">start</span></span>
+                                        <br th:if="${a.startsAt != null and a.endsAt != null}">
+                                        <span th:if="${a.endsAt != null}">Until <span th:text="${#temporals.format(a.endsAt, 'dd MMM yyyy HH:mm')}">end</span></span>
+                                    </td>
+                                    <td>
+                                        <div class="ann-row-actions">
+                                            <a th:href="@{/superadmin/announcements(edit=${a.id})}" class="btn btn-secondary">Edit</a>
+                                            <form method="post" th:action="@{/superadmin/announcements/{id}/toggle(id=${a.id})}">
+                                                <button type="submit" class="btn btn-secondary" th:text="${a.active} ? 'Switch off' : 'Switch on'">Switch off</button>
+                                            </form>
+                                            <form method="post" th:action="@{/superadmin/announcements/{id}/delete(id=${a.id})}"
+                                                  data-action="confirm-submit"
+                                                  data-confirm-message="Delete this announcement? People who have not seen it yet will not see it.">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script th:src="@{/js/event-delegation.js}"></script>
+</body>
+</html>

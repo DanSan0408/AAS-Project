@@ -86,7 +86,7 @@ public class CalculateService {
             },
             String.CASE_INSENSITIVE_ORDER
         ));
-        Map<Long, List<Mark>> marksByStudentId = groupMarksByEvaluatedStudent(markRepository.findByAssessment(assessment));
+        Map<Long, List<Mark>> marksByStudentId = groupMarksByEvaluatedStudent(finishedOnly(markRepository.findByAssessment(assessment)));
         
         for (Student student : students) {
             Double resolvedFactor = resolveStudentFactor(student);
@@ -116,7 +116,7 @@ public class CalculateService {
     }
 
     public Map<Long, List<Mark>> getMarksByEvaluatedStudentForAssessment(Assessment assessment) {
-        return groupMarksByEvaluatedStudent(markRepository.findByAssessment(assessment));
+        return groupMarksByEvaluatedStudent(finishedOnly(markRepository.findByAssessment(assessment)));
     }
 
     public StudentAssessmentDataDto calculateStudentAssessmentData(Student student, Assessment assessment) {
@@ -136,11 +136,12 @@ public class CalculateService {
         dto.setStudent(student);
         dto.setAssessment(assessment);
         
-        List<Mark> marks = preloadedMarks != null ? preloadedMarks : markRepository.findByEvaluatedStudentAndAssessment(student, assessment);
+        List<Mark> marks = finishedOnly(preloadedMarks != null ? preloadedMarks : markRepository.findByEvaluatedStudentAndAssessment(student, assessment));
         
         Double factor = precomputedFactor != null ? precomputedFactor : resolveStudentFactor(student);
         
         dto.setFactor(factor);
+        dto.setEvaluated(!marks.isEmpty());
         
         Map<Long, RubricCalculationDto> rubricCalculations = new HashMap<>();
         
@@ -237,7 +238,7 @@ public class CalculateService {
             double cappedTotal = Math.min(finalFactor, 1.05);
             dto.setFinalCalculatedFactor(Math.round(cappedTotal * 1000.0) / 1000.0);
         } else {
-            List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
+            List<Mark> allMarks = finishedOnly(markRepository.findByEvaluatedStudent(student));
             List<Mark> peerMarks = allMarks.stream()
                 .filter(m -> belongsToCourseId(m, courseId))
                 .filter(m -> m.getEvaluatorStudent() != null)
@@ -286,8 +287,8 @@ public class CalculateService {
         Map<Long, Double> individualAverages = new HashMap<>();
         
         for (Student member : groupMembers) {
-            List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(member, peerAssessment);
-            receivedMarks = receivedMarks.stream()
+            List<Mark> receivedMarks = finishedOnly(markRepository.findByEvaluatedStudentAndAssessment(member, peerAssessment));
+            receivedMarks = ratingsFromOthers(receivedMarks, member).stream()
                 .filter(m -> m.getEvaluatorStudent() != null)
                 .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
                 .filter(m -> m.getLecturer() == null)
@@ -357,15 +358,16 @@ public class CalculateService {
         List<FactorWeightage> weightages = resolveCourseWeightages(student, courseId);
         
         if (!weightages.isEmpty()) {
-            double finalFactor = 0.0;
+            List<Double> factors = new ArrayList<>();
+            List<Double> weights = new ArrayList<>();
             for (FactorWeightage fw : weightages) {
-                double factor = calculateStudentFactorFromPeerAssessment(student, fw.getAssessment(), fw.getFactorContributionType());
-                finalFactor += factor * (fw.getWeightage() / 100.0);
+                factors.add(calculateStudentFactorFromPeerAssessment(student, fw.getAssessment(), fw.getFactorContributionType()));
+                weights.add(fw.getWeightage() / 100.0);
             }
-            return Math.round(finalFactor * 1000.0) / 1000.0;
+            return Math.round(combineWeightedFactors(factors, weights) * 1000.0) / 1000.0;
         }
 
-        List<Mark> allMarks = markRepository.findByEvaluatedStudent(student);
+        List<Mark> allMarks = finishedOnly(markRepository.findByEvaluatedStudent(student));
         List<Mark> peerMarks = allMarks.stream()
             .filter(m -> belongsToCourseId(m, courseId))
             .filter(m -> m.getEvaluatorStudent() != null)
@@ -386,8 +388,8 @@ public class CalculateService {
         Map<Long, Double> individualAverages = new HashMap<>();
         
         for (Student member : groupMembers) {
-            List<Mark> receivedMarks = markRepository.findByEvaluatedStudentAndAssessment(member, peerAssessment);
-            receivedMarks = receivedMarks.stream()
+            List<Mark> receivedMarks = finishedOnly(markRepository.findByEvaluatedStudentAndAssessment(member, peerAssessment));
+            receivedMarks = ratingsFromOthers(receivedMarks, member).stream()
                 .filter(m -> m.getEvaluatorStudent() != null)
                 .filter(m -> m.getIsSupervisorMark() == null || !m.getIsSupervisorMark())
                 .filter(m -> m.getLecturer() == null)
@@ -426,6 +428,46 @@ public class CalculateService {
         return Math.round(factor * 1000.0) / 1000.0;
     }
 
+    /** A mark counts once it is finished. Drafts are work in progress; rows from before status existed (null) still count. */
+    public static boolean isFinished(Mark mark) {
+        return mark != null && (mark.getStatus() == null
+                || mark.getStatus() == Mark.SubmissionStatus.FINAL
+                || mark.getStatus() == Mark.SubmissionStatus.SUBMITTED);
+    }
+
+    static List<Mark> finishedOnly(List<Mark> marks) {
+        return marks == null ? new ArrayList<>() : marks.stream().filter(CalculateService::isFinished).collect(Collectors.toList());
+    }
+
+    /** What teammates gave a student: their own self-rating is not part of it. */
+    static List<Mark> ratingsFromOthers(List<Mark> received, Student member) {
+        return received.stream()
+            .filter(m -> m.getEvaluatorStudent() == null || member == null || member.getId() == null
+                    || !member.getId().equals(m.getEvaluatorStudent().getId()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Weighted sum of the teamwork factors that have data. A component with no data (factor 0) is left out and its weight is
+     * shared by the others, so a student with one assessment marked is not treated as having scored zero on the rest.
+     * With data for every component this is the plain weighted sum.
+     */
+    static double combineWeightedFactors(List<Double> factors, List<Double> weights) {
+        double weightedSum = 0.0;
+        double validWeight = 0.0;
+        double allWeight = 0.0;
+        for (int i = 0; i < factors.size(); i++) {
+            double weight = weights.get(i) != null ? weights.get(i) : 0.0;
+            allWeight += weight;
+            double factor = factors.get(i) != null ? factors.get(i) : 0.0;
+            if (factor > 0) {
+                weightedSum += factor * weight;
+                validWeight += weight;
+            }
+        }
+        return validWeight > 0 ? weightedSum * (allWeight / validWeight) : 0.0;
+    }
+
     private RubricCalculationDto calculateRubricData(Student student, Assessment assessment, Rubric rubric, List<Mark> allMarks) {
         RubricCalculationDto dto = new RubricCalculationDto();
         dto.setRubric(rubric);
@@ -433,6 +475,11 @@ public class CalculateService {
         List<Mark> rubricMarks = allMarks.stream()
             .filter(m -> m.getRubric() != null && m.getRubric().getId().equals(rubric.getId()))
             .collect(Collectors.toList());
+        // Where assessors marked this rubric, their marks decide it; student self/peer ratings are not averaged in with them.
+        List<Mark> assessorMarks = rubricMarks.stream().filter(m -> m.getLecturer() != null).collect(Collectors.toList());
+        if (!assessorMarks.isEmpty()) {
+            rubricMarks = assessorMarks;
+        }
             
         if (rubric.hasSubRubrics()) {
             dto.setRubricFactor(calculateSubRubricFactor(student, assessment, rubric, rubricMarks));
@@ -454,15 +501,15 @@ public class CalculateService {
     private Double calculateSubRubricFactor(Student student, Assessment assessment, Rubric rubric, List<Mark> marks) {
         if (marks.isEmpty()) return 0.0;
         
-        Map<Long, List<Mark>> marksByLecturer = new HashMap<>();
+        Map<String, List<Mark>> marksByLecturer = new HashMap<>();
         for (Mark mark : marks) {
             if (mark.getSubRubric() == null) continue;
-            Long lecturerId = null;
-            if (mark.getLecturer() != null) lecturerId = mark.getLecturer().getId();
-            else if (mark.getEvaluatorStudent() != null) lecturerId = mark.getEvaluatorStudent().getId();
+            String evaluatorKey = null;
+            if (mark.getLecturer() != null) evaluatorKey = "L" + mark.getLecturer().getId();
+            else if (mark.getEvaluatorStudent() != null) evaluatorKey = "S" + mark.getEvaluatorStudent().getId();
             
-            if (lecturerId != null) {
-                marksByLecturer.computeIfAbsent(lecturerId, k -> new ArrayList<>()).add(mark);
+            if (evaluatorKey != null) {
+                marksByLecturer.computeIfAbsent(evaluatorKey, k -> new ArrayList<>()).add(mark);
             }
         }
         
@@ -1094,6 +1141,19 @@ public class CalculateService {
             assessment.getId(), student.getId(), allComments.size(), displayed);
 
         return result;
+    }
+
+    /**
+     * The comments the AI audit may read about a student: written by a teammate (not the student, not an assessor) and already
+     * approved by a moderator. Pending and rejected comments never leave the system.
+     */
+    public List<AssessmentComment> getApprovedPeerComments(Student student, Assessment assessment) {
+        return commentRepository.findByEvaluatedStudentAndAssessment(student, assessment).stream()
+            .filter(c -> c.getEvaluatorType() == AssessmentComment.EvaluatorType.STUDENT)
+            .filter(c -> c.getApprovalStatus() == AssessmentComment.ApprovalStatus.APPROVED)
+            .filter(c -> c.getEvaluatorId() != null && !c.getEvaluatorId().equals(student.getId()))
+            .filter(c -> c.getCommentText() != null && !c.getCommentText().trim().isEmpty())
+            .collect(Collectors.toList());
     }
 
     private String getEvaluatorKey(Mark mark) {

@@ -27,6 +27,7 @@ public class AiModerationDtos {
             @JsonProperty("criterionLabel") String criterionLabel,
             @JsonProperty("rubricName") String rubricName,
             @JsonProperty("meanPairGapPct") Double meanPairGapPct,
+            @JsonProperty("pairCount") Integer pairCount,
             @JsonProperty("severity") String severity,
             @JsonProperty("analysis") String analysis
     ) {}
@@ -44,6 +45,8 @@ public class AiModerationDtos {
             @JsonProperty("assessmentTitle") String assessmentTitle,
             @JsonProperty("consensusStatus") String consensusStatus,
             @JsonProperty("meanCohortGapPct") Double meanCohortGapPct,
+            @JsonProperty("aiStatus") String aiStatus,
+            @JsonProperty("aiNotes") List<String> aiNotes,
             @JsonProperty("executiveSummary") String executiveSummary,
             @JsonProperty("topDivergentCriteria") List<CriterionDiscrepancy> topDivergentCriteria,
             @JsonProperty("priorityReviewTargets") List<TargetDiscrepancy> priorityReviewTargets,

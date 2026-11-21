@@ -336,12 +336,7 @@ public class SuperAdminService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found."));
 
-        if (!adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(lecturerId, courseId)) {
-            AdminCourseAssignment assignment = new AdminCourseAssignment();
-            assignment.setLecturer(admin);
-            assignment.setCourse(course);
-            adminCourseAssignmentRepository.save(assignment);
-        }
+        saveAdminAssignment(admin, course);
 
         // Keep legacy single-course field populated for backward compatibility.
         if (admin.getCourse() == null) {
@@ -480,12 +475,7 @@ public class SuperAdminService {
             throw new IllegalArgumentException("Invited user is not an admin.");
         }
 
-        if (!adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(invitedAdmin.getId(), course.getId())) {
-            AdminCourseAssignment assignment = new AdminCourseAssignment();
-            assignment.setLecturer(invitedAdmin);
-            assignment.setCourse(course);
-            adminCourseAssignmentRepository.save(assignment);
-        }
+        saveAdminAssignment(invitedAdmin, course);
 
         if (invitedAdmin.getCourse() == null) {
             invitedAdmin.setCourse(course);
@@ -568,5 +558,17 @@ public class SuperAdminService {
 
     private void deleteTableRows(String tableName) {
         jdbcTemplate.execute("DELETE FROM `" + tableName + "`");
+    }
+
+    /** Gives an admin the course as an admin; a row that only made them an assessor there is upgraded, not duplicated. */
+    private void saveAdminAssignment(Lecturer admin, Course course) {
+        AdminCourseAssignment assignment = adminCourseAssignmentRepository.findByLecturerId(admin.getId()).stream()
+            .filter(a -> a.getCourse() != null && course.getId().equals(a.getCourse().getId()))
+            .findFirst()
+            .orElseGet(AdminCourseAssignment::new);
+        assignment.setLecturer(admin);
+        assignment.setCourse(course);
+        assignment.setAsAdmin(Boolean.TRUE);
+        adminCourseAssignmentRepository.save(assignment);
     }
 }
