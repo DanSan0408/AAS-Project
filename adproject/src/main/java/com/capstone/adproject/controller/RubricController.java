@@ -138,6 +138,8 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
             rubricService.saveAssessment(existingAssessment);
             redirectAttributes.addFlashAttribute("successMessage", "Assessment updated successfully.");
         } else {
+            // A new assessment never reuses another assessment's submissions; that is set later on the submission settings page.
+            assessment.setSubmissionSourceAssessment(null);
             if (assessment.getRequiresSubmission() == null) {
                 assessment.setRequiresSubmission(false);
             }
@@ -463,6 +465,12 @@ import com.capstone.adproject.util.HtmlSanitizerUtil;
 
             rubric.setRubricCommentLabels(sanitizedLabels);
             rubric.setRubricCommentAnonymousFlags(anonymousFlags);
+        }
+
+        // 0 is a valid total (a rubric can be evaluated and recorded without adding marks); a negative total is not.
+        if (rubric.getMarks() != null && rubric.getMarks().signum() < 0) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Total marks cannot be negative. Use 0 for a rubric that adds no marks.");
+            return "redirect:" + ((rubricId == null) ? "/rubrics/add/" + assessmentId : "/rubrics/edit/" + rubricId);
         }
 
         if (!duplicateConfirmed) {

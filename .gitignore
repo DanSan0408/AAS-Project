@@ -7,4 +7,23 @@
 .cache/
 Reports/
 .env
-.env.*
+.env.*
+# Keep the example env file even though .env.* is ignored
+!.env.example
+!adproject/.env.example
+
+# Runtime output and user data: never commit
+logs/
+*.log
+*.log.*
+*.gz
+uploads/
+adproject/uploads/
+
+# Generated and local files
+__pycache__/
+*.pyc
+.DS_Store
+temp_*.csv
+ai-service/.venv/
+.venv/

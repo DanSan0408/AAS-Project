@@ -125,6 +125,83 @@ public class CourseScopeService {
         return sortCourses(deduplicateById(new ArrayList<>(allManagedCourses)));
     }
 
+    /**
+     * The courses the current user administers: their own course, the ones they created, and the ones they were invited to as
+     * an admin. Courses where they are only an assessor or a student are not here, even though they can work in them.
+     */
+    public Set<Long> getAdminCourseIdsForCurrentUser() {
+        String username = getLoggedInUsername();
+        if (username == null || username.isBlank()) {
+            return Collections.emptySet();
+        }
+        Set<Long> ids = new LinkedHashSet<>();
+        List<Course> allCourses = superAdminService != null ? superAdminService.getAllCourses() : Collections.emptyList();
+        for (Lecturer lecturer : resolveLecturersByIdentity(lecturerRepository, username)) {
+            Course home = safeCourseFromLecturer(lecturer);
+            if (home != null && home.getId() != null) {
+                ids.add(home.getId());
+            }
+            if (allCourses != null) {
+                for (Course c : allCourses) {
+                    if (c != null && c.getId() != null && c.getCreatedBy() != null && lecturer.getId() != null
+                            && lecturer.getId().equals(c.getCreatedBy().getId())) {
+                        ids.add(c.getId());
+                    }
+                }
+            }
+            if (adminCourseAssignmentRepository != null && lecturer.getId() != null) {
+                for (AdminCourseAssignment assignment : adminCourseAssignmentRepository.findByLecturerId(lecturer.getId())) {
+                    Course c = safeCourseFromAssignment(assignment);
+                    if (c != null && c.getId() != null && assignment.grantsAdminOfCourse()) {
+                        ids.add(c.getId());
+                    }
+                }
+            }
+        }
+        return ids;
+    }
+
+    /**
+     * Whether the person may act as an admin in this course. Someone with admin links to some courses may do so only there;
+     * an account with none (a super admin, or an old account without links) keeps using its managed courses.
+     */
+    public boolean canActAsAdminInCourse(Long courseId) {
+        if (courseId == null) {
+            return false;
+        }
+        Set<Long> adminIds = getAdminCourseIdsForCurrentUser();
+        return adminIds.isEmpty() ? isManagedCourseId(courseId) : adminIds.contains(courseId);
+    }
+
+    /** The courses to offer in the admin area: where the person is an admin, not the ones they only assess or study in. */
+    public List<Course> getAdminAreaCoursesForCurrentUser() {
+        Set<Long> adminIds = getAdminCourseIdsForCurrentUser();
+        List<Course> managed = getManagedCoursesForCurrentUser();
+        if (adminIds.isEmpty()) {
+            return managed;
+        }
+        return managed.stream().filter(c -> c != null && adminIds.contains(c.getId())).collect(Collectors.toList());
+    }
+
+    /**
+     * Called when an admin page is requested. If the course the person was last working in is one they only assess or study
+     * in, move them to one of their own admin courses (their home course first), so admin pages never show that course.
+     */
+    public Long ensureAdminActiveCourse() {
+        Set<Long> adminIds = getAdminCourseIdsForCurrentUser();
+        Long current = getActiveCourseIdForCurrentUser();
+        if (adminIds.isEmpty() || (current != null && adminIds.contains(current))) {
+            return current;
+        }
+        Long preferred = getPreferredActiveCourseIdFromProfile(adminIds);
+        Long target = preferred != null ? preferred : adminIds.iterator().next();
+        return setActiveCourseIdForCurrentUser(target) ? target : current;
+    }
+
+    public boolean isAdminOfCourse(Long courseId) {
+        return courseId != null && getAdminCourseIdsForCurrentUser().contains(courseId);
+    }
+
     public List<Course> getEnrolledCoursesForStudent(String username) {
         if (studentRepository == null || username == null || username.isBlank()) {
             return Collections.emptyList();

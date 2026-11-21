@@ -44,6 +44,8 @@ import com.capstone.adproject.repositories.MarkRepository;
 import com.capstone.adproject.repositories.StudentResultOverrideRepository;
 import com.capstone.adproject.service.AdminService;
 import com.capstone.adproject.service.AssessmentService;
+import com.capstone.adproject.service.CohortInputs;
+import com.capstone.adproject.service.CohortMetrics;
 import com.capstone.adproject.service.CalculateService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.StudentService;
@@ -266,6 +268,53 @@ public class DataViewController {
             : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId));
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "data_views_home";
+    }
+
+    /** Course Analytics: the few numbers an educator needs about how the cohort is doing. See {@link CohortMetrics}. */
+    @GetMapping("/course-analytics")
+    @SuppressWarnings("unchecked")
+    public String showCourseAnalytics(
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) List<Long> assessmentIds,
+            Model model) {
+        Map<String, Object> dataMap = getOverallDataModelMap(groupId, null, assessmentIds, false, 1, 25);
+        List<Student> students = (List<Student>) dataMap.get("students");
+        List<Assessment> assessments = (List<Assessment>) dataMap.get("assessments");
+        Map<Long, Map<String, Object>> overall = (Map<Long, Map<String, Object>>) dataMap.get("studentOverallData");
+
+        Course course = courseScopeService.getActiveCourseForCurrentUser();
+        double passMark = course != null ? course.effectivePassMark() : Course.DEFAULT_PASS_MARK;
+        double cloTarget = course != null ? course.effectiveCloTargetPercent() : Course.DEFAULT_CLO_TARGET_PERCENT;
+        Long activeCourseId = getResolvedActiveCourseId();
+
+        Map<Long, Map<Long, List<Mark>>> marksByAssessment = new HashMap<>();
+        for (Assessment assessment : assessments) {
+            marksByAssessment.put(assessment.getId(), calculateService.getMarksByEvaluatedStudentForAssessment(assessment));
+        }
+        Map<Long, Long> groupIdByStudent = new HashMap<>();
+        for (Student student : students) {
+            Group group = resolveStudentGroupForCourse(student, activeCourseId);
+            if (student.getId() != null && group != null && group.getId() != null) {
+                groupIdByStudent.put(student.getId(), group.getId());
+            }
+        }
+
+        List<CohortMetrics.StudentResult> results = CohortInputs.toResults(students, overall);
+        model.addAttribute("summary", CohortMetrics.summarise(results, passMark, calculateService::calculateGrade));
+        model.addAttribute("cloRows", CohortMetrics.cloRows(results, CohortInputs.cloAvailable(assessments), cloTarget));
+        model.addAttribute("criterionRows", CohortMetrics.criterionRows(
+                CohortInputs.criterionSamples(assessments, marksByAssessment, groupIdByStudent)));
+        model.addAttribute("attention", CohortMetrics.attention(results, passMark));
+        model.addAttribute("passMark", passMark);
+        model.addAttribute("cloTarget", cloTarget);
+        model.addAttribute("assessments", assessments);
+        model.addAttribute("allAssessments", dataMap.get("allAssessments"));
+        model.addAttribute("groups", dataMap.get("groups"));
+        model.addAttribute("selectedGroupId", groupId);
+        model.addAttribute("selectedAssessmentIds", assessmentIds == null ? List.of() : assessmentIds);
+        model.addAttribute("activeCourse", course);
+        model.addAttribute("adminUsername", getLoggedInUsername());
+        return "course_analytics";
     }
 
     @GetMapping("/overall")
@@ -529,29 +578,36 @@ public class DataViewController {
             data.put("teamName", studentGroup != null ? studentGroup.getGroupName() : "No Team");
             
             Double resolvedFactor = calculateService.calculatePeerAssessmentFactorForStudent(student, activeCourseId);
+            StudentResultOverride override = overridesByStudentId.get(student.getId());
+            // An admin's override wins: the factor it sets is the one the totals are worked out with.
+            Double factor = override != null && override.getOverriddenFactor() != null
+                ? override.getOverriddenFactor()
+                : resolvedFactor;
             Double grandTotal = 0.0;
+            boolean evaluated = false;
             Map<Long, StudentAssessmentDataDto> assessmentDataById = new HashMap<>();
             for (Assessment assessment : assessments) {
                 Map<Long, List<Mark>> marksByStudentId = marksByAssessmentId.get(assessment.getId());
                 StudentAssessmentDataDto assessmentData = calculateService.calculateStudentAssessmentData(
                     student,
                     assessment,
-                    resolvedFactor,
+                    factor,
                     marksByStudentId.get(student.getId())
                 );
                 assessmentDataById.put(assessment.getId(), assessmentData);
                 grandTotal += assessmentData.getTotalMarks();
+                evaluated = evaluated || assessmentData.isEvaluated();
             }
 
-            StudentResultOverride override = overridesByStudentId.get(student.getId());
-            Double factor = override != null && override.getOverriddenFactor() != null
-                ? override.getOverriddenFactor()
-                : resolvedFactor;
             boolean isOverridden = override != null && override.getOverriddenGrandTotal() != null;
+            if (isOverridden) {
+                grandTotal = override.getOverriddenGrandTotal();   // the total the admin set, and the grade that follows from it
+            }
             
             data.put("factor", factor);
             data.put("grandTotal", grandTotal);
             data.put("isOverridden", isOverridden);
+            data.put("evaluated", evaluated || isOverridden);
             data.put("grade", calculateService.calculateGrade(grandTotal));
             
             List<StudentAssessmentDataDto> details = new ArrayList<>();

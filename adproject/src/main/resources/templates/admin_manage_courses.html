@@ -124,7 +124,9 @@
                                               class="text-muted">Only course creator can invite</span>
                                     </td>
                                     <td>
-                                        <div class="table-actions">
+                                        <span th:if="${creatableInviteCourseIds == null or !creatableInviteCourseIds.contains(course.id)}"
+                                              class="text-muted">Only the course creator can edit or delete</span>
+                                        <div class="table-actions" th:if="${creatableInviteCourseIds != null and creatableInviteCourseIds.contains(course.id)}">
                                             <a th:href="@{/admin/courses/edit/{id}(id=${course.id})}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i> Edit</a>
                                             <form th:action="@{/admin/courses/delete/{id}(id=${course.id})}" method="post"
                                                   class="inline-action"

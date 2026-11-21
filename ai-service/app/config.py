@@ -7,9 +7,16 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
 
-    # Microservice Security
-    ai_internal_secret: str = "dev-insecure-secret-change-in-env"
+    # Microservice Security. No default: outside debug mode the service refuses to start without a strong secret.
+    ai_internal_secret: str = ""
     
+    # Telegram alerts: the same bot and chat as the Spring Boot app, so one chat shows everything.
+    telegram_bot_token: str = ""
+    telegram_alert_chat_id: str = ""
+    telegram_deploy_chat_id: str = ""          # the alert chat falls back to this, as in the app
+    adproject_environment_label: str = "production"
+    ai_alerts_enabled: bool = True
+
     # Service Configuration
     host: str = "0.0.0.0"
     port: int = 8000

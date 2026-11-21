@@ -33,6 +33,7 @@ import com.capstone.adproject.repositories.RatingRepository;
 import com.capstone.adproject.repositories.RubricRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import com.capstone.adproject.repositories.SubRubricRepository;
+import com.capstone.adproject.util.AssessmentOwnership;
 import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Service
@@ -771,6 +772,8 @@ public class LecturerAssessmentService {
                 Rating rating = ratingRepository.findById(ratingId)
                     .orElseThrow(() -> new RuntimeException("Rating not found"));
                 
+                AssessmentOwnership.requireRating(assessment, rating);
+                
                 Mark mark = new Mark();
                 mark.setEvaluatorStudent(student);
                 mark.setEvaluatedStudent(student);
@@ -787,6 +790,7 @@ public class LecturerAssessmentService {
                     Long subRubricId = Long.parseLong(key.substring(10));
                     SubRubric subRubric = subRubricRepository.findById(subRubricId)
                         .orElseThrow(() -> new RuntimeException("SubRubric not found"));
+                    AssessmentOwnership.requireRubric(assessment, subRubric.getRubric());
                     
                     mark.setSubRubric(subRubric);
                     mark.setRubric(subRubric.getRubric());
@@ -815,6 +819,7 @@ public class LecturerAssessmentService {
                     Long rubricId = Long.parseLong(key.substring(7));
                     Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found"));
+                    AssessmentOwnership.requireRubric(assessment, rubric);
                     
                     mark.setRubric(rubric);
                     mark.setMarkValue(rating.getMarks() != null ? rating.getMarks().doubleValue() : 0.0);
@@ -911,6 +916,8 @@ public class LecturerAssessmentService {
                     
                     Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found"));
+                    
+                    AssessmentOwnership.requireRubric(assessment, rubric);
                     
                     for (Map.Entry<Integer, String> commentEntry : rubricCommentMap.entrySet()) {
                         Integer commentIndex = commentEntry.getKey();

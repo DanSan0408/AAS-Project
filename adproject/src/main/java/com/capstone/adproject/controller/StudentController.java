@@ -60,6 +60,7 @@ import com.capstone.adproject.service.AssessmentCommentService;
 import com.capstone.adproject.service.AssessmentService;
 import com.capstone.adproject.service.DeadlineService;
 import com.capstone.adproject.service.MarkService;
+import com.capstone.adproject.util.AssessmentOwnership;
 import com.capstone.adproject.util.HtmlSanitizerUtil;
 
 @Controller
@@ -465,9 +466,6 @@ public class StudentController {
         List<Assessment> allAssessments = allAssignedAssessments.stream()
             .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
             .collect(Collectors.toList());
-        if (allAssessments.isEmpty() && !allAssignedAssessments.isEmpty()) {
-            allAssessments = allAssignedAssessments;
-        }
         List<Deadline> allDeadlines = currentCourseId == null
             ? List.of()
             : deadlineService.getDeadlinesByCourseId(currentCourseId);
@@ -556,9 +554,6 @@ public class StudentController {
         List<Assessment> assessments = allAssigned.stream()
             .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
             .collect(Collectors.toList());
-        if (assessments.isEmpty() && !allAssigned.isEmpty()) {
-            assessments = allAssigned;
-        }
         List<Assessment> peerSelfAssessments = new ArrayList<>();
         
         for (Assessment assessment : assessments) {
@@ -635,9 +630,6 @@ public class StudentController {
         List<Assessment> submissionAssessments = allEligible.stream()
                 .filter(a -> currentCourseId == null || (a.getCourse() != null && currentCourseId.equals(a.getCourse().getId())))
                 .collect(Collectors.toList());
-        if (submissionAssessments.isEmpty() && !allEligible.isEmpty()) {
-            submissionAssessments = allEligible;
-        }
 
         Map<Long, Deadline> assessmentDeadlineMap = new HashMap<>();
         Map<Long, Boolean> assessmentOpenMap = new HashMap<>();
@@ -1119,8 +1111,11 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 
                 Rubric rubric = rubricRepository.findById(rubricId)
                         .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                
+                AssessmentOwnership.requireRubric(assessment, rubric);
                 Rating rating = ratingRepository.findById(ratingId)
                         .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                AssessmentOwnership.requireRating(assessment, rating);
                 
                 Mark mark = new Mark();
                 mark.setEvaluatorStudent(evaluator);
@@ -1163,6 +1158,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
                 
                 Rating rating = ratingRepository.findById(ratingId)
                         .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                
+                AssessmentOwnership.requireRating(assessment, rating);
                 
                 Rubric resolvedParentRubric = parentRubric;
                 if (resolvedParentRubric == null) {
@@ -1238,6 +1235,8 @@ public String submitPeerAssessment(@PathVariable Long assessmentId,
             
             Rubric rubric = rubricRepository.findById(rubricId)
                 .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+            
+            AssessmentOwnership.requireRubric(assessment, rubric);
             
             for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
                 Integer commentIndex = commentEntry.getKey();
@@ -1508,8 +1507,11 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     
                     Rubric rubric = rubricRepository.findById(rubricId)
                             .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                    
+                    AssessmentOwnership.requireRubric(assessment, rubric);
                     Rating rating = ratingRepository.findById(ratingId)
                             .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                    AssessmentOwnership.requireRating(assessment, rating);
                     
                     Mark mark = new Mark();
                     mark.setEvaluatorStudent(evaluator);
@@ -1556,6 +1558,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                     
                     Rating rating = ratingRepository.findById(ratingId)
                             .orElseThrow(() -> new RuntimeException("Rating not found: " + ratingId));
+                    
+                    AssessmentOwnership.requireRating(assessment, rating);
                     
                     Rubric resolvedParentRubric = parentRubric;
 
@@ -1628,6 +1632,8 @@ public String submitTeamEvaluation(@PathVariable Long assessmentId,
                 
                 Rubric rubric = rubricRepository.findById(rubricId)
                     .orElseThrow(() -> new RuntimeException("Rubric not found: " + rubricId));
+                
+                AssessmentOwnership.requireRubric(assessment, rubric);
                 
                 for (Map.Entry<Integer, String> commentEntry : comments.entrySet()) {
                     Integer commentIndex = commentEntry.getKey();

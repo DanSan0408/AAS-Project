@@ -37,6 +37,7 @@ import com.capstone.adproject.service.CourseScopeService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -137,6 +138,10 @@ class GroupCommentControllerTest {
                 "Group Alpha",
                 88,
                 "HEALTHY",
+                null,
+                0,
+                "OK",
+                Collections.emptyList(),
                 "Team is performing well with high mutual cohesion.",
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -190,6 +195,10 @@ class GroupCommentControllerTest {
                 "Group Alpha",
                 85,
                 "HEALTHY_COLLABORATION",
+                null,
+                0,
+                "OK",
+                Collections.emptyList(),
                 "Good team collaboration.",
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -294,5 +303,118 @@ class GroupCommentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("lecturer_comment_select_assessment"))
                 .andExpect(model().attribute("assessments", org.hamcrest.Matchers.hasSize(1)));
+    }
+
+    // --- What the AI audit is sent, who may run it, and what a failure shows ----------------------------------------
+
+    private com.capstone.adproject.model.Student student(long id, String name) {
+        com.capstone.adproject.model.Student s = new com.capstone.adproject.model.Student();
+        s.setId(id);
+        s.setUsername(name);
+        s.setEmail(name.toLowerCase() + "@uni.edu.my");
+        s.setGroup(group);
+        s.setCourse(course);
+        return s;
+    }
+
+    private com.capstone.adproject.model.Mark ratingMark(com.capstone.adproject.model.Student by, com.capstone.adproject.model.Student about,
+                                                         double value, com.capstone.adproject.model.Mark.SubmissionStatus status, Lecturer assessor) {
+        com.capstone.adproject.model.Mark m = new com.capstone.adproject.model.Mark();
+        m.setEvaluatorStudent(by);
+        m.setEvaluatedStudent(about);
+        m.setAssessment(assessment);
+        m.setMarkValue(value);
+        m.setStatus(status);
+        m.setLecturer(assessor);
+        return m;
+    }
+
+    private AiTeamDynamicsDtos.AuditResponse anyAudit() {
+        return new AiTeamDynamicsDtos.AuditResponse(20L, "Group Alpha", 90, "HEALTHY_COLLABORATION", null, 0, "OK", List.of(),
+                "ok", List.of(), List.of(), List.of());
+    }
+
+    @Test
+    void testAiAudit_SendsOnlyFinishedStudentRatings_NotAssessorMarksOrDrafts() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        com.capstone.adproject.model.Student ali = student(1, "Ali");
+        com.capstone.adproject.model.Student bella = student(2, "Bella");
+        group.setStudents(new java.util.ArrayList<>(List.of(ali, bella)));
+        Lecturer drLim = new Lecturer();
+        drLim.setId(5L);
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(10L));
+        when(markRepository.findByGroupMembersAndAssessment(any(), eq(assessment))).thenReturn(List.of(
+                ratingMark(ali, bella, 4, com.capstone.adproject.model.Mark.SubmissionStatus.FINAL, null),             // a real peer rating
+                ratingMark(bella, bella, 5, com.capstone.adproject.model.Mark.SubmissionStatus.FINAL, drLim),          // an assessor's mark, stored as "self"
+                ratingMark(bella, ali, 3, com.capstone.adproject.model.Mark.SubmissionStatus.DRAFT, null)));          // not submitted yet
+        when(aiServiceClient.auditTeamDynamics(any(AiTeamDynamicsDtos.AuditRequest.class))).thenReturn(anyAudit());
+
+        mockMvc.perform(get("/admin/comments/view/assessment/100/group/20/ai-audit").principal(auth)).andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<AiTeamDynamicsDtos.AuditRequest> sent = org.mockito.ArgumentCaptor.forClass(AiTeamDynamicsDtos.AuditRequest.class);
+        verify(aiServiceClient).auditTeamDynamics(sent.capture());
+        org.junit.jupiter.api.Assertions.assertEquals(1, sent.getValue().peerRatings().size());
+        org.junit.jupiter.api.Assertions.assertEquals(4.0, sent.getValue().peerRatings().get(0).earned());
+    }
+
+    @Test
+    void testAiAudit_SendsOnlyApprovedTeammateCommentsWithoutTheWritersName() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        com.capstone.adproject.model.Student ali = student(1, "Ali");
+        group.setStudents(new java.util.ArrayList<>(List.of(ali)));
+        com.capstone.adproject.model.AssessmentComment approved = new com.capstone.adproject.model.AssessmentComment();
+        approved.setCommentText("Always on time.");
+        approved.setAssessment(assessment);
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(10L));
+        when(calculateService.getApprovedPeerComments(ali, assessment)).thenReturn(List.of(approved));
+        when(aiServiceClient.auditTeamDynamics(any(AiTeamDynamicsDtos.AuditRequest.class))).thenReturn(anyAudit());
+
+        mockMvc.perform(get("/admin/comments/view/assessment/100/group/20/ai-audit").principal(auth)).andExpect(status().isOk());
+
+        org.mockito.ArgumentCaptor<AiTeamDynamicsDtos.AuditRequest> sent = org.mockito.ArgumentCaptor.forClass(AiTeamDynamicsDtos.AuditRequest.class);
+        verify(aiServiceClient).auditTeamDynamics(sent.capture());
+        org.junit.jupiter.api.Assertions.assertEquals(1, sent.getValue().peerComments().size());
+        org.junit.jupiter.api.Assertions.assertEquals("Teammate", sent.getValue().peerComments().get(0).evaluatorName());
+        verify(calculateService, org.mockito.Mockito.never()).getAllAssessmentComments(any(), any());
+    }
+
+    @Test
+    void testAiAudit_Failure_ShowsAGenericMessageNotTheInternalError() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
+        when(courseScopeService.getActiveCourseIdsForCurrentUser()).thenReturn(Set.of(10L));
+        when(aiServiceClient.auditTeamDynamics(any(AiTeamDynamicsDtos.AuditRequest.class)))
+                .thenThrow(new RuntimeException("500 from http://ai-service:8000 detail=db password"));
+
+        mockMvc.perform(get("/admin/comments/view/assessment/100/group/20/ai-audit").principal(auth))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.message").value("The AI analysis is unavailable right now. Try again in a few minutes."));
+    }
+
+    @Test
+    void testAiAudit_AnAssessorWhoDoesNotSuperviseTheGroupIsRefused() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("lecturer@domain.com", "pass", List.of(new SimpleGrantedAuthority("ROLE_LECTURER")));
+        Lecturer lecturer = new Lecturer();
+        lecturer.setId(5L);
+        lecturer.setEmail("lecturer@domain.com");
+        lecturer.setCourse(course);
+        Lecturer someoneElse = new Lecturer();
+        someoneElse.setId(6L);
+        group.setAcademicSupervisor(someoneElse);
+        when(assessmentService.getAssessmentById(100L)).thenReturn(Optional.of(assessment));
+        when(groupRepository.findById(20L)).thenReturn(Optional.of(group));
+        when(lecturerRepository.findByEmail("lecturer@domain.com")).thenReturn(Optional.of(lecturer));
+        when(lecturerGroupAssignmentRepository.findByLecturerAndAssessment(lecturer, assessment)).thenReturn(Collections.emptyList());
+        when(lecturerRubricAssignmentRepository.existsByLecturerAndAssessment(lecturer, assessment)).thenReturn(false);
+
+        mockMvc.perform(get("/lecturer/comments/view/assessment/100/group/20/ai-audit").principal(auth))
+                .andExpect(status().isForbidden());
+
+        verify(aiServiceClient, org.mockito.Mockito.never()).auditTeamDynamics(any());
     }
 }

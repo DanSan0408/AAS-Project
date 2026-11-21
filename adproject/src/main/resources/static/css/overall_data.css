@@ -576,60 +576,60 @@ body.overall-data-page .legend-grid { display: grid !important; grid-template-co
  * Guarantees table cells, sticky columns, filter blocks, and headers are dark/warm
  * ============================================================================ */
 html[data-theme="dark"] body.overall-data-page {
-    background-color: var(--ui-bg-canvas, #0f0f12) !important;
-    color: var(--ui-text-body-color, #e4e4e7) !important;
+    background-color: var(--ui-bg-canvas, var(--ui-bg-canvas)) !important;
+    color: var(--ui-text-body-color, var(--ui-text-body-color)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .filter-card {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border-color: var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .filter-field input,
 html[data-theme="dark"] body.overall-data-page .filter-field select {
-    background-color: #1e1e24 !important;
+    background-color: var(--ui-bg-subtle) !important;
     color: var(--ui-text-primary, #ffffff) !important;
-    border-color: var(--ui-border-strong, #3f3f4e) !important;
+    border-color: var(--ui-border-strong, var(--ui-border-strong)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .assessment-filter-block {
-    background-color: #1e1e24 !important;
-    border-color: var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .assessment-checkbox {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border-color: var(--ui-border, #2b2b36) !important;
-    color: var(--ui-text-body-color, #e4e4e7) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
+    color: var(--ui-text-body-color, var(--ui-text-body-color)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .table-container {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    border-color: var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .overall-table {
-    border-color: var(--ui-border, #2b2b36) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page th {
-    background-color: var(--ui-bg-subtle, #22222a) !important;
+    background-color: var(--ui-bg-subtle, var(--ui-bg-subtle)) !important;
     color: var(--ui-text-primary, #ffffff) !important;
-    border-color: var(--ui-border, #2b2b36) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page td {
-    background-color: var(--ui-bg-surface, #18181c) !important;
-    color: var(--ui-text-body-color, #e4e4e7) !important;
-    border-color: var(--ui-border, #2b2b36) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
+    color: var(--ui-text-body-color, var(--ui-text-body-color)) !important;
+    border-color: var(--ui-border, var(--ui-border)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page .sticky-col {
-    background-color: var(--ui-bg-surface, #18181c) !important;
+    background-color: var(--ui-bg-surface, var(--ui-bg-surface)) !important;
 }
 
 html[data-theme="dark"] body.overall-data-page th.sticky-col {
-    background-color: var(--ui-bg-subtle, #22222a) !important;
+    background-color: var(--ui-bg-subtle, var(--ui-bg-subtle)) !important;
     color: var(--ui-text-primary, #ffffff) !important;
 }
 
@@ -638,7 +638,7 @@ html[data-theme="dark"] body.overall-data-page tbody tr:hover td {
 }
 
 html[data-theme="dark"] body.overall-data-page tbody tr:hover .sticky-col {
-    background-color: #1e1e24 !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 /* Warm Mode Extensions */

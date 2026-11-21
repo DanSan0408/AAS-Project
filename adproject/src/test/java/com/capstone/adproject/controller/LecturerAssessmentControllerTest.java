@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -127,6 +128,8 @@ class LecturerAssessmentControllerTest {
         testStudent.setGroup(testGroup);
 
         auth = new UsernamePasswordAuthenticationToken("lecturer@utm.my", "password");
+        // Assessors reach an assessment only when they are assigned to it.
+        org.mockito.Mockito.lenient().when(assignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of(testAssessment));
     }
 
     @Test
@@ -339,5 +342,68 @@ class LecturerAssessmentControllerTest {
         ResponseEntity<Resource> response = controller.streamSubmissionFile(88L, auth);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    // --- Course isolation ----------------------------------------------------------------------------------------
+
+    @Test
+    void testShowAssessments_DoesNotListAnotherCoursesAssessmentsWhenThisCourseHasNone() {
+        Course otherCourse = new Course();
+        otherCourse.setId(2L);
+        Assessment elsewhere = new Assessment();
+        elsewhere.setId(77L);
+        elsewhere.setTitle("Other course assessment");
+        elsewhere.setCourse(otherCourse);
+        elsewhere.setRubrics(new ArrayList<>());
+        when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
+        when(assignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of(elsewhere));
+        when(rubricAssignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of());
+        when(studentAssignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        controller.showAssessments(model, auth);
+
+        assertEquals(List.of(), model.getAttribute("assessments"));
+    }
+
+    @Test
+    void testSubmitCombinedEvaluation_RefusesToAnnotateASubmissionOfAnotherAssessment() {
+        Course otherCourse = new Course();
+        otherCourse.setId(2L);
+        Assessment elsewhere = new Assessment();
+        elsewhere.setId(77L);
+        elsewhere.setCourse(otherCourse);
+        AssessmentSubmission foreign = new AssessmentSubmission();
+        foreign.setId(900L);
+        foreign.setAssessment(elsewhere);
+        when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
+        when(rubricService.findAssessmentById(10L)).thenReturn(testAssessment);
+        when(studentAssignmentRepository.findStudentsByLecturerAndAssessment(testLecturer, testAssessment))
+                .thenReturn(List.of(testStudent));
+        when(lecturerAssessmentService.isStudentEvaluationComplete(testAssessment, testLecturer, 100L)).thenReturn(true);
+        when(assessmentSubmissionService.getSubmissionById(900L)).thenReturn(Optional.of(foreign));
+
+        Map<String, String> params = Map.of(
+            "submissionDoodlesPayload", "[{\"x\":1}]",
+            "submissionId", "900",
+            "student_100_rubric_50", "4");
+
+        controller.submitCombinedEvaluation(10L, null, 100L, "submit", params, auth, new RedirectAttributesModelMap());
+
+        verify(assessmentSubmissionService, never()).saveAllAnnotationsFromJson(eq(foreign), any(), any());
+    }
+
+    @Test
+    void testAnAssessorOfTheSameCourseWhoIsNotAssignedCannotOpenTheAssessment() {
+        when(lecturerRepository.findByEmail("lecturer@utm.my")).thenReturn(Optional.of(testLecturer));
+        when(rubricService.findAssessmentById(10L)).thenReturn(testAssessment);
+        when(assignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of());
+        when(rubricAssignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of());
+        when(studentAssignmentRepository.findAssessmentsByLecturer(testLecturer)).thenReturn(List.of());
+
+        Model model = new ConcurrentModel();
+        String view = controller.showStudentSelection(10L, model, auth, new RedirectAttributesModelMap());
+
+        assertEquals("redirect:/lecturer/assessments", view);
     }
 }

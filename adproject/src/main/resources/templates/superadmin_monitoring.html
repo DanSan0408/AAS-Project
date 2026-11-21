@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitoring - IAMS</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/monitoring.css}">
+</head>
+<body data-ui-role="super_admin" class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/superadmin/home', 'System Monitoring')}"></nav>
+
+        <div class="page-header">
+            <h1>System monitoring</h1>
+            <p>Health of the application and everything it depends on, taken when this page loaded.</p>
+        </div>
+
+        <div class="container mt-4 monitoring">
+            <div th:if="${successMessage}" class="alert alert-success" role="status"><span th:text="${successMessage}"></span></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert"><span th:text="${errorMessage}"></span></div>
+
+            <!-- Overall status -->
+            <section class="mon-overview" aria-label="Overall status">
+                <div class="mon-overall" th:classappend="|mon-${#strings.toLowerCase(snapshot.overall)}|">
+                    <span class="mon-overall-label" th:text="${snapshot.overall.name() == 'UP' ? 'All systems operational' : (snapshot.overall.name() == 'WARN' ? 'Degraded: needs attention' : 'Outage: action required')}">All systems operational</span>
+                    <span class="mon-overall-time">Checked <span th:text="${snapshot.takenAtText()}">now</span></span>
+                </div>
+                <div class="mon-toolbar">
+                    <label class="mon-autorefresh"><input type="checkbox" id="autoRefresh"> Refresh every 30 seconds</label>
+                    <a th:href="@{/superadmin/monitoring}" class="btn btn-secondary">Refresh now</a>
+                </div>
+            </section>
+
+            <!-- Dependency checks -->
+            <section aria-labelledby="checksTitle">
+                <h2 id="checksTitle" class="mon-section-title">Services</h2>
+                <div class="mon-grid">
+                    <article class="mon-card" th:each="check : ${snapshot.checks}" th:classappend="|mon-${#strings.toLowerCase(check.level)}|">
+                        <header>
+                            <h3 th:text="${check.name}">Database</h3>
+                            <span class="mon-badge" th:text="${check.level.name() == 'UP' ? 'Healthy' : (check.level.name() == 'WARN' ? 'Warning' : 'Down')}">Healthy</span>
+                        </header>
+                        <p th:text="${check.detail}">Responding</p>
+                        <small th:if="${check.latencyMs != null}" class="mon-num" th:text="|${check.latencyMs} ms|">12 ms</small>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Vitals -->
+            <section aria-labelledby="vitalsTitle">
+                <h2 id="vitalsTitle" class="mon-section-title">Server</h2>
+                <dl class="mon-vitals">
+                    <div><dt>Uptime</dt><dd class="mon-num" th:text="${snapshot.uptimeText()}">3h 12m</dd></div>
+                    <div><dt>Memory</dt><dd class="mon-num" th:text="|${snapshot.heapUsedMb} / ${snapshot.heapMaxMb} MB (${snapshot.heapPercent()}%)|">200 / 512 MB</dd></div>
+                    <div><dt>Threads</dt><dd class="mon-num" th:text="${snapshot.threads}">40</dd></div>
+                    <div><dt>Load average</dt><dd class="mon-num" th:text="|${#numbers.formatDecimal(snapshot.loadAverage, 1, 2)} on ${snapshot.processors} CPU|">0.20 on 2 CPU</dd></div>
+                    <div><dt>Disk free</dt><dd class="mon-num" th:text="|${snapshot.diskFreeMb} MB of ${snapshot.diskTotalMb} MB (${snapshot.diskUsedPercent()}% used)|">20000 MB</dd></div>
+                    <div><dt>Server errors (5xx) since start</dt><dd class="mon-num" th:text="${snapshot.serverErrors}">0</dd></div>
+                    <div><dt>Client errors (4xx) since start</dt><dd class="mon-num" th:text="${snapshot.clientErrors}">0</dd></div>
+                    <div><dt>Schema faults since start</dt><dd class="mon-num" th:text="${snapshot.schemaIncidents}">0</dd></div>
+                    <div><dt>Version (deployed commit)</dt><dd class="mon-num" th:text="${snapshot.revision}">abc1234</dd></div>
+                    <div><dt>Java</dt><dd class="mon-num" th:text="${snapshot.javaVersion}">21</dd></div>
+                </dl>
+            </section>
+
+            <!-- Alert channels -->
+            <section aria-labelledby="alertsTitle">
+                <h2 id="alertsTitle" class="mon-section-title">Alert channels</h2>
+                <div class="mon-panel">
+                    <ul class="mon-channels">
+                        <li><span class="mon-dot" th:classappend="${emailAlertConfigured} ? 'mon-up' : 'mon-warn'"></span>
+                            Email alerts: <strong th:text="${emailAlertConfigured ? 'configured' : 'not configured (set ADPROJECT_ALERTS_RECIPIENT_EMAIL)'}">configured</strong></li>
+                        <li><span class="mon-dot" th:classappend="${telegramConfigured} ? 'mon-up' : 'mon-warn'"></span>
+                            Telegram alerts: <strong th:text="${telegramConfigured ? 'configured' : 'not configured (set TELEGRAM_BOT_TOKEN and TELEGRAM_ALERT_CHAT_ID)'}">configured</strong></li>
+                    </ul>
+                    <form th:action="@{/superadmin/monitoring/test-alert}" method="post">
+                        <button type="submit" class="btn btn-secondary">Send a test alert</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Schema guard -->
+            <section aria-labelledby="schemaTitle">
+                <h2 id="schemaTitle" class="mon-section-title">Database schema guard</h2>
+                <div class="mon-panel">
+                    <p class="mon-note">
+                        Compares the live database with what the application maps. Unused legacy columns that would block inserts
+                        are made optional automatically (never deleted). Last checked <span th:text="${schemaCheckedAt}">never</span>.
+                    </p>
+                    <p th:if="${#lists.isEmpty(snapshot.schemaFindings)}" class="mon-empty">No differences found. The database matches the code.</p>
+                    <div class="mon-table-wrap" th:unless="${#lists.isEmpty(snapshot.schemaFindings)}">
+                        <table class="mon-table">
+                            <thead><tr><th>Finding</th><th>Table</th><th>Column</th><th>Detail</th></tr></thead>
+                            <tbody>
+                                <tr th:each="f : ${snapshot.schemaFindings}">
+                                    <td><span class="mon-badge" th:classappend="${f.kind == 'LEGACY_RELAXED' ? 'mon-up' : 'mon-down'}"
+                                              th:text="${f.kind == 'LEGACY_RELAXED' ? 'Fixed' : (f.kind == 'MISSING_COLUMN' ? 'Missing column' : 'Blocking')}">Fixed</span></td>
+                                    <td th:text="${f.table}">marks</td>
+                                    <td th:text="${f.column}">submittedAt</td>
+                                    <td th:text="${f.detail}">detail</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <form th:action="@{/superadmin/monitoring/recheck-schema}" method="post">
+                        <button type="submit" class="btn btn-secondary">Re-check schema</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Recent errors -->
+            <section aria-labelledby="errorsTitle">
+                <h2 id="errorsTitle" class="mon-section-title">Recent server errors</h2>
+                <div class="mon-panel">
+                    <p class="mon-note">Kept in memory (last 100) and cleared on restart. The reference matches the one shown on the user's error page and the log line.</p>
+                    <p th:if="${#lists.isEmpty(snapshot.recentErrors)}" class="mon-empty">No server errors since the application started.</p>
+                    <div class="mon-table-wrap" th:unless="${#lists.isEmpty(snapshot.recentErrors)}">
+                        <table class="mon-table">
+                            <thead><tr><th>Time</th><th>Reference</th><th>Status</th><th>Request</th><th>Error</th></tr></thead>
+                            <tbody>
+                                <tr th:each="e : ${snapshot.recentErrors}">
+                                    <td class="mon-num" th:text="${e.atText()}">time</td>
+                                    <td><code th:text="${e.errorId}">AB12CD34</code></td>
+                                    <td class="mon-num" th:text="${e.status}">500</td>
+                                    <td th:text="|${e.method} ${e.path}|">GET /x</td>
+                                    <td><strong th:text="${e.exceptionShort()}">Exception</strong><br><span th:text="${e.message}">message</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script th:src="@{/js/monitoring.js}"></script>
+</body>
+</html>

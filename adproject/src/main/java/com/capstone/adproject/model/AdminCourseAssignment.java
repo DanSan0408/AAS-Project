@@ -1,5 +1,6 @@
 package com.capstone.adproject.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,4 +30,20 @@ public class AdminCourseAssignment {
     @ManyToOne(optional = false)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
+
+    /**
+     * True when the person was given this course as an admin; false when they are only an assessor in it. Rows from before
+     * this column existed are null and still count as admin, so nobody loses access they already had.
+     */
+    @Column(name = "as_admin")
+    private Boolean asAdmin;
+
+    /** An assessor enrolment (the common case): the person works in the course but does not administer it. */
+    public AdminCourseAssignment(Long id, Lecturer lecturer, Course course) {
+        this(id, lecturer, course, Boolean.FALSE);
+    }
+
+    public boolean grantsAdminOfCourse() {
+        return !Boolean.FALSE.equals(asAdmin);
+    }
 }

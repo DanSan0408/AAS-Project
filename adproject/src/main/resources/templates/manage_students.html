@@ -88,7 +88,9 @@
                             </p>
                         </div>
                         
-                        <form id="studentForm" th:action="@{/admin/manage-students}" th:object="${student}" method="post">
+                        <form id="studentForm" th:action="@{/admin/manage-students}" th:object="${student}" method="post"
+                              data-suggest-url="/admin/users/suggestions" data-suggest-type="student"
+                              data-add-url="/admin/manage-students/add-existing" data-add-field="studentId" data-noun="student">
                             <input type="hidden" th:field="*{id}" />
                             <input type="hidden" name="confirmDuplicate" id="confirmDuplicate" value="false" />
 
@@ -99,6 +101,7 @@
                             <label for="username">Name / Username <span style="font-weight: normal; color: #666;" th:text="${student.id != null ? '(editable)' : '(optional)'}">(optional)</span></label>
                             <input type="text" id="username" th:field="*{username}" 
                                    placeholder="e.g. john.doe (leave blank to auto-generate)">
+                            <div id="userSuggestions" class="user-suggestions" role="region" aria-live="polite" aria-label="Existing accounts that match" hidden></div>
                             
                             <button type="submit" id="submitButton" 
                                     th:text="${student.id != null ? 'Update Student' : 'Add Student'}">
@@ -152,6 +155,20 @@
                         </div>
                     </form>
 
+                    <div class="welcome-bulk" th:if="${unactivatedIds != null and !unactivatedIds.isEmpty()}">
+                        <p class="welcome-bulk-text">
+                            <strong th:text="${#sets.size(unactivatedIds)}">0</strong>
+                            student account(s) have not set a password yet.
+                        </p>
+                        <form th:action="@{/admin/welcome-emails/resend}" method="post"
+                              data-action="confirm-submit"
+                              th:attr="data-confirm-message=|Send a new welcome email to all ${#sets.size(unactivatedIds)} student(s) who have not set a password yet?|">
+                            <input type="hidden" name="audience" value="students" />
+                            <input type="hidden" name="scope" value="all" />
+                            <button type="submit" class="action-button promote">Send welcome email to all</button>
+                        </form>
+                    </div>
+
                     <div class="table-scroll">
                         <table>
                             <thead>
@@ -176,6 +193,16 @@
                                     <td>
                                         <div class="table-actions">
                                             <a th:href="@{/admin/edit-student/{id}(id=${student.id})}" class="action-button">Update</a>
+                                            <form th:if="${unactivatedIds != null and unactivatedIds.contains(student.id)}"
+                                                  th:action="@{/admin/welcome-emails/resend}" method="post" style="display:inline;">
+                                                <input type="hidden" name="audience" value="students" />
+                                                <input type="hidden" name="id" th:value="${student.id}" />
+                                                <button type="submit" class="action-button promote"
+                                                        th:attr="aria-label=|Send welcome email to ${student.email}|">Send welcome email</button>
+                                            </form>
+                                            <button th:unless="${unactivatedIds != null and unactivatedIds.contains(student.id)}"
+                                                    type="button" class="action-button" disabled
+                                                    title="This account has already set its password">Send welcome email</button>
                                             <form th:action="@{/admin/delete-student/{id}(id=${student.id})}" method="post" style="display:inline;"
                                                   data-action="confirm-submit"
                                                   data-confirm-message="Are you sure you want to delete this student? This action cannot be undone.">
@@ -194,6 +221,7 @@
         </div>
     </div>
     <script th:src="@{/js/event-delegation.js}" th:attr="nonce=${cspNonce}"></script>
+    <script th:src="@{/js/existing-user-suggest.js}" th:attr="nonce=${cspNonce}"></script>
     <script th:attr="nonce=${cspNonce}" th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             const isDuplicate = /*[[${isDuplicate}]]*/ false;

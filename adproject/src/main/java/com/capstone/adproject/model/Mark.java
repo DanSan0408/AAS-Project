@@ -165,11 +165,22 @@ public class Mark {
     }
 
     public void calculateCloMarks() {
-        if (rubric != null && rubric.getCloMarks() != null && rating != null && rating.getMarks() != null) {
-            
-            double proportion = rating.getMarks().doubleValue() / 
-                (rubric.getMarks() != null ? rubric.getMarks().doubleValue() : 1.0);
-            this.cloMarks = proportion * rubric.getCloMarks();
+        if (rubric == null || rating == null || rating.getMarks() == null) {
+            return;
+        }
+        java.math.BigDecimal rubricMarks = rubric.getMarks();
+        // A rubric worth 0 marks is allowed: the evaluator's rating is recorded, and the rubric adds nothing to the CLO.
+        if (rubricMarks != null && rubricMarks.signum() == 0) {
+            this.cloMarks = 0.0;
+            return;
+        }
+        if (rubric.getCloMarks() != null) {
+            double divisor = rubricMarks != null ? rubricMarks.doubleValue() : 1.0;
+            // Dividing by a non-positive number would give NaN or Infinity, which MySQL refuses: keep the caller's value.
+            if (divisor > 0) {
+                double proportion = rating.getMarks().doubleValue() / divisor;
+                this.cloMarks = proportion * rubric.getCloMarks();
+            }
         }
     }
 
@@ -197,10 +208,11 @@ public class Mark {
             this.assessmentType = "Peer Assessment";
         }
         
-        if (this.markValue == null) {
+        // Last line of defence: NaN and Infinity cannot be stored, so they never leave here.
+        if (this.markValue == null || !Double.isFinite(this.markValue)) {
             this.markValue = 0.0;
         }
-        if (this.cloMarks == null) {
+        if (this.cloMarks == null || !Double.isFinite(this.cloMarks)) {
             this.cloMarks = 0.0;
         }
     }
