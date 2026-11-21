@@ -333,6 +333,35 @@ class AdminServiceTest {
     }
 
     @Test
+    void resendStudentWelcomeEmails_ForOneAccount_SendsEvenWhenAnEarlierEmailWasAccepted_ButNeverToActivatedAccounts() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        Student alreadyConfirmed = welcomeStudent(2L, "confirmed@example.com", true, "raw-token-2", LocalDateTime.now());
+        Student activated = welcomeStudent(3L, "active@example.com", true, null, LocalDateTime.now());
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(studentRepository.findByCourseId(10L)).thenReturn(List.of(alreadyConfirmed, activated));
+        when(userService.generateResetToken(alreadyConfirmed, Duration.ofDays(7))).thenReturn("fresh");
+
+        assertEquals(1, adminService.resendStudentWelcomeEmails(2L, request),
+            "the per-account button must work even though a welcome email was already accepted before");
+        assertEquals(0, adminService.resendStudentWelcomeEmails(3L, request),
+            "an account that already set its password is never re-invited");
+    }
+
+    @Test
+    void resendStudentWelcomeEmails_IncludeConfirmed_ReachesEveryoneWhoHasNotSetAPassword() {
+        MockHttpServletRequest request = wireWelcomeEmailCollaborators();
+        Student neverEmailed = welcomeStudent(1L, "never@example.com", true, "t1", null);
+        Student alreadyConfirmed = welcomeStudent(2L, "confirmed@example.com", true, "t2", LocalDateTime.now());
+        Student activated = welcomeStudent(3L, "active@example.com", true, null, LocalDateTime.now());
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(studentRepository.findByCourseId(10L)).thenReturn(List.of(neverEmailed, alreadyConfirmed, activated));
+        when(userService.generateResetToken(any(Student.class), eq(Duration.ofDays(7)))).thenReturn("fresh");
+
+        assertEquals(2, adminService.resendStudentWelcomeEmails(null, true, request));
+        verify(userService, never()).generateResetToken(eq(activated), any());
+    }
+
+    @Test
     void resendStudentWelcomeEmails_WithNothingPending_QueuesNothing() {
         MockHttpServletRequest request = wireWelcomeEmailCollaborators();
         when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
@@ -370,5 +399,86 @@ class AdminServiceTest {
         student.setResetPasswordToken(token);
         student.setWelcomeEmailSentAt(sentAt);
         return student;
+    }
+
+    // --- Deleting an assessor must not reach into their other courses ----------------------------------------------
+
+    private Lecturer assessor(Long id, Course home) {
+        Lecturer l = new Lecturer();
+        l.setId(id);
+        l.setEmail("lim@uni.edu.my");
+        l.setCourse(home);
+        return l;
+    }
+
+    private com.capstone.adproject.model.AdminCourseAssignment join(Lecturer l, Course c) {
+        return new com.capstone.adproject.model.AdminCourseAssignment(1000L + c.getId(), l, c);
+    }
+
+    @Test
+    void deletingAnAssessorWhoseHomeCourseIsThisOneKeepsTheirOtherCoursesAndAccount() {
+        Lecturer lim = assessor(1L, courseA);
+        var inB = join(lim, courseB);
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(lecturerRepository.findById(1L)).thenReturn(Optional.of(lim));
+        when(adminCourseAssignmentRepository.findByLecturerId(1L)).thenReturn(List.of(inB));
+
+        adminService.deleteLecturerById(1L);
+
+        verify(lecturerRepository).deleteMarksGivenInCourse(1L, 10L);
+        verify(lecturerRepository).deleteGroupAssignmentsInCourse(1L, 10L);
+        verify(lecturerRepository).deleteStudentAssignmentsInCourse(1L, 10L);
+        verify(lecturerRepository).deleteRubricAssignmentsInCourse(1L, 10L);
+        verify(lecturerRepository).deleteCommentsByLecturerInCourse(1L, 10L);
+        verify(lecturerRepository).unlinkFromGroupsInCourse(1L, 10L);
+        verify(lecturerRepository, never()).deleteMarksGiven(any());
+        verify(lecturerRepository, never()).delete(any());
+        // Their other course becomes their home course, and its join row is no longer needed.
+        assertEquals(20L, lim.getCourse().getId());
+        verify(adminCourseAssignmentRepository).delete(inB);
+        verify(lecturerRepository).save(lim);
+    }
+
+    @Test
+    void removingAnAssessorWhoJoinedThisCourseFromElsewhereOnlyLeavesThisCourse() {
+        Lecturer lim = assessor(1L, courseB);
+        var inA = join(lim, courseA);
+        when(adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(1L, 10L)).thenReturn(true);
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(lecturerRepository.findById(1L)).thenReturn(Optional.of(lim));
+        when(adminCourseAssignmentRepository.findByLecturerId(1L)).thenReturn(List.of(inA));
+
+        adminService.deleteLecturerById(1L);
+
+        verify(lecturerRepository).deleteMarksGivenInCourse(1L, 10L);
+        verify(adminCourseAssignmentRepository).delete(inA);
+        verify(lecturerRepository, never()).delete(any());
+        verify(lecturerRepository, never()).deleteMarksGiven(any());
+        assertEquals(20L, lim.getCourse().getId());
+    }
+
+    @Test
+    void anAssessorWhoBelongsOnlyToThisCourseIsDeletedCompletely() {
+        Lecturer lim = assessor(1L, courseA);
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(lecturerRepository.findById(1L)).thenReturn(Optional.of(lim));
+        when(adminCourseAssignmentRepository.findByLecturerId(1L)).thenReturn(List.of());
+
+        adminService.deleteLecturerById(1L);
+
+        verify(lecturerRepository).deleteMarksGiven(1L);
+        verify(lecturerRepository).delete(lim);
+        verify(lecturerRepository, never()).deleteMarksGivenInCourse(any(), any());
+    }
+
+    @Test
+    void anAssessorOutsideThisCourseCannotBeDeleted() {
+        Lecturer lim = assessor(1L, courseB);
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(lecturerRepository.findById(1L)).thenReturn(Optional.of(lim));
+        when(adminCourseAssignmentRepository.existsByLecturerIdAndCourseId(1L, 10L)).thenReturn(false);
+
+        assertThrows(RuntimeException.class, () -> adminService.deleteLecturerById(1L));
+        verify(lecturerRepository, never()).delete(any());
     }
 }

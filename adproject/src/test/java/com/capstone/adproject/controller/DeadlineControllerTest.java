@@ -202,4 +202,50 @@ class DeadlineControllerTest {
 
         verify(deadlineService).deleteDeadline(500L);
     }
+
+    @Test
+    void testSaveDeadline_WithTheIdOfAnotherCoursesDeadline_IsRejectedAndNothingIsSaved() throws Exception {
+        Deadline foreign = new Deadline();
+        foreign.setId(500L);
+        foreign.setCourseId(99L);
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(deadlineService.getDeadlineById(500L)).thenReturn(Optional.of(foreign));
+
+        mockMvc.perform(post("/deadlines/save")
+                .param("id", "500")
+                .param("title", "Overwritten")
+                .param("confirmDuplicate", "true"))
+                .andExpect(redirectedUrl("/admin/home"))
+                .andExpect(flash().attribute("errorMessage", "Unauthorized to update this deadline."));
+
+        verify(deadlineService, never()).save(any());
+    }
+
+    @Test
+    void testSaveDeadline_WithAnIdThatDoesNotExist_IsRejected() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(deadlineService.getDeadlineById(404L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/deadlines/save")
+                .param("id", "404")
+                .param("title", "Ghost")
+                .param("confirmDuplicate", "true"))
+                .andExpect(flash().attribute("errorMessage", "Unauthorized to update this deadline."));
+
+        verify(deadlineService, never()).save(any());
+    }
+
+    @Test
+    void testSaveDeadline_WithTheIdOfThisCoursesDeadline_StillUpdatesIt() throws Exception {
+        when(courseScopeService.getActiveCourseIdForCurrentUser()).thenReturn(10L);
+        when(deadlineService.getDeadlineById(500L)).thenReturn(Optional.of(deadline));
+
+        mockMvc.perform(post("/deadlines/save")
+                .param("id", "500")
+                .param("title", "Sprint 1 Final Deliverable")
+                .param("confirmDuplicate", "true"))
+                .andExpect(flash().attribute("successMessage", "Deadline saved successfully!"));
+
+        verify(deadlineService).save(any(Deadline.class));
+    }
 }

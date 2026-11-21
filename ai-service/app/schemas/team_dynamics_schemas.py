@@ -30,16 +30,18 @@ class TeamDynamicsRequest(BaseModel):
     groupName: str
     assessmentId: int
     assessmentTitle: str
-    members: List[MemberOverview]
-    peerRatings: List[PeerRatingItem] = Field(default_factory=list)
-    peerComments: List[PeerCommentItem] = Field(default_factory=list)
+    members: List[MemberOverview] = Field(max_length=60)
+    peerRatings: List[PeerRatingItem] = Field(default_factory=list, max_length=6000)
+    peerComments: List[PeerCommentItem] = Field(default_factory=list, max_length=600)
 
 
 class MemberMetric(BaseModel):
     studentId: int
     studentName: str
     selfScoreAvg: Optional[float] = None
-    peerScoreAvg: float
+    peerScoreAvg: Optional[float] = Field(default=None, description="None when nobody has rated this student")
+    peerRatingCount: int = 0
+    peerRaterCount: int = 0
     selfInflationGap: Optional[float] = None
     status: str = Field(description="'CONTRIBUTING', 'SUSPECTED_FREE_RIDER', 'OVER_CONFIDENT', 'UNDER_EVALUATED'")
     contributionSummary: str
@@ -50,13 +52,19 @@ class AnomalyFlag(BaseModel):
     severity: str = Field(description="'HIGH', 'MEDIUM', 'LOW'")
     targetStudent: Optional[str] = None
     description: str
+    evidence: str = Field(default="", description="The numbers behind the flag, so a supervisor can judge it")
+    source: str = Field(default="CALCULATED", description="'CALCULATED' (from the ratings) or 'AI' (from the written comments)")
 
 
 class TeamDynamicsResponse(BaseModel):
     groupId: int
     groupName: str
-    teamHealthScore: int = Field(ge=0, le=100, description="Overall team collaboration health (0-100)")
-    collaborationStatus: str = Field(description="'HEALTHY_COLLABORATION', 'SUSPECTED_COLLUSION', 'FREE_RIDER_DETECTED', 'HIGH_FRICTION'")
+    teamHealthScore: Optional[int] = Field(default=None, ge=0, le=100, description="Calculated from the ratings; None when there is not enough peer data")
+    collaborationStatus: str = Field(description="'HEALTHY_COLLABORATION', 'SUSPECTED_COLLUSION', 'FREE_RIDER_DETECTED', 'HIGH_FRICTION', 'INSUFFICIENT_DATA'")
+    groupPeerAverage: Optional[float] = None
+    peerRatingCount: int = 0
+    aiStatus: str = Field(default="OK", description="'OK', 'PARTIAL', 'UNAVAILABLE' or 'NOT_USED'")
+    aiNotes: List[str] = Field(default_factory=list, description="What the AI could not do, in plain words")
     executiveSummary: str
     memberMetrics: List[MemberMetric] = Field(default_factory=list)
     anomalyFlags: List[AnomalyFlag] = Field(default_factory=list)

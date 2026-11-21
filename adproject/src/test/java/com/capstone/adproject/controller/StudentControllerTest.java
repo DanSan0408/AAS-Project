@@ -320,4 +320,47 @@ class StudentControllerTest {
                 .andExpect(view().name("assessment_results"))
                 .andExpect(model().attribute("totalMarks", 85.0));
     }
+
+    // --- Course isolation: never fall back to another course's assessments --------------------------------------
+
+    private Assessment assessmentInAnotherCourse() {
+        Course other = new Course();
+        other.setId(2L);
+        other.setCourseName("Other course");
+        Assessment a = new Assessment();
+        a.setId(77L);
+        a.setTitle("Other course assessment");
+        a.setCourse(other);
+        a.setRubrics(new java.util.ArrayList<>());
+        a.setRequiresSubmission(true);
+        return a;
+    }
+
+    @Test
+    void testStudentHome_DoesNotShowAnotherCoursesAssessmentsWhenThisCourseHasNone() throws Exception {
+        Assessment other = assessmentInAnotherCourse();
+        when(studentRepository.findByEmail("student1@example.com")).thenReturn(Optional.of(student1));
+        when(assessmentService.findAllAssessmentsWithRubrics()).thenReturn(List.of(other));
+        when(studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(other, student1)).thenReturn(true);
+        when(deadlineService.getDeadlinesByCourseId(1L)).thenReturn(Collections.emptyList());
+        when(studentRepository.findByGroup(group)).thenReturn(List.of(student1, student2));
+        when(assessmentRepository.findAll()).thenReturn(List.of(other));
+
+        mockMvc.perform(get("/student/home").principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("allAssessments", Collections.emptyList()));
+    }
+
+    @Test
+    void testListAssessments_DoesNotShowAnotherCoursesAssessmentsWhenThisCourseHasNone() throws Exception {
+        Assessment other = assessmentInAnotherCourse();
+        when(studentRepository.findByEmail("student1@example.com")).thenReturn(Optional.of(student1));
+        when(assessmentRepository.findAll()).thenReturn(List.of(other));
+        when(studentAssessmentAssignmentRepository.existsByAssessmentAndStudent(other, student1)).thenReturn(true);
+        when(studentRepository.findByGroup(group)).thenReturn(List.of(student1, student2));
+
+        mockMvc.perform(get("/student/assessments").principal(principal))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("assessments", Collections.emptyList()));
+    }
 }

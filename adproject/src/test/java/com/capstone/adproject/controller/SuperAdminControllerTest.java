@@ -43,6 +43,18 @@ class SuperAdminControllerTest {
     @Mock
     private SuperAdminService superAdminService;
 
+    @Mock
+    private com.capstone.adproject.service.MonitoringService monitoringService;
+
+    @Mock
+    private com.capstone.adproject.service.AlertingService alertingService;
+
+    @Mock
+    private com.capstone.adproject.config.LegacyColumnCleanupMigrationRunner schemaGuard;
+
+    @Mock
+    private com.capstone.adproject.service.AnnouncementService announcementService;
+
     @InjectMocks
     private SuperAdminController superAdminController;
 
@@ -137,5 +149,37 @@ class SuperAdminControllerTest {
 
         verify(superAdminService).resetToSuperAdminOnly();
     }
-}
 
+    @Test
+    void monitoringPage_ShowsSnapshotAndAlertChannelState() throws Exception {
+        var snapshot = org.mockito.Mockito.mock(com.capstone.adproject.service.MonitoringService.Snapshot.class);
+        when(monitoringService.snapshot()).thenReturn(snapshot);
+        when(alertingService.isTelegramConfigured()).thenReturn(true);
+        when(alertingService.isEmailAlertConfigured()).thenReturn(false);
+
+        mockMvc.perform(get("/superadmin/monitoring"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("superadmin_monitoring"))
+                .andExpect(model().attribute("snapshot", snapshot))
+                .andExpect(model().attribute("telegramConfigured", true))
+                .andExpect(model().attribute("emailAlertConfigured", false));
+    }
+
+    @Test
+    void testAlert_SendsThroughEveryChannelAndReportsTheOutcome() throws Exception {
+        when(alertingService.notifyAll(anyString(), anyString())).thenReturn("email sent; telegram sent");
+
+        mockMvc.perform(post("/superadmin/monitoring/test-alert"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/superadmin/monitoring"))
+                .andExpect(flash().attribute("successMessage", "Test alert attempted: email sent; telegram sent."));
+    }
+
+    @Test
+    void recheckSchema_RunsTheGuardAgain() throws Exception {
+        mockMvc.perform(post("/superadmin/monitoring/recheck-schema"))
+                .andExpect(redirectedUrl("/superadmin/monitoring"));
+
+        verify(schemaGuard).guardSchema();
+    }
+}

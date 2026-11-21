@@ -178,16 +178,20 @@
                             statusBg = '#ffedd5';
                             statusColor = '#9a3412';
                             statusLabel = 'Team Friction Noted';
+                        } else if (data.collaborationStatus === 'INSUFFICIENT_DATA') {
+                            statusBg = '#e2e8f0';
+                            statusColor = '#334155';
+                            statusLabel = 'Not enough ratings yet';
                         }
 
-                        let html = `
+                        let html = aiBannerHtml(data) + `
                             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:14px 18px; margin-bottom:14px;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                                     <span style="background:${statusBg}; color:${statusColor}; font-weight:600; font-size:0.8rem; padding:3px 10px; border-radius:9999px;">
                                         ${statusLabel}
                                     </span>
                                     <span style="font-size:0.875rem; color:#64748b; font-weight:600;">
-                                        Overall Health: <strong style="color:#1e293b;">${data.teamHealthScore}/100</strong>
+                                        Overall Health: <strong style="color:#1e293b;">${data.teamHealthScore === null || data.teamHealthScore === undefined ? 'not enough data' : data.teamHealthScore + '/100'}</strong>
                                     </span>
                                 </div>
                                 <p style="margin:0; font-size:0.925rem; line-height:1.6; color:#334155;">${escapeHtml(data.executiveSummary)}</p>
@@ -232,7 +236,7 @@
                                             <p style="margin:2px 0 0 0; color:#64748b; font-size:0.825rem; line-height:1.4;">${escapeHtml(m.contributionSummary)}</p>
                                         </div>
                                         <div style="color:#64748b; font-size:0.8rem; white-space:nowrap; text-align:right;">
-                                            Peer Avg: <strong style="color:#1e293b;">${m.peerScoreAvg}%</strong>
+                                            Peer Avg: <strong style="color:#1e293b;">${m.peerScoreAvg === null || m.peerScoreAvg === undefined ? 'no peer ratings' : m.peerScoreAvg + '%'}</strong>
                                             ${m.selfScoreAvg !== null ? `<br><span style="font-size:0.775rem;">Self: ${m.selfScoreAvg}%</span>` : ''}
                                         </div>
                                     </div>
@@ -253,6 +257,8 @@
                                 html += `
                                     <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:3px solid #f59e0b; padding:8px 12px; border-radius:4px; font-size:0.85rem; color:#78350f;">
                                         <strong>${escapeHtml(a.targetStudent || a.type)}:</strong> ${escapeHtml(a.description)}
+                                        ${a.evidence ? '<div style="margin-top:3px; font-size:0.8rem;">' + escapeHtml(a.evidence) + '</div>' : ''}
+                                        <div style="margin-top:2px; font-size:0.75rem; opacity:0.8;">${a.source === 'AI' ? 'From the written comments (AI)' : 'Calculated from the ratings'}</div>
                                     </div>
                                 `;
                             });
@@ -285,7 +291,17 @@
                 });
             });
 
-            function escapeHtml(str) {
+            function aiBannerHtml(data) {
+            if (!data || (data.aiStatus !== 'UNAVAILABLE' && data.aiStatus !== 'PARTIAL')) { return ''; }
+            const notes = (data.aiNotes || []).map(n => '<li>' + escapeHtml(n) + '</li>').join('');
+            const lead = data.aiStatus === 'UNAVAILABLE'
+                ? 'The AI was not available, so nothing below was written by it. The findings are calculated from the ratings.'
+                : 'Part of the AI analysis was not available. The findings below are still calculated from the ratings.';
+            return '<div role="status" style="background:#fff7ed; border:1px solid #fed7aa; border-left:3px solid #ea580c; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem; color:#7c2d12;">'
+                + '<strong>' + lead + '</strong>' + (notes ? '<ul style="margin:6px 0 0 0; padding-left:18px;">' + notes + '</ul>' : '') + '</div>';
+        }
+
+        function escapeHtml(str) {
                 if (!str) return '';
                 return (str + '').replace(/[&<"']/g, function(m) {
                     switch (m) {

@@ -110,4 +110,74 @@ class LegacyColumnCleanupMigrationRunnerTest {
 
         verify(jdbcTemplate).execute("ALTER TABLE `courses` MODIFY COLUMN `course_code` VARCHAR(255) NULL DEFAULT NULL");
     }
+
+    // ---- generic schema guard ----
+
+    private static LegacyColumnCleanupMigrationRunner.DbColumn column(String table, String name, boolean nullable,
+            boolean hasDefault, boolean primaryKey) {
+        return new LegacyColumnCleanupMigrationRunner.DbColumn(table, name, "varchar(255)", nullable, hasDefault,
+            primaryKey, false, null, null);
+    }
+
+    @Test
+    void analyse_FlagsAnUnusedRequiredColumnWithNoDefault_TheCauseOfInsertFailures() {
+        var mapped = java.util.Map.of("marks", java.util.Set.of("id", "score"));
+        var db = java.util.List.of(
+            column("marks", "id", false, false, true),
+            column("marks", "score", true, false, false),
+            column("marks", "old_weight", false, false, false));
+
+        var findings = LegacyColumnCleanupMigrationRunner.analyse(mapped, db);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, findings.size());
+        org.junit.jupiter.api.Assertions.assertEquals("LEGACY_BLOCKING", findings.get(0).kind());
+        org.junit.jupiter.api.Assertions.assertEquals("old_weight", findings.get(0).column());
+    }
+
+    @Test
+    void analyse_IgnoresUnusedColumnsThatAreOptionalOrHaveADefault() {
+        var mapped = java.util.Map.of("marks", java.util.Set.of("id"));
+        var db = java.util.List.of(
+            column("marks", "id", false, false, true),
+            column("marks", "optional_old", true, false, false),
+            column("marks", "defaulted_old", false, true, false));
+
+        org.junit.jupiter.api.Assertions.assertTrue(LegacyColumnCleanupMigrationRunner.analyse(mapped, db).isEmpty());
+    }
+
+    @Test
+    void analyse_NeverTouchesTablesTheCodeDoesNotMap() {
+        var mapped = java.util.Map.of("marks", java.util.Set.of("id"));
+        var db = java.util.List.of(
+            column("marks", "id", false, false, true),
+            column("somebody_elses_table", "required_col", false, false, false));
+
+        org.junit.jupiter.api.Assertions.assertTrue(LegacyColumnCleanupMigrationRunner.analyse(mapped, db).isEmpty());
+    }
+
+    @Test
+    void analyse_ReportsAColumnTheCodeNeedsButTheDatabaseLacks() {
+        var mapped = java.util.Map.of("marks", java.util.Set.of("id", "clo1"));
+        var db = java.util.List.of(column("marks", "id", false, false, true));
+
+        var findings = LegacyColumnCleanupMigrationRunner.analyse(mapped, db);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, findings.size());
+        org.junit.jupiter.api.Assertions.assertEquals("MISSING_COLUMN", findings.get(0).kind());
+        org.junit.jupiter.api.Assertions.assertEquals("clo1", findings.get(0).column());
+    }
+
+    @Test
+    void analyse_MatchesNamesCaseInsensitively() {
+        var mapped = java.util.Map.of("marks", java.util.Set.of("submittedat"));
+        var db = java.util.List.of(column("Marks", "submittedAt", true, false, false));
+
+        org.junit.jupiter.api.Assertions.assertTrue(LegacyColumnCleanupMigrationRunner.analyse(mapped, db).isEmpty());
+    }
+
+    @Test
+    void guardSchema_WithoutEntityMetadata_IsASafeNoOp() {
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> runner.guardSchema());
+        org.junit.jupiter.api.Assertions.assertTrue(runner.getFindings().isEmpty());
+    }
 }

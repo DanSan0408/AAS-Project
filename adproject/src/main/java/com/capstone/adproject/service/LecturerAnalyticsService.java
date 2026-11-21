@@ -121,13 +121,13 @@ public class LecturerAnalyticsService {
             if (rubric.getSubRubrics().isEmpty()) {
                 double max = maximum(rubric.getRatings(), rubric.getMarks());
                 if (Double.isFinite(max) && max > 0) result.put("r" + rubric.getId(),
-                    new Criterion("r" + rubric.getId(), rubric.getId(), name, name, rubric.getClo(), scope, max));
+                    new Criterion("r" + rubric.getId(), rubric.getId(), name, name, rubric.getClo(), scope, max, step(rubric.getRatings())));
             } else {
                 rubric.getSubRubrics().forEach(sub -> {
                     double max = maximum(sub.getRatings(), sub.getMarks());
                     if (Double.isFinite(max) && max > 0) result.put("s" + sub.getId(),
                         new Criterion("s" + sub.getId(), rubric.getId(), name,
-                            label(sub.getName(), "Criterion " + sub.getId()), rubric.getClo(), scope, max));
+                            label(sub.getName(), "Criterion " + sub.getId()), rubric.getClo(), scope, max, step(sub.getRatings())));
                 });
             }
         }
@@ -140,6 +140,19 @@ public class LecturerAnalyticsService {
         if (ratings == null || ratings.isEmpty()) return legacyMaximum == null ? 0 : legacyMaximum.doubleValue();
         return ratings.stream().map(Rating::getMarks).filter(Objects::nonNull)
             .mapToDouble(BigDecimal::doubleValue).filter(Double::isFinite).max().orElse(0);
+    }
+
+    /** The smallest gap between two different rating marks (1 on a 1-5 scale), or 0 when there are fewer than two levels. */
+    static double step(List<Rating> ratings) {
+        if (ratings == null) return 0;
+        List<Double> levels = ratings.stream().map(Rating::getMarks).filter(Objects::nonNull)
+            .map(BigDecimal::doubleValue).filter(Double::isFinite).distinct().sorted().toList();
+        double smallest = 0;
+        for (int i = 1; i < levels.size(); i++) {
+            double gap = levels.get(i) - levels.get(i - 1);
+            if (gap > 0 && (smallest == 0 || gap < smallest)) smallest = gap;
+        }
+        return smallest;
     }
 
     private static boolean isCommitted(Mark.SubmissionStatus status) {

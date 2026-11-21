@@ -14,6 +14,8 @@ public class StudentAssessmentDataDto {
     private Student student;
     private Assessment assessment;
     private Double factor;
+    /** True when at least one finished mark exists for this student in the assessment (so zero means zero, not "not marked yet"). */
+    private boolean evaluated;
     
     private Map<Long, RubricCalculationDto> rubricCalculations = new HashMap<>();
     
@@ -113,6 +115,14 @@ public class StudentAssessmentDataDto {
         this.cloWeightedSumsIndividualOnly = cloWeightedSumsIndividualOnly;
     }
     
+    public boolean isEvaluated() {
+        return evaluated;
+    }
+
+    public void setEvaluated(boolean evaluated) {
+        this.evaluated = evaluated;
+    }
+
     public Double getTotalMarks() {
         return totalMarks != null ? totalMarks : 0.0;
     }

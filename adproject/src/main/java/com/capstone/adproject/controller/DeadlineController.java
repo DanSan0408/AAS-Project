@@ -65,6 +65,15 @@ public String saveDeadline(
         return "redirect:/admin/home";
     }
     
+    // An id means "update that deadline": it has to exist and belong to the active course, or it could overwrite another course's.
+    if (deadline.getId() != null) {
+        Optional<Deadline> existing = deadlineService.getDeadlineById(deadline.getId());
+        if (existing.isEmpty() || !activeCourseId.equals(existing.get().getCourseId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized to update this deadline.");
+            return "redirect:/admin/home";
+        }
+    }
+
     if (deadline.getAssessmentId() != null) {
         Optional<Assessment> assessmentOpt = assessmentService.getAssessmentById(deadline.getAssessmentId());
         if (assessmentOpt.isPresent() && assessmentOpt.get().getCourse() != null && !activeCourseId.equals(assessmentOpt.get().getCourse().getId())) {

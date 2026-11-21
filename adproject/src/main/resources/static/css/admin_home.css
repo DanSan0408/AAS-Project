@@ -1322,26 +1322,26 @@ body.admin-page .mini-progress-fill {
    Multi-Theme Overrides: Dark Mode for Admin Dashboard
    ========================================================================== */
 html[data-theme="dark"] body.admin-page {
-    background-color: #121214 !important;
-    color: #f4f4f5 !important;
-    --color-primary: #f59e0b;
-    --color-primary-light: #fbbf24;
+    background-color: var(--ui-bg-canvas) !important;
+    color: var(--ui-text-primary) !important;
+    --color-primary: var(--ui-primary);
+    --color-primary-light: var(--ui-primary-light);
     --color-primary-dark: #b45309;
-    --color-secondary: #d4d4d8;
-    --color-secondary-light: #e4e4e7;
-    --color-secondary-dark: #a1a1aa;
-    --color-background: #121214;
-    --color-surface: #1e1e24;
-    --color-border: #2e2e38;
-    --color-hover: #26262e;
+    --color-secondary: var(--ui-text-secondary);
+    --color-secondary-light: var(--ui-text-body-color);
+    --color-secondary-dark: var(--ui-text-muted);
+    --color-background: var(--ui-bg-canvas);
+    --color-surface: var(--ui-bg-surface);
+    --color-border: var(--ui-border);
+    --color-hover: var(--ui-bg-subtle);
 }
 
 html[data-theme="dark"] body.admin-page .main-content {
-    background-color: #121214 !important;
+    background-color: var(--ui-bg-canvas) !important;
 }
 
 html[data-theme="dark"] body.admin-page .header {
-    background: linear-gradient(135deg, #2d0510 0%, #170107 100%) !important;
+    background: linear-gradient(135deg, #1f3358 0%, #162744 100%) !important;
     border: 1px solid rgba(248, 166, 23, 0.25) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
 }
@@ -1352,7 +1352,7 @@ html[data-theme="dark"] body.admin-page :is(h1, h2, h3, h4, h5, h6) {
 
 html[data-theme="dark"] body.admin-page .managed-courses-indicator {
     background: linear-gradient(135deg, rgba(248, 166, 23, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
-    border-color: #2e2e38 !important;
+    border-color: var(--ui-border) !important;
     border-left-color: var(--color-accent, #F8A617) !important;
 }
 
@@ -1361,11 +1361,11 @@ html[data-theme="dark"] body.admin-page .managed-courses-header h3 {
 }
 
 html[data-theme="dark"] body.admin-page .managed-courses-subtitle {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .managed-course-chip {
-    background: #24242c !important;
+    background: var(--ui-bg-subtle) !important;
     border-color: #383844 !important;
 }
 
@@ -1377,12 +1377,12 @@ html[data-theme="dark"] body.admin-page .managed-course-code {
 }
 
 html[data-theme="dark"] body.admin-page .managed-course-name {
-    color: #e4e4e7 !important;
+    color: var(--ui-text-body-color) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-progress-card {
     background: linear-gradient(135deg, rgba(248, 166, 23, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
-    border-color: #2e2e38 !important;
+    border-color: var(--ui-border) !important;
     border-left-color: var(--color-accent, #F8A617) !important;
 }
 
@@ -1391,7 +1391,7 @@ html[data-theme="dark"] body.admin-page .live-progress-title :is(h3, h4) {
 }
 
 html[data-theme="dark"] body.admin-page .live-progress-subtitle {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .badge-assessment-title {
@@ -1401,47 +1401,47 @@ html[data-theme="dark"] body.admin-page .badge-assessment-title {
 }
 
 html[data-theme="dark"] body.admin-page .btn-toggle-details {
-    background: #24242c !important;
+    background: var(--ui-bg-subtle) !important;
     border-color: #3f3f46 !important;
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .btn-toggle-details:hover {
-    background: #2e2e38 !important;
+    background: var(--ui-border) !important;
     border-color: #f8a617 !important;
     color: #f8a617 !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-progress-bar-container {
-    background: #27272a !important;
+    background: var(--ui-bg-subtle) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-progress-count,
 html[data-theme="dark"] body.admin-page .live-progress-updated {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-assessment-select {
-    background-color: #24242c !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-color: #3f3f46 !important;
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .btn-toggle-multi-summary {
-    background: #24242c !important;
+    background: var(--ui-bg-subtle) !important;
     border-color: #3f3f46 !important;
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .btn-toggle-multi-summary:hover {
-    background: #2e2e38 !important;
+    background: var(--ui-border) !important;
     border-color: #f8a617 !important;
     color: #f8a617 !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-multi-summary-drawer {
-    background: #18181c !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-surface) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-header h4 {
@@ -1449,21 +1449,21 @@ html[data-theme="dark"] body.admin-page .multi-summary-header h4 {
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-hint {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-row {
-    background: #1e1e24 !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-row:hover {
     border-color: #f59e0b !important;
-    background: #26262e !important;
+    background: var(--ui-bg-subtle) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-title {
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-course {
@@ -1472,17 +1472,17 @@ html[data-theme="dark"] body.admin-page .multi-summary-course {
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-bar-track {
-    background: #2e2e38 !important;
+    background: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .multi-summary-pct {
-    color: #d4d4d8 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .btn-switch-live {
-    background: #26262e !important;
+    background: var(--ui-bg-subtle) !important;
     border-color: #3f3f46 !important;
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .btn-switch-live:hover {
@@ -1492,28 +1492,28 @@ html[data-theme="dark"] body.admin-page .btn-switch-live:hover {
 }
 
 html[data-theme="dark"] body.admin-page .live-progress-details-drawer {
-    border-top-color: #2e2e38 !important;
+    border-top-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-details-table {
-    background: #18181c !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-surface) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-details-table th {
-    background: #22222a !important;
+    background: var(--ui-bg-subtle) !important;
     color: #ffffff !important;
-    border-bottom-color: #2e2e38 !important;
+    border-bottom-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .live-details-table td {
-    color: #d4d4d8 !important;
-    border-bottom-color: #26262e !important;
+    color: var(--ui-text-secondary) !important;
+    border-bottom-color: var(--ui-bg-subtle) !important;
 }
 
 html[data-theme="dark"] body.admin-page .assessment-box {
-    background-color: #1a1a20 !important;
-    border-color: #2e2e38 !important;
+    background-color: var(--ui-bg-surface) !important;
+    border-color: var(--ui-border) !important;
     border-left-color: var(--color-accent, #F8A617) !important;
 }
 
@@ -1523,13 +1523,13 @@ html[data-theme="dark"] body.admin-page .assessment-header h3 {
 
 html[data-theme="dark"] body.admin-page .total-marks {
     background: rgba(255, 255, 255, 0.03) !important;
-    border-color: #2e2e38 !important;
+    border-color: var(--ui-border) !important;
     border-left-color: var(--color-accent, #F8A617) !important;
 }
 
 html[data-theme="dark"] body.admin-page .total-marks p,
 html[data-theme="dark"] body.admin-page .total-marks div p {
-    color: #d4d4d8 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .total-marks span {
@@ -1537,13 +1537,13 @@ html[data-theme="dark"] body.admin-page .total-marks span {
 }
 
 html[data-theme="dark"] body.admin-page .assess-type-group {
-    background: #202028 !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .rubric-assessment {
-    background: #24242c !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
 }
 
 html[data-theme="dark"] body.admin-page .rubric-assessment h6 {
@@ -1551,7 +1551,7 @@ html[data-theme="dark"] body.admin-page .rubric-assessment h6 {
 }
 
 html[data-theme="dark"] body.admin-page .rubric-details p {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .rubric-details span {
@@ -1596,8 +1596,8 @@ html[data-theme="dark"] body.admin-page .assessment-notes-banner.assessor-notes 
 }
 
 html[data-theme="dark"] body.admin-page .comment-item {
-    background: #1e1e24 !important;
-    border-color: #2e2e38 !important;
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
     border-left-color: #f59e0b !important;
 }
 
@@ -1607,11 +1607,11 @@ html[data-theme="dark"] body.admin-page .comment-number-badge {
 }
 
 html[data-theme="dark"] body.admin-page .comment-item-text {
-    color: #d4d4d8 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .summary-label {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .summary-value {
@@ -1619,11 +1619,11 @@ html[data-theme="dark"] body.admin-page .summary-value {
 }
 
 html[data-theme="dark"] body.admin-page .question-meta {
-    color: #a1a1aa !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .question-meta strong {
-    color: #f4f4f5 !important;
+    color: var(--ui-text-primary) !important;
 }
 
 html[data-theme="dark"] body.admin-page .assess-type-group h5 {

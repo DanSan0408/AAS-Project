@@ -10,6 +10,7 @@ class CriterionItem(BaseModel):
     clo: Optional[int] = None
     scope: Optional[str] = ""
     possible: float = 100.0
+    step: float = Field(default=0.0, description="Smallest difference between two rating levels; 0 when not known")
 
 
 class ScoreItem(BaseModel):
@@ -37,9 +38,9 @@ class CommentItem(BaseModel):
 class ModerationBriefingRequest(BaseModel):
     assessmentId: int
     assessmentTitle: str
-    criteria: List[CriterionItem]
-    scores: List[ScoreItem]
-    comments: Optional[List[CommentItem]] = Field(default_factory=list)
+    criteria: List[CriterionItem] = Field(max_length=500)
+    scores: List[ScoreItem] = Field(max_length=20000)
+    comments: Optional[List[CommentItem]] = Field(default_factory=list, max_length=200)
 
 
 class CriterionDiscrepancy(BaseModel):
@@ -47,6 +48,8 @@ class CriterionDiscrepancy(BaseModel):
     criterionLabel: str
     rubricName: str
     meanPairGapPct: float
+    meanPairGapSteps: Optional[float] = None
+    pairCount: int = 0
     severity: str = Field(description="'CRITICAL', 'MODERATE', or 'LOW'")
     analysis: str
 
@@ -55,6 +58,7 @@ class TargetDiscrepancy(BaseModel):
     targetId: str
     targetName: str
     spreadPct: float
+    spreadSteps: Optional[float] = None
     lecturerScores: Dict[str, float]
     summaryNote: str
 
@@ -64,6 +68,9 @@ class ModerationBriefingResponse(BaseModel):
     assessmentTitle: str
     consensusStatus: str = Field(description="'HIGH_ALIGNMENT', 'MODERATE_DISCREPANCY', or 'ACTION_REQUIRED'")
     meanCohortGapPct: float
+    meanCohortGapSteps: Optional[float] = None
+    aiStatus: str = Field(default="OK", description="'OK', 'PARTIAL', 'UNAVAILABLE' or 'NOT_USED'")
+    aiNotes: List[str] = Field(default_factory=list, description="What the AI could not do, in plain words")
     executiveSummary: str
     topDivergentCriteria: List[CriterionDiscrepancy] = Field(default_factory=list)
     priorityReviewTargets: List[TargetDiscrepancy] = Field(default_factory=list)

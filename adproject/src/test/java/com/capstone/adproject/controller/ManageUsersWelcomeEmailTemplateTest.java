@@ -109,4 +109,37 @@ class ManageUsersWelcomeEmailTemplateTest {
         assertTrue(page.contains("name=\"audience\" value=\"lecturers\""));
         assertTrue(page.contains("name=\"id\" value=\"3\""));
     }
+
+    @Test
+    void manageStudentsShowsAWelcomeEmailButtonBesideUpdateAndABulkButton() {
+        Student unactivated = student(7L, "new.student@example.com");
+        Student activated = student(8L, "active.student@example.com");
+        String page = render("manage_students", Map.of(
+            "student", new Student(),
+            "students", List.of(unactivated, activated),
+            "pendingWelcomeEmails", List.of(),
+            "unactivatedIds", java.util.Set.of(7L)));
+
+        assertTrue(page.contains("1</strong>"), "bulk bar shows how many accounts still have to set a password");
+        assertTrue(page.contains("name=\"scope\" value=\"all\""), "bulk button targets everyone who has not set a password");
+        assertTrue(page.contains("Send welcome email to new.student@example.com"), "row button for the unactivated account");
+        assertFalse(page.contains("Send welcome email to active.student@example.com"), "no live button for an activated account");
+        assertTrue(page.contains("This account has already set its password"), "activated account shows a disabled button");
+    }
+
+    @Test
+    void manageLecturersShowsAWelcomeEmailButtonBesideUpdate() {
+        Lecturer lecturer = new Lecturer();
+        lecturer.setId(3L);
+        lecturer.setEmail("assessor@example.com");
+        lecturer.setUsername("assessor");
+        String page = render("manage_lecturers", Map.of(
+            "lecturer", new Lecturer(),
+            "lecturers", List.of(lecturer),
+            "pendingWelcomeEmails", List.of(),
+            "unactivatedIds", java.util.Set.of(3L)));
+
+        assertTrue(page.contains("Send welcome email to assessor@example.com"));
+        assertTrue(page.contains("name=\"audience\" value=\"lecturers\""));
+    }
 }
