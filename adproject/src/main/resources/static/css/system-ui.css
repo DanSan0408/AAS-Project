@@ -171,7 +171,6 @@ body[data-ui-role] {
     --ui-surface: var(--ui-bg-surface);
     --ui-text: var(--ui-text-body-color);
     --ui-muted: var(--ui-text-muted);
-    --ui-border: var(--ui-border);
     --ui-radius: 12px;
     --ui-control-radius: 8px;
     --ui-shadow: 0 4px 16px rgb(0 0 0 / 6%);
@@ -867,7 +866,7 @@ html[data-theme="dark"] :is(i.fas, i.far, i.fa, i.fa-solid, i.fa-regular):not([c
 }
 
 /* Accessible Button Styling in Dark Mode */
-html[data-theme="dark"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back)) {
+html[data-theme="dark"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn)) {
     color: var(--ui-on-brand) !important;
 }
 
@@ -1095,6 +1094,18 @@ html[data-theme="dark"] .sidebar .logout-btn,
 html[data-theme="dark"] .sidebar .logout-btn a,
 html[data-theme="dark"] .sidebar .logout-btn button {
     color: var(--ui-primary-light) !important;
+}
+
+/* Super admin sidebar: its maroon accents vanish on the dark surface, so use the theme's own tokens. */
+html[data-theme="dark"] .sidebar .menu-list li.role-divider { border-top-color: var(--ui-border); }
+html[data-theme="dark"] .sidebar .menu-list li.role-divider .section-label { color: var(--ui-text-muted); }
+html[data-theme="dark"] .sidebar .menu-list li.logout-item .logout-btn {
+    border-color: var(--ui-primary-light);
+    color: var(--ui-primary-light) !important;
+}
+html[data-theme="dark"] .sidebar .menu-list li.logout-item .logout-btn:hover {
+    background: var(--ui-bg-subtle);
+    box-shadow: none;
 }
 
 html[data-theme="dark"] :is(.course-switcher, .course-switch-select) {
@@ -1491,7 +1502,7 @@ html[data-theme="warm"] .sidebar-link.active {
 }
 
 /* Accessible Button Styling in Warm Mode */
-html[data-theme="warm"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back)) {
+html[data-theme="warm"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn)) {
     color: #ffffff !important;
 }
 
