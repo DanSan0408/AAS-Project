@@ -219,6 +219,11 @@ public class LegacyColumnCleanupMigrationRunner implements CommandLineRunner {
                 addAll(mapped, tables[0], new String[] {entity.getDiscriminatorColumnName()});
             }
             for (String property : entity.getPropertyNames()) {
+                // A collection property reports its collection table with the OWNER's id column, which is not a column of
+                // that table (it holds the owner's id under the key name). The collection loop below has the right columns.
+                if (entity.getPropertyType(property).isCollectionType()) {
+                    continue;
+                }
                 String table = entity.getPropertyTableName(property);
                 String[] columns = entity.getPropertyColumnNames(property);
                 if (table != null && columns != null) {

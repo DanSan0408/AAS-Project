@@ -254,13 +254,27 @@ public class MonitoringService {
         long blocked = findings.stream().filter(f -> "LEGACY_BLOCKING".equals(f.kind())).count();
         if (missing > 0 || blocked > 0) {
             return new Check("Database schema", Level.DOWN,
-                    missing + " expected column(s) missing, " + blocked + " legacy column(s) still blocking inserts", null);
+                    missing + " expected column(s) missing, " + blocked + " legacy column(s) still blocking inserts"
+                            + namesOf(findings), null);
         }
         if (lastSchemaIncident != null) {
             return new Check("Database schema", Level.WARN, "A schema fault occurred at runtime: " + lastSchemaIncident, null);
         }
         return new Check("Database schema", Level.UP,
                 relaxed == 0 ? "Matches the code" : relaxed + " legacy column(s) were made optional at startup", null);
+    }
+
+    /** "Which ones": the first few table.column names, so an alert can be acted on without opening the monitoring page. */
+    static String namesOf(List<SchemaFinding> findings) {
+        List<String> names = findings.stream()
+                .filter(f -> "MISSING_COLUMN".equals(f.kind()) || "LEGACY_BLOCKING".equals(f.kind()))
+                .map(f -> f.table() + "." + f.column())
+                .toList();
+        if (names.isEmpty()) {
+            return "";
+        }
+        String shown = String.join(", ", names.subList(0, Math.min(8, names.size())));
+        return ": " + shown + (names.size() > 8 ? " (+" + (names.size() - 8) + " more)" : "");
     }
 
     private static String shorten(String message) {

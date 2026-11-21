@@ -19,6 +19,7 @@ import com.capstone.adproject.service.AnnouncementService;
 import com.capstone.adproject.service.CourseScopeService;
 import com.capstone.adproject.service.AnnouncementService.AnnouncementView;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -55,7 +56,17 @@ public class AnnouncementAdvice {
                 || authentication instanceof AnonymousAuthenticationToken) {
             return List.of();
         }
-        HttpSession session = request.getSession();
+        // Only a normal page request shows the pop-up. An async dispatch (the progress stream finishing) or the /error page
+        // runs after the response is committed, where creating a session throws and turns one failure into several alerts.
+        if (request.getDispatcherType() != DispatcherType.REQUEST) {
+            return List.of();
+        }
+        HttpSession session;
+        try {
+            session = request.getSession();
+        } catch (IllegalStateException responseAlreadyCommitted) {
+            return List.of();
+        }
         Long courseId = activeCourseId();
         Object cached = session.getAttribute(SESSION_KEY);
         if (cached instanceof List<?> list && session.getAttribute(COURSE_KEY + ".set") != null
