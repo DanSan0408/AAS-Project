@@ -81,6 +81,31 @@ class AnnouncementPopupTest {
     }
 
     @Test
+    void anAsyncOrErrorDispatchNeverCreatesASession() {
+        // The progress stream (SSE) completes through an async dispatch, after the response is committed; creating a session
+        // then throws "Cannot create a session after the response has been committed". The same goes for the /error page.
+        signInAs("ROLE_ADMIN");
+        for (jakarta.servlet.DispatcherType type : List.of(jakarta.servlet.DispatcherType.ASYNC, jakarta.servlet.DispatcherType.ERROR)) {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setDispatcherType(type);
+
+            assertTrue(advice.pendingAnnouncements(request).isEmpty(), type + " dispatch should show nothing");
+            assertEquals(null, request.getSession(false), type + " dispatch must not create a session");
+        }
+        verify(service, never()).liveFor(anyCollection(), any(), any());
+    }
+
+    @Test
+    void aCommittedResponseThatRefusesANewSessionDoesNotBreakThePage() {
+        signInAs("ROLE_ADMIN");
+        jakarta.servlet.http.HttpServletRequest request = mock(jakarta.servlet.http.HttpServletRequest.class);
+        when(request.getDispatcherType()).thenReturn(jakarta.servlet.DispatcherType.REQUEST);
+        when(request.getSession()).thenThrow(new IllegalStateException("Cannot create a session after the response has been committed"));
+
+        assertTrue(advice.pendingAnnouncements(request).isEmpty());
+    }
+
+    @Test
     void theDatabaseIsAskedOncePerLoginNotOncePerPage() {
         signInAs("ROLE_LECTURER");
         when(service.liveFor(anyCollection(), any(), any())).thenReturn(List.of(NOTICE));

@@ -143,7 +143,7 @@ class ProgressTrackingEvaluationsTest {
     }
 
     private void finalMarks(Mark... marks) {
-        when(markRepository.findByAssessmentAndStatus(assessment, Mark.SubmissionStatus.FINAL)).thenReturn(List.of(marks));
+        when(markRepository.findByAssessment(assessment)).thenReturn(List.of(marks));
     }
 
     private AssessmentComment comment(AssessmentComment.EvaluatorType type, Long evaluatorId, Student about,
@@ -335,5 +335,23 @@ class ProgressTrackingEvaluationsTest {
 
         assertThrows(IllegalArgumentException.class, () ->
                 service.deleteEvaluation(assessment, "ROBOT", 5L, 12L, "Individual Assessment", List.of(103L), "Reason", "admin1"));
+    }
+
+    @Test
+    void submittedAndOldStatuslessEvaluationsAreListedNotOnlyFinalOnes() {
+        Mark submitted = studentMark(ali, chen, report, "Peer Assessment");
+        submitted.setStatus(Mark.SubmissionStatus.SUBMITTED);
+        Mark statusless = studentMark(bella, chen, report, "Peer Assessment");
+        statusless.setStatus(null);
+        Mark draft = studentMark(chen, chen, report, "Self Assessment");
+        draft.setStatus(Mark.SubmissionStatus.DRAFT);
+        finalMarks(submitted, statusless, draft);
+
+        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null);
+
+        assertEquals(2, rows.size(), "the draft is not a finished evaluation");
+        ProgressTrackingService.MarkCounts counts = service.markCounts(assessment);
+        assertEquals(2, counts.finished());
+        assertEquals(1, counts.drafts());
     }
 }

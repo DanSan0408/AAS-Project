@@ -537,6 +537,7 @@ public class AdminController {
             @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
             @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
             @RequestParam(value = "evalRubricId", required = false) Long evalRubricId,
+            @RequestParam(value = "evalAll", required = false, defaultValue = "false") boolean evalAll,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -550,7 +551,7 @@ public class AdminController {
         }
 
         if ("evaluations".equals(tab)) {
-            addEvaluationsTabModel(model, assessment, evalGroupId, evalStudentId, evalRubricId);
+            addEvaluationsTabModel(model, assessment, evalGroupId, evalStudentId, evalRubricId, evalAll);
         }
 
         Map<String, Object> lecturerProgress = progressTrackingService.getLecturerProgress(assessment);
@@ -589,12 +590,13 @@ public class AdminController {
             @RequestParam(value = "currentAssessmentId", required = false) Long currentAssessmentId,
             @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
             @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
-            @RequestParam(value = "evalRubricId", required = false) Long evalRubricId) {
+            @RequestParam(value = "evalRubricId", required = false) Long evalRubricId,
+            @RequestParam(value = "evalAll", required = false, defaultValue = "false") boolean evalAll) {
         boolean sameAssessment = assessmentId.equals(currentAssessmentId);
         return "redirect:" + evaluationsUrl(assessmentId,
                 sameAssessment ? evalGroupId : null,
                 sameAssessment ? evalStudentId : null,
-                sameAssessment ? evalRubricId : null);
+                sameAssessment ? evalRubricId : null) + (sameAssessment && evalAll ? "&evalAll=true" : "");
     }
 
     /** Permanently deletes one finished evaluation. Admins can read and delete evaluations, never edit them. */
@@ -610,6 +612,7 @@ public class AdminController {
             @RequestParam(value = "evalGroupId", required = false) Long evalGroupId,
             @RequestParam(value = "evalStudentId", required = false) Long evalStudentId,
             @RequestParam(value = "evalRubricId", required = false) Long evalRubricId,
+            @RequestParam(value = "evalAll", required = false, defaultValue = "false") boolean evalAll,
             RedirectAttributes redirectAttributes) {
         Assessment assessment = assessmentService.getAssessmentById(assessmentId).orElse(null);
         if (assessment == null || !ownsAssessment(assessment)) {
@@ -624,7 +627,7 @@ public class AdminController {
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:" + evaluationsUrl(assessmentId, evalGroupId, evalStudentId, evalRubricId);
+        return "redirect:" + evaluationsUrl(assessmentId, evalGroupId, evalStudentId, evalRubricId) + (evalAll ? "&evalAll=true" : "");
     }
 
     private String evaluationsUrl(Long assessmentId, Long groupId, Long studentId, Long rubricId) {
@@ -641,12 +644,15 @@ public class AdminController {
         return url.toString();
     }
 
-    private void addEvaluationsTabModel(Model model, Assessment assessment, Long groupId, Long studentId, Long rubricId) {
+    /** Most evaluations listed at once when "show all" is used; narrowing the choice shows the rest. */
+    private static final int MAX_EVALUATIONS_SHOWN = 200;
+
+    private void addEvaluationsTabModel(Model model, Assessment assessment, Long groupId, Long studentId, Long rubricId, boolean showAll) {
         Long activeCourseId = courseScopeService.getActiveCourseIdForCurrentUser();
         List<Assessment> courseAssessments = activeCourseId == null
                 ? List.of()
                 : assessmentService.findAllAssessmentsWithRubricsByCourseId(activeCourseId);
-        boolean picked = groupId != null || studentId != null || rubricId != null;
+        boolean picked = groupId != null || studentId != null || rubricId != null || showAll;
 
         model.addAttribute("courseAssessments", courseAssessments);
         model.addAttribute("evaluationStudents", progressTrackingService.getEvaluationStudents(assessment));
@@ -655,9 +661,15 @@ public class AdminController {
         model.addAttribute("evalStudentId", studentId);
         model.addAttribute("evalRubricId", rubricId);
         model.addAttribute("evaluationsPicked", picked);
-        model.addAttribute("evaluations", picked
+        List<ProgressTrackingService.EvaluationRow> found = picked
                 ? progressTrackingService.findEvaluations(assessment, groupId, studentId, rubricId)
-                : List.of());
+                : List.of();
+        boolean truncated = found.size() > MAX_EVALUATIONS_SHOWN;
+        model.addAttribute("evaluations", truncated ? found.subList(0, MAX_EVALUATIONS_SHOWN) : found);
+        model.addAttribute("evaluationsTruncated", truncated);
+        model.addAttribute("evaluationsTotal", found.size());
+        model.addAttribute("evalAll", showAll);
+        model.addAttribute("markCounts", progressTrackingService.markCounts(assessment));
         model.addAttribute("recentDeletions", progressTrackingService.recentDeletions(assessment.getId()));
     }
 

@@ -481,6 +481,19 @@ class AdminManagementControllerTest {
     }
 
     @Test
+    void evaluationsTab_ShowAllListsEveryEvaluationWithoutAnyFilter() throws Exception {
+        stubTrackingPageBasics();
+        when(progressTrackingService.findEvaluations(assessment, null, null, null)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/admin/progress-tracking/100").param("tab", "evaluations").param("evalAll", "true"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("evaluationsPicked", true))
+                .andExpect(model().attribute("evalAll", true));
+
+        verify(progressTrackingService).findEvaluations(assessment, null, null, null);
+    }
+
+    @Test
     void evaluationsPicker_KeepsFiltersForTheSameAssessmentAndResetsThemWhenSwitching() throws Exception {
         mockMvc.perform(get("/admin/progress-tracking/evaluations")
                         .param("assessmentId", "100").param("currentAssessmentId", "100").param("evalStudentId", "9"))
