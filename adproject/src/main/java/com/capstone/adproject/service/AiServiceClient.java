@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -60,6 +61,9 @@ public class AiServiceClient {
     private final Map<String, Deque<Instant>> recentCalls = new HashMap<>();
     Clock clock = Clock.systemUTC();
 
+    // Two constructors exist (this one and the test one below), so Spring must be told which to use; without this the
+    // application fails to start with "No default constructor found".
+    @Autowired
     public AiServiceClient(
             @Value("${app.ai-service.url:http://localhost:8000}") String baseUrl,
             @Value("${app.ai-service.secret:}") String internalSecret) {
