@@ -411,9 +411,30 @@ public class ProgressTrackingService {
         return new MarkCounts(finished, all.size() - finished);
     }
 
-    /** Finished evaluations for an assessment, optionally narrowed to a group, an evaluated student or a rubric. */
+    /** A person who evaluated, for the Assessor picker. */
+    public record EvaluatorOption(Long id, String name) {}
+
+    /** Assessors who have at least one finished evaluation in this assessment, by name. */
     @Transactional(readOnly = true)
-    public List<EvaluationRow> findEvaluations(Assessment assessment, Long groupId, Long studentId, Long rubricId) {
+    public List<EvaluatorOption> getEvaluationAssessors(Assessment assessment) {
+        Map<Long, String> byId = new LinkedHashMap<>();
+        for (Mark mark : finishedMarks(assessment)) {
+            if (mark.getLecturer() != null && mark.getLecturer().getId() != null) {
+                byId.putIfAbsent(mark.getLecturer().getId(), displayName(mark.getLecturer()));
+            }
+        }
+        return byId.entrySet().stream()
+                .map(e -> new EvaluatorOption(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparing((EvaluatorOption o) -> o.name().toLowerCase()).thenComparing(EvaluatorOption::id))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Finished evaluations for an assessment, optionally narrowed to a group, an evaluated student, a rubric or the assessor
+     * who did the evaluating. All the choices given must hold at the same time.
+     */
+    @Transactional(readOnly = true)
+    public List<EvaluationRow> findEvaluations(Assessment assessment, Long groupId, Long studentId, Long rubricId, Long assessorId) {
         Long courseId = courseIdOf(assessment);
         Map<String, List<Mark>> buckets = new LinkedHashMap<>();
         Map<String, Group> bucketGroups = new HashMap<>();
@@ -423,6 +444,9 @@ public class ProgressTrackingService {
             }
             if (rubricId != null && !rubricId.equals(rubricIdOf(mark))) {
                 continue;
+            }
+            if (assessorId != null && !(KIND_LECTURER.equals(kindOf(mark)) && assessorId.equals(evaluatorIdOf(mark)))) {
+                continue; // an assessor's id is compared only with assessors: a student with the same number is someone else
             }
             Group group = resolveGroupForStudentInCourse(mark.getEvaluatedStudent(), courseId);
             String key = bucketKey(mark, group);

@@ -556,7 +556,7 @@
             <div th:if="${activeTab == 'evaluations'}">
                 <div class="card eval-picker-card">
                     <h2 class="card-title"><i class="fas fa-filter"></i> Choose what to look at</h2>
-                    <p class="eval-help">Pick the assessment, then a group, a student or a rubric. Finished evaluations that match are listed below. You can read them and delete them, but not edit them. Changing the assessment clears the other choices.</p>
+                    <p class="eval-help">Pick the assessment, then a group, a student, an assessor or a rubric (all the choices you make must match). Finished evaluations that match are listed below. You can read them and delete them, but not edit them. Changing the assessment clears the other choices.</p>
                     <form method="get" th:action="@{/admin/progress-tracking/evaluations}" class="eval-picker">
                         <input type="hidden" name="currentAssessmentId" th:value="${assessment.id}">
                         <div class="eval-field">
@@ -584,6 +584,14 @@
                             </select>
                         </div>
                         <div class="eval-field">
+                            <label for="evalAssessor">Assessor</label>
+                            <select id="evalAssessor" name="evalAssessorId">
+                                <option value="">Any assessor</option>
+                                <option th:each="a : ${evaluationAssessors}" th:value="${a.id}" th:text="${a.name}"
+                                        th:selected="${evalAssessorId != null and a.id == evalAssessorId}">Assessor</option>
+                            </select>
+                        </div>
+                        <div class="eval-field">
                             <label for="evalRubric">Rubric</label>
                             <select id="evalRubric" name="evalRubricId">
                                 <option value="">Any rubric</option>
@@ -594,14 +602,14 @@
                         <div class="eval-actions">
                             <button type="submit" class="btn-eval btn-eval-primary">Show evaluations</button>
                             <button type="submit" class="btn-eval btn-eval-quiet" name="evalAll" value="true"
-                                    title="List every finished evaluation of this assessment, ignoring the group, student and rubric choices">Show all</button>
+                                    title="List every finished evaluation of this assessment, ignoring the group, student, assessor and rubric choices">Show all</button>
                             <a class="btn-eval btn-eval-quiet" th:href="@{'/admin/progress-tracking/' + ${assessment.id} + '?tab=evaluations'}">Clear choices</a>
                         </div>
                     </form>
                 </div>
 
                 <div class="card" th:unless="${evaluationsPicked}">
-                    <p class="eval-empty">Choose a group, a student or a rubric above to see its finished evaluations, or press <strong>Show all</strong>.</p>
+                    <p class="eval-empty">Choose a group, a student, an assessor or a rubric above to see its finished evaluations, or press <strong>Show all</strong>.</p>
                     <p class="eval-help" th:if="${markCounts != null}">
                         This assessment has <strong th:text="${markCounts.finished}">0</strong> finished mark(s)<span th:if="${markCounts.drafts > 0}"> and <strong th:text="${markCounts.drafts}">0</strong> draft mark(s) that were saved but not submitted</span>.
                     </p>
@@ -668,6 +676,7 @@
                                 <input type="hidden" name="evalGroupId" th:value="${evalGroupId}">
                                 <input type="hidden" name="evalStudentId" th:value="${evalStudentId}">
                                 <input type="hidden" name="evalRubricId" th:value="${evalRubricId}">
+                                <input type="hidden" name="evalAssessorId" th:value="${evalAssessorId}">
                                 <input type="hidden" name="evalAll" th:value="${evalAll != null and evalAll}">
                                 <label>Reason for deleting (kept in the deletion record)</label>
                                 <div class="eval-delete-row">

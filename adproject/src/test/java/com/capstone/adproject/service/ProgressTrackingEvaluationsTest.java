@@ -166,7 +166,7 @@ class ProgressTrackingEvaluationsTest {
     void anAssessorEvaluationShowsWhoMarkedWhomWithTheRatingsAndTotal() {
         finalMarks(lecturerMark(chen, report, "Individual Assessment"));
 
-        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null);
+        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null, null);
 
         assertEquals(1, rows.size());
         EvaluationRow row = rows.get(0);
@@ -184,7 +184,7 @@ class ProgressTrackingEvaluationsTest {
     void aStudentPeerEvaluationIsListedUnderTheStudentWhoGaveIt() {
         finalMarks(studentMark(ali, bella, report, "Peer Assessment"));
 
-        EvaluationRow row = service.findEvaluations(assessment, null, null, null).get(0);
+        EvaluationRow row = service.findEvaluations(assessment, null, null, null, null).get(0);
 
         assertEquals("STUDENT", row.evaluatorKind());
         assertEquals("Ali", row.evaluatorName());
@@ -196,7 +196,7 @@ class ProgressTrackingEvaluationsTest {
     void anAssessorsGroupEvaluationIsOneRowForTheWholeGroupNotOnePerMember() {
         finalMarks(lecturerMark(ali, presentation, "Group Assessment"), lecturerMark(bella, presentation, "Group Assessment"));
 
-        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null);
+        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null, null);
 
         assertEquals(1, rows.size());
         assertEquals("Team A", rows.get(0).targetName());
@@ -209,10 +209,10 @@ class ProgressTrackingEvaluationsTest {
         finalMarks(lecturerMark(ali, presentation, "Group Assessment"), lecturerMark(bella, presentation, "Group Assessment"),
                 lecturerMark(chen, report, "Individual Assessment"), studentMark(ali, bella, report, "Peer Assessment"));
 
-        assertEquals(2, service.findEvaluations(assessment, 1L, null, null).size());   // Team A: group row + peer row
-        assertEquals(1, service.findEvaluations(assessment, null, 103L, null).size()); // Chen only
-        assertEquals(1, service.findEvaluations(assessment, null, null, 11L).size());  // Presentation only
-        assertEquals(0, service.findEvaluations(assessment, null, 103L, 11L).size());
+        assertEquals(2, service.findEvaluations(assessment, 1L, null, null, null).size());   // Team A: group row + peer row
+        assertEquals(1, service.findEvaluations(assessment, null, 103L, null, null).size()); // Chen only
+        assertEquals(1, service.findEvaluations(assessment, null, null, 11L, null).size());  // Presentation only
+        assertEquals(0, service.findEvaluations(assessment, null, 103L, 11L, null).size());
     }
 
     @Test
@@ -223,7 +223,7 @@ class ProgressTrackingEvaluationsTest {
                 comment(AssessmentComment.EvaluatorType.LECTURER, 5L, chen, 99L, "Individual Assessment", "Other", "Other rubric"),
                 comment(AssessmentComment.EvaluatorType.STUDENT, 5L, chen, 12L, "Individual Assessment", "Peer", "Different evaluator")));
 
-        EvaluationRow row = service.findEvaluations(assessment, null, null, null).get(0);
+        EvaluationRow row = service.findEvaluations(assessment, null, null, null, null).get(0);
 
         assertEquals(1, row.comments().size());
         assertEquals("Clear structure", row.comments().get(0).text());
@@ -347,11 +347,75 @@ class ProgressTrackingEvaluationsTest {
         draft.setStatus(Mark.SubmissionStatus.DRAFT);
         finalMarks(submitted, statusless, draft);
 
-        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null);
+        List<EvaluationRow> rows = service.findEvaluations(assessment, null, null, null, null);
 
         assertEquals(2, rows.size(), "the draft is not a finished evaluation");
         ProgressTrackingService.MarkCounts counts = service.markCounts(assessment);
         assertEquals(2, counts.finished());
         assertEquals(1, counts.drafts());
+    }
+
+    // --- the assessor filter ---------------------------------------------------------------------------------------
+
+    private Lecturer drTan() {
+        Lecturer l = new Lecturer();
+        l.setId(6L);
+        l.setUsername("Dr Tan");
+        return l;
+    }
+
+    private Mark finalMark(Mark m) {
+        m.setStatus(Mark.SubmissionStatus.FINAL);
+        return m;
+    }
+
+    @org.junit.jupiter.api.Test
+    void theAssessorFilterListsOnlyThatAssessorsEvaluations() {
+        Mark byLim = finalMark(lecturerMark(ali, report, "Individual Assessment"));
+        Mark byTan = finalMark(lecturerMark(bella, report, "Individual Assessment"));
+        byTan.setLecturer(drTan());
+        Mark byStudent = finalMark(studentMark(ali, bella, report, "Peer Assessment"));
+        org.mockito.Mockito.when(markRepository.findByAssessment(assessment)).thenReturn(java.util.List.of(byLim, byTan, byStudent));
+
+        var rows = service.findEvaluations(assessment, null, null, null, 5L);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, rows.size());
+        org.junit.jupiter.api.Assertions.assertEquals("Dr Lim", rows.get(0).evaluatorName());
+    }
+
+    @org.junit.jupiter.api.Test
+    void aStudentWhoSharesTheAssessorsNumberIsNeverMistakenForThem() {
+        Student fiveToo = student(5L, "Five", null); // a student whose id equals Dr Lim's id
+        Mark studentMark = finalMark(studentMark(fiveToo, bella, report, "Peer Assessment"));
+        org.mockito.Mockito.when(markRepository.findByAssessment(assessment)).thenReturn(java.util.List.of(studentMark));
+
+        org.junit.jupiter.api.Assertions.assertTrue(service.findEvaluations(assessment, null, null, null, 5L).isEmpty());
+    }
+
+    @org.junit.jupiter.api.Test
+    void theAssessorFilterCombinesWithTheOtherFilters() {
+        Mark limReport = finalMark(lecturerMark(ali, report, "Individual Assessment"));
+        Mark limPresentation = finalMark(lecturerMark(ali, presentation, "Group Assessment"));
+        org.mockito.Mockito.when(markRepository.findByAssessment(assessment)).thenReturn(java.util.List.of(limReport, limPresentation));
+
+        var rows = service.findEvaluations(assessment, null, null, 12L, 5L);
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, rows.size());
+        org.junit.jupiter.api.Assertions.assertEquals("Report", rows.get(0).rubricName());
+    }
+
+    @org.junit.jupiter.api.Test
+    void theAssessorListHasOnlyAssessorsWithFinishedEvaluationsOnceEachByName() {
+        Mark limA = finalMark(lecturerMark(ali, report, "Individual Assessment"));
+        Mark limB = finalMark(lecturerMark(bella, report, "Individual Assessment"));
+        Mark tanDraft = lecturerMark(ali, presentation, "Group Assessment");
+        tanDraft.setLecturer(drTan());
+        tanDraft.setStatus(Mark.SubmissionStatus.DRAFT);
+        Mark student = finalMark(studentMark(ali, bella, report, "Peer Assessment"));
+        org.mockito.Mockito.when(markRepository.findByAssessment(assessment)).thenReturn(java.util.List.of(limA, limB, tanDraft, student));
+
+        var assessors = service.getEvaluationAssessors(assessment);
+
+        org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(new ProgressTrackingService.EvaluatorOption(5L, "Dr Lim")), assessors);
     }
 }
