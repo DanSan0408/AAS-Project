@@ -1,7 +1,9 @@
 import logging
 import os
 import re
+import time
 
+import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -43,18 +45,86 @@ def _uses_sampling_settings(model: str) -> bool:
     return not (match and int(match.group(1)) >= 3)
 
 
+def active_provider() -> str:
+    """"deepseek" or "gemini". Auto picks DeepSeek when it has a key, so commenting out the Gemini variables is enough to switch."""
+    choice = (settings.ai_provider or "auto").strip().lower()
+    if choice in ("deepseek", "gemini"):
+        return choice
+    return "deepseek" if (settings.deepseek_api_key or os.environ.get("DEEPSEEK_API_KEY", "")) else "gemini"
+
+
+class ProviderHttpError(Exception):
+    """The provider answered with an error status. Only the status is kept: the body can echo the request."""
+
+    def __init__(self, status: int):
+        super().__init__(f"HTTP {status}")
+        self.status = status
+
+
+_RETRY_STATUSES = {429, 500, 502, 503, 504}
+
+
+def _deepseek_json_text(system: str, user: str, temperature: float) -> str:
+    """One chat completion in JSON mode; returns the reply text. Retries once on a blank reply (JSON mode can return spaces) or a busy server."""
+    api_key = settings.deepseek_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
+    if not api_key:
+        raise ValueError("DEEPSEEK_API_KEY is not set. Please add it to your .env or environment variables.")
+    if "json" not in (system + user).lower():
+        system += "\n\nReply with a single JSON object."   # JSON mode refuses a prompt that never says "json"
+    thinking = settings.deepseek_thinking.strip().lower() == "enabled"
+    payload = {
+        "model": settings.deepseek_model,
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "response_format": {"type": "json_object"},
+        "thinking": {"type": "enabled" if thinking else "disabled"},
+        "max_tokens": 4096,
+        "stream": False,
+    }
+    if not thinking:
+        payload["temperature"] = temperature   # thinking mode ignores it
+    url = settings.deepseek_base_url.rstrip("/") + "/chat/completions"
+    headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+    for attempt in (1, 2):
+        try:
+            response = httpx.post(url, headers=headers, json=payload, timeout=60)
+        except httpx.TransportError:
+            if attempt == 2:
+                raise
+            time.sleep(1)
+            continue
+        if response.status_code in _RETRY_STATUSES and attempt == 1:
+            time.sleep(1)
+            continue
+        if response.status_code != 200:
+            raise ProviderHttpError(response.status_code)
+        content = ((response.json().get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        if content.strip():
+            return content
+        if attempt == 2:
+            raise ValueError("The reply was blank.")
+        time.sleep(1)
+    raise ValueError("No reply.")
+
+
+def _gemini_json_text(system: str, user: str, temperature: float):
+    return get_gemini_llm(temperature).invoke([SystemMessage(content=system), HumanMessage(content=user)]).content
+
+
 def invoke_json(system: str, user: str, temperature: float = 0.1) -> dict:
     """Asks the model and returns the JSON object in its reply.
 
-    Raises AiUnavailable on any failure (no key, network, quota, a reply that is not JSON). Only the kind of error is logged:
-    never the prompt, which contains student comments.
+    Raises AiUnavailable on any failure (no key, network, quota, a reply that is not JSON). Only the kind of error is logged
+    (for an HTTP error, its status code): never the prompt, which contains student comments, and never the key.
     """
+    provider = active_provider()
     try:
-        response = get_gemini_llm(temperature).invoke([SystemMessage(content=system), HumanMessage(content=user)])
-        return extract_json(response.content)
+        if provider == "deepseek":
+            return extract_json(_deepseek_json_text(system, user, temperature))
+        return extract_json(_gemini_json_text(system, user, temperature))
     except Exception as exc:  # deliberately broad: whatever went wrong, the caller falls back to calculated results
-        logger.warning("AI call failed (%s)", type(exc).__name__)
-        # Only the kind of error: the message can hold a key or student text.
-        alerts.alert("gemini:" + type(exc).__name__,
-                     f"[ERROR] The Gemini call failed ({type(exc).__name__}). AI features are falling back to calculated results.")
+        kind = f"HTTP{exc.status}" if isinstance(exc, ProviderHttpError) else type(exc).__name__
+        logger.warning("AI call failed (%s: %s)", provider, kind)
+        label = f"HTTP {exc.status}" if isinstance(exc, ProviderHttpError) else kind
+        alerts.alert(f"{provider}:{kind}",
+                     f"[ERROR] The {provider} call failed ({label}). AI features are falling back to calculated results.")
         raise AiUnavailable("The AI did not return a usable answer.") from exc
