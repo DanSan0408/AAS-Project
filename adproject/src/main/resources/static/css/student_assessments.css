@@ -199,7 +199,7 @@ body {
     align-items: center;
     gap: 15px;
     padding: 15px;
-    background-color: #FFFDF9; 
+    background-color: var(--ui-bg-surface); 
     border-radius: 8px;
     margin-bottom: 25px;
     border: 1px solid var(--student-border);
@@ -319,8 +319,8 @@ body {
     gap: 10px;
     align-items: center;
 }
-.alert-danger { background-color: #FDEDED; color: var(--student-alert); border: 1px solid #FABDBD; }
-.alert-success { background-color: #EDF7ED; color: var(--student-success); border: 1px solid #C3E6CB; }
+.alert-danger { background-color: var(--ui-danger-soft); color: var(--student-alert); border: 1px solid #FABDBD; }
+.alert-success { background-color: #EDF7ED; color: var(--student-success); border: 1px solid var(--ui-border); }
 
 @media (max-width: 1279px) {
     .main-content,

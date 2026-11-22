@@ -120,7 +120,7 @@ body.edit-overrides-page td {
 }
 
 body.edit-overrides-page .student-name { font-weight: 600 !important; color: var(--color-primary) !important; }
-body.edit-overrides-page .student-email { color: #666 !important; font-size: 0.9rem !important; }
+body.edit-overrides-page .student-email { color: var(--ui-text-muted) !important; font-size: 0.9rem !important; }
 
 body.edit-overrides-page .inp-number {
     width: 100% !important;
@@ -133,7 +133,7 @@ body.edit-overrides-page .inp-number {
 body.edit-overrides-page .inp-number:focus {
     border-color: var(--color-primary) !important;
     outline: none !important;
-    background-color: #fff5f5 !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 body.edit-overrides-page .sticky-footer {
@@ -201,7 +201,7 @@ body.edit-overrides-page .btn-secondary:hover {
 body.edit-overrides-page .empty-state {
     text-align: center !important;
     padding: 50px !important;
-    color: #94a3b8 !important;
+    color: var(--ui-text-muted) !important;
     border: 2px dashed var(--color-border) !important;
     border-radius: 12px !important;
 }
@@ -214,7 +214,7 @@ body.edit-overrides-page .empty-state i {
 
 body.edit-overrides-page .empty-state h3 {
     margin: 0 !important;
-    color: #64748b !important;
+    color: var(--ui-text-muted) !important;
     font-weight: 500 !important;
 }
 
@@ -348,9 +348,9 @@ body.edit-overrides-page .empty-state h3 {
 }
 
 .calculated-value {
-    background-color: #f9fafb !important;
+    background-color: var(--ui-bg-subtle) !important;
     font-weight: 600 !important;
-    color: #4b5563 !important;
+    color: var(--ui-text-secondary) !important;
     text-align: center !important;
     border-right: 1px solid var(--color-border) !important;
 }

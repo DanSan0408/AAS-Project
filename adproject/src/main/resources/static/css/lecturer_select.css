@@ -94,9 +94,9 @@ body.lecturer-page .alert {
 }
 
 body.lecturer-page .alert-error {
-    background-color: #FEE2E2;
+    background-color: var(--ui-danger-soft);
     border-color: #DC2626;
-    color: #7F1D1D;
+    color: var(--ui-danger);
 }
 
 @media (max-width: 768px) {
@@ -128,9 +128,9 @@ body.lecturer-page .alert-error {
 
 
 body.lecturer-page .alert-success {
-    background-color: #D1FAE5;
+    background-color: var(--ui-success-soft);
     border-color: var(--lecturer-success);
-    color: #065F46;
+    color: var(--ui-success);
 }
 
 body.lecturer-page .alert .icon {
@@ -455,9 +455,9 @@ body.lecturer-page .btn-action:hover {
     justify-content: center;
     gap: 8px;
     padding: 10px 16px;
-    background: #ecfdf5;
+    background: var(--ui-success-soft);
     color: #047857 !important;
-    border: 1px solid #a7f3d0;
+    border: 1px solid var(--ui-border);
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
@@ -467,7 +467,7 @@ body.lecturer-page .btn-action:hover {
 }
 
 .btn-report-view:hover {
-    background: #d1fae5;
+    background: var(--ui-success-soft);
     border-color: #6ee7b7;
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(4, 120, 87, 0.15);
@@ -479,8 +479,8 @@ body.lecturer-page .btn-action:hover {
     justify-content: center;
     gap: 8px;
     padding: 9px 16px;
-    background: #e0f2fe;
-    color: #0369a1 !important;
+    background: var(--ui-info-soft);
+    color: var(--ui-info) !important;
     border: 1px solid #bae6fd;
     border-radius: 8px;
     font-size: 0.9rem;

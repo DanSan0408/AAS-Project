@@ -183,8 +183,8 @@ body.lecturer-page .alert {
 }
 
 body.lecturer-page .alert-error {
-    background-color: #FEE2E2;
-    color: #7F1D1D;
+    background-color: var(--ui-danger-soft);
+    color: var(--ui-danger);
     border-color: #DC2626;
 }
 
@@ -215,7 +215,7 @@ body.lecturer-page .save-warning i {
 }
 
 body.lecturer-page .save-warning strong {
-    color: #B45309;
+    color: var(--ui-warning);
 }
 
 body.lecturer-page .rubric-section {
@@ -295,7 +295,7 @@ body.lecturer-page .rating-option {
     display: flex;
     align-items: center;
     padding: 14px;
-    background: white;
+    background: var(--ui-bg-surface);
     border: 2px solid var(--lecturer-border);
     border-radius: 8px;
     cursor: pointer;
@@ -397,7 +397,7 @@ body.lecturer-page .rubric-comment-field textarea:focus {
 
 body.lecturer-page .rubric-comment-field textarea.insufficient {
     border-color: var(--lecturer-danger) !important;
-    background-color: #FEE2E2;
+    background-color: var(--ui-danger-soft);
 }
 
 body.lecturer-page .rubric-comment-field textarea.insufficient:focus {
@@ -407,7 +407,7 @@ body.lecturer-page .rubric-comment-field textarea.insufficient:focus {
 
 body.lecturer-page .rubric-comment-field textarea.sufficient {
     border-color: var(--lecturer-success) !important;
-    background-color: #ECFDF5;
+    background-color: var(--ui-success-soft);
 }
 
 body.lecturer-page .rubric-comment-field textarea.sufficient:focus {
@@ -497,7 +497,7 @@ body.lecturer-page .comment-textarea:focus {
 
 body.lecturer-page .comment-textarea.insufficient {
     border-color: var(--lecturer-danger) !important;
-    background-color: #FEE2E2;
+    background-color: var(--ui-danger-soft);
 }
 
 body.lecturer-page .comment-textarea.insufficient:focus {
@@ -507,7 +507,7 @@ body.lecturer-page .comment-textarea.insufficient:focus {
 
 body.lecturer-page .comment-textarea.sufficient {
     border-color: var(--lecturer-success) !important;
-    background-color: #ECFDF5;
+    background-color: var(--ui-success-soft);
 }
 
 body.lecturer-page .comment-textarea.sufficient:focus {

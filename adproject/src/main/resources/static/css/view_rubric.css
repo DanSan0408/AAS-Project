@@ -262,7 +262,7 @@ body.view-rubric-page .rubric-info h3 {
 
 body.view-rubric-page .rubric-info p { 
     margin: 0 0 10px 0 !important; 
-    color: #666 !important; 
+    color: var(--ui-text-muted) !important; 
     font-size: 0.95rem !important; 
 }
 
@@ -357,7 +357,7 @@ body.view-rubric-page .rating-value {
 
 body.view-rubric-page .rating-desc {
     font-size: 0.85rem !important;
-    color: #555 !important;
+    color: var(--ui-text-secondary) !important;
     line-height: 1.4 !important;
 }
 
@@ -417,7 +417,7 @@ body.view-rubric-page .summary-value {
 
 body.view-rubric-page .comment-item,
 body.view-rubric-page .comment-row {
-    background-color: white !important;
+    background-color: var(--ui-bg-surface) !important;
     padding: 15px !important;
     border-radius: 6px !important;
     margin-bottom: 10px !important;
@@ -491,7 +491,7 @@ body.view-rubric-page .empty-comments {
     padding: 40px 20px !important;
     border: 2px dashed var(--color-border) !important;
     border-radius: 8px !important;
-    background-color: white !important;
+    background-color: var(--ui-bg-surface) !important;
 }
 
 body.view-rubric-page .empty-comments i {
@@ -651,14 +651,14 @@ body.view-rubric-page .alert {
 }
 
 body.view-rubric-page .alert-success { 
-    background-color: #d1fae5 !important; 
-    color: #065f46 !important;
+    background-color: var(--ui-success-soft) !important; 
+    color: var(--ui-success) !important;
     border-color: var(--color-success) !important;
 }
 
 body.view-rubric-page .alert-danger { 
-    background-color: #fee2e2 !important; 
-    color: #991b1b !important;
+    background-color: var(--ui-danger-soft) !important; 
+    color: var(--ui-danger) !important;
     border-color: var(--color-alert) !important;
 }
 
@@ -672,7 +672,7 @@ body.view-rubric-page .empty-state-container {
 }
 
 body.view-rubric-page .empty-section {
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border-radius: 12px !important;
     padding: 2rem !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
@@ -683,7 +683,7 @@ body.view-rubric-page .empty-section h2 {
     font-size: 1.5rem !important;
     font-weight: 600 !important;
     margin: 0 0 1.5rem 0 !important;
-    color: #2c3e50 !important;
+    color: var(--ui-text-body-color) !important;
     display: flex !important;
     align-items: center !important;
     gap: 0.5rem !important;
@@ -708,7 +708,7 @@ body.view-rubric-page .individual-section h2 i {
 }
 
 body.view-rubric-page .empty-subsection {
-    background: #f8f9fa !important;
+    background: var(--ui-bg-subtle) !important;
     border-radius: 8px !important;
     padding: 2rem !important;
     margin-bottom: 1.5rem !important;
@@ -728,7 +728,7 @@ body.view-rubric-page .empty-subsection h3 {
 }
 
 body.view-rubric-page .empty-text {
-    color: #6c757d !important;
+    color: var(--ui-text-muted) !important;
     font-size: 0.95rem !important;
     margin: 0 0 1.25rem 0 !important;
     font-style: italic !important;
@@ -1070,8 +1070,8 @@ body.view-rubric-page .notes-display-box {
     margin-top: 16px !important;
     padding: 12px 14px !important;
     border-radius: 8px !important;
-    background: #f9fafb !important;
-    border: 1px solid #e5e7eb !important;
+    background: var(--ui-bg-subtle) !important;
+    border: 1px solid var(--ui-border) !important;
 }
 
 body.view-rubric-page .notes-display-box.assessor-notes-box {

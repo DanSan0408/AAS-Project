@@ -56,28 +56,28 @@
 
         <form th:action="@{/admin/lecturer-assignments/{id}/save(id=${assessment.id})}" method="post">
             
-            <div class="card mb-4" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;">
+            <div class="card mb-4" style="background: var(--ui-bg-surface); padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 30px;">
                 <h3 style="margin-top: 0;">Assignment Mode</h3>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
+                    <label style="flex: 1; padding: 15px; border: 1px solid var(--ui-border); border-radius: 8px; cursor: pointer; background-color: var(--ui-bg-subtle);">
                         <input type="radio" name="assignmentMode" value="GROUP" th:checked="${assignmentMode == 'GROUP'}">
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Groups</strong>
-                            <span style="color: #666; font-size: 0.9em;">Assessors evaluate all rubrics for specific groups</span>
+                            <span style="color: var(--ui-text-muted); font-size: 0.9em;">Assessors evaluate all rubrics for specific groups</span>
                         </div>
                     </label>
-                    <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
+                    <label style="flex: 1; padding: 15px; border: 1px solid var(--ui-border); border-radius: 8px; cursor: pointer; background-color: var(--ui-bg-subtle);">
                         <input type="radio" name="assignmentMode" value="RUBRIC" th:checked="${assignmentMode == 'RUBRIC'}">
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Rubrics</strong>
-                            <span style="color: #666; font-size: 0.9em;">Assessors evaluate specific rubrics for all groups</span>
+                            <span style="color: var(--ui-text-muted); font-size: 0.9em;">Assessors evaluate specific rubrics for all groups</span>
                         </div>
                     </label>
-                    <label style="flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; background-color: #f8f9fa;">
+                    <label style="flex: 1; padding: 15px; border: 1px solid var(--ui-border); border-radius: 8px; cursor: pointer; background-color: var(--ui-bg-subtle);">
                         <input type="radio" name="assignmentMode" value="STUDENT" th:checked="${assignmentMode == 'STUDENT'}">
                         <div style="display: inline-block; margin-left: 10px;">
                             <strong style="display: block; font-size: 1.1em; margin-bottom: 5px;">Assign by Students</strong>
-                            <span style="color: #666; font-size: 0.9em;">Assessors evaluate all rubrics for selected students</span>
+                            <span style="color: var(--ui-text-muted); font-size: 0.9em;">Assessors evaluate all rubrics for selected students</span>
                         </div>
                     </label>
                 </div>
@@ -85,9 +85,9 @@
             
             <div id="rubricModeSection" th:style="${assignmentMode == 'RUBRIC'} ? 'display:block;' : 'display:none;'">
                 <h3>Assign by Rubric (Applies to all groups)</h3>
-                <div class="table-responsive mb-4" style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div class="table-responsive mb-4" style="background: var(--ui-bg-surface); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                     <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
-                        <thead style="background: #f8f9fa;">
+                        <thead style="background: var(--ui-bg-subtle);">
                             <tr>
                                 <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Rubric Name</th>
                                 <th style="padding: 15px; border-bottom: 2px solid #dee2e6;">Select Assessors</th>

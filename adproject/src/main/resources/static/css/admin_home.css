@@ -98,14 +98,14 @@ body.admin-page .alert {
 }
 
 body.admin-page .alert-success {
-    color: #065F46 !important;
-    background-color: #D1FAE5 !important;
+    color: var(--ui-success) !important;
+    background-color: var(--ui-success-soft) !important;
     border-color: var(--color-success) !important;
 }
 
 body.admin-page .alert-danger {
-    color: #7F1D1D !important;
-    background-color: #FEE2E2 !important;
+    color: var(--ui-danger) !important;
+    background-color: var(--ui-danger-soft) !important;
     border-color: var(--color-alert) !important;
 }
 
@@ -163,7 +163,7 @@ body.admin-page .managed-course-chip {
     gap: 8px !important;
     padding: 8px 12px !important;
     border-radius: 10px !important;
-    background: #fff !important;
+    background: var(--ui-bg-surface) !important;
     border: 1px solid var(--color-border) !important;
 }
 
@@ -1015,7 +1015,7 @@ body.admin-page .live-assessment-select {
     font-weight: 600 !important;
     border-radius: 8px !important;
     border: 1px solid rgba(74, 0, 24, 0.25) !important;
-    background-color: #ffffff !important;
+    background-color: var(--ui-bg-surface) !important;
     color: var(--color-primary) !important;
     cursor: pointer !important;
     outline: none !important;
@@ -1034,7 +1034,7 @@ body.admin-page .btn-toggle-multi-summary {
     font-weight: 600 !important;
     border-radius: 8px !important;
     cursor: pointer !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border: 1px solid rgba(74, 0, 24, 0.2) !important;
     color: var(--color-primary) !important;
     display: inline-flex !important;
@@ -1093,7 +1093,7 @@ body.admin-page .multi-summary-row {
     align-items: center !important;
     justify-content: space-between !important;
     padding: 8px 12px !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border: 1px solid var(--color-border) !important;
     border-radius: 8px !important;
     gap: 12px !important;
@@ -1167,7 +1167,7 @@ body.admin-page .btn-switch-live {
     font-weight: 600 !important;
     border-radius: 6px !important;
     border: 1px solid var(--color-border) !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     color: var(--color-primary) !important;
     cursor: pointer !important;
     display: inline-flex !important;
@@ -1200,7 +1200,7 @@ body.admin-page .btn-toggle-details {
     font-weight: 600 !important;
     border-radius: 8px !important;
     cursor: pointer !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border: 1px solid rgba(74, 0, 24, 0.2) !important;
     color: var(--color-primary) !important;
     display: inline-flex !important;
@@ -1261,7 +1261,7 @@ body.admin-page .live-details-table {
     border-collapse: separate !important;
     border-spacing: 0 !important;
     font-size: 0.85rem !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border: 1px solid var(--color-border) !important;
     border-radius: 10px !important;
     overflow: hidden !important;
@@ -1298,14 +1298,14 @@ body.admin-page .status-badge {
     text-transform: uppercase !important;
 }
 
-body.admin-page .status-badge.badge-success { background: #d1fae5 !important; color: #065f46 !important; }
-body.admin-page .status-badge.badge-warning { background: #fef3c7 !important; color: #92400e !important; }
-body.admin-page .status-badge.badge-secondary { background: #f1f5f9 !important; color: #475569 !important; }
+body.admin-page .status-badge.badge-success { background: var(--ui-success-soft) !important; color: var(--ui-success) !important; }
+body.admin-page .status-badge.badge-warning { background: var(--ui-warning-soft) !important; color: var(--ui-warning) !important; }
+body.admin-page .status-badge.badge-secondary { background: var(--ui-bg-subtle) !important; color: var(--ui-text-secondary) !important; }
 
 body.admin-page .mini-progress-track {
     width: 100% !important;
     height: 6px !important;
-    background: #e2e8f0 !important;
+    background: var(--ui-bg-subtle) !important;
     border-radius: 9999px !important;
     overflow: hidden !important;
     margin-bottom: 2px !important;
