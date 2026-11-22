@@ -89,8 +89,8 @@ body.student-home-page .alert-success {
 
 body.student-home-page .alert-danger,
 body.student-home-page .alert-error {
-    color: #7F1D1D !important;
-    background-color: #FEE2E2 !important;
+    color: var(--ui-danger) !important;
+    background-color: var(--ui-danger-soft) !important;
     border-color: var(--student-alert) !important;
 }
 

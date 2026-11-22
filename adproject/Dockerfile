@@ -4,12 +4,19 @@ WORKDIR /workspace
 
 # Dependencies first, in their own layer: it only changes when pom.xml does, so with the build cache a code-only change
 # skips the download. It is an optimisation only: if it cannot resolve something, the package step below still fetches it.
+#
+# When Maven Central fails a download once (a transient 5xx), Maven writes a "*.lastUpdated" marker and refuses to retry
+# that artifact for a day; the cached layer would then replay the failure on every later build ("POM ... is missing").
+# So downloads are retried here, and any failure markers are deleted before the layer is cached.
+ENV MAVEN_OPTS="-Dmaven.wagon.http.retryHandler.count=5 -Dmaven.wagon.http.retryHandler.requestSentEnabled=true"
 COPY pom.xml .
-RUN mvn -B -ntp dependency:go-offline || true
+RUN (mvn -B -ntp dependency:go-offline || true) \
+    && find /root/.m2 -name '*.lastUpdated' -delete
 
 COPY src ./src
 # The tests have already run (CI gates the build on them), so they are neither run nor compiled here.
-RUN mvn -B -ntp -Dmaven.test.skip=true package
+# -U makes Maven re-check anything an earlier attempt recorded as missing instead of trusting that record.
+RUN mvn -B -ntp -U -Dmaven.test.skip=true package
 
 FROM eclipse-temurin:21-jre-jammy AS runtime
 

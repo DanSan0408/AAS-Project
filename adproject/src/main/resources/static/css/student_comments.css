@@ -236,7 +236,7 @@ body.student-comments-page .badge-supervisor {
 
 body.student-comments-page .comment-date {
     font-size: 0.85em !important;
-    color: #888 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.student-comments-page .anonymous-badge {
@@ -269,7 +269,7 @@ body.student-comments-page .comment-text {
 body.student-comments-page .no-comments {
     text-align: center !important;
     padding: 60px 20px !important;
-    color: #999 !important;
+    color: var(--ui-text-muted) !important;
     border: 2px dashed var(--student-border) !important;
     border-radius: 12px !important;
     background-color: var(--student-surface) !important;

@@ -73,29 +73,29 @@
             <h5 class="text-muted">Assessment: <span th:text="${assessment.title}"></span></h5>
             
             <!-- Team Review Summary Panel -->
-            <div id="ai-team-dynamics-card" style="background:#ffffff; border:1px solid #e5e7eb; border-left:4px solid #4A0018; border-radius:8px; padding:18px 20px; margin-bottom:25px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+            <div id="ai-team-dynamics-card" style="background:var(--ui-bg-surface); border:1px solid var(--ui-border); border-left:4px solid var(--ui-brand); border-radius:8px; padding:18px 20px; margin-bottom:25px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                     <div>
-                        <h3 style="margin:0; font-size:1.1rem; color:#4A0018; font-weight:700; display:flex; align-items:center; gap:8px;">
-                            <i class="fas fa-users" style="color:#4A0018;"></i>
+                        <h3 style="margin:0; font-size:1.1rem; color:var(--ui-brand); font-weight:700; display:flex; align-items:center; gap:8px;">
+                            <i class="fas fa-users" style="color:var(--ui-brand);"></i>
                             Team Review Summary
                         </h3>
-                        <p style="margin:4px 0 0 0; color:#6b7280; font-size:0.875rem;">
+                        <p style="margin:4px 0 0 0; color:var(--ui-text-muted); font-size:0.875rem;">
                             Consolidated review of peer evaluation balance, individual contributions, and team dynamics.
                         </p>
                     </div>
-                    <button type="button" id="btn-run-team-audit" th:data-audit-url="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/group/' + ${group.id} + '/ai-audit'}" style="background:#4A0018; color:#fff; font-weight:600; padding:8px 18px; border-radius:6px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:0.875rem; transition:filter 0.2s;">
+                    <button type="button" id="btn-run-team-audit" th:data-audit-url="@{'/' + ${role} + '/comments/view/assessment/' + ${assessment.id} + '/group/' + ${group.id} + '/ai-audit'}" style="background:var(--ui-brand); color: var(--ui-on-brand); font-weight:600; padding:8px 18px; border-radius:6px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-size:0.875rem; transition:filter 0.2s;">
                         <i class="fas fa-file-alt"></i> View Summary
                     </button>
                 </div>
-                <div id="team-audit-loading" style="display:none; padding:16px; text-align:center; color:#4A0018; font-weight:500; font-size:0.9rem;">
+                <div id="team-audit-loading" style="display:none; padding:16px; text-align:center; color:var(--ui-brand); font-weight:500; font-size:0.9rem;">
                     <i class="fas fa-circle-notch fa-spin" style="margin-right:8px;"></i> Compiling team summary...
                 </div>
-                <div id="team-audit-error" style="display:none; padding:10px 14px; margin-top:12px; background:#fef2f2; border:1px solid #fecaca; border-radius:6px; color:#dc2626; font-size:0.875rem;"></div>
+                <div id="team-audit-error" style="display:none; padding:10px 14px; margin-top:12px; background:var(--ui-danger-soft); border:1px solid var(--ui-border); border-radius:6px; color:var(--ui-danger); font-size:0.875rem;"></div>
                 <div id="team-audit-content" style="display:none; padding-top:14px;"></div>
             </div>
 
-            <div th:if="${#lists.isEmpty(students)}" class="alert alert-warning" style="color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; padding: 15px; border-radius: 4px;">
+            <div th:if="${#lists.isEmpty(students)}" class="alert alert-warning" style="color: var(--ui-warning); background-color: var(--ui-warning-soft); border-color: var(--ui-border); padding: 15px; border-radius: 4px;">
                 <p class="mb-0" style="margin: 0;">No students in this group.</p>
             </div>
             
@@ -105,12 +105,12 @@
                 <div class="row">
                     <!-- All Assessment Comments -->
                     <div class="col-12 comment-section" style="width: 100%; padding: 0 10px;">
-                        <h4 style="font-size: 1.5rem; font-weight: 700; color: #4A0018; margin-bottom: 20px; border-bottom: 2px solid #F8A617; padding-bottom: 10px;">Assessment Comments Received</h4>
+                        <h4 style="font-size: 1.5rem; font-weight: 700; color: var(--ui-brand); margin-bottom: 20px; border-bottom: 2px solid #F8A617; padding-bottom: 10px;">Assessment Comments Received</h4>
                         <div th:if="${#maps.isEmpty(allCommentsMap[student.id])}">
                             <p class="text-muted small mt-2" style="font-size: 0.875em; color: #777;">No comments received yet.</p>
                         </div>
                         <div th:each="questionEntry : ${allCommentsMap[student.id]}" style="margin-bottom: 25px;">
-                            <h5 style="color: #4A0018; margin-top: 15px; font-weight: 700; font-size: 1.25rem; border-bottom: 2px dashed #E5E7EB; padding-bottom: 8px;" th:text="${questionEntry.key}">Question</h5>
+                            <h5 style="color: var(--ui-brand); margin-top: 15px; font-weight: 700; font-size: 1.25rem; border-bottom: 2px dashed var(--ui-border); padding-bottom: 8px;" th:text="${questionEntry.key}">Question</h5>
                             <div th:each="evaluatorEntry : ${questionEntry.value}">
                                 <div class="evaluator-name" style="margin-top: 8px;"><i class="fas fa-user-circle"></i> <span th:text="${evaluatorEntry.key}"></span></div>
                                 <div th:each="comment : ${evaluatorEntry.value}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
@@ -172,12 +172,12 @@
                     }
 
                     let html = aiBannerHtml(data) + `
-                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:14px 18px; margin-bottom:14px;">
+                        <div style="background:var(--ui-bg-subtle); border:1px solid var(--ui-border); border-radius:6px; padding:14px 18px; margin-bottom:14px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
                                 <span style="background:${statusBg}; color:${statusColor}; font-weight:600; font-size:0.8rem; padding:3px 10px; border-radius:9999px;">
                                     ${statusLabel}
                                 </span>
-                                <span style="font-size:0.875rem; color:#64748b; font-weight:600;">
+                                <span style="font-size:0.875rem; color:var(--ui-text-muted); font-weight:600;">
                                     Overall Health: <strong style="color:#1e293b;">${data.teamHealthScore === null || data.teamHealthScore === undefined ? 'not enough data' : data.teamHealthScore + '/100'}</strong>
                                 </span>
                             </div>
@@ -188,7 +188,7 @@
                     if (data.memberMetrics && data.memberMetrics.length > 0) {
                         html += `
                             <div style="margin-bottom:14px;">
-                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#64748b; margin-bottom:6px;">
+                                <div style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ui-text-muted); margin-bottom:6px;">
                                     Member Contributions
                                 </div>
                                 <div style="display:flex; flex-direction:column; gap:6px;">
@@ -214,15 +214,15 @@
                             }
 
                             html += `
-                                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 12px; background:#fff; border:1px solid #e2e8f0; border-radius:5px; font-size:0.875rem; gap:12px;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 12px; background:var(--ui-bg-surface); border:1px solid var(--ui-border); border-radius:5px; font-size:0.875rem; gap:12px;">
                                     <div style="flex:1; min-width:0;">
                                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                             <strong style="color:#0f172a;">${escapeHtml(m.studentName)}</strong>
                                             <span style="background:${badgeBg}; color:${badgeColor}; font-size:0.75rem; font-weight:600; padding:1px 7px; border-radius:4px;">${badgeText}</span>
                                         </div>
-                                        <p style="margin:2px 0 0 0; color:#64748b; font-size:0.825rem; line-height:1.4;">${escapeHtml(m.contributionSummary)}</p>
+                                        <p style="margin:2px 0 0 0; color:var(--ui-text-muted); font-size:0.825rem; line-height:1.4;">${escapeHtml(m.contributionSummary)}</p>
                                     </div>
-                                    <div style="color:#64748b; font-size:0.8rem; white-space:nowrap; text-align:right;">
+                                    <div style="color:var(--ui-text-muted); font-size:0.8rem; white-space:nowrap; text-align:right;">
                                         Peer Avg: <strong style="color:#1e293b;">${m.peerScoreAvg === null || m.peerScoreAvg === undefined ? 'no peer ratings' : m.peerScoreAvg + '%'}</strong>
                                         ${m.selfScoreAvg !== null ? `<br><span style="font-size:0.775rem;">Self: ${m.selfScoreAvg}%</span>` : ''}
                                     </div>
@@ -242,7 +242,7 @@
                         `;
                         data.anomalyFlags.forEach(a => {
                             html += `
-                                <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:3px solid #f59e0b; padding:8px 12px; border-radius:4px; font-size:0.85rem; color:#78350f;">
+                                <div style="background:var(--ui-warning-soft); border:1px solid var(--ui-border); border-left:3px solid #f59e0b; padding:8px 12px; border-radius:4px; font-size:0.85rem; color:var(--ui-warning);">
                                     <strong>${escapeHtml(a.targetStudent || a.type)}:</strong> ${escapeHtml(a.description)}
                                         ${a.evidence ? '<div style="margin-top:3px; font-size:0.8rem;">' + escapeHtml(a.evidence) + '</div>' : ''}
                                         <div style="margin-top:2px; font-size:0.75rem; opacity:0.8;">${a.source === 'AI' ? 'From the written comments (AI)' : 'Calculated from the ratings'}</div>
@@ -254,8 +254,8 @@
 
                     if (data.recommendedActions && data.recommendedActions.length > 0) {
                         html += `
-                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:10px 14px;">
-                                <div style="font-size:0.775rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:#475569; margin-bottom:4px;">
+                            <div style="background:var(--ui-bg-subtle); border:1px solid var(--ui-border); border-radius:5px; padding:10px 14px;">
+                                <div style="font-size:0.775rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--ui-text-secondary); margin-bottom:4px;">
                                     Suggested Next Steps
                                 </div>
                                 <ul style="margin:0; padding-left:18px; font-size:0.85rem; color:#334155; line-height:1.5;">
@@ -283,7 +283,7 @@
             const lead = data.aiStatus === 'UNAVAILABLE'
                 ? 'The AI was not available, so nothing below was written by it. The findings are calculated from the ratings.'
                 : 'Part of the AI analysis was not available. The findings below are still calculated from the ratings.';
-            return '<div role="status" style="background:#fff7ed; border:1px solid #fed7aa; border-left:3px solid #ea580c; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem; color:#7c2d12;">'
+            return '<div role="status" style="background:var(--ui-warning-soft); border:1px solid var(--ui-border); border-left:3px solid #ea580c; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.85rem; color:#7c2d12;">'
                 + '<strong>' + lead + '</strong>' + (notes ? '<ul style="margin:6px 0 0 0; padding-left:18px;">' + notes + '</ul>' : '') + '</div>';
         }
 

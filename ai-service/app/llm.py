@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -21,14 +22,25 @@ def get_gemini_llm(temperature: float = 0.2) -> ChatGoogleGenerativeAI:
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not set. Please add it to your .env or environment variables.")
 
-    return ChatGoogleGenerativeAI(
+    options = dict(
         model=settings.gemini_model,
         google_api_key=api_key,
-        temperature=temperature,
         timeout=60,
         max_retries=2,
-        max_output_tokens=4096,
+        # Room for the answer after the model has thought: thinking tokens count against this limit.
+        max_output_tokens=8192,
     )
+    if _uses_sampling_settings(settings.gemini_model):
+        options["temperature"] = temperature
+    elif settings.gemini_thinking_level:
+        options["thinking_level"] = settings.gemini_thinking_level
+    return ChatGoogleGenerativeAI(**options)
+
+
+def _uses_sampling_settings(model: str) -> bool:
+    """Gemini 3 and later ignore temperature and will reject it; earlier models still use it."""
+    match = re.match(r"gemini-(\d+)", model or "")
+    return not (match and int(match.group(1)) >= 3)
 
 
 def invoke_json(system: str, user: str, temperature: float = 0.1) -> dict:

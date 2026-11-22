@@ -125,16 +125,16 @@
 
                         <!-- Report Deliverable & Feedback Banner -->
                         <div th:if="${assessment.requiresSubmission}" class="assessment-submission-banner" 
-                             style="margin: 15px 0 20px 0; padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; border: 1px solid #e2e8f0; background: #f8fafc;">
+                             style="margin: 15px 0 20px 0; padding: 14px 18px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; border: 1px solid var(--ui-border); background: var(--ui-bg-subtle);">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 38px; height: 38px; border-radius: 8px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                                <div style="width: 38px; height: 38px; border-radius: 8px; background: var(--ui-danger-soft); color: var(--ui-danger); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
                                     <i class="fas fa-file-pdf"></i>
                                 </div>
                                 <div>
                                     <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">
                                         <span th:text="${assessment.getEffectiveSubmissionTitle()}">Report Deliverable</span>
                                     </div>
-                                    <div style="font-size: 0.82rem; color: #64748b; margin-top: 2px;">
+                                    <div style="font-size: 0.82rem; color: var(--ui-text-muted); margin-top: 2px;">
                                         <span th:if="${submissionMap != null and submissionMap.containsKey(assessment.id)}" th:with="sub=${submissionMap.get(assessment.id)}">
                                             Submitted: <strong th:text="${sub.originalFileName}">report.pdf</strong> (v<span th:text="${sub.version}">1</span>)
                                             <span th:if="${doodleCountMap != null and doodleCountMap.containsKey(assessment.id) and doodleCountMap.get(assessment.id) > 0}" 
@@ -152,7 +152,7 @@
                                 <a th:if="${submissionMap != null and submissionMap.containsKey(assessment.id)}" 
                                    th:href="@{/student/assessment/{id}/submission/view(id=${assessment.id})}" 
                                    class="btn btn-evaluate btn-self" 
-                                   style="background: #4A0018; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+                                   style="background: var(--ui-brand); color: var(--ui-on-brand); text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
                                     <i class="fas fa-file-signature"></i> View Assessor's Annotated Report
                                 </a>
                                 <a th:unless="${submissionMap != null and submissionMap.containsKey(assessment.id)}" 

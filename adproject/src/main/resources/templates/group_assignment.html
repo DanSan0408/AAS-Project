@@ -147,7 +147,7 @@
                                             </div>
                                         </div>
                                         
-                                        <div th:unless="${availableStudents.isEmpty()}" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 4px; text-align: center;">
+                                        <div th:unless="${availableStudents.isEmpty()}" style="margin-top: 10px; padding: 10px; background-color: var(--ui-info-soft); border-radius: 4px; text-align: center;">
                                             <strong><span id="selectedCount">0</span> student(s) selected for this group</strong>
                                         </div>
                                         
@@ -197,7 +197,7 @@
                                 <p th:if="${availableStudentsCount > 0}">
                                     There are currently <span th:text="${availableStudentsCount}">0</span> unassigned students available for randomization.
                                 </p>
-                                <p th:unless="${availableStudentsCount > 0}" style="color: #e74c3c; font-weight: bold;">
+                                <p th:unless="${availableStudentsCount > 0}" style="color: var(--ui-danger); font-weight: bold;">
                                     No unassigned students available to randomize.
                                 </p>
                                 

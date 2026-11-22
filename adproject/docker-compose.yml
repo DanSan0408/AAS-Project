@@ -70,7 +70,8 @@ services:
     restart: unless-stopped
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      GEMINI_THINKING_LEVEL: ${GEMINI_THINKING_LEVEL:-}
       AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
       # Same Telegram bot and chat as the app: the service reports its own errors, Gemini failures and restarts.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}

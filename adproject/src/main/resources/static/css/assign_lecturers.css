@@ -93,7 +93,7 @@ body.assign-lecturer-page .page-header h2 {
 }
 
 body.assign-lecturer-page .page-header p {
-    color: #666 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.assign-lecturer-page #rubricModeSection,
@@ -142,7 +142,7 @@ body.assign-lecturer-page .group-assignment-card {
 }
 
 body.assign-lecturer-page .group-header {
-    background-color: #f8fafc !important;
+    background-color: var(--ui-bg-subtle) !important;
     padding: 15px 20px !important;
     border-bottom: 1px solid var(--color-border) !important;
     display: flex !important;
@@ -182,11 +182,11 @@ body.assign-lecturer-page .lecturer-assignments-container {
 }
 
 body.assign-lecturer-page .students-list {
-    background-color: #f1f5f9 !important;
+    background-color: var(--ui-bg-subtle) !important;
     padding: 12px !important;
     border-radius: 6px !important;
     font-size: 0.9rem !important;
-    color: #475569 !important;
+    color: var(--ui-text-secondary) !important;
     margin-bottom: 20px !important;
     line-height: 1.5 !important;
 }
@@ -221,7 +221,7 @@ body.assign-lecturer-page .form-select {
     border: 1px solid var(--color-border) !important;
     border-radius: 6px !important;
     color: var(--color-secondary) !important;
-    background-color: white !important;
+    background-color: var(--ui-bg-surface) !important;
     box-sizing: border-box !important;
     text-overflow: ellipsis !important;
     overflow: hidden !important;
@@ -349,8 +349,8 @@ body.assign-lecturer-page .alert {
     text-align: center !important;
     border-left: 4px solid !important;
 }
-body.assign-lecturer-page .alert-success { background-color: #d1fae5 !important; color: #065f46 !important; border-color: var(--color-success) !important; }
-body.assign-lecturer-page .alert-danger { background-color: #fee2e2 !important; color: #991b1b !important; border-color: var(--color-alert) !important; }
+body.assign-lecturer-page .alert-success { background-color: var(--ui-success-soft) !important; color: var(--ui-success) !important; border-color: var(--color-success) !important; }
+body.assign-lecturer-page .alert-danger { background-color: var(--ui-danger-soft) !important; color: var(--ui-danger) !important; border-color: var(--color-alert) !important; }
 
 @media (max-width: 1279px) {
     .main-content,

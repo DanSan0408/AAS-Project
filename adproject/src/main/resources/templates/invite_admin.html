@@ -64,7 +64,7 @@
             <div class="card form-card" style="margin-top: 20px;">
                 <div class="card-body">
                     <h3>Manage Existing Admins</h3>
-                    <p style="margin-bottom: 12px; color: #666;">Delete invited admin accounts from here.</p>
+                    <p style="margin-bottom: 12px; color: var(--ui-text-muted);">Delete invited admin accounts from here.</p>
                     <div th:if="${#lists.isEmpty(admins)}">No admin accounts found.</div>
                     <table th:if="${not #lists.isEmpty(admins)}" class="table table-striped" style="width: 100%; border-collapse: collapse;">
                         <thead>

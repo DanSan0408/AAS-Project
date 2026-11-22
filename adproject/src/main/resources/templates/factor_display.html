@@ -90,15 +90,15 @@
                                         <table class="nested-ratings-table" style="width: 100%; border-collapse: collapse;">
                                             <thead th:if="${!bd.rawRatings.isEmpty()}">
                                                 <tr>
-                                                    <th th:each="rating, rStat : ${bd.rawRatings}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center; background: #f8f9fa; font-size: 0.8em; color: #64748b;">Teammate [[${rStat.count}]]</th>
+                                                    <th th:each="rating, rStat : ${bd.rawRatings}" style="border: 1px solid var(--ui-border); padding: 5px; text-align: center; background: var(--ui-bg-subtle); font-size: 0.8em; color: var(--ui-text-muted);">Teammate [[${rStat.count}]]</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td th:each="teammateRatings : ${bd.rawRatings}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center; font-weight: bold; color: #4A0018;">
+                                                    <td th:each="teammateRatings : ${bd.rawRatings}" style="border: 1px solid var(--ui-border); padding: 5px; text-align: center; font-weight: bold; color: var(--ui-brand);">
                                                         <div th:each="rating : ${teammateRatings}" th:text="${#numbers.formatDecimal(rating, 1, 2)}" style="margin-bottom: 2px;">0.00</div>
                                                     </td>
-                                                    <td th:if="${bd.rawRatings.isEmpty()}" style="border: 1px solid #E5E7EB; padding: 5px; text-align: center;" class="text-muted">None</td>
+                                                    <td th:if="${bd.rawRatings.isEmpty()}" style="border: 1px solid var(--ui-border); padding: 5px; text-align: center;" class="text-muted">None</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -124,8 +124,8 @@
 
             <!-- History Section -->
             <div th:if="${selectedGroupId != null and !allHistory.isEmpty()}" class="card table-card history-section" style="margin-top: 30px;">
-                <div class="card-header" style="padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #E5E7EB;">
-                    <h3 style="margin: 0; color: #4A0018;"><i class="fas fa-history"></i> Factor Override History</h3>
+                <div class="card-header" style="padding: 20px; background-color: var(--ui-bg-subtle); border-bottom: 1px solid var(--ui-border);">
+                    <h3 style="margin: 0; color: var(--ui-brand);"><i class="fas fa-history"></i> Factor Override History</h3>
                 </div>
                 <div class="table-responsive">
                     <table class="data-table history-table">
