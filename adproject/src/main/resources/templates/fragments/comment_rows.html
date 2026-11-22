@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  One comment as a horizontal row: who it is from, what it is about and the text, and when. Used by the student, lecturer and
+  admin comment pages, so a change to how comments look happens here once.
+  kind: self | team | peer | lecturer | supervisor | other (sets the colour of the left stripe)
+  anonymous: true shows an "Anonymous" tag. topic and when may be null.
+  Call it inside a <ul class="comment-rows">, never with th:each on the same element (th:replace runs before th:each).
+-->
+<li th:fragment="row(kind, icon, from, anonymous, topic, text, when)" class="comment-row" th:attr="data-kind=${kind}">
+    <div class="comment-row-from">
+        <span class="comment-row-avatar" aria-hidden="true"><i th:class="'fas ' + ${icon}"></i></span>
+        <span class="comment-row-who">
+            <span class="comment-row-name" th:text="${from}">Name</span>
+            <span th:if="${anonymous}" class="comment-row-tag"><i class="fas fa-user-secret" aria-hidden="true"></i> Anonymous</span>
+        </span>
+    </div>
+    <div class="comment-row-main">
+        <span th:if="${topic != null and !topic.isEmpty()}" class="comment-row-topic" th:text="${topic}">Topic</span>
+        <p class="comment-row-text" th:text="${text}">The comment.</p>
+        <button type="button" class="comment-row-more" aria-expanded="false" hidden>Read more</button>
+    </div>
+    <time class="comment-row-date" th:if="${when != null}" th:text="${#temporals.format(when, 'dd MMM yyyy, HH:mm')}">05 Nov 2025, 14:30</time>
+</li>
+
+<!--
+  The comments one student received, grouped by topic (rubric question): commentsByTopic is topic -> evaluator -> comments.
+  The data has no dates or types for these, so each row shows only the evaluator and the text.
+-->
+<div th:fragment="topicGroups(commentsByTopic)" class="comment-topics">
+    <p th:if="${commentsByTopic == null or #maps.isEmpty(commentsByTopic)}" class="comment-rows-empty">
+        <i class="far fa-comment-dots" aria-hidden="true"></i> No comments received yet.
+    </p>
+    <section th:if="${commentsByTopic != null}" th:each="topic : ${commentsByTopic}" class="comment-topic">
+        <header class="comment-topic-head">
+            <h5 class="comment-topic-title" th:text="${topic.key}">Question</h5>
+            <span class="comment-topic-count" th:text="${#numbers.formatInteger(#aggregates.sum(topic.value.values().![size()]), 1)}">3</span>
+        </header>
+        <ul class="comment-rows" role="list">
+            <th:block th:each="evaluator : ${topic.value}">
+                <th:block th:each="text : ${evaluator.value}">
+                    <li th:replace="~{fragments/comment_rows :: row('other', 'fa-user-circle', ${evaluator.key}, false, null, ${text}, null)}"></li>
+                </th:block>
+            </th:block>
+        </ul>
+    </section>
+</div>
+
+</body>
+</html>

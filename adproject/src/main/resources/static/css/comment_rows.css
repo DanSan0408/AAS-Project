@@ -1,0 +1,243 @@
+/* Comments as horizontal rows (fragments/comment_rows.html): student, lecturer and admin comment pages.
+   Theme tokens only, so light, dark and warm all follow their own palettes. */
+
+.comment-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.comment-row {
+    --comment-kind: var(--ui-border-strong);
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px 24px;
+    padding: 16px 20px;
+    background: var(--ui-bg-surface);
+    border: 1px solid var(--ui-border);
+    border-left: 4px solid var(--comment-kind);
+    border-radius: 10px;
+}
+
+.comment-row[hidden] {
+    display: none;
+}
+
+.comment-row[data-kind="self"],
+.comment-row[data-kind="team"] { --comment-kind: var(--ui-info); }
+.comment-row[data-kind="peer"] { --comment-kind: var(--ui-success); }
+.comment-row[data-kind="lecturer"] { --comment-kind: var(--ui-brand); }
+.comment-row[data-kind="supervisor"] { --comment-kind: var(--ui-warning); }
+
+.comment-row-from {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.comment-row-avatar {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--ui-bg-subtle);
+    color: var(--comment-kind);
+    font-size: 1rem;
+}
+
+.comment-row-who {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.comment-row-name {
+    font-weight: 600;
+    color: var(--ui-text-primary);
+    overflow-wrap: anywhere;
+}
+
+.comment-row-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--ui-bg-subtle);
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text-secondary);
+    font-size: 0.75rem;
+}
+
+.comment-row-main {
+    min-width: 0;
+}
+
+.comment-row-topic {
+    display: inline-block;
+    margin-bottom: 6px;
+    padding: 2px 10px;
+    border-radius: 6px;
+    background: var(--ui-bg-subtle);
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.comment-row-text {
+    margin: 0;
+    color: var(--ui-text-body-color);
+    line-height: 1.6;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+}
+
+.comment-row.is-expanded .comment-row-text {
+    display: block;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+}
+
+.comment-row-more {
+    margin-top: 6px;
+    min-height: 32px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--ui-brand);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.comment-row-more[hidden] {
+    display: none;
+}
+
+.comment-row-more:hover {
+    text-decoration: underline;
+}
+
+.comment-row-more:focus-visible,
+.comment-filter-btn:focus-visible {
+    outline: 2px solid var(--ui-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.comment-row-date {
+    color: var(--ui-text-muted);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Admin and lecturer: comments grouped by topic */
+.comment-topic {
+    margin-bottom: 28px;
+}
+
+.comment-topic-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ui-border);
+}
+
+/* Two class names so the old per-page ".comment-section h5" rules (a coloured heading with its own underline) lose. */
+.comment-topic .comment-topic-title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ui-text-primary);
+}
+
+.comment-topic-count {
+    padding: 1px 10px;
+    border-radius: 999px;
+    background: var(--ui-bg-subtle);
+    border: 1px solid var(--ui-border);
+    color: var(--ui-text-secondary);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.comment-rows-empty {
+    padding: 20px;
+    border: 1px dashed var(--ui-border-strong);
+    border-radius: 10px;
+    color: var(--ui-text-muted);
+    text-align: center;
+}
+
+/* Student: filter by who wrote it */
+.comment-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 20px;
+}
+
+.comment-filter-btn {
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1px solid var(--ui-border);
+    border-radius: 999px;
+    background: var(--ui-bg-surface);
+    color: var(--ui-text-secondary);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.comment-filter-btn:hover {
+    background: var(--ui-bg-subtle);
+}
+
+.comment-filter-btn[aria-pressed="true"] {
+    background: var(--ui-brand-soft);
+    border-color: var(--ui-brand);
+    color: var(--ui-brand);
+}
+
+.comment-filter-empty {
+    padding: 20px;
+    color: var(--ui-text-muted);
+    text-align: center;
+}
+
+@media (max-width: 720px) {
+    .comment-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .comment-row-date {
+        white-space: normal;
+    }
+}

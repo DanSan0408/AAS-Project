@@ -15,7 +15,7 @@
         .header-container img { max-width: 200px; height: auto; }
         .header-container h1 { margin: 0; color: var(--ui-primary, #047857); font-size: 2.5rem; font-weight: 700; }
         
-        .page-content { padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; border: 1px solid #E5E7EB; }
+        .page-content { box-sizing: border-box; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; border: 1px solid #E5E7EB; }
         .page-content h2 { color: var(--ui-primary, #047857); border-bottom: 3px solid var(--ui-primary, #047857); padding-bottom: 10px; margin-bottom: 5px; text-align: center; }
         .page-content h5.text-muted { text-align: center; color: #6b7280; margin-top: 0; margin-bottom: 25px; font-weight: normal; }
         
@@ -52,6 +52,7 @@
             .btn-secondary { width: 100%; text-align: center; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/comment_rows.css}">
     <link rel="stylesheet" th:href="@{/css/system-ui.css}">
 </head>
 <body data-ui-role="lecturer" class="lecturer-page">
@@ -117,16 +118,7 @@
                         <!-- All Assessment Comments for this student -->
                         <div class="col-12 comment-section" style="width: 100%; padding: 0 10px;">
                             <h5 style="font-size: 1.5rem; font-weight: 700; color: var(--ui-primary, #047857); margin-bottom: 20px; border-bottom: 2px solid #F8A617; padding-bottom: 10px;">Assessment Comments Received</h5>
-                            <div th:if="${#maps.isEmpty(studentEntry.value.allComments)}">
-                                <p class="text-muted small mt-2">No comments received yet.</p>
-                            </div>
-                            <div th:each="questionEntry : ${studentEntry.value.allComments}" style="margin-bottom: 25px;">
-                                <h6 style="color: var(--ui-primary, #047857); margin-top: 15px; font-weight: 700; font-size: 1.25rem; border-bottom: 2px dashed var(--ui-border); padding-bottom: 8px;" th:text="${questionEntry.key}">Question</h6>
-                                <div th:each="evaluatorEntry : ${questionEntry.value}">
-                                    <div class="evaluator-name" style="margin-top: 8px; font-weight: 600; color: #3F3F46; display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-circle"></i> <span th:text="${evaluatorEntry.key}"></span></div>
-                                    <div th:each="comment : ${evaluatorEntry.value}" class="comment-text" th:text="'- &quot;' + ${comment} + '&quot;'"></div>
-                                </div>
-                            </div>
+                            <div th:replace="~{fragments/comment_rows :: topicGroups(${studentEntry.value.allComments})}"></div>
                         </div>
                     </div>
                 </div>
@@ -315,5 +307,6 @@
             }
         })();
     </script>
+    <script th:src="@{/js/comment-rows.js}"></script>
 </body>
 </html>
