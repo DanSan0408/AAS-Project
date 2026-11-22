@@ -167,3 +167,27 @@ class EndpointTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LongCommentTest(unittest.TestCase):
+    """One comment longer than the limit must not fail the whole batch of 20: the scan would then be stuck on it forever."""
+
+    def test_an_overlong_comment_is_cut_not_rejected(self):
+        req = CheckCommentsRequest(comments=[{"id": "a", "text": "x" * 9000}, {"id": "b", "text": "short"}])
+
+        self.assertEqual(4000, len(req.comments[0].text))
+        self.assertEqual("short", req.comments[1].text)
+
+    def test_a_comment_at_the_limit_is_untouched(self):
+        req = CheckCommentsRequest(comments=[{"id": "a", "text": "y" * 4000}])
+
+        self.assertEqual("y" * 4000, req.comments[0].text)
+
+    def test_the_endpoint_answers_a_batch_that_has_an_overlong_comment(self):
+        client = TestClient(main.app)
+        with patch.object(main.settings, "ai_internal_secret", SECRET), patch.object(main.settings, "debug", False), \
+                patch.object(cc, "invoke_json", return_value=answer(("a", "ok", 0.9, "Fine."))):
+            response = client.post("/api/v1/comments/check", json={"comments": [{"id": "a", "text": "z" * 9000}]},
+                                   headers={"X-Internal-Secret": SECRET})
+
+        self.assertEqual(200, response.status_code, response.text[:200])
