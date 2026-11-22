@@ -1,6 +1,6 @@
 # Project State Documentation
 
-**Last Updated**: 2026-11-19 (Claude Code)
+**Last Updated**: 2026-11-19
 
 ## Current Status: Course-Scoped Group Members & SMTP Failure Visibility
 **Status**: COMPLETED
@@ -3668,3 +3668,11 @@ never breaks a page. New announcements reach people at their next sign-in, not m
 - **Comments as horizontal rows** on the student, lecturer and admin comment pages: shared fragment `fragments/comment_rows.html` (row + `topicGroups`), `comment_rows.css` (theme tokens only), `comment-rows.js` ("Read more" on clamped text; the student page can filter by You/Peers/Assessors/Supervisors). The student page replaced a card grid with one row per comment (who, topic/label, text, date; anonymous tag; stripe colour by source). Admin and lecturer pages group a student's comments by topic with a count. No controller or service change: the admin/lecturer data has no dates or types, so those rows show evaluator and text only. Tests: `CommentRowsRenderTest` (10), `comment-rows.test.cjs`. The old `.comment-card`/`.comments-grid` rules in `student_comments.css` are now unused.
 - Not verified: a real Google sign-in (needs the Google Cloud client), the app booting against MySQL with the new dependency, the live progress stream.
 - Totals: Java 562 (1 skipped), JS 120, ai-service 102.
+
+## 2026-11-22: one overlong comment stuck the comment scan
+
+- Production log: `Failed to call AI service for the comment check: 422 ... string_too_long ... at most 4000 characters`, then `Scheduled comment scan failed`. One student comment (a 20-point review list) was over 4000 characters; the AI service rejected the whole batch of 20, and the scheduled scan hit the same batch on every run.
+- Fix, both sides: `AiCommentDtos.Item` cuts text to `MAX_TEXT_CHARS` (4000, never splitting an emoji) before it is sent; the AI service's `CommentToCheck` now cuts an overlong comment instead of rejecting the batch (`field_validator`). The other endpoints limit list sizes only, not text length.
+- Privacy: the 422 body echoes the offending input, and `AiServiceClient` logged `e.getMessage()`, so the student's comment went into the application log (and the ERROR relay to Telegram). The three AI calls now log and throw only `HTTP <status>` or the failure type (`AiServiceClient.describe`).
+- Tests: `AiServiceClientFailureTest` (5), `LongCommentTest` in `test_comment_check.py` (3). Java 532 on this branch (1 skipped), ai-service 105.
+- Not changed: a batch the AI service rejects for some other reason would still be retried on every run (it is logged with its status and alerted, coalesced). Earlier Telegram alerts for this error may contain the comment text.
