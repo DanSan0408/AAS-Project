@@ -30,6 +30,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices.RememberMeTokenAlgorithm;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.RequestCache;
 import org.springframework.web.cors.CorsConfiguration;
@@ -86,6 +87,16 @@ public class SecurityConfig {
     @Autowired
     private AuthenticationSuccessHandler authenticationSuccessHandler;
 
+    // Present only when GOOGLE_CLIENT_ID is configured (see GoogleLoginConfig); otherwise there is no Google sign-in at all.
+    @Autowired(required = false)
+    private ClientRegistrationRepository googleClientRegistrations;
+
+    @Autowired(required = false)
+    private RegisteredGoogleUserService registeredGoogleUsers;
+
+    @Autowired(required = false)
+    private GoogleSignInFailureHandler googleSignInFailureHandler;
+
     //to save and restore user last visited page if dia keluar dari system and still ada cookie
     @Bean
     public RequestCache requestCache() {
@@ -125,10 +136,14 @@ public class SecurityConfig {
                 .authenticationEntryPoint(authenticationEntryPoint())
                 .accessDeniedHandler(accessDeniedHandler()))
             .authorizeHttpRequests(authorize -> authorize
-                .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
+                // ASYNC: the live progress stream (SSE) completes through an async re-dispatch after its response is committed. The
+                // first (REQUEST) dispatch already decided access; authorising the re-dispatch again throws
+                // AuthorizationDeniedException with no way to answer once the session has expired.
+                .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD, DispatcherType.ASYNC).permitAll()
                 .requestMatchers(HttpMethod.OPTIONS).permitAll()
                 .requestMatchers("/", "/login", "/favicon.ico", "/actuator/health", "/css/**", "/js/**", "/images/**",
-                    "/forgot_password", "/reset_password/**", "/csp-violations", "/error", "/error/**").permitAll()
+                    "/forgot_password", "/reset_password/**", "/csp-violations", "/error", "/error/**",
+                    "/oauth2/authorization/**", "/login/oauth2/code/**").permitAll()
                 .requestMatchers("/superadmin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access admin pages
                 .requestMatchers("/rubrics/**").hasAnyRole("ADMIN", "SUPER_ADMIN") // Super Admin can access rubric pages
@@ -179,6 +194,16 @@ public class SecurityConfig {
                     csp.policyDirectives(policy);
                 })
             );
+
+        if (googleClientRegistrations != null && registeredGoogleUsers != null && googleSignInFailureHandler != null) {
+            http.oauth2Login(oauth -> oauth
+                .loginPage("/login")
+                .clientRegistrationRepository(googleClientRegistrations)
+                .userInfoEndpoint(userInfo -> userInfo.oidcUserService(registeredGoogleUsers))
+                .successHandler(authenticationSuccessHandler)
+                .failureHandler(googleSignInFailureHandler)
+            );
+        }
 
         return http.build();
     }

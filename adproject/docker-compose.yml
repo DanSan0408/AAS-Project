@@ -52,6 +52,10 @@ services:
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
       AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
       COMMENT_SCAN_ENABLED: ${COMMENT_SCAN_ENABLED:-true}
+      # "Sign in with Google": leave GOOGLE_CLIENT_ID empty to switch it off (the login page then has no Google button).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
     ports:
       - "8080:8080"
     volumes:
