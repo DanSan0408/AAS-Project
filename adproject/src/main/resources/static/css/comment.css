@@ -83,7 +83,7 @@ body.comment-config-page .page-header h1 {
 }
 
 body.comment-config-page .page-header p {
-    color: #666 !important;
+    color: var(--ui-text-muted) !important;
     font-size: 1.1rem !important;
 }
 
@@ -118,7 +118,7 @@ body.comment-config-page .comment-header {
 }
 
 body.comment-config-page .badge {
-    background-color: #f3f4f6 !important;
+    background-color: var(--ui-bg-subtle) !important;
     color: var(--color-secondary) !important;
     padding: 4px 10px !important;
     border-radius: 4px !important;
@@ -139,7 +139,7 @@ body.comment-config-page .settings-row {
     display: flex !important;
     gap: 20px !important;
     align-items: flex-end !important;
-    background-color: #f9fafb !important;
+    background-color: var(--ui-bg-subtle) !important;
     padding: 10px !important;
     border-radius: 6px !important;
 }
@@ -186,7 +186,7 @@ body.comment-config-page .btn {
 }
 
 body.comment-config-page .btn-add {
-    background-color: #f3f4f6 !important;
+    background-color: var(--ui-bg-subtle) !important;
     color: var(--color-secondary) !important;
     width: 100% !important;
     border: 2px dashed var(--color-border) !important;
@@ -227,7 +227,7 @@ body.comment-config-page .btn-secondary { background-color: var(--color-secondar
 body.comment-config-page .empty-state {
     text-align: center !important;
     padding: 30px !important;
-    color: #94a3b8 !important;
+    color: var(--ui-text-muted) !important;
 }
 body.comment-config-page .empty-state i { font-size: 2rem !important; margin-bottom: 10px !important; }
 

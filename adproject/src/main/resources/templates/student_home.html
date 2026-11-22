@@ -32,7 +32,7 @@
         </nav>
 
         <!-- Quick Access Banner for Report Submissions -->
-        <div th:if="${submissionAssessmentsCount != null and submissionAssessmentsCount > 0}" 
+        <div th:if="${submissionAssessmentsCount != null and submissionAssessmentsCount > 0}" class="student-welcome-banner"
              style="max-width: 1400px; margin: 0 auto 24px auto; width: 100%; box-sizing: border-box; background: linear-gradient(135deg, #7A1E2D 0%, #4A0018 100%); color: #ffffff; padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 14px rgba(74, 0, 24, 0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
             <div style="display: flex; align-items: center; gap: 16px;">
                 <div style="width: 46px; height: 46px; border-radius: 10px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
@@ -81,7 +81,7 @@
                         </div>
 
                         <div th:if="${assessment.extraNotesForStudent != null and !#strings.isEmpty(#strings.trim(assessment.extraNotesForStudent))}"
-                             style="margin: 15px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid #ccfbf1; border-left: 4px solid #16a085; background: #f0fdfa;">
+                             style="margin: 15px 0; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border); border-left: 4px solid #16a085; background: var(--ui-success-soft);">
                             <h6 style="margin: 0 0 8px 0; color: #0f766e; font-size: 0.95rem; font-weight: 700;">
                                 <i class="fas fa-note-sticky"></i> Special Instructions
                             </h6>

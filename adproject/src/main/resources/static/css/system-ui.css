@@ -2161,3 +2161,260 @@ html[data-theme="warm"] .hotkey-guide-row kbd {
     color: #2c241e !important;
 }
 
+
+/* ---------- Password show/hide (js/password-toggle.js) ---------- */
+.password-field {
+    position: relative;
+    display: block;
+}
+
+.password-field > input {
+    width: 100%;
+    padding-right: 48px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ui-text-muted);
+    cursor: pointer;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.password-toggle:hover {
+    color: var(--ui-text-primary);
+    background: var(--ui-bg-inset);
+}
+
+.password-toggle:active {
+    background: var(--ui-border);
+}
+
+.password-toggle:focus-visible {
+    outline: 2px solid var(--ui-brand);
+    outline-offset: 1px;
+}
+
+html[data-theme="dark"] .password-toggle:focus-visible {
+    outline-color: var(--ui-accent);
+}
+
+/* ---------- Dark mode palette harmony ----------
+   Pages written for the light theme left pale pastel fills, white cards, maroon fills and flat-UI blues that clash with the
+   dark blue-grey palette. Everything here maps them onto the dark tokens: neutral surfaces, the four tinted "soft"
+   states (success, warning, danger, info), and the brand fill. */
+html[data-theme="dark"] :is(.page-content, .analytics-lecturer-options, .reports-header-card, .reports-table-card, .split-controls-bar,
+    .student-viewer-wrapper, .viewer-top-bar, .submissions-empty-state, .empty-section, .comment-hint, .submissions-header-card) {
+    background: var(--ui-bg-surface) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text-body-color);
+}
+
+html[data-theme="dark"] :is(.empty-subsection, .sub-rubric-item, .overall-comments-section, .group-header, .students-list, .settings-row,
+    .comment-edit-box, .reports-table-toolbar, .rubric-quick-nav, .workstation-progress-badge, .comment-card, .radio-card,
+    .split-btn-group, .submitted-box, .unsubmitted-box, .comment-hint) {
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text-body-color);
+}
+
+html[data-theme="dark"] :is(.progress-bar-container, .workstation-mini-bar) {
+    background: var(--ui-bg-inset) !important;
+}
+
+/* Neutral chips and small buttons */
+html[data-theme="dark"] :is(.badge-status.closed, .scope-tag, .version-tag, .summary-badge.total, .status-pill.status-pending,
+    .badge-neutral, .factor-badge, .clo-badge, .btn-evaluate-link, .btn-viewer-back, .btn-toggle-members, .btn-action.outline) {
+    background: var(--ui-bg-subtle) !important;
+    border-color: var(--ui-border) !important;
+    color: var(--ui-text-secondary) !important;
+}
+
+/* Tinted states: a soft fill, readable text in the state colour */
+html[data-theme="dark"] :is(.submitted-pill, .summary-badge.submitted, .status-pill.status-submitted, .badge-success, .btn-report-view,
+    .flash-alert.flash-success, body.lecturer-page .badge.badge-pending) {
+    background: var(--ui-success-soft) !important;
+    border-color: color-mix(in srgb, var(--ui-success) 40%, transparent) !important;
+    color: var(--ui-success) !important;
+}
+
+html[data-theme="dark"] :is(.badge-warning, .summary-badge.pending, .summary-badge.doodles, .badge-shared, .feedback-available-notice,
+    .group-warning-box, .simple-instructions-box, .re-evaluation-notice, .shared-info-banner) {
+    background: var(--ui-warning-soft) !important;
+    border-color: color-mix(in srgb, var(--ui-warning) 40%, transparent) !important;
+    color: var(--ui-warning) !important;
+}
+
+html[data-theme="dark"] :is(.pdf-icon-badge, .viewer-title-icon, .badge-unassigned, .btn-eval.btn-eval-danger, .flash-alert.flash-error,
+    .deadline-warning) {
+    background: var(--ui-danger-soft) !important;
+    border-color: color-mix(in srgb, var(--ui-danger) 40%, transparent) !important;
+    color: var(--ui-danger) !important;
+}
+
+html[data-theme="dark"] :is(.badge-status.open, .badge-scope, .btn-reports-tab, .info-box, .template-injector-card, .student-count-badge,
+    .summary-badge.info) {
+    background: var(--ui-info-soft) !important;
+    border-color: color-mix(in srgb, var(--ui-info) 40%, transparent) !important;
+    color: var(--ui-info) !important;
+}
+
+html[data-theme="dark"] .self-badge {
+    background: var(--ui-primary-soft) !important;
+    color: var(--ui-primary) !important;
+}
+
+/* Maroon and flat-blue fills become the system's own fills */
+html[data-theme="dark"] :is(.btn-configure-submission, .btn-submission, .btn-run-team-audit) {
+    background: var(--ui-brand) !important;
+    border-color: var(--ui-brand) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is(.btn.btn-add, .btn-add) {
+    background: var(--ui-success) !important;
+    border-color: var(--ui-success) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] .template-apply-btn {
+    background: var(--ui-info) !important;
+    border-color: var(--ui-info) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+/* The student welcome banner is a maroon gradient in the light theme */
+html[data-theme="dark"] .student-welcome-banner {
+    background: linear-gradient(135deg, var(--ui-bg-subtle), var(--ui-bg-surface)) !important;
+    border: 1px solid var(--ui-border);
+    box-shadow: none !important;
+}
+
+/* Page-local palettes (defined in the page stylesheets with light values) follow the dark tokens. */
+html[data-theme="dark"] {
+    --sub-bg: var(--ui-bg-canvas);
+    --sub-surface: var(--ui-bg-surface);
+    --sub-border: var(--ui-border);
+    --sub-text: var(--ui-text-body-color);
+    --sub-text-muted: var(--ui-text-muted);
+    --sub-success: var(--ui-success);
+    --sub-success-bg: var(--ui-success-soft);
+    --sub-warning: var(--ui-warning);
+    --sub-warning-bg: var(--ui-warning-soft);
+    --sub-danger: var(--ui-danger);
+    --sub-primary: var(--ui-primary);
+    --sub-primary-dark: var(--ui-primary-light);
+    --sub-accent: var(--ui-accent);
+    --lecturer-muted: var(--ui-text-muted);
+    --color-info-blue: var(--ui-info);
+    --color-group: var(--ui-info);
+    --color-individual: var(--ui-success);
+    --color-purple: var(--student-primary);
+    --color-purple-light: var(--student-primary-soft);
+}
+
+/* Section header bars were a solid primary fill with white text; in dark they are a raised surface with a brand rule. */
+html[data-theme="dark"] :is(body.assign-assessment-page .card-header, body.data-view-page .student-header,
+    body.group-page .group-table thead th, body.group-page #studentTable thead th) {
+    background: var(--ui-bg-subtle) !important;
+    color: var(--ui-text-primary) !important;
+    border-bottom: 2px solid var(--ui-brand) !important;
+}
+
+html[data-theme="dark"] :is(body.assign-assessment-page .card-header, body.data-view-page .student-header) :is(h1, h2, h3, span, div, i, strong) {
+    color: inherit !important;
+}
+
+/* Semantic buttons: the system's own fill for each meaning, with dark text on the bright fill */
+html[data-theme="dark"] :is(.btn-danger, .btn-delete, .delete-btn, .instant-badge) {
+    background: var(--ui-danger) !important;
+    border-color: var(--ui-danger) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is(.btn-info, .btn-view) {
+    background: var(--ui-info) !important;
+    border-color: var(--ui-info) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is(.btn-success, .btn-export, .btn-print, .btn-add-sub, .btn-start-evaluation, .btn-submit, .badge-mode-student) {
+    background: var(--ui-success) !important;
+    border-color: var(--ui-success) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is(.btn-warning, .btn-assign, .btn-lecturer, .error-btn--primary) {
+    background: var(--ui-warning) !important;
+    border-color: var(--ui-warning) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+/* Any other solid, bright fill carries dark text (a generic dark rule had given it light grey or white) */
+html[data-theme="dark"] :is(.evaluator-badge, .assessment-type-badge.peer, .assessment-type-badge.self, .assessment-type-badge.team,
+    .you-badge, .detail-badge.warning, .info-badge, .badge-progress, .badge-completed, .deadline-status.status-open,
+    .status-badge.status-open, .badge-clo, .btn-edit, .action-button:not(.delete):not(.delete-btn), .rubric-action-btn.edit-btn,
+    .main-content a.active) {
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is(.evaluator-badge, .assessment-type-badge, .you-badge, .detail-badge, .info-badge, .badge-progress,
+    .badge-completed, .btn-edit, .action-button, .btn-start-evaluation, .badge-mode-student, .btn-success, .btn-info,
+    .btn-warning, .btn-danger, .btn-view, .btn-assign, .btn-lecturer) :is(span, i, strong, small) {
+    color: inherit !important;
+}
+
+/* The data-view header bar is a surface now, so its translucent chips take light text */
+html[data-theme="dark"] body.data-view-page .student-header .detail-badge:not(.warning) {
+    background: var(--ui-bg-inset) !important;
+    color: var(--ui-text-body-color) !important;
+}
+
+/* Neutral grey fills set inline with white text */
+html[data-theme="dark"] :is([style*="background-color: #94a3b8"], [style*="background-color: #95a5a6"], .anonymous-badge) {
+    background: var(--ui-bg-subtle) !important;
+    border: 1px solid var(--ui-border) !important;
+    color: var(--ui-text-secondary) !important;
+}
+
+/* Flat-UI purple, teal and orange fills set inline on buttons and badges take the system's role colours */
+html[data-theme="dark"] :is([style*="#9b59b6" i], [style*="#9B59B6"]) {
+    background: var(--student-primary) !important;
+    border-color: var(--student-primary) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] [style*="#16a085" i] {
+    background: var(--ui-success) !important;
+    border-color: var(--ui-success) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] :is([style*="#e67e22" i], [style*="#f7941d" i]) {
+    background: var(--ui-warning) !important;
+    border-color: var(--ui-warning) !important;
+    color: var(--ui-on-brand) !important;
+}
+
+html[data-theme="dark"] {
+    --doodle-primary: var(--ui-brand);
+}
+
+/* The moderation summary button sets its text colour inline; it must follow the fill. */
+html[data-theme="dark"] #btn-generate-ai-briefing,
+html[data-theme="dark"] #btn-run-team-audit {
+    background: var(--ui-brand) !important;
+    color: var(--ui-on-brand) !important;
+}

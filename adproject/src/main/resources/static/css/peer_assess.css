@@ -160,9 +160,9 @@ body {
 }
 
 .re-evaluation-notice {
-    background-color: #FFF8E1; 
+    background-color: var(--ui-warning-soft); 
     border: 1px solid var(--student-accent);
-    color: #92400E;
+    color: var(--ui-warning);
 }
 
 .re-evaluation-notice i {
@@ -171,7 +171,7 @@ body {
 }
 
 .deadline-warning {
-    background-color: #FDEDED; 
+    background-color: var(--ui-danger-soft); 
     border: 1px solid #FABDBD;
     color: var(--student-alert);
 }
@@ -257,7 +257,7 @@ body {
 }
 
 .sub-rubric-item {
-    background-color: #FAFAFA;
+    background-color: var(--ui-bg-subtle);
     padding: 25px;
     border-radius: 10px;
     margin-bottom: 25px;
@@ -456,7 +456,7 @@ body {
 .modal-overlay.active { display: flex; }
 
 .modal-content {
-    background-color: #FFFFFF;
+    background-color: var(--ui-bg-surface);
     width: 100%;
     max-width: 550px;
     padding: 40px;

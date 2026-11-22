@@ -55,11 +55,11 @@
         </div>
 
         <form th:action="@{/admin/student-assignments/{id}/save(id=${assessment.id})}" method="post">
-            <div class="card mb-4" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <div class="card mb-4" style="background: var(--ui-bg-surface); padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
                 <h3 style="margin-top: 0;">Students In Current Course</h3>
-                <p style="margin: 0 0 15px 0; color: #666;">Configure the evaluation boundaries for students accessing this assessment.</p>
+                <p style="margin: 0 0 15px 0; color: var(--ui-text-muted);">Configure the evaluation boundaries for students accessing this assessment.</p>
 
-                <div th:if="${#lists.isEmpty(allStudents)}" style="padding: 16px; background: #f8f9fa; border-radius: 8px; color: #666;">
+                <div th:if="${#lists.isEmpty(allStudents)}" style="padding: 16px; background: var(--ui-bg-subtle); border-radius: 8px; color: var(--ui-text-muted);">
                     No students found in this course.
                 </div>
 

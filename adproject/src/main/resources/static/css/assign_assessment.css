@@ -99,7 +99,7 @@ body.assign-assessment-page .assessment-title {
     margin-bottom: 25px !important;
     font-size: 1.2rem !important;
     color: var(--color-secondary) !important;
-    background-color: #f8fafc !important;
+    background-color: var(--ui-bg-subtle) !important;
     padding: 10px !important;
     border-radius: 6px !important;
 }
@@ -132,7 +132,7 @@ body.assign-assessment-page .main-content select {
     border-radius: 8px !important;
     font-size: 1rem !important;
     color: var(--color-secondary) !important;
-    background-color: white !important;
+    background-color: var(--ui-bg-surface) !important;
 }
 
 body.assign-assessment-page .main-content input:focus,
@@ -160,8 +160,8 @@ body.assign-assessment-page .radio-card {
 }
 
 body.assign-assessment-page .radio-card:hover {
-    border-color: #cbd5e1 !important;
-    background-color: #f8fafc !important;
+    border-color: var(--ui-border-strong) !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 body.assign-assessment-page .radio-card input:checked + .radio-content {
@@ -170,7 +170,7 @@ body.assign-assessment-page .radio-card input:checked + .radio-content {
 
 body.assign-assessment-page .radio-card:has(input:checked) {
     border-color: var(--color-primary) !important;
-    background-color: #fff5f5 !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 body.assign-assessment-page .radio-content {
@@ -180,7 +180,7 @@ body.assign-assessment-page .radio-content {
 
 body.assign-assessment-page .radio-content span {
     font-size: 0.85rem !important;
-    color: #64748b !important;
+    color: var(--ui-text-muted) !important;
     font-weight: 400 !important;
 }
 
@@ -188,7 +188,7 @@ body.assign-assessment-page #scheduledOpenDateGroup {
     display: none;
     margin-top: 20px !important;
     padding: 15px !important;
-    background-color: #f1f5f9 !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-radius: 8px !important;
 }
 

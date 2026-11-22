@@ -29,8 +29,8 @@
                         <h2 th:text="${assessment.title}">Assessment Title</h2>
                         <p class="subtitle">Select a student below to begin or continue your evaluation.</p>
                         <div th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}"
-                             style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid #d1fae5; border-left: 4px solid #10b981; background: #ecfdf5; color: #1f2937; white-space: pre-line;">
-                            <strong style="display: block; margin-bottom: 4px; color: #065f46;">Admin Notes</strong>
+                             style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--ui-border); border-left: 4px solid #10b981; background: var(--ui-success-soft); color: #1f2937; white-space: pre-line;">
+                            <strong style="display: block; margin-bottom: 4px; color: var(--ui-success);">Admin Notes</strong>
                             <span th:utext="${assessment.getExtraNotesLinkified()}">Extra notes</span>
                         </div>
                     </div>
@@ -51,11 +51,11 @@
                 </div>
 
                 <div class="students-list" style="margin-top: 20px; display: flex; flex-direction: column;">
-                    <div th:each="student : ${assignedStudents}" th:with="resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}" class="list-item-card" th:attr="data-name=${student.username}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
+                    <div th:each="student : ${assignedStudents}" th:with="resolvedGroup=${studentGroupMap != null ? studentGroupMap.get(student.id) : student.group}" class="list-item-card" th:attr="data-name=${student.username}" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid var(--ui-border); border-radius: 8px; margin-bottom: 15px; background: var(--ui-bg-surface); box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;">
 
                         <div class="list-item-info" style="flex: 1; min-width: 250px;">
                             <h3 th:text="${student.username}" style="margin: 0 0 8px 0; color: var(--ui-primary, #047857); font-size: 1.1rem;">Student Name</h3>
-                            <div style="color: #6B7280; font-size: 0.95rem;">
+                            <div style="color: var(--ui-text-muted); font-size: 0.95rem;">
                                 <span style="font-weight: 500;">Group:</span> 
                                 <span th:text="${resolvedGroup != null ? resolvedGroup.groupName : 'No group assigned'}">Group Name</span>
                             </div>
@@ -85,7 +85,7 @@
 
                     </div>
                     
-                    <div th:if="${#lists.isEmpty(assignedStudents)}" style="text-align: center; padding: 40px; color: #6B7280; background: white; border-radius: 8px; border: 1px solid #E5E7EB;">
+                    <div th:if="${#lists.isEmpty(assignedStudents)}" style="text-align: center; padding: 40px; color: var(--ui-text-muted); background: var(--ui-bg-surface); border-radius: 8px; border: 1px solid var(--ui-border);">
                         <p style="margin: 0; font-size: 1.1rem;">No students assigned.</p>
                     </div>
                 </div>

@@ -145,7 +145,7 @@ body.overall-data-page .filter-card-summary-title {
 
 body.overall-data-page .filter-card-summary-hint {
     font-size: 0.9rem !important;
-    color: #6b7280 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.overall-data-page .overall-filter-card[open] .filter-card-summary {
@@ -164,7 +164,7 @@ body.overall-data-page .page-indicator {
 
 body.overall-data-page .filter-card-description {
     margin: 0 0 18px 0 !important;
-    color: #6b7280 !important;
+    color: var(--ui-text-muted) !important;
     font-size: 0.95rem !important;
 }
 
@@ -198,7 +198,7 @@ body.overall-data-page .filter-field select {
     padding: 10px 12px !important;
     border-radius: 8px !important;
     border: 1px solid var(--color-border) !important;
-    background: #fff !important;
+    background: var(--ui-bg-surface) !important;
     font-size: 0.95rem !important;
     width: 100% !important;
 }
@@ -206,7 +206,7 @@ body.overall-data-page .filter-field select {
 body.overall-data-page .assessment-filter-block {
     border: 1px solid var(--color-border) !important;
     border-radius: 10px !important;
-    background: #fafafa !important;
+    background: var(--ui-bg-subtle) !important;
     padding: 14px !important;
 }
 
@@ -220,7 +220,7 @@ body.overall-data-page .assessment-filter-header {
 
 body.overall-data-page .assessment-filter-header span {
     font-size: 0.9rem !important;
-    color: #6b7280 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.overall-data-page .assessment-checkbox-grid {
@@ -238,8 +238,8 @@ body.overall-data-page .assessment-checkbox {
     gap: 10px !important;
     padding: 10px 12px !important;
     border-radius: 8px !important;
-    border: 1px solid #e5e7eb !important;
-    background: #fff !important;
+    border: 1px solid var(--ui-border) !important;
+    background: var(--ui-bg-surface) !important;
     font-size: 0.92rem !important;
     color: var(--color-secondary) !important;
 }
@@ -271,8 +271,8 @@ body.overall-data-page .pagination-bar {
 
 body.overall-data-page .table-legend {
     font-size: 0.9rem !important;
-    color: #555 !important;
-    border-left: 4px solid #4A0018 !important;
+    color: var(--ui-text-secondary) !important;
+    border-left: 4px solid var(--ui-brand) !important;
 }
 
 body.overall-data-page .table-legend strong {
@@ -286,7 +286,7 @@ body.overall-data-page .table-legend span {
 body.overall-data-page .table-summary {
     justify-content: space-between !important;
     font-size: 0.92rem !important;
-    color: #6b7280 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.overall-data-page .pagination-bar {
@@ -303,7 +303,7 @@ body.overall-data-page .empty-results {
     border-radius: 12px !important;
     padding: 40px 20px !important;
     text-align: center !important;
-    color: #6b7280 !important;
+    color: var(--ui-text-muted) !important;
 }
 
 body.overall-data-page .empty-results h3 {
@@ -334,7 +334,7 @@ body.overall-data-page .overall-table {
 }
 
 body.overall-data-page th {
-    background-color: #f8fafc !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-bottom: 1px solid var(--color-border) !important;
     border-right: 1px solid var(--color-border) !important;
     padding: 12px 10px !important;
@@ -362,18 +362,18 @@ body.overall-data-page .fourth-col { left: 380px !important; width: 100px !impor
 body.overall-data-page th.sticky-col { z-index: 200 !important; }
 
 body.overall-data-page .assessment-header { background-color: var(--color-primary) !important; color: white !important; }
-body.overall-data-page .clo-header { color: #666 !important; }
+body.overall-data-page .clo-header { color: var(--ui-text-muted) !important; }
 body.overall-data-page .clo-weighted-header { color: #d97706 !important; }
-body.overall-data-page .total-header { font-weight: 700 !important; color: #666 !important; }
+body.overall-data-page .total-header { font-weight: 700 !important; color: var(--ui-text-muted) !important; }
 body.overall-data-page .total-w-header { font-weight: 700 !important; color: var(--color-success) !important; }
 body.overall-data-page .grand-total-header { background-color: var(--color-success) !important; color: white !important; }
 body.overall-data-page .grade-header { background-color: var(--color-secondary) !important; color: white !important; }
 
-body.overall-data-page .grand-total-value { font-weight: 700 !important; color: var(--color-success) !important; background-color: #f0fdf4 !important; }
+body.overall-data-page .grand-total-value { font-weight: 700 !important; color: var(--color-success) !important; background-color: var(--ui-success-soft) !important; }
 
-body.overall-data-page .factor-badge { padding: 2px 6px !important; border-radius: 4px !important; font-size: 0.8rem !important; background-color: #f3f4f6 !important; border: 1px solid var(--color-border) !important; }
-body.overall-data-page .factor-capped { background-color: #fef2f2 !important; color: #b91c1c !important; border-color: #fecaca !important; }
-body.overall-data-page .capped-indicator { font-size: 0.7rem !important; color: #b91c1c !important; }
+body.overall-data-page .factor-badge { padding: 2px 6px !important; border-radius: 4px !important; font-size: 0.8rem !important; background-color: var(--ui-bg-subtle) !important; border: 1px solid var(--color-border) !important; }
+body.overall-data-page .factor-capped { background-color: var(--ui-danger-soft) !important; color: var(--ui-danger) !important; border-color: var(--ui-border) !important; }
+body.overall-data-page .capped-indicator { font-size: 0.7rem !important; color: var(--ui-danger) !important; }
 
 body.overall-data-page .btn { padding: 8px 16px !important; border-radius: 6px !important; text-decoration: none !important; font-weight: 600 !important; border: none !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; }
 body.overall-data-page .btn-edit { background-color: #f59e0b !important; color: white !important; }

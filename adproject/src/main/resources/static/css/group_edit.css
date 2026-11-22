@@ -171,14 +171,14 @@ body.group-edit-page .alert {
 }
 
 body.group-edit-page .alert-success {
-    background-color: #D1FAE5 !important;
-    color: #065F46 !important;
+    background-color: var(--ui-success-soft) !important;
+    color: var(--ui-success) !important;
     border-color: var(--color-success) !important;
 }
 
 body.group-edit-page .alert-danger {
-    background-color: #FEE2E2 !important;
-    color: #7F1D1D !important;
+    background-color: var(--ui-danger-soft) !important;
+    color: var(--ui-danger) !important;
     border-color: var(--color-alert) !important;
 }
 

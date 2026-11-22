@@ -81,7 +81,7 @@
                         
                         <h3 th:text="${student.id != null ? 'Update Student' : 'Add New Student'}">Add New Student</h3>
                         
-                        <div th:if="${student.id == null}" class="info-box" style="background-color: #e8f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                        <div th:if="${student.id == null}" class="info-box" style="background-color: var(--ui-info-soft); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
                             <p style="margin: 0; color: #2c3e50;">
                                 <strong>📧 Email-Based Account Creation</strong><br/>
                                 Simply enter the student's email address. A secure temporary password will be automatically generated and sent to them via email with instructions to set their own password.
@@ -98,7 +98,7 @@
                             <input type="email" id="email" th:field="*{email}" required 
                                    placeholder="student@example.com">
 
-                            <label for="username">Name / Username <span style="font-weight: normal; color: #666;" th:text="${student.id != null ? '(editable)' : '(optional)'}">(optional)</span></label>
+                            <label for="username">Name / Username <span style="font-weight: normal; color: var(--ui-text-muted);" th:text="${student.id != null ? '(editable)' : '(optional)'}">(optional)</span></label>
                             <input type="text" id="username" th:field="*{username}" 
                                    placeholder="e.g. john.doe (leave blank to auto-generate)">
                             <div id="userSuggestions" class="user-suggestions" role="region" aria-live="polite" aria-label="Existing accounts that match" hidden></div>
@@ -118,7 +118,7 @@
                     <!-- Bulk Add Students -->
                     <div class="add-form-container" th:if="${student.id == null}" style="margin-top: 30px; border-top: 2px solid #f0f0f0; padding-top: 20px;">
                         <h3>Bulk Add Students</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                        <p style="font-size: 0.9em; color: var(--ui-text-muted); margin-bottom: 15px;">
                             Add one user per row. Email is required; Name/Username is optional. You can paste directly from Excel (Email in column 1, Name in column 2).
                         </p>
                         <form id="bulkStudentsForm" th:action="@{/admin/bulk-add-students}" method="post">

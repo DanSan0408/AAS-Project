@@ -125,14 +125,14 @@ body.profile-page .header-container h1 {
 }
 
 .alert-success {
-    color: #065F46;
-    background-color: #D1FAE5;
+    color: var(--ui-success);
+    background-color: var(--ui-success-soft);
     border-color: var(--color-success);
 }
 
 .alert-danger {
-    color: #7F1D1D;
-    background-color: #FEE2E2;
+    color: var(--ui-danger);
+    background-color: var(--ui-danger-soft);
     border-color: var(--color-danger);
 }
 
@@ -156,7 +156,7 @@ body.profile-page .header-container h1 {
     box-sizing: border-box;
     font-size: 16px;
     transition: border-color 0.2s, box-shadow 0.2s;
-    background-color: #FFFFFF;
+    background-color: var(--ui-bg-surface);
 }
 
 .form-group input[type="text"]:focus {
@@ -166,13 +166,13 @@ body.profile-page .header-container h1 {
 }
 
 .form-group input[disabled] {
-    background-color: #F8F9FA;
-    color: #6B7280;
+    background-color: var(--ui-bg-subtle);
+    color: var(--ui-text-muted);
     cursor: not-allowed;
 }
 
 .field-help {
-    color: #6B7280;
+    color: var(--ui-text-muted);
     margin-top: 4px;
     display: block;
     font-size: 0.92rem;

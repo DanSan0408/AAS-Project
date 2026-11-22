@@ -5,7 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Gemini API Configuration
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
+    # Gemini 3+ only: "minimal", "low", "medium" or "high". Empty keeps Google's default for the model.
+    gemini_thinking_level: str = ""
 
     # Microservice Security. No default: outside debug mode the service refuses to start without a strong secret.
     ai_internal_secret: str = ""

@@ -250,7 +250,7 @@ body.rubric-page .btn-add-sub { background-color: var(--color-success) !importan
 body.rubric-page .btn-configure { background-color: var(--color-purple) !important; }
 body.rubric-page .btn-lecturer { background-color: #E67E22 !important; }
 body.rubric-page .btn-assign { background-color: var(--color-accent) !important; }
-body.rubric-page .btn-submission { background-color: #4A0018 !important; color: #ffffff !important; }
+body.rubric-page .btn-submission { background-color: var(--ui-brand) !important; color: var(--ui-on-brand) !important; }
 body.rubric-page .btn-submission.inactive { background-color: #64748b !important; color: #ffffff !important; opacity: 0.85; }
 body.rubric-page .btn-edit { background-color: var(--color-warning) !important; }
 body.rubric-page .btn-delete { background-color: var(--color-alert) !important; }
@@ -432,9 +432,9 @@ body.rubric-page i.fa-chart-line {
     padding: 10px 18px !important;
     margin: 0 !important;
     width: 100% !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--ui-border) !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
     gap: 8px !important;
     font-size: 0.9rem !important;
@@ -444,11 +444,11 @@ body.rubric-page i.fa-chart-line {
 .system-breadcrumb li {
     display: inline-flex !important;
     align-items: center !important;
-    color: #475569 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 .system-breadcrumb a {
-    color: #4A0018 !important;
+    color: var(--ui-brand) !important;
     text-decoration: none !important;
     font-weight: 600 !important;
     display: inline-flex !important;
@@ -463,7 +463,7 @@ body.rubric-page i.fa-chart-line {
 }
 
 .system-breadcrumb .separator {
-    color: #94a3b8 !important;
+    color: var(--ui-text-muted) !important;
     font-size: 0.75rem !important;
     padding: 0 4px !important;
     display: inline-flex !important;
@@ -472,14 +472,14 @@ body.rubric-page i.fa-chart-line {
 }
 
 .system-breadcrumb .assessment-name {
-    color: #1e293b !important;
+    color: var(--ui-text-body-color) !important;
     font-weight: 600 !important;
 }
 
 .system-breadcrumb .current-page {
-    color: #4A0018 !important;
+    color: var(--ui-brand) !important;
     font-weight: 700 !important;
-    background: #fdf2f4 !important;
+    background: var(--ui-brand-soft) !important;
     padding: 3px 10px !important;
     border-radius: 6px !important;
     border: 1px solid #fce7eb !important;
@@ -571,14 +571,14 @@ body.rubric-page .alert {
 }
 
 body.rubric-page .alert-success {
-    background-color: #D1FAE5 !important;
-    color: #065F46 !important;
+    background-color: var(--ui-success-soft) !important;
+    color: var(--ui-success) !important;
     border-color: var(--color-success) !important;
 }
 
 body.rubric-page .alert-error {
-    background-color: #FEE2E2 !important;
-    color: #7F1D1D !important;
+    background-color: var(--ui-danger-soft) !important;
+    color: var(--ui-danger) !important;
     border-color: var(--color-alert) !important;
 }
 

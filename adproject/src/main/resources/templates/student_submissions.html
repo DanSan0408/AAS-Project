@@ -78,11 +78,11 @@
 
             <!-- Feedback Alert Messages -->
             <div class="alert-container" style="margin-bottom: 20px;">
-                <div th:if="${success}" class="alert alert-success" style="background:#ecfdf5; border-left:4px solid #10b981; padding:12px 16px; border-radius:8px; color:#065f46; display:flex; align-items:center; gap:8px;">
+                <div th:if="${success}" class="alert alert-success" style="background:var(--ui-success-soft); border-left:4px solid #10b981; padding:12px 16px; border-radius:8px; color:var(--ui-success); display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-check-circle" style="font-size: 1.1rem;"></i>
                     <span th:text="${success}">Report uploaded successfully!</span>
                 </div>
-                <div th:if="${error}" class="alert alert-error" style="background:#fef2f2; border-left:4px solid #ef4444; padding:12px 16px; border-radius:8px; color:#991b1b; display:flex; align-items:center; gap:8px;">
+                <div th:if="${error}" class="alert alert-error" style="background:var(--ui-danger-soft); border-left:4px solid #ef4444; padding:12px 16px; border-radius:8px; color:var(--ui-danger); display:flex; align-items:center; gap:8px;">
                     <i class="fas fa-exclamation-circle" style="font-size: 1.1rem;"></i>
                     <span th:text="${error}">Error occurred during upload.</span>
                 </div>

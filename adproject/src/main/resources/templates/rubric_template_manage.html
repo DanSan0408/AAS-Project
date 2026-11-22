@@ -105,8 +105,8 @@
                             <td data-label="ID" th:text="${template.id}">1</td>
                             <td data-label="Name" th:text="${template.name}" style="font-weight: 600;">Standard Blueprint</td>
                             <td data-label="Type">
-                                <span th:if="${template.templateType == 'FULL'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: #d1fae5; color: #065f46; border: 1px solid #10b981;">Full Template</span>
-                                <span th:if="${template.templateType == 'BLUEPRINT'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: #e0e7ff; color: #3730a3; border: 1px solid #6366f1;">Blueprint</span>
+                                <span th:if="${template.templateType == 'FULL'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: var(--ui-success-soft); color: var(--ui-success); border: 1px solid #10b981;">Full Template</span>
+                                <span th:if="${template.templateType == 'BLUEPRINT'}" style="padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background-color: var(--ui-info-soft); color: #3730a3; border: 1px solid #6366f1;">Blueprint</span>
                             </td>
                             <td data-label="Description" th:text="${template.description}">A description...</td>
                             <td data-label="Actions" class="actions-cell">

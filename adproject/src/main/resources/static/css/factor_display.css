@@ -160,7 +160,7 @@ body.factor-display-page td {
 body.factor-display-page .student-name { font-weight: 600 !important; color: var(--color-primary) !important; }
 
 body.factor-display-page .fw-bold { font-weight: bold !important; }
-body.factor-display-page .text-muted { color: #6c757d !important; }
+body.factor-display-page .text-muted { color: var(--ui-text-muted) !important; }
 
 body.factor-display-page .badge {
     padding: 6px 10px;
@@ -173,28 +173,28 @@ body.factor-display-page .badge {
 }
 
 body.factor-display-page .badge-warning {
-    background-color: #FEF3C7;
-    color: #92400E;
+    background-color: var(--ui-warning-soft);
+    color: var(--ui-warning);
     border: 1px solid #FCD34D;
 }
 
 body.factor-display-page .badge-success {
-    background-color: #D1FAE5;
-    color: #065F46;
+    background-color: var(--ui-success-soft);
+    color: var(--ui-success);
     border: 1px solid #6EE7B7;
 }
 
 body.factor-display-page .empty-state-table {
     text-align: center;
     padding: 30px !important;
-    color: #94a3b8;
+    color: var(--ui-text-muted);
     font-style: italic;
 }
 
 body.factor-display-page .empty-state {
     text-align: center !important;
     padding: 50px !important;
-    color: #94a3b8 !important;
+    color: var(--ui-text-muted) !important;
     border: 2px dashed var(--color-border) !important;
     border-radius: 12px !important;
 }
@@ -207,7 +207,7 @@ body.factor-display-page .empty-state i {
 
 body.factor-display-page .empty-state h3 {
     margin: 0 !important;
-    color: #64748b !important;
+    color: var(--ui-text-muted) !important;
     font-weight: 500 !important;
 }
 
@@ -257,7 +257,7 @@ body.factor-display-page .raw-rating-item {
 }
 
 body.factor-display-page .teammate-label {
-    color: #64748b !important;
+    color: var(--ui-text-muted) !important;
     font-size: 0.75rem !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
