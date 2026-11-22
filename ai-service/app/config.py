@@ -3,6 +3,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Which model provider answers: "deepseek", "gemini", or "auto" (DeepSeek when DEEPSEEK_API_KEY is set, otherwise Gemini).
+    ai_provider: str = "auto"
+
+    # DeepSeek (OpenAI-compatible API). Thinking is off by default: the answers here are short JSON, so it only adds delay and cost.
+    deepseek_api_key: str = ""
+    deepseek_model: str = "deepseek-flash"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_thinking: str = "disabled"          # "disabled" or "enabled"
+
     # Gemini API Configuration
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"

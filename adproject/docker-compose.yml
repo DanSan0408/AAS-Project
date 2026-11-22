@@ -69,11 +69,16 @@ services:
     container_name: adproject-ai
     restart: unless-stopped
     environment:
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # AI_PROVIDER=auto uses DeepSeek when DEEPSEEK_API_KEY is set, otherwise Gemini; either set of variables can be left out.
+      AI_PROVIDER: ${AI_PROVIDER:-auto}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      DEEPSEEK_THINKING: ${DEEPSEEK_THINKING:-disabled}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
       GEMINI_THINKING_LEVEL: ${GEMINI_THINKING_LEVEL:-}
       AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
-      # Same Telegram bot and chat as the app: the service reports its own errors, Gemini failures and restarts.
+      # Same Telegram bot and chat as the app: the service reports its own errors, AI provider failures and restarts.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALERT_CHAT_ID: ${TELEGRAM_ALERT_CHAT_ID:-}
       TELEGRAM_DEPLOY_CHAT_ID: ${TELEGRAM_DEPLOY_CHAT_ID:-}

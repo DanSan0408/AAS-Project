@@ -80,7 +80,8 @@ class AlerterTest(unittest.TestCase):
 class WiringTest(unittest.TestCase):
     def test_a_failed_model_call_alerts_with_the_error_type_only(self):
         from app import llm
-        with patch.object(llm, "get_gemini_llm", side_effect=ValueError("key=SECRET-KEY-VALUE student text")), \
+        with patch.object(llm.settings, "ai_provider", "gemini"), \
+                patch.object(llm, "get_gemini_llm", side_effect=ValueError("key=SECRET-KEY-VALUE student text")), \
                 patch.object(alerts, "alert") as alert:
             with self.assertRaises(llm.AiUnavailable):
                 llm.invoke_json("system", "user")

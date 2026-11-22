@@ -155,7 +155,7 @@ alerts, and neither are visitors closing the page. The app also says so when it 
 is announced as DOWN.
 
 **The AI service reports for itself** with the same bot and chat (`TELEGRAM_*` and `ADPROJECT_ENVIRONMENT_LABEL` are passed to
-it in `docker-compose.yml`): Gemini failures (key, quota, outage), unhandled errors, start (including a refusal to start for
+it in `docker-compose.yml`): AI provider failures (key, quota, billing, outage; the alert names the HTTP status, for example `deepseek: HTTP 402`), unhandled errors, start (including a refusal to start for
 a bad secret) and stop. Only the kind of error is sent, never a prompt, a comment or an error message.
 
 **The app cannot report that its own server is down**, so `.github/workflows/uptime.yml` checks production from outside every
