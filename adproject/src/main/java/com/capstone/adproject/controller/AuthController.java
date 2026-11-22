@@ -62,9 +62,30 @@ public class AuthController {
         return "redirect:/rubrics/manage";
     }
 
+    // Present only when GOOGLE_CLIENT_ID is configured; without it the login page has no Google button.
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setGoogleLoginStatus(com.capstone.adproject.config.GoogleLoginStatus googleLoginStatus) {
+        this.googleLoginStatus = googleLoginStatus;
+    }
+
+    private com.capstone.adproject.config.GoogleLoginStatus googleLoginStatus;
+
+    private static String googleMessage(String reason) {
+        if (reason == null) {
+            return null;
+        }
+        return switch (reason) {
+            case "not_registered" -> "That Google account is not registered in IAMS. Sign in with your password, "
+                    + "or ask your administrator to add this email address.";
+            case "unverified" -> "Google could not confirm that email address. Please verify it with Google and try again.";
+            default -> "Google sign-in did not complete. Please try again, or sign in with your password.";
+        };
+    }
+
     @GetMapping("/login")
     public String showLoginPage(
-            @RequestParam(value = "error", required = false) String error, 
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "google", required = false) String google,
             Model model) {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -78,7 +99,12 @@ public class AuthController {
         if (error != null) {
             model.addAttribute("loginError", "true");
         }
-        
+        model.addAttribute("googleLoginEnabled", googleLoginStatus != null && googleLoginStatus.isEnabled());
+        String message = googleMessage(google);
+        if (message != null) {
+            model.addAttribute("googleMessage", message);
+        }
+
         return "login";
     }
 
