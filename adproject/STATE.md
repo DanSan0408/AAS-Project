@@ -3660,3 +3660,11 @@ never breaks a page. New announcements reach people at their next sign-in, not m
 - Tests: `ai-service/tests/test_deepseek.py` (12), `test_alerts.py` pinned to the Gemini path. ai-service suite 102. Also checked the real request path against a local fake server (path, bearer header, payload).
 - Not verified: a real DeepSeek call (no key here); that `temperature` is accepted in non-thinking mode (the docs say only that thinking mode ignores it).
 - Data note: DeepSeek is hosted by a Chinese company; student comments leave the university's control. Worth a line in the project documentation.
+
+## 2026-11-22: one overlong comment stuck the comment scan
+
+- Production log: `Failed to call AI service for the comment check: 422 ... string_too_long ... at most 4000 characters`, then `Scheduled comment scan failed`. One student comment (a 20-point review list) was over 4000 characters; the AI service rejected the whole batch of 20, and the scheduled scan hit the same batch on every run.
+- Fix, both sides: `AiCommentDtos.Item` cuts text to `MAX_TEXT_CHARS` (4000, never splitting an emoji) before it is sent; the AI service's `CommentToCheck` now cuts an overlong comment instead of rejecting the batch (`field_validator`). The other endpoints limit list sizes only, not text length.
+- Privacy: the 422 body echoes the offending input, and `AiServiceClient` logged `e.getMessage()`, so the student's comment went into the application log (and the ERROR relay to Telegram). The three AI calls now log and throw only `HTTP <status>` or the failure type (`AiServiceClient.describe`).
+- Tests: `AiServiceClientFailureTest` (5), `LongCommentTest` in `test_comment_check.py` (3). Java 532 on this branch (1 skipped), ai-service 105.
+- Not changed: a batch the AI service rejects for some other reason would still be retried on every run (it is logged with its status and alerted, coalesced). Earlier Telegram alerts for this error may contain the comment text.
