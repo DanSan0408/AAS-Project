@@ -137,7 +137,7 @@ body.calculate-factor-page .inp-number {
 body.calculate-factor-page .inp-number:focus {
     border-color: var(--color-primary) !important;
     outline: none !important;
-    background-color: #fff5f5 !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 body.calculate-factor-page .sticky-footer {
@@ -219,12 +219,12 @@ body.calculate-factor-page .radio-card {
     border-radius: 6px !important;
     cursor: pointer !important;
     transition: all 0.2s !important;
-    background-color: white !important;
+    background-color: var(--ui-bg-surface) !important;
     margin: 0 !important;
 }
 
 body.calculate-factor-page .radio-card:hover {
-    border-color: #cbd5e1 !important;
+    border-color: var(--ui-border-strong) !important;
     background-color: var(--color-hover) !important;
 }
 
@@ -234,7 +234,7 @@ body.calculate-factor-page .radio-card input:checked + .radio-content strong {
 
 body.calculate-factor-page .radio-card:has(input:checked) {
     border-color: var(--color-primary) !important;
-    background-color: #fff5f5 !important;
+    background-color: var(--ui-bg-subtle) !important;
 }
 
 body.calculate-factor-page .radio-card.compact .radio-content strong {
@@ -250,7 +250,7 @@ body.calculate-factor-page .radio-card input[type="radio"] {
 body.calculate-factor-page .radio-card:has(input:disabled) {
     opacity: 0.6 !important;
     cursor: not-allowed !important;
-    background-color: #f1f5f9 !important;
+    background-color: var(--ui-bg-subtle) !important;
     border-color: var(--color-border) !important;
 }
 

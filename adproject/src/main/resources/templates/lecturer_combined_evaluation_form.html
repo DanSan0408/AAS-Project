@@ -172,7 +172,7 @@
         <div th:if="${submission != null}" class="split-controls-bar">
             <div class="deliverable-info">
                 <span class="deliverable-title">
-                    <i class="fas fa-file-pdf" style="color: #dc2626; font-size: 1.15rem;"></i>
+                    <i class="fas fa-file-pdf" style="color: var(--ui-danger); font-size: 1.15rem;"></i>
                     <span th:text="${assessment.getEffectiveSubmissionTitle()}">Student Report</span>:
                     <span th:text="${submission.originalFileName}" style="color: var(--ui-primary, #047857);">Report.pdf</span>
                 </span>
@@ -211,7 +211,7 @@
 
         <div th:if="${assessment.requiresSubmission and submission == null}" 
              class="alert alert-info" 
-             style="margin: 16px 24px; padding: 14px 18px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+             style="margin: 16px 24px; padding: 14px 18px; background: var(--ui-info-soft); border-left: 4px solid #3b82f6; border-radius: 8px; color: var(--ui-info); display: flex; align-items: center; gap: 10px;">
             <i class="fas fa-info-circle" style="font-size: 1.2rem;"></i>
             <span>This assessment requires a report submission, but no file has been submitted by the student/group yet. You may evaluate the rubrics normally below.</span>
         </div>
@@ -248,16 +248,16 @@
                                     <span th:unless="${isStudentTarget != null and isStudentTarget}">Group: </span>
                                     <span th:text="${selectedGroup.groupName}">Group Name</span>
                                 </span>
-                                <span th:if="${isStudentTarget == null or !isStudentTarget}" style="color: #64748b; font-size: 0.82rem; font-weight: 500;">
+                                <span th:if="${isStudentTarget == null or !isStudentTarget}" style="color: var(--ui-text-muted); font-size: 0.82rem; font-weight: 500;">
                                     (<span th:text="${#lists.size(groupStudents)}">0</span> members)
                                 </span>
                             </div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <button th:if="${isStudentTarget == null or !isStudentTarget}" type="button" class="btn-toggle-members" onclick="toggleMembersChipList()" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: #475569; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                            <button th:if="${isStudentTarget == null or !isStudentTarget}" type="button" class="btn-toggle-members" onclick="toggleMembersChipList()" style="background: var(--ui-bg-subtle); border: 1px solid var(--ui-border); border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: var(--ui-text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fas fa-users"></i> <span id="toggle-members-text">View Members</span>
                             </button>
-                            <button th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}" type="button" onclick="toggleAdminNotes()" style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: #047857; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                            <button th:if="${assessment.extraNotes != null and !#strings.isEmpty(#strings.trim(assessment.extraNotes))}" type="button" onclick="toggleAdminNotes()" style="background: var(--ui-success-soft); border: 1px solid var(--ui-border); border-radius: 6px; padding: 4px 10px; font-size: 0.78rem; font-weight: 600; color: #047857; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fas fa-note-sticky"></i> <span id="toggle-notes-text">Admin Notes</span>
                             </button>
                         </div>
@@ -266,7 +266,7 @@
                     <!-- Collapsible Members List -->
                     <div id="collapsible-students-list" class="students-chips-list" style="display: none;">
                         <span th:each="student : ${groupStudents}" class="student-chip">
-                            <i class="fas fa-user-circle" style="color: #64748b;"></i>
+                            <i class="fas fa-user-circle" style="color: var(--ui-text-muted);"></i>
                             <span th:text="${not #strings.isEmpty(student.username) ? student.username : student.email}">Student</span>
                         </span>
                     </div>

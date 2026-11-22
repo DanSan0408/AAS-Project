@@ -45,7 +45,7 @@
             </div>
 
             <div th:if="${assessment.extraNotesForStudent != null and !#strings.isEmpty(#strings.trim(assessment.extraNotesForStudent))}"
-                 style="margin-bottom: 20px; padding: 15px; border-radius: 8px; border-left: 4px solid #16a085; background: #f0fdfa; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                 style="margin-bottom: 20px; padding: 15px; border-radius: 8px; border-left: 4px solid #16a085; background: var(--ui-success-soft); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <h4 style="margin-top: 0; color: #0f766e; font-size: 1.1rem; margin-bottom: 10px;">
                     <i class="fas fa-info-circle"></i> Special Instructions
                 </h4>
@@ -105,7 +105,7 @@
                                     <span class="assessment-type-badge" 
                                           th:style="${rubric.assessmentTypes != null and rubric.assessmentTypes.toLowerCase().contains('group') ? 
                                                      'margin-left: 10px; background: #7A1E2D; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;' : 
-                                                     'margin-left: 10px; background: #3F3F46; color: white; padding: 3px 10px; border-radius: 3px; font-size: 0.85em;'}">
+                                                     'margin-left: 10px; background: #3F3F46; color: var(--ui-on-brand); padding: 3px 10px; border-radius: 3px; font-size: 0.85em;'}">
                                         <span th:text="${rubric.assessmentTypes}">Individual Assessment</span>
                                     </span>
                                 </h3>
@@ -264,7 +264,7 @@
                             <span class="required-indicator">*</span>
                         </h3>
                         
-                        <div style="background: #F4F2EE; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #7A1E2D;">
+                        <div style="background: var(--ui-bg-subtle); padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #7A1E2D;">
                             <p style="color: #3F3F46; margin-bottom: 10px;">
                                 <i class="fas fa-info-circle" style="color: #7A1E2D;"></i>
                                 <strong>Instructions:</strong>
@@ -310,7 +310,7 @@
                             </div>
                         </div>
                         
-                        <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: #FFFDF9; border-radius: 4px; border-left: 3px solid #F8A617;">
+                        <div class="comment-hint" style="margin-top: 15px; padding: 10px; background: var(--ui-bg-surface); border-radius: 4px; border-left: 3px solid #F8A617;">
                             <i class="fas fa-lightbulb" style="color: #F8A617;"></i>
                             <strong>Tip:</strong> 
                             <span th:if="${isTeam}">

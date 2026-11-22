@@ -73,11 +73,11 @@
 
   .table-responsive tr {
     display: block;
-    border: 1px solid #ddd;
+    border: 1px solid var(--ui-border);
     margin-bottom: 1rem;
     border-radius: 6px;
     overflow: hidden;
-    background: #fff;
+    background: var(--ui-bg-surface);
     padding: 8px;
   }
 
@@ -87,7 +87,7 @@
     align-items: stretch !important;
     text-align: left !important;
     padding: 0.75rem 0.5rem !important;
-    border-bottom: 1px solid #eee !important;
+    border-bottom: 1px solid var(--ui-border) !important;
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
@@ -106,7 +106,7 @@
     font-weight: 700 !important;
     font-size: 0.8rem !important;
     text-transform: uppercase !important;
-    color: #4A0018 !important;
+    color: var(--ui-brand) !important;
     margin-bottom: 0.35rem !important;
     text-align: left !important;
   }
@@ -144,7 +144,7 @@
 .form-group select,
 .form-group textarea {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--ui-border);
   border-radius: 4px;
   font-size: 1rem;
 }
@@ -282,7 +282,7 @@
   left: 0;
   height: 100vh;
   width: 250px;
-  background: white;
+  background: var(--ui-bg-surface);
   z-index: 999;
   transform: translateX(-100%);
   transition: transform 0.3s ease-out;
@@ -371,8 +371,8 @@
 }
 
 .card {
-  background: white;
-  border: 1px solid #e0e0e0;
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-border);
   border-radius: 4px;
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -392,7 +392,7 @@
 
 .card-content {
   font-size: 0.95rem;
-  color: #666;
+  color: var(--ui-text-muted);
   margin-bottom: 1rem;
 }
 
@@ -682,8 +682,8 @@ html {
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #5c2c3a;
-  background-color: #f4f2ee;
-  color: #4A0018;
+  background-color: var(--ui-bg-subtle);
+  color: var(--ui-brand);
   font-weight: 600;
   cursor: pointer;
   -webkit-appearance: none;
@@ -872,9 +872,9 @@ html {
     padding: 10px 18px !important;
     margin: 0 !important;
     width: 100% !important;
-    background: #ffffff !important;
+    background: var(--ui-bg-surface) !important;
     border-radius: 10px !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid var(--ui-border) !important;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
     gap: 8px !important;
     font-size: 0.9rem !important;
@@ -884,11 +884,11 @@ html {
 .system-breadcrumb li {
     display: inline-flex !important;
     align-items: center !important;
-    color: #475569 !important;
+    color: var(--ui-text-secondary) !important;
 }
 
 .system-breadcrumb a {
-    color: #4A0018 !important;
+    color: var(--ui-brand) !important;
     text-decoration: none !important;
     font-weight: 600 !important;
     display: inline-flex !important;
@@ -903,7 +903,7 @@ html {
 }
 
 .system-breadcrumb .separator {
-    color: #94a3b8 !important;
+    color: var(--ui-text-muted) !important;
     font-size: 0.75rem !important;
     padding: 0 4px !important;
     display: inline-flex !important;
@@ -912,14 +912,14 @@ html {
 }
 
 .system-breadcrumb .assessment-name {
-    color: #1e293b !important;
+    color: var(--ui-text-body-color) !important;
     font-weight: 600 !important;
 }
 
 .system-breadcrumb .current-page {
-    color: #4A0018 !important;
+    color: var(--ui-brand) !important;
     font-weight: 700 !important;
-    background: #fdf2f4 !important;
+    background: var(--ui-brand-soft) !important;
     padding: 3px 10px !important;
     border-radius: 6px !important;
     border: 1px solid #fce7eb !important;
