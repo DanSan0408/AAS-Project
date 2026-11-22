@@ -88,6 +88,9 @@ class EvaluationsTabRenderTest {
         m.put("evalGroupId", null);
         m.put("evalStudentId", picked ? 103L : null);
         m.put("evalRubricId", null);
+        m.put("evaluationAssessors", List.of(new com.capstone.adproject.service.ProgressTrackingService.EvaluatorOption(5L, "Dr Lim"),
+                new com.capstone.adproject.service.ProgressTrackingService.EvaluatorOption(6L, "Dr Tan")));
+        m.put("evalAssessorId", null);
         m.put("evaluationsPicked", picked);
         m.put("evaluations", rows);
         m.put("recentDeletions", List.of());
@@ -105,12 +108,43 @@ class EvaluationsTabRenderTest {
     void beforeAnythingIsPickedItAsksToPickAndListsNothing() {
         String html = render(pageModel(false, List.of()));
 
-        assertTrue(html.contains("Choose a group, a student or a rubric above"));
+        assertTrue(html.contains("Choose a group, a student, an assessor or a rubric above"));
         assertFalse(html.contains("eval-delete"));
         assertTrue(html.contains("name=\"assessmentId\""));
         assertTrue(html.contains("name=\"evalGroupId\""));
         assertTrue(html.contains("name=\"evalStudentId\""));
         assertTrue(html.contains("name=\"evalRubricId\""));
+        assertTrue(html.contains("name=\"evalAssessorId\""));
+    }
+
+    @Test
+    void theAssessorPickerListsTheAssessorsAndKeepsTheChoice() {
+        Map<String, Object> model = pageModel(true, List.of());
+        model.put("evalAssessorId", 6L);
+
+        String html = render(model);
+
+        assertTrue(html.contains("<label for=\"evalAssessor\">Assessor</label>"));
+        assertTrue(html.contains("Any assessor"));
+        assertTrue(html.contains("value=\"5\""));
+        assertTrue(html.matches("(?s).*<option value=\"6\"[^>]*selected[^>]*>\\s*Dr Tan.*"), "the chosen assessor is selected");
+    }
+
+    @Test
+    void deletingKeepsTheAssessorChoiceSoThePersonLandsOnTheSameList() {
+        Map<String, Object> model = pageModel(true, List.of(row("Dr Tan", "Chen", "Fine")));
+        model.put("evalAssessorId", 6L);
+
+        String html = render(model);
+
+        assertTrue(html.contains("name=\"evalAssessorId\" value=\"6\""));
+    }
+
+    @Test
+    void showAllIsAVisibleButtonThatSubmitsTheFormAsShowAll() {
+        String html = render(pageModel(false, List.of()));
+
+        assertTrue(html.matches("(?s).*<button[^>]*name=\"evalAll\"[^>]*value=\"true\"[^>]*>\\s*Show all\\s*</button>.*"));
     }
 
     @Test

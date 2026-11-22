@@ -3676,3 +3676,12 @@ never breaks a page. New announcements reach people at their next sign-in, not m
 - Privacy: the 422 body echoes the offending input, and `AiServiceClient` logged `e.getMessage()`, so the student's comment went into the application log (and the ERROR relay to Telegram). The three AI calls now log and throw only `HTTP <status>` or the failure type (`AiServiceClient.describe`).
 - Tests: `AiServiceClientFailureTest` (5), `LongCommentTest` in `test_comment_check.py` (3). Java 532 on this branch (1 skipped), ai-service 105.
 - Not changed: a batch the AI service rejects for some other reason would still be retried on every run (it is logged with its status and alerted, coalesced). Earlier Telegram alerts for this error may contain the comment text.
+
+## 2026-11-22: evaluations tab: assessor filter, "Show all" fixed
+
+- New **Assessor** filter on the Finished Evaluations tab (`evalAssessorId`): matches only assessors (an assessor's id is never compared with a student's); combines with the other filters; the picker lists assessors who have a finished evaluation in the assessment (`getEvaluationAssessors`). `findEvaluations` now takes the assessor id as a fifth argument.
+- **"Show all"** now really ignores the group, student, assessor and rubric choices (before, choices still in the address were combined with it), in the picker redirect, the page itself and after a delete.
+- In dark mode the outlined "Show all" and "Clear choices" buttons had dark text on a dark card (a general dark rule gave every submit button dark text): excluded in `system-ui.css`.
+- Not changed: the Student filter still matches only the person an evaluation is about, not the person who wrote it.
+- Tests: Java 579 (1 skipped). Not committed.
+- `Scripts/migrate-super-admin-email.sql`: tested on a scratch MySQL 8.4; to be run by hand.

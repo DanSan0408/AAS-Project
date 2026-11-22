@@ -866,7 +866,7 @@ html[data-theme="dark"] :is(i.fas, i.far, i.fa, i.fa-solid, i.fa-regular):not([c
 }
 
 /* Accessible Button Styling in Dark Mode */
-html[data-theme="dark"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn)) {
+html[data-theme="dark"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn):not(.btn-eval-quiet):not(.btn-eval-danger)) {
     color: var(--ui-on-brand) !important;
 }
 
@@ -1502,7 +1502,7 @@ html[data-theme="warm"] .sidebar-link.active {
 }
 
 /* Accessible Button Styling in Warm Mode */
-html[data-theme="warm"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn)) {
+html[data-theme="warm"] :is(.btn-primary, .btn-action.primary, .btn-peer, .btn-team, body.admin-page .btn-primary, .add-form-container button[type="submit"], button[type="submit"]:not(.btn-secondary):not(.theme-segment-btn):not(.btn-cancel):not(.btn-back):not(.btn-ai-scan):not(.btn-approve-scanned):not(.logout-btn):not(.btn-eval-quiet):not(.btn-eval-danger)) {
     color: #ffffff !important;
 }
 

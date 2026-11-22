@@ -463,13 +463,13 @@ class AdminManagementControllerTest {
                 .andExpect(model().attribute("evaluationsPicked", false))
                 .andExpect(model().attribute("evaluations", Collections.emptyList()));
 
-        verify(progressTrackingService, never()).findEvaluations(any(), any(), any(), any());
+        verify(progressTrackingService, never()).findEvaluations(any(), any(), any(), any(), any());
     }
 
     @Test
     void evaluationsTab_ListsEvaluationsForThePickedFilters() throws Exception {
         stubTrackingPageBasics();
-        when(progressTrackingService.findEvaluations(assessment, 3L, null, 12L)).thenReturn(Collections.emptyList());
+        when(progressTrackingService.findEvaluations(assessment, 3L, null, 12L, null)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/admin/progress-tracking/100").param("tab", "evaluations")
                         .param("evalGroupId", "3").param("evalRubricId", "12"))
@@ -477,20 +477,82 @@ class AdminManagementControllerTest {
                 .andExpect(model().attribute("evaluationsPicked", true))
                 .andExpect(model().attributeExists("courseAssessments", "evaluationStudents", "evaluationRubrics", "recentDeletions"));
 
-        verify(progressTrackingService).findEvaluations(assessment, 3L, null, 12L);
+        verify(progressTrackingService).findEvaluations(assessment, 3L, null, 12L, null);
     }
 
     @Test
     void evaluationsTab_ShowAllListsEveryEvaluationWithoutAnyFilter() throws Exception {
         stubTrackingPageBasics();
-        when(progressTrackingService.findEvaluations(assessment, null, null, null)).thenReturn(Collections.emptyList());
+        when(progressTrackingService.findEvaluations(assessment, null, null, null, null)).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/admin/progress-tracking/100").param("tab", "evaluations").param("evalAll", "true"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("evaluationsPicked", true))
                 .andExpect(model().attribute("evalAll", true));
 
-        verify(progressTrackingService).findEvaluations(assessment, null, null, null);
+        verify(progressTrackingService).findEvaluations(assessment, null, null, null, null);
+    }
+
+    @Test
+    void evaluationsTab_ShowAllIgnoresWhateverElseWasChosen() throws Exception {
+        stubTrackingPageBasics();
+        when(progressTrackingService.findEvaluations(any(), any(), any(), any(), any())).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/admin/progress-tracking/100").param("tab", "evaluations").param("evalAll", "true")
+                        .param("evalGroupId", "3").param("evalStudentId", "9").param("evalRubricId", "12").param("evalAssessorId", "5"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("evalAll", true))
+                .andExpect(model().attribute("evalGroupId", (Object) null))
+                .andExpect(model().attribute("evalAssessorId", (Object) null));
+
+        verify(progressTrackingService).findEvaluations(assessment, null, null, null, null);
+    }
+
+    @Test
+    void evaluationsTab_FiltersByAssessorAndOffersTheAssessorsWhoHaveFinishedEvaluations() throws Exception {
+        stubTrackingPageBasics();
+        when(progressTrackingService.findEvaluations(assessment, null, null, null, 5L)).thenReturn(Collections.emptyList());
+        when(progressTrackingService.getEvaluationAssessors(assessment))
+                .thenReturn(List.of(new ProgressTrackingService.EvaluatorOption(5L, "Dr Lim")));
+
+        mockMvc.perform(get("/admin/progress-tracking/100").param("tab", "evaluations").param("evalAssessorId", "5"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("evaluationsPicked", true))
+                .andExpect(model().attribute("evalAssessorId", 5L))
+                .andExpect(model().attributeExists("evaluationAssessors"));
+
+        verify(progressTrackingService).findEvaluations(assessment, null, null, null, 5L);
+    }
+
+    @Test
+    void evaluationsPicker_ShowAllDropsTheOtherChoicesFromTheAddress() throws Exception {
+        mockMvc.perform(get("/admin/progress-tracking/evaluations")
+                        .param("assessmentId", "100").param("currentAssessmentId", "100").param("evalAll", "true")
+                        .param("evalGroupId", "3").param("evalStudentId", "9").param("evalRubricId", "12").param("evalAssessorId", "5"))
+                .andExpect(redirectedUrl("/admin/progress-tracking/100?tab=evaluations&evalAll=true"));
+    }
+
+    @Test
+    void evaluationsPicker_KeepsTheAssessorChoice() throws Exception {
+        mockMvc.perform(get("/admin/progress-tracking/evaluations")
+                        .param("assessmentId", "100").param("currentAssessmentId", "100").param("evalAssessorId", "5"))
+                .andExpect(redirectedUrl("/admin/progress-tracking/100?tab=evaluations&evalAssessorId=5"));
+
+        mockMvc.perform(get("/admin/progress-tracking/evaluations")
+                        .param("assessmentId", "200").param("currentAssessmentId", "100").param("evalAssessorId", "5"))
+                .andExpect(redirectedUrl("/admin/progress-tracking/200?tab=evaluations"));
+    }
+
+    @Test
+    void deleteEvaluation_ReturnsToTheSameAssessorChoice() throws Exception {
+        allowAssessment100();
+        when(progressTrackingService.deleteEvaluation(any(), anyString(), any(), any(), anyString(), any(), any(), anyString())).thenReturn(1);
+
+        mockMvc.perform(post("/admin/progress-tracking/100/evaluations/delete")
+                        .param("evaluatorKind", "LECTURER").param("evaluatorId", "5")
+                        .param("assessmentType", "Individual Assessment").param("targetIds", "103")
+                        .param("reason", "Wrong student").param("evalAssessorId", "5"))
+                .andExpect(redirectedUrl("/admin/progress-tracking/100?tab=evaluations&evalAssessorId=5"));
     }
 
     @Test
