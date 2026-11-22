@@ -3650,3 +3650,13 @@ never breaks a page. New announcements reach people at their next sign-in, not m
   - **Production:** if Dokploy's Environment tab sets `GEMINI_MODEL=gemini-2.5-flash`, it overrides the new default; change or delete it.
 - Not verified: a real Gemini 3.8 call (no key here), a real browser session of the live app, other pages' dynamic states (JS-built markup, hover states).
 - Totals: Java 527 (1 skipped), JS 109, ai-service 90. Nothing committed.
+
+## 2026-11-22: DeepSeek as the AI provider (Gemini kept as an alternative)
+
+- Reason: the Gemini key's Google project has a prepaid billing account with depleted credits (HTTP 402 on every call, including `gemini-3.8-flash`).
+- `ai-service/app/llm.py`: `active_provider()` (`AI_PROVIDER` = `deepseek` | `gemini` | `auto`; auto = DeepSeek when `DEEPSEEK_API_KEY` is set, else Gemini). DeepSeek is called over plain `httpx` (`POST {base}/chat/completions`, `response_format: json_object`, `thinking: disabled`, `temperature` only when thinking is off, `max_tokens` 4096). One retry on a blank reply (JSON mode can return spaces), 429/5xx or a network error. The prompt is given the word "json" if it lacks it (the API requires it). The graphs are untouched: everything still goes through `invoke_json`.
+- Failure alerts now name the provider and, for HTTP errors, the status code only (`deepseek: HTTP 402`); never the key, the prompt or the response body.
+- Settings: `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` (default `deepseek-flash`; `deepseek-v4-pro` is the larger model), `DEEPSEEK_BASE_URL`, `DEEPSEEK_THINKING`. `docker-compose.yml` passes them; `GEMINI_API_KEY` is now optional (`${GEMINI_API_KEY:-}`), so removing it from Dokploy is fine.
+- Tests: `ai-service/tests/test_deepseek.py` (12), `test_alerts.py` pinned to the Gemini path. ai-service suite 102. Also checked the real request path against a local fake server (path, bearer header, payload).
+- Not verified: a real DeepSeek call (no key here); that `temperature` is accepted in non-thinking mode (the docs say only that thinking mode ignores it).
+- Data note: DeepSeek is hosted by a Chinese company; student comments leave the university's control. Worth a line in the project documentation.

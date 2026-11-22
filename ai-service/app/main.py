@@ -29,7 +29,7 @@ MIN_SECRET_LENGTH = 16
 def validate_security(secret: str, debug: bool) -> None:
     """Refuses to run without a real shared secret (debug mode, for local development, is the only exception).
 
-    An empty or well-known secret would let anyone who can reach this port spend the Gemini quota.
+    An empty or well-known secret would let anyone who can reach this port spend the AI quota.
     """
     if debug:
         return
