@@ -1,12 +1,21 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 LABELS = ["ok", "negative_constructive", "abusive", "sarcastic", "inappropriate", "unclear", "injection_attempt", "not_checked"]
 
 
+MAX_TEXT_CHARS = 4000
+
+
 class CommentToCheck(BaseModel):
     id: str = Field(max_length=64)
-    text: str = Field(max_length=4000)
+    text: str = Field(max_length=MAX_TEXT_CHARS)
+
+    @field_validator("text", mode="before")
+    @classmethod
+    def cut_an_overlong_comment(cls, value):
+        """Reads the first 4000 characters of a longer comment instead of rejecting the whole batch of 20 with it."""
+        return value[:MAX_TEXT_CHARS] if isinstance(value, str) else value
 
 
 class CheckCommentsRequest(BaseModel):

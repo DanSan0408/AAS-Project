@@ -148,8 +148,8 @@ public class AiServiceClient {
                     .retrieve()
                     .body(AiTeamDynamicsDtos.AuditResponse.class), r -> aiRan(r.aiStatus()));
         } catch (RestClientException e) {
-            log.error("Failed to call AI service for team dynamics audit: {}", e.getMessage());
-            throw new RuntimeException("AI service is currently unavailable or returned an error: " + e.getMessage(), e);
+            log.error("Failed to call AI service for team dynamics audit: {}", describe(e));
+            throw new RuntimeException("AI service is currently unavailable or returned an error: " + describe(e), e);
         }
     }
 
@@ -161,8 +161,8 @@ public class AiServiceClient {
                     .retrieve()
                     .body(AiModerationDtos.BriefingResponse.class), r -> aiRan(r.aiStatus()));
         } catch (RestClientException e) {
-            log.error("Failed to call AI service for moderation briefing: {}", e.getMessage());
-            throw new RuntimeException("AI service is currently unavailable or returned an error: " + e.getMessage(), e);
+            log.error("Failed to call AI service for moderation briefing: {}", describe(e));
+            throw new RuntimeException("AI service is currently unavailable or returned an error: " + describe(e), e);
         }
     }
 
@@ -175,8 +175,19 @@ public class AiServiceClient {
                     .retrieve()
                     .body(AiCommentDtos.CheckResponse.class), r -> aiRan(r.aiStatus()));
         } catch (RestClientException e) {
-            log.error("Failed to call AI service for the comment check: {}", e.getMessage());
+            log.error("Failed to call AI service for the comment check: {}", describe(e));
             throw new RuntimeException("AI service is currently unavailable or returned an error.", e);
         }
+    }
+
+    /**
+     * What went wrong, without the response body: when the AI service refuses a request it echoes the offending input back, and
+     * that input is a student's comment. The status (or the kind of failure) is all anyone needs in a log line or an alert.
+     */
+    static String describe(RestClientException e) {
+        if (e instanceof org.springframework.web.client.RestClientResponseException response) {
+            return "HTTP " + response.getStatusCode().value();
+        }
+        return e.getClass().getSimpleName();
     }
 }
