@@ -1925,6 +1925,61 @@ public class AdminController {
         return "redirect:/admin/manage-courses";
     }
 
+    /**
+     * Sets the learning outcome (CLO) target of the active course from the Course Analytics page, so the admin can change it
+     * where the outcome results are read. It is the same course setting Manage Courses edits, with the same rules: a number from
+     * 0 to 100, changed only by the admin who created the course, and nothing else about the course is touched.
+     */
+    @PostMapping("/course-analytics/clo-target")
+    public String setCloTarget(@RequestParam(value = "cloTarget", required = false) Double cloTarget,
+                               @RequestParam(value = "groupId", required = false) Long groupId,
+                               @RequestParam(value = "assessmentIds", required = false) List<Long> assessmentIds,
+                               RedirectAttributes redirectAttributes) {
+        String back = courseAnalyticsUrl(groupId, assessmentIds);
+        Course active = courseScopeService.getActiveCourseForCurrentUser();
+        if (active == null || active.getId() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Select an active course first.");
+            return "redirect:" + back;
+        }
+        if (cloTarget == null || cloTarget.isNaN() || cloTarget < 0 || cloTarget > 100) {
+            redirectAttributes.addFlashAttribute("errorMessage", "The learning outcome target must be a number between 0 and 100.");
+            return "redirect:" + back;
+        }
+        Course existing = superAdminService.getCourseById(active.getId()).orElse(null);
+        if (existing == null || !isManagedCourseId(existing.getId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to update this course.");
+            return "redirect:" + back;
+        }
+        if (!isCourseCreatedByCurrentAdmin(existing)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Only the admin who created this course can change its targets.");
+            return "redirect:" + back;
+        }
+        existing.setCloTargetPercent(cloTarget);
+        superAdminService.saveCourse(existing);
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Learning outcome target set to " + (cloTarget == Math.rint(cloTarget) ? String.valueOf(cloTarget.longValue()) : String.valueOf(cloTarget))
+                        + "% for this course.");
+        return "redirect:" + back;
+    }
+
+    private static String courseAnalyticsUrl(Long groupId, List<Long> assessmentIds) {
+        StringBuilder url = new StringBuilder("/admin/data-views/course-analytics");
+        char separator = '?';
+        if (groupId != null) {
+            url.append(separator).append("groupId=").append(groupId);
+            separator = '&';
+        }
+        if (assessmentIds != null) {
+            for (Long id : assessmentIds) {
+                if (id != null) {
+                    url.append(separator).append("assessmentIds=").append(id);
+                    separator = '&';
+                }
+            }
+        }
+        return url.toString();
+    }
+
     private static boolean isPercentage(Double value) {
         return value == null || (!value.isNaN() && value >= 0 && value <= 100);
     }

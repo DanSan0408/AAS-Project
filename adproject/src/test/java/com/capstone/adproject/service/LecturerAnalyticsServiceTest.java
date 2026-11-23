@@ -76,7 +76,7 @@ class LecturerAnalyticsServiceTest {
         assertNotEquals(data.scores().get(0).targetId(), data.scores().get(1).targetId());
         assertNotNull(data.scores().get(0).studentId());
     }
-    @Test void draftsPeersInvalidScoresAndForeignTeamsAreExcluded() {
+    @Test void draftsPeersAndInvalidScoresAreExcludedButAStudentWithOnlyAForeignTeamIsStillCompared() {
         var draft = row(1, 1L, 101, 4); when(draft.getStatus()).thenReturn(Mark.SubmissionStatus.DRAFT);
         var peer = row(2, null, 101, 8);
         var invalid = row(3, 1L, 101, Double.NaN);
@@ -84,7 +84,69 @@ class LecturerAnalyticsServiceTest {
         var foreign = row(5, 1L, 101, 5); when(foreign.getTeamId()).thenReturn(999L);
         rows(draft, peer, invalid, tooHigh, foreign);
         var data = service.comparison(10L, 20L);
-        assertTrue(data.scores().isEmpty()); assertEquals(5, data.excludedRows());
+        // The assessor's score for a student whose only team belongs to another course is kept, under "Unassigned team",
+        // instead of the assessor silently disappearing from the comparison.
+        assertEquals(1, data.scores().size());
+        assertEquals("Unassigned team", data.scores().get(0).teamName());
+        assertNull(data.scores().get(0).teamId());
+        assertEquals(4, data.excludedRows());
+    }
+    @Test void aStudentsTeamInThisCourseComesFromTheirEnrolmentNotFromAnotherCoursesGroup() {
+        var mark = row(1, 1L, 101, 8);
+        when(mark.getTeamId()).thenReturn(999L);          // the student's old group, from another course
+        when(mark.getAssignedTeamId()).thenReturn(40L);   // their team in THIS course
+        rows(mark);
+        var data = service.comparison(10L, 20L);
+        assertEquals(1, data.scores().size());
+        assertEquals(40L, data.scores().get(0).teamId());
+        assertEquals("Team A", data.scores().get(0).teamName());
+    }
+    @Test void anEnrolmentTeamOutsideTheCourseIsIgnoredAndTheLegacyTeamUsedIfItBelongsHere() {
+        var mark = row(1, 1L, 101, 8);
+        when(mark.getAssignedTeamId()).thenReturn(777L);  // not a team of this course
+        rows(mark);
+        assertEquals(40L, service.comparison(10L, 20L).scores().get(0).teamId());
+    }
+    @Test void everyExcludedScoreIsExplainedByAssessorAndReason() {
+        var tooHigh = row(1, 1L, 101, 11);                // above the criterion's maximum of 10
+        var invalid = row(2, 2L, 101, Double.NaN);
+        var wrongKind = row(3, 2L, 101, 5); when(wrongKind.getAssessmentType()).thenReturn("Individual Assessment");
+        rows(tooHigh, invalid, wrongKind);
+        var data = service.comparison(10L, 20L);
+        assertEquals(3, data.excludedRows());
+        var reasons = data.exclusions().stream().map(e -> e.lecturerName() + "|" + e.reason() + "|" + e.rows()).toList();
+        assertTrue(reasons.contains("Lecturer 1|ABOVE_MAXIMUM|1"), reasons.toString());
+        assertTrue(reasons.contains("Lecturer 2|INVALID_SCORE|1"), reasons.toString());
+        assertTrue(reasons.contains("Lecturer 2|TYPE_MISMATCH|1"), reasons.toString());
+    }
+    @Test void draftMarksAreLoadedSoAnAssessorWithOnlyDraftsIsNamedInsteadOfVanishing() {
+        var draft = row(1, 5L, 101, 7); when(draft.getStatus()).thenReturn(Mark.SubmissionStatus.DRAFT);
+        var submitted = row(2, 6L, 101, 8);
+        rows(draft, submitted);
+        var data = service.comparison(10L, 20L);
+        verify(marks).findLecturerAnalyticsMarks(eq(20L), eq(10L), argThat(statuses -> statuses.contains(Mark.SubmissionStatus.DRAFT)));
+        assertEquals(1, data.scores().size());
+        assertEquals("Lecturer 6", data.scores().get(0).lecturerName());   // the draft is never compared
+        assertEquals(1, data.excludedRows());
+        assertEquals("Lecturer 5", data.exclusions().get(0).lecturerName());
+        assertEquals("NOT_SUBMITTED", data.exclusions().get(0).reason());
+    }
+    @Test void aDraftNeverReplacesTheSubmittedScoreOfTheSameAssessor() {
+        var submitted = row(1, 5L, 101, 6);
+        var laterDraft = row(2, 5L, 101, 9);
+        when(laterDraft.getStatus()).thenReturn(Mark.SubmissionStatus.DRAFT);
+        when(laterDraft.getSubmittedAt()).thenReturn(LocalDateTime.of(2026, 11, 1, 10, 0));   // newer than the submitted mark
+        rows(submitted, laterDraft);
+        var data = service.comparison(10L, 20L);
+        assertEquals(1, data.scores().size());
+        assertEquals(6, data.scores().get(0).earned());
+        assertEquals(1, data.excludedRows());
+    }
+    @Test void anAssessorWhoseEveryScoreWasExcludedIsStillNamedInTheExplanation() {
+        rows(row(1, 7L, 101, 99));
+        var data = service.comparison(10L, 20L);
+        assertTrue(data.scores().isEmpty());
+        assertEquals("Lecturer 7", data.exclusions().get(0).lecturerName());
     }
     @Test void crossCourseAssessmentNeverLoadsMarksOrTeamNames() {
         assertThrows(IllegalArgumentException.class, () -> service.comparison(999L, 20L));

@@ -121,6 +121,66 @@
         });
         return [...groups.values()].sort(byName);
     }
+    const EXCLUSION_REASONS = {
+        ABOVE_MAXIMUM: "score above the criterion's current maximum (the rating scale may have been changed after marking)",
+        INVALID_SCORE: 'score that is not a valid number',
+        TYPE_MISMATCH: 'recorded as a different assessment type (group or individual) from its rubric',
+        CRITERION_NOT_COMPARABLE: 'criterion that is not part of this comparison (a peer or self rubric, a removed criterion, or one with no usable maximum)',
+        NOT_SUBMITTED: 'draft not submitted yet (it counts once the assessor submits it)',
+        NO_STUDENT: 'score with no student',
+        NO_ASSESSOR: 'score with no assessor'
+    };
+    /** Lines saying which assessor lost how many stored scores and why, so nobody disappears from a comparison unexplained. */
+    function exclusionLines(snapshot) {
+        return (snapshot.exclusions || []).map(e => `${e.lecturerName}: ${e.rows} ${e.rows === 1 ? 'score' : 'scores'} left out, ${EXCLUSION_REASONS[e.reason] || e.reason}.`);
+    }
+    function renderExclusions(node, snapshot) {
+        node.replaceChildren();
+        if (!snapshot.excludedRows) return;
+        const lines = exclusionLines(snapshot);
+        node.append(`${snapshot.excludedRows} stored score rows were left out of this comparison${lines.length ? ':' : ' because their criteria, scores or status could not be used.'}`);
+        if (lines.length) {
+            const list = document.createElement('ul');
+            lines.forEach(line => { const item = document.createElement('li'); item.textContent = line; list.append(item); });
+            node.append(list);
+        }
+    }
+    const round1 = n => n == null || !Number.isFinite(n) ? null : Math.round(n * 10) / 10;
+    /**
+     * What the page shows, as the tables of a downloadable report (.xlsx or .pdf). It is built from the same {@code result} the
+     * page draws, so the file and the screen cannot disagree. Only text, numbers and empty cells, so it can be sent as JSON.
+     */
+    function reportDocument(snapshot, result, notes = []) {
+        const lines = exclusionLines(snapshot);
+        const shown = lines.length > 25 ? [...lines.slice(0, 25), `…and ${lines.length - 25} more.`] : lines;
+        const details = [`Assessment: ${snapshot.assessmentTitle}`, ...notes, 'Draft and peer/self evaluations are not included.'];
+        if (snapshot.excludedRows) details.push(`${snapshot.excludedRows} stored score rows were left out of the comparison:`, ...shown);
+        const lecturers = result.lecturers.slice(0, 59);
+        const sections = [
+            { heading: 'Summary', columns: ['Measure', 'Value'], rows: [
+                ['Assessors compared', result.lecturers.length],
+                ['Assessor-target evaluations', result.targets.length],
+                ['Scored criteria', result.facts.length],
+                ['Mean score (%)', round1(result.mean)],
+                ['Exact agreement on shared ratings (%)', round1(result.agreementRate)],
+                ['Rating pairs compared', result.pairedRatings],
+                ['Median spread between assessors (%)', round1(result.medianSpread)],
+                ['Shared target-criterion combinations', result.sharedCells]] },
+            { heading: 'Assessors', note: "Mean of each assessor's target percentages. Q1 to Q3 is the middle half of their evaluations.",
+              columns: ['Assessor', 'Evaluations', 'Mean (%)', 'Median (%)', 'Q1 (%)', 'Q3 (%)', 'Lowest (%)', 'Highest (%)'],
+              rows: result.lecturers.map(l => [l.name, l.values.length, round1(l.value), round1(l.median), round1(l.q1), round1(l.q3), round1(l.low), round1(l.high)]) },
+            { heading: 'Agreement between assessors', note: 'A smaller gap means two assessors marked the same work more alike.',
+              columns: ['Pair', 'Mean gap (%)', 'Matched criteria'], rows: result.pairs.map(p => [p.name, round1(p.value), p.count]) },
+            { heading: 'Team comparison', columns: ['Team', 'Evaluation', 'Assessor', 'Mean (%)'],
+              rows: result.teams.flatMap(t => t.lecturers.map(l => [t.teamName, t.scope === 'GROUP' ? 'Group' : 'Individual', l.name, round1(l.value)])) },
+            { heading: 'Rubric by assessor', note: 'Mean score per rubric. An empty cell means the assessor did not score that rubric.',
+              columns: ['Rubric', ...lecturers.map(l => l.name)],
+              rows: result.rubrics.map(r => [r.name, ...lecturers.map(l => { const values = r.lecturers.get(l.id); return values ? round1(mean(values)) : null; })]) },
+            { heading: 'Evaluation breakdown', columns: ['Assessor', 'Team', 'Target', 'Type', 'Rubric', 'Criteria scored', 'Awarded', 'Available', 'Score (%)'],
+              rows: result.breakdown.map(r => [r.lecturerName, r.teamName, r.targetName, r.criterion.scope === 'GROUP' ? 'Group' : 'Individual', r.criterion.rubricName, r.count, r.earned, r.possible, round1(r.percentage)]) }
+        ];
+        return { title: 'Marking consistency', subtitle: snapshot.assessmentTitle, details, sections };
+    }
     function csvCell(value) {
         let text = String(value ?? '');
         // Keep names beginning with spreadsheet formula characters as literal text.
@@ -132,7 +192,7 @@
         result.breakdown.forEach(r => rows.push([snapshot.assessmentTitle, r.lecturerName, r.teamName, r.targetName, r.criterion.scope, r.criterion.rubricName, r.count, r.earned, r.possible, r.percentage.toFixed(2)]));
         return '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
     }
-    const api = { analyse, comparisonCsv, paginate, groupTeams };
+    const api = { analyse, comparisonCsv, paginate, groupTeams, exclusionLines, reportDocument };
     global.IamsLecturerAnalytics = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     if (typeof document === 'undefined') return;
@@ -346,7 +406,7 @@
             get('content').hidden = false;
             get('empty').hidden = !!result.facts.length;
             get('visuals').hidden = !result.facts.length;
-            get('export').disabled = !result.facts.length;
+            get('export').disabled = !result.facts.length; get('xlsx').disabled = get('pdf').disabled = !result.facts.length;
             get('kpi-lecturers').textContent = result.lecturers.length;
             get('kpi-targets').textContent = new Set(result.targets.map(t => t.targetId)).size;
             get('kpi-mean').textContent = percent(result.mean);
@@ -356,7 +416,7 @@
             get('agreement-sample').textContent = result.pairedRatings ? `${result.matchingPairs} of ${result.pairedRatings} paired ratings within 10 pp` : 'No matched ratings in this selection';
             get('spread-sample').textContent = result.sharedCells ? `Across ${result.sharedCells} shared target–criterion combinations` : 'No criteria scored by multiple lecturers';
             get('status-message').textContent = `${snapshot.assessmentTitle} · ${result.targets.length} lecturer–target evaluations · ${result.facts.length} scored criteria. Draft and peer/self evaluations excluded.`;
-            get('excluded-note').textContent = snapshot.excludedRows ? `${snapshot.excludedRows} stored score rows were excluded because their criteria, scores, status or current team could not be used for this comparison.` : '';
+            renderExclusions(get('excluded-note'), snapshot);
             if (result.facts.length) {
                 chart(get('average-chart'), result.lecturers.map(l => ({ ...l, color: colors.get(String(l.id)) })));
                 chart(get('gap-chart'), result.pairs, ' pp'); teamChart(); rubricChart(); distributionChart(); alignmentChart(); breakdownTable();
@@ -373,7 +433,7 @@
             const controller = new AbortController(); request = controller;
             const assessmentId = get('assessment').value;
             snapshot = null; result = null;
-            get('error').hidden = true; get('content').hidden = true; get('export').disabled = true;
+            get('error').hidden = true; get('content').hidden = true; get('export').disabled = true; get('xlsx').disabled = get('pdf').disabled = true;
             if (!assessmentId) { root.removeAttribute('aria-busy'); snapshot = null; get('status-message').textContent = 'No assessments are available in the active course. Create or select a course assessment to start comparing lecturer evaluations.'; return; }
             root.setAttribute('aria-busy', 'true'); get('status-message').textContent = 'Loading lecturer evaluations…';
             try {
@@ -428,6 +488,49 @@
             const link = element('a'); link.href = url; link.download = `data-analytics-${snapshot.assessmentId}.csv`; link.click();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         });
+        function filterNotes() {
+            const f = readFilters(), label = id => { const select = get(id); return select.options[select.selectedIndex]?.textContent || ''; };
+            const notes = [];
+            if (f.team) notes.push('Team: ' + label('team'));
+            if (f.scope) notes.push('Evaluation: ' + label('scope'));
+            if (f.rubric) notes.push('Rubric: ' + label('rubric'));
+            if (f.clo) notes.push('CLO: ' + label('clo'));
+            if (f.student) notes.push('Student: ' + label('student'));
+            if (f.status) notes.push('Status: ' + label('status'));
+            if (f.shared) notes.push('Only criteria scored by two or more assessors');
+            const chosen = f.lecturers.length, all = get('lecturer-list').querySelectorAll('input').length;
+            if (chosen !== all) notes.push(`Assessors: ${chosen} of ${all} selected`);
+            return notes.length ? notes : ['Filters: none'];
+        }
+        async function downloadReport(format) {
+            if (!snapshot || !result || !result.facts.length) return;
+            const buttons = [get('xlsx'), get('pdf')];
+            buttons.forEach(b => { b.disabled = true; });
+            get('status-message').textContent = 'Preparing your file…';
+            try {
+                const token = document.querySelector('meta[name="_csrf"]')?.content, header = document.querySelector('meta[name="_csrf_header"]')?.content;
+                const url = new URL(root.dataset.exportEndpoint, location.href); url.searchParams.set('format', format);
+                const response = await fetch(url, { method: 'POST', credentials: 'same-origin', cache: 'no-store',
+                    headers: { 'Content-Type': 'application/json', ...(token && header ? { [header]: token } : {}) },
+                    body: JSON.stringify(reportDocument(snapshot, result, filterNotes())) });
+                if (!response.ok) {
+                    const message = (await response.json().catch(() => null))?.message;
+                    throw new Error(message || 'The file could not be made. Please try again.');
+                }
+                const blob = await response.blob();
+                const link = element('a'); link.href = URL.createObjectURL(blob);
+                link.download = (/filename="?([^";]+)"?/.exec(response.headers.get('content-disposition') || '') || [])[1] || `marking-consistency.${format}`;
+                document.body.append(link); link.click(); link.remove();
+                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+                get('status-message').textContent = `Your ${format === 'pdf' ? 'PDF' : 'Excel'} file has been downloaded.`;
+            } catch (error) {
+                get('status-message').textContent = error.message;
+            } finally {
+                buttons.forEach(b => { b.disabled = !(result && result.facts.length); });
+            }
+        }
+        get('xlsx').addEventListener('click', () => downloadReport('xlsx'));
+        get('pdf').addEventListener('click', () => downloadReport('pdf'));
         root.querySelectorAll('.analytics-chart, .analytics-table-wrap').forEach(box => {
             box.tabIndex = 0;
             box.setAttribute('aria-label', box.closest('.analytics-panel')?.querySelector('h2')?.textContent || 'Comparison chart');

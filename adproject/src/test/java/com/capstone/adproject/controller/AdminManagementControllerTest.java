@@ -854,6 +854,71 @@ class AdminManagementControllerTest {
         verify(superAdminService, never()).saveCourse(any());
     }
 
+    // --- the learning outcome target, set from Course Analytics -----------------------------------------------------------
+
+    private Course activeCourseOwnedByThisAdmin() {
+        Course stored = courseCreatedBySomeoneElse();
+        stored.getCreatedBy().setEmail("admin@example.com");
+        stored.setPassMark(40.0);
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(stored);
+        when(superAdminService.getCourseById(10L)).thenReturn(Optional.of(stored));
+        when(courseScopeService.isAdminOfCourse(10L)).thenReturn(true);
+        when(superAdminService.saveCourse(any(Course.class))).thenAnswer(i -> i.getArgument(0));
+        return stored;
+    }
+
+    @Test
+    void cloTarget_IsSavedForTheActiveCourseAndTheAnalyticsFiltersAreKept() throws Exception {
+        Course stored = activeCourseOwnedByThisAdmin();
+
+        mockMvc.perform(post("/admin/course-analytics/clo-target").param("cloTarget", "65")
+                        .param("groupId", "3").param("assessmentIds", "100").param("assessmentIds", "101"))
+                .andExpect(redirectedUrl("/admin/data-views/course-analytics?groupId=3&assessmentIds=100&assessmentIds=101"))
+                .andExpect(flash().attribute("successMessage", "Learning outcome target set to 65% for this course."));
+
+        org.junit.jupiter.api.Assertions.assertEquals(65.0, stored.effectiveCloTargetPercent());
+        org.junit.jupiter.api.Assertions.assertEquals(40.0, stored.effectivePassMark(), "nothing else about the course changes");
+    }
+
+    @Test
+    void cloTarget_RefusesAnythingOutsideZeroToOneHundredOrNotANumber() throws Exception {
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(courseCreatedBySomeoneElse());
+
+        for (String bad : new String[]{"101", "-1", "150.5"}) {
+            mockMvc.perform(post("/admin/course-analytics/clo-target").param("cloTarget", bad))
+                    .andExpect(redirectedUrl("/admin/data-views/course-analytics"))
+                    .andExpect(flash().attribute("errorMessage", "The learning outcome target must be a number between 0 and 100."));
+        }
+        mockMvc.perform(post("/admin/course-analytics/clo-target"))
+                .andExpect(flash().attribute("errorMessage", "The learning outcome target must be a number between 0 and 100."));
+
+        verify(superAdminService, never()).saveCourse(any());
+    }
+
+    @Test
+    void cloTarget_CanOnlyBeSetByTheAdminWhoCreatedTheCourse() throws Exception {
+        Course stored = courseCreatedBySomeoneElse();
+        stored.getCreatedBy().setEmail("someone.else@example.com");
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(stored);
+        when(superAdminService.getCourseById(10L)).thenReturn(Optional.of(stored));
+        when(courseScopeService.isAdminOfCourse(10L)).thenReturn(true);
+
+        mockMvc.perform(post("/admin/course-analytics/clo-target").param("cloTarget", "70"))
+                .andExpect(flash().attribute("errorMessage", "Only the admin who created this course can change its targets."));
+
+        verify(superAdminService, never()).saveCourse(any());
+    }
+
+    @Test
+    void cloTarget_NeedsAnActiveCourse() throws Exception {
+        when(courseScopeService.getActiveCourseForCurrentUser()).thenReturn(null);
+
+        mockMvc.perform(post("/admin/course-analytics/clo-target").param("cloTarget", "70"))
+                .andExpect(flash().attribute("errorMessage", "Select an active course first."));
+
+        verify(superAdminService, never()).saveCourse(any());
+    }
+
     @Test
     void aCourseWithNothingSetUsesFiftyAndFifty() {
         Course c = new Course();

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>Data Analytics - IAMS</title>
     <link rel="stylesheet" th:href="@{/css/admin_sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/responsive-patterns.css}">
@@ -15,13 +17,13 @@
     <main class="main-content">
         <div class="header"><div class="header-container"><img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"></div></div>
         <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Data Views', '/admin/data-views', 'Data Analytics')}"></nav>
-        <section id="lecturer-analytics" th:data-endpoint="@{/admin/analytics/lecturer-comparison/data}" aria-labelledby="analytics-title">
+        <section id="lecturer-analytics" th:data-endpoint="@{/admin/analytics/lecturer-comparison/data}" th:data-export-endpoint="@{/admin/analytics/lecturer-comparison/export}" aria-labelledby="analytics-title">
             <div class="analytics-heading">
                 <div><p class="analytics-eyebrow">DATA ANALYTICS <span th:if="${activeCourse != null}" th:text="' / ' + ${activeCourse.courseCode}"></span></p>
                     <h1 id="analytics-title">Data Analytics</h1>
                     <p>Compare awarded scores within one assessment, across teams and rubric criteria.</p>
                 </div>
-                <div class="analytics-actions"><button type="button" id="analytics-export" class="btn-secondary" disabled>Export comparison CSV</button><button type="button" id="analytics-print" class="btn-secondary">Print</button></div>
+                <div class="analytics-actions"><button type="button" id="analytics-xlsx" class="btn-secondary" disabled>Download Excel</button><button type="button" id="analytics-pdf" class="btn-secondary" disabled>Download PDF</button><button type="button" id="analytics-export" class="btn-secondary" disabled>Export comparison CSV</button><button type="button" id="analytics-print" class="btn-secondary">Print</button></div>
             </div>
             <form id="analytics-filters" class="analytics-filter-card" aria-label="Analytics filters">
                 <div class="analytics-primary-filters">

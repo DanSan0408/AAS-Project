@@ -64,8 +64,10 @@ public class LecturerAnalyticsService {
             .toList());
         Map<Long, String> teamNames = new HashMap<>();
         teams.forEach(t -> teamNames.put(Long.valueOf(t.id()), t.label()));
+        // Drafts are loaded too, only so they can be counted and explained ("not submitted yet"): exclusionReason() keeps them out
+        // of every figure, so an assessor who has only drafted still appears in the list of what was left out.
         List<LecturerAnalyticsMark> rows = marks.findLecturerAnalyticsMarks(assessmentId, courseId,
-            List.of(Mark.SubmissionStatus.FINAL, Mark.SubmissionStatus.SUBMITTED));
+            List.of(Mark.SubmissionStatus.FINAL, Mark.SubmissionStatus.SUBMITTED, Mark.SubmissionStatus.DRAFT));
         Map<Long, String> legacyNames = new HashMap<>();
         List<Long> legacyIds = rows.stream().filter(r -> r.getLecturerId() == null)
             .map(r -> legacyLecturerId(r.getSourceTag())).filter(Objects::nonNull).distinct().toList();
@@ -75,20 +77,21 @@ public class LecturerAnalyticsService {
         // Group evaluations are copied to each team member by the evaluation service.
         // One latest row per lecturer + target + criterion prevents weighting by team size.
         Map<String, LecturerAnalyticsMark> latest = new LinkedHashMap<>();
+        Map<String, Integer> excludedBy = new LinkedHashMap<>(); // "lecturer name|reason" -> rows
         int excluded = 0;
         for (LecturerAnalyticsMark row : rows) {
             Long lecturerId = lecturerId(row);
             String key = criterionId(row);
             Criterion criterion = criteria.get(key);
-            if (lecturerId == null || row.getStudentId() == null || criterion == null
-                    || !isCommitted(row.getStatus()) || !Objects.equals(criterion.scope(), scope(row.getAssessmentType()))
-                    || row.getEarned() == null || !Double.isFinite(row.getEarned())
-                    || row.getEarned() < 0 || row.getEarned() > criterion.possible()
-                    || (row.getTeamId() != null && !teamNames.containsKey(row.getTeamId()))) {
+            String reason = exclusionReason(row, lecturerId, criterion);
+            if (reason != null) {
                 excluded++;
+                String who = lecturerId == null ? "Unknown assessor"
+                    : label(row.getLecturerName(), legacyNames.getOrDefault(lecturerId, "Lecturer " + lecturerId));
+                excludedBy.merge(who + "|" + reason, 1, Integer::sum);
                 continue;
             }
-            String identity = lecturerId + ":" + targetId(row, criterion) + ":" + key;
+            String identity = lecturerId + ":" + targetId(row, criterion, teamNames) + ":" + key;
             latest.merge(identity, row, (a, b) -> newest(a, b));
         }
         List<Score> scores = new ArrayList<>();
@@ -97,11 +100,12 @@ public class LecturerAnalyticsService {
             Long id = lecturerId(row);
             String name = label(row.getLecturerName(), legacyNames.getOrDefault(id, "Lecturer " + id));
             String studentName = label(row.getStudentName(), "Student " + row.getStudentId());
-            String teamName = row.getTeamId() == null ? "Unassigned team" : teamNames.get(row.getTeamId());
-            boolean group = "GROUP".equals(criterion.scope()) && row.getTeamId() != null;
-            scores.add(new Score(id, name, row.getTeamId(), teamName,
+            Long teamId = teamOf(row, teamNames);
+            String teamName = teamId == null ? "Unassigned team" : teamNames.get(teamId);
+            boolean group = "GROUP".equals(criterion.scope()) && teamId != null;
+            scores.add(new Score(id, name, teamId, teamName,
                 group ? null : row.getStudentId(), group ? null : studentName,
-                targetId(row, criterion), group ? teamName : studentName,
+                targetId(row, criterion, teamNames), group ? teamName : studentName,
                 criterion.id(), row.getEarned(), row.getStatus().name(),
                 row.getSubmittedAt() == null ? null : row.getSubmittedAt().toString()));
         }
@@ -109,7 +113,12 @@ public class LecturerAnalyticsService {
             .thenComparing(Score::targetId).thenComparing(Score::criterionId));
         if (scores.stream().anyMatch(s -> s.teamId() == null)) teams.add(new Option("unassigned", "Unassigned team"));
         return new LecturerComparisonData(assessmentId, label(assessment.getTitle(), "Assessment " + assessmentId),
-            List.copyOf(teams), List.copyOf(criteria.values()), List.copyOf(scores), excluded);
+            List.copyOf(teams), List.copyOf(criteria.values()), List.copyOf(scores), excluded,
+            excludedBy.entrySet().stream().map(e -> {
+                int bar = e.getKey().lastIndexOf('|');
+                return new LecturerComparisonData.Exclusion(e.getKey().substring(0, bar), e.getKey().substring(bar + 1), e.getValue());
+            }).sorted(Comparator.comparing(LecturerComparisonData.Exclusion::lecturerName, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(LecturerComparisonData.Exclusion::reason)).toList());
     }
 
     private Map<String, Criterion> criteria(Assessment assessment) {
@@ -161,9 +170,35 @@ public class LecturerAnalyticsService {
     private static String criterionId(LecturerAnalyticsMark row) {
         return row.getSubRubricId() != null ? "s" + row.getSubRubricId() : "r" + row.getRubricId();
     }
-    private static String targetId(LecturerAnalyticsMark row, Criterion criterion) {
-        return "GROUP".equals(criterion.scope()) && row.getTeamId() != null
-            ? "GROUP:" + row.getTeamId() : criterion.scope() + ":STUDENT:" + row.getStudentId();
+    private static String targetId(LecturerAnalyticsMark row, Criterion criterion, Map<Long, String> teamNames) {
+        Long teamId = teamOf(row, teamNames);
+        return "GROUP".equals(criterion.scope()) && teamId != null
+            ? "GROUP:" + teamId : criterion.scope() + ":STUDENT:" + row.getStudentId();
+    }
+
+    /**
+     * The student's team in THIS course: the team from their course enrolment first, then their own group if it belongs to this
+     * course, otherwise none ("Unassigned team"). A student whose only group is another course's is still compared; the
+     * assessor must not vanish from the comparison because of where a student's group happens to be recorded.
+     */
+    private static Long teamOf(LecturerAnalyticsMark row, Map<Long, String> teamNames) {
+        Long enrolled = row.getAssignedTeamId();
+        if (enrolled != null && teamNames.containsKey(enrolled)) return enrolled;
+        Long own = row.getTeamId();
+        return own != null && teamNames.containsKey(own) ? own : null;
+    }
+
+    /** Why a stored score cannot be compared, or null when it can. */
+    private static String exclusionReason(LecturerAnalyticsMark row, Long lecturerId, Criterion criterion) {
+        if (lecturerId == null) return "NO_ASSESSOR";
+        if (row.getStudentId() == null) return "NO_STUDENT";
+        if (criterion == null) return "CRITERION_NOT_COMPARABLE";
+        if (!isCommitted(row.getStatus())) return "NOT_SUBMITTED";
+        if (!Objects.equals(criterion.scope(), scope(row.getAssessmentType()))) return "TYPE_MISMATCH";
+        Double earned = row.getEarned();
+        if (earned == null || !Double.isFinite(earned) || earned < 0) return "INVALID_SCORE";
+        if (earned > criterion.possible()) return "ABOVE_MAXIMUM";
+        return null;
     }
     private static Long lecturerId(LecturerAnalyticsMark row) {
         return row.getLecturerId() != null ? row.getLecturerId() : legacyLecturerId(row.getSourceTag());

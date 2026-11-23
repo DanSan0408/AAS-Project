@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { analyse, comparisonCsv } = require('../../main/resources/static/js/lecturer-analytics.js');
+const { analyse, comparisonCsv, exclusionLines, reportDocument } = require('../../main/resources/static/js/lecturer-analytics.js');
 const criteria = [
     { id: 's1', rubricId: 1, rubricName: 'Design', label: 'Evidence', possible: 10, scope: 'GROUP', clo: 1 },
     { id: 's2', rubricId: 1, rubricName: 'Design', label: 'Clarity', possible: 30, scope: 'GROUP', clo: 1 },
@@ -103,4 +103,92 @@ test('team pagination counts four distinct teams and keeps both evaluation types
     assert.equal(groups[0].sections.length, 2);
     const csv = comparisonCsv(data, result);
     assert.equal(csv.split('\r\n').length, result.breakdown.length + 1);
+});
+
+test('every assessor who lost scores is named with how many and why', () => {
+    const lines = exclusionLines({ exclusions: [
+        { lecturerName: 'Dr Lim', reason: 'ABOVE_MAXIMUM', rows: 3 },
+        { lecturerName: 'Dr Tan', reason: 'TYPE_MISMATCH', rows: 1 }
+    ] });
+    assert.equal(lines.length, 2);
+    assert.match(lines[0], /^Dr Lim: 3 scores left out, score above the criterion's current maximum/);
+    assert.match(lines[1], /^Dr Tan: 1 score left out, recorded as a different assessment type/);
+});
+test('an unknown reason is shown as it is rather than hidden, and no exclusions means no lines', () => {
+    assert.match(exclusionLines({ exclusions: [{ lecturerName: 'A', reason: 'SOMETHING_NEW', rows: 2 }] })[0], /SOMETHING_NEW/);
+    assert.deepEqual(exclusionLines({}), []);
+});
+
+// --- the report the page downloads as .xlsx or .pdf ------------------------------------------------------------------------
+const tableOf = (doc, heading) => doc.sections.find(s => s.heading === heading);
+const reportData = () => {
+    const data = snapshot([score(1, 'GROUP:10', 's1', 8), score(2, 'GROUP:10', 's1', 6), score(1, 'GROUP:10', 's2', 24), score(2, 'GROUP:10', 's2', 18), score(1, 'GROUP:20', 's1', 5, { teamId: 20, teamName: 'Team B' })]);
+    return { data, result: analyse(data) };
+};
+test('the report has the same tables as the page, in reading order', () => {
+    const { data, result } = reportData();
+    const doc = reportDocument(data, result, ['Team: all']);
+    assert.deepEqual(doc.sections.map(s => s.heading), ['Summary', 'Assessors', 'Agreement between assessors', 'Team comparison', 'Rubric by assessor', 'Evaluation breakdown']);
+    assert.equal(doc.title, 'Marking consistency');
+    assert.equal(doc.subtitle, 'Review');
+    assert.ok(doc.details.includes('Assessment: Review') && doc.details.includes('Team: all'));
+});
+test('the report figures are the page figures, rounded to one decimal', () => {
+    const { data, result } = reportData();
+    const doc = reportDocument(data, result);
+    const lecturer1 = tableOf(doc, 'Assessors').rows.find(r => r[0] === 'Lecturer 1');
+    const shown = result.lecturers.find(l => l.name === 'Lecturer 1');
+    assert.equal(lecturer1[1], shown.values.length);
+    assert.equal(lecturer1[2], Math.round(shown.value * 10) / 10);
+    const summary = Object.fromEntries(tableOf(doc, 'Summary').rows);
+    assert.equal(summary['Assessors compared'], 2);
+    assert.equal(summary['Mean score (%)'], Math.round(result.mean * 10) / 10);
+});
+test('the breakdown table has one row per breakdown row with the awarded and available marks as numbers', () => {
+    const { data, result } = reportData();
+    const rows = tableOf(reportDocument(data, result), 'Evaluation breakdown').rows;
+    assert.equal(rows.length, result.breakdown.length);
+    assert.equal(typeof rows[0][6], 'number');
+    assert.equal(typeof rows[0][8], 'number');
+});
+test('the rubric table has one column per assessor and an empty cell where an assessor did not score the rubric', () => {
+    const { data, result } = reportData();
+    const rubric = tableOf(reportDocument(data, result), 'Rubric by assessor');
+    assert.deepEqual(rubric.columns, ['Rubric', 'Lecturer 1', 'Lecturer 2']);
+    const unscored = snapshot([score(1, 'GROUP:10', 's1', 8), score(2, 'GROUP:10', 's2', 18)]);
+    const rows = tableOf(reportDocument(unscored, analyse(unscored)), 'Rubric by assessor').rows;
+    assert.equal(rows[0].length, 3);
+});
+test('assessors who lost scores are named in the report description', () => {
+    const { data, result } = reportData();
+    data.excludedRows = 3;
+    data.exclusions = [{ lecturerName: 'Dr Lim', reason: 'ABOVE_MAXIMUM', rows: 3 }];
+    const doc = reportDocument(data, result);
+    assert.ok(doc.details.some(line => line.startsWith('Dr Lim: 3 scores left out')), JSON.stringify(doc.details));
+});
+test('a very long list of exclusions is shortened so the request stays within its limits', () => {
+    const { data, result } = reportData();
+    data.excludedRows = 100;
+    data.exclusions = Array.from({ length: 100 }, (_, i) => ({ lecturerName: 'Lecturer ' + i, reason: 'ABOVE_MAXIMUM', rows: 1 }));
+    const doc = reportDocument(data, result);
+    assert.ok(doc.details.length <= 40, String(doc.details.length));
+    assert.ok(doc.details.some(line => /and 7\d more/.test(line)));
+});
+test('the report only ever contains text, numbers and empty cells, ready to be sent as JSON', () => {
+    const { data, result } = reportData();
+    const doc = reportDocument(data, result);
+    const roundTrip = JSON.parse(JSON.stringify(doc));
+    assert.deepEqual(roundTrip, doc);
+    doc.sections.forEach(section => section.rows.forEach(row => row.forEach(cell =>
+        assert.ok(cell === null || typeof cell === 'string' || typeof cell === 'number', `cell ${cell}`))));
+});
+
+test('the Marking Consistency page has Excel and PDF buttons wired to the export endpoint and carries the CSRF token', () => {
+    const fs = require('node:fs'), path = require('node:path');
+    const html = fs.readFileSync(path.resolve(__dirname, '../../main/resources/templates/lecturer_comparison_analytics.html'), 'utf-8');
+    assert.match(html, /id="analytics-xlsx"[^>]*>Download Excel</);
+    assert.match(html, /id="analytics-pdf"[^>]*>Download PDF</);
+    assert.match(html, /data-export-endpoint="@\{\/admin\/analytics\/lecturer-comparison\/export\}"/);
+    assert.match(html, /name="_csrf"[^>]*_csrf\?\.token/);
+    assert.match(html, /name="_csrf_header"/);
 });
