@@ -29,6 +29,8 @@
         </div>
 
         <div class="ca-page">
+            <div class="ca-alert ca-alert--ok" role="status" th:if="${successMessage}" th:text="${successMessage}"></div>
+            <div class="ca-alert ca-alert--error" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></div>
             <form class="ca-filters" method="get" th:action="@{/admin/data-views/course-analytics}">
                 <div class="ca-field">
                     <label for="caAssessment">Assessment</label>
@@ -47,6 +49,30 @@
                     </select>
                 </div>
                 <button type="submit" class="ca-apply">Show</button>
+            </form>
+
+            <form class="ca-filters ca-clo-form" method="post" th:action="@{/admin/course-analytics/clo-target}">
+                <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+                <input type="hidden" name="groupId" th:if="${selectedGroupId != null}" th:value="${selectedGroupId}">
+                <input type="hidden" name="assessmentIds" th:each="id : ${selectedAssessmentIds}" th:value="${id}">
+                <div class="ca-field">
+                    <label for="caCloTarget">Learning outcome (CLO) target</label>
+                    <div class="ca-clo-input">
+                        <input id="caCloTarget" type="number" name="cloTarget" min="0" max="100" step="1" required
+                               inputmode="numeric" th:value="${#numbers.formatDecimal(cloTarget, 1, 0)}" aria-describedby="caCloTargetHelp">
+                        <span aria-hidden="true">%</span>
+                    </div>
+                </div>
+                <button type="submit" class="ca-apply">Save target</button>
+                <p id="caCloTargetHelp" class="ca-hint ca-clo-help">The share of a learning outcome's marks a student should reach. It is saved for this course and drives the outcome results below.</p>
+            </form>
+
+            <form class="ca-export" method="get" th:action="@{/admin/data-views/course-analytics/export}" aria-label="Download this page">
+                <input type="hidden" name="groupId" th:if="${selectedGroupId != null}" th:value="${selectedGroupId}">
+                <input type="hidden" name="assessmentIds" th:each="id : ${selectedAssessmentIds}" th:value="${id}">
+                <span class="ca-export-label">Download this page for the team and assessments chosen above:</span>
+                <button type="submit" name="format" value="xlsx" class="ca-download">Excel (.xlsx)</button>
+                <button type="submit" name="format" value="pdf" class="ca-download">PDF</button>
             </form>
 
             <p class="ca-empty" th:if="${assessments == null or assessments.isEmpty()}">
@@ -181,8 +207,8 @@
                 </section>
 
                 <p class="ca-note">
-                    Pass mark <span th:text="${#numbers.formatDecimal(passMark, 1, 0)}">50</span> and learning outcome target
-                    <span th:text="${#numbers.formatDecimal(cloTarget, 1, 0)}">50</span>% are set per course under Manage Courses &rarr; Edit.
+                    Pass mark <span th:text="${#numbers.formatDecimal(passMark, 1, 0)}">50</span> is set per course under Manage Courses &rarr; Edit.
+                    The learning outcome target (<span th:text="${#numbers.formatDecimal(cloTarget, 1, 0)}">50</span>%) can be set in the box at the top of this page.
                     Results use any admin override. A criterion needs at least 5 ratings before it is called hard or easy, and marks are described in words only with 5 or more evaluated students.
                 </p>
             </th:block>

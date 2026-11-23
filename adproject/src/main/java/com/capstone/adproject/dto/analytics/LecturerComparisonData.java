@@ -5,8 +5,14 @@ import java.util.List;
 /** Immutable analytics snapshot; no persistence entities or private lecturer fields leave the service. */
 public record LecturerComparisonData(
         Long assessmentId, String assessmentTitle, List<Option> teams, List<Criterion> criteria,
-        List<Score> scores, int excludedRows) {
+        List<Score> scores, int excludedRows, List<Exclusion> exclusions) {
+    public LecturerComparisonData(Long assessmentId, String assessmentTitle, List<Option> teams, List<Criterion> criteria,
+                                  List<Score> scores, int excludedRows) {
+        this(assessmentId, assessmentTitle, teams, criteria, scores, excludedRows, List.of());
+    }
     public record Option(String id, String label) {}
+    /** Stored score rows left out of the comparison, per assessor and reason, so nobody just goes missing without explanation. */
+    public record Exclusion(String lecturerName, String reason, int rows) {}
     /** {@code step} is the smallest difference between two rating levels of the criterion (0 when it is not known). */
     public record Criterion(String id, Long rubricId, String rubricName, String label,
                             Integer clo, String scope, double possible, double step) {

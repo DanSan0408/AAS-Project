@@ -125,4 +125,50 @@ class CourseAnalyticsPageRenderTest {
         assertFalse(html.contains("<script>alert('x')</script>"));
         assertTrue(html.contains("&lt;script&gt;"));
     }
+
+    @Test
+    void theAdminCanSetTheOutcomeTargetFromTheFilterArea() {
+        Map<String, Object> m = model(List.of(), List.of(), true);
+        m.put("cloTarget", 65.0);
+        m.put("selectedGroupId", 3L);
+        m.put("selectedAssessmentIds", List.of(1L));
+
+        String html = render(m);
+
+        assertTrue(html.contains("/admin/course-analytics/clo-target"));
+        assertTrue(html.contains("name=\"cloTarget\""));
+        assertTrue(html.matches("(?s).*<input[^>]*id=\"caCloTarget\"[^>]*value=\"65\".*"), "the current target is in the box");
+        assertTrue(html.contains("Save target"));
+        assertTrue(html.contains("<input type=\"hidden\" name=\"groupId\" value=\"3\">"), "the chosen team is kept after saving");
+        assertTrue(html.contains("<input type=\"hidden\" name=\"assessmentIds\" value=\"1\">"), "and so are the chosen assessments");
+        assertTrue(html.contains("name=\"_csrf\""));
+    }
+
+    @Test
+    void aSavedOrRefusedTargetIsAnnounced() {
+        Map<String, Object> ok = model(List.of(), List.of(), true);
+        ok.put("successMessage", "Learning outcome target set to 65% for this course.");
+        assertTrue(render(ok).contains("Learning outcome target set to 65% for this course."));
+
+        Map<String, Object> refused = model(List.of(), List.of(), true);
+        refused.put("errorMessage", "Only the admin who created this course can change its targets.");
+        assertTrue(render(refused).contains("Only the admin who created this course can change its targets."));
+    }
+
+    @Test
+    void theAdminCanDownloadThePageForTheChosenTeamAndAssessments() {
+        Map<String, Object> m = model(List.of(), List.of(), true);
+        m.put("selectedGroupId", 3L);
+        m.put("selectedAssessmentIds", List.of(1L));
+
+        String html = render(m);
+
+        assertTrue(html.contains("/admin/data-views/course-analytics/export"));
+        assertTrue(html.matches("(?s).*<button[^>]*name=\"format\"[^>]*value=\"xlsx\"[^>]*>\\s*Excel \\(\\.xlsx\\)\\s*</button>.*"));
+        assertTrue(html.matches("(?s).*<button[^>]*name=\"format\"[^>]*value=\"pdf\"[^>]*>\\s*PDF\\s*</button>.*"));
+        int exportForm = html.indexOf("class=\"ca-export\"");
+        String afterExport = html.substring(exportForm);
+        assertTrue(afterExport.contains("<input type=\"hidden\" name=\"groupId\" value=\"3\">"), "the download keeps the chosen team");
+        assertTrue(afterExport.contains("<input type=\"hidden\" name=\"assessmentIds\" value=\"1\">"), "and the chosen assessments");
+    }
 }

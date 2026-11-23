@@ -11,7 +11,10 @@ public interface LecturerAnalyticsMark {
     String getSourceTag();
     Long getStudentId();
     String getStudentName();
+    /** The student's own (legacy) group, which may belong to another course. */
     Long getTeamId();
+    /** The student's group in the course being analysed, from their course enrolment (null when none). */
+    Long getAssignedTeamId();
     String getTeamName();
     Long getRubricId();
     Long getSubRubricId();

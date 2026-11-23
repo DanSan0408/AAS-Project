@@ -110,6 +110,18 @@
         <version>0.8.1</version> <!-- Use the latest stable version -->
     </dependency>
 
+    <!-- Downloadable reports: .xlsx (Apache POI) and .pdf (OpenPDF). -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.4.1</version>
+    </dependency>
+    <dependency>
+        <groupId>com.github.librepdf</groupId>
+        <artifactId>openpdf</artifactId>
+        <version>3.0.6</version>
+    </dependency>
+
     <!-- Google Guava for LoadingCache (used in RateLimitInterceptor) -->
     <dependency>
         <groupId>com.google.guava</groupId>

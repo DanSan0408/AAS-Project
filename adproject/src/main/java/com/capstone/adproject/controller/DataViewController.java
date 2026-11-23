@@ -1,5 +1,11 @@
 package com.capstone.adproject.controller;
 
+import java.util.Objects;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.CacheControl;
+import com.capstone.adproject.export.ReportFormat;
+import com.capstone.adproject.export.ReportDocument;
+import com.capstone.adproject.export.CourseAnalyticsReport;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -270,13 +276,14 @@ public class DataViewController {
         return "data_views_home";
     }
 
-    /** Course Analytics: the few numbers an educator needs about how the cohort is doing. See {@link CohortMetrics}. */
-    @GetMapping("/course-analytics")
+    /** Everything the Course Analytics page (and its downloads) show, worked out once so the file can never disagree with the page. */
+    private record CourseAnalyticsView(Course course, double passMark, double cloTarget, CohortMetrics.Summary summary,
+                                       List<CohortMetrics.CloRow> cloRows, List<CohortMetrics.CriterionRow> criterionRows,
+                                       List<CohortMetrics.AttentionRow> attention, List<Assessment> assessments,
+                                       Object allAssessments, Object groups) {}
+
     @SuppressWarnings("unchecked")
-    public String showCourseAnalytics(
-            @RequestParam(required = false) Long groupId,
-            @RequestParam(required = false) List<Long> assessmentIds,
-            Model model) {
+    private CourseAnalyticsView buildCourseAnalytics(Long groupId, List<Long> assessmentIds) {
         Map<String, Object> dataMap = getOverallDataModelMap(groupId, null, assessmentIds, false, 1, 25);
         List<Student> students = (List<Student>) dataMap.get("students");
         List<Assessment> assessments = (List<Assessment>) dataMap.get("assessments");
@@ -300,21 +307,74 @@ public class DataViewController {
         }
 
         List<CohortMetrics.StudentResult> results = CohortInputs.toResults(students, overall);
-        model.addAttribute("summary", CohortMetrics.summarise(results, passMark, calculateService::calculateGrade));
-        model.addAttribute("cloRows", CohortMetrics.cloRows(results, CohortInputs.cloAvailable(assessments), cloTarget));
-        model.addAttribute("criterionRows", CohortMetrics.criterionRows(
-                CohortInputs.criterionSamples(assessments, marksByAssessment, groupIdByStudent)));
-        model.addAttribute("attention", CohortMetrics.attention(results, passMark));
-        model.addAttribute("passMark", passMark);
-        model.addAttribute("cloTarget", cloTarget);
-        model.addAttribute("assessments", assessments);
-        model.addAttribute("allAssessments", dataMap.get("allAssessments"));
-        model.addAttribute("groups", dataMap.get("groups"));
+        return new CourseAnalyticsView(course, passMark, cloTarget,
+                CohortMetrics.summarise(results, passMark, calculateService::calculateGrade),
+                CohortMetrics.cloRows(results, CohortInputs.cloAvailable(assessments), cloTarget),
+                CohortMetrics.criterionRows(CohortInputs.criterionSamples(assessments, marksByAssessment, groupIdByStudent)),
+                CohortMetrics.attention(results, passMark),
+                assessments, dataMap.get("allAssessments"), dataMap.get("groups"));
+    }
+
+    /** Course Analytics: the few numbers an educator needs about how the cohort is doing. See {@link CohortMetrics}. */
+    @GetMapping("/course-analytics")
+    public String showCourseAnalytics(
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) List<Long> assessmentIds,
+            Model model) {
+        CourseAnalyticsView view = buildCourseAnalytics(groupId, assessmentIds);
+        model.addAttribute("summary", view.summary());
+        model.addAttribute("cloRows", view.cloRows());
+        model.addAttribute("criterionRows", view.criterionRows());
+        model.addAttribute("attention", view.attention());
+        model.addAttribute("passMark", view.passMark());
+        model.addAttribute("cloTarget", view.cloTarget());
+        model.addAttribute("assessments", view.assessments());
+        model.addAttribute("allAssessments", view.allAssessments());
+        model.addAttribute("groups", view.groups());
         model.addAttribute("selectedGroupId", groupId);
         model.addAttribute("selectedAssessmentIds", assessmentIds == null ? List.of() : assessmentIds);
-        model.addAttribute("activeCourse", course);
+        model.addAttribute("activeCourse", view.course());
         model.addAttribute("adminUsername", getLoggedInUsername());
         return "course_analytics";
+    }
+
+    /** The Course Analytics page as a download (.xlsx or .pdf), for the same team and assessments the page is showing. */
+    @GetMapping("/course-analytics/export")
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<?> exportCourseAnalytics(
+            @RequestParam("format") String format,
+            @RequestParam(required = false) Long groupId,
+            @RequestParam(required = false) List<Long> assessmentIds) {
+        ReportFormat reportFormat;
+        try {
+            reportFormat = ReportFormat.parse(format);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().contentType(MediaType.TEXT_PLAIN).body(e.getMessage());
+        }
+        CourseAnalyticsView view = buildCourseAnalytics(groupId, assessmentIds);
+        String teamLabel = null;
+        if (groupId != null && view.groups() instanceof List<?> groups) {
+            for (Object g : groups) {
+                if (g instanceof Group group && groupId.equals(group.getId())) {
+                    teamLabel = group.getGroupName();
+                }
+            }
+        }
+        Course course = view.course();
+        String courseLabel = course == null ? "" : ((course.getCourseCode() == null ? "" : course.getCourseCode() + " ")
+                + (course.getCourseName() == null ? "" : course.getCourseName())).trim();
+        List<String> titles = view.assessments().stream().map(Assessment::getTitle).filter(Objects::nonNull).toList();
+        ReportDocument document = CourseAnalyticsReport.build(new CourseAnalyticsReport.Input(courseLabel, teamLabel,
+                (assessmentIds == null || assessmentIds.isEmpty()) ? List.of() : titles, view.passMark(), view.cloTarget(),
+                view.summary(), view.cloRows(), view.criterionRows(), view.attention()));
+        String slug = (course == null || course.getCourseCode() == null ? "course" : course.getCourseCode())
+                .replaceAll("[^A-Za-z0-9._-]+", "_");
+        String filename = "course-analytics-" + slug + "-" + java.time.LocalDate.now() + "." + reportFormat.extension();
+        return ResponseEntity.ok()
+                .contentType(reportFormat.mediaType())
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+                .cacheControl(CacheControl.noStore())
+                .body(reportFormat.write(document));
     }
 
     @GetMapping("/overall")

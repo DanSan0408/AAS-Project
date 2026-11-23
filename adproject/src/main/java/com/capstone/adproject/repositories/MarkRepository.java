@@ -94,17 +94,20 @@ List<Mark> findByEvaluatedStudentAndAssessmentAndRubric(Student evaluatedStudent
     @Query("""
         SELECT m.id AS id, l.id AS lecturerId, l.username AS lecturerName,
                m.comments AS sourceTag, s.id AS studentId, s.username AS studentName,
-               g.id AS teamId, g.groupName AS teamName, r.id AS rubricId,
+               g.id AS teamId, g.groupName AS teamName, ag.id AS assignedTeamId, r.id AS rubricId,
                sr.id AS subRubricId, m.assessmentType AS assessmentType,
                m.markValue AS earned, m.status AS status, m.submittedAt AS submittedAt
         FROM Mark m
         JOIN m.assessment a
         JOIN m.evaluatedStudent s
         LEFT JOIN s.group g
+        LEFT JOIN StudentCourseAssignment sca ON sca.student = s AND sca.course.id = :courseId
+        LEFT JOIN sca.group ag
         LEFT JOIN m.lecturer l
         LEFT JOIN m.rubric r
         LEFT JOIN m.subRubric sr
-        WHERE a.id = :assessmentId AND a.course.id = :courseId AND s.course.id = :courseId
+        WHERE a.id = :assessmentId AND a.course.id = :courseId
+          AND (s.course.id = :courseId OR sca.id IS NOT NULL OR g.course.id = :courseId)
           AND (l.id IS NOT NULL OR m.comments LIKE 'LECTURER:%')
           AND m.status IN :statuses
         """)

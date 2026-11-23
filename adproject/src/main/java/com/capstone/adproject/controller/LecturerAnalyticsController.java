@@ -1,5 +1,12 @@
 package com.capstone.adproject.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ContentDisposition;
+import com.capstone.adproject.export.ReportRequest;
+import com.capstone.adproject.export.ReportFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +81,61 @@ public class LecturerAnalyticsController {
             return ResponseEntity.status(404).cacheControl(CacheControl.noStore())
                 .body(Map.of("message", "This assessment is not available in your active course."));
         }
+    }
+
+    /** Largest request body accepted for a download: the tables on the page, far below this, so anything bigger is refused. */
+    static final int MAX_EXPORT_BODY_BYTES = 5 * 1024 * 1024;
+    private static final com.fasterxml.jackson.databind.ObjectMapper EXPORT_JSON = new com.fasterxml.jackson.databind.ObjectMapper()
+        .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+    /**
+     * Turns the tables the page is showing into a downloadable .xlsx or .pdf. The comparison is worked out in the browser, so
+     * the browser sends back exactly what it shows and this only lays it out. The body is read here with a hard size limit
+     * (so a huge request is never loaded into memory), every part is checked ({@link ReportRequest}), and the file name is
+     * chosen here, never taken from the request.
+     */
+    @PostMapping(value = "/export", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> export(@RequestParam("format") String format, HttpServletRequest http) {
+        if (scope.getActiveCourseIdForCurrentUser() == null) {
+            return exportError(403, "Select an active course before exporting lecturer comparisons.");
+        }
+        if (http.getContentLengthLong() > MAX_EXPORT_BODY_BYTES) {
+            return exportError(413, "That export is too large. Narrow the filters and try again.");
+        }
+        byte[] body;
+        try {
+            body = http.getInputStream().readNBytes(MAX_EXPORT_BODY_BYTES + 1);
+        } catch (java.io.IOException e) {
+            return exportError(400, "The export request could not be read.");
+        }
+        if (body.length > MAX_EXPORT_BODY_BYTES) {
+            return exportError(413, "That export is too large. Narrow the filters and try again.");
+        }
+        try {
+            ReportFormat reportFormat = ReportFormat.parse(format);
+            ReportRequest request;
+            try {
+                request = EXPORT_JSON.readValue(body, ReportRequest.class);
+            } catch (java.io.IOException e) {
+                throw new IllegalArgumentException("The export request is not valid.");
+            }
+            if (request == null) {
+                throw new IllegalArgumentException("There is nothing to export.");
+            }
+            byte[] file = reportFormat.write(request.toDocument());
+            String filename = "marking-consistency-" + java.time.LocalDate.now() + "." + reportFormat.extension();
+            return ResponseEntity.ok()
+                .contentType(reportFormat.mediaType())
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+                .cacheControl(CacheControl.noStore())
+                .body(file);
+        } catch (IllegalArgumentException ex) {
+            return exportError(400, ex.getMessage());
+        }
+    }
+
+    private static ResponseEntity<Map<String, String>> exportError(int status, String message) {
+        return ResponseEntity.status(status).cacheControl(CacheControl.noStore()).body(Map.of("message", message));
     }
 
     @GetMapping("/moderation-briefing")
