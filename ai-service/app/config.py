@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_thinking: str = "disabled"          # "disabled" or "enabled"
 
+    # Optional price overrides for the cost estimate, JSON: {"model": {"hit": 0.1, "miss": 0.3, "out": 2.5}} in US dollars per million
+    # tokens (a number, or [off-peak, peak]). DeepSeek's prices are built in; set this for Gemini or when a price changes.
+    ai_prices_json: str = ""
+
     # Gemini API Configuration
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"

@@ -52,6 +52,10 @@ services:
       AI_SERVICE_URL: ${AI_SERVICE_URL:-http://ai-service:8000}
       AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
       COMMENT_SCAN_ENABLED: ${COMMENT_SCAN_ENABLED:-true}
+      # Optional starting values for the AI spend warnings. They are best set on the page (Super Admin > AI Usage & Cost); once saved
+      # there, these are ignored. 0 or empty = off. Budget in US dollars per month; the low-balance level is in the provider's currency.
+      AI_MONTHLY_BUDGET_USD: ${AI_MONTHLY_BUDGET_USD:-0}
+      AI_LOW_BALANCE_ALERT: ${AI_LOW_BALANCE_ALERT:-0}
       # "Sign in with Google": leave GOOGLE_CLIENT_ID empty to switch it off (the login page then has no Google button).
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
@@ -81,6 +85,9 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
       GEMINI_THINKING_LEVEL: ${GEMINI_THINKING_LEVEL:-}
+      # Optional price overrides for the cost estimate, JSON, US dollars per million tokens. DeepSeek's prices are built in; set this for
+      # Gemini or when a price changes: {"gemini-3.8-flash":{"hit":0.1,"miss":0.3,"out":2.5}}
+      AI_PRICES_JSON: ${AI_PRICES_JSON:-}
       AI_INTERNAL_SECRET: ${AI_INTERNAL_SECRET}
       # Same Telegram bot and chat as the app: the service reports its own errors, AI provider failures and restarts.
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}

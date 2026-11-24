@@ -7,9 +7,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,8 @@ import org.springframework.web.client.RestClientException;
 import com.capstone.adproject.dto.ai.AiCommentDtos;
 import com.capstone.adproject.dto.ai.AiModerationDtos;
 import com.capstone.adproject.dto.ai.AiTeamDynamicsDtos;
+import com.capstone.adproject.model.AiUsageEvent.Feature;
+import com.capstone.adproject.model.AiUsageEvent.Outcome;
 
 @Service
 public class AiServiceClient {
@@ -61,6 +64,18 @@ public class AiServiceClient {
     private final Map<String, Deque<Instant>> recentCalls = new HashMap<>();
     Clock clock = Clock.systemUTC();
 
+    /** Records what each request used. Optional, so a client built without it (in tests) simply records nothing. */
+    private AiUsageService usage;
+
+    /** What is left on the provider account, as the AI service reports it. Amounts are in the account's own currency. */
+    public record Balance(String provider, boolean supported, Boolean available, List<Amount> balances, String error) {}
+
+    public record Amount(String currency, Double total, Double granted, Double toppedUp) {}
+
+    static final Duration BALANCE_TTL = Duration.ofMinutes(5);
+    private Balance cachedBalance;
+    private Instant balanceFetchedAt;
+
     // Two constructors exist (this one and the test one below), so Spring must be told which to use; without this the
     // application fails to start with "No default constructor found".
     @Autowired
@@ -89,32 +104,75 @@ public class AiServiceClient {
         this.internalSecret = "";
     }
 
+    @Autowired(required = false)
+    void setUsage(AiUsageService usage) {
+        this.usage = usage;
+    }
+
     private static String caller() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.getName() != null ? auth.getName() : "anonymous";
     }
 
-    /** Answers a repeat of a request from memory, refuses a person who asks too often, otherwise makes the call. */
+    /** Saves one line of usage. Never throws: the figures must not be able to break an AI feature. */
+    private void remember(Feature feature, Outcome outcome, AiUsageService.UsageHeader header, long startedNanos, String errorKind) {
+        if (usage == null || outcome == null) return;
+        try {
+            usage.record(feature, outcome, caller(), header, (System.nanoTime() - startedNanos) / 1_000_000, errorKind);
+        } catch (Exception e) {
+            log.warn("AI usage could not be recorded ({})", e.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * Answers a repeat of a request from memory, refuses a person who asks too often, otherwise makes the call. Whichever
+     * happens is recorded, so the usage page also shows what the cache and the limit saved.
+     */
     @SuppressWarnings("unchecked")
-    private <T> T cachedOrCall(Object key, Supplier<T> call, Predicate<T> worthKeeping) {
+    private <T> T cachedOrCall(Feature feature, Object key, String uri, Object body, Class<T> type, Function<T, String> statusOf) {
         Instant now = clock.instant();
+        long started = System.nanoTime();
+        Outcome early = null;
+        T kept = null;
         synchronized (this) {
             Cached hit = cache.get(key);
             if (hit != null && Duration.between(hit.storedAt(), now).compareTo(CACHE_TTL) < 0) {
-                return (T) hit.value();
+                kept = (T) hit.value();
+                early = Outcome.CACHE_HIT;
+            } else {
+                Deque<Instant> calls = recentCalls.computeIfAbsent(caller(), k -> new ArrayDeque<>());
+                while (!calls.isEmpty() && Duration.between(calls.peekFirst(), now).compareTo(RATE_WINDOW) >= 0) {
+                    calls.pollFirst();
+                }
+                if (calls.size() >= MAX_CALLS_PER_WINDOW) {
+                    early = Outcome.RATE_LIMITED;
+                } else {
+                    calls.addLast(now);
+                }
             }
-            Deque<Instant> calls = recentCalls.computeIfAbsent(caller(), k -> new ArrayDeque<>());
-            while (!calls.isEmpty() && Duration.between(calls.peekFirst(), now).compareTo(RATE_WINDOW) >= 0) {
-                calls.pollFirst();
-            }
-            if (calls.size() >= MAX_CALLS_PER_WINDOW) {
-                throw new RateLimitedException();
-            }
-            calls.addLast(now);
         }
-        T answer = call.get();
+        if (early != null) {
+            remember(feature, early, null, started, null);   // outside the lock: this writes to the database
+            if (early == Outcome.RATE_LIMITED) throw new RateLimitedException();
+            return kept;
+        }
+        ResponseEntity<T> entity;
+        try {
+            entity = restClient.post().uri(uri).body(body).retrieve().toEntity(type);
+        } catch (RestClientException e) {
+            remember(feature, Outcome.SERVICE_ERROR, null, started, describe(e));
+            throw e;
+        }
+        T answer = entity.getBody();
+        String aiStatus = answer == null ? null : statusOf.apply(answer);
+        AiUsageService.UsageHeader header = AiUsageService.parseHeader(entity.getHeaders().getFirst(AiUsageService.USAGE_HEADER));
+        Outcome outcome = AiUsageService.outcomeOf(aiStatus);
+        // "The AI was not needed" and no model call: nothing to record. A model call is always recorded.
+        if (outcome != null || header != null) {
+            remember(feature, outcome == null ? Outcome.OK : outcome, header, started, null);
+        }
         // A degraded answer (the AI was down) is not kept, so the next click can try again.
-        if (answer != null && worthKeeping.test(answer)) {
+        if (answer != null && aiRan(aiStatus)) {
             synchronized (this) {
                 cache.put(key, new Cached(answer, now));
             }
@@ -142,11 +200,8 @@ public class AiServiceClient {
 
     public AiTeamDynamicsDtos.AuditResponse auditTeamDynamics(AiTeamDynamicsDtos.AuditRequest request) {
         try {
-            return cachedOrCall(Map.entry("team-audit", request), () -> restClient.post()
-                    .uri("/api/v1/team-dynamics/audit")
-                    .body(request)
-                    .retrieve()
-                    .body(AiTeamDynamicsDtos.AuditResponse.class), r -> aiRan(r.aiStatus()));
+            return cachedOrCall(Feature.TEAM_AUDIT, Map.entry("team-audit", request), "/api/v1/team-dynamics/audit", request,
+                    AiTeamDynamicsDtos.AuditResponse.class, AiTeamDynamicsDtos.AuditResponse::aiStatus);
         } catch (RestClientException e) {
             log.error("Failed to call AI service for team dynamics audit: {}", describe(e));
             throw new RuntimeException("AI service is currently unavailable or returned an error: " + describe(e), e);
@@ -155,11 +210,8 @@ public class AiServiceClient {
 
     public AiModerationDtos.BriefingResponse generateModerationBriefing(AiModerationDtos.BriefingRequest request) {
         try {
-            return cachedOrCall(Map.entry("moderation-briefing", request), () -> restClient.post()
-                    .uri("/api/v1/moderation/briefing")
-                    .body(request)
-                    .retrieve()
-                    .body(AiModerationDtos.BriefingResponse.class), r -> aiRan(r.aiStatus()));
+            return cachedOrCall(Feature.MODERATION_BRIEFING, Map.entry("moderation-briefing", request), "/api/v1/moderation/briefing", request,
+                    AiModerationDtos.BriefingResponse.class, AiModerationDtos.BriefingResponse::aiStatus);
         } catch (RestClientException e) {
             log.error("Failed to call AI service for moderation briefing: {}", describe(e));
             throw new RuntimeException("AI service is currently unavailable or returned an error: " + describe(e), e);
@@ -169,14 +221,37 @@ public class AiServiceClient {
     /** Asks the AI service to read a batch of comments (at most 20) and say which deserve a moderator's look. */
     public AiCommentDtos.CheckResponse checkComments(AiCommentDtos.CheckRequest request) {
         try {
-            return cachedOrCall(Map.entry("comment-check", request), () -> restClient.post()
-                    .uri("/api/v1/comments/check")
-                    .body(request)
-                    .retrieve()
-                    .body(AiCommentDtos.CheckResponse.class), r -> aiRan(r.aiStatus()));
+            return cachedOrCall(Feature.COMMENT_CHECK, Map.entry("comment-check", request), "/api/v1/comments/check", request,
+                    AiCommentDtos.CheckResponse.class, AiCommentDtos.CheckResponse::aiStatus);
         } catch (RestClientException e) {
             log.error("Failed to call AI service for the comment check: {}", describe(e));
             throw new RuntimeException("AI service is currently unavailable or returned an error.", e);
+        }
+    }
+
+    /**
+     * What is left on the provider account, for the AI usage page. Kept for five minutes so reloading the page does not call the
+     * provider each time. Never throws: when the AI service cannot say, the answer carries a reason and is not kept.
+     */
+    public Balance providerBalance() {
+        Instant now = clock.instant();
+        synchronized (this) {
+            if (cachedBalance != null && balanceFetchedAt != null && Duration.between(balanceFetchedAt, now).compareTo(BALANCE_TTL) < 0) {
+                return cachedBalance;
+            }
+        }
+        try {
+            Balance fresh = restClient.get().uri("/api/v1/usage/balance").retrieve().body(Balance.class);
+            if (fresh == null) throw new IllegalStateException("empty");
+            if (fresh.error() == null) {
+                synchronized (this) {
+                    cachedBalance = fresh;
+                    balanceFetchedAt = now;
+                }
+            }
+            return fresh;
+        } catch (Exception e) {
+            return new Balance(null, true, null, List.of(), "The AI service could not be reached.");
         }
     }
 

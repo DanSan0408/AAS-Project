@@ -2,12 +2,13 @@ import logging
 import os
 import re
 import time
+from typing import Optional
 
 import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from app import alerts
+from app import alerts, usage
 from app.analysis.text_safety import extract_json
 from app.config import settings
 
@@ -85,6 +86,7 @@ def _deepseek_json_text(system: str, user: str, temperature: float) -> str:
     url = settings.deepseek_base_url.rstrip("/") + "/chat/completions"
     headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
     for attempt in (1, 2):
+        usage.note_attempt()
         try:
             response = httpx.post(url, headers=headers, json=payload, timeout=60)
         except httpx.TransportError:
@@ -97,7 +99,9 @@ def _deepseek_json_text(system: str, user: str, temperature: float) -> str:
             continue
         if response.status_code != 200:
             raise ProviderHttpError(response.status_code)
-        content = ((response.json().get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+        body = response.json()
+        usage.add_deepseek_usage(body.get("usage") if isinstance(body, dict) else None)   # billed even when the reply is blank
+        content = ((body.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
         if content.strip():
             return content
         if attempt == 2:
@@ -107,7 +111,10 @@ def _deepseek_json_text(system: str, user: str, temperature: float) -> str:
 
 
 def _gemini_json_text(system: str, user: str, temperature: float):
-    return get_gemini_llm(temperature).invoke([SystemMessage(content=system), HumanMessage(content=user)]).content
+    usage.note_attempt()
+    message = get_gemini_llm(temperature).invoke([SystemMessage(content=system), HumanMessage(content=user)])
+    usage.add_langchain_usage(getattr(message, "usage_metadata", None))
+    return message.content
 
 
 def invoke_json(system: str, user: str, temperature: float = 0.1) -> dict:
@@ -117,14 +124,58 @@ def invoke_json(system: str, user: str, temperature: float = 0.1) -> dict:
     (for an HTTP error, its status code): never the prompt, which contains student comments, and never the key.
     """
     provider = active_provider()
+    call = usage.start_call(provider, settings.deepseek_model if provider == "deepseek" else settings.gemini_model)
     try:
         if provider == "deepseek":
-            return extract_json(_deepseek_json_text(system, user, temperature))
-        return extract_json(_gemini_json_text(system, user, temperature))
+            result = extract_json(_deepseek_json_text(system, user, temperature))
+        else:
+            result = extract_json(_gemini_json_text(system, user, temperature))
+        usage.finish_call(call, ok=True)
+        return result
     except Exception as exc:  # deliberately broad: whatever went wrong, the caller falls back to calculated results
         kind = f"HTTP{exc.status}" if isinstance(exc, ProviderHttpError) else type(exc).__name__
+        usage.finish_call(call, ok=False, error=kind)
         logger.warning("AI call failed (%s: %s)", provider, kind)
         label = f"HTTP {exc.status}" if isinstance(exc, ProviderHttpError) else kind
         alerts.alert(f"{provider}:{kind}",
                      f"[ERROR] The {provider} call failed ({label}). AI features are falling back to calculated results.")
         raise AiUnavailable("The AI did not return a usable answer.") from exc
+
+
+def provider_balance() -> dict:
+    """What is left on the account, where the provider says so (DeepSeek does; Gemini has no such call).
+
+    Always returns a plain dict and never raises: {"provider", "supported", "available", "balances": [{currency, total, granted,
+    toppedUp}], "error"}. Only the kind of failure is reported, never a body or the key.
+    """
+    provider = active_provider()
+    if provider != "deepseek":
+        return {"provider": provider, "supported": False, "available": None, "balances": [], "error": None}
+    api_key = settings.deepseek_api_key or os.environ.get("DEEPSEEK_API_KEY", "")
+    if not api_key:
+        return {"provider": provider, "supported": True, "available": None, "balances": [], "error": "no API key"}
+    try:
+        response = httpx.get(settings.deepseek_base_url.rstrip("/") + "/user/balance",
+                             headers={"Authorization": "Bearer " + api_key, "Accept": "application/json"}, timeout=15)
+        if response.status_code != 200:
+            return {"provider": provider, "supported": True, "available": None, "balances": [], "error": f"HTTP {response.status_code}"}
+        body = response.json()
+        infos = body.get("balance_infos") if isinstance(body, dict) else None
+        balances = []
+        for info in infos if isinstance(infos, list) else []:
+            if isinstance(info, dict):
+                balances.append({"currency": str(info.get("currency") or "")[:8], "total": _amount(info.get("total_balance")),
+                                 "granted": _amount(info.get("granted_balance")), "toppedUp": _amount(info.get("topped_up_balance"))})
+        available = body.get("is_available") if isinstance(body, dict) and isinstance(body.get("is_available"), bool) else None
+        return {"provider": provider, "supported": True, "available": available, "balances": balances, "error": None}
+    except Exception as exc:
+        return {"provider": provider, "supported": True, "available": None, "balances": [], "error": type(exc).__name__}
+
+
+def _amount(value) -> Optional[float]:
+    """The provider sends amounts as strings ("110.00")."""
+    try:
+        number = float(value)
+        return number if number == number and abs(number) != float("inf") else None
+    except (TypeError, ValueError):
+        return None
