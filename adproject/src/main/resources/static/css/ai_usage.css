@@ -1,0 +1,65 @@
+/* Super Admin "AI usage" page. Builds on monitoring.css (panels, tables, badges); tokens only, so dark and warm themes follow. */
+.aiu { display: grid; gap: 32px; }
+
+.aiu-range { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.aiu-range a {
+    padding: 8px 16px; border-radius: 999px; border: 1px solid var(--ui-border-strong);
+    background: var(--ui-bg-surface); color: var(--ui-text-secondary); font-weight: 600; font-size: 0.875rem; text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.aiu-range a:hover { background: var(--ui-bg-inset); color: var(--ui-text-primary); }
+.aiu-range a:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.aiu-range a.is-current { background: var(--ui-primary); border-color: var(--ui-primary); color: var(--ui-on-brand); }
+.aiu-range-note { margin-left: 8px; font-size: 0.875rem; color: var(--ui-text-muted); }
+
+.aiu-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.aiu-kpi {
+    background: var(--ui-bg-surface); border: 1px solid var(--ui-border); border-radius: 12px; padding: 16px 20px;
+    display: flex; flex-direction: column; gap: 8px; min-width: 0;
+}
+.aiu-kpi-wide { grid-column: span 2; }
+.aiu-kpi h3 { margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--ui-text-muted); }
+.aiu-kpi-value { margin: 0; font-size: 1.75rem; font-weight: 700; line-height: 1.15; color: var(--ui-text-primary); overflow-wrap: anywhere; }
+.aiu-unit { font-size: 1rem; font-weight: 600; color: var(--ui-text-secondary); }
+.aiu-kpi-text { margin: 0; font-size: 0.875rem; line-height: 1.5; color: var(--ui-text-secondary); overflow-wrap: break-word; }
+
+.aiu-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.aiu-sub { margin: 0; font-size: 1rem; font-weight: 700; color: var(--ui-text-primary); }
+/* Never break a name or a number mid-word; the wrapper scrolls sideways when a table is wider than its panel. */
+.aiu .mon-table th, .aiu .mon-table td { white-space: nowrap; overflow-wrap: normal; }
+.aiu .mon-table td:first-child { min-width: 120px; }
+/* Numbers line up on the right under their headers; the first column and text columns stay on the left. */
+.aiu .mon-table th:not(:first-child), .aiu .mon-table td.mon-num { text-align: right; }
+.aiu .mon-table th:first-child, .aiu .mon-table td:first-child, .aiu .mon-table th.aiu-text, .aiu .mon-table td.aiu-bar-cell { text-align: left; }
+
+.aiu-scroll { max-height: 420px; overflow-y: auto; }
+.aiu-bar-cell { min-width: 120px; width: 28%; }
+progress.aiu-bar {
+    appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 8px; border: 0; border-radius: 4px;
+    background: var(--ui-bg-inset); color: var(--ui-accent); overflow: hidden;
+}
+progress.aiu-bar::-webkit-progress-bar { background: var(--ui-bg-inset); border-radius: 4px; }
+progress.aiu-bar::-webkit-progress-value { background: var(--ui-accent); border-radius: 4px; }
+progress.aiu-bar::-moz-progress-bar { background: var(--ui-accent); border-radius: 4px; }
+
+.aiu-form { gap: 20px; }
+.aiu-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.aiu-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.aiu-field label { font-size: 0.875rem; font-weight: 600; color: var(--ui-text-primary); }
+.aiu-field input {
+    width: 100%; max-width: 280px; padding: 10px 12px; font: inherit; font-variant-numeric: tabular-nums; color: var(--ui-text-primary);
+    background: var(--ui-bg-surface); border: 1px solid var(--ui-border-strong); border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.aiu-field input::placeholder { color: var(--ui-text-muted); }
+.aiu-field input:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 1px; border-color: var(--ui-accent); }
+.aiu-hint { font-size: 0.8125rem; line-height: 1.5; color: var(--ui-text-muted); }
+.aiu-form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+
+.aiu-notes { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ui-text-secondary); font-size: 0.9rem; line-height: 1.55; }
+.aiu-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 720px) {
+    .aiu-kpi-wide { grid-column: auto; }
+    .aiu-kpi-value { font-size: 1.5rem; }
+}

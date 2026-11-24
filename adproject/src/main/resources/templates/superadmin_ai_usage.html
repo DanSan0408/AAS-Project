@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Usage - IAMS</title>
+    <link rel="stylesheet" th:href="@{/css/superadmin_sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/superadmin_home.css}">
+    <link rel="stylesheet" th:href="@{/css/system-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/monitoring.css}">
+    <link rel="stylesheet" th:href="@{/css/ai_usage.css}">
+</head>
+<body data-ui-role="super_admin" class="superadmin-page">
+    <div th:replace="~{fragments/superadmin_sidebar :: superadmin_sidebar}"></div>
+
+    <div class="main-content">
+        <div class="header">
+            <div class="header-container">
+                <img th:src="@{/images/IAMS_logo2.png}" alt="IAMS Logo"/>
+            </div>
+        </div>
+        <nav th:replace="~{fragments/breadcrumb :: breadcrumb('Dashboard', '/superadmin/home', 'AI Usage')}"></nav>
+
+        <div class="page-header">
+            <h1>AI usage</h1>
+            <p>What the AI features cost and how they are doing. Amounts are estimates from the published price list; the provider's balance below is the real figure.</p>
+        </div>
+
+        <div class="container mt-4 monitoring aiu">
+            <div th:if="${successMessage}" class="alert alert-success" role="status"><span th:text="${successMessage}"></span></div>
+            <div th:if="${errorMessage}" class="alert alert-danger" role="alert"><span th:text="${errorMessage}"></span></div>
+
+            <!-- Period -->
+            <nav class="aiu-range" aria-label="Period">
+                <a th:each="r : ${ranges}" th:href="@{/superadmin/ai-usage(days=${r})}" th:text="|Last ${r} days|"
+                   th:classappend="${r == report.days} ? 'is-current'" th:attr="aria-current=${r == report.days} ? 'page' : null">Last 30 days</a>
+                <span class="aiu-range-note mon-num" th:text="|${report.from} to ${report.to} (UTC)|">2026-11-01 to 2026-11-30 (UTC)</span>
+            </nav>
+
+            <!-- Money -->
+            <section aria-labelledby="moneyTitle">
+                <h2 id="moneyTitle" class="mon-section-title">Money</h2>
+                <div class="aiu-kpis">
+                    <article class="aiu-kpi aiu-kpi-wide">
+                        <h3>Provider balance</h3>
+                        <p th:if="${!balance.supported}" class="aiu-kpi-text">Not available: <span th:text="${balance.provider}">gemini</span> does not report a balance. Check it in the provider's console.</p>
+                        <p th:if="${balance.supported and balance.error != null}" class="aiu-kpi-text">
+                            <span class="mon-badge mon-warn">Unknown</span>
+                            Could not read the balance (<span th:text="${balance.error}">HTTP 401</span>). Check that the API key is valid.
+                        </p>
+                        <th:block th:if="${balance.supported and balance.error == null and firstBalance != null}">
+                            <p class="aiu-kpi-value mon-num"><span th:text="${#numbers.formatDecimal(firstBalance.total, 1, 'COMMA', 2, 'POINT')}">10.00</span> <span class="aiu-unit" th:text="${firstBalance.currency}">USD</span></p>
+                            <p class="aiu-kpi-text">
+                                <span class="mon-badge" th:classappend="${balance.available == false} ? 'mon-down' : 'mon-up'"
+                                      th:text="${balance.available == false} ? 'Out of funds' : 'Funds available'">Funds available</span>
+                                <span th:if="${firstBalance.toppedUp != null and firstBalance.granted != null}" class="mon-num"
+                                      th:text="|${#numbers.formatDecimal(firstBalance.toppedUp, 1, 'COMMA', 2, 'POINT')} topped up, ${#numbers.formatDecimal(firstBalance.granted, 1, 'COMMA', 2, 'POINT')} granted|">8.00 topped up</span>
+                            </p>
+                            <p class="aiu-kpi-text" th:if="${runwayDays != null and runwayDays > 365}">More than a year left at the last week's spend.</p>
+                            <p class="aiu-kpi-text" th:if="${runwayDays != null and runwayDays <= 365}">About <strong class="mon-num" th:text="${runwayDays}">40</strong> days left at the last week's spend.</p>
+                            <p class="aiu-kpi-text" th:if="${settings.lowBalanceAlert != null}">Alert when it falls below <span class="mon-num" th:text="${settings.lowBalanceAlert}">5</span>.</p>
+                        </th:block>
+                        <p th:if="${balance.supported and balance.error == null and firstBalance == null}" class="aiu-kpi-text">The provider returned no balance.</p>
+                    </article>
+
+                    <article class="aiu-kpi">
+                        <h3>This month</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.monthToDate.costText()}">$0.00</p>
+                        <p class="aiu-kpi-text" th:if="${report.forecast.projectedText() != null}">Heading for <strong class="mon-num" th:text="${report.forecast.projectedText()}">$0.00</strong> by month end.</p>
+                        <p class="aiu-kpi-text" th:if="${report.forecast.projectedText() == null}">A projection needs a full day of data.</p>
+                        <p class="aiu-kpi-text" th:if="${report.forecast.hasBudget()}">
+                            <span class="mon-badge" th:classappend="${report.forecast.budgetUsedPercent >= 100} ? 'mon-down' : (${report.forecast.budgetUsedPercent >= 80} ? 'mon-warn' : 'mon-up')"
+                                  th:text="|${report.forecast.budgetUsedPercent}% of budget|">40% of budget</span>
+                            of <span class="mon-num" th:text="${report.forecast.budgetText()}">$20</span>
+                        </p>
+                        <p class="aiu-kpi-text" th:unless="${report.forecast.hasBudget()}">No monthly budget set. You can set one under Spending alerts below.</p>
+                    </article>
+
+                    <article class="aiu-kpi">
+                        <h3>Today</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.today.costText()}">$0.00</p>
+                        <p class="aiu-kpi-text mon-num" th:text="|${report.today.requests} requests, ${report.today.llmCalls} model calls|">0 requests</p>
+                    </article>
+
+                    <article class="aiu-kpi">
+                        <h3>Last 7 days, per day</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.forecast.burnText() != null} ? ${report.forecast.burnText()} : 'n/a'">$0.00</p>
+                        <p class="aiu-kpi-text">Average daily spend, used for the days left.</p>
+                    </article>
+
+                    <article class="aiu-kpi">
+                        <h3>This period</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.period.costText()}">$0.00</p>
+                        <p class="aiu-kpi-text" th:if="${report.period.costPerRequestText() != null}">
+                            <span class="mon-num" th:text="${report.period.costPerRequestText()}">$0.0001</span> per request that called the model.
+                        </p>
+                        <p class="aiu-kpi-text" th:if="${report.period.unpricedRequests > 0}">
+                            <span class="mon-badge mon-warn">Not priced</span>
+                            <span class="mon-num" th:text="${report.period.unpricedRequests}">3</span> requests used a model with no price, so they are left out of the amount. Prices are set with AI_PRICES_JSON on the server.
+                        </p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Alerts -->
+            <section aria-labelledby="alertsTitle">
+                <h2 id="alertsTitle" class="mon-section-title">Spending alerts</h2>
+                <form class="mon-panel aiu-form" th:action="@{/superadmin/ai-usage/settings}" method="post">
+                    <input type="hidden" name="days" th:value="${report.days}">
+                    <div class="aiu-form-row">
+                        <div class="aiu-field">
+                            <label for="aiuBudget">Monthly budget (US dollars)</label>
+                            <input id="aiuBudget" name="monthlyBudget" type="number" min="0" max="1000000" step="0.01" inputmode="decimal"
+                                   placeholder="Off" th:value="${settings.monthlyBudgetUsd}" aria-describedby="aiuBudgetHint">
+                            <span id="aiuBudgetHint" class="aiu-hint">Warn at 80% and again at 100% of this estimated spend each calendar month. The AI keeps working either way. Leave empty to turn off.</span>
+                        </div>
+                        <div class="aiu-field">
+                            <label for="aiuLow">Low-balance alert<span th:if="${balanceCurrency != null}"> (<span th:text="${balanceCurrency}">USD</span>)</span></label>
+                            <input id="aiuLow" name="lowBalance" type="number" min="0" max="1000000" step="0.01" inputmode="decimal"
+                                   placeholder="Off" th:value="${settings.lowBalanceAlert}" aria-describedby="aiuLowHint">
+                            <span id="aiuLowHint" class="aiu-hint">Warn when the provider balance falls below this, and again after a top-up and a new drop. Needs a provider that reports a balance (DeepSeek). Leave empty to turn off.</span>
+                        </div>
+                    </div>
+                    <p th:unless="${alertChannelConfigured}" class="aiu-kpi-text">
+                        <span class="mon-badge mon-warn">No channel</span>
+                        Neither email nor Telegram alerts are configured, so a warning could not be delivered. See System Monitoring.
+                    </p>
+                    <div class="aiu-form-actions">
+                        <button type="submit" class="btn btn-primary">Save alerts</button>
+                        <span class="mon-note" th:if="${settings.savedInApp}"
+                              th:text="|Last saved by ${settings.updatedBy} on ${#temporals.format(settings.updatedAt, 'yyyy-MM-dd HH:mm')} UTC.|">Last saved by admin on 2026-11-23 UTC.</span>
+                        <span class="mon-note" th:unless="${settings.savedInApp}">Showing the server's default settings. Saving here replaces them.</span>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Activity -->
+            <section aria-labelledby="activityTitle">
+                <h2 id="activityTitle" class="mon-section-title">Activity</h2>
+                <p th:if="${report.period.requests == 0}" class="mon-empty">
+                    No AI requests have been recorded in this period. Figures start from the day this page was deployed; run a comment check or a team audit to see the first entries.
+                </p>
+                <div class="aiu-kpis" th:unless="${report.period.requests == 0}">
+                    <article class="aiu-kpi">
+                        <h3>Requests</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.period.requests}">0</p>
+                        <p class="aiu-kpi-text mon-num" th:text="|${report.period.llmCalls} model calls, ${report.period.retries} retried|">0 model calls</p>
+                    </article>
+                    <article class="aiu-kpi">
+                        <h3>Answered normally</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.period.okPercent() != null} ? ${report.period.okPercent()} + '%' : 'n/a'">100%</p>
+                        <p class="aiu-kpi-text mon-num" th:text="|${report.period.partial} partial, ${report.period.unavailable} fell back, ${report.period.serviceErrors} service errors|">0 partial</p>
+                    </article>
+                    <article class="aiu-kpi">
+                        <h3>Speed</h3>
+                        <p class="aiu-kpi-value mon-num" th:if="${report.latency.samples > 0}" th:text="|${#numbers.formatDecimal(report.latency.avgMs / 1000.0, 1, 1)} s|">2.1 s</p>
+                        <p class="aiu-kpi-value" th:if="${report.latency.samples == 0}">n/a</p>
+                        <p class="aiu-kpi-text mon-num" th:if="${report.latency.samples > 0}"
+                           th:text="|average; slowest 1 in 20 took ${#numbers.formatDecimal(report.latency.p95Ms / 1000.0, 1, 1)} s, longest ${#numbers.formatDecimal(report.latency.maxMs / 1000.0, 1, 1)} s|">average</p>
+                    </article>
+                    <article class="aiu-kpi">
+                        <h3>Tokens</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${#numbers.formatInteger(report.period.totalTokens(), 1, 'COMMA')}">0</p>
+                        <p class="aiu-kpi-text mon-num" th:text="|${#numbers.formatInteger(report.period.promptTokens, 1, 'COMMA')} in, ${#numbers.formatInteger(report.period.completionTokens, 1, 'COMMA')} out|">0 in</p>
+                    </article>
+                    <article class="aiu-kpi">
+                        <h3>Cheap input (cache)</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.period.cachedPercent() != null} ? ${report.period.cachedPercent()} + '%' : 'n/a'">0%</p>
+                        <p class="aiu-kpi-text">Share of input the provider served from its cache at a fraction of the price.</p>
+                    </article>
+                    <article class="aiu-kpi">
+                        <h3>Saved</h3>
+                        <p class="aiu-kpi-value mon-num" th:text="${report.period.cacheHits + report.period.rateLimited}">0</p>
+                        <p class="aiu-kpi-text mon-num" th:text="|${report.period.cacheHits} ${report.period.cacheHits == 1 ? 'repeat' : 'repeats'} answered from memory, ${report.period.rateLimited} refused by the limit|">0 repeats</p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Per day -->
+            <section aria-labelledby="dayTitle" th:if="${report.period.requests > 0}">
+                <h2 id="dayTitle" class="mon-section-title">By day</h2>
+                <div class="mon-panel">
+                    <div class="mon-table-wrap aiu-scroll">
+                        <table class="mon-table">
+                            <thead><tr><th>Day (UTC)</th><th>Requests</th><th>Model calls</th><th>Tokens</th><th>Cost</th><th><span class="aiu-sr">Share of the busiest day's cost</span></th></tr></thead>
+                            <tbody>
+                                <tr th:each="d : ${activeDays}">
+                                    <td class="mon-num" th:text="${d.date}">2026-11-23</td>
+                                    <td class="mon-num" th:text="${d.totals.requests}">3</td>
+                                    <td class="mon-num" th:text="${d.totals.llmCalls}">3</td>
+                                    <td class="mon-num" th:text="${#numbers.formatInteger(d.totals.totalTokens(), 1, 'COMMA')}">1,200</td>
+                                    <td class="mon-num" th:text="${d.totals.costText()}">$0.0012</td>
+                                    <td class="aiu-bar-cell"><progress class="aiu-bar" th:max="${maxDayCost}" th:value="${d.totals.costUsd}" th:attr="aria-label=|Cost on ${d.date}|"></progress></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mon-note" th:if="${quietDays > 0}" th:text="|${quietDays} days with no AI activity are not listed.|">3 days with no AI activity are not listed.</p>
+                </div>
+            </section>
+
+            <!-- Breakdowns -->
+            <section aria-labelledby="splitTitle" th:if="${report.period.requests > 0}">
+                <h2 id="splitTitle" class="mon-section-title">Where it goes</h2>
+                <div class="aiu-split">
+                    <div class="mon-panel">
+                        <h3 class="aiu-sub">By feature</h3>
+                        <div class="mon-table-wrap">
+                        <table class="mon-table">
+                            <thead><tr><th>Feature</th><th>Requests</th><th>Tokens</th><th>Cost</th></tr></thead>
+                            <tbody><tr th:each="row : ${report.byFeature}">
+                                <td th:text="${featureNames[row.label] ?: row.label}">Comment check</td>
+                                <td class="mon-num" th:text="${row.totals.requests}">1</td>
+                                <td class="mon-num" th:text="${#numbers.formatInteger(row.totals.totalTokens(), 1, 'COMMA')}">1</td>
+                                <td class="mon-num" th:text="${row.totals.costText()}">$0</td>
+                            </tr></tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <div class="mon-panel">
+                        <h3 class="aiu-sub">By person</h3>
+                        <div class="mon-table-wrap">
+                        <table class="mon-table">
+                            <thead><tr><th>Asked by</th><th>Requests</th><th>Tokens</th><th>Cost</th></tr></thead>
+                            <tbody><tr th:each="row : ${report.byUser}">
+                                <td th:text="${row.label}">admin1</td>
+                                <td class="mon-num" th:text="${row.totals.requests}">1</td>
+                                <td class="mon-num" th:text="${#numbers.formatInteger(row.totals.totalTokens(), 1, 'COMMA')}">1</td>
+                                <td class="mon-num" th:text="${row.totals.costText()}">$0</td>
+                            </tr></tbody>
+                        </table>
+                        </div>
+                        <p class="mon-note">"system" is the automatic comment scan.</p>
+                    </div>
+                    <div class="mon-panel" th:if="${!#lists.isEmpty(report.byModel)}">
+                        <h3 class="aiu-sub">By model</h3>
+                        <div class="mon-table-wrap">
+                        <table class="mon-table">
+                            <thead><tr><th>Model</th><th>Model calls</th><th>Tokens</th><th>Cost</th></tr></thead>
+                            <tbody><tr th:each="row : ${report.byModel}">
+                                <td th:text="${row.label}">deepseek deepseek-flash</td>
+                                <td class="mon-num" th:text="${row.totals.llmCalls}">1</td>
+                                <td class="mon-num" th:text="${#numbers.formatInteger(row.totals.totalTokens(), 1, 'COMMA')}">1</td>
+                                <td class="mon-num" th:text="${row.totals.costText()}">$0</td>
+                            </tr></tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Problems -->
+            <section aria-labelledby="failTitle" th:if="${report.period.requests > 0}">
+                <h2 id="failTitle" class="mon-section-title">Problems</h2>
+                <div class="mon-panel">
+                    <p th:if="${#lists.isEmpty(report.failures)}" class="mon-empty">No failures in this period.</p>
+                    <div class="mon-table-wrap" th:unless="${#lists.isEmpty(report.failures)}">
+                        <table class="mon-table">
+                            <thead><tr><th>Kind of failure</th><th>Times</th><th>Last seen (UTC)</th></tr></thead>
+                            <tbody><tr th:each="f : ${report.failures}">
+                                <td><code th:text="${f.kind}">HTTP402</code></td>
+                                <td class="mon-num" th:text="${f.count}">1</td>
+                                <td class="mon-num" th:text="${#temporals.format(f.lastAt, 'yyyy-MM-dd HH:mm')}">2026-11-23 09:10</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                    <p class="mon-note">HTTP 402 means the account is out of funds, 401 a rejected key, 429 or 5xx a busy or down provider. Only the kind of failure is kept.</p>
+                </div>
+            </section>
+
+            <!-- Recent -->
+            <section aria-labelledby="recentTitle">
+                <h2 id="recentTitle" class="mon-section-title">Latest requests</h2>
+                <div class="mon-panel">
+                    <p th:if="${#lists.isEmpty(report.recent)}" class="mon-empty">Nothing recorded yet.</p>
+                    <div class="mon-table-wrap" th:unless="${#lists.isEmpty(report.recent)}">
+                        <table class="mon-table">
+                            <thead><tr><th>Time (UTC)</th><th class="aiu-text">Feature</th><th class="aiu-text">Asked by</th><th class="aiu-text">Result</th><th>Tokens</th><th>Cost</th><th>Took</th></tr></thead>
+                            <tbody><tr th:each="e : ${report.recent}">
+                                <td class="mon-num" th:text="${#temporals.format(e.occurredAt, 'yyyy-MM-dd HH:mm:ss')}">2026-11-23 09:10:00</td>
+                                <td th:text="${featureNames[e.feature.name()] ?: e.feature.name()}">Comment check</td>
+                                <td th:text="${e.requestedBy}">system</td>
+                                <td><span class="mon-badge"
+                                          th:classappend="${e.outcome.name() == 'OK'} ? 'mon-up' : (${e.outcome.name() == 'CACHE_HIT'} ? '' : 'mon-warn')"
+                                          th:text="${outcomeNames[e.outcome.name()] ?: e.outcome.name()}">Answered</span>
+                                    <code th:if="${e.errorKind != null}" th:text="${e.errorKind}">HTTP402</code></td>
+                                <td class="mon-num" th:text="${#numbers.formatInteger(e.promptTokens + e.completionTokens, 1, 'COMMA')}">1,200</td>
+                                <td class="mon-num" th:text="${e.costUsd != null} ? ${T(com.capstone.adproject.dto.ai.AiUsageReport).usd(e.costUsd)} : (${e.llmCalls > 0} ? 'not priced' : '-')">$0.0012</td>
+                                <td class="mon-num" th:text="|${#numbers.formatDecimal(e.latencyMs / 1000.0, 1, 1)} s|">2.1 s</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="aboutTitle">
+                <h2 id="aboutTitle" class="mon-section-title">About these figures</h2>
+                <div class="mon-panel">
+                    <ul class="aiu-notes">
+                        <li>Cost is an estimate: tokens times the provider's published price, with the cheaper rate for cached input. DeepSeek charges double at peak (01:00-04:00 and 06:00-10:00 UTC on weekdays); Chinese public holidays are counted as peak, so the estimate can be a little high. The balance at the top is the real figure.</li>
+                        <li>Only numbers are stored: who asked, which feature, tokens, time and the kind of failure. Prompts, comments, names and answers are never kept.</li>
+                        <li>Figures start from the day this page was first deployed, and records older than 400 days are deleted.</li>
+                        <li>Requests answered from memory (the same question within ten minutes) and requests refused by the per-person limit cost nothing; they are counted under Saved.</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

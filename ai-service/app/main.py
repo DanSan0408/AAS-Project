@@ -2,9 +2,9 @@ import hmac
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Header, HTTPException, Depends, status
+from fastapi import FastAPI, Header, HTTPException, Depends, Response, status
 
-from app import alerts
+from app import alerts, llm, usage
 from app.config import settings
 from app.schemas.team_dynamics_schemas import (
     TeamDynamicsRequest,
@@ -75,6 +75,16 @@ def verify_internal_secret(x_internal_secret: str = Header(default="", alias="X-
     return True
 
 
+USAGE_HEADER = "X-AI-Usage"
+
+
+def _report_usage(response: Response, used: usage.RequestUsage) -> None:
+    """Tells the app what the request cost, in a header, so the response bodies stay as they were."""
+    value = used.header_value()
+    if value:
+        response.headers[USAGE_HEADER] = value
+
+
 @app.get("/health")
 def health():
     return {"status": "healthy", "service": "IAMS AI Service"}
@@ -85,10 +95,13 @@ def health():
     response_model=TeamDynamicsResponse,
     dependencies=[Depends(verify_internal_secret)]
 )
-def audit_team_dynamics(request: TeamDynamicsRequest):
+def audit_team_dynamics(request: TeamDynamicsRequest, response: Response):
     try:
         logger.info(f"Auditing team dynamics for group #{request.groupId}: '{request.groupName}' on assessment #{request.assessmentId}")
-        return execute_team_dynamics_audit(request)
+        with usage.track() as used:
+            result = execute_team_dynamics_audit(request)
+        _report_usage(response, used)
+        return result
     except Exception as e:
         logger.error(f"Error executing team dynamics audit: {e}", exc_info=True)
         alerts.alert("500:audit", f"[ERROR] The team dynamics audit failed ({type(e).__name__}).")
@@ -100,10 +113,13 @@ def audit_team_dynamics(request: TeamDynamicsRequest):
     response_model=ModerationBriefingResponse,
     dependencies=[Depends(verify_internal_secret)]
 )
-def generate_moderation_briefing(request: ModerationBriefingRequest):
+def generate_moderation_briefing(request: ModerationBriefingRequest, response: Response):
     try:
         logger.info(f"Generating moderation briefing for assessment #{request.assessmentId}: '{request.assessmentTitle}'")
-        return execute_moderation_briefing(request)
+        with usage.track() as used:
+            result = execute_moderation_briefing(request)
+        _report_usage(response, used)
+        return result
     except Exception as e:
         logger.error(f"Error generating moderation briefing: {e}", exc_info=True)
         alerts.alert("500:briefing", f"[ERROR] The moderation briefing failed ({type(e).__name__}).")
@@ -115,11 +131,20 @@ def generate_moderation_briefing(request: ModerationBriefingRequest):
     response_model=CheckCommentsResponse,
     dependencies=[Depends(verify_internal_secret)]
 )
-def check_comments_endpoint(request: CheckCommentsRequest):
+def check_comments_endpoint(request: CheckCommentsRequest, response: Response):
     try:
         logger.info("Checking %d comments for moderation", len(request.comments))   # counts only: never the comment text
-        return check_comments(request)
+        with usage.track() as used:
+            result = check_comments(request)
+        _report_usage(response, used)
+        return result
     except Exception as e:
         logger.error(f"Error checking comments: {type(e).__name__}", exc_info=True)
         alerts.alert("500:comments", f"[ERROR] The comment check failed ({type(e).__name__}).")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="The AI analysis could not be completed.")
+
+
+@app.get("/api/v1/usage/balance", dependencies=[Depends(verify_internal_secret)])
+def provider_balance():
+    """What is left on the provider account, for the Super Admin AI usage page. Never raises; failures are in the body."""
+    return llm.provider_balance()
