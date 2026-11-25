@@ -686,35 +686,77 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
 
     /**
      * Reads the pending comments of an assessment that have not been checked (up to 100 at a time, 20 per request) and records
-     * the finding on each. The finding is advice: a comment stays pending until a person approves or rejects it.
+     * the finding on each. Identical comment texts share one AI verdict rather than paying to scan duplicates repeatedly.
+     * The finding is advice: a comment stays pending until a person approves or rejects it.
      */
     @Transactional
     public ScanResult scanPendingComments(Long assessmentId) {
         if (aiServiceClient == null) {
             throw new IllegalStateException("The AI service is not configured.");
         }
-        List<AssessmentComment> todo = commentRepository.findByAssessmentId(assessmentId).stream()
+        List<AssessmentComment> allComments = commentRepository.findByAssessmentId(assessmentId);
+        // Reuse verdicts already recorded on identical text in the same assessment when no manual flag blocks them.
+        Map<String, AssessmentComment> alreadyCheckedByHash = new HashMap<>();
+        for (AssessmentComment c : allComments) {
+            if (!needsScan(c) && c.getAiLabel() != null && !"not_checked".equals(c.getAiLabel())) {
+                alreadyCheckedByHash.putIfAbsent(c.getAiTextHash(), c);
+            }
+        }
+
+        List<AssessmentComment> rawTodo = allComments.stream()
             .filter(c -> c.getApprovalStatus() == AssessmentComment.ApprovalStatus.PENDING && !c.isApproved())
             .filter(c -> c.getCommentText() != null && !c.getCommentText().isBlank())
             .filter(AssessmentCommentService::needsScan)
             .sorted(java.util.Comparator.comparing(AssessmentComment::getId))
             .collect(Collectors.toList());
-        int remaining = Math.max(0, todo.size() - SCAN_LIMIT);
-        if (todo.size() > SCAN_LIMIT) todo = todo.subList(0, SCAN_LIMIT);
+        int remaining = Math.max(0, rawTodo.size() - SCAN_LIMIT);
+        if (rawTodo.size() > SCAN_LIMIT) rawTodo = rawTodo.subList(0, SCAN_LIMIT);
 
         int checked = 0, flagged = 0, notChecked = 0;
+        Map<String, List<AssessmentComment>> todoByHash = new java.util.LinkedHashMap<>();
+        for (AssessmentComment c : rawTodo) {
+            String hash = textHash(c.getCommentText());
+            AssessmentComment cached = alreadyCheckedByHash.get(hash);
+            if (cached != null) {
+                boolean aiFlagged = cached.getFlagReason() != null
+                        ? cached.getFlagReason().startsWith("AI check:")
+                        : Boolean.TRUE.equals(cached.getIsFlaggedNegative());
+                AiCommentDtos.Verdict reused = new AiCommentDtos.Verdict(
+                        String.valueOf(c.getId()),
+                        cached.getAiLabel(),
+                        cached.getAiConfidence() != null ? cached.getAiConfidence() : 0.0,
+                        null,
+                        cached.getAiReason(),
+                        aiFlagged,
+                        aiFlagged,
+                        "CACHE");
+                applyVerdict(c, reused);
+                commentRepository.save(c);
+                checked++;
+                if (Boolean.TRUE.equals(c.getIsFlaggedNegative())) flagged++;
+                continue;
+            }
+            todoByHash.computeIfAbsent(hash, k -> new java.util.ArrayList<>()).add(c);
+        }
+
+        List<AssessmentComment> representatives = todoByHash.values().stream()
+                .map(group -> group.get(0))
+                .collect(Collectors.toList());
+
         boolean anyBatchDone = false;
         String worst = "NOT_USED";
         List<String> notes = new java.util.ArrayList<>();
-        for (int from = 0; from < todo.size(); from += SCAN_BATCH) {
-            List<AssessmentComment> batch = todo.subList(from, Math.min(from + SCAN_BATCH, todo.size()));
+        for (int from = 0; from < representatives.size(); from += SCAN_BATCH) {
+            List<AssessmentComment> batch = representatives.subList(from, Math.min(from + SCAN_BATCH, representatives.size()));
             AiCommentDtos.CheckResponse response;
             try {
                 response = aiServiceClient.checkComments(new AiCommentDtos.CheckRequest(batch.stream()
                     .map(c -> new AiCommentDtos.Item(String.valueOf(c.getId()), c.getCommentText())).collect(Collectors.toList())));
             } catch (RuntimeException e) {
                 if (!anyBatchDone) throw e;     // nothing was read: tell the caller
-                remaining += todo.size() - from;
+                for (int j = from; j < representatives.size(); j++) {
+                    remaining += todoByHash.get(textHash(representatives.get(j).getCommentText())).size();
+                }
                 notes.add("The scan stopped early; run it again to continue.");
                 break;
             }
@@ -723,16 +765,19 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
             if (response.aiNotes() != null) notes.addAll(response.aiNotes());
             Map<String, AiCommentDtos.Verdict> byId = new HashMap<>();
             if (response.results() != null) response.results().forEach(v -> byId.put(v.id(), v));
-            for (AssessmentComment comment : batch) {
-                AiCommentDtos.Verdict verdict = byId.get(String.valueOf(comment.getId()));
+            for (AssessmentComment rep : batch) {
+                List<AssessmentComment> group = todoByHash.get(textHash(rep.getCommentText()));
+                AiCommentDtos.Verdict verdict = byId.get(String.valueOf(rep.getId()));
                 if (verdict == null || "not_checked".equals(verdict.label())) {
-                    notChecked++;
+                    notChecked += group.size();
                     continue;            // left unchecked, so a later scan tries again
                 }
-                applyVerdict(comment, verdict);
-                commentRepository.save(comment);
-                checked++;
-                if (Boolean.TRUE.equals(verdict.flagged())) flagged++;
+                for (AssessmentComment comment : group) {
+                    applyVerdict(comment, verdict);
+                    commentRepository.save(comment);
+                    checked++;
+                    if (Boolean.TRUE.equals(verdict.flagged())) flagged++;
+                }
             }
         }
         return new ScanResult(checked, flagged, notChecked, remaining, worst, notes.stream().distinct().collect(Collectors.toList()));

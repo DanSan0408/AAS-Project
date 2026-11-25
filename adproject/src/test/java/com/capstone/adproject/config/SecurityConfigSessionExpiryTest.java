@@ -111,4 +111,15 @@ class SecurityConfigSessionExpiryTest {
         assertEquals(403, request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE));
         assertNotNull(request.getAttribute(GlobalExceptionHandler.CUSTOM_MESSAGE_ATTRIBUTE));
     }
+
+    @Test
+    void accessDeniedAndEntryPointDoNothingWhenResponseIsAlreadyCommitted() throws Exception {
+        response.setCommitted(true);
+
+        config.accessDeniedHandler().handle(request, response, new org.springframework.security.access.AccessDeniedException("late"));
+        config.authenticationEntryPoint().commence(request, response, new InsufficientAuthenticationException("late"));
+
+        assertNull(response.getForwardedUrl());
+        assertNull(response.getRedirectedUrl());
+    }
 }

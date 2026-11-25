@@ -231,6 +231,11 @@ public class SecurityConfig {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
+            if (response.isCommitted()) {
+                logger.debug("Response already committed for {}; skipping access-denied handling ({})",
+                        GlobalExceptionHandler.originalUri(request), accessDeniedException.getClass().getSimpleName());
+                return;
+            }
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             boolean signedIn = auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken);
             // A CSRF failure with no live session is an expired session, not a forbidden action.
@@ -249,6 +254,9 @@ public class SecurityConfig {
 
     private static void rejectUnauthenticated(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
+        if (response.isCommitted()) {
+            return;
+        }
         if (GlobalExceptionHandler.wantsJson(request) || isEventStream(request)) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             if (!isEventStream(request)) {

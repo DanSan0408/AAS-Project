@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -52,6 +52,62 @@ def active_provider() -> str:
     if choice in ("deepseek", "gemini"):
         return choice
     return "deepseek" if (settings.deepseek_api_key or os.environ.get("DEEPSEEK_API_KEY", "")) else "gemini"
+
+
+def _typesafe_api_key() -> str:
+    return (settings.typesafe_api_key or os.environ.get("TYPESAFE_API_KEY", "")).strip()
+
+
+def typesafe_available() -> bool:
+    """True when TypeSafe AI (Jev) is configured and not explicitly disabled."""
+    flag = (settings.typesafe_enabled or "auto").strip().lower()
+    if flag in ("false", "off", "0", "no"):
+        return False
+    return bool(_typesafe_api_key())
+
+
+def invoke_system_one(state: Any, questions: Dict[str, Any], timeout: int = 30) -> Dict[str, Any]:
+    """Calls TypeSafe AI's System One endpoint (/v1/systemone) for structured classification/gating without prose generation.
+
+    Returns the `answers` dictionary from the API response. Raises AiUnavailable on failure; never logs state or keys.
+    """
+    api_key = _typesafe_api_key()
+    if not api_key:
+        raise AiUnavailable("TYPESAFE_API_KEY is not set.")
+    model = (settings.typesafe_model or "jev-latest").strip() or "jev-latest"
+    url = settings.typesafe_base_url.rstrip("/") + "/v1/systemone"
+    headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+    payload = {"model": model, "state": state, "questions": questions}
+    call = usage.start_call("typesafe", model)
+    try:
+        for attempt in (1, 2):
+            usage.note_attempt()
+            try:
+                response = httpx.post(url, headers=headers, json=payload, timeout=timeout)
+            except httpx.TransportError:
+                if attempt == 2:
+                    raise
+                time.sleep(1)
+                continue
+            if response.status_code in _RETRY_STATUSES and attempt == 1:
+                time.sleep(1)
+                continue
+            if response.status_code != 200:
+                raise ProviderHttpError(response.status_code)
+            body = response.json()
+            if not isinstance(body, dict) or not isinstance(body.get("answers"), dict):
+                raise ValueError("Missing answers in TypeSafe response.")
+            if isinstance(body.get("model"), str) and body["model"].strip():
+                call.model = body["model"].strip()
+            usage.add_typesafe_usage(body.get("usage"))
+            usage.finish_call(call, ok=True)
+            return body["answers"]
+        raise ValueError("No reply.")
+    except Exception as exc:
+        kind = f"HTTP{exc.status}" if isinstance(exc, ProviderHttpError) else type(exc).__name__
+        usage.finish_call(call, ok=False, error=kind)
+        logger.warning("TypeSafe AI call failed (%s)", kind)
+        raise AiUnavailable("TypeSafe AI did not return a usable answer.") from exc
 
 
 class ProviderHttpError(Exception):

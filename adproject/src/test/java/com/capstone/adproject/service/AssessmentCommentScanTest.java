@@ -255,4 +255,28 @@ class AssessmentCommentScanTest {
         AssessmentCommentService bare = new AssessmentCommentService();
         assertThrows(IllegalStateException.class, () -> bare.scanPendingComments(5L));
     }
+
+    @Test
+    void identicalCommentsShareOneAiCallAndReuseAlreadyCheckedText() {
+        AssessmentComment alreadyRead = pending("Good teamwork");
+        service_markRead(alreadyRead);
+        AssessmentComment duplicateOfRead = pending("Good teamwork");
+        AssessmentComment newA = pending("Needs clearer slides");
+        AssessmentComment newB = pending("Needs clearer slides");
+        when(commentRepository.findByAssessmentId(5L)).thenReturn(List.of(alreadyRead, duplicateOfRead, newA, newB));
+        when(aiServiceClient.checkComments(any())).thenAnswer(invocation -> {
+            AiCommentDtos.CheckRequest req = invocation.getArgument(0);
+            assertEquals(1, req.comments().size());
+            assertEquals("Needs clearer slides", req.comments().get(0).text());
+            return response("OK", new AiCommentDtos.Verdict(req.comments().get(0).id(), "ok", 0.92, "en", "Constructive", false, false, "AI"));
+        });
+
+        AssessmentCommentService.ScanResult result = service.scanPendingComments(5L);
+
+        assertEquals(3, result.checked());
+        assertEquals("ok", duplicateOfRead.getAiLabel());
+        assertEquals("ok", newA.getAiLabel());
+        assertEquals("ok", newB.getAiLabel());
+        verify(aiServiceClient, org.mockito.Mockito.times(1)).checkComments(any());
+    }
 }

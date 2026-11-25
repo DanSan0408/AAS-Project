@@ -191,3 +191,60 @@ class LongCommentTest(unittest.TestCase):
                                    headers={"X-Internal-Secret": SECRET})
 
         self.assertEqual(200, response.status_code, response.text[:200])
+
+
+class CostOptimizationAndJevTest(unittest.TestCase):
+    def test_duplicate_comments_share_one_model_call(self):
+        seen = []
+
+        def spy(system, user, temperature=0.0):
+            seen.append(user)
+            return answer(("a", "ok", 0.95, "Fine."))
+
+        with patch.object(cc, "typesafe_available", return_value=False), patch.object(cc, "invoke_json", side_effect=spy):
+            out = cc.check_comments(request(("a", "Good teamwork."), ("b", "Good teamwork.")))
+
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(seen[0].count("<comment "), 1)
+        self.assertEqual([v.label for v in out.results], ["ok", "ok"])
+
+    def test_explicit_strong_profanity_is_decided_by_rules_without_calling_the_model(self):
+        with patch.object(cc, "typesafe_available", return_value=False), \
+                patch.object(cc, "invoke_json", side_effect=AssertionError("must not call model")):
+            out = cc.check_comments(request(("a", "Bodoh punya ahli.")))
+
+        self.assertEqual(out.results[0].label, "abusive")
+        self.assertEqual(out.results[0].source, "RULES")
+        self.assertEqual(out.aiStatus, "NOT_USED")
+
+    def test_jev_tier1_accepts_clear_ok_without_generative_llm_and_escalates_flagged_items(self):
+        def fake_jev(state, questions):
+            choice = "sarcastic" if "deadline" in state else "ok"
+            return {"moderation": {"choice": choice, "confidence": 0.92}}
+
+        seen_llm = []
+
+        def fake_llm(system, user, temperature=0.0):
+            seen_llm.append(user)
+            return answer(("b", "sarcastic", 0.9, "Mocks late submission."))
+
+        with patch.object(cc, "typesafe_available", return_value=True), \
+                patch.object(cc, "invoke_system_one", side_effect=fake_jev), \
+                patch.object(cc, "invoke_json", side_effect=fake_llm):
+            out = cc.check_comments(request(("a", "Helped debug the API."), ("b", "Great job submitting 5 minutes before deadline!")))
+
+        self.assertEqual(len(seen_llm), 1)
+        self.assertNotIn('id="a"', seen_llm[0])
+        self.assertIn('id="b"', seen_llm[0])
+        self.assertEqual(out.results[0].label, "ok")
+        self.assertEqual(out.results[1].label, "sarcastic")
+        self.assertEqual(out.aiStatus, "OK")
+
+    def test_jev_falls_back_to_generative_llm_when_jev_is_unavailable(self):
+        with patch.object(cc, "typesafe_available", return_value=True), \
+                patch.object(cc, "invoke_system_one", side_effect=AiUnavailable("down")), \
+                patch.object(cc, "invoke_json", return_value=answer(("a", "ok", 0.9, "Fine."))):
+            out = cc.check_comments(request(("a", "Good work.")))
+
+        self.assertEqual(out.results[0].label, "ok")
+        self.assertEqual(out.aiStatus, "OK")
