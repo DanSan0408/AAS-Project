@@ -238,7 +238,7 @@ def synthesize_moderation_briefing(state: ModerationGraphState) -> Dict[str, Any
                                            for c in top_criteria],
         "submissionsWithBiggestSpread": targets,
     }
-    user = ("Facts (calculated from the assessors' marks):\n" + json.dumps(facts, indent=2)
+    user = ("Facts (calculated from the assessors' marks):\n" + json.dumps(facts, separators=(",", ":"))
             + ("\n\nAssessor comments:\n" + "\n".join(comments) if comments else "")
             + '\n\nWrite 2 or 3 plain sentences (at most 80 words) on how closely the assessors agree and where they differ most, '
               'and 2 or 3 short next steps for the moderation discussion that start with a verb. Do not invent reasons for the differences. '

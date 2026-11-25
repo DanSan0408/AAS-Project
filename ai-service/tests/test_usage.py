@@ -270,5 +270,32 @@ class BalanceTest(DeepSeekCase):
         self.assertEqual("ConnectError", ok.json()["error"])
 
 
+class TypeSafeJevUsageTest(unittest.TestCase):
+    def test_jev_pricing_charges_input_only_and_zero_for_output(self):
+        cost = usage.estimate_cost("jev-1.14.0", 1_000_000, 0, 500_000, MONDAY_NOON)
+        self.assertAlmostEqual(0.042, cost, places=9)
+
+    def test_invoke_system_one_tracks_tokens_and_cost(self):
+        body = {
+            "model": "jev-1.14.0",
+            "answers": {"moderation": {"type": "choice", "choice": "ok", "confidence": 0.94}},
+            "usage": {"input_tokens": 250, "output_tokens": 12},
+        }
+        resp = httpx.Response(200, json=body, request=httpx.Request("POST", "https://api.typesafe.ai/v1/systemone"))
+        with patch.object(settings, "typesafe_api_key", "ts-secret-key"), \
+                patch.object(settings, "typesafe_enabled", "auto"), \
+                patch.object(settings, "typesafe_model", "jev-latest"), \
+                patch.object(settings, "typesafe_base_url", "https://api.typesafe.ai"), \
+                patch.object(llm.httpx, "post", return_value=resp), \
+                usage.track() as used:
+            answers = llm.invoke_system_one("Good job", {"moderation": {"type": "choice"}})
+
+        self.assertEqual("ok", answers["moderation"]["choice"])
+        self.assertEqual("typesafe", used.provider)
+        self.assertEqual("jev-1.14.0", used.model)
+        self.assertEqual(250, used.prompt_tokens)
+        self.assertAlmostEqual(250 * 0.042 / 1_000_000, used.cost_usd, places=12)
+
+
 if __name__ == "__main__":
     unittest.main()

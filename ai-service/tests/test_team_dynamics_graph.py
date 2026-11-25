@@ -143,5 +143,28 @@ class NotEnoughDataTest(unittest.TestCase):
         self.assertEqual(result.collaborationStatus, "INSUFFICIENT_DATA")
 
 
+class TypeSafeJevTeamDynamicsTest(unittest.TestCase):
+    def test_jev_handles_positive_comments_without_calling_comment_llm(self):
+        seen_prompts = []
+
+        def fake_llm(system, user, temperature=0.1):
+            seen_prompts.append(user)
+            return {"executiveSummary": "The team worked steadily.", "recommendedActions": ["Keep current cadence."]}
+
+        with patch.object(graph, "typesafe_available", return_value=True), \
+                patch.object(graph, "invoke_system_one", return_value={
+                    "sentiment": {"choice": "POSITIVE", "confidence": 0.95},
+                    "attendanceOrEffortConcern": {"probability": 0.05},
+                }), \
+                patch.object(graph, "invoke_json", side_effect=fake_llm):
+            result = graph.execute_team_dynamics_audit(request([comment("Aisyah", "Very reliable.")], free_rider=False))
+
+        self.assertEqual(result.aiStatus, "OK")
+        self.assertEqual(len(seen_prompts), 1)
+        self.assertNotIn("<comment", seen_prompts[0])
+        aisyah = [m for m in result.memberMetrics if m.studentName == "Aisyah"][0]
+        self.assertIn("positive peer comments", aisyah.contributionSummary)
+
+
 if __name__ == "__main__":
     unittest.main()

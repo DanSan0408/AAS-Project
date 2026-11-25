@@ -105,4 +105,19 @@ class CommentScanSchedulerTest {
 
         assertEquals("SKIPPED", s.runOnce(true).status());
     }
+
+    @Test
+    void anAssessmentWithOnlyUncheckedCommentsCoolsDownForAutomaticRunsButNotManualOnes() {
+        when(commentRepository.findAssessmentIdsWithPendingComments()).thenReturn(List.of(1L));
+        when(commentService.scanPendingComments(1L)).thenReturn(result(0, 0, 5, 0, "PARTIAL"));
+        CommentScanScheduler s = scheduler(true);
+
+        s.runOnce(false);
+        CommentScanScheduler.RunSummary secondAuto = s.runOnce(false);
+        CommentScanScheduler.RunSummary manual = s.runOnce(true);
+
+        assertEquals(0, secondAuto.assessments());
+        assertEquals(1, manual.assessments());
+        verify(commentService, org.mockito.Mockito.times(2)).scanPendingComments(1L);
+    }
 }

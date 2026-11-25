@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     # Gemini 3+ only: "minimal", "low", "medium" or "high". Empty keeps Google's default for the model.
     gemini_thinking_level: str = ""
 
+    # TypeSafe AI (Jev "System One" classification/gating model: $0.042/1M input tokens, $0 output tokens).
+    # Optional tier-1 classifier for comment moderation and team sentiment; auto-enabled when TYPESAFE_API_KEY is set.
+    typesafe_api_key: str = ""
+    typesafe_model: str = "jev-latest"
+    typesafe_base_url: str = "https://api.typesafe.ai"
+    typesafe_enabled: str = "auto"               # "auto", "true", or "false"
+
     # Microservice Security. No default: outside debug mode the service refuses to start without a strong secret.
     ai_internal_secret: str = ""
     

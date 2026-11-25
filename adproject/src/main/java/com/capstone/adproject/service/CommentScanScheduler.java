@@ -1,7 +1,10 @@
 package com.capstone.adproject.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -23,6 +26,8 @@ public class CommentScanScheduler {
     private static final Logger log = LoggerFactory.getLogger(CommentScanScheduler.class);
     /** Most comments one run reads (the AI client allows only so many model calls per window). */
     static final int MAX_COMMENTS_PER_RUN = 200;
+    /** Cooldown before automatically retrying an assessment whose comments produced zero checked verdicts. */
+    static final Duration RETRY_COOLDOWN = Duration.ofHours(1);
 
     /** What the last run did, for the super admin page. */
     public record RunSummary(Instant at, boolean manual, int assessments, int read, int flagged, int notChecked, int remaining,
@@ -32,6 +37,7 @@ public class CommentScanScheduler {
     private final AssessmentCommentService commentService;
     private final boolean enabled;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final Map<Long, Instant> retryCooldownUntil = new ConcurrentHashMap<>();
     private volatile RunSummary last;
 
     @Autowired(required = false)
@@ -52,7 +58,7 @@ public class CommentScanScheduler {
         return last;
     }
 
-    @Scheduled(fixedDelayString = "${app.comment-scan.interval-ms:900000}", initialDelayString = "${app.comment-scan.initial-delay-ms:180000}")
+    @Scheduled(fixedDelayString = "${app.comment-scan.interval-ms:1800000}", initialDelayString = "${app.comment-scan.initial-delay-ms:180000}")
     public void scheduledRun() {
         if (enabled) {
             runOnce(false);
@@ -70,9 +76,16 @@ public class CommentScanScheduler {
         int assessments = 0, read = 0, flagged = 0, notChecked = 0, remaining = 0;
         String status = "OK";
         String note = "";
+        Instant now = Instant.now();
         try {
             List<Long> ids = commentRepository.findAssessmentIdsWithPendingComments().stream().distinct().sorted().toList();
             for (Long assessmentId : ids) {
+                if (!manual) {
+                    Instant blockedUntil = retryCooldownUntil.get(assessmentId);
+                    if (blockedUntil != null && now.isBefore(blockedUntil)) {
+                        continue;
+                    }
+                }
                 if (read + notChecked >= MAX_COMMENTS_PER_RUN) {
                     status = "PARTIAL";
                     note = "Stopped at the per-run limit; the rest is read next time.";
@@ -84,6 +97,11 @@ public class CommentScanScheduler {
                 flagged += result.flagged();
                 notChecked += result.notChecked();
                 remaining += result.remaining();
+                if (result.checked() == 0 && result.notChecked() > 0) {
+                    retryCooldownUntil.put(assessmentId, now.plus(RETRY_COOLDOWN));
+                } else if (result.checked() > 0) {
+                    retryCooldownUntil.remove(assessmentId);
+                }
                 if ("UNAVAILABLE".equals(result.aiStatus()) || "PARTIAL".equals(result.aiStatus())) {
                     status = result.aiStatus();
                     note = "The AI could not read everything; it will be retried next time.";

@@ -85,6 +85,11 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
       GEMINI_THINKING_LEVEL: ${GEMINI_THINKING_LEVEL:-}
+      # Optional TypeSafe AI (Jev) Tier-1 classifier for comment moderation & team sentiment ($0 output tokens).
+      TYPESAFE_API_KEY: ${TYPESAFE_API_KEY:-}
+      TYPESAFE_MODEL: ${TYPESAFE_MODEL:-jev-latest}
+      TYPESAFE_BASE_URL: ${TYPESAFE_BASE_URL:-https://api.typesafe.ai}
+      TYPESAFE_ENABLED: ${TYPESAFE_ENABLED:-auto}
       # Optional price overrides for the cost estimate, JSON, US dollars per million tokens. DeepSeek's prices are built in; set this for
       # Gemini or when a price changes: {"gemini-3.8-flash":{"hit":0.1,"miss":0.3,"out":2.5}}
       AI_PRICES_JSON: ${AI_PRICES_JSON:-}

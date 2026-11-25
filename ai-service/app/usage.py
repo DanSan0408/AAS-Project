@@ -28,10 +28,14 @@ MAX_ERROR_KINDS = 10
 # Per one million tokens, as (off-peak, peak), from https://api-docs.deepseek.com/quick_start/pricing. A model that is not listed
 # here is "not priced": its tokens are still counted, its cost is left empty. AI_PRICES_JSON adds or replaces entries.
 _DEEPSEEK_FLASH = {"hit": (0.003, 0.006), "miss": (0.15, 0.3), "out": (0.6, 1.2)}
+_JEV = {"hit": (0.042, 0.042), "miss": (0.042, 0.042), "out": (0.0, 0.0)}
 DEFAULT_PRICES: Dict[str, Dict[str, Tuple[float, float]]] = {
     "deepseek-flash": _DEEPSEEK_FLASH,
     "deepseek-v4-flash": _DEEPSEEK_FLASH,           # the old name; the provider now serves it with deepseek-flash
     "deepseek-v4-pro": {"hit": (0.022, 0.044), "miss": (0.66, 1.32), "out": (1.98, 3.96)},
+    "jev-latest": _JEV,
+    "jev-1.13.0": _JEV,
+    "jev-1.14.0": _JEV,
 }
 
 _price_cache: Optional[Dict[str, Dict[str, Tuple[float, float]]]] = None
@@ -81,7 +85,10 @@ def is_peak(moment: datetime) -> bool:
 def estimate_cost(model: str, prompt_tokens: int, cache_hit_tokens: int, completion_tokens: int,
                   moment: Optional[datetime] = None) -> Optional[float]:
     """US dollars for one call, or None when the model has no price."""
-    entry = prices().get((model or "").strip().lower())
+    key = (model or "").strip().lower()
+    entry = prices().get(key)
+    if entry is None and key.startswith("jev-"):
+        entry = _JEV
     if entry is None:
         return None
     slot = 1 if is_peak(moment or datetime.now(timezone.utc)) else 0
@@ -216,6 +223,13 @@ def add_langchain_usage(metadata) -> None:
     out_details = metadata.get("output_token_details") if isinstance(metadata.get("output_token_details"), dict) else {}
     add_tokens(prompt=metadata.get("input_tokens"), cache_hit=in_details.get("cache_read"),
                completion=metadata.get("output_tokens"), reasoning=out_details.get("reasoning"))
+
+
+def add_typesafe_usage(usage) -> None:
+    """Reads the `usage` object of a TypeSafe AI System One reply (`input_tokens`, `output_tokens`)."""
+    if not isinstance(usage, dict):
+        return
+    add_tokens(prompt=usage.get("input_tokens"), completion=usage.get("output_tokens"))
 
 
 def finish_call(call: CallUsage, ok: bool, error: Optional[str] = None) -> None:

@@ -12,7 +12,7 @@ from langgraph.graph import StateGraph, END
 
 from app.analysis.team_metrics import analyse_team, default_actions, plain_summary
 from app.analysis.text_safety import (MAX_COMMENTS, Pseudonyms, clean_text, one_of, string_list, text_field)
-from app.llm import AiUnavailable, invoke_json
+from app.llm import AiUnavailable, invoke_json, invoke_system_one, typesafe_available
 from app.schemas.team_dynamics_schemas import (
     TeamDynamicsRequest,
     TeamDynamicsResponse,
@@ -60,6 +60,39 @@ def analyse(state: TeamDynamicsGraphState) -> Dict[str, Any]:
     return {"analysis": analysis, "names": names}
 
 
+def _jev_classify_student_comments(label_text: str) -> Optional[Dict[str, Any]]:
+    """Classifies one student's peer comments via TypeSafe AI Jev without generating prose."""
+    questions = {
+        "sentiment": {
+            "type": "choice",
+            "instructions": "What is the overall sentiment of teammates' comments about this student's contribution?",
+            "criteria": {
+                "POSITIVE": "Generally positive or appreciative of contribution and collaboration.",
+                "MIXED": "Balanced praise and minor constructive feedback without serious complaints.",
+                "NEGATIVE": "Mostly negative feedback about contribution or collaboration.",
+                "COMPLAINT": "Explicit complaint about missed meetings, lack of effort, or unreliability.",
+            },
+        },
+        "attendanceOrEffortConcern": {
+            "type": "noul",
+            "instructions": "Do these comments mention attendance problems, missed meetings, unresponsiveness, or lack of effort?",
+        },
+    }
+    answers = invoke_system_one(state=label_text, questions=questions)
+    sent = answers.get("sentiment") if isinstance(answers, dict) else None
+    concern = answers.get("attendanceOrEffortConcern") if isinstance(answers, dict) else None
+    if not isinstance(sent, dict):
+        return None
+    sentiment = one_of(sent.get("choice"), SENTIMENTS, "MIXED")
+    prob = 0.0
+    if isinstance(concern, dict):
+        try:
+            prob = float(concern.get("probability", concern.get("score", 0.0)))
+        except (TypeError, ValueError):
+            prob = 0.0
+    return {"sentiment": sentiment, "concern": prob >= 0.5}
+
+
 def summarise_comments(state: TeamDynamicsGraphState) -> Dict[str, Any]:
     """The model's plain-language read of the written comments, one line per student."""
     req = state["request"]
@@ -71,43 +104,71 @@ def summarise_comments(state: TeamDynamicsGraphState) -> Dict[str, Any]:
         id_by_name.setdefault(m["studentName"], m["studentId"])
 
     lines = []
+    texts_by_student: Dict[int, List[str]] = {}
     for index, c in enumerate(req.get("peerComments", [])[:MAX_COMMENTS], start=1):
         student_id = id_by_name.get(c.get("evaluatedName"))
         text = clean_text(c.get("commentText"))
         if student_id is None or not text:
             continue   # who wrote it is never sent; only who it is about
-        lines.append(f'<comment id="c{index}" about="{names.label("Student", student_id, c.get("evaluatedName"))}">{text}</comment>')
+        texts_by_student.setdefault(student_id, []).append(text)
+        lines.append((student_id, f'<comment id="c{index}" about="{names.label("Student", student_id, c.get("evaluatedName"))}">{text}</comment>'))
     if not lines:
         return {"comment_notes": {}}
 
-    user = (
-        "Each comment below is about one student (their label is in the about attribute).\n"
-        "For each student that has comments, write one short plain sentence on how teammates described their contribution, "
-        "communication and reliability, and say whether comments mention attendance or effort problems.\n\n"
-        + "\n".join(lines)
-        + '\n\nReply as JSON: {"students": [{"about": "Student 1", "sentiment": "POSITIVE|MIXED|NEGATIVE|COMPLAINT", '
-          '"summary": "one sentence", "attendanceOrEffortConcern": false}]}'
-    )
-
     notes: Dict[int, Dict[str, Any]] = {}
-    attempts, failures, ai_notes = state["ai_attempts"] + 1, state["ai_failures"], list(state["ai_notes"])
-    try:
-        data = invoke_json(COMMENT_SYSTEM, user, temperature=0.1)
-        label_to_id = {names.label("Student", m["studentId"], m["studentName"]): m["studentId"] for m in members}
-        items = data.get("students") if isinstance(data.get("students"), list) else []
-        for item in items:
-            if not isinstance(item, dict) or item.get("about") not in label_to_id:
-                continue
-            summary = text_field(item.get("summary"), 240)
-            if summary:
-                notes[label_to_id[item["about"]]] = {
-                    "sentiment": one_of(item.get("sentiment"), SENTIMENTS, "MIXED"),
-                    "summary": names.restore(summary),
-                    "concern": item.get("attendanceOrEffortConcern") is True,
-                }
-    except AiUnavailable:
-        failures += 1
-        ai_notes.append("The AI could not summarise the written comments this time.")
+    attempts, failures, ai_notes = state["ai_attempts"], state["ai_failures"], list(state["ai_notes"])
+    escalated_ids = set(texts_by_student.keys())
+
+    # Tier 1: TypeSafe AI Jev screens each student's comments cheaply; only negative/concern cases escalate for prose summaries.
+    if typesafe_available():
+        escalated_ids = set()
+        for student_id, texts in texts_by_student.items():
+            attempts += 1
+            try:
+                jev = _jev_classify_student_comments("\n".join(texts))
+                if jev and not jev["concern"] and jev["sentiment"] in ("POSITIVE", "MIXED"):
+                    stat = analysis["member_stats"].get(student_id, {})
+                    peer = stat.get("peerScoreAvg")
+                    summary = ("Teammates left positive peer comments" if jev["sentiment"] == "POSITIVE"
+                               else "Teammates left mixed peer comments with no attendance or effort concerns")
+                    if peer is not None:
+                        summary += f" (peer average {peer}%)."
+                    else:
+                        summary += "."
+                    notes[student_id] = {"sentiment": jev["sentiment"], "summary": summary, "concern": False}
+                else:
+                    escalated_ids.add(student_id)
+            except AiUnavailable:
+                escalated_ids.add(student_id)
+
+    llm_lines = [line for sid, line in lines if sid in escalated_ids]
+    if llm_lines:
+        user = (
+            "Each comment below is about one student (their label is in the about attribute).\n"
+            "For each student that has comments, write one short plain sentence on how teammates described their contribution, "
+            "communication and reliability, and say whether comments mention attendance or effort problems.\n\n"
+            + "\n".join(llm_lines)
+            + '\n\nReply as JSON: {"students": [{"about": "Student 1", "sentiment": "POSITIVE|MIXED|NEGATIVE|COMPLAINT", '
+              '"summary": "one sentence", "attendanceOrEffortConcern": false}]}'
+        )
+        attempts += 1
+        try:
+            data = invoke_json(COMMENT_SYSTEM, user, temperature=0.1)
+            label_to_id = {names.label("Student", m["studentId"], m["studentName"]): m["studentId"] for m in members}
+            items = data.get("students") if isinstance(data.get("students"), list) else []
+            for item in items:
+                if not isinstance(item, dict) or item.get("about") not in label_to_id:
+                    continue
+                summary = text_field(item.get("summary"), 240)
+                if summary:
+                    notes[label_to_id[item["about"]]] = {
+                        "sentiment": one_of(item.get("sentiment"), SENTIMENTS, "MIXED"),
+                        "summary": names.restore(summary),
+                        "concern": item.get("attendanceOrEffortConcern") is True,
+                    }
+        except AiUnavailable:
+            failures += 1
+            ai_notes.append("The AI could not summarise the written comments this time.")
 
     # A written concern about attendance or effort next to ratings at or above the team average is worth a look.
     flags = analysis["flags"]
@@ -163,7 +224,7 @@ def write_narrative(state: TeamDynamicsGraphState) -> Dict[str, Any]:
         "students": [{"student": names.label("Student", s["studentId"], s["studentName"]), "status": s["status"],
                       "peerAverage": s["peerScoreAvg"]} for s in analysis["member_stats"].values()],
     }
-    user = ("Facts (calculated from the peer ratings):\n" + json.dumps(facts, indent=2) +
+    user = ("Facts (calculated from the peer ratings):\n" + json.dumps(facts, separators=(",", ":")) +
             '\n\nWrite 2 or 3 plain sentences for the supervisor (at most 80 words) and 2 or 3 short next steps that start with a verb. '
             'Refer to students by their labels. Do not repeat the numbers; say what they mean. '
             'Reply as JSON: {"executiveSummary": "...", "recommendedActions": ["...", "..."]}')
