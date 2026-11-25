@@ -296,6 +296,33 @@ class TypeSafeJevUsageTest(unittest.TestCase):
         self.assertEqual(250, used.prompt_tokens)
         self.assertAlmostEqual(250 * 0.042 / 1_000_000, used.cost_usd, places=12)
 
+    def test_multi_model_request_reports_both_jev_and_deepseek_separately(self):
+        jev_body = {
+            "model": "jev-1.14.0",
+            "answers": {"moderation": {"type": "choice", "choice": "sarcastic", "confidence": 0.9}},
+            "usage": {"input_tokens": 200, "output_tokens": 10},
+        }
+        jev_resp = httpx.Response(200, json=jev_body, request=httpx.Request("POST", "https://api.typesafe.ai/v1/systemone"))
+        ds_resp = reply('{"ok": true}', FIRST)
+        with patch.object(settings, "typesafe_api_key", "ts-secret"), \
+                patch.object(settings, "typesafe_enabled", "auto"), \
+                patch.object(settings, "deepseek_api_key", KEY), \
+                patch.object(settings, "ai_provider", "deepseek"), \
+                patch.object(settings, "deepseek_model", "deepseek-flash"), \
+                patch.object(llm.httpx, "post", side_effect=[jev_resp, ds_resp]), \
+                usage.track() as used:
+            llm.invoke_system_one("Great job", {"moderation": {"type": "choice"}})
+            llm.invoke_json("Reply with JSON.", "Great job")
+
+        header = json.loads(used.header_value())
+        self.assertEqual("typesafe+deepseek", header["provider"])
+        self.assertEqual("jev-1.14.0+deepseek-flash", header["model"])
+        self.assertEqual(2, header["calls"])
+        self.assertEqual(2, len(header["models"]))
+        self.assertEqual(["jev-1.14.0", "deepseek-flash"], [m["model"] for m in header["models"]])
+        self.assertEqual(200, header["models"][0]["promptTokens"])
+        self.assertEqual(1000, header["models"][1]["promptTokens"])
+
 
 if __name__ == "__main__":
     unittest.main()

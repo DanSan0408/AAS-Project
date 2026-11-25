@@ -181,6 +181,8 @@ class SuperAdminAiUsageControllerTest {
         assertTrue(html.contains("25% of budget"));
         assertTrue(html.contains("Alert when it falls below"));
         assertTrue(html.contains("Comment check"), "feature shown by its readable name");
+        assertTrue(html.contains("deepseek-flash"), "model column shown in latest requests and by model");
+        assertTrue(html.contains("TypeSafe AI (Jev)"), "page explains both DeepSeek and Jev");
         assertTrue(html.contains("Model unavailable (fell back)"));
         assertTrue(html.contains("HTTP402"));
         assertTrue(html.contains("$0.0003"), "small amounts keep their decimals");

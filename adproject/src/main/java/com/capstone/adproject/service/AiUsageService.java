@@ -45,10 +45,14 @@ public class AiUsageService {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
+    /** Per-model slice inside {@link UsageHeader} when a single request calls multiple models (e.g. Jev + DeepSeek). */
+    public record ModelUsage(String provider, String model, int calls, int failedCalls, int retries, long promptTokens,
+                             long cachedPromptTokens, long completionTokens, long reasoningTokens, BigDecimal costUsd) {}
+
     /** The AI service's summary of one request, read from {@link #USAGE_HEADER}. Every number is clamped to something sane. */
     public record UsageHeader(String provider, String model, int calls, int failedCalls, int retries, long promptTokens,
                               long cachedPromptTokens, long completionTokens, long reasoningTokens, BigDecimal costUsd,
-                              List<String> errors) {}
+                              List<String> errors, List<ModelUsage> models) {}
 
     private final AiUsageEventRepository events;
     private final AiUsageSettingsService settings;
@@ -93,7 +97,7 @@ public class AiUsageService {
         List<String> kinds = new ArrayList<>();
         if (errorKind != null && !errorKind.isBlank()) kinds.add(errorKind);
         if (usage != null) {
-            e.setProvider(cut(usage.provider(), 20));
+            e.setProvider(cut(usage.provider(), 40));
             e.setModel(cut(usage.model(), 80));
             e.setLlmCalls(usage.calls());
             e.setFailedCalls(usage.failedCalls());
@@ -103,6 +107,13 @@ public class AiUsageService {
             e.setCompletionTokens(usage.completionTokens());
             e.setReasoningTokens(usage.reasoningTokens());
             e.setCostUsd(usage.costUsd());
+            if (usage.models() != null && !usage.models().isEmpty()) {
+                try {
+                    e.setModelBreakdownJson(cut(JSON.writeValueAsString(usage.models()), 2000));
+                } catch (Exception ignored) {
+                    // Best-effort per-model breakdown; aggregate figures above remain intact.
+                }
+            }
             kinds.addAll(usage.errors());
         }
         if (!kinds.isEmpty()) e.setErrorKind(cut(String.join(", ", kinds), 100));
@@ -121,17 +132,39 @@ public class AiUsageService {
                     if (kind.isTextual() && !kind.asText().isBlank() && errors.size() < 5) errors.add(cut(kind.asText().trim(), 40));
                 }
             }
-            BigDecimal cost = n.path("costUsd").isNumber() && n.path("costUsd").decimalValue().signum() >= 0
-                    ? n.path("costUsd").decimalValue().setScale(8, RoundingMode.HALF_UP) : null;
-            return new UsageHeader(cut(n.path("provider").asText(""), 20), cut(n.path("model").asText(""), 80),
+            BigDecimal cost = parseCost(n.path("costUsd"));
+            List<ModelUsage> models = new ArrayList<>();
+            if (n.path("models").isArray()) {
+                for (JsonNode m : n.path("models")) {
+                    if (!m.isObject() || models.size() >= 10) continue;
+                    models.add(new ModelUsage(
+                            cut(m.path("provider").asText(""), 20),
+                            cut(m.path("model").asText(""), 80),
+                            (int) clamp(m.path("calls").asLong(0), 10_000),
+                            (int) clamp(m.path("failedCalls").asLong(0), 10_000),
+                            (int) clamp(m.path("retries").asLong(0), 10_000),
+                            clamp(m.path("promptTokens").asLong(0), 10_000_000_000L),
+                            clamp(m.path("cachedPromptTokens").asLong(0), 10_000_000_000L),
+                            clamp(m.path("completionTokens").asLong(0), 10_000_000_000L),
+                            clamp(m.path("reasoningTokens").asLong(0), 10_000_000_000L),
+                            parseCost(m.path("costUsd"))));
+                }
+            }
+            return new UsageHeader(cut(n.path("provider").asText(""), 40), cut(n.path("model").asText(""), 80),
                     (int) clamp(n.path("calls").asLong(0), 10_000), (int) clamp(n.path("failedCalls").asLong(0), 10_000),
                     (int) clamp(n.path("retries").asLong(0), 10_000), clamp(n.path("promptTokens").asLong(0), 10_000_000_000L),
                     clamp(n.path("cachedPromptTokens").asLong(0), 10_000_000_000L),
                     clamp(n.path("completionTokens").asLong(0), 10_000_000_000L),
-                    clamp(n.path("reasoningTokens").asLong(0), 10_000_000_000L), cost, List.copyOf(errors));
+                    clamp(n.path("reasoningTokens").asLong(0), 10_000_000_000L), cost, List.copyOf(errors), List.copyOf(models));
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static BigDecimal parseCost(JsonNode node) {
+        return node.isNumber() && node.decimalValue().signum() >= 0
+                ? node.decimalValue().setScale(8, RoundingMode.HALF_UP)
+                : null;
     }
 
     private static long clamp(long value, long max) {
@@ -172,8 +205,8 @@ public class AiUsageService {
                 forecast(all, inMonth, now, today, sevenDaysAgo, monthlyBudgetUsd()), latency(inPeriod), perDay,
                 rows(inPeriod, e -> e.getFeature().name()),
                 rows(inPeriod, e -> e.getRequestedBy() == null ? "unknown" : e.getRequestedBy()),
-                rows(inPeriod.stream().filter(e -> e.getLlmCalls() > 0).toList(),
-                        e -> e.getModel() != null ? e.getModel() : (e.getProvider() == null ? "unknown model" : e.getProvider() + " (unknown model)")),
+                rows(expandByModel(inPeriod.stream().filter(e -> e.getLlmCalls() > 0).toList()),
+                        e -> e.getModel() != null && !e.getModel().isBlank() ? e.getModel() : (e.getProvider() == null ? "unknown model" : e.getProvider() + " (unknown model)")),
                 failures(inPeriod), events.findTop25ByOrderByOccurredAtDescIdDesc());
     }
 
@@ -205,6 +238,46 @@ public class AiUsageService {
     static long percentile(List<Long> ascending, int percent) {
         int index = (int) Math.ceil(percent / 100.0 * ascending.size()) - 1;
         return ascending.get(Math.max(0, Math.min(index, ascending.size() - 1)));
+    }
+
+    /** Splits multi-model request events (e.g. Jev + DeepSeek) into per-model rows for accurate model attribution. */
+    private static List<AiUsageEvent> expandByModel(List<AiUsageEvent> events) {
+        List<AiUsageEvent> expanded = new ArrayList<>();
+        for (AiUsageEvent e : events) {
+            String raw = e.getModelBreakdownJson();
+            if (raw == null || raw.isBlank()) {
+                expanded.add(e);
+                continue;
+            }
+            try {
+                JsonNode arr = JSON.readTree(raw);
+                if (!arr.isArray() || arr.isEmpty()) {
+                    expanded.add(e);
+                    continue;
+                }
+                for (JsonNode m : arr) {
+                    AiUsageEvent slice = new AiUsageEvent();
+                    slice.setOccurredAt(e.getOccurredAt());
+                    slice.setFeature(e.getFeature());
+                    slice.setOutcome(e.getOutcome());
+                    slice.setProvider(cut(m.path("provider").asText(e.getProvider()), 40));
+                    String modelName = m.path("model").asText("");
+                    slice.setModel(modelName.isBlank() ? null : cut(modelName, 80));
+                    slice.setLlmCalls((int) clamp(m.path("calls").asLong(0), 10_000));
+                    slice.setFailedCalls((int) clamp(m.path("failedCalls").asLong(0), 10_000));
+                    slice.setRetries((int) clamp(m.path("retries").asLong(0), 10_000));
+                    slice.setPromptTokens(clamp(m.path("promptTokens").asLong(0), 10_000_000_000L));
+                    slice.setCachedPromptTokens(clamp(m.path("cachedPromptTokens").asLong(0), 10_000_000_000L));
+                    slice.setCompletionTokens(clamp(m.path("completionTokens").asLong(0), 10_000_000_000L));
+                    slice.setReasoningTokens(clamp(m.path("reasoningTokens").asLong(0), 10_000_000_000L));
+                    slice.setCostUsd(parseCost(m.path("costUsd")));
+                    expanded.add(slice);
+                }
+            } catch (Exception ignored) {
+                expanded.add(e);
+            }
+        }
+        return expanded;
     }
 
     private static List<AiUsageReport.Row> rows(List<AiUsageEvent> list, java.util.function.Function<AiUsageEvent, String> key) {

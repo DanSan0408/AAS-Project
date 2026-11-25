@@ -17,7 +17,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from app.config import settings
 
@@ -126,6 +126,7 @@ class RequestUsage:
     provider: str = ""
     model: str = ""
     errors: List[str] = field(default_factory=list)
+    by_model: Dict[Tuple[str, str], Dict[str, Any]] = field(default_factory=dict)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     def add(self, call: CallUsage, ok: bool, error: Optional[str], now: Optional[datetime] = None) -> None:
@@ -143,8 +144,38 @@ class RequestUsage:
                 self.unpriced_calls += 1
             else:
                 self.cost_usd += cost
-            self.provider = call.provider
-            self.model = call.model
+            key = (call.provider or "", call.model or "")
+            entry = self.by_model.get(key)
+            if entry is None:
+                entry = {
+                    "provider": key[0],
+                    "model": key[1],
+                    "calls": 0,
+                    "failedCalls": 0,
+                    "retries": 0,
+                    "promptTokens": 0,
+                    "cachedPromptTokens": 0,
+                    "completionTokens": 0,
+                    "reasoningTokens": 0,
+                    "costUsd": 0.0,
+                    "_unpriced": 0,
+                }
+                self.by_model[key] = entry
+            entry["calls"] += 1
+            entry["failedCalls"] += 0 if ok else 1
+            entry["retries"] += max(call.attempts - 1, 0)
+            entry["promptTokens"] += call.prompt_tokens
+            entry["cachedPromptTokens"] += call.cache_hit_tokens
+            entry["completionTokens"] += call.completion_tokens
+            entry["reasoningTokens"] += call.reasoning_tokens
+            if cost is None:
+                entry["_unpriced"] += 1
+            else:
+                entry["costUsd"] += cost
+            providers = list(dict.fromkeys(p for p, _ in self.by_model if p))
+            models = list(dict.fromkeys(m for _, m in self.by_model if m))
+            self.provider = "+".join(providers) if providers else call.provider
+            self.model = "+".join(models) if models else call.model
             if error and len(self.errors) < MAX_ERROR_KINDS and error not in self.errors:
                 self.errors.append(error)
 
@@ -153,14 +184,31 @@ class RequestUsage:
         with self._lock:
             if self.calls == 0:
                 return None
-            return json.dumps({
+            payload: Dict[str, Any] = {
                 "provider": self.provider, "model": self.model, "calls": self.calls, "failedCalls": self.failed_calls,
                 "retries": self.retries, "promptTokens": self.prompt_tokens, "cachedPromptTokens": self.cache_hit_tokens,
                 "completionTokens": self.completion_tokens, "reasoningTokens": self.reasoning_tokens,
                 "modelMs": self.model_ms,
                 "costUsd": None if self.unpriced_calls else round(self.cost_usd, 8),
                 "errors": self.errors,
-            }, separators=(",", ":"))
+            }
+            if len(self.by_model) > 1:
+                payload["models"] = [
+                    {
+                        "provider": e["provider"],
+                        "model": e["model"],
+                        "calls": e["calls"],
+                        "failedCalls": e["failedCalls"],
+                        "retries": e["retries"],
+                        "promptTokens": e["promptTokens"],
+                        "cachedPromptTokens": e["cachedPromptTokens"],
+                        "completionTokens": e["completionTokens"],
+                        "reasoningTokens": e["reasoningTokens"],
+                        "costUsd": None if e["_unpriced"] else round(e["costUsd"], 8),
+                    }
+                    for e in self.by_model.values()
+                ]
+            return json.dumps(payload, separators=(",", ":"))
 
 
 _request: contextvars.ContextVar[Optional[RequestUsage]] = contextvars.ContextVar("ai_request_usage", default=None)
