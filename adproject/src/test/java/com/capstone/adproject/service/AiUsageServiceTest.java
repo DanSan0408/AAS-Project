@@ -355,4 +355,32 @@ class AiUsageServiceTest {
         assertEquals("$0.0012", AiUsageReport.usd(new BigDecimal("0.001234")));
         assertEquals("n/a", AiUsageReport.usd(null));
     }
+
+    @Test
+    void multiModelRequestsAreSplitPerModelInByModelWhileKeepingTotalRequestNumbers() {
+        var header = AiUsageService.parseHeader(
+                "{\"provider\":\"typesafe+deepseek\",\"model\":\"jev-1.14.0+deepseek-flash\",\"calls\":3,\"failedCalls\":0,\"retries\":0,"
+                        + "\"promptTokens\":1200,\"cachedPromptTokens\":400,\"completionTokens\":200,\"reasoningTokens\":0,\"modelMs\":900,"
+                        + "\"costUsd\":0.0002204,\"errors\":[],"
+                        + "\"models\":[{\"provider\":\"typesafe\",\"model\":\"jev-1.14.0\",\"calls\":2,\"failedCalls\":0,\"retries\":0,"
+                        + "\"promptTokens\":200,\"cachedPromptTokens\":0,\"completionTokens\":0,\"reasoningTokens\":0,\"costUsd\":0.0000084},"
+                        + "{\"provider\":\"deepseek\",\"model\":\"deepseek-flash\",\"calls\":1,\"failedCalls\":0,\"retries\":0,"
+                        + "\"promptTokens\":1000,\"cachedPromptTokens\":400,\"completionTokens\":200,\"reasoningTokens\":0,\"costUsd\":0.000212}]}");
+        service.record(Feature.COMMENT_CHECK, Outcome.OK, "system", header, 950, null);
+        var saved = ArgumentCaptor.forClass(AiUsageEvent.class);
+        verify(repo).save(saved.capture());
+        AiUsageEvent combined = saved.getValue();
+        assertEquals("typesafe+deepseek", combined.getProvider());
+        assertEquals("jev-1.14.0+deepseek-flash", combined.getModel());
+        assertNotNull(combined.getModelBreakdownJson());
+
+        stored(combined);
+        AiUsageReport r = service.report(7);
+        assertEquals(1, r.period().requests());
+        assertEquals(3, r.period().llmCalls());
+        assertEquals(List.of("deepseek-flash", "jev-1.14.0"), r.byModel().stream().map(AiUsageReport.Row::label).toList());
+        assertEquals(1, r.byModel().get(0).totals().llmCalls());
+        assertEquals(2, r.byModel().get(1).totals().llmCalls());
+        assertEquals(200, r.byModel().get(1).totals().promptTokens());
+    }
 }

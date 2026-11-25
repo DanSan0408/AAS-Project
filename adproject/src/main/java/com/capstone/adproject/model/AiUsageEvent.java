@@ -53,11 +53,15 @@ public class AiUsageEvent {
     @Column(length = 100)
     private String requestedBy;
 
-    @Column(length = 20)
+    @Column(length = 40)
     private String provider;
 
     @Column(length = 80)
     private String model;
+
+    /** Compact JSON list of per-model stats when a single request used more than one model (e.g. Jev + DeepSeek). */
+    @Column(length = 2000)
+    private String modelBreakdownJson;
 
     /** Calls made to the model for this request (a request can make several). */
     @Column(nullable = false)
@@ -107,6 +111,8 @@ public class AiUsageEvent {
     public void setProvider(String provider) { this.provider = provider; }
     public String getModel() { return model; }
     public void setModel(String model) { this.model = model; }
+    public String getModelBreakdownJson() { return modelBreakdownJson; }
+    public void setModelBreakdownJson(String modelBreakdownJson) { this.modelBreakdownJson = modelBreakdownJson; }
     public int getLlmCalls() { return llmCalls; }
     public void setLlmCalls(int llmCalls) { this.llmCalls = llmCalls; }
     public int getFailedCalls() { return failedCalls; }
