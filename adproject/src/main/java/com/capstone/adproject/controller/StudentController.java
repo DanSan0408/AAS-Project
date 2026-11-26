@@ -1779,6 +1779,20 @@ public String viewMyComments(Model model, Principal principal) {
         return;
     }
     
+    if (comment.getAssessmentType() == AssessmentComment.CommentAssessmentType.TEAM
+            && "You (Team Evaluation)".equals(anonymousId)
+            && viewingStudent != null && viewingStudent.getId() != null
+            && !viewingStudent.getId().equals(comment.getEvaluatorId())) {
+        Assessment assessment = comment.getAssessment();
+        Boolean isAnonymous = assessment != null ? assessment.getCommentsAnonymousForType(comment.getRubricAssessmentType()) : null;
+        if (isAnonymous != null && !isAnonymous && comment.getEvaluatorName() != null && !comment.getEvaluatorName().isBlank()) {
+            comment.setDisplayName(comment.getEvaluatorName());
+        } else {
+            comment.setDisplayName("Teammate");
+        }
+        return;
+    }
+
     if (anonymousId != null && !anonymousId.isEmpty()) {
         comment.setDisplayName(anonymousId);
     } else {

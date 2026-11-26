@@ -20,8 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.capstone.adproject.model.Assessment;
 import com.capstone.adproject.model.AssessmentComment;
+import com.capstone.adproject.model.Course;
+import com.capstone.adproject.model.Group;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,6 +36,9 @@ public class AssessmentCommentServiceTest {
 
     @Mock
     private StudentRepository studentRepository;
+
+    @Mock
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     @InjectMocks
     private AssessmentCommentService commentService;
@@ -277,5 +284,95 @@ public class AssessmentCommentServiceTest {
         List<AssessmentComment> assessorOnly = commentService.getCommentsForModeration(10L, "all", "assessor", null, null);
         assertEquals(1, assessorOnly.size());
         assertEquals("Dr. Smith", assessorOnly.get(0).getEvaluatorName());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCompiledCommentsMergeDuplicateStudentRowsAndCategorizeTeammateTeamCommentsAsPeer() {
+        Course course = new Course();
+        course.setId(5L);
+        assessment.setCourse(course);
+
+        Student secondaryRecord = new Student();
+        secondaryRecord.setId(99L);
+        secondaryRecord.setUsername("Alice");
+        secondaryRecord.setEmail("alice@example.com");
+
+        AssessmentComment peer1 = new AssessmentComment();
+        peer1.setId(601L);
+        peer1.setEvaluatorId(2L);
+        peer1.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+        peer1.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
+        peer1.setEvaluatedStudent(student);
+        peer1.setAssessment(assessment);
+        peer1.setCommentText("Teammate 1 feedback");
+        peer1.setAnonymousIdentifier("Teammate 1");
+        peer1.setIsApproved(true);
+
+        AssessmentComment peer2OnSecondaryRow = new AssessmentComment();
+        peer2OnSecondaryRow.setId(602L);
+        peer2OnSecondaryRow.setEvaluatorId(3L);
+        peer2OnSecondaryRow.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+        peer2OnSecondaryRow.setAssessmentType(AssessmentComment.CommentAssessmentType.PEER);
+        peer2OnSecondaryRow.setEvaluatedStudent(secondaryRecord);
+        peer2OnSecondaryRow.setAssessment(assessment);
+        peer2OnSecondaryRow.setCommentText("Teammate 2 feedback");
+        peer2OnSecondaryRow.setAnonymousIdentifier("Teammate 2");
+        peer2OnSecondaryRow.setIsApproved(true);
+
+        AssessmentComment peer3ViaTeamEval = new AssessmentComment();
+        peer3ViaTeamEval.setId(603L);
+        peer3ViaTeamEval.setEvaluatorId(4L);
+        peer3ViaTeamEval.setEvaluatorType(AssessmentComment.EvaluatorType.STUDENT);
+        peer3ViaTeamEval.setAssessmentType(AssessmentComment.CommentAssessmentType.TEAM);
+        peer3ViaTeamEval.setEvaluatedStudent(student);
+        peer3ViaTeamEval.setAssessment(assessment);
+        peer3ViaTeamEval.setCommentText("Teammate 3 team feedback");
+        peer3ViaTeamEval.setAnonymousIdentifier("You (Team Evaluation)");
+        peer3ViaTeamEval.setIsApproved(true);
+
+        when(studentRepository.findAllByEmailIgnoreCase("alice@example.com")).thenReturn(List.of(student, secondaryRecord));
+        when(commentRepository.findByEvaluatedStudent(student)).thenReturn(List.of(peer1, peer3ViaTeamEval));
+        when(commentRepository.findByEvaluatedStudent(secondaryRecord)).thenReturn(List.of(peer2OnSecondaryRow));
+
+        Map<String, Object> compiled = commentService.getCompiledCommentsForStudent(student, 5L);
+        assertEquals(3, compiled.get("totalComments"));
+
+        Map<String, Map<String, List<AssessmentComment>>> byAssessment =
+                (Map<String, Map<String, List<AssessmentComment>>>) compiled.get("commentsByAssessment");
+        List<AssessmentComment> peerList = byAssessment.get("Project Milestone 1").get("peer");
+        assertEquals(3, peerList.size());
+        assertEquals("Teammate", peer3ViaTeamEval.getDisplayName());
+    }
+
+    @Test
+    public void testGetCommentsForModeration_GroupFilterIncludesCourseScopedStudentAssignment() {
+        Course course = new Course();
+        course.setId(5L);
+        assessment.setCourse(course);
+
+        Group primaryCourseGroup = new Group();
+        primaryCourseGroup.setId(100L);
+        student.setGroup(primaryCourseGroup);
+
+        Group targetCourseGroup = new Group();
+        targetCourseGroup.setId(200L);
+
+        StudentCourseAssignment sca = new StudentCourseAssignment();
+        sca.setStudent(student);
+        sca.setCourse(course);
+        sca.setGroup(targetCourseGroup);
+
+        AssessmentComment c = new AssessmentComment();
+        c.setId(701L);
+        c.setEvaluatedStudent(student);
+        c.setAssessment(assessment);
+        c.setCommentText("Good work");
+
+        when(commentRepository.findByAssessmentIdOrderBySubmittedAtDesc(10L)).thenReturn(List.of(c));
+        when(studentCourseAssignmentRepository.findByStudentIdAndCourseId(1L, 5L)).thenReturn(Optional.of(sca));
+
+        List<AssessmentComment> matched = commentService.getCommentsForModeration(10L, "all", "all", 200L, null);
+        assertEquals(1, matched.size());
     }
 }

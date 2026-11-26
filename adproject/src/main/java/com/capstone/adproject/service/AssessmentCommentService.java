@@ -19,7 +19,9 @@ import com.capstone.adproject.dto.ai.AiCommentDtos;
 import com.capstone.adproject.model.AssessmentComment;
 import com.capstone.adproject.model.Rubric;
 import com.capstone.adproject.model.Student;
+import com.capstone.adproject.model.StudentCourseAssignment;
 import com.capstone.adproject.repositories.AssessmentCommentRepository;
+import com.capstone.adproject.repositories.StudentCourseAssignmentRepository;
 import com.capstone.adproject.repositories.StudentRepository;
 import java.time.LocalDateTime;
 
@@ -35,6 +37,9 @@ public class AssessmentCommentService {
     
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired(required = false)
+    private StudentCourseAssignmentRepository studentCourseAssignmentRepository;
 
     @Autowired(required = false)
     private AiServiceClient aiServiceClient;
@@ -351,8 +356,38 @@ public class AssessmentCommentService {
     }
 
     public Map<String, Object> getCompiledCommentsForStudent(Student student, Long courseId) {
-    List<AssessmentComment> allComments = commentRepository
-        .findByEvaluatedStudent(student)
+    List<Student> studentRecords = new ArrayList<>();
+    java.util.Set<Long> seenStudentIds = new java.util.HashSet<>();
+    if (student != null) {
+        studentRecords.add(student);
+        if (student.getId() != null) {
+            seenStudentIds.add(student.getId());
+        }
+        if (student.getEmail() != null && !student.getEmail().isBlank() && studentRepository != null) {
+            List<Student> matches = studentRepository.findAllByEmailIgnoreCase(student.getEmail());
+            if (matches != null) {
+                for (Student match : matches) {
+                    if (match != null && (match.getId() == null || seenStudentIds.add(match.getId()))) {
+                        studentRecords.add(match);
+                    }
+                }
+            }
+        }
+    }
+
+    List<AssessmentComment> rawComments = new ArrayList<>();
+    java.util.Set<Long> seenCommentIds = new java.util.HashSet<>();
+    for (Student record : studentRecords) {
+        List<AssessmentComment> found = commentRepository.findByEvaluatedStudent(record);
+        if (found == null) continue;
+        for (AssessmentComment c : found) {
+            if (c != null && (c.getId() == null || seenCommentIds.add(c.getId()))) {
+                rawComments.add(c);
+            }
+        }
+    }
+
+    List<AssessmentComment> allComments = rawComments
         .stream()
         .filter(AssessmentComment::isApproved)
         .filter(c -> courseId == null || (c.getAssessment() != null
@@ -414,15 +449,18 @@ public class AssessmentCommentService {
         
         String category;
         if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.STUDENT) {
+            boolean writtenByViewer = comment.getEvaluatorId() != null && seenStudentIds.contains(comment.getEvaluatorId());
             if (comment.getAssessmentType() == AssessmentComment.CommentAssessmentType.SELF) {
                 category = "self";
-            } else if (comment.getAssessmentType() == AssessmentComment.CommentAssessmentType.TEAM) {
+            } else if (comment.getAssessmentType() == AssessmentComment.CommentAssessmentType.TEAM && writtenByViewer) {
                 category = "team";
             } else {
                 category = "peer";
             }
         } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
             category = "lecturer";
+        } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.SUPERVISOR) {
+            category = "supervisor";
         } else {
             category = "other";
         }
@@ -462,7 +500,15 @@ private String determineDisplayName(AssessmentComment comment) {
                 return comment.getEvaluatorName() != null ? comment.getEvaluatorName() : "Student";
             }
         }
-        return comment.getAnonymousIdentifier() != null ? comment.getAnonymousIdentifier() : "Teammate";
+        String anon = comment.getAnonymousIdentifier();
+        if (comment.getAssessmentType() == AssessmentComment.CommentAssessmentType.TEAM
+                && comment.getEvaluatedStudent() != null
+                && comment.getEvaluatorId() != null
+                && !comment.getEvaluatorId().equals(comment.getEvaluatedStudent().getId())
+                && "You (Team Evaluation)".equals(anon)) {
+            return "Teammate";
+        }
+        return anon != null ? anon : "Teammate";
         
     } else if (comment.getEvaluatorType() == AssessmentComment.EvaluatorType.LECTURER) {
         
@@ -887,7 +933,16 @@ public List<AssessmentComment> getExistingComments(Long evaluatorId,
             .filter(c -> {
                 if (groupId == null) return true;
                 Student s = c.getEvaluatedStudent();
-                return s != null && s.getGroup() != null && groupId.equals(s.getGroup().getId());
+                if (s == null) return false;
+                if (studentCourseAssignmentRepository != null && s.getId() != null
+                        && c.getAssessment() != null && c.getAssessment().getCourse() != null) {
+                    Optional<StudentCourseAssignment> sca = studentCourseAssignmentRepository
+                            .findByStudentIdAndCourseId(s.getId(), c.getAssessment().getCourse().getId());
+                    if (sca.isPresent() && sca.get().getGroup() != null) {
+                        return groupId.equals(sca.get().getGroup().getId());
+                    }
+                }
+                return s.getGroup() != null && groupId.equals(s.getGroup().getId());
             })
             .filter(c -> {
                 if (search == null || search.trim().isEmpty()) return true;
